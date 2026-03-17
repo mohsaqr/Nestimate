@@ -1,0 +1,387 @@
+#' Window-based Transition Network Analysis
+#'
+#' @description
+#' Computes networks from one-hot (binary indicator) data using temporal
+#' windowing. Supports transition (directed), co-occurrence (undirected),
+#' or both network types.
+#'
+#' @param data Data frame with one-hot encoded columns (0/1 binary).
+#' @param method Character. Network type: \code{"transition"} (directed),
+#'   \code{"cooccurrence"} (undirected), or \code{"both"} (returns list of
+#'   two networks). Default: \code{"transition"}.
+#' @param type Character. Output type: \code{"frequency"} (raw counts) or
+#'   \code{"relative"} (row-normalized probabilities). Default: \code{"frequency"}.
+#' @param codes Character vector or NULL. Names of the one-hot columns to use.
+#'   If NULL, auto-detects binary columns. Default: NULL.
+#' @param window_size Integer. Number of consecutive rows to aggregate per
+#'   window. Default: 1 (no windowing).
+#' @param mode Character. Window mode: \code{"non-overlapping"} (fixed, separate
+#'   windows) or \code{"overlapping"} (rolling, step = 1).
+#'   Default: \code{"non-overlapping"}.
+#' @param actor Character or NULL. Name of the actor/ID column for per-group
+#'   computation. If NULL, treats all rows as one group. Default: NULL.
+#'
+#' @return For \code{method = "transition"} or \code{"cooccurrence"}: a
+#'   \code{netobject} (see \code{\link{build_network}}).
+#'
+#'   For \code{method = "both"}: a named list with elements
+#'   \code{$transition} and \code{$cooccurrence}, each a \code{netobject}.
+#'
+#' @details
+#' \strong{Transitions}: Uses \code{crossprod(X[-n,], X[-1,])} to count
+#' how often state i is active at time t AND state j at time t+1.
+#'
+#' \strong{Co-occurrence}: Uses \code{crossprod(X)} to count states that are
+#' simultaneously active in the same row.
+#'
+#' \strong{Windowing}: For \code{window_size > 1}, rows are aggregated into
+#' windows before computing networks. Non-overlapping windows are fixed,
+#' separate blocks; overlapping windows roll forward one row at a time.
+#' Within each window, any active indicator (1) in any row makes that state
+#' active for the window.
+#'
+#' \strong{Per-actor}: When \code{actor} is specified, networks are computed
+#' per group and summed.
+#'
+#' @examples
+#' \dontrun{
+#' # Simple one-hot data
+#' df <- data.frame(
+#'   A = c(1, 0, 1, 0, 1),
+#'   B = c(0, 1, 0, 1, 0),
+#'   C = c(0, 0, 1, 0, 0)
+#' )
+#'
+#' # Transition network
+#' net <- wtna(df)
+#' print(net)
+#'
+#' # Both networks
+#' nets <- wtna(df, method = "both")
+#' print(nets$transition)
+#' print(nets$cooccurrence)
+#'
+#' # With windowing
+#' net <- wtna(df, window_size = 2, mode = "non-overlapping")
+#' }
+#'
+#' @seealso \code{\link{build_network}}, \code{\link{prepare_onehot}}
+#'
+#' @export
+wtna <- function(data,
+                 method = c("transition", "cooccurrence", "both"),
+                 type = c("frequency", "relative"),
+                 codes = NULL,
+                 window_size = 1L,
+                 mode = c("non-overlapping", "overlapping"),
+                 actor = NULL) {
+  method <- match.arg(method)
+  type <- match.arg(type)
+  mode <- match.arg(mode)
+
+  df <- as.data.frame(data)
+  codes <- .resolve_codes(df, codes, exclude = actor)
+
+  stopifnot(length(codes) >= 2L)
+
+  if (is.null(actor)) {
+    X <- .wtna_to_matrix(df, codes, window_size, mode)
+    weights <- .wtna_compute_weights(X, method)
+  } else {
+    stopifnot(all(actor %in% names(df)))
+    weights <- .wtna_compute_by_actor(df, codes, window_size, mode, actor, method)
+  }
+
+  if (method == "both") {
+    return(list(
+      transition = .wtna_finalize(weights$transition, type, codes, data, "transition"),
+      cooccurrence = .wtna_finalize(weights$cooccurrence, type, codes, data, "cooccurrence")
+    ))
+  }
+
+  .wtna_finalize(weights, type, codes, data, method)
+}
+
+
+# ---- Private helpers ----
+
+#' Aggregate data into windowed binary matrix
+#' @noRd
+.wtna_to_matrix <- function(df, codes, window_size, mode) {
+  X <- as.matrix(df[, codes, drop = FALSE])
+  storage.mode(X) <- "integer"
+
+  if (window_size <= 1L) return(X)
+
+  n <- nrow(X)
+  if (mode == "non-overlapping") {
+    wid <- (seq_len(n) - 1L) %/% window_size
+    res <- rowsum(X, wid)
+    res[res > 0L] <- 1L
+    return(res)
+  }
+
+  # Overlapping (rolling) window
+  if (n < window_size) return(matrix(0L, 0L, length(codes)))
+
+  n_windows <- n - window_size + 1L
+  combined <- X[seq_len(n_windows), , drop = FALSE]
+  for (i in seq_len(window_size - 1L)) {
+    combined <- combined | X[(1L + i):(n_windows + i), , drop = FALSE]
+  }
+  storage.mode(combined) <- "integer"
+  combined
+}
+
+
+#' Compute transition counts
+#' @noRd
+.wtna_transitions <- function(X) {
+  n <- nrow(X)
+  if (n < 2L) return(matrix(0, ncol(X), ncol(X)))
+  crossprod(X[-n, , drop = FALSE], X[-1L, , drop = FALSE])
+}
+
+
+#' Compute co-occurrence counts
+#' @noRd
+.wtna_cooccurrence <- function(X) {
+  crossprod(X)
+}
+
+
+#' Dispatch weight computation by method
+#' @noRd
+.wtna_compute_weights <- function(X, method) {
+  switch(method,
+    transition = .wtna_transitions(X),
+    cooccurrence = .wtna_cooccurrence(X),
+    both = list(
+      transition = .wtna_transitions(X),
+      cooccurrence = .wtna_cooccurrence(X)
+    )
+  )
+}
+
+
+#' Compute weights per actor and sum
+#' @noRd
+.wtna_compute_by_actor <- function(df, codes, window_size, mode, actor, method) {
+  n_codes <- length(codes)
+  init_mat <- matrix(0, n_codes, n_codes)
+  if (length(actor) == 1L) {
+    groups <- split(df, df[[actor]])
+  } else {
+    grp_key <- interaction(df[, actor, drop = FALSE], drop = TRUE)
+    groups <- split(df, grp_key)
+  }
+
+  matrices <- lapply(groups, function(g) {
+    X <- .wtna_to_matrix(g, codes, window_size, mode)
+    .wtna_compute_weights(X, method)
+  })
+
+  if (method == "both") {
+    list(
+      transition = Reduce(`+`, lapply(matrices, `[[`, "transition"), init_mat),
+      cooccurrence = Reduce(`+`, lapply(matrices, `[[`, "cooccurrence"), init_mat)
+    )
+  } else {
+    Reduce(`+`, matrices, init_mat)
+  }
+}
+
+
+#' Resolve codes specification to column names
+#'
+#' Supports multiple selection styles:
+#' \itemize{
+#'   \item \code{NULL} — auto-detect binary 0/1 columns (excluding \code{exclude})
+#'   \item Character vector — column names (e.g. \code{c("A", "B", "C")})
+#'   \item Numeric vector — column indices (e.g. \code{2:9})
+#'   \item Single string with \code{:} — column name range
+#'     (e.g. \code{"Planning:Evaluating"})
+#' }
+#' @param df Data frame.
+#' @param codes Column specification (NULL, character, numeric, or range string).
+#' @param exclude Character vector of column names to exclude from auto-detection.
+#' @return Character vector of resolved column names.
+#' @noRd
+.resolve_codes <- function(df, codes = NULL, exclude = NULL) {
+  if (is.null(codes)) {
+    # Auto-detect binary columns, excluding specified columns
+    check_df <- df[, setdiff(names(df), exclude), drop = FALSE]
+    return(.wtna_auto_detect_codes(check_df))
+  }
+
+  if (is.numeric(codes)) {
+    # Column indices
+    stopifnot(all(codes >= 1L & codes <= ncol(df)))
+    return(names(df)[codes])
+  }
+
+  if (is.character(codes) && length(codes) == 1L && grepl(":", codes)) {
+    # Name range "start:end"
+    parts <- strsplit(codes, ":")[[1]]
+    stopifnot(length(parts) == 2L)
+    start <- match(parts[1], names(df))
+    end <- match(parts[2], names(df))
+    if (is.na(start)) stop("Column '", parts[1], "' not found.")
+    if (is.na(end)) stop("Column '", parts[2], "' not found.")
+    return(names(df)[start:end])
+  }
+
+  # Character vector of names
+  stopifnot(is.character(codes))
+  missing <- setdiff(codes, names(df))
+  if (length(missing) > 0) {
+    stop("Columns not found: ", paste(missing, collapse = ", "))
+  }
+  codes
+}
+
+
+#' Auto-detect one-hot binary columns
+#' @noRd
+.wtna_auto_detect_codes <- function(df) {
+  is_onehot <- vapply(df, function(x) {
+    if (!is.numeric(x) && !is.logical(x)) return(FALSE)
+    vals <- unique(x[!is.na(x)])
+    length(vals) > 0 && all(vals %in% c(0, 1))
+  }, logical(1L))
+
+  codes <- names(df)[is_onehot]
+  if (length(codes) == 0L) stop("No one-hot columns found.")
+  codes
+}
+
+
+#' Finalize: row-normalize and build netobject
+#' @noRd
+.wtna_finalize <- function(weights, type, codes, data, method) {
+  if (type == "relative") {
+    rs <- rowSums(weights)
+    rs[rs == 0] <- 1
+    weights <- weights / rs
+  }
+
+  dimnames(weights) <- list(codes, codes)
+  directed <- method == "transition"
+
+  # Extract edges
+  edges <- .extract_edges_from_matrix(weights, directed = directed)
+
+  structure(
+    list(
+      data = data,
+      matrix = weights,
+      nodes = codes,
+      directed = directed,
+      method = paste0("wtna_", method),
+      params = list(type = type, window_size = 1L, mode = "non-overlapping"),
+      scaling = NULL,
+      threshold = 0,
+      n_nodes = length(codes),
+      n_edges = nrow(edges),
+      edges = edges,
+      level = NULL
+    ),
+    class = "netobject"
+  )
+}
+
+
+# ---- Registry estimator wrappers ----
+# These allow wtna to be used via build_network() and gain
+# bootstrap_network() / permutation_test() support automatically.
+
+#' Core wtna estimator for the registry
+#'
+#' @param data Data frame with one-hot columns.
+#' @param codes Character vector or NULL. One-hot column names.
+#' @param window_size Integer. Window size. Default: 1.
+#' @param mode Character. "non-overlapping" or "overlapping".
+#' @param actor Character or NULL. Actor grouping column.
+#' @param wtna_method Character. "transition" or "cooccurrence".
+#' @param ... Ignored.
+#' @return Standard estimator list (matrix, nodes, directed, cleaned_data).
+#' @noRd
+.estimator_wtna_core <- function(data, codes = NULL, window_size = 1L,
+                                  mode = "non-overlapping", actor = NULL,
+                                  wtna_method = "transition", ...) {
+  df <- as.data.frame(data)
+  codes <- .resolve_codes(df, codes, exclude = actor)
+
+  stopifnot(length(codes) >= 2L)
+  mode <- match.arg(mode, c("non-overlapping", "overlapping"))
+  window_size <- as.integer(window_size)
+
+  if (is.null(actor)) {
+    X <- .wtna_to_matrix(df, codes, window_size, mode)
+    weights <- .wtna_compute_weights(X, wtna_method)
+  } else {
+    stopifnot(all(actor %in% names(df)))
+    weights <- .wtna_compute_by_actor(df, codes, window_size, mode,
+                                       actor, wtna_method)
+  }
+
+  dimnames(weights) <- list(codes, codes)
+  directed <- wtna_method == "transition"
+
+  list(
+    matrix = weights,
+    nodes = codes,
+    directed = directed,
+    cleaned_data = data
+  )
+}
+
+
+#' WTNA transition estimator (directed)
+#'
+#' Accepts both one-hot binary data and sequence data (wide/long).
+#' One-hot: windowing + crossprod. Sequence: existing transition counting.
+#' @noRd
+.estimator_wtna <- function(data,
+                             format = "auto",
+                             action = "Action",
+                             id = NULL,
+                             time = "Time",
+                             cols = NULL,
+                             codes = NULL,
+                             window_size = 1L,
+                             mode = "non-overlapping",
+                             actor = NULL,
+                             ...) {
+  df <- as.data.frame(data)
+
+  # Detect format: one-hot vs sequence
+  if (format == "auto") {
+    format <- if (action %in% names(df)) "long" else "wide"
+  }
+
+  if (format == "wide") {
+    state_cols <- .select_state_cols(df, c(id, actor), cols)
+    is_binary <- length(state_cols) >= 2L && all(vapply(
+      df[, state_cols, drop = FALSE],
+      function(x) is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1)),
+      logical(1)
+    ))
+
+    if (is_binary || !is.null(codes)) {
+      # One-hot path: windowing + crossprod
+      return(.estimator_wtna_core(
+        data, codes = codes, window_size = window_size,
+        mode = mode, actor = actor, wtna_method = "transition", ...
+      ))
+    }
+  }
+
+  # Sequence path: use existing transition counting directly
+  .estimator_frequency(
+    data, format = format, action = action, id = id,
+    time = time, cols = cols, ...
+  )
+}
+
+

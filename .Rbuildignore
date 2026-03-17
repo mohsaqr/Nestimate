@@ -1,0 +1,12 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^CHANGES\.md$
+^CLAUDE\.md$
+^FEATURES\.md$
+^HANDOFF\.md$
+^LEARNINGS\.md$
+^TODO\.md$
+^docs$
+^sidelined$
+^tmp$

@@ -1,0 +1,852 @@
+# ==============================================================================
+# Tests for cluster_data()
+# ==============================================================================
+
+# ---- Test data ----
+
+make_test_data <- function(n = 50, k = 26, n_states = 4, seed = 42) {
+  set.seed(seed)
+  states <- LETTERS[seq_len(n_states)]
+  mat <- matrix(sample(states, n * k, replace = TRUE), nrow = n, ncol = k)
+  colnames(mat) <- paste0("T", seq_len(k))
+  as.data.frame(mat, stringsAsFactors = FALSE)
+}
+
+make_data_with_na <- function(n = 30, k = 20, n_states = 3, seed = 42) {
+  set.seed(seed)
+  states <- LETTERS[seq_len(n_states)]
+  mat <- matrix(sample(states, n * k, replace = TRUE), nrow = n, ncol = k)
+  # Add void markers to last few columns
+  for (i in seq_len(n)) {
+    trail_start <- sample(k - 5, 1) + 5
+    if (trail_start <= k) mat[i, trail_start:k] <- "%"
+  }
+  # Add some mid-sequence NAs
+  mat[sample(n * k, 10)] <- "*"
+  colnames(mat) <- paste0("T", seq_len(k))
+  as.data.frame(mat, stringsAsFactors = FALSE)
+}
+
+# ==============================================================================
+# 1. Input validation
+# ==============================================================================
+
+test_that("cluster_data validates inputs", {
+  df <- make_test_data(n = 20, k = 10)
+  expect_error(cluster_data(df, k = 1), "k >= 2")
+  expect_error(cluster_data(df, k = 20), "k <= n - 1")
+  expect_error(cluster_data(df, k = 2, dissimilarity = "invalid"))
+  expect_error(cluster_data(df, k = 2, method = "invalid"))
+  expect_error(cluster_data(df, k = 2, dissimilarity = "lv", weighted = TRUE),
+               "Weighting is only supported")
+  expect_error(cluster_data("not a df", k = 2))
+})
+
+# ==============================================================================
+# 2. Basic clustering works for all metrics
+# ==============================================================================
+
+test_that("cluster_data runs for all 9 metrics", {
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  for (metric in c("hamming", "osa", "lv", "dl", "lcs",
+                    "qgram", "cosine", "jaccard", "jw")) {
+    cl <- cluster_data(df, k = 3, dissimilarity = metric)
+    expect_true(inherits(cl, "net_clustering"), info = metric)
+    expect_equal(cl$k, 3L, info = metric)
+    expect_equal(sum(cl$sizes), 30L, info = metric)
+    expect_length(cl$assignments, 30L)
+    expect_true(inherits(cl$distance, "dist"), info = metric)
+    expect_true(is.numeric(cl$silhouette), info = metric)
+  }
+})
+
+# ==============================================================================
+# 3. Clustering methods
+# ==============================================================================
+
+test_that("PAM returns medoids", {
+  df <- make_test_data(n = 20, k = 10)
+  cl <- cluster_data(df, k = 3, method = "pam")
+  expect_false(is.null(cl$medoids))
+  expect_length(cl$medoids, 3L)
+  expect_true(all(cl$medoids %in% seq_len(20)))
+})
+
+test_that("hierarchical methods work", {
+  df <- make_test_data(n = 20, k = 10)
+  for (m in c("ward.D2", "ward.D", "complete", "average", "single")) {
+    cl <- cluster_data(df, k = 3, method = m)
+    expect_true(inherits(cl, "net_clustering"), info = m)
+    expect_true(is.null(cl$medoids), info = m)
+    expect_equal(sum(cl$sizes), 20L, info = m)
+  }
+})
+
+# ==============================================================================
+# 4. Weighted Hamming
+# ==============================================================================
+
+test_that("weighted Hamming produces different distances than unweighted", {
+  df <- make_test_data(n = 20, k = 10)
+  cl_uw <- cluster_data(df, k = 2, dissimilarity = "hamming", weighted = FALSE)
+  cl_w <- cluster_data(df, k = 2, dissimilarity = "hamming",
+                       weighted = TRUE, lambda = 1)
+  # Distance matrices should differ
+  d_uw <- as.matrix(cl_uw$distance)
+  d_w <- as.matrix(cl_w$distance)
+  expect_false(isTRUE(all.equal(d_uw, d_w)))
+  # Weighted distances should be <= unweighted (weights <= 1)
+  expect_true(all(d_w <= d_uw + 1e-10))
+})
+
+test_that("lambda = 0 weighted matches unweighted", {
+  df <- make_test_data(n = 20, k = 10)
+  cl_uw <- cluster_data(df, k = 2, dissimilarity = "hamming", weighted = FALSE)
+  # weighted = TRUE with lambda = 0 should give same distances
+  # (lambda forced to 0 when weighted = FALSE, but lambda = 0 means uniform)
+  # Actually testing: explicit lambda = 0 with weighted = TRUE
+  # In our impl: lambda = 0 → weights = exp(0 * ...) / max = rep(1)
+  # But the function sets lambda <- if (weighted) lambda else 0
+  # With weighted = TRUE, lambda = 0 → weights = 1
+  cl_w0 <- cluster_data(df, k = 2, dissimilarity = "hamming",
+                        weighted = TRUE, lambda = 0)
+  d_uw <- as.matrix(cl_uw$distance)
+  d_w0 <- as.matrix(cl_w0$distance)
+  expect_equal(d_uw, d_w0, tolerance = 1e-10)
+})
+
+# ==============================================================================
+# 5. NA / void marker handling
+# ==============================================================================
+
+test_that("na_syms are treated as missing", {
+  df <- make_data_with_na(n = 20, k = 10)
+  cl <- cluster_data(df, k = 2)
+  expect_s3_class(cl, "net_clustering")
+  expect_equal(sum(cl$sizes), 20L)
+})
+
+test_that("custom na_syms work", {
+  df <- make_test_data(n = 20, k = 10, n_states = 3)
+  # Replace some values with custom NA symbol
+  df[1:5, 8:10] <- "MISSING"
+  cl <- cluster_data(df, k = 2, na_syms = c("*", "%", "MISSING"))
+  expect_s3_class(cl, "net_clustering")
+})
+
+# ==============================================================================
+# 6. Seed reproducibility
+# ==============================================================================
+
+test_that("seed produces reproducible results", {
+  df <- make_test_data(n = 30, k = 10)
+  cl1 <- cluster_data(df, k = 3, seed = 123)
+  cl2 <- cluster_data(df, k = 3, seed = 123)
+  expect_equal(cl1$assignments, cl2$assignments)
+  expect_equal(as.matrix(cl1$distance), as.matrix(cl2$distance))
+})
+
+# ==============================================================================
+# 7. S3 methods
+# ==============================================================================
+
+test_that("print.net_clustering works", {
+  df <- make_test_data(n = 20, k = 10)
+  cl <- cluster_data(df, k = 2)
+  out <- capture.output(print(cl))
+  expect_true(any(grepl("Sequence Clustering", out)))
+  expect_true(any(grepl("pam", out)))
+  expect_true(any(grepl("hamming", out)))
+  expect_true(any(grepl("Silhouette", out)))
+})
+
+test_that("summary.net_clustering works", {
+  df <- make_test_data(n = 20, k = 10)
+  cl <- cluster_data(df, k = 2)
+  stats <- capture.output(res <- summary(cl))
+  expect_true(is.data.frame(res))
+  expect_equal(nrow(res), 2L)
+  expect_true("size" %in% names(res))
+  expect_true("mean_within_dist" %in% names(res))
+})
+
+test_that("plot.net_clustering silhouette works", {
+  df <- make_test_data(n = 20, k = 10)
+  cl <- cluster_data(df, k = 2)
+  p <- plot(cl, type = "silhouette")
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot.net_clustering mds works", {
+  df <- make_test_data(n = 20, k = 10)
+  cl <- cluster_data(df, k = 2)
+  p <- plot(cl, type = "mds")
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot.net_clustering heatmap works", {
+  df <- make_test_data(n = 20, k = 10)
+  cl <- cluster_data(df, k = 2)
+  p <- plot(cl, type = "heatmap")
+  expect_s3_class(p, "ggplot")
+})
+
+# ==============================================================================
+# 8. cluster_sequences alias
+# ==============================================================================
+
+test_that("cluster_sequences is an alias for cluster_data", {
+  expect_identical(cluster_sequences, cluster_data)
+})
+
+# ==============================================================================
+# 9. Cross-validation against tna
+# ==============================================================================
+
+test_that("distance matrices match tna for all 9 metrics", {
+  skip_if_not_installed("tna")
+  data <- tna::group_regulation[1:50, ]
+
+  for (metric in c("hamming", "osa", "lv", "dl", "lcs",
+                    "qgram", "cosine", "jaccard", "jw")) {
+    tna_r <- tna::cluster_data(data, k = 2, dissimilarity = metric, q = 2)
+    our_r <- cluster_data(data, k = 2, dissimilarity = metric, q = 2L)
+    expect_equal(
+      as.matrix(our_r$distance), as.matrix(tna_r$distance),
+      tolerance = 1e-10, info = metric
+    )
+  }
+})
+
+test_that("weighted hamming matches tna (lambda = 0.5)", {
+  skip_if_not_installed("tna")
+  data <- tna::group_regulation[1:50, ]
+
+  tna_r <- tna::cluster_data(data, k = 2, dissimilarity = "hamming",
+                             weighted = TRUE, lambda = 0.5)
+  our_r <- cluster_data(data, k = 2, dissimilarity = "hamming",
+                        weighted = TRUE, lambda = 0.5)
+  expect_equal(
+    as.matrix(our_r$distance), as.matrix(tna_r$distance),
+    tolerance = 1e-10
+  )
+})
+
+test_that("weighted hamming matches tna (lambda = 2.0)", {
+  skip_if_not_installed("tna")
+  data <- tna::group_regulation[1:50, ]
+
+  tna_r <- tna::cluster_data(data, k = 2, dissimilarity = "hamming",
+                             weighted = TRUE, lambda = 2.0)
+  our_r <- cluster_data(data, k = 2, dissimilarity = "hamming",
+                        weighted = TRUE, lambda = 2.0)
+  expect_equal(
+    as.matrix(our_r$distance), as.matrix(tna_r$distance),
+    tolerance = 1e-10
+  )
+})
+
+test_that("cluster assignments match tna for PAM", {
+  skip_if_not_installed("tna")
+  data <- tna::group_regulation[1:50, ]
+
+  tna_r <- tna::cluster_data(data, k = 3, dissimilarity = "hamming")
+  our_r <- cluster_data(data, k = 3, dissimilarity = "hamming")
+
+  # Distance matrices must match exactly
+  expect_equal(
+    as.matrix(our_r$distance), as.matrix(tna_r$distance),
+    tolerance = 1e-10
+  )
+  # PAM is deterministic on same distance matrix → same assignments
+  expect_equal(our_r$assignments, tna_r$assignments)
+  expect_equal(our_r$silhouette, tna_r$silhouette, tolerance = 1e-10)
+})
+
+test_that("cluster assignments match tna for hclust methods", {
+  skip_if_not_installed("tna")
+  data <- tna::group_regulation[1:50, ]
+
+  for (m in c("complete", "average")) {
+    tna_r <- tna::cluster_data(data, k = 3, dissimilarity = "hamming",
+                               method = m)
+    our_r <- cluster_data(data, k = 3, dissimilarity = "hamming",
+                          method = m)
+    expect_equal(
+      as.matrix(our_r$distance), as.matrix(tna_r$distance),
+      tolerance = 1e-10, info = m
+    )
+    expect_equal(our_r$assignments, tna_r$assignments, info = m)
+  }
+})
+
+# ==============================================================================
+# 10. R fallback vs stringdist consistency
+# ==============================================================================
+
+test_that("R fallback matches stringdist for all applicable metrics", {
+  skip_if_not_installed("stringdist")
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  enc <- Nestimate:::.encode_sequences(df, c("*", "%"))
+
+  for (metric in c("hamming", "osa", "lv", "dl", "lcs",
+                    "qgram", "cosine", "jaccard", "jw")) {
+    d_r <- as.matrix(
+      Nestimate:::.dissimilarity_matrix_r(enc, metric, lambda = 0, q = 2L, p = 0.1)
+    )
+    d_sd <- as.matrix(
+      Nestimate:::.dissimilarity_matrix_stringdist(enc, metric, lambda = 0, q = 2L, p = 0.1)
+    )
+    expect_equal(d_r, d_sd, tolerance = 1e-10, info = metric)
+  }
+})
+
+# ==============================================================================
+# 11. Edge cases
+# ==============================================================================
+
+test_that("single state data works", {
+  df <- data.frame(T1 = rep("A", 10), T2 = rep("A", 10), T3 = rep("A", 10))
+  cl <- cluster_data(df, k = 2, dissimilarity = "hamming")
+  # All distances should be 0
+  expect_true(all(as.matrix(cl$distance) == 0))
+})
+
+test_that("two-state binary data works", {
+  set.seed(1)
+  df <- data.frame(
+    T1 = sample(c("X", "Y"), 20, replace = TRUE),
+    T2 = sample(c("X", "Y"), 20, replace = TRUE),
+    T3 = sample(c("X", "Y"), 20, replace = TRUE)
+  )
+  cl <- cluster_data(df, k = 2, dissimilarity = "hamming")
+  expect_s3_class(cl, "net_clustering")
+})
+
+test_that("data with all trailing NAs handled", {
+  df <- data.frame(
+    T1 = c("A", "B", "A", "B", "C"),
+    T2 = c("B", "A", "C", "A", "A"),
+    T3 = c("%", "%", "%", "%", "%"),
+    T4 = c("%", "%", "%", "%", "%")
+  )
+  cl <- cluster_data(df, k = 2, dissimilarity = "hamming")
+  expect_s3_class(cl, "net_clustering")
+  expect_equal(sum(cl$sizes), 5L)
+})
+
+test_that("matrix input works", {
+  mat <- matrix(sample(LETTERS[1:3], 30, replace = TRUE), nrow = 10)
+  colnames(mat) <- paste0("T", 1:3)
+  cl <- cluster_data(mat, k = 2)
+  expect_s3_class(cl, "net_clustering")
+  expect_equal(sum(cl$sizes), 10L)
+})
+
+test_that("q-gram parameter affects result", {
+  df <- make_test_data(n = 20, k = 10, n_states = 4)
+  cl_q2 <- cluster_data(df, k = 2, dissimilarity = "qgram", q = 2L)
+  cl_q3 <- cluster_data(df, k = 2, dissimilarity = "qgram", q = 3L)
+  # Different q should give different distance matrices
+  expect_false(isTRUE(all.equal(
+    as.matrix(cl_q2$distance), as.matrix(cl_q3$distance)
+  )))
+})
+
+test_that("p parameter affects jw result", {
+  df <- make_test_data(n = 20, k = 10, n_states = 4)
+  cl_p1 <- cluster_data(df, k = 2, dissimilarity = "jw", p = 0.1)
+  cl_p2 <- cluster_data(df, k = 2, dissimilarity = "jw", p = 0.2)
+  # Different p should give different distance matrices
+  expect_false(isTRUE(all.equal(
+    as.matrix(cl_p1$distance), as.matrix(cl_p2$distance)
+  )))
+})
+
+# ==============================================================================
+# 12. Encoding tests
+# ==============================================================================
+
+test_that(".encode_sequences handles na_syms correctly", {
+  df <- data.frame(T1 = c("A", "*", "B"), T2 = c("B", "A", "%"))
+  enc <- Nestimate:::.encode_sequences(df, na_syms = c("*", "%"))
+  # df row 1 = c("A", "B"), row 2 = c("*", "A"), row 3 = c("B", "%")
+  expect_true(is.na(enc$int_mat[2, 1]))  # "*" → NA
+  expect_true(is.na(enc$int_mat[3, 2]))  # "%" → NA
+  expect_equal(enc$states, c("A", "B"))
+  expect_equal(enc$n_states, 2L)
+  expect_equal(enc$len, c(2L, 2L, 1L))  # row 3: last obs at col 1
+})
+
+test_that(".encode_sequences integer encoding is correct", {
+  df <- data.frame(T1 = c("C", "A", "B"), T2 = c("A", "B", "C"))
+  enc <- Nestimate:::.encode_sequences(df, na_syms = c("*", "%"))
+  # States sorted: A=1, B=2, C=3
+  expect_equal(enc$states, c("A", "B", "C"))
+  expect_equal(enc$int_mat[1, ], c(3L, 1L))  # C=3, A=1
+  expect_equal(enc$int_mat[2, ], c(1L, 2L))  # A=1, B=2
+  expect_equal(enc$int_mat[3, ], c(2L, 3L))  # B=2, C=3
+})
+
+# ==============================================================================
+# 13. Individual distance function tests
+# ==============================================================================
+
+test_that("hamming distance is correct", {
+  # Same sequence → 0
+  expect_equal(Nestimate:::.hamming_dist_r(c(1,2,3), c(1,2,3), 3, 3, 1), 0)
+  # All different → length
+  expect_equal(Nestimate:::.hamming_dist_r(c(1,2,3), c(4,5,6), 3, 3, 1), 3)
+  # One difference
+  expect_equal(Nestimate:::.hamming_dist_r(c(1,2,3), c(1,2,4), 3, 3, 1), 1)
+})
+
+test_that("hamming distance with weights is correct", {
+  w <- exp(-1 * c(0, 1, 2))
+  w <- w / max(w)
+  # All different: sum of weights
+  expect_equal(
+    Nestimate:::.hamming_dist_r(c(1,2,3), c(4,5,6), 3, 3, w),
+    sum(w)
+  )
+  # First position different only
+  expect_equal(
+    Nestimate:::.hamming_dist_r(c(1,2,3), c(4,2,3), 3, 3, w),
+    w[1]
+  )
+})
+
+test_that("levenshtein distance is correct", {
+  # kitten → sitting = 3
+  x <- c(1, 2, 3, 3, 4, 5)  # k i t t e n
+  y <- c(6, 2, 3, 3, 2, 5, 7)  # s i t t i n g
+  expect_equal(Nestimate:::.levenshtein_dist_r(x, y, 6, 7), 3)
+  # Same → 0
+  expect_equal(Nestimate:::.levenshtein_dist_r(c(1,2), c(1,2), 2, 2), 0)
+  # Empty vs non-empty
+  expect_equal(Nestimate:::.levenshtein_dist_r(c(1,2,3), c(1,2,3), 0, 3), 3)
+})
+
+test_that("lcs distance is correct", {
+  # lcs of (1,2,3,4) and (2,4,3) → lcs length = 2 (2,3 or 2,4)
+  # distance = 4 + 3 - 2*2 = 3
+  expect_equal(Nestimate:::.lcs_dist_r(c(1,2,3,4), c(2,4,3), 4, 3), 3)
+  # Same → 0
+  expect_equal(Nestimate:::.lcs_dist_r(c(1,2,3), c(1,2,3), 3, 3), 0)
+})
+
+# ==============================================================================
+# 14. Input extraction tests
+# ==============================================================================
+
+test_that("cluster_data works on netobject from sequence methods", {
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  net <- build_network(df, method = "relative")
+  cl_net <- cluster_data(net, k = 3)
+  cl_df <- cluster_data(df, k = 3)
+  expect_s3_class(cl_net, "net_clustering")
+  expect_equal(as.matrix(cl_net$distance), as.matrix(cl_df$distance),
+               tolerance = 1e-10)
+})
+
+test_that("cluster_data works on frequency netobject", {
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  net <- build_network(df, method = "frequency")
+  cl <- cluster_data(net, k = 3)
+  expect_s3_class(cl, "net_clustering")
+  expect_equal(sum(cl$sizes), 30L)
+})
+
+test_that("cluster_data rejects association-method netobjects", {
+  set.seed(42)
+  ndf <- data.frame(matrix(rnorm(100), 20, 5))
+  colnames(ndf) <- paste0("V", 1:5)
+  net <- build_network(ndf, method = "cor")
+  expect_error(cluster_data(net, k = 2), "sequence data")
+})
+
+test_that("cluster_data works on tna model", {
+  skip_if_not_installed("tna")
+  data <- tna::group_regulation[1:30, ]
+  model <- tna::tna(data)
+  cl_tna <- cluster_data(model, k = 2)
+  cl_df <- cluster_data(data, k = 2)
+  expect_s3_class(cl_tna, "net_clustering")
+  expect_equal(as.matrix(cl_tna$distance), as.matrix(cl_df$distance),
+               tolerance = 1e-10)
+})
+
+test_that("cluster_data works on cograph_network", {
+  skip_if_not_installed("cograph")
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  # Build a mock cograph_network with $data
+  cg <- structure(
+    list(data = df, weights = matrix(0, 4, 4), directed = TRUE),
+    class = c("cograph_network", "list")
+  )
+  cl_cg <- cluster_data(cg, k = 3)
+  cl_df <- cluster_data(df, k = 3)
+  expect_s3_class(cl_cg, "net_clustering")
+  expect_equal(as.matrix(cl_cg$distance), as.matrix(cl_df$distance),
+               tolerance = 1e-10)
+})
+
+# ==============================================================================
+# 15. build_network dispatch for net_clustering
+# ==============================================================================
+
+test_that("build_network dispatches on net_clustering", {
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  cl <- cluster_data(df, k = 3)
+  grp <- build_network(cl)
+  expect_s3_class(grp, "netobject_group")
+  expect_length(grp, 3L)
+  expect_equal(names(grp), paste("Cluster", 1:3))
+  # Each sub-network should be a netobject
+  for (nm in names(grp)) {
+    expect_s3_class(grp[[nm]], "netobject")
+  }
+})
+
+test_that("build_network(clustering) default method is relative", {
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  cl <- cluster_data(df, k = 3)
+  grp <- build_network(cl)
+  expect_equal(grp[[1]]$method, "relative")
+})
+
+test_that("build_network(clustering) respects method arg", {
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  cl <- cluster_data(df, k = 3)
+  grp <- build_network(cl, method = "frequency")
+  expect_equal(grp[[1]]$method, "frequency")
+})
+
+test_that("build_network(clustering) sub-networks have correct sizes", {
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  cl <- cluster_data(df, k = 3)
+  grp <- build_network(cl)
+  total_seqs <- sum(vapply(grp, function(net) nrow(net$data), integer(1L)))
+  expect_equal(total_seqs, 30L)
+  # Sizes match clustering sizes
+  for (i in seq_along(grp)) {
+    expect_equal(nrow(grp[[i]]$data), unname(cl$sizes[i]))
+  }
+})
+
+test_that("build_network(clustering) stores clustering metadata", {
+  df <- make_test_data(n = 30, k = 10, n_states = 4)
+  cl <- cluster_data(df, k = 3)
+  grp <- build_network(cl)
+  expect_s3_class(attr(grp, "clustering"), "net_clustering")
+  expect_equal(attr(grp, "clustering")$k, 3L)
+})
+
+# ==============================================================================
+# 16. Covariate analysis — input forms
+# ==============================================================================
+
+make_cov_data <- function(n = 40, seed = 42) {
+  set.seed(seed)
+  data.frame(
+    T1 = sample(LETTERS[1:3], n, replace = TRUE),
+    T2 = sample(LETTERS[1:3], n, replace = TRUE),
+    T3 = sample(LETTERS[1:3], n, replace = TRUE),
+    Age = rnorm(n, 25, 5),
+    Gender = sample(c("M", "F"), n, replace = TRUE),
+    stringsAsFactors = FALSE
+  )
+}
+
+test_that("all 5 covariate input forms produce identical results", {
+  df <- make_cov_data()
+  cl_formula <- cluster_data(df, k = 3, covariates = ~ Age + Gender)
+  cl_char <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  cl_string <- cluster_data(df, k = 3, covariates = "Age + Gender")
+  cl_df <- cluster_data(df, k = 3, covariates = df[, c("Age", "Gender")])
+
+  ref <- cl_char$covariates$coefficients
+  expect_equal(cl_formula$covariates$coefficients, ref)
+  expect_equal(cl_string$covariates$coefficients, ref)
+  expect_equal(cl_df$covariates$coefficients, ref)
+})
+
+test_that("covariates = NULL produces no covariate analysis", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = NULL)
+  expect_null(cl$covariates)
+})
+
+# ==============================================================================
+# 17. Covariate analysis — profiles
+# ==============================================================================
+
+test_that("numeric profiles are correct", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  np <- cl$covariates$profiles$numeric
+  expect_true(is.data.frame(np))
+  expect_true(all(c("cluster", "n", "pct", "variable", "mean", "sd", "median")
+                   %in% names(np)))
+  # Verify against manual computation
+  for (clust in unique(np$cluster)) {
+    mask <- cl$assignments == clust
+    manual_mean <- mean(df$Age[mask])
+    manual_sd <- sd(df$Age[mask])
+    manual_med <- median(df$Age[mask])
+    row <- np[np$cluster == clust & np$variable == "Age", ]
+    expect_equal(row$mean, manual_mean, tolerance = 1e-10)
+    expect_equal(row$sd, manual_sd, tolerance = 1e-10)
+    expect_equal(row$median, manual_med, tolerance = 1e-10)
+  }
+})
+
+test_that("categorical profiles are correct", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  cp <- cl$covariates$profiles$categorical
+  expect_true(is.data.frame(cp))
+  expect_true(all(c("cluster", "n", "variable", "level", "count", "pct")
+                   %in% names(cp)))
+  # Verify against manual computation
+  for (clust in unique(cp$cluster)) {
+    mask <- cl$assignments == clust
+    tab <- table(df$Gender[mask])
+    for (lev in names(tab)) {
+      row <- cp[cp$cluster == clust & cp$variable == "Gender" &
+                cp$level == lev, ]
+      expect_equal(row$count, as.integer(tab[[lev]]))
+    }
+  }
+})
+
+test_that("all-numeric covariates produce no categorical profile", {
+  df <- make_cov_data()
+  df$Score <- rnorm(nrow(df))
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Score"))
+  expect_null(cl$covariates$profiles$categorical)
+  expect_true(is.data.frame(cl$covariates$profiles$numeric))
+})
+
+test_that("all-categorical covariates produce no numeric profile", {
+  df <- make_cov_data()
+  df$Group <- sample(c("X", "Y"), nrow(df), replace = TRUE)
+  cl <- cluster_data(df, k = 3, covariates = c("Gender", "Group"))
+  expect_null(cl$covariates$profiles$numeric)
+  expect_true(is.data.frame(cl$covariates$profiles$categorical))
+})
+
+# ==============================================================================
+# 18. Covariate analysis — k=2 cross-validation against glm(binomial)
+# ==============================================================================
+
+test_that("k=2 multinomial matches glm(binomial)", {
+  set.seed(99)
+  df <- data.frame(
+    T1 = sample(LETTERS[1:4], 60, replace = TRUE),
+    T2 = sample(LETTERS[1:4], 60, replace = TRUE),
+    T3 = sample(LETTERS[1:4], 60, replace = TRUE),
+    T4 = sample(LETTERS[1:4], 60, replace = TRUE),
+    Age = rnorm(60, 30, 8),
+    Score = runif(60, 0, 100),
+    stringsAsFactors = FALSE
+  )
+  cl <- cluster_data(df, k = 2, covariates = c("Age", "Score"))
+  our <- cl$covariates$coefficients
+
+  # glm reference
+  cov_df <- df[, c("Age", "Score")]
+  cov_df$cluster <- factor(cl$assignments)
+  ref_fit <- glm(cluster ~ Age + Score, data = cov_df, family = binomial)
+  ref <- summary(ref_fit)$coefficients
+
+  # Compare coefficients (excluding intercept from our table for variable match)
+  for (vname in c("Age", "Score")) {
+    our_row <- our[our$variable == vname, ]
+    expect_equal(our_row$estimate[[1L]], unname(ref[vname, "Estimate"]),
+                 tolerance = 1e-3, info = vname)
+    expect_equal(our_row$std_error[[1L]], unname(ref[vname, "Std. Error"]),
+                 tolerance = 1e-3, info = vname)
+    expect_equal(our_row$z[[1L]], unname(ref[vname, "z value"]),
+                 tolerance = 1e-3, info = vname)
+    expect_equal(our_row$p[[1L]], unname(ref[vname, "Pr(>|z|)"]),
+                 tolerance = 1e-2, info = vname)
+  }
+})
+
+# ==============================================================================
+# 19. Covariate analysis — k>2 manual verification
+# ==============================================================================
+
+test_that("k>2 coefficients match manual extraction from multinom", {
+  set.seed(77)
+  df <- data.frame(
+    T1 = sample(LETTERS[1:3], 50, replace = TRUE),
+    T2 = sample(LETTERS[1:3], 50, replace = TRUE),
+    T3 = sample(LETTERS[1:3], 50, replace = TRUE),
+    X1 = rnorm(50),
+    X2 = rnorm(50),
+    stringsAsFactors = FALSE
+  )
+  cl <- cluster_data(df, k = 3, covariates = c("X1", "X2"))
+  our <- cl$covariates$coefficients
+
+  # Manual reference from raw multinom
+  fit_df <- data.frame(cluster = factor(cl$assignments), X1 = df$X1, X2 = df$X2)
+  fit <- nnet::multinom(cluster ~ X1 + X2, data = fit_df, trace = FALSE)
+  s <- summary(fit)
+  coefs <- s$coefficients
+  ses <- s$standard.errors
+
+  for (i in seq_len(nrow(coefs))) {
+    for (j in seq_len(ncol(coefs))) {
+      est <- coefs[i, j]
+      se <- ses[i, j]
+      z_manual <- est / se
+      p_manual <- 2 * (1 - pnorm(abs(z_manual)))
+      or_manual <- exp(est)
+      ci_lo_manual <- exp(est - 1.96 * se)
+      ci_hi_manual <- exp(est + 1.96 * se)
+
+      row <- our[our$cluster == rownames(coefs)[i] &
+                 our$variable == colnames(coefs)[j], ]
+      expect_equal(row$estimate, est, tolerance = 1e-10)
+      expect_equal(row$std_error, se, tolerance = 1e-10)
+      expect_equal(row$odds_ratio, or_manual, tolerance = 1e-10)
+      expect_equal(row$ci_lower, ci_lo_manual, tolerance = 1e-10)
+      expect_equal(row$ci_upper, ci_hi_manual, tolerance = 1e-10)
+      expect_equal(row$z, z_manual, tolerance = 1e-10)
+      expect_equal(row$p, p_manual, tolerance = 1e-10)
+    }
+  }
+})
+
+# ==============================================================================
+# 20. Covariate analysis — model fit
+# ==============================================================================
+
+test_that("model fit stats are correct", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  fit <- cl$covariates$fit
+  expect_true(is.numeric(fit$aic))
+  expect_true(is.numeric(fit$bic))
+  expect_true(is.numeric(fit$deviance))
+  expect_true(fit$mcfadden_r2 >= 0 && fit$mcfadden_r2 <= 1)
+  expect_equal(fit$reference_cluster, "1")
+})
+
+# ==============================================================================
+# 21. Covariate analysis — S3 methods
+# ==============================================================================
+
+test_that("print shows covariates line", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  out <- capture.output(print(cl))
+  expect_true(any(grepl("Covariates:", out)))
+  expect_true(any(grepl("post-hoc", out)))
+})
+
+test_that("summary shows covariate analysis", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  out <- capture.output(res <- summary(cl))
+  expect_true(any(grepl("Post-hoc Covariate Analysis", out)))
+  expect_true(any(grepl("Predictors of Membership", out)))
+  expect_true(any(grepl("McFadden", out)))
+  expect_true(any(grepl("does not influence", out)))
+  # Return value is a list with cluster_stats and covariates
+  expect_true(is.list(res))
+  expect_true(!is.null(res$cluster_stats))
+  expect_true(!is.null(res$covariates))
+})
+
+test_that("summary without covariates returns data.frame (backwards compat)", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3)
+  out <- capture.output(res <- summary(cl))
+  expect_true(is.data.frame(res))
+})
+
+test_that("plot type='predictors' returns ggplot", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  p <- plot(cl, type = "predictors")
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot type='predictors' errors without covariates", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3)
+  expect_error(plot(cl, type = "predictors"), "No covariate analysis")
+})
+
+# ==============================================================================
+# 22. Covariate analysis — edge cases
+# ==============================================================================
+
+test_that("single covariate works", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = "Age")
+  expect_true(!is.null(cl$covariates))
+  expect_true(all(cl$covariates$coefficients$variable %in%
+                  c("(Intercept)", "Age")))
+})
+
+test_that("covariate with NAs warns and works", {
+  df <- make_cov_data()
+  df$Age[c(1, 5, 10)] <- NA
+  expect_warning(
+    cl <- cluster_data(df, k = 3, covariates = "Age"),
+    "Dropped 3 rows"
+  )
+  expect_true(!is.null(cl$covariates))
+})
+
+test_that("constant covariate errors", {
+  df <- make_cov_data()
+  df$Const <- 5
+  expect_error(
+    cluster_data(df, k = 3, covariates = "Const"),
+    "constant"
+  )
+})
+
+test_that("covariate data.frame row count mismatch errors", {
+  df <- make_cov_data()
+  bad_cov <- data.frame(Age = rnorm(10))
+  expect_error(
+    cluster_data(df, k = 3, covariates = bad_cov),
+    "rows"
+  )
+})
+
+test_that("netobject metadata covariates work", {
+  set.seed(42)
+  df <- data.frame(
+    T1 = sample(LETTERS[1:3], 40, replace = TRUE),
+    T2 = sample(LETTERS[1:3], 40, replace = TRUE),
+    T3 = sample(LETTERS[1:3], 40, replace = TRUE),
+    Age = rnorm(40, 25, 5),
+    Score = runif(40, 0, 100),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(df, method = "relative")
+  # Age and Score are numeric → stored in $metadata
+  expect_true(!is.null(net$metadata))
+  cl <- cluster_data(net, k = 3, covariates = c("Age", "Score"))
+  expect_true(!is.null(cl$covariates))
+  # Should match direct data.frame input
+  cl_df <- cluster_data(df, k = 3, covariates = c("Age", "Score"))
+  expect_equal(cl$covariates$coefficients, cl_df$covariates$coefficients)
+})
+
+test_that("build_network round-trip preserves covariates", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  grp <- build_network(cl)
+  stored <- attr(grp, "clustering")
+  expect_true(!is.null(stored$covariates))
+  expect_equal(stored$covariates$fit$aic, cl$covariates$fit$aic)
+})
