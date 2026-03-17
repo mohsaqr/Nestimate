@@ -108,7 +108,7 @@ centrality_stability <- function(x,
 
   # ---- Setup ----
   net_method <- .resolve_method_alias(x$method)
-  states <- x$nodes
+  states <- x$nodes$label
   n_states <- length(states)
   is_transition <- net_method %in% c("relative", "frequency", "co_occurrence")
   is_relative <- net_method == "relative"
@@ -116,7 +116,7 @@ centrality_stability <- function(x,
   thresh <- x$threshold
 
   # ---- Original centralities ----
-  orig_cents <- .compute_centralities(x$matrix, states, x$directed, measures, loops)
+  orig_cents <- .compute_centralities(x$weights, states, x$directed, measures, loops)
 
   # Drop measures with zero variance (e.g. OutStrength for relative networks)
   keep <- vapply(measures, function(m) sd(orig_cents[[m]]) > 0, logical(1))

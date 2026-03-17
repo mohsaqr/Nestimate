@@ -83,13 +83,13 @@ test_that("permutation_test works with method='relative'", {
   expect_true(is.matrix(perm$p_values))
   expect_true(is.matrix(perm$effect_size))
   expect_equal(dim(perm$diff), c(3, 3))
-  expect_equal(dimnames(perm$diff), list(net1$nodes, net1$nodes))
+  expect_equal(dimnames(perm$diff), list(net1$nodes$label, net1$nodes$label))
 
   # P-values in [0, 1]
   expect_true(all(perm$p_values >= 0 & perm$p_values <= 1))
 
-  # diff = x$matrix - y$matrix
-  expect_equal(perm$diff, net1$matrix - net2$matrix)
+  # diff = x$weights - y$weights
+  expect_equal(perm$diff, net1$weights - net2$weights)
 
   # Summary
   expect_true(is.data.frame(perm$summary))

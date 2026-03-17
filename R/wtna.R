@@ -271,22 +271,35 @@ wtna <- function(data,
   # Extract edges
   edges <- .extract_edges_from_matrix(weights, directed = directed)
 
+  nodes_df <- data.frame(
+    id = seq_along(codes),
+    label = codes,
+    name = codes,
+    x = NA_real_,
+    y = NA_real_,
+    stringsAsFactors = FALSE
+  )
+  wtna_method <- paste0("wtna_", method)
+
   structure(
     list(
       data = data,
-      matrix = weights,
-      nodes = codes,
+      weights = weights,
+      nodes = nodes_df,
+      edges = edges,
       directed = directed,
-      method = paste0("wtna_", method),
+      method = wtna_method,
       params = list(type = type, window_size = 1L, mode = "non-overlapping"),
       scaling = NULL,
       threshold = 0,
       n_nodes = length(codes),
       n_edges = nrow(edges),
-      edges = edges,
-      level = NULL
+      level = NULL,
+      meta = list(source = "nestimate", layout = NULL,
+                  tna = list(method = wtna_method)),
+      node_groups = NULL
     ),
-    class = "netobject"
+    class = c("netobject", "cograph_network")
   )
 }
 

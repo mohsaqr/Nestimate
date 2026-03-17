@@ -40,9 +40,9 @@ test_that("build_mmm models are netobjects", {
 
   expect_s3_class(mmm$models[[1]], "netobject")
   expect_s3_class(mmm$models[[2]], "netobject")
-  expect_equal(nrow(mmm$models[[1]]$matrix), 3)
-  expect_equal(ncol(mmm$models[[1]]$matrix), 3)
-  expect_equal(mmm$models[[1]]$nodes, mmm$states)
+  expect_equal(nrow(mmm$models[[1]]$weights), 3)
+  expect_equal(ncol(mmm$models[[1]]$weights), 3)
+  expect_equal(mmm$models[[1]]$nodes$label, mmm$states)
 })
 
 test_that("build_mmm transition matrices are row-normalized", {
@@ -50,7 +50,7 @@ test_that("build_mmm transition matrices are row-normalized", {
   mmm <- build_mmm(data, k = 2, n_starts = 2, seed = 1)
 
   lapply(mmm$models, function(m) {
-    rs <- rowSums(m$matrix)
+    rs <- rowSums(m$weights)
     expect_equal(unname(rs), rep(1, 3), tolerance = 1e-10)
   })
 })
@@ -81,7 +81,7 @@ test_that("build_mmm recovers two distinct groups", {
   data <- .make_mmm_data(n_per_group = 50, n_cols = 15, seed = 123)
   mmm <- build_mmm(data, k = 2, n_starts = 5, seed = 1)
 
-  diff <- sum(abs(mmm$models[[1]]$matrix - mmm$models[[2]]$matrix))
+  diff <- sum(abs(mmm$models[[1]]$weights - mmm$models[[2]]$weights))
   expect_true(diff > 0.5)
   expect_true(all(mmm$mixing > 0.2))
 })

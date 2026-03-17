@@ -92,11 +92,14 @@ can store and replay the full params list without knowing method internals.}
 \item{...}{Additional arguments passed to the estimator function.}
 }
 \value{
-An object of class \code{"netobject"} containing:
+An object of class \code{c("netobject", "cograph_network")} containing:
 \describe{
-\item{data}{The input data used for estimation, as a matrix.}
-\item{matrix}{The estimated network weight matrix.}
-\item{nodes}{Character vector of node names.}
+\item{data}{The input data used for estimation, as a data frame.}
+\item{weights}{The estimated network weight matrix.}
+\item{nodes}{Data frame with columns \code{id}, \code{label}, \code{name},
+\code{x}, \code{y}. Node labels are in \code{$nodes$label}.}
+\item{edges}{Data frame of non-zero edges with integer \code{from}/\code{to}
+(node IDs) and numeric \code{weight}.}
 \item{directed}{Logical. Whether the network is directed.}
 \item{method}{The resolved method name.}
 \item{params}{The params list used (for reproducibility).}
@@ -104,8 +107,10 @@ An object of class \code{"netobject"} containing:
 \item{threshold}{The threshold applied.}
 \item{n_nodes}{Number of nodes.}
 \item{n_edges}{Number of non-zero edges.}
-\item{edges}{Data frame of non-zero edges (from, to, weight).}
 \item{level}{Decomposition level used (or NULL).}
+\item{meta}{List with \code{source}, \code{layout}, and \code{tna} metadata
+(cograph-compatible).}
+\item{node_groups}{Node groupings data frame, or NULL.}
 }
 Method-specific extras (e.g. \code{precision_matrix}, \code{cor_matrix},
 \code{frequency_matrix}, \code{lambda_selected}, etc.) are preserved

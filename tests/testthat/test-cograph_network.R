@@ -23,10 +23,10 @@ test_that(".as_netobject converts cograph_network to netobject", {
   result <- Nestimate:::.as_netobject(cg)
 
   expect_s3_class(result, "netobject")
-  expect_true(is.matrix(result$matrix))
-  expect_true(is.character(result$nodes))
-  expect_equal(nrow(result$matrix), length(result$nodes))
-  expect_equal(ncol(result$matrix), length(result$nodes))
+  expect_true(is.matrix(result$weights))
+  expect_true(is.data.frame(result$nodes))
+  expect_equal(nrow(result$weights), nrow(result$nodes))
+  expect_equal(ncol(result$weights), nrow(result$nodes))
   expect_true(result$directed)
   expect_equal(result$method, "relative")  # TNA is directed → "relative"
 })
@@ -40,7 +40,7 @@ test_that(".as_netobject decodes integer-encoded data", {
     # All values should be character state labels, not integers
     vals <- unlist(result$data)
     non_na <- vals[!is.na(vals)]
-    expect_true(all(non_na %in% result$nodes))
+    expect_true(all(non_na %in% result$nodes$label))
   }
 })
 
@@ -56,7 +56,7 @@ test_that(".as_netobject preserves matrix values from cograph_network", {
   result <- Nestimate:::.as_netobject(cg)
 
   # Matrix should be identical to the weights in the cograph_network
-  expect_equal(unname(result$matrix), unname(cg$weights))
+  expect_equal(unname(result$weights), unname(cg$weights))
 })
 
 # ---- bootstrap_network ----
@@ -163,13 +163,13 @@ test_that("boot_glasso works with cograph_network wrapping glasso netobject", {
   # Create a fake cograph_network that wraps the glasso data
   cg <- structure(list(
     nodes = data.frame(
-      id = seq_along(net$nodes),
-      label = net$nodes,
+      id = seq_along(net$nodes$label),
+      label = net$nodes$label,
       stringsAsFactors = FALSE
     ),
     edges = data.frame(from = integer(0), to = integer(0)),
     directed = FALSE,
-    weights = net$matrix,
+    weights = net$weights,
     data = net$data,
     meta = list(source = "test", tna = list(method = "glasso"))
   ), class = c("cograph_network", "list"))

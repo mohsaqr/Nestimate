@@ -54,11 +54,14 @@
 #'   session splitting. Default: \code{900}.
 #' @param ... Additional arguments passed to the estimator function.
 #'
-#' @return An object of class \code{"netobject"} containing:
+#' @return An object of class \code{c("netobject", "cograph_network")} containing:
 #' \describe{
-#'   \item{data}{The input data used for estimation, as a matrix.}
-#'   \item{matrix}{The estimated network weight matrix.}
-#'   \item{nodes}{Character vector of node names.}
+#'   \item{data}{The input data used for estimation, as a data frame.}
+#'   \item{weights}{The estimated network weight matrix.}
+#'   \item{nodes}{Data frame with columns \code{id}, \code{label}, \code{name},
+#'     \code{x}, \code{y}. Node labels are in \code{$nodes$label}.}
+#'   \item{edges}{Data frame of non-zero edges with integer \code{from}/\code{to}
+#'     (node IDs) and numeric \code{weight}.}
 #'   \item{directed}{Logical. Whether the network is directed.}
 #'   \item{method}{The resolved method name.}
 #'   \item{params}{The params list used (for reproducibility).}
@@ -66,8 +69,10 @@
 #'   \item{threshold}{The threshold applied.}
 #'   \item{n_nodes}{Number of nodes.}
 #'   \item{n_edges}{Number of non-zero edges.}
-#'   \item{edges}{Data frame of non-zero edges (from, to, weight).}
 #'   \item{level}{Decomposition level used (or NULL).}
+#'   \item{meta}{List with \code{source}, \code{layout}, and \code{tna} metadata
+#'     (cograph-compatible).}
+#'   \item{node_groups}{Node groupings data frame, or NULL.}
 #' }
 #' Method-specific extras (e.g. \code{precision_matrix}, \code{cor_matrix},
 #' \code{frequency_matrix}, \code{lambda_selected}, etc.) are preserved
@@ -383,12 +388,22 @@ build_network <- function(data,
     }
   }
 
-  # Build netobject
+  # Build unified netobject / cograph_network
+  nodes_df <- data.frame(
+    id = seq_along(nodes),
+    label = nodes,
+    name = nodes,
+    x = NA_real_,
+    y = NA_real_,
+    stringsAsFactors = FALSE
+  )
+
   result <- list(
     data = raw_data,
     metadata = metadata,
-    matrix = net_matrix,
-    nodes = nodes,
+    weights = net_matrix,
+    nodes = nodes_df,
+    edges = edges,
     directed = directed,
     method = method,
     params = params,
@@ -396,9 +411,14 @@ build_network <- function(data,
     threshold = threshold,
     n_nodes = length(nodes),
     n_edges = nrow(edges),
-    edges = edges,
     level = level,
-    prepared = prepared
+    prepared = prepared,
+    meta = list(
+      source = "nestimate",
+      layout = NULL,
+      tna = list(method = method)
+    ),
+    node_groups = NULL
   )
 
   # Carry over method-specific extras
@@ -407,7 +427,7 @@ build_network <- function(data,
     result[[key]] <- est_result[[key]]
   }
 
-  structure(result, class = "netobject")
+  structure(result, class = c("netobject", "cograph_network"))
 }
 
 
@@ -578,7 +598,7 @@ plot.netobject <- function(x, predictability = TRUE,
   node_cols <- .node_colors(x$n_nodes)
 
   dots <- list(
-    x = x$matrix,
+    x = x$weights,
     directed = x$directed,
     node_fill = node_cols,
     edge_labels = TRUE,
@@ -641,20 +661,20 @@ plot.netobject_ml <- function(x, predictability = TRUE,
   if (predictability && x$method %in% c("glasso", "pcor", "cor")) {
     r2 <- predictability.netobject_ml(x)
 
-    dots_b <- c(list(x = x$between$matrix,
+    dots_b <- c(list(x = x$between$weights,
                      title = "Between-person",
                      pie_values = r2$between,
                      pie_colors = pie_color),
                 dots)
-    dots_w <- c(list(x = x$within$matrix,
+    dots_w <- c(list(x = x$within$weights,
                      title = "Within-person",
                      pie_values = r2$within,
                      pie_colors = pie_color),
                 dots)
   } else {
-    dots_b <- c(list(x = x$between$matrix,
+    dots_b <- c(list(x = x$between$weights,
                      title = "Between-person"), dots)
-    dots_w <- c(list(x = x$within$matrix,
+    dots_w <- c(list(x = x$within$weights,
                      title = "Within-person"), dots)
   }
 
@@ -720,7 +740,7 @@ predictability.netobject <- function(object, ...) {
   } else {
     # cor method: multiple R² from correlation matrix
     S <- object$cor_matrix
-    net <- object$matrix
+    net <- object$weights
     p <- ncol(net)
     r2 <- vapply(seq_len(p), function(j) {
       neighbors <- which(net[j, ] != 0)
@@ -735,7 +755,7 @@ predictability.netobject <- function(object, ...) {
     }, numeric(1))
   }
   r2 <- pmin(pmax(r2, 0), 1)
-  names(r2) <- colnames(object$matrix)
+  names(r2) <- object$nodes$label
   r2
 }
 

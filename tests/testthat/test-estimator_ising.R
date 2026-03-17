@@ -373,7 +373,7 @@ test_that("Ising: build_network(method='ising') works", {
   expect_equal(net$method, "ising")
   expect_false(net$directed)
   expect_equal(net$n_nodes, 4)
-  expect_true(isSymmetric(net$matrix, tol = 1e-10))
+  expect_true(isSymmetric(net$weights, tol = 1e-10))
 })
 
 test_that("Ising: alias 'isingfit' resolves correctly", {
@@ -419,7 +419,7 @@ test_that("Ising: scaling works with ising method", {
   df <- .make_ising_data(100, 4)
   net <- build_network(df, method = "ising", scaling = "max")
 
-  max_abs <- max(abs(net$matrix))
+  max_abs <- max(abs(net$weights))
   if (max_abs > 0) {
     expect_equal(max_abs, 1, tolerance = 1e-10)
   }
@@ -430,7 +430,7 @@ test_that("Ising: threshold works with ising method", {
   df <- .make_ising_data(100, 4)
   net <- build_network(df, method = "ising", threshold = 0.1)
 
-  nonzero <- net$matrix[net$matrix != 0]
+  nonzero <- net$weights[net$weights != 0]
   if (length(nonzero) > 0) {
     expect_true(all(abs(nonzero) >= 0.1))
   }

@@ -15,7 +15,7 @@ test_that("wtna transition counts match manual crossprod", {
   # Manual: crossprod(X[-5,], X[-1,])
   X <- as.matrix(df)
   expected <- crossprod(X[-5, ], X[-1, ])
-  expect_equal(unname(net$matrix), unname(expected))
+  expect_equal(unname(net$weights), unname(expected))
 })
 
 test_that("wtna cooccurrence counts match crossprod", {
@@ -32,7 +32,7 @@ test_that("wtna cooccurrence counts match crossprod", {
   # Manual: crossprod(X)
   X <- as.matrix(df)
   expected <- crossprod(X)
-  expect_equal(unname(net$matrix), unname(expected))
+  expect_equal(unname(net$weights), unname(expected))
 })
 
 test_that("wtna method='both' returns list of two networks", {
@@ -69,7 +69,7 @@ test_that("wtna non-overlapping window aggregation", {
   agg <- rowsum(X, wid)
   agg[agg > 0] <- 1
   expected <- crossprod(agg[-nrow(agg), , drop = FALSE], agg[-1, , drop = FALSE])
-  expect_equal(unname(net$matrix), unname(expected))
+  expect_equal(unname(net$weights), unname(expected))
 })
 
 test_that("wtna overlapping window aggregation", {
@@ -88,7 +88,7 @@ test_that("wtna overlapping window aggregation", {
   combined <- X[1:3, ] | X[2:4, ]
   storage.mode(combined) <- "integer"
   expected <- crossprod(combined[-3, ], combined[-1, ])
-  expect_equal(unname(net$matrix), unname(expected))
+  expect_equal(unname(net$weights), unname(expected))
 })
 
 test_that("wtna per-actor grouping", {
@@ -108,7 +108,7 @@ test_that("wtna per-actor grouping", {
   t1 <- crossprod(g1[-3, ], g1[-1, ])
   t2 <- crossprod(g2[-3, ], g2[-1, ])
   expected <- t1 + t2
-  expect_equal(unname(net$matrix), unname(expected))
+  expect_equal(unname(net$weights), unname(expected))
 })
 
 test_that("wtna type='relative' row-normalizes", {
@@ -118,7 +118,7 @@ test_that("wtna type='relative' row-normalizes", {
   )
 
   net <- wtna(df, method = "transition", type = "relative")
-  rs <- rowSums(net$matrix)
+  rs <- rowSums(net$weights)
   # Non-zero rows should sum to 1
   non_zero <- rs > 0
   if (any(non_zero)) {
@@ -145,14 +145,14 @@ test_that("wtna auto-detects one-hot columns", {
 
   net <- wtna(df2, method = "transition")
   # Should only use A and B (binary columns)
-  expect_equal(sort(net$nodes), c("A", "B"))
+  expect_equal(sort(net$nodes$label), c("A", "B"))
 })
 
 test_that("wtna single row edge case", {
   df <- data.frame(A = 1, B = 0)
   net <- wtna(df, method = "transition", type = "frequency")
   expect_s3_class(net, "netobject")
-  expect_true(all(net$matrix == 0))
+  expect_true(all(net$weights == 0))
 })
 
 test_that("wtna all-zeros edge case", {
@@ -162,7 +162,7 @@ test_that("wtna all-zeros edge case", {
   )
   net <- wtna(df, method = "transition", type = "frequency")
   expect_s3_class(net, "netobject")
-  expect_true(all(net$matrix == 0))
+  expect_true(all(net$weights == 0))
 })
 
 test_that("wtna single actor with actor param", {
@@ -183,7 +183,7 @@ test_that("wtna cooccurrence is symmetric", {
   )
 
   net <- wtna(df, method = "cooccurrence", type = "frequency")
-  expect_true(isSymmetric(unname(net$matrix)))
+  expect_true(isSymmetric(unname(net$weights)))
 })
 
 test_that("wtna validates inputs", {

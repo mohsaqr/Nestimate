@@ -39,12 +39,12 @@ test_that("estimate_network works with method='relative'", {
   expect_s3_class(net, "netobject")
   expect_equal(net$method, "relative")
   expect_true(net$directed)
-  expect_true(is.matrix(net$matrix))
-  expect_equal(nrow(net$matrix), 3)
-  expect_equal(ncol(net$matrix), 3)
+  expect_true(is.matrix(net$weights))
+  expect_equal(nrow(net$weights), 3)
+  expect_equal(ncol(net$weights), 3)
 
   # Rows should sum to approximately 1
-  row_sums <- rowSums(net$matrix)
+  row_sums <- rowSums(net$weights)
   expect_true(all(abs(row_sums - 1) < 1e-10))
 
   expect_equal(net$n_nodes, 3)
@@ -59,8 +59,8 @@ test_that("estimate_network works with method='frequency'", {
   expect_s3_class(net, "netobject")
   expect_equal(net$method, "frequency")
   expect_true(net$directed)
-  expect_true(is.integer(net$matrix))
-  expect_true(all(net$matrix >= 0))
+  expect_true(is.integer(net$weights))
+  expect_true(all(net$weights >= 0))
 
   # frequency_matrix should be available
   expect_true(!is.null(net$frequency_matrix))
@@ -74,9 +74,9 @@ test_that("estimate_network works with method='co_occurrence'", {
   expect_equal(net$method, "co_occurrence")
   expect_false(net$directed)
   # Symmetric
-  expect_equal(net$matrix, t(net$matrix))
+  expect_equal(net$weights, t(net$weights))
   # Diagonal contains self-co-occurrence counts (non-negative)
-  expect_true(all(diag(net$matrix) >= 0))
+  expect_true(all(diag(net$weights) >= 0))
 })
 
 
@@ -91,11 +91,11 @@ test_that("estimate_network works with method='glasso'", {
   expect_s3_class(net, "netobject")
   expect_equal(net$method, "glasso")
   expect_false(net$directed)
-  expect_true(is.matrix(net$matrix))
-  expect_equal(nrow(net$matrix), 6)
-  expect_true(all(diag(net$matrix) == 0))
+  expect_true(is.matrix(net$weights))
+  expect_equal(nrow(net$weights), 6)
+  expect_true(all(diag(net$weights) == 0))
   # Symmetric
-  expect_equal(net$matrix, t(net$matrix))
+  expect_equal(net$weights, t(net$weights))
   # Method-specific extras
   expect_true(!is.null(net$precision_matrix))
   expect_true(!is.null(net$gamma))
@@ -110,8 +110,8 @@ test_that("estimate_network works with method='pcor'", {
   expect_s3_class(net, "netobject")
   expect_equal(net$method, "pcor")
   expect_false(net$directed)
-  expect_true(all(diag(net$matrix) == 0))
-  expect_equal(net$matrix, t(net$matrix))
+  expect_true(all(diag(net$weights) == 0))
+  expect_equal(net$weights, t(net$weights))
   expect_true(!is.null(net$precision_matrix))
 })
 
@@ -122,8 +122,8 @@ test_that("estimate_network works with method='cor'", {
   expect_s3_class(net, "netobject")
   expect_equal(net$method, "cor")
   expect_false(net$directed)
-  expect_true(all(diag(net$matrix) == 0))
-  expect_equal(net$matrix, t(net$matrix))
+  expect_true(all(diag(net$weights) == 0))
+  expect_equal(net$weights, t(net$weights))
 })
 
 
@@ -165,7 +165,7 @@ test_that("scaling='minmax' works", {
     estimate_network(wide, method = "relative", scaling = "minmax")
   )
 
-  nz <- net$matrix[net$matrix != 0]
+  nz <- net$weights[net$weights != 0]
   if (length(nz) > 1) {
     expect_true(min(nz) >= 0)
     expect_true(max(nz) <= 1 + 1e-10)
@@ -177,7 +177,7 @@ test_that("scaling='max' normalizes by max absolute value", {
   net <- suppressWarnings(
     estimate_network(wide, method = "relative", scaling = "max")
   )
-  expect_true(max(abs(net$matrix)) <= 1 + 1e-10)
+  expect_true(max(abs(net$weights)) <= 1 + 1e-10)
 })
 
 test_that("scaling='rank' replaces values with ranks", {
@@ -185,7 +185,7 @@ test_that("scaling='rank' replaces values with ranks", {
   net <- suppressWarnings(
     estimate_network(wide, method = "relative", scaling = "rank")
   )
-  nz <- net$matrix[net$matrix != 0]
+  nz <- net$weights[net$weights != 0]
   if (length(nz) > 0) {
     # Ranks should be positive integers or half-integers (from ties)
     expect_true(all(nz > 0))
@@ -198,7 +198,7 @@ test_that("scaling='normalize' makes rows sum to ~1 (absolute values)", {
   net <- suppressWarnings(
     estimate_network(wide, method = "relative", scaling = "normalize")
   )
-  rs <- rowSums(abs(net$matrix))
+  rs <- rowSums(abs(net$weights))
   nonzero <- rs > 0
   expect_true(all(abs(rs[nonzero] - 1) < 1e-10))
 })
@@ -210,7 +210,7 @@ test_that("combined scaling works", {
                      scaling = c("rank", "minmax"))
   )
   expect_s3_class(net, "netobject")
-  nz <- net$matrix[net$matrix != 0]
+  nz <- net$weights[net$weights != 0]
   if (length(nz) > 1) {
     expect_true(min(nz) >= 0)
     expect_true(max(nz) <= 1 + 1e-10)
@@ -241,7 +241,7 @@ test_that("threshold filters weak edges", {
 
   expect_true(net_high$n_edges <= net_low$n_edges)
   # All non-zero values should be >= threshold
-  nz <- abs(net_high$matrix[net_high$matrix != 0])
+  nz <- abs(net_high$weights[net_high$weights != 0])
   if (length(nz) > 0) {
     expect_true(all(nz >= 0.3))
   }
@@ -269,7 +269,7 @@ test_that("undirected network uses upper triangle only", {
 
   expect_false(net$directed)
   # n_edges should match upper triangle non-zeros
-  mat <- net$matrix
+  mat <- net$weights
   upper_nz <- sum(upper.tri(mat) & mat != 0)
   expect_equal(net$n_edges, upper_nz)
 })
@@ -376,7 +376,7 @@ test_that("params list is stored and reusable", {
 
   # Can be replayed
   net2 <- build_network(wide, method = net$method, params = net$params)
-  expect_equal(net$matrix, net2$matrix)
+  expect_equal(net$weights, net2$weights)
 })
 
 
@@ -453,7 +453,7 @@ test_that("edges match non-zero entries in matrix (directed)", {
   wide <- .make_wide_seq()
   net <- suppressWarnings(estimate_network(wide, method = "relative"))
 
-  mat <- net$matrix
+  mat <- net$weights
   # All non-diagonal non-zero entries
   expected_n <- sum(mat != 0 & row(mat) != col(mat))
   expect_equal(nrow(net$edges), expected_n)
@@ -463,7 +463,7 @@ test_that("edges match upper triangle (undirected)", {
   df <- .make_assoc_data(n = 80, p = 5)
   net <- suppressWarnings(estimate_network(df, method = "cor"))
 
-  mat <- net$matrix
+  mat <- net$weights
   expected_n <- sum(upper.tri(mat) & mat != 0)
   expect_equal(nrow(net$edges), expected_n)
 })
@@ -482,7 +482,7 @@ test_that("estimate_network works with tna::group_regulation (wide)", {
   expect_true(net$directed)
   expect_equal(net$n_nodes, 9)
   # Rows sum to ~1
-  row_sums <- rowSums(net$matrix)
+  row_sums <- rowSums(net$weights)
   expect_true(all(abs(row_sums - 1) < 1e-10))
 })
 
@@ -494,5 +494,5 @@ test_that("estimate_network frequency matches frequencies() output", {
   )
   freq_mat <- frequencies(tna::group_regulation, format = "wide")
 
-  expect_equal(net$matrix, freq_mat)
+  expect_equal(net$weights, freq_mat)
 })

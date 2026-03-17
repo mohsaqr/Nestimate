@@ -129,7 +129,7 @@ bootstrap_network <- function(x,
 
   # ---- Original network is x itself ----
   original <- x
-  states <- original$nodes
+  states <- original$nodes$label
   n_states <- length(states)
 
   # ---- Dispatch bootstrap ----
@@ -155,7 +155,7 @@ bootstrap_network <- function(x,
 
   # ---- Auto edge_threshold for threshold inference ----
   if (inference == "threshold" && is.null(edge_threshold)) {
-    abs_weights <- abs(as.vector(original$matrix))
+    abs_weights <- abs(as.vector(original$weights))
     nz_weights <- abs_weights[abs_weights > 0]
     edge_threshold <- if (length(nz_weights) > 0) {
       quantile(nz_weights, probs = 0.10)
@@ -167,7 +167,7 @@ bootstrap_network <- function(x,
   # ---- Compute statistics ----
   stats <- .compute_bootstrap_stats(
     boot_matrices = boot_matrices,
-    original_matrix = original$matrix,
+    original_matrix = original$weights,
     states = states,
     directed = directed,
     iter = iter,
@@ -180,7 +180,7 @@ bootstrap_network <- function(x,
   # ---- Build summary data frame ----
   summary_df <- .build_bootstrap_summary(
     stats = stats,
-    original_matrix = original$matrix,
+    original_matrix = original$weights,
     states = states,
     directed = directed,
     ci_level = ci_level,
@@ -192,8 +192,9 @@ bootstrap_network <- function(x,
   pruned_edges <- .extract_edges_from_matrix(pruned_matrix, directed = directed)
 
   model <- list(
-    matrix = pruned_matrix,
-    nodes = states,
+    weights = pruned_matrix,
+    nodes = original$nodes,
+    edges = pruned_edges,
     directed = directed,
     method = method,
     params = params,
@@ -201,10 +202,12 @@ bootstrap_network <- function(x,
     threshold = threshold,
     n_nodes = n_states,
     n_edges = nrow(pruned_edges),
-    edges = pruned_edges,
-    level = level
+    level = level,
+    meta = list(source = "nestimate", layout = NULL,
+                tna = list(method = method)),
+    node_groups = NULL
   )
-  class(model) <- "netobject"
+  class(model) <- c("netobject", "cograph_network")
 
   # ---- Assemble result ----
   result <- list(
@@ -604,7 +607,7 @@ plot.net_bootstrap <- function(x, ...) {
     ...
   )
 
-  dots_orig <- c(list(x = x$original$matrix, title = "Original"), dots)
+  dots_orig <- c(list(x = x$original$weights, title = "Original"), dots)
   dots_sig <- c(list(x = x$significant, title = "Significant"), dots)
 
   do.call(cograph::splot, dots_orig)

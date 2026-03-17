@@ -75,7 +75,7 @@ comp <- compare_mmm(data, k = 2:5, seed = 42)
 plot(comp)
 
 # Access components as netobjects
-mmm$models[[1]]$matrix
+mmm$models[[1]]$weights
 }
 
 }

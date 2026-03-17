@@ -123,9 +123,6 @@ estimate_network <- function(data,
 #'
 #' @noRd
 .extract_edges_from_matrix <- function(mat, directed = FALSE) {
-  nms <- rownames(mat)
-  if (is.null(nms)) nms <- paste0("V", seq_len(nrow(mat)))
-
   if (directed) {
     idx <- which(mat != 0 & row(mat) != col(mat), arr.ind = TRUE)
   } else {
@@ -134,14 +131,14 @@ estimate_network <- function(data,
 
   if (nrow(idx) == 0) {
     return(data.frame(
-      from = character(0), to = character(0),
+      from = integer(0), to = integer(0),
       weight = numeric(0), stringsAsFactors = FALSE
     ))
   }
 
   data.frame(
-    from   = nms[idx[, 1]],
-    to     = nms[idx[, 2]],
+    from   = as.integer(idx[, 1]),
+    to     = as.integer(idx[, 2]),
     weight = mat[idx],
     stringsAsFactors = FALSE
   )

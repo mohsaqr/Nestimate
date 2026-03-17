@@ -183,7 +183,7 @@ reliability <- function(..., iter = 1000L, split = 0.5,
 #' Split-half reliability for transition methods
 #' @noRd
 .reliability_transition <- function(net, method, iter, split, scale) {
-  states <- net$nodes
+  states <- net$nodes$label
   n_states <- length(states)
   nbins <- n_states * n_states
   is_relative <- method == "relative"
@@ -242,7 +242,7 @@ reliability <- function(..., iter = 1000L, split = 0.5,
 #' @noRd
 .reliability_association <- function(net, method, iter, split, scale) {
   data <- net$data
-  states <- net$nodes
+  states <- net$nodes$label
   n_states <- length(states)
   nbins <- n_states * n_states
   scaling <- net$scaling

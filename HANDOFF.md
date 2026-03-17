@@ -2,84 +2,52 @@
 
 ## Completed
 
-### 1. Fixed cluster_data() test failures + added coverage
-- `tests/testthat/test-cluster_data.R`: Fixed 3 bugs (expect_s3_class/expect_null `info` param, wrong encoding assertion, tna ward.D2 lowercasing). Added 10 tests for input extraction (netobject, tna, cograph_network, association rejection) and build_network dispatch.
+### 1. netobject → cograph_network unification (MAJOR)
+- `build_network()` now outputs dual-class `c("netobject", "cograph_network")` objects
+- **Field changes:**
+  - `$matrix` → `$weights` (cograph convention)
+  - `$nodes` char vector → `$nodes` data.frame (id, label, name, x, y)
+  - `$edges` from/to: character labels → integer node IDs
+  - Added `$meta` (source, layout, tna metadata)
+  - Added `$node_groups` (NULL default)
+  - Kept all Nestimate-specific fields: `$method`, `$params`, `$scaling`, `$threshold`, `$level`, `$n_nodes`, `$n_edges`, `$data`, `$metadata`
+- **Files modified (R source):**
+  - `R/build_network.R`: Constructor, print/summary/plot, predictability
+  - `R/estimate_network.R`: `.extract_edges_from_matrix()` → integer from/to
+  - `R/bootstrap_network.R`: All field accesses + pruned model constructor
+  - `R/permutation_test.R`: All field accesses + summary/plot
+  - `R/reliability.R`: `$nodes` → `$nodes$label`
+  - `R/centrality_stability.R`: `$nodes$label`, `$weights`
+  - `R/mcml.R`: `$weights`, `.wrap_netobject()` constructor
+  - `R/mmm.R`: `$nodes$label`, `$weights`, component constructor, S3 methods
+  - `R/wtna.R`: Full constructor updated
+  - `R/utils.R`: `.as_netobject()` returns dual-class, `as_cograph()` simplified
+- **Files modified (tests):** 11 test files, ~100 replacements
+- **Result:** 2235 tests pass, 0 failures
 
-### 2. Post-hoc covariate analysis in cluster_data()
-- `R/cluster_data.R`: `covariates` parameter accepts formula, char vector, string, or data.frame. Runs `nnet::multinom()` after clustering. Cluster profiles (mean/SD/median for numeric, counts/% for categorical) + odds ratio table + AIC/BIC/McFadden R². Updated print/summary/plot. k=2 cross-validated against `glm(binomial)` (max diff 6.7e-6).
-
-### 3. Covariate-integrated MMM in build_mmm()
-- `R/mmm.R`: `covariates` parameter — influences mixing proportions within EM via hand-rolled Newton-Raphson softmax regression. Screen phase without covariates, refine phase with. Relative convergence criterion for perfect-separation. Speed: 3.8x overhead (down from 36x). Beta recovery 1.48 vs true 1.5.
-
-### 4. Code simplification
-- Extracted shared `.print_covariate_profiles()` and `.plot_covariate_forest()` — eliminated ~120 lines duplication. Deleted dead code. Vectorized `.mmm_quality()`. Fixed O(n²) categorical profiles. NaN p-value guard.
-
-### 5. Tutorial QMD
-- `tutorials/nestimate-demo.qmd` + `tutorials/saqrvibcoding.csv`: 17 sections covering all major functions, validated.
-
-### 6. Git repo initialized
-- Commit `8eaf111`: snapshot before unification.
+### Previous work (from prior session)
+- cluster_data() covariates, build_mmm() covariates, tutorial QMD, code simplification
 
 ## Current State
-- **2235 tests pass**, 0 failures. Package installed locally.
-- `as_cograph()` partially written in `R/utils.R` (generic + methods) but untested.
-- `as_tna.netobject` does not exist — only `as_tna.mcml`.
+- **2235 tests pass**, 0 failures, 6 pre-existing warnings
+- All `build_network()` output is now `c("netobject", "cograph_network")`
+- cograph's `splot()` works directly on netobjects via `$weights` matrix
+- `as_cograph()` is now a no-op for netobjects (already cograph_network)
+- `.as_netobject()` upgraded to produce dual-class from pure cograph_network input
 
 ## Key Decisions
-
-### netobject → cograph_network unification (NEXT MAJOR TASK)
-
-**Problem:** Nestimate outputs `netobject`, cograph expects `cograph_network`. No direct interop — users must manually convert to use `splot()`, `communities()`, etc.
-
-**Field mapping:**
-
-| netobject | cograph_network | Notes |
-|-----------|----------------|-------|
-| `$matrix` | `$weights` | Same data |
-| `$nodes` (char vector) | `$nodes` (data.frame: id, label, name, x, y) | Structural change |
-| `$edges` | `$edges` | Check column compat |
-| `$directed` | `$directed` | Same |
-| `$data` | `$data` | Same |
-| `$method` | `$meta$tna$method` | Into meta |
-| `$metadata` | `$meta$metadata` or keep as-is | Covariate columns |
-| `$params`, `$scaling`, `$threshold`, `$level` | `$meta$...` | Into meta |
-| `$n_nodes`, `$n_edges` | Derived | Remove |
-| (none) | `$node_groups` | NULL default |
-
-**Files that access netobject fields:**
-- `R/build_network.R` — creates netobject, print/summary/plot
-- `R/bootstrap_network.R` — `$matrix`, `$data`, `$method`, `$directed`, `$nodes`
-- `R/permutation_test.R` — `$matrix`, `$data`, `$method`, `$directed`
-- `R/reliability.R` — `$data`, `$method`
-- `R/centrality_stability.R` — `$matrix`, `$data`, `$method`, `$directed`, `$nodes`
-- `R/boot_glasso.R` — `$matrix`, `$data`, `$method`
-- `R/cluster_data.R` — `$data`, `$metadata`, `$method` in extractors and covariate resolution
-- `R/mcml.R` — `$matrix`, `$data`, `$nodes`, `$method`, creates netobjects
-- `R/mmm.R` — `$data`, `$nodes`, creates netobjects
-- `R/extraction.R` — `$matrix`, `$nodes`, `$edges`
-- `R/utils.R` — `.as_netobject()` creates netobjects
-- All corresponding test files
-
-**Recommended approach:**
-1. Read cograph's `cograph_network` constructor to understand mandatory fields
-2. Decide: dual-class `c("netobject", "cograph_network")` vs full replacement
-3. Start with `build_network.R` output, update consumers file by file, test after each
-4. Update tests last
-5. Remove `.as_netobject()` when done
+- **Dual-class** `c("netobject", "cograph_network")` — Nestimate methods dispatch on "netobject", cograph methods dispatch on "cograph_network". Both work seamlessly.
+- **`$weights` not `$matrix`** — clean rename, no backward compat alias. Matches cograph convention.
+- **`$nodes` data.frame** — all internal access uses `$nodes$label` for char vector. `$n_nodes` still stored for convenience.
+- **Integer edge IDs** — `$edges$from`/`$to` are integer node IDs matching `$nodes$id`. Matches cograph convention.
 
 ## Open Issues
-- `as_cograph()` in utils.R: partially written, untested. Either complete as stopgap or remove before unification.
-- MMM with many-level categorical covariates can produce NaN SEs (guard added, underlying issue remains).
-- `test-mmm.R` existing tests fail during R CMD check due to parallel fork restrictions (pre-existing).
-- `print.mcml` S3 method conflicts between Nestimate and cograph.
-
-## Next Steps
-1. **Fresh session**: Plan netobject → cograph_network unification. Read cograph's constructor. Write plan.
-2. Execute file by file with tests after each.
-3. Clean up: remove `.as_netobject()`, `as_cograph()`, update CLAUDE.md.
+- HON/HONEM/HYPA/MOGEN classes still use their own `$matrix`/`$nodes` fields (not netobject, separate class hierarchy)
+- `print.mcml` S3 method conflicts between Nestimate and cograph (pre-existing)
+- `test-mmm.R` parallel fork restrictions during R CMD check (pre-existing)
 
 ## Context
-- Nestimate: `/Users/mohammedsaqr/Documents/Github/Nestimate/` (branch: `main`, commit: `8eaf111`)
+- Nestimate: `/Users/mohammedsaqr/Documents/Github/Nestimate/` (branch: `dev-clean`)
 - Cograph: `/Users/mohammedsaqr/Documents/Github/cograph/` (branch: `dev`)
 - R 4.5, macOS Darwin 25.3.0, testthat edition 3
-- Specs: `docs/superpowers/specs/2026-03-17-cluster-covariates-design.md` and `2026-03-17-mmm-covariates-design.md`
+- Git snapshot before unification: commit `8eaf111`

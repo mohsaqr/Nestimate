@@ -176,7 +176,7 @@ test_that("pruned model has <= edges of original", {
   expect_true(boot$model$n_edges <= boot$original$n_edges)
   # Pruned matrix should be zero where not significant
   non_sig <- boot$p_values >= boot$ci_level
-  expect_true(all(boot$model$matrix[non_sig] == 0))
+  expect_true(all(boot$model$weights[non_sig] == 0))
 })
 
 
@@ -188,7 +188,7 @@ test_that("original matches standalone estimate", {
   boot <- bootstrap_network(net, iter = 20L, seed = 1)
 
   # Original should match standalone call
-  expect_equal(boot$original$matrix, net$matrix)
+  expect_equal(boot$original$weights, net$weights)
 })
 
 
@@ -282,7 +282,7 @@ test_that("scaling is applied to bootstrap replicates", {
                                           scaling = "max"),
                             iter = 20L, seed = 1)
   # Original should have max scaling applied
-  expect_true(max(abs(boot$original$matrix)) <= 1 + 1e-10)
+  expect_true(max(abs(boot$original$weights)) <= 1 + 1e-10)
   # Mean bootstrap values should also be bounded
   expect_true(max(abs(boot$mean)) <= 1 + 1e-10)
 })

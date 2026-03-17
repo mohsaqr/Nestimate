@@ -121,14 +121,14 @@ permutation_test <- function(x, y,
          "', y uses '", y$method, "'.", call. = FALSE)
   }
 
-  if (!setequal(x$nodes, y$nodes)) {
+  if (!setequal(x$nodes$label, y$nodes$label)) {
     stop("Nodes must be the same in both networks.", call. = FALSE)
   }
 
   # Ensure same node order
-  nodes <- x$nodes
-  if (!identical(x$nodes, y$nodes)) {
-    y$matrix <- y$matrix[nodes, nodes]
+  nodes <- x$nodes$label
+  if (!identical(x$nodes$label, y$nodes$label)) {
+    y$weights <- y$weights[nodes, nodes]
   }
 
   method <- .resolve_method_alias(x$method)
@@ -148,7 +148,7 @@ permutation_test <- function(x, y,
   }
 
   # ---- Observed difference ----
-  obs_diff <- x$matrix - y$matrix
+  obs_diff <- x$weights - y$weights
 
   # ---- Dispatch permutation ----
   has_data_x <- is.data.frame(x$data) && ncol(x$data) > 0L
@@ -199,8 +199,8 @@ permutation_test <- function(x, y,
     obs_diff = obs_diff,
     p_mat = p_mat,
     es_mat = es_mat,
-    x_matrix = x$matrix,
-    y_matrix = y$matrix,
+    x_matrix = x$weights,
+    y_matrix = y$weights,
     nodes = nodes,
     directed = directed,
     alpha = alpha
@@ -247,7 +247,7 @@ permutation_test <- function(x, y,
   n_total <- n_x + n_y
 
   # Observed diff (recomputed from counts for consistency)
-  obs_flat <- as.vector(x$matrix - y$matrix)
+  obs_flat <- as.vector(x$weights - y$weights)
 
   # Running counters
   exceed_counts <- integer(nbins)
@@ -338,7 +338,7 @@ permutation_test <- function(x, y,
   threshold_y <- y$threshold
   scaling_x <- x$scaling
   scaling_y <- y$scaling
-  obs_flat <- as.vector(x$matrix - y$matrix)
+  obs_flat <- as.vector(x$weights - y$weights)
 
   # Select fast path based on method
   use_fast <- method %in% c("cor", "pcor", "glasso")
@@ -547,7 +547,7 @@ print.net_permutation <- function(x, ...) {
   n_sig <- sum(x$summary$sig)
   n_total <- nrow(x$summary)
   cat(sprintf("  Nodes: %d  |  Edges tested: %d  |  Significant: %d\n",
-              length(x$x$nodes), n_total, n_sig))
+              x$x$n_nodes, n_total, n_sig))
 
   invisible(x)
 }
@@ -600,7 +600,7 @@ plot.net_permutation <- function(x, ...) {
     ...
   )
 
-  dots_x <- c(list(x = x$x$matrix, title = "Network X"), dots)
+  dots_x <- c(list(x = x$x$weights, title = "Network X"), dots)
   dots_y <- c(list(x = x$diff_sig, title = "Significant Differences"), dots)
 
   do.call(cograph::splot, dots_x)

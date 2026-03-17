@@ -310,7 +310,7 @@ cluster_summary <- function(x,
   if (inherits(x, "cograph_network")) {
     mat <- x$weights
   } else if (inherits(x, "netobject") || inherits(x, "netobject_ml")) {
-    mat <- x$matrix
+    mat <- x$weights
   } else if (inherits(x, "tna")) {
     mat <- x$weights
   } else {
@@ -1269,23 +1269,30 @@ as_tna.mcml <- function(x) {
                             directed = TRUE) {
   states <- rownames(mat)
   edges <- .extract_edges_from_matrix(mat, directed = directed)
+  nodes_df <- data.frame(
+    id = seq_along(states), label = states, name = states,
+    x = NA_real_, y = NA_real_, stringsAsFactors = FALSE
+  )
 
   structure(
     list(
-      data      = data,
-      matrix    = mat,
-      nodes     = states,
-      directed  = directed,
-      method    = method,
-      params    = list(),
-      scaling   = NULL,
-      threshold = 0,
-      n_nodes   = length(states),
-      n_edges   = nrow(edges),
-      edges     = edges,
-      level     = NULL
+      data       = data,
+      weights    = mat,
+      nodes      = nodes_df,
+      edges      = edges,
+      directed   = directed,
+      method     = method,
+      params     = list(),
+      scaling    = NULL,
+      threshold  = 0,
+      n_nodes    = length(states),
+      n_edges    = nrow(edges),
+      level      = NULL,
+      meta       = list(source = "nestimate", layout = NULL,
+                        tna = list(method = method)),
+      node_groups = NULL
     ),
-    class = "netobject"
+    class = c("netobject", "cograph_network")
   )
 }
 

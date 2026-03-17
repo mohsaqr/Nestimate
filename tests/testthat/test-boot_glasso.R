@@ -870,7 +870,7 @@ test_that("boot_glasso original matches build_network glasso", {
 
   # The partial correlation matrices should match closely
   # (both use the same lambda path and EBIC selection)
-  expect_equal(result$original_pcor, net$matrix, tolerance = 1e-6)
+  expect_equal(result$original_pcor, net$weights, tolerance = 1e-6)
 })
 
 test_that("boot_glasso CS mean correlations are high for structured data", {

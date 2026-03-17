@@ -46,7 +46,7 @@ test_that("zero-variance columns are dropped with message", {
     "Dropping zero-variance"
   )
   expect_equal(net$n_nodes, 5)
-  expect_false("constant" %in% colnames(net$matrix))
+  expect_false("constant" %in% colnames(net$weights))
 })
 
 test_that("non-syntactic column names are dropped with message", {
@@ -58,7 +58,7 @@ test_that("non-syntactic column names are dropped with message", {
     "non-syntactic"
   )
   expect_equal(net$n_nodes, 4)
-  expect_false("%" %in% colnames(net$matrix))
+  expect_false("%" %in% colnames(net$weights))
 })
 
 test_that("all-NA columns are dropped with message", {
@@ -92,13 +92,13 @@ test_that("build_network works with data frame input (glasso)", {
   expect_equal(net$method, "glasso")
   expect_equal(net$n, 80)
   expect_equal(net$n_nodes, 6)
-  expect_true(is.matrix(net$matrix))
-  expect_equal(nrow(net$matrix), 6)
-  expect_equal(ncol(net$matrix), 6)
+  expect_true(is.matrix(net$weights))
+  expect_equal(nrow(net$weights), 6)
+  expect_equal(ncol(net$weights), 6)
   # Diagonal should be zero
-  expect_true(all(diag(net$matrix) == 0))
+  expect_true(all(diag(net$weights) == 0))
   # Should be symmetric
-  expect_equal(net$matrix, t(net$matrix))
+  expect_equal(net$weights, t(net$weights))
   # Edges data frame
   expect_true(is.data.frame(net$edges))
   expect_true(all(c("from", "to", "weight") %in% names(net$edges)))
@@ -159,11 +159,11 @@ test_that("build_network works with method='pcor'", {
   expect_equal(net$method, "pcor")
   expect_equal(net$n, 80)
   expect_equal(net$n_nodes, 5)
-  expect_true(is.matrix(net$matrix))
+  expect_true(is.matrix(net$weights))
   # Diagonal should be zero
-  expect_true(all(diag(net$matrix) == 0))
+  expect_true(all(diag(net$weights) == 0))
   # Should be symmetric
-  expect_equal(net$matrix, t(net$matrix))
+  expect_equal(net$weights, t(net$weights))
   # Should have precision matrix
   expect_true(!is.null(net$precision_matrix))
   # Edges
@@ -203,11 +203,11 @@ test_that("build_network works with method='cor'", {
   expect_equal(net$method, "cor")
   expect_equal(net$n, 80)
   expect_equal(net$n_nodes, 5)
-  expect_true(is.matrix(net$matrix))
+  expect_true(is.matrix(net$weights))
   # Diagonal should be zero
-  expect_true(all(diag(net$matrix) == 0))
+  expect_true(all(diag(net$weights) == 0))
   # Should be symmetric
-  expect_equal(net$matrix, t(net$matrix))
+  expect_equal(net$weights, t(net$weights))
   # No precision matrix for cor method
   expect_null(net$precision_matrix)
   # Edges
@@ -236,7 +236,7 @@ test_that("cor matrix matches thresholded cor_matrix", {
   expected <- net$cor_matrix
   diag(expected) <- 0
   expected[abs(expected) < thr] <- 0
-  expect_equal(net$matrix, expected)
+  expect_equal(net$weights, expected)
 })
 
 
@@ -261,8 +261,8 @@ test_that("id_col columns are excluded from analysis", {
 
   # subject_id and rid should be excluded -> 5 variables
   expect_equal(net$n_nodes, 5)
-  expect_false("subject_id" %in% colnames(net$matrix))
-  expect_false("rid" %in% colnames(net$matrix))
+  expect_false("subject_id" %in% colnames(net$weights))
+  expect_false("rid" %in% colnames(net$weights))
 })
 
 
@@ -342,14 +342,12 @@ test_that("edges match non-zero upper triangle of matrix", {
   df <- .make_freq_data(n = 100, p = 6)
   net <- build_network(df, method = "glasso", params = list(nlambda = 30L))
 
-  mat <- net$matrix
+  mat <- net$weights
   upper_nz <- which(upper.tri(mat) & mat != 0, arr.ind = TRUE)
   expect_equal(nrow(net$edges), nrow(upper_nz))
 
   for (i in seq_len(nrow(net$edges))) {
-    r <- match(net$edges$from[i], colnames(mat))
-    cc <- match(net$edges$to[i], colnames(mat))
-    expect_equal(net$edges$weight[i], mat[r, cc])
+    expect_equal(net$edges$weight[i], mat[net$edges$from[i], net$edges$to[i]])
   }
 })
 
@@ -357,12 +355,12 @@ test_that("edges match for pcor and cor methods too", {
   df <- .make_freq_data(n = 80, p = 5)
 
   net_pcor <- build_network(df, method = "pcor")
-  mat <- net_pcor$matrix
+  mat <- net_pcor$weights
   upper_nz <- which(upper.tri(mat) & mat != 0, arr.ind = TRUE)
   expect_equal(nrow(net_pcor$edges), nrow(upper_nz))
 
   net_cor <- build_network(df, method = "cor", threshold = 0.1)
-  mat <- net_cor$matrix
+  mat <- net_cor$weights
   upper_nz <- which(upper.tri(mat) & mat != 0, arr.ind = TRUE)
   expect_equal(nrow(net_cor$edges), nrow(upper_nz))
 })
@@ -380,11 +378,11 @@ test_that("all methods produce consistent structure", {
     expect_equal(net$method, m)
     expect_equal(net$n, 80)
     expect_equal(net$n_nodes, 5)
-    expect_true(is.matrix(net$matrix))
+    expect_true(is.matrix(net$weights))
     expect_true(is.matrix(net$cor_matrix))
     expect_true(is.data.frame(net$edges))
     expect_true(is.numeric(net$n_edges))
-    expect_true(all(diag(net$matrix) == 0))
+    expect_true(all(diag(net$weights) == 0))
   }
 })
 
@@ -598,7 +596,7 @@ test_that("predictability returns named numeric vector for glasso", {
 
   expect_true(is.numeric(r2))
   expect_equal(length(r2), 5)
-  expect_equal(names(r2), colnames(net$matrix))
+  expect_equal(names(r2), colnames(net$weights))
   expect_true(all(r2 >= 0 & r2 <= 1))
 })
 
@@ -630,7 +628,7 @@ test_that("predictability.cor returns 0 for isolated nodes", {
 
   # Isolated nodes (no edges) should have R^2 = 0
   isolated <- vapply(seq_len(net$n_nodes), function(j) {
-    all(net$matrix[j, ] == 0)
+    all(net$weights[j, ] == 0)
   }, logical(1))
   if (any(isolated)) {
     expect_true(all(r2[isolated] == 0))

@@ -90,14 +90,15 @@ safe_sd <- function(x) {
 }
 
 
-#' Convert cograph_network to netobject
+#' Convert pure cograph_network to dual-class netobject/cograph_network
 #'
 #' Internal converter so that downstream functions (bootstrap, permutation,
 #' reliability, etc.) can accept either \code{netobject} or
-#' \code{cograph_network} inputs transparently.
+#' \code{cograph_network} inputs transparently. Objects that already have
+#' the \code{"netobject"} class are returned unchanged.
 #'
 #' @param x A \code{netobject} (returned unchanged) or \code{cograph_network}.
-#' @return A \code{netobject}.
+#' @return A dual-class \code{c("netobject", "cograph_network")} object.
 #' @noRd
 .as_netobject <- function(x) {
   if (inherits(x, "netobject")) return(x)
@@ -106,7 +107,8 @@ safe_sd <- function(x) {
   }
 
   mat <- x$weights
-  states <- x$nodes$label
+  nodes_df <- x$nodes
+  states <- nodes_df$label
   raw_data <- x$data
   directed <- x$directed %||% TRUE
 
@@ -123,7 +125,6 @@ safe_sd <- function(x) {
   is_sequence_method <- method %in% c(
     "relative", "frequency", "co_occurrence", "attention"
   )
-
 
   # Decode integer-encoded tna data -> character labels
   # Only for sequence methods; association methods keep numeric data as-is
@@ -142,18 +143,25 @@ safe_sd <- function(x) {
   edges <- .extract_edges_from_matrix(mat, directed = directed)
 
   structure(list(
-    data = raw_data, matrix = mat, nodes = states,
-    directed = directed, method = method,
+    data = raw_data, weights = mat, nodes = nodes_df,
+    edges = edges, directed = directed, method = method,
     params = list(), scaling = NULL, threshold = 0,
     n_nodes = length(states), n_edges = nrow(edges),
-    edges = edges, level = NULL
-  ), class = "netobject")
+    level = NULL,
+    meta = x$meta %||% list(source = "cograph", layout = NULL,
+                            tna = list(method = method)),
+    node_groups = x$node_groups
+  ), class = c("netobject", "cograph_network"))
 }
 
 
-#' Convert netobject to cograph_network
+#' Convert to cograph_network
 #'
-#' @param x A \code{netobject}.
+#' Since \code{netobject} now inherits from \code{cograph_network}, this
+#' function returns the object as-is for netobjects. For other inputs it
+#' uses \code{cograph::cograph()} if the cograph package is available.
+#'
+#' @param x An object to convert.
 #' @param ... Additional arguments passed to \code{cograph::cograph()}.
 #' @return A \code{cograph_network}.
 #'
@@ -165,13 +173,14 @@ as_cograph <- function(x, ...) {
 #' @rdname as_cograph
 #' @export
 as_cograph.netobject <- function(x, ...) {
-  if (!requireNamespace("cograph", quietly = TRUE)) {
-    stop("Package 'cograph' is required.", call. = FALSE)
-  }
-  cg <- cograph::cograph(x$matrix, directed = x$directed, ...)
-  cg$data <- x$data
-  cg$meta$tna$method <- x$method
-  cg
+  # Already a cograph_network via dual class
+  x
+}
+
+#' @rdname as_cograph
+#' @export
+as_cograph.cograph_network <- function(x, ...) {
+  x
 }
 
 #' @rdname as_cograph
@@ -194,6 +203,8 @@ as_cograph.netobject_group <- function(x, ...) {
 #' @rdname as_cograph
 #' @export
 as_cograph.default <- function(x, ...) {
-  stop(sprintf("Cannot convert object of class '%s' to cograph_network.",
-               paste(class(x), collapse = ", ")), call. = FALSE)
+  if (!requireNamespace("cograph", quietly = TRUE)) {
+    stop("Package 'cograph' is required.", call. = FALSE)
+  }
+  cograph::cograph(x, ...)
 }

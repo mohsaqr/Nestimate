@@ -362,7 +362,7 @@
 #' plot(comp)
 #'
 #' # Access components as netobjects
-#' mmm$models[[1]]$matrix
+#' mmm$models[[1]]$weights
 #' }
 #'
 #' @seealso \code{\link{compare_mmm}}, \code{\link{build_network}}
@@ -397,13 +397,14 @@ build_mmm <- function(data,
            "Rebuild with tna::tna(data) where data is kept.", call. = FALSE)
     }
     raw_data <- .mmm_decode_int_data(raw_data, states)
-  } else if (inherits(data, "cograph_network")) {
+  } else if (inherits(data, "cograph_network") && !inherits(data, "netobject")) {
+    # Pure cograph_network (from cograph package): coerce to decode integer data
     data <- .as_netobject(data)
     raw_data <- data$data
-    states <- data$nodes
+    states <- data$nodes$label
   } else if (inherits(data, "netobject")) {
     raw_data <- data$data
-    states <- data$nodes
+    states <- data$nodes$label
   } else {
     raw_data <- as.data.frame(data)
     state_cols <- .select_state_cols(raw_data, id = NULL, cols = NULL)
@@ -541,10 +542,15 @@ build_mmm <- function(data,
 
     edges <- .extract_edges_from_matrix(P_mat, directed = TRUE)
 
+    nodes_df <- data.frame(
+      id = seq_along(states), label = states, name = states,
+      x = NA_real_, y = NA_real_, stringsAsFactors = FALSE
+    )
     structure(list(
       data = raw_data,
-      matrix = P_mat,
-      nodes = states,
+      weights = P_mat,
+      nodes = nodes_df,
+      edges = edges,
       directed = TRUE,
       method = "relative",
       params = list(),
@@ -552,9 +558,11 @@ build_mmm <- function(data,
       threshold = 0,
       n_nodes = n_states,
       n_edges = nrow(edges),
-      edges = edges,
-      level = NULL
-    ), class = "netobject")
+      level = NULL,
+      meta = list(source = "nestimate", layout = NULL,
+                  tna = list(method = "relative")),
+      node_groups = NULL
+    ), class = c("netobject", "cograph_network"))
   })
 
   names(models) <- paste0("Component_", seq_len(k))
@@ -685,7 +693,7 @@ summary.net_mmm <- function(object, ...) {
     n_in <- sum(object$assignments == m)
     cat(sprintf("--- Cluster %d (%.1f%%, n=%d) ---\n",
                 m, object$mixing[m] * 100, n_in))
-    print(round(object$models[[m]]$matrix, 3))
+    print(round(object$models[[m]]$weights, 3))
     cat("\n")
   }
 
@@ -728,7 +736,7 @@ plot.net_mmm <- function(x, type = c("networks", "posterior", "covariates"), ...
     n_in <- sum(x$assignments == m)
     title <- sprintf("Cluster %d (%.0f%%, n=%d)",
                      m, x$mixing[m] * 100, n_in)
-    cograph::splot(x$models[[m]]$matrix, title = title, ...)
+    cograph::splot(x$models[[m]]$weights, title = title, ...)
   })
 
   if (requireNamespace("patchwork", quietly = TRUE)) {

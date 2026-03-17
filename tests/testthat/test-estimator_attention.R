@@ -15,9 +15,9 @@ test_that("attention estimator basic forward counting", {
   expect_s3_class(net, "netobject")
   expect_true(net$directed)
   expect_equal(net$method, "attention")
-  expect_true(all(net$matrix >= 0))
+  expect_true(all(net$weights >= 0))
   # Forward direction: (T1,T2), (T1,T3), (T2,T3)
-  expect_true(nrow(net$matrix) > 0)
+  expect_true(nrow(net$weights) > 0)
 })
 
 test_that("attention estimator alias works", {
@@ -47,7 +47,7 @@ test_that("attention estimator with custom lambda", {
 
   # Smaller lambda = faster decay = less weight on distant pairs
   # So total weight should be less with smaller lambda
-  expect_true(sum(net1$matrix) < sum(net2$matrix))
+  expect_true(sum(net1$weights) < sum(net2$weights))
 })
 
 test_that("attention estimator direction parameter", {
@@ -66,7 +66,7 @@ test_that("attention estimator direction parameter", {
 
   # With 2 columns, forward has (1,2), backward has (2,1)
   # "both" should be the sum of forward + backward
-  expect_equal(sum(both$matrix), sum(fwd$matrix) + sum(bwd$matrix),
+  expect_equal(sum(both$weights), sum(fwd$weights) + sum(bwd$weights),
                tolerance = 1e-10)
 })
 
@@ -86,7 +86,7 @@ test_that("attention estimator custom decay function", {
   net <- build_network(wide_data, method = "attention",
                        params = list(format = "wide", decay = linear_decay))
   expect_s3_class(net, "netobject")
-  expect_true(all(net$matrix >= 0))
+  expect_true(all(net$weights >= 0))
 })
 
 test_that("attention estimator custom time_matrix", {
@@ -129,7 +129,7 @@ test_that("attention estimator handles NAs", {
   net <- build_network(wide_data, method = "attention",
                        params = list(format = "wide"))
   expect_s3_class(net, "netobject")
-  expect_true(all(net$matrix >= 0))
+  expect_true(all(net$weights >= 0))
 })
 
 test_that("attention estimator long format", {
@@ -145,7 +145,7 @@ test_that("attention estimator long format", {
                                      id = "Actor", time = "Time"))
   expect_s3_class(net, "netobject")
   expect_true(net$directed)
-  expect_equal(sort(net$nodes), c("A", "B"))
+  expect_equal(sort(net$nodes$label), c("A", "B"))
 })
 
 test_that("attention estimator print label", {
@@ -172,7 +172,7 @@ test_that("attention estimator is NOT row-normalized", {
   net <- build_network(wide_data, method = "attention",
                        params = list(format = "wide"))
   # Raw attention counts should not sum to 1 per row
-  rs <- rowSums(net$matrix)
+  rs <- rowSums(net$weights)
   expect_false(all(abs(rs - 1) < 1e-10))
 })
 
@@ -203,10 +203,10 @@ test_that("attention estimator cross-validates with tna::atna on simple data", {
   if (!is.null(tna_model)) {
     tna_mat <- tna_model$weights
     # Both should have same states
-    expect_equal(sort(rownames(net$matrix)), sort(rownames(tna_mat)))
+    expect_equal(sort(rownames(net$weights)), sort(rownames(tna_mat)))
     # Compare values (allow tolerance for different implementations)
-    common <- sort(rownames(net$matrix))
-    nest_mat <- net$matrix[common, common]
+    common <- sort(rownames(net$weights))
+    nest_mat <- net$weights[common, common]
     tna_ref <- tna_mat[common, common]
     # Check correlation is high (same relative pattern)
     if (sum(nest_mat) > 0 && sum(tna_ref) > 0) {

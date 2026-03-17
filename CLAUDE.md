@@ -48,7 +48,7 @@ See `docs/ARCHITECTURE.md` for the full module map.
 
 Custom estimators added via `register_estimator(name, fn, description, directed)`. `estimate_network()` is a thin wrapper around `build_network()`.
 
-Returns `netobject` S3 class. Supports multilevel decomposition (`level = "between"/"within"/"both"` → `netobject_ml`).
+Returns dual-class `c("netobject", "cograph_network")` S3 objects. The `netobject` class provides Nestimate-specific methods; the `cograph_network` class enables direct use with cograph functions (`splot()`, `communities()`, etc.). Key fields: `$weights` (matrix), `$nodes` (data.frame with id/label/name/x/y), `$edges` (integer from/to + weight), `$meta`, `$node_groups`, plus Nestimate extras (`$method`, `$params`, `$scaling`, `$threshold`, `$level`, `$n_nodes`, `$n_edges`, `$data`, `$metadata`). Supports multilevel decomposition (`level = "between"/"within"/"both"` → `netobject_ml`).
 
 ### S3 Class System
 
@@ -56,7 +56,7 @@ All classes have `print`, `summary`, `plot` methods. Naming convention:
 
 | Class | Source | Returns from |
 |-------|--------|-------------|
-| `netobject` / `netobject_ml` | `build_network.R` | `build_network()` |
+| `c("netobject", "cograph_network")` / `netobject_ml` | `build_network.R` | `build_network()` |
 | `saqr_bootstrap` | `bootstrap_network.R` | `bootstrap_network()` |
 | `boot_glasso` | `boot_glasso.R` | `boot_glasso()` |
 | `saqr_permutation` | `permutation_test.R` | `permutation_test()` |
