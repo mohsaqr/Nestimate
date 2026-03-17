@@ -388,8 +388,8 @@ test_that("print.netobject works for transition", {
   out <- capture.output(print(net))
   expect_true(any(grepl("Transition Network", out)))
   expect_true(any(grepl("directed", out)))
-  expect_true(any(grepl("Nodes:", out)))
-  expect_true(any(grepl("Edges:", out)))
+  expect_true(any(grepl("Nodes", out)))
+  expect_true(any(grepl("Edges", out)))
 })
 
 test_that("print.netobject works for association", {

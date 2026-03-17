@@ -288,7 +288,7 @@ test_that("print.netobject produces expected output for glasso", {
 
   out <- capture.output(print(net))
   expect_true(any(grepl("Partial Correlation Network \\(EBICglasso\\)", out)))
-  expect_true(any(grepl("Nodes: 5", out)))
+  expect_true(any(grepl("Nodes \\(5\\)", out)))
   expect_true(any(grepl("Sample size: 80", out)))
   expect_true(any(grepl("Gamma:", out)))
   expect_true(any(grepl("Lambda:", out)))
@@ -697,5 +697,5 @@ test_that("print.netobject shows data dimensions", {
   net <- build_network(df, method = "glasso", params = list(nlambda = 20L))
 
   out <- capture.output(print(net))
-  expect_true(any(grepl("Data: 80 x 5", out)))
+  expect_true(any(grepl("Data: 80 sequences", out)))
 })
