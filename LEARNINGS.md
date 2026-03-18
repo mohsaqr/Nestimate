@@ -39,3 +39,13 @@
 - [mmm covariate columns]: When `build_mmm()` receives a data.frame with covariate columns (numeric like Age), `.select_state_cols()` picks them up as state columns, inflating state count. Must strip covariate column names from `raw_data` before state extraction.
 - [nnet::multinom matrix response]: `nnet::multinom()` accepts an N x k matrix as response — treats rows as multinomial proportions. This is the correct approach for soft-EM M-step. No weights needed; the posteriors already encode soft assignments.
 - [mmm label switching]: EM may permute cluster labels relative to ground truth. Beta coefficients may have opposite sign. Tests must check both orderings (or use absolute values).
+
+### 2026-03-18
+- [graphical VAR own implementation]: Two-step approach (lasso beta → glasso kappa → EBIC) produces beta correlations ≥0.98 vs graphicalVAR package across 5 datasets. PCC magnitude can differ on contemporaneous-heavy data because graphicalVAR alternates beta↔kappa jointly while our approach fixes beta first. Same edges detected, different magnitudes.
+- [coordinate descent vs glmnet]: Own coordinate descent (200 iterations, 1e-8 tol) matched graphicalVAR better than glmnet on some datasets. glmnet's own lambda path diverges from graphicalVAR's grid, causing worse PCC estimates. Stick with coordinate descent.
+- [EBIC formula sensitivity]: Using `4*gamma` vs `2*gamma` or `log(d)` vs `log(p_possible)` in the EBIC penalty dramatically changes model selection. The formula `2*gamma*n_params*log(p_possible)` with `p_possible = d*d + d*(d-1)/2` gave best overall match to graphicalVAR.
+- [centrality_fn pattern]: When removing igraph as a hard dependency, expose a `centrality_fn` parameter that accepts a function `f(matrix) → named list`. Default computes strength via rowSums/colSums. Users/cograph supply their own for betweenness/closeness.
+- [CRAN @return requirement]: ALL exported functions need `@return`, including S3 print/summary/plot methods. Use `@return The input object, invisibly.` for print/summary, `@return A \code{ggplot} object, invisibly.` for plot.
+- [CRAN DESCRIPTION]: Never start with "This package" or "Comprehensive toolkit". Expand all acronyms on first mention. Add `[cph]` to Authors@R. Keep Title < 65 chars in title case.
+- [_R_CHECK_LIMIT_CORES_]: `build_mmm()` uses `parallel::mclapply()` which fails during R CMD check. Guard with `if (isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE")))) n_cores <- 1L`.
+- [.Rbuildignore .claude]: The `.claude` directory must be excluded — R CMD check --as-cran flags hidden directories.

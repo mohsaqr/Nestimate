@@ -162,5 +162,8 @@ Network comparison functions in `network_comparison.R` (correlation, RMSE, MAE, 
 
 ## Dependencies
 
-**Imports:** tna, igraph, ggplot2, glasso, data.table
-**Suggests:** testthat, lavaan, cograph, glmnet, network, sna
+**Imports (4):** ggplot2, glasso, data.table, cluster
+**Suggests (source, 7):** tna, glmnet, lavaan, lme4, stringdist, nnet, cograph
+**Suggests (test-only, 8):** testthat, igraph, IsingFit, bootnet, gimme, mlVAR, qgraph, reticulate
+
+Nestimate is a computation engine — no plot methods delegate to cograph. Users call `cograph::splot(net)` directly. The `centrality_fn` parameter in `centrality_stability()` and `boot_glasso()` accepts an external centrality function (igraph is not required).

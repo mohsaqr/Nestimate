@@ -1,5 +1,25 @@
 # Changes
 
+### 2026-03-18 — v0.2.0: Dependency reduction, coverage, CRAN prep
+- DESCRIPTION: Reduced Imports from 6 to 4 (removed igraph, tna). Version 0.2.0.
+- R/graphical_var.R: Reimplemented from scratch — own coordinate descent lasso + glasso + EBIC. Dropped graphicalVAR dependency and ml_graphical_var().
+- R/centrality_stability.R: Added `centrality_fn` parameter, removed igraph dependency. Built-in strength via rowSums/colSums.
+- R/boot_glasso.R: Added `centrality_fn` parameter, removed igraph dependency. Removed cograph plot branch.
+- R/build_network.R: Removed plot.netobject, plot.netobject_ml (cograph wrappers).
+- R/bootstrap_network.R: Removed plot.net_bootstrap (cograph wrapper).
+- R/permutation_test.R: Removed plot.net_permutation (cograph wrapper).
+- R/gimme.R: Removed cograph branches from plot.net_gimme.
+- R/hon.R: Removed plot.net_hon (cograph wrapper).
+- R/hypa.R: Removed plot.net_hypa (cograph wrapper).
+- R/mmm.R: Removed cograph/patchwork from plot.net_mmm. Added _R_CHECK_LIMIT_CORES_ guard.
+- R/mogen.R: Removed cograph branch from plot.net_mogen.
+- R/utils.R: Removed as_cograph() and all methods.
+- R/Nestimate-package.R: Removed @import tna, @importFrom igraph. Added @return to 39 exported functions.
+- R/mcml.R: Fixed example, @noRd ordering, added print/summary roxygen.
+- Tests: 2780 total (up from 2235), coverage 96.1%. Code review fixes applied.
+- CRAN: NEWS.md, cran-comments.md, .Rbuildignore (.claude), DESCRIPTION (cph, acronyms, URL). R CMD check --as-cran: 0/0/0.
+- docs/cograph-interface.md: Object format spec for cograph integration.
+
 ### 2026-03-17 — Add coverage tests for hon/honem/hypa/mogen/pathways
 - tests/testthat/test-hon.R: Added Section 11 (16 tests) covering .hon_parse_input all-NA rows, invalid type stop, collapse_repeats edge cases, .hon_kld empty/Inf paths, .hon_get_extensions missing order, .hon_sequence_to_node empty input, .hon_graph_to_edgelist empty graph, .hon_assemble_output empty rules, build_hon no-valid-trajectories stop, plot.net_hon branches (no-cograph, no-HO-pathways, successful). Added Section 12 (6 tests) for pathways.net_hon: character return, empty for first-order HON, min_count/top/min_prob/order filters. 237 pass, 1 skip.
 - tests/testthat/test-honem.R: Added Section 7 (1 test) for plot.net_honem dim<2 message. 31 pass.
