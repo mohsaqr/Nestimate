@@ -926,6 +926,13 @@ build_gimme <- function(data,
 # S3 Methods
 # ============================================================================
 
+#' Print Method for net_gimme
+#'
+#' @param x A \code{net_gimme} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_gimme <- function(x, ...) {
   cat("GIMME Network Analysis\n")
@@ -955,6 +962,13 @@ print.net_gimme <- function(x, ...) {
 }
 
 
+#' Summary Method for net_gimme
+#'
+#' @param object A \code{net_gimme} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.net_gimme <- function(object, ...) {
   cat("GIMME Network Analysis -- Summary\n")
@@ -998,6 +1012,16 @@ summary.net_gimme <- function(object, ...) {
 }
 
 
+#' Plot Method for net_gimme
+#'
+#' @param x A \code{net_gimme} object.
+#' @param type Character. Plot type: \code{"temporal"}, \code{"contemporaneous"},
+#'   \code{"individual"}, \code{"counts"}, or \code{"fit"}.
+#' @param subject Integer or character. Subject to plot for \code{type = "individual"}.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 plot.net_gimme <- function(x, type = c("temporal", "contemporaneous",
                                           "individual", "counts", "fit"),

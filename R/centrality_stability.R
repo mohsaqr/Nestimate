@@ -342,6 +342,8 @@ centrality_stability <- function(x,
 #' @param x A \code{net_stability} object.
 #' @param ... Additional arguments (ignored).
 #'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_stability <- function(x, ...) {
   cat(sprintf("Centrality Stability (%d iterations, threshold = %.1f)\n",

@@ -1368,7 +1368,13 @@ as_tna.default <- function(x) {
 # S3 Methods
 # ==============================================================================
 
-#' @noRd
+#' Print Method for mcml
+#'
+#' @param x An \code{mcml} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.mcml <- function(x, ...) {
   n_clusters <- x$meta$n_clusters
@@ -1400,7 +1406,13 @@ print.mcml <- function(x, ...) {
   invisible(x)
 }
 
-#' @noRd
+#' Summary Method for mcml
+#'
+#' @param object An \code{mcml} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.mcml <- function(object, ...) {
   print(object, ...)

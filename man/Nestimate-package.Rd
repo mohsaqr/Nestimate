@@ -6,10 +6,18 @@
 \alias{Nestimate-package}
 \title{Nestimate: Network Estimation, Bootstrap, and Temporal Analysis}
 \description{
-Comprehensive toolkit for network estimation from sequence and panel data. Supports transition networks (relative, frequency, co-occurrence), association networks (correlation, partial correlation, graphical lasso, Ising), bootstrap inference, permutation testing, higher-order networks (HON, HONEM, HYPA, MOGen), GIMME (group iterative multiple model estimation), multi-cluster multi-layer networks (MCML), multilevel VAR, graphical VAR, and temporal network analysis with time-varying centrality, velocity, and proximity timelines.
+Estimate networks from sequence and panel data. Supports transition networks (relative, frequency, co-occurrence), association networks (correlation, partial correlation, graphical lasso, Ising), bootstrap inference, permutation testing, and higher-order networks (Higher-Order Network, Higher-Order Network Embedding, Hyper-Path Anomaly, Multi-Order Generative Model). Includes Group Iterative Multiple Model Estimation (GIMME), multi-cluster multi-layer networks (MCML), multilevel vector autoregression (VAR), graphical VAR, and temporal network analysis with time-varying centrality, velocity, and proximity timelines.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/mohsaqr/Nestimate}
+  \item Report bugs at \url{https://github.com/mohsaqr/Nestimate/issues}
+}
+
 }
 \author{
-\strong{Maintainer}: Mohammed Saqr \email{saqr@saqr.me}
+\strong{Maintainer}: Mohammed Saqr \email{saqr@saqr.me} [copyright holder]
 
 }
 \keyword{internal}

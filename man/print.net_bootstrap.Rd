@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments (ignored).}
 }
+\value{
+The input object, invisibly.
+}
 \description{
 Print Method for net_bootstrap
 }

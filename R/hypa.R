@@ -227,6 +227,13 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
 # S3 methods
 # ---------------------------------------------------------------------------
 
+#' Print Method for net_hypa
+#'
+#' @param x A \code{net_hypa} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_hypa <- function(x, ...) {
   cat("HYPA: Path Anomaly Detection\n")
@@ -238,6 +245,13 @@ print.net_hypa <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary Method for net_hypa
+#'
+#' @param object A \code{net_hypa} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.net_hypa <- function(object, ...) {
   cat("HYPA Summary\n\n")

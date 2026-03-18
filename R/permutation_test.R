@@ -516,6 +516,8 @@ permutation_test <- function(x, y,
 #' @param x A \code{net_permutation} object.
 #' @param ... Additional arguments (ignored).
 #'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_permutation <- function(x, ...) {
   method_labels <- c(

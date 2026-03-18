@@ -438,6 +438,8 @@ build_network <- function(data,
 #' @param x A \code{netobject}.
 #' @param ... Additional arguments (ignored).
 #'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.netobject <- function(x, ...) {
   method_labels <- c(
@@ -564,6 +566,8 @@ print.netobject <- function(x, ...) {
 #' @param x A \code{netobject_group}.
 #' @param ... Additional arguments (ignored).
 #'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.netobject_group <- function(x, ...) {
   grps <- names(x)
@@ -580,6 +584,8 @@ print.netobject_group <- function(x, ...) {
 #'
 #' @param x A \code{netobject_ml}.
 #' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
 #'
 #' @export
 print.netobject_ml <- function(x, ...) {

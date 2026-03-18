@@ -357,6 +357,8 @@ reliability <- function(..., iter = 1000L, split = 0.5,
 #' @param x A \code{net_reliability} object.
 #' @param ... Additional arguments (ignored).
 #'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_reliability <- function(x, ...) {
   cat(sprintf("Split-Half Reliability (%d iterations, split = %.0f%%",

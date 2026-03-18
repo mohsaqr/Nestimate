@@ -600,6 +600,8 @@ mlvar <- function(data,
 #' @param x An \code{mlvar_result} object.
 #' @param ... Additional arguments (ignored).
 #'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.mlvar_result <- function(x, ...) {
   d <- length(x$labels)
@@ -622,6 +624,8 @@ print.mlvar_result <- function(x, ...) {
 #'
 #' @param object An \code{mlvar_result} object.
 #' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
 #'
 #' @export
 summary.mlvar_result <- function(object, ...) {

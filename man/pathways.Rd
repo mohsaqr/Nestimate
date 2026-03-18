@@ -40,6 +40,12 @@ optimal order from model selection.}
 A character vector of pathway strings in arrow notation
 (e.g. \code{"A B -> C"}), suitable for
 \code{cograph::plot_simplicial()}.
+
+A character vector of pathway strings.
+
+A character vector of pathway strings.
+
+A character vector of pathway strings.
 }
 \description{
 Extracts higher-order pathway strings suitable for

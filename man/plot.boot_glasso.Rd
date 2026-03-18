@@ -21,6 +21,9 @@ or \code{"inclusion"}.}
 accepts \code{order}: \code{"sample"} (default, sorted by value)
 or \code{"id"} (alphabetical).}
 }
+\value{
+A \code{ggplot} object, invisibly.
+}
 \description{
 Plots bootstrap results for GLASSO networks.
 }

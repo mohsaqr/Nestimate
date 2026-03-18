@@ -541,6 +541,13 @@ state_frequencies <- function(data) {
 # S3 methods
 # ---------------------------------------------------------------------------
 
+#' Print Method for net_mogen
+#'
+#' @param x A \code{net_mogen} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_mogen <- function(x, ...) {
   cat("Multi-Order Generative Model (MOGen)\n")
@@ -561,6 +568,13 @@ print.net_mogen <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary Method for net_mogen
+#'
+#' @param object A \code{net_mogen} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.net_mogen <- function(object, ...) {
   cat("Multi-Order Generative Model (MOGen) Summary\n\n")
@@ -588,6 +602,14 @@ summary.net_mogen <- function(object, ...) {
   invisible(object)
 }
 
+#' Plot Method for net_mogen
+#'
+#' @param x A \code{net_mogen} object.
+#' @param type Character. Plot type: \code{"ic"} (default) or \code{"likelihood"}.
+#' @param ... Additional arguments passed to \code{\link[graphics]{plot}}.
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 plot.net_mogen <- function(x, type = c("ic", "likelihood"), ...) {
   type <- match.arg(type)

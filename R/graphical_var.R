@@ -369,6 +369,13 @@ graphical_var <- function(data,
 # S3 Methods
 # ============================================================
 
+#' Print Method for gvar_result
+#'
+#' @param x A \code{gvar_result} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.gvar_result <- function(x, ...) {
   d <- length(x$labels)
@@ -386,6 +393,13 @@ print.gvar_result <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary Method for gvar_result
+#'
+#' @param object A \code{gvar_result} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.gvar_result <- function(object, ...) {
   cat("=== Temporal Network (beta) ===\n")

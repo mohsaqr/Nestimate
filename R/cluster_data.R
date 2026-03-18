@@ -715,6 +715,13 @@ cluster_sequences <- cluster_data
 # 6. S3 Methods
 # ==============================================================================
 
+#' Print Method for net_clustering
+#'
+#' @param x A \code{net_clustering} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_clustering <- function(x, ...) {
   cat("Sequence Clustering\n")
@@ -739,6 +746,13 @@ print.net_clustering <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary Method for net_clustering
+#'
+#' @param object A \code{net_clustering} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.net_clustering <- function(object, ...) {
   dist_mat <- as.matrix(object$distance)

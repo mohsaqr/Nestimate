@@ -1154,6 +1154,13 @@ build_hon <- function(data, max_order = 5L, min_freq = 1L,
 # S3 methods
 # ---------------------------------------------------------------------------
 
+#' Print Method for net_hon
+#'
+#' @param x A \code{net_hon} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_hon <- function(x, ...) {
   cat("Higher-Order Network (HON)\n")
@@ -1167,6 +1174,13 @@ print.net_hon <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary Method for net_hon
+#'
+#' @param object A \code{net_hon} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.net_hon <- function(object, ...) {
   cat("Higher-Order Network (HON) Summary\n")

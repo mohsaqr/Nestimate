@@ -184,6 +184,13 @@ build_honem <- function(hon, dim = 32L, max_power = 10L) {
 # S3 methods
 # ---------------------------------------------------------------------------
 
+#' Print Method for net_honem
+#'
+#' @param x A \code{net_honem} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_honem <- function(x, ...) {
   cat("HONEM: Higher-Order Network Embedding\n")
@@ -194,6 +201,13 @@ print.net_honem <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary Method for net_honem
+#'
+#' @param object A \code{net_honem} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.net_honem <- function(object, ...) {
   cat("HONEM Summary\n\n")
@@ -208,6 +222,14 @@ summary.net_honem <- function(object, ...) {
   invisible(object)
 }
 
+#' Plot Method for net_honem
+#'
+#' @param x A \code{net_honem} object.
+#' @param dims Integer vector of length 2. Dimensions to plot (default: \code{c(1, 2)}).
+#' @param ... Additional arguments passed to \code{\link[graphics]{plot}}.
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 plot.net_honem <- function(x, dims = c(1L, 2L), ...) {
   if (x$dim < 2L) {

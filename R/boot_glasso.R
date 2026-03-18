@@ -771,6 +771,8 @@ boot_glasso <- function(x,
 #' @param x A \code{boot_glasso} object.
 #' @param ... Additional arguments (ignored).
 #'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.boot_glasso <- function(x, ...) {
   cat(sprintf(
@@ -870,6 +872,8 @@ summary.boot_glasso <- function(object, type = "edges", ...) {
 #'   \code{type = "edge_diff"} and \code{type = "centrality_diff"},
 #'   accepts \code{order}: \code{"sample"} (default, sorted by value)
 #'   or \code{"id"} (alphabetical).
+#'
+#' @return A \code{ggplot} object, invisibly.
 #'
 #' @export
 plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {

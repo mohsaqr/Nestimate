@@ -242,6 +242,7 @@ prepare_data <- function(data,
 #' Print Method for nestimate_data
 #' @param x A \code{nestimate_data} object.
 #' @param ... Additional arguments (ignored).
+#' @return The input object, invisibly.
 #' @export
 print.nestimate_data <- function(x, ...) {
   cat("Prepared Data for Network Estimation\n")

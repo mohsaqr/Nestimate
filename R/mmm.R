@@ -653,6 +653,13 @@ compare_mmm <- function(data, k = 2:5, ...) {
 # S3 methods
 # ---------------------------------------------------------------------------
 
+#' Print Method for net_mmm
+#'
+#' @param x A \code{net_mmm} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_mmm <- function(x, ...) {
   cat("Mixed Markov Model\n")
@@ -682,6 +689,13 @@ print.net_mmm <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary Method for net_mmm
+#'
+#' @param object A \code{net_mmm} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 summary.net_mmm <- function(object, ...) {
   print(object)
@@ -705,6 +719,14 @@ summary.net_mmm <- function(object, ...) {
   invisible(object)
 }
 
+#' Plot Method for net_mmm
+#'
+#' @param x A \code{net_mmm} object.
+#' @param type Character. Plot type: \code{"posterior"} (default) or \code{"covariates"}.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return A \code{ggplot} object, invisibly.
+#'
 #' @export
 plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
   type <- match.arg(type)
@@ -750,6 +772,13 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
   invisible(p)
 }
 
+#' Print Method for mmm_compare
+#'
+#' @param x An \code{mmm_compare} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.mmm_compare <- function(x, ...) {
   cat("MMM Model Comparison\n\n")
@@ -762,6 +791,13 @@ print.mmm_compare <- function(x, ...) {
   invisible(x)
 }
 
+#' Plot Method for mmm_compare
+#'
+#' @param x An \code{mmm_compare} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return A \code{ggplot} object, invisibly.
+#'
 #' @export
 plot.mmm_compare <- function(x, ...) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {

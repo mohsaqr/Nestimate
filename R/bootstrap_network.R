@@ -523,6 +523,8 @@ bootstrap_network <- function(x,
 #' @param x A \code{net_bootstrap} object.
 #' @param ... Additional arguments (ignored).
 #'
+#' @return The input object, invisibly.
+#'
 #' @export
 print.net_bootstrap <- function(x, ...) {
   method_labels <- c(

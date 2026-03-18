@@ -50,6 +50,8 @@ pathways <- function(x, ...) {
 #' @param order Integer or NULL. If specified, only include pathways
 #'   at this source order. Default: all orders > 1.
 #'
+#' @return A character vector of pathway strings.
+#'
 #' @export
 pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
                              top = NULL, order = NULL, ...) {
@@ -90,6 +92,8 @@ pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
 #' @param type Character. Which anomalies to include: \code{"all"}
 #'   (default), \code{"over"}, or \code{"under"}.
 #'
+#' @return A character vector of pathway strings.
+#'
 #' @export
 pathways.net_hypa <- function(x, type = "all", ...) {
   type <- match.arg(type, c("all", "over", "under"))
@@ -122,6 +126,8 @@ pathways.net_hypa <- function(x, type = "all", ...) {
 #'   (default: 0).
 #' @param top Integer or NULL. Return only the top N pathways ranked
 #'   by count (default: NULL = all).
+#'
+#' @return A character vector of pathway strings.
 #'
 #' @export
 pathways.net_mogen <- function(x, order = NULL, min_count = 1L,
