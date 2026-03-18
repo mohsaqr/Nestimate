@@ -13,3 +13,5 @@
 ^tutorials$
 ^Rplots\.pdf$
 ^tests/testthat/Rplots\.pdf$
+^\.claude$
+^cran-comments\.md$

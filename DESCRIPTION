@@ -10,6 +10,9 @@ Description: Comprehensive toolkit for network estimation from sequence and pane
     networks (MCML), multilevel VAR, graphical VAR, and temporal network analysis
     with time-varying centrality, velocity, and proximity timelines.
 License: MIT + file LICENSE
+URL: https://github.com/mohsaqr/Nestimate
+BugReports: https://github.com/mohsaqr/Nestimate/issues
+Language: en-US
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
