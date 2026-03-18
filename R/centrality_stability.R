@@ -31,6 +31,13 @@
 #'   threshold (default: 0.95).
 #' @param method Character. Correlation method: \code{"pearson"},
 #'   \code{"spearman"}, or \code{"kendall"} (default: \code{"pearson"}).
+#' @param centrality_fn Optional function. A custom centrality function
+#'   that takes a weight matrix and returns a named list of centrality
+#'   vectors. When \code{NULL} (default), only \code{"InStrength"} and
+#'   \code{"OutStrength"} are computed via \code{colSums}/\code{rowSums}.
+#'   When provided, the function is called as \code{centrality_fn(mat)}
+#'   and should return a named list (e.g.,
+#'   \code{list(Betweenness = ..., Closeness = ...)}).
 #' @param loops Logical. If \code{FALSE} (default), self-loops (diagonal)
 #'   are excluded from centrality computation. This does not modify the
 #'   stored matrix.
@@ -69,6 +76,7 @@ centrality_stability <- function(x,
                                  threshold = 0.7,
                                  certainty = 0.95,
                                  method = "pearson",
+                                 centrality_fn = NULL,
                                  loops = FALSE,
                                  seed = NULL) {
 
@@ -91,6 +99,10 @@ centrality_stability <- function(x,
   )
   iter <- as.integer(iter)
   method <- match.arg(method, c("pearson", "spearman", "kendall"))
+
+  if (!is.null(centrality_fn)) {
+    stopifnot("centrality_fn must be a function" = is.function(centrality_fn))
+  }
 
   valid_measures <- c("InStrength", "OutStrength", "Betweenness",
                        "Closeness", "InCloseness", "OutCloseness")
@@ -116,7 +128,8 @@ centrality_stability <- function(x,
   thresh <- x$threshold
 
   # ---- Original centralities ----
-  orig_cents <- .compute_centralities(x$weights, states, x$directed, measures, loops)
+  orig_cents <- .compute_centralities(x$weights, states, x$directed, measures,
+                                       loops, centrality_fn)
 
   # Drop measures with zero variance (e.g. OutStrength for relative networks)
   keep <- vapply(measures, function(m) sd(orig_cents[[m]]) > 0, logical(1))
@@ -141,12 +154,6 @@ centrality_stability <- function(x,
   }
   measures <- measures[keep]
   orig_cents <- orig_cents[measures]
-
-  # ---- Needs igraph? ----
-  igraph_measures <- intersect(measures,
-    c("Betweenness", "Closeness", "InCloseness", "OutCloseness"))
-  matrix_measures <- intersect(measures, c("InStrength", "OutStrength"))
-  needs_igraph <- length(igraph_measures) > 0L
 
   # ---- Pre-compute for transitions ----
   if (is_transition) {
@@ -221,7 +228,8 @@ centrality_stability <- function(x,
       mat <- build_matrix(idx)
       if (is.null(mat)) return(rep(NA_real_, n_measures))
 
-      sub_cents <- .compute_centralities(mat, states, x$directed, measures, loops)
+      sub_cents <- .compute_centralities(mat, states, x$directed, measures,
+                                          loops, centrality_fn)
 
       vapply(measures, function(m) {
         sc <- sub_cents[[m]]
@@ -263,15 +271,28 @@ centrality_stability <- function(x,
 
 # ---- Helpers ----
 
-#' Compute centralities from a weight matrix without igraph where possible
+#' Compute centralities from a weight matrix
+#'
+#' InStrength and OutStrength use colSums/rowSums (no dependencies).
+#' Other measures (Betweenness, Closeness, InCloseness, OutCloseness)
+#' require a user-supplied \code{centrality_fn}.
+#'
+#' @param mat Weight matrix.
+#' @param states Character vector of state names.
+#' @param directed Logical.
+#' @param measures Character vector of requested measures.
+#' @param loops Logical. If FALSE, zero out diagonal before computing.
+#' @param centrality_fn Optional function taking a weight matrix and
+#'   returning a named list of centrality vectors.
 #' @noRd
 .compute_centralities <- function(mat, states, directed, measures,
-                                  loops = FALSE) {
+                                  loops = FALSE, centrality_fn = NULL) {
   n <- length(states)
   if (!loops) diag(mat) <- 0
   result <- list()
 
-  # Matrix-based centralities (no igraph needed)
+  # Built-in matrix-based centralities (no dependencies)
+  builtin <- c("InStrength", "OutStrength")
   if ("InStrength" %in% measures) {
     result[["InStrength"]] <- colSums(mat)
   }
@@ -279,30 +300,25 @@ centrality_stability <- function(x,
     result[["OutStrength"]] <- rowSums(mat)
   }
 
-  # igraph-based centralities
-  igraph_needed <- intersect(measures,
-    c("Betweenness", "Closeness", "InCloseness", "OutCloseness"))
-
-  if (length(igraph_needed) > 0L) {
-    mode <- if (directed) "directed" else "undirected"
-    g <- igraph::graph_from_adjacency_matrix(mat, mode = mode, weighted = TRUE)
-    # Inverted weights: higher weight = shorter distance (matches tna)
-    w_inv <- 1 / igraph::E(g)$weight
-
-    if ("Betweenness" %in% igraph_needed) {
-      result[["Betweenness"]] <- igraph::betweenness(g, weights = w_inv)
+  # External centralities via centrality_fn
+  external <- setdiff(measures, builtin)
+  if (length(external) > 0L) {
+    if (is.null(centrality_fn)) {
+      stop("centrality_fn is required for measures: ",
+           paste(external, collapse = ", "),
+           ". Provide a function that takes a weight matrix and returns ",
+           "a named list of centrality vectors.", call. = FALSE)
     }
-    if ("Closeness" %in% igraph_needed) {
-      result[["Closeness"]] <- igraph::closeness(g, mode = "all",
-                                                  weights = w_inv)
+    custom <- centrality_fn(mat)
+    if (!is.list(custom)) {
+      stop("centrality_fn must return a named list.", call. = FALSE)
     }
-    if ("InCloseness" %in% igraph_needed) {
-      result[["InCloseness"]] <- igraph::closeness(g, mode = "in",
-                                                    weights = w_inv)
-    }
-    if ("OutCloseness" %in% igraph_needed) {
-      result[["OutCloseness"]] <- igraph::closeness(g, mode = "out",
-                                                     weights = w_inv)
+    for (m in external) {
+      if (is.null(custom[[m]])) {
+        stop("centrality_fn did not return measure '", m, "'.",
+             call. = FALSE)
+      }
+      result[[m]] <- custom[[m]]
     }
   }
 

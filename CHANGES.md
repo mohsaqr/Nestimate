@@ -1,5 +1,11 @@
 # Changes
 
+### 2026-03-17 — Add coverage tests for hon/honem/hypa/mogen/pathways
+- tests/testthat/test-hon.R: Added Section 11 (16 tests) covering .hon_parse_input all-NA rows, invalid type stop, collapse_repeats edge cases, .hon_kld empty/Inf paths, .hon_get_extensions missing order, .hon_sequence_to_node empty input, .hon_graph_to_edgelist empty graph, .hon_assemble_output empty rules, build_hon no-valid-trajectories stop, plot.net_hon branches (no-cograph, no-HO-pathways, successful). Added Section 12 (6 tests) for pathways.net_hon: character return, empty for first-order HON, min_count/top/min_prob/order filters. 237 pass, 1 skip.
+- tests/testthat/test-honem.R: Added Section 7 (1 test) for plot.net_honem dim<2 message. 31 pass.
+- tests/testthat/test-hypa.R: Added Section 7 (7 tests) covering build_hypa no-valid-trajectories, no-edges stop, summary with anomalies, plot.net_hypa no-cograph/no-anomalies/successful. Added Section 8 (4 tests) for pathways.net_hypa: type=all/over/under, empty on no-anomalies. 41 pass, 1 skip.
+- tests/testthat/test-mogen.R: Added Section 9 (15 tests) covering .mogen_log_likelihood empty/single/order0/missing-key paths, build_mogen no-valid-trajectories, mogen_transitions default order/empty return, path_counts data.frame/list/short/top/k-validation, state_frequencies data.frame/list, print.net_mogen LRT branch, plot.net_mogen pathways no-cograph/no-pathways. Added Section 10 (5 tests) for pathways.net_mogen: character return, order=0 empty, min_count/top/min_prob filters. 80 pass, 1 skip.
+
 ### 2026-03-17 — Add covariate-integrated MMM to build_mmm()
 - R/mmm.R: Added `covariates` parameter to `build_mmm()`. Covariates influence cluster membership within EM: M-step replaces `colMeans(post)` with `nnet::multinom(post ~ covariates)` for covariate-dependent mixing proportions. New internals: `.mmm_softmax_mstep()`, `.mmm_predict_log_pi()`. Updated param count, return object ($covariates), print/summary/plot S3 methods. Strips covariate columns from raw_data before state extraction.
 - tests/testthat/test-mmm.R: 9 new tests: covariate return structure, coefficient direction recovery, nested model LL, param count, S3 methods, plot, data.frame input, NA handling. 80/80 pass.

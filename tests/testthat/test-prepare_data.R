@@ -300,3 +300,88 @@ test_that("shorter sessions are NA-padded in wide format", {
   expect_true(is.na(res$sequence_data[s2_row, 2]))
   expect_true(is.na(res$sequence_data[s2_row, 3]))
 })
+
+
+# ---- Unix timestamp numeric path (L333-338) ----
+
+test_that(".parse_time numeric unix path with milliseconds divisor", {
+  # Call .parse_time directly via prepare_data with is_unix_time + milliseconds
+  ev <- data.frame(
+    student = rep("s1", 2),
+    code = c("A", "B"),
+    ts = c(1704100000000, 1704100300000),
+    stringsAsFactors = FALSE
+  )
+  res <- prepare_data(ev, actor = "student", action = "code", time = "ts",
+                      is_unix_time = TRUE, unix_time_unit = "milliseconds")
+  expect_false(is.null(res$time_data))
+  # Should be about 2024 timestamps
+  expect_s3_class(res$time_data[[1]], "POSIXct")
+})
+
+test_that(".parse_time numeric unix path with microseconds divisor", {
+  ev <- data.frame(
+    student = rep("s1", 2),
+    code = c("A", "B"),
+    ts = c(1704100000000000, 1704100300000000),
+    stringsAsFactors = FALSE
+  )
+  res <- prepare_data(ev, actor = "student", action = "code", time = "ts",
+                      is_unix_time = TRUE, unix_time_unit = "microseconds")
+  expect_false(is.null(res$time_data))
+  expect_s3_class(res$time_data[[1]], "POSIXct")
+})
+
+test_that(".parse_time errors on unparseable string timestamps (L341-343)", {
+  # Provide completely unparseable strings that cannot be coerced to numeric
+  ev <- data.frame(
+    student = rep("s1", 2),
+    code = c("A", "B"),
+    ts = c("not-a-date-xyz", "also-garbage"),
+    stringsAsFactors = FALSE
+  )
+  expect_error(
+    prepare_data(ev, actor = "student", action = "code", time = "ts"),
+    "Could not parse"
+  )
+})
+
+# ---- .aggregate_metadata: all-NA extra column (L362) ----
+
+test_that("extra column all-NA returns NA in meta_data", {
+  ev <- data.frame(
+    student = c("s1", "s1"),
+    code = c("A", "B"),
+    level = c(NA_character_, NA_character_),
+    stringsAsFactors = FALSE
+  )
+  res <- prepare_data(ev, actor = "student", action = "code")
+  # level is extra column; all NA -> aggregated to NA
+  expect_true("level" %in% names(res$meta_data))
+  expect_true(is.na(res$meta_data$level))
+})
+
+# ---- .aggregate_metadata: tied mode emits message (L366-373) ----
+
+test_that("tied-mode character extra column emits message and returns first value", {
+  ev <- data.frame(
+    student = c("s1", "s1", "s1", "s1"),
+    code = c("A", "B", "A", "B"),
+    level = c("high", "low", "medium", "low"),
+    stringsAsFactors = FALSE
+  )
+  # "low" appears twice, "high" and "medium" once each -> tie between all equal
+  # Actually: high=1, low=2, medium=1 -> mode is "low" (unique), no tie
+  # To get a tie: use equal counts
+  ev2 <- data.frame(
+    student = c("s1", "s1"),
+    code = c("A", "B"),
+    level = c("high", "low"),
+    stringsAsFactors = FALSE
+  )
+  expect_message(
+    res <- prepare_data(ev2, actor = "student", action = "code"),
+    "tied mode"
+  )
+  expect_true(res$meta_data$level %in% c("high", "low"))
+})

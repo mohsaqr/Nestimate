@@ -88,6 +88,5 @@ summary(perm)
 \seealso{
 \code{\link{build_network}}, \code{\link{bootstrap_network}},
 \code{\link{print.net_permutation}},
-\code{\link{summary.net_permutation}},
-\code{\link{plot.net_permutation}}
+\code{\link{summary.net_permutation}}
 }

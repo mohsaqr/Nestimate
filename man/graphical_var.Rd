@@ -14,16 +14,13 @@ graphical_var(
   gamma = 0.5,
   scale = TRUE,
   center_within = TRUE,
-  maxit_in = 100L,
-  maxit_out = 100L,
-  lambda_min_kappa = 0.05,
-  lambda_min_beta = lambda_min_kappa,
+  lambda_min_ratio = 0.01,
   penalize_diagonal = TRUE
 )
 }
 \arguments{
-\item{data}{A data.frame with columns for variables, and optionally id, day,
-beep columns for panel/ESM data.}
+\item{data}{A data.frame or matrix with columns for variables, and optionally
+id, day, beep columns for panel/ESM data.}
 
 \item{vars}{Character vector of variable names.}
 
@@ -35,25 +32,18 @@ subject.}
 \item{beep}{Character. Name of the beep/measurement column. Default: NULL.}
 
 \item{n_lambda}{Integer. Number of lambda values per penalty dimension.
-Creates an n_lambda x n_lambda grid. Default: 30.}
+Default: 30.}
 
 \item{gamma}{Numeric. EBIC hyperparameter (0 = BIC, higher = sparser).
 Default: 0.5.}
 
 \item{scale}{Logical. Whether to standardize variables. Default: TRUE.}
 
-\item{center_within}{Logical. Whether to center within person (removes
-between-person variance). Default: TRUE.}
+\item{center_within}{Logical. Whether to center within person when id is
+provided (removes between-person variance). Default: TRUE.}
 
-\item{maxit_in}{Integer. Max inner iterations for beta update. Default: 100.}
-
-\item{maxit_out}{Integer. Max outer alternating iterations. Default: 100.}
-
-\item{lambda_min_kappa}{Numeric. Ratio of min/max lambda for kappa.
-Default: 0.01.}
-
-\item{lambda_min_beta}{Numeric. Ratio of min/max lambda for beta.
-Default: 0.01.}
+\item{lambda_min_ratio}{Numeric. Ratio of min/max lambda for both beta and
+kappa grids. Default: 0.01.}
 
 \item{penalize_diagonal}{Logical. Penalize autoregressive diagonal in beta.
 Default: TRUE.}
@@ -61,16 +51,18 @@ Default: TRUE.}
 \value{
 A list of class \code{gvar_result} containing:
 \describe{
-\item{beta}{Temporal coefficient matrix (p x p). \code{beta[i,j]} =
-effect of variable j at t-1 on variable i at t. Sparse (L1-penalized).}
+\item{beta}{Temporal coefficient matrix (p x p). Each entry represents the
+effect of a variable at t-1 on another at t. Sparse (L1-penalized).}
 \item{kappa}{Precision matrix (p x p, symmetric). Inverse of residual
-covariance. Sparse (GLASSO-penalized).}
+covariance. Sparse (graphical lasso).}
 \item{PCC}{Partial contemporaneous correlations (p x p, symmetric).
 Derived from kappa: \code{-cov2cor(kappa)}, diagonal zeroed.}
 \item{PDC}{Partial directed correlations (p x p). Standardized temporal
 coefficients scaled by residual covariance.}
+\item{temporal}{Alias for \code{beta}.}
+\item{contemporaneous}{Alias for \code{PCC}.}
 \item{labels}{Variable names.}
-\item{n_obs}{Number of valid observations used.}
+\item{n_obs}{Number of valid lag-pair observations.}
 \item{lambda_beta}{Selected lambda for temporal penalty.}
 \item{lambda_kappa}{Selected lambda for contemporaneous penalty.}
 \item{gamma}{EBIC gamma used.}
@@ -80,19 +72,26 @@ coefficients scaled by residual covariance.}
 \description{
 Estimate a graphical vector autoregressive (GVAR) model from time series or
 panel data. Jointly estimates a sparse temporal network (L1-penalized VAR
-coefficients) and a sparse contemporaneous network (GLASSO on residuals)
-using EBIC model selection over a lambda grid.
-
-Follows the algorithm of Epskamp et al. (2018): alternating optimization
-of temporal (beta) and contemporaneous (kappa) parameters, with joint EBIC
-for model selection.
+coefficients) and a sparse contemporaneous network (graphical lasso on
+residuals) using EBIC model selection over a lambda grid.
+}
+\details{
+Follows the two-step approach of Epskamp et al. (2018):
+\enumerate{
+\item Estimate sparse temporal coefficients (beta) via L1-penalized
+regression across a lambda grid.
+\item For each temporal model, estimate the contemporaneous precision
+matrix (kappa) via graphical lasso on the residual covariance.
+\item Select the (lambda_beta, lambda_kappa) pair minimizing joint EBIC.
+}
 }
 \examples{
 \dontrun{
 # Single subject
-data <- matrix(rnorm(500 * 4), 500, 4)
-colnames(data) <- c("V1", "V2", "V3", "V4")
-res <- graphical_var(as.data.frame(data), vars = colnames(data))
+set.seed(1)
+data <- data.frame(matrix(rnorm(200 * 4), 200, 4))
+names(data) <- c("V1", "V2", "V3", "V4")
+res <- graphical_var(data, vars = names(data))
 res$beta    # temporal
 res$PCC     # contemporaneous
 }

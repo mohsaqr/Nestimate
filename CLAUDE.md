@@ -57,16 +57,24 @@ All classes have `print`, `summary`, `plot` methods. Naming convention:
 | Class | Source | Returns from |
 |-------|--------|-------------|
 | `c("netobject", "cograph_network")` / `netobject_ml` | `build_network.R` | `build_network()` |
-| `saqr_bootstrap` | `bootstrap_network.R` | `bootstrap_network()` |
+| `netobject_group` | `build_network.R`, `cluster_data.R`, `mcml.R` | `build_network()` (grouped), `cluster_data()`, `build_mcml()` |
+| `net_bootstrap` | `bootstrap_network.R` | `bootstrap_network()` |
 | `boot_glasso` | `boot_glasso.R` | `boot_glasso()` |
-| `saqr_permutation` | `permutation_test.R` | `permutation_test()` |
-| `saqr_gimme` | `gimme.R` | `build_gimme()` |
+| `net_permutation` | `permutation_test.R` | `permutation_test()` |
+| `net_gimme` | `gimme.R` | `build_gimme()` |
 | `mcml_network` | `mcml.R` | `build_mcml()` |
 | `mlvar_result` | `mlvar.R` | `mlvar()` |
-| `saqr_hon` | `hon.R` | `build_hon()` |
-| `saqr_honem` | `honem.R` | `build_honem()` |
-| `saqr_hypa` | `hypa.R` | `build_hypa()` |
-| `saqr_mogen` | `mogen.R` | `build_mogen()` |
+| `net_hon` | `hon.R` | `build_hon()` |
+| `net_honem` | `honem.R` | `build_honem()` |
+| `net_hypa` | `hypa.R` | `build_hypa()` |
+| `net_mogen` | `mogen.R` | `build_mogen()` |
+| `net_mmm` | `mmm.R` | `build_mmm()` |
+| `mmm_compare` | `mmm.R` | `compare_mmm()` |
+| `net_clustering` | `cluster_data.R` | `cluster_data()` |
+| `gvar_result` | `graphical_var.R` | `graphical_var()` |
+| `ml_graphical_var_result` | `graphical_var.R` | `ml_graphical_var()` |
+| `net_reliability` | `reliability.R` | `reliability_network()` |
+| `net_stability` | `centrality_stability.R` | `centrality_stability()` |
 | `temporal_network` | `temporal_network.R` | `temporal_network()` |
 | `tna_velocity` | `velocity_tna.R` | `velocity_tna()` |
 
@@ -92,6 +100,28 @@ HON, HONEM, HYPA, MOGen share infrastructure:
 - Unified edge columns: `path`, `from`, `to`, `count`, `probability`
 - Arrow notation for node names: `"A -> B -> C"`
 
+### Mixed Markov Models
+
+`build_mmm()` — EM-based mixture of Markov chains (soft assignments, per-component transition matrices as netobjects, BIC/AIC/ICL, optional covariate regression). Returns `net_mmm`. `compare_mmm()` compares BIC/AIC/ICL across k values → `mmm_compare`.
+
+### Clustering & Grouping
+
+`cluster_data()` — clusters sequences (ward/k-means/latent-class), then calls `build_network()` per cluster → `netobject_group`. Underlying clustering results returned as `net_clustering`.
+
+### Graphical VAR
+
+`graphical_var()` / `ml_graphical_var()` — idiographic and multilevel VAR network estimation. Return `gvar_result` / `ml_graphical_var_result`.
+
+### Reliability & Stability
+
+`reliability_network()` — split-half reliability of network edges → `net_reliability`.
+`centrality_stability()` — CS-coefficient via case-dropping subsets → `net_stability`.
+
+### Network Utilities
+
+`pathways()` — generic dispatching on `net_hon`, `net_hypa`, `net_mogen`; returns character vector of pathway strings in arrow notation. No dedicated return class.
+Network comparison functions in `network_comparison.R` (correlation, RMSE, MAE, cosine between two matrices).
+
 ### Temporal Networks
 
 `temporal_network()` — 21 snapshot metrics, temporal BFS (multi-pass for non-DAG), proximity timeline plot.
@@ -115,6 +145,20 @@ HON, HONEM, HYPA, MOGen share infrastructure:
 - **ID column**: NULL means single sequence; character vector for grouping
 - **Fast transitions**: `tabulate()` on integer-encoded pairs (vectorized, no loops)
 - **Error handling**: `tryCatch()` with `stop(..., call. = FALSE)` for informative messages
+
+## Known Open Issues (Pre-existing)
+
+- HON/HONEM/HYPA/MOGen classes still use their own `$matrix`/`$nodes` fields — they are NOT `cograph_network` compatible
+- `print.mcml` S3 method conflict between Nestimate and cograph
+- `test-mmm.R` fails during `R CMD check` due to parallel fork restriction in the check sandbox — not a regression
+
+## Testing Gotchas
+
+- `expect_s3_class()` and `expect_null()` do NOT accept an `info` parameter — use `expect_true(inherits(...), info=)` instead
+- tna v1.2.1 lowercases `hclust` method names, so `"ward.D2"` becomes `"ward.d2"` and errors — skip ward.D2 in tna cross-validation tests
+- `build_network()` classifies columns as state vs metadata by checking if values are in node names — numeric columns always go to `$metadata`; character columns with letters overlapping node names can be misclassified
+- `nnet::multinom` with k=2: `summary()$coefficients` returns a named vector, not a matrix — must detect and wrap into a 1-row matrix
+- Formula environment: build `as.formula()` inside the fitting function so variables resolve in the correct environment
 
 ## Dependencies
 

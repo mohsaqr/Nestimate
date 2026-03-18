@@ -157,12 +157,6 @@ test_that("summary.net_hypa works", {
   expect_true(any(grepl("HYPA", out)))
 })
 
-test_that("plot.net_hypa works", {
-  trajs <- list(c("A", "B", "C"), c("A", "B", "D"), c("B", "C", "A"),
-                c("C", "A", "B"), c("B", "A", "C"), c("A", "C", "B"))
-  h <- build_hypa(trajs, k = 1L)
-  expect_no_error(plot(h))
-})
 
 # ===========================================================================
 # Section 6: Data.frame input
@@ -173,4 +167,81 @@ test_that("build_hypa handles data.frame input", {
                    T3 = c("C", "A", "B"))
   h <- build_hypa(df, k = 1L)
   expect_s3_class(h, "net_hypa")
+})
+
+# ===========================================================================
+# Section 7: Coverage for previously uncovered paths
+# ===========================================================================
+
+# --- build_hypa: no valid trajectories ---
+test_that("build_hypa stops when no valid trajectories", {
+  # All single-state entries: parsed trajectories have < 2 states each
+  df <- data.frame(T1 = c("A", "B"), stringsAsFactors = FALSE)
+  expect_error(build_hypa(df, k = 1L), "No valid trajectories")
+})
+
+# --- build_hypa: no edges at given order (paths too short) ---
+test_that("build_hypa stops when no edges at requested order k", {
+  # k=3 requires 4-grams; trajectories of length 3 produce only 1-grams (k=1)
+  # and 2-grams (k=2) but not 3-grams as transitions
+  trajs <- list(c("A", "B", "C"), c("B", "C", "D"))
+  expect_error(build_hypa(trajs, k = 3L), "No edges at order")
+})
+
+# --- summary.net_hypa with anomalies displays anomalous paths ---
+test_that("summary.net_hypa displays anomalous paths when present", {
+  # Create highly biased data to force anomaly detection
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2,  c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  out <- capture.output(summary(h))
+  # Either found anomalies or printed "No anomalous paths detected."
+  expect_true(any(grepl("Anomalous|anomalous|No anomalous", out,
+                         ignore.case = TRUE)))
+})
+
+
+# ===========================================================================
+# Section 8: pathways() tests for HYPA
+# ===========================================================================
+
+test_that("pathways.net_hypa returns character vector", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2,  c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  pw <- pathways(h)
+  expect_true(is.character(pw))
+})
+
+test_that("pathways.net_hypa type='over' returns over-represented paths", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2,  c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  pw_all  <- pathways(h, type = "all")
+  pw_over <- pathways(h, type = "over")
+  expect_true(length(pw_over) <= length(pw_all))
+})
+
+test_that("pathways.net_hypa type='under' returns under-represented paths", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2,  c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  pw_under <- pathways(h, type = "under")
+  expect_true(is.character(pw_under))
+})
+
+test_that("pathways.net_hypa returns empty when no anomalies", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
+  h <- build_hypa(trajs, k = 1L, alpha = 1e-10)
+  pw <- pathways(h)
+  # With near-zero alpha threshold, likely no anomalies
+  expect_true(is.character(pw))
 })

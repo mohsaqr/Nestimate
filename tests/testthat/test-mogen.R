@@ -311,3 +311,197 @@ test_that("build_mogen AIC decreases then increases", {
   # DOF should increase with order
   expect_true(all(diff(m$dof) >= 0))
 })
+
+# ===========================================================================
+# Section 9: Coverage for previously uncovered paths
+# ===========================================================================
+
+# --- .mogen_log_likelihood: empty trajectory returns 0 ---
+test_that(".mogen_log_likelihood handles empty trajectory", {
+  trajs <- list(character(0L))
+  marginal <- c(A = 0.5, B = 0.5)
+  tm1 <- matrix(c(0, 1, 1, 0), 2, 2, byrow = TRUE,
+                dimnames = list(c("A", "B"), c("A", "B")))
+  trans_mats <- list(marginal, tm1)
+  ll <- .mogen_log_likelihood(trajs, 1L, trans_mats)
+  expect_equal(ll, 0)
+})
+
+# --- .mogen_log_likelihood: single-state trajectory returns just log(p0) ---
+test_that(".mogen_log_likelihood handles single-state trajectory", {
+  trajs <- list(c("A"))
+  marginal <- c(A = 0.6, B = 0.4)
+  tm1 <- matrix(c(0, 1, 1, 0), 2, 2, byrow = TRUE,
+                dimnames = list(c("A", "B"), c("A", "B")))
+  trans_mats <- list(marginal, tm1)
+  ll <- .mogen_log_likelihood(trajs, 1L, trans_mats)
+  expect_equal(ll, log(0.6))
+})
+
+# --- .mogen_log_likelihood: order_used == 0 branch (k=0, step >= 2) ---
+test_that(".mogen_log_likelihood uses marginal at order 0 for all steps", {
+  trajs <- list(c("A", "B", "A"))
+  marginal <- c(A = 0.6, B = 0.4)
+  trans_mats <- list(marginal)  # only order 0
+  ll <- .mogen_log_likelihood(trajs, 0L, trans_mats)
+  expected <- log(0.6) + log(0.4) + log(0.6)
+  expect_equal(ll, expected, tolerance = 1e-10)
+})
+
+# --- .mogen_log_likelihood: key not in trans_mat uses log_eps ---
+test_that(".mogen_log_likelihood uses log_eps for missing key", {
+  trajs <- list(c("A", "B", "C"))
+  marginal <- c(A = 1 / 3, B = 1 / 3, C = 1 / 3)
+  # Empty tm1: no transitions recorded
+  tm1 <- matrix(0, 3, 3, dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
+  trans_mats <- list(marginal, tm1)
+  ll <- .mogen_log_likelihood(trajs, 1L, trans_mats)
+  log_eps <- log(.Machine$double.eps)
+  # Step 1: log(1/3), steps 2-3: log_eps each (missing keys → zero probs)
+  expected <- log(1 / 3) + log_eps + log_eps
+  expect_equal(ll, expected, tolerance = 1e-10)
+})
+
+# --- build_mogen: no valid trajectories ---
+test_that("build_mogen stops when no valid trajectories", {
+  df <- data.frame(T1 = c("A", "B"), stringsAsFactors = FALSE)
+  expect_error(build_mogen(df, max_order = 2L), "No valid trajectories")
+})
+
+# --- mogen_transitions: default order (NULL) uses optimal_order ---
+test_that("mogen_transitions defaults to optimal_order when order=NULL", {
+  trajs <- list(c("A", "B", "C", "D"), c("A", "B", "D", "C"),
+                c("B", "C", "D", "A"), c("C", "D", "A", "B"))
+  m <- build_mogen(trajs, max_order = 2L)
+  tr_default <- mogen_transitions(m)
+  tr_explicit <- mogen_transitions(m, order = m$optimal_order)
+  expect_equal(nrow(tr_default), nrow(tr_explicit))
+})
+
+# --- mogen_transitions: empty return when min_count filters all ---
+test_that("mogen_transitions returns empty data.frame when all filtered", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
+  m <- build_mogen(trajs, max_order = 1L)
+  tr <- mogen_transitions(m, order = 1L, min_count = 9999L)
+  expect_true(is.data.frame(tr))
+  expect_equal(nrow(tr), 0L)
+  expect_true(all(c("path", "count", "probability", "from", "to") %in%
+                    names(tr)))
+})
+
+# --- path_counts: data.frame input branch ---
+test_that("path_counts works with data.frame input", {
+  df <- data.frame(T1 = c("A", "B"), T2 = c("B", "C"),
+                   T3 = c("C", "A"), stringsAsFactors = FALSE)
+  result <- path_counts(df, k = 2L)
+  expect_true(is.data.frame(result))
+  expect_true(all(c("path", "count", "proportion") %in% names(result)))
+  expect_true(nrow(result) > 0L)
+})
+
+# --- path_counts: list input branch ---
+test_that("path_counts works with list input", {
+  trajs <- list(c("A", "B", "C"), c("A", "B", "D"))
+  result <- path_counts(trajs, k = 2L)
+  expect_true(is.data.frame(result))
+  expect_true(nrow(result) > 0L)
+})
+
+# --- path_counts: trajectories shorter than k contribute nothing ---
+test_that("path_counts handles trajectories shorter than k", {
+  trajs <- list(c("A"), c("B"), c("A", "B", "C"))
+  result <- path_counts(trajs, k = 3L)
+  # Only the third trajectory contributes 1 path: A -> B -> C
+  expect_equal(nrow(result), 1L)
+  expect_equal(result$count[1L], 1L)
+})
+
+# --- path_counts: top parameter limits output ---
+test_that("path_counts top parameter limits rows returned", {
+  trajs <- list(c("A", "B", "C", "D"), c("A", "B", "D", "C"))
+  result_all <- path_counts(trajs, k = 2L)
+  result_top <- path_counts(trajs, k = 2L, top = 1L)
+  expect_equal(nrow(result_top), 1L)
+  expect_true(nrow(result_all) >= nrow(result_top))
+})
+
+# --- path_counts: k must be >= 2 ---
+test_that("path_counts rejects k < 2", {
+  trajs <- list(c("A", "B", "C"))
+  expect_error(path_counts(trajs, k = 1L), "k.*must be >= 2")
+})
+
+# --- state_frequencies: data.frame input branch ---
+test_that("state_frequencies works with data.frame input", {
+  df <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"),
+                   stringsAsFactors = FALSE)
+  result <- state_frequencies(df)
+  expect_true(is.data.frame(result))
+  expect_true(all(c("state", "count", "proportion") %in% names(result)))
+  expect_equal(sum(result$proportion), 1.0, tolerance = 1e-10)
+})
+
+# --- state_frequencies: list input branch ---
+test_that("state_frequencies works with list input", {
+  trajs <- list(c("A", "B", "A"), c("B", "C"))
+  result <- state_frequencies(trajs)
+  expect_true(is.data.frame(result))
+  expect_equal(sum(result$proportion), 1.0, tolerance = 1e-10)
+  expect_equal(result$count[result$state == "A"], 2L)
+})
+
+# --- print.net_mogen: LRT criterion branch uses AIC label ---
+test_that("print.net_mogen displays AIC when criterion is 'lrt'", {
+  trajs <- list(c("A", "B", "C", "D"), c("A", "B", "D", "C"),
+                c("B", "C", "D", "A"), c("C", "D", "A", "B"))
+  m <- build_mogen(trajs, max_order = 2L, criterion = "lrt")
+  out <- capture.output(print(m))
+  expect_true(any(grepl("AIC|lrt", out)))
+})
+
+
+# ===========================================================================
+# Section 10: pathways() tests for MOGen
+# ===========================================================================
+
+test_that("pathways.net_mogen returns character vector", {
+  set.seed(42)
+  trajs <- lapply(seq_len(30L), function(i) sample(LETTERS[1:4], 6, replace = TRUE))
+  m <- build_mogen(trajs, max_order = 2L)
+  pw <- pathways(m)
+  expect_true(is.character(pw))
+})
+
+test_that("pathways.net_mogen order=0 returns empty character", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
+  m <- build_mogen(trajs, max_order = 1L)
+  pw <- pathways(m, order = 0L)
+  expect_equal(pw, character(0))
+})
+
+test_that("pathways.net_mogen min_count filters paths", {
+  set.seed(42)
+  trajs <- lapply(seq_len(30L), function(i) sample(LETTERS[1:4], 6, replace = TRUE))
+  m <- build_mogen(trajs, max_order = 2L)
+  pw_all  <- pathways(m, min_count = 1L)
+  pw_filt <- pathways(m, min_count = 9999L)
+  expect_equal(length(pw_filt), 0L)
+  expect_true(length(pw_all) >= length(pw_filt))
+})
+
+test_that("pathways.net_mogen top limits output", {
+  set.seed(42)
+  trajs <- lapply(seq_len(30L), function(i) sample(LETTERS[1:4], 6, replace = TRUE))
+  m <- build_mogen(trajs, max_order = 2L)
+  pw_top <- pathways(m, top = 2L)
+  expect_true(length(pw_top) <= 2L)
+})
+
+test_that("pathways.net_mogen min_prob filters by probability", {
+  set.seed(42)
+  trajs <- lapply(seq_len(30L), function(i) sample(LETTERS[1:4], 6, replace = TRUE))
+  m <- build_mogen(trajs, max_order = 2L)
+  pw_all  <- pathways(m, min_prob = 0)
+  pw_filt <- pathways(m, min_prob = 0.99)
+  expect_true(length(pw_all) >= length(pw_filt))
+})

@@ -254,9 +254,11 @@ wagg <- aggregate_weights
 #' # -----------------------------------------------------
 #' # Auto-detect clusters from netobject
 #' # -----------------------------------------------------
+#' \dontrun{
 #' net <- build_network(mat, method = "relative")
 #' net$nodes$clusters <- c(1, 1, 1, 2, 2, 2, 3, 3, 3, 3)
 #' cs <- cluster_summary(net)  # No clusters argument needed
+#' }
 #'
 #' # -----------------------------------------------------
 #' # Different aggregation methods
@@ -1306,9 +1308,9 @@ as_tna.default <- function(x) {
   stop("Cannot convert object of class '", class(x)[1], "' to tna", call. = FALSE)
 }
 
-#' @noRd
 #' Normalize cluster specification to list format
 #' @keywords internal
+#' @noRd
 .normalize_clusters <- function(clusters, node_names) {
   if (is.data.frame(clusters)) {
     # Data frame with node and group columns

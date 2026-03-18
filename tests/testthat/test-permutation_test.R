@@ -275,3 +275,164 @@ test_that("effect size is zero when diff is zero", {
   expect_true(all(perm$diff == 0))
   expect_true(all(perm$effect_size == 0))
 })
+
+
+# ---- netobject_group dispatch (L82-92) ----
+
+test_that("permutation_test dispatches over matching netobject_group pairs", {
+  skip_if_not_installed("tna")
+  df1 <- tna::group_regulation
+  df2 <- tna::group_regulation
+  df1$grp <- rep(c("A", "B"), length.out = nrow(df1))
+  df2$grp <- rep(c("A", "B"), length.out = nrow(df2))
+  grp1 <- build_network(df1, method = "relative", group = "grp")
+  grp2 <- build_network(df2, method = "relative", group = "grp")
+
+  results <- permutation_test(grp1, grp2, iter = 20L, seed = 1)
+  expect_true(is.list(results))
+  expect_true(all(vapply(results, inherits, logical(1), "net_permutation")))
+})
+
+test_that("permutation_test errors when group names do not overlap", {
+  skip_if_not_installed("tna")
+  df <- tna::group_regulation
+  df$g1 <- rep(c("A", "B"), length.out = nrow(df))
+  df$g2 <- rep(c("X", "Y"), length.out = nrow(df))
+  grp1 <- build_network(df, method = "relative", group = "g1")
+  grp2 <- build_network(df, method = "relative", group = "g2")
+  expect_error(permutation_test(grp1, grp2, iter = 10L),
+               "No matching group names")
+})
+
+
+# ---- missing $data on x (L111-112) ----
+
+test_that("permutation_test errors when x has no $data", {
+  w1 <- .make_perm_wide(n = 50, seed = 1)
+  w2 <- .make_perm_wide(n = 50, seed = 2)
+  net1 <- build_network(w1, method = "relative")
+  net2 <- build_network(w2, method = "relative")
+  net1$data <- NULL
+  expect_error(permutation_test(net1, net2, iter = 10L),
+               "does not contain \\$data")
+})
+
+
+# ---- node order reordering (L131) ----
+
+test_that("permutation_test handles same nodes in different order", {
+  states <- c("A", "B", "C")
+  set.seed(1)
+  mat1 <- matrix(sample(states, 50 * 10, replace = TRUE), nrow = 50)
+  mat2 <- matrix(sample(states, 50 * 10, replace = TRUE), nrow = 50)
+  colnames(mat1) <- colnames(mat2) <- paste0("T", 1:10)
+  df1 <- as.data.frame(mat1, stringsAsFactors = FALSE)
+  df2 <- as.data.frame(mat2, stringsAsFactors = FALSE)
+
+  net1 <- build_network(df1, method = "relative")
+  net2 <- build_network(df2, method = "relative")
+
+  # Manually reorder nodes in net2's label so they are same set but different order
+  net2$nodes$label <- rev(net2$nodes$label)
+  # They are setequal but not identical → triggers L131 branch
+  perm <- permutation_test(net1, net2, iter = 15L, seed = 1)
+  expect_s3_class(perm, "net_permutation")
+})
+
+
+# ---- paired permutation for association methods (L417-419) ----
+
+test_that("paired permutation works for association methods", {
+  d1 <- .make_freq_data(n = 60, p = 4, seed = 1)
+  d2 <- .make_freq_data(n = 60, p = 4, seed = 2)
+  net1 <- build_network(d1, method = "cor")
+  net2 <- build_network(d2, method = "cor")
+
+  perm <- permutation_test(net1, net2, iter = 20L, paired = TRUE, seed = 42)
+  expect_s3_class(perm, "net_permutation")
+  expect_true(perm$paired)
+  expect_true(all(perm$p_values >= 0 & perm$p_values <= 1))
+})
+
+
+# ---- pcor association path (L368-371) ----
+
+test_that("permutation_test works with method='pcor'", {
+  d1 <- .make_freq_data(n = 80, p = 4, seed = 1)
+  d2 <- .make_freq_data(n = 80, p = 4, seed = 2)
+  net1 <- build_network(d1, method = "pcor")
+  net2 <- build_network(d2, method = "pcor")
+
+  perm <- permutation_test(net1, net2, iter = 20L, seed = 42)
+  expect_s3_class(perm, "net_permutation")
+  expect_equal(perm$method, "pcor")
+  expect_true(all(perm$p_values >= 0 & perm$p_values <= 1))
+})
+
+
+# ---- custom estimator fallback in association path (L386-407) ----
+
+test_that("permutation_test fallback for custom estimator", {
+  custom_fn <- function(data, ...) {
+    mat <- cor(as.matrix(data))
+    diag(mat) <- 0
+    list(matrix = mat, nodes = colnames(mat), directed = FALSE,
+         cleaned_data = data)
+  }
+  register_estimator("test_perm_custom", custom_fn,
+                     "custom for perm", directed = FALSE)
+  on.exit(remove_estimator("test_perm_custom"), add = TRUE)
+
+  d1 <- .make_freq_data(n = 50, p = 4, seed = 1)
+  d2 <- .make_freq_data(n = 50, p = 4, seed = 2)
+  net1 <- build_network(d1, method = "test_perm_custom")
+  net2 <- build_network(d2, method = "test_perm_custom")
+
+  perm <- permutation_test(net1, net2, iter = 15L, seed = 1)
+  expect_s3_class(perm, "net_permutation")
+  expect_equal(perm$method, "test_perm_custom")
+})
+
+
+# ---- scaling/threshold applied in association loop (L431-434) ----
+
+test_that("permutation_test with threshold applied in association path", {
+  d1 <- .make_freq_data(n = 60, p = 4, seed = 1)
+  d2 <- .make_freq_data(n = 60, p = 4, seed = 2)
+  net1 <- build_network(d1, method = "cor", threshold = 0.01)
+  net2 <- build_network(d2, method = "cor", threshold = 0.01)
+
+  perm <- permutation_test(net1, net2, iter = 20L, seed = 1)
+  expect_s3_class(perm, "net_permutation")
+  expect_true(all(perm$p_values >= 0 & perm$p_values <= 1))
+})
+
+
+# ---- p.adjust with holm (L466) ----
+
+test_that("holm p.adjust correction works", {
+  w1 <- .make_perm_wide(n = 50, seed = 1)
+  w2 <- .make_perm_wide(n = 50, seed = 2)
+  net1 <- build_network(w1, method = "relative")
+  net2 <- build_network(w2, method = "relative")
+
+  perm <- permutation_test(net1, net2, iter = 30L, adjust = "holm", seed = 42)
+  expect_equal(perm$adjust, "holm")
+  expect_true(all(perm$p_values >= 0 & perm$p_values <= 1))
+})
+
+
+# ---- print: unknown method label (L535) ----
+
+test_that("print.net_permutation shows generic label for unknown method", {
+  w1 <- .make_perm_wide(n = 50, seed = 1)
+  w2 <- .make_perm_wide(n = 50, seed = 2)
+  net1 <- build_network(w1, method = "relative")
+  net2 <- build_network(w2, method = "relative")
+  perm <- permutation_test(net1, net2, iter = 15L, seed = 1)
+  perm$method <- "custom_unknown_perm"
+  out <- capture.output(print(perm))
+  expect_true(any(grepl("custom_unknown_perm", out)))
+})
+
+

@@ -1115,3 +1115,165 @@ test_that("hon+ matches pyHON+ on group_regulation subset", {
     info = "Not all edges matched by from/to")
   expect_equal(merged$probability, merged$weight, tolerance = 1e-10)
 })
+
+# ===========================================================================
+# Section 11: Coverage for previously uncovered paths
+# ===========================================================================
+
+# --- .hon_parse_input: all-NA row returns empty trajectory and is dropped ---
+test_that(".hon_parse_input drops all-NA rows", {
+  df <- data.frame(T1 = c(NA, "A"), T2 = c(NA, "B"), stringsAsFactors = FALSE)
+  result <- .hon_parse_input(df)
+  # The first row is all-NA: it should be dropped, leaving 1 trajectory
+  expect_equal(length(result), 1L)
+  expect_equal(result[[1L]], c("A", "B"))
+})
+
+# --- .hon_parse_input: invalid input type stops ---
+test_that(".hon_parse_input stops on invalid input", {
+  expect_error(.hon_parse_input(42), "data.frame or list")
+})
+
+# --- .hon_parse_input: collapse_repeats with length-1 trajectory ---
+test_that(".hon_parse_input collapse_repeats returns length-1 traj unchanged", {
+  # A length-1 traj is filtered out (needs >=2 for transitions), so test
+  # that a 2-element traj after collapsing still works
+  trajs <- list(c("A", "A", "B"))
+  result <- .hon_parse_input(trajs, collapse_repeats = TRUE)
+  expect_equal(result[[1L]], c("A", "B"))
+})
+
+# --- .hon_parse_input: collapse_repeats with single-element input ---
+test_that(".hon_parse_input collapse_repeats skips length-1 element", {
+  # After collapsing, length-1 elements stay as-is (branch: length(traj)<=1)
+  # We pass a list with a 2-element traj where all are same => collapses to 1
+  # => that traj gets filtered (< 2 states), so result is empty
+  trajs <- list(c("A", "A"))
+  result <- .hon_parse_input(trajs, collapse_repeats = TRUE)
+  expect_equal(length(result), 0L)
+})
+
+# --- .hon_kld: empty distribution a returns 0 ---
+test_that(".hon_kld returns 0 for empty distribution a", {
+  a <- numeric(0L)
+  b <- c(X = 0.5, Y = 0.5)
+  expect_equal(.hon_kld(a, b), 0.0)
+})
+
+# --- .hon_kld: p_b = 0 for a target with p_a > 0 returns Inf ---
+test_that(".hon_kld returns Inf when p_b = 0 for supported target", {
+  a <- c(X = 1.0)
+  b <- c(Y = 1.0)  # X not in b => p_b(X) = 0
+  expect_equal(.hon_kld(a, b), Inf)
+})
+
+# --- .hon_get_extensions: order key missing returns character(0) ---
+test_that(".hon_get_extensions returns character(0) when order key missing", {
+  cache <- new.env(hash = TRUE, parent = emptyenv())
+  # Put an entry in cache but without the queried order
+  inner <- new.env(hash = TRUE, parent = emptyenv())
+  inner[["3"]] <- c("some_key")
+  cache[["key_a"]] <- inner
+  result <- .honp_extend_source_fast  # just checking .hon_get_extensions indirectly
+  ext <- .hon_get_extensions("key_a", 99L, cache)
+  expect_equal(ext, character(0L))
+})
+
+# --- .hon_sequence_to_node: empty sequence returns "" ---
+test_that(".hon_sequence_to_node returns empty string for empty input", {
+  expect_equal(.hon_sequence_to_node(character(0L)), "")
+})
+
+# --- .hon_graph_to_edgelist: empty graph returns empty data.frame ---
+test_that(".hon_graph_to_edgelist returns empty data.frame for empty graph", {
+  graph <- new.env(hash = TRUE, parent = emptyenv())
+  result <- .hon_graph_to_edgelist(graph)
+  expect_true(is.data.frame(result))
+  expect_equal(nrow(result), 0L)
+  expect_true(all(c("path", "from", "to", "count", "probability",
+                     "from_order", "to_order") %in% names(result)))
+})
+
+# --- .hon_assemble_output: empty rules gives observed_max_order = 1 ---
+test_that(".hon_assemble_output uses max_order_observed=1 when no rules", {
+  graph <- new.env(hash = TRUE, parent = emptyenv())
+  rules <- new.env(hash = TRUE, parent = emptyenv())
+  trajs <- list(c("A", "B"))
+  result <- .hon_assemble_output(graph, rules, trajs, 3L, 1L)
+  expect_equal(result$max_order_observed, 1L)
+})
+
+# --- build_hon: all-NA trajectories error ---
+test_that("build_hon stops when all trajectories are too short after parsing", {
+  # All rows are single-state (no transitions possible)
+  df <- data.frame(T1 = c("A", "B"), stringsAsFactors = FALSE)
+  expect_error(build_hon(df, max_order = 2L, min_freq = 1L),
+               "No valid trajectories")
+})
+
+
+# ===========================================================================
+# Section 12: pathways() tests for HON
+# ===========================================================================
+
+test_that("pathways.net_hon returns character vector of paths", {
+  trajs <- list(
+    c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"),
+    c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D")
+  )
+  hon <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon+")
+  pw <- pathways(hon)
+  expect_true(is.character(pw))
+})
+
+test_that("pathways.net_hon returns empty for first-order-only HON", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
+  hon <- build_hon(trajs, max_order = 1L, min_freq = 1L)
+  pw <- pathways(hon)
+  expect_equal(pw, character(0))
+})
+
+test_that("pathways.net_hon min_count filters rare paths", {
+  trajs <- list(
+    c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"),
+    c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D")
+  )
+  hon <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon+")
+  pw_low  <- pathways(hon, min_count = 1L)
+  pw_high <- pathways(hon, min_count = 999L)
+  expect_true(length(pw_low) >= length(pw_high))
+  expect_equal(length(pw_high), 0L)
+})
+
+test_that("pathways.net_hon top parameter limits results", {
+  trajs <- list(
+    c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"),
+    c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D")
+  )
+  hon <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon+")
+  pw_all <- pathways(hon)
+  pw_top <- pathways(hon, top = 1L)
+  expect_true(length(pw_all) >= length(pw_top))
+  if (length(pw_all) > 0L) expect_true(length(pw_top) <= 1L)
+})
+
+test_that("pathways.net_hon min_prob filters low-probability paths", {
+  trajs <- list(
+    c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"),
+    c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D")
+  )
+  hon <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon+")
+  pw_all  <- pathways(hon)
+  pw_filt <- pathways(hon, min_prob = 0.99)
+  expect_true(length(pw_all) >= length(pw_filt))
+})
+
+test_that("pathways.net_hon order parameter selects specific order", {
+  trajs <- list(
+    c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"), c("X", "A", "C"),
+    c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D"), c("Y", "A", "D")
+  )
+  hon <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon+")
+  pw2 <- pathways(hon, order = 2L)
+  expect_true(is.character(pw2))
+})

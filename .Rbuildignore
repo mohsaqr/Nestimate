@@ -10,3 +10,6 @@
 ^docs$
 ^sidelined$
 ^tmp$
+^tutorials$
+^Rplots\.pdf$
+^tests/testthat/Rplots\.pdf$

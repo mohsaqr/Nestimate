@@ -589,22 +589,8 @@ summary.net_mogen <- function(object, ...) {
 }
 
 #' @export
-plot.net_mogen <- function(x, type = c("ic", "likelihood", "pathways"), ...) {
+plot.net_mogen <- function(x, type = c("ic", "likelihood"), ...) {
   type <- match.arg(type)
-
-  if (type == "pathways") {
-    if (!requireNamespace("cograph", quietly = TRUE)) {
-      stop("Package 'cograph' is required for pathway plots. ",
-           "Install it with: install.packages('cograph')")
-    }
-    pw <- pathways(x, min_count = 5L, top = 10L, ...)
-    if (length(pw) == 0L) {
-      message("No pathways to plot")
-      return(invisible(x))
-    }
-    p <- cograph::plot_simplicial(x = NULL, pathways = pw)
-    return(invisible(p))
-  }
 
   if (type == "ic") {
     orders <- x$orders

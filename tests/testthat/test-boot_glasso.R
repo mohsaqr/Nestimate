@@ -686,13 +686,12 @@ test_that("plot.boot_glasso type='inclusion' produces ggplot", {
   expect_s3_class(p, "ggplot")
 })
 
-test_that("plot.boot_glasso type='network' runs without error", {
-  skip_if_not_installed("cograph")
+test_that("plot.boot_glasso rejects removed 'network' type", {
   df <- .make_test_data(100, 4)
   result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
                          cs_drop = SMALL_CS_DROP, centrality = FAST_CENT,
                          seed = 1)
-  expect_no_error(plot(result, type = "network"))
+  expect_error(plot(result, type = "network"), "should be one of")
 })
 
 
@@ -829,12 +828,23 @@ test_that("boot_glasso works with kendall correlation", {
 # All four centrality measures
 # ========================================================================
 
-test_that("boot_glasso computes all four centrality measures", {
+test_that("boot_glasso computes all four centrality measures with centrality_fn", {
+  skip_if_not_installed("igraph")
   df <- .make_test_data(100, 4)
   all_cent <- c("strength", "expected_influence", "closeness", "betweenness")
+  my_centrality_fn <- function(mat) {
+    abs_mat <- abs(mat)
+    g <- igraph::graph_from_adjacency_matrix(abs_mat, mode = "undirected",
+                                              weighted = TRUE, diag = FALSE)
+    inv_w <- 1 / igraph::E(g)$weight
+    list(
+      closeness = igraph::closeness(g, weights = inv_w),
+      betweenness = igraph::betweenness(g, weights = inv_w)
+    )
+  }
   result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
                          cs_drop = SMALL_CS_DROP, centrality = all_cent,
-                         seed = 1)
+                         centrality_fn = my_centrality_fn, seed = 1)
   expect_equal(result$centrality_measures, all_cent)
   expect_equal(length(result$original_centrality), 4)
   expect_equal(length(result$cs_coefficient), 4)
@@ -842,12 +852,34 @@ test_that("boot_glasso computes all four centrality measures", {
   expect_equal(length(result$centrality_diff_p), 4)
 })
 
-test_that("boot_glasso closeness and betweenness are non-negative", {
+test_that("boot_glasso closeness and betweenness require centrality_fn", {
   df <- .make_test_data(100, 4)
+  expect_error(
+    boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                cs_drop = SMALL_CS_DROP,
+                centrality = c("closeness", "betweenness"),
+                seed = 1),
+    "centrality_fn is required"
+  )
+})
+
+test_that("boot_glasso closeness and betweenness are non-negative with centrality_fn", {
+  skip_if_not_installed("igraph")
+  df <- .make_test_data(100, 4)
+  my_centrality_fn <- function(mat) {
+    abs_mat <- abs(mat)
+    g <- igraph::graph_from_adjacency_matrix(abs_mat, mode = "undirected",
+                                              weighted = TRUE, diag = FALSE)
+    inv_w <- 1 / igraph::E(g)$weight
+    list(
+      closeness = igraph::closeness(g, weights = inv_w),
+      betweenness = igraph::betweenness(g, weights = inv_w)
+    )
+  }
   result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
                          cs_drop = SMALL_CS_DROP,
                          centrality = c("closeness", "betweenness"),
-                         seed = 1)
+                         centrality_fn = my_centrality_fn, seed = 1)
   # Some values may be NaN/Inf for disconnected networks, check finite ones
   cl <- result$original_centrality$closeness
   bt <- result$original_centrality$betweenness
@@ -1213,4 +1245,170 @@ test_that("boot_glasso strength matches bootnet strength definition", {
 
   # Should match within tolerance (tiny diff from pcor rounding)
   expect_equal(unname(bg_str), unname(bn_str), tolerance = 0.01)
+})
+
+
+# ========================================================================
+# Coverage gap: netobject without $data (L141-142)
+# ========================================================================
+
+test_that("boot_glasso errors on glasso netobject without $data", {
+  df <- .make_test_data(50, 3)
+  net <- build_network(df, method = "glasso")
+  # Strip $data to trigger the error path
+  net$data <- NULL
+  expect_error(boot_glasso(net, iter = 10), "\\$data|data")
+})
+
+
+# ========================================================================
+# Coverage gap: p < 2 and n < 3 internal checks (L165-166)
+# ========================================================================
+
+test_that("boot_glasso errors when p < 2 after matrix conversion", {
+  df <- data.frame(V1 = rnorm(20))
+  expect_error(boot_glasso(df, iter = 10), "At least 2")
+})
+
+test_that("boot_glasso errors when n < 3 after matrix conversion", {
+  df <- data.frame(V1 = rnorm(2), V2 = rnorm(2))
+  expect_error(boot_glasso(df, iter = 10), "3 complete rows|3 observations")
+})
+
+
+# ========================================================================
+# Coverage gap: .bg_estimate_once NULL returns (L393, L397, L404, L407)
+# ========================================================================
+
+test_that(".bg_estimate_once returns NULL when bootstrap sample has zero variance", {
+  # A constant column means correlation fails → returns NULL
+  # We test this indirectly: boot_glasso still finishes even with some NULL boots
+  set.seed(1)
+  df <- data.frame(
+    V1 = c(rep(1, 5), rnorm(45)),
+    V2 = c(rep(2, 5), rnorm(45)),
+    V3 = rnorm(50)
+  )
+  # Just verify it runs without error (some boot iterations may fail gracefully)
+  expect_no_error(
+    result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                          cs_drop = SMALL_CS_DROP, centrality = FAST_CENT,
+                          seed = 99)
+  )
+  expect_s3_class(result, "boot_glasso")
+})
+
+
+# ========================================================================
+# Coverage gap: closeness and betweenness centrality (L440-441)
+# ========================================================================
+
+test_that("boot_glasso computes closeness centrality via centrality_fn", {
+  skip_if_not_installed("igraph")
+  df <- .make_test_data(100, 4)
+  my_fn <- function(mat) {
+    abs_mat <- abs(mat)
+    g <- igraph::graph_from_adjacency_matrix(abs_mat, mode = "undirected",
+                                              weighted = TRUE, diag = FALSE)
+    inv_w <- 1 / igraph::E(g)$weight
+    list(closeness = igraph::closeness(g, weights = inv_w))
+  }
+  result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                         cs_drop = SMALL_CS_DROP,
+                         centrality = "closeness",
+                         centrality_fn = my_fn, seed = 1)
+  expect_equal(result$centrality_measures, "closeness")
+  expect_equal(length(result$original_centrality$closeness), 4)
+  expect_true(all(result$original_centrality$closeness[
+    is.finite(result$original_centrality$closeness)] >= 0))
+})
+
+test_that("boot_glasso computes betweenness centrality via centrality_fn", {
+  skip_if_not_installed("igraph")
+  df <- .make_test_data(100, 4)
+  my_fn <- function(mat) {
+    abs_mat <- abs(mat)
+    g <- igraph::graph_from_adjacency_matrix(abs_mat, mode = "undirected",
+                                              weighted = TRUE, diag = FALSE)
+    inv_w <- 1 / igraph::E(g)$weight
+    list(betweenness = igraph::betweenness(g, weights = inv_w))
+  }
+  result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                         cs_drop = SMALL_CS_DROP,
+                         centrality = "betweenness",
+                         centrality_fn = my_fn, seed = 1)
+  expect_equal(result$centrality_measures, "betweenness")
+  expect_equal(length(result$original_centrality$betweenness), 4)
+  expect_true(all(result$original_centrality$betweenness[
+    is.finite(result$original_centrality$betweenness)] >= 0))
+})
+
+
+# ========================================================================
+# Coverage gap: .bg_edge_diff_test n_valid < 2 (L640)
+# ========================================================================
+
+test_that(".bg_edge_diff_test returns p_mat of ones when n_valid < 2", {
+  # Only 1 complete row → n_valid = 1
+  boot_edges <- matrix(c(1, NA, NA, NA, NA, NA), nrow = 1, ncol = 6)
+  colnames(boot_edges) <- paste0("e", 1:6)
+  result <- Nestimate:::.bg_edge_diff_test(boot_edges)
+  # Should return p_mat (default all-1)
+  expect_equal(nrow(result), 6)
+  expect_true(all(result[upper.tri(result)] == 1))
+})
+
+
+# ========================================================================
+# Coverage gap: .bg_edge_diff_test returns NULL for > 500 edges (L651)
+# ========================================================================
+
+test_that(".bg_edge_diff_test returns NULL for large edge count", {
+  # Create a matrix with 501 edges (columns)
+  n_edges <- 501
+  boot_edges <- matrix(rnorm(10 * n_edges), 10, n_edges)
+  colnames(boot_edges) <- paste0("e", seq_len(n_edges))
+  result <- Nestimate:::.bg_edge_diff_test(boot_edges)
+  expect_null(result)
+})
+
+
+# ========================================================================
+# Coverage gap: .bg_centrality_diff_test n_valid < 2 (L682)
+# ========================================================================
+
+test_that(".bg_centrality_diff_test returns p_mat of ones when n_valid < 2", {
+  boot_cent <- matrix(c(1, NA, NA, NA), nrow = 1, ncol = 4)
+  colnames(boot_cent) <- paste0("V", 1:4)
+  result <- Nestimate:::.bg_centrality_diff_test(boot_cent)
+  expect_equal(nrow(result), 4)
+  expect_true(all(result[upper.tri(result)] == 1))
+})
+
+
+# ========================================================================
+# Coverage gap: plot type='edge_diff' errors when edge_diff_p is NULL (L931-932)
+# ========================================================================
+
+test_that("plot.boot_glasso edge_diff errors when edge_diff_p is NULL", {
+  df <- .make_test_data(100, 4)
+  result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                         cs_drop = SMALL_CS_DROP, centrality = FAST_CENT,
+                         seed = 1)
+  # Manually set edge_diff_p to NULL
+  result$edge_diff_p <- NULL
+  expect_error(plot(result, type = "edge_diff"), "too many edges|not computed")
+})
+
+
+# ========================================================================
+# Coverage gap: plot type='network' removed (no longer valid)
+# ========================================================================
+
+test_that("plot.boot_glasso rejects 'network' type (removed)", {
+  df <- .make_test_data(100, 4)
+  result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                         cs_drop = SMALL_CS_DROP, centrality = FAST_CENT,
+                         seed = 1)
+  expect_error(plot(result, type = "network"), "should be one of")
 })

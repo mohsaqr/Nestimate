@@ -171,3 +171,46 @@ test_that("single-state matrix with self-loop", {
   edges_no <- extract_edges(m, include_self = FALSE)
   expect_equal(nrow(edges_no), 0)
 })
+
+
+# == extract_initial_probs: additional paths ================================
+
+test_that("extracts $initial_probs from tna-class (L132-133)", {
+  # tna/ftna/ctna/atna class with $initial_probs (not $initial)
+  obj <- make_tna_model()
+  obj$initial_probs <- c(A = 0.4, B = 0.3, C = 0.3)
+  class(obj) <- "tna"
+  result <- extract_initial_probs(obj)
+  expect_equal(result, c(A = 0.4, B = 0.3, C = 0.3))
+})
+
+test_that("extracts $initial_probs from tna-subclass ftna (L132-133)", {
+  obj <- make_tna_model("transition", "ftna")
+  obj$initial_probs <- c(A = 0.5, B = 0.5)
+  result <- extract_initial_probs(obj)
+  expect_equal(result, c(A = 0.5, B = 0.5))
+})
+
+test_that("extracts $initial_probs from generic list (L138-139)", {
+  # Non-tna list with $initial_probs (not $initial)
+  obj <- list(initial_probs = c(X = 0.6, Y = 0.4))
+  result <- extract_initial_probs(obj)
+  expect_equal(result, c(X = 0.6, Y = 0.4))
+})
+
+test_that("uniform fallback uses S-names when matrix has no rownames (L154)", {
+  # Transition matrix with no dimnames -> states inferred as S1, S2
+  m <- matrix(c(0, 1, 1, 0), nrow = 2)
+  obj <- list(weights = m)
+  expect_warning(result <- extract_initial_probs(obj), "uniform")
+  expect_equal(names(result), c("S1", "S2"))
+  expect_equal(as.numeric(result), c(0.5, 0.5))
+})
+
+# == extract_edges: sort_by = "to" ==========================================
+
+test_that("sort_by='to' sorts by to column then from", {
+  edges <- extract_edges(make_mat(), sort_by = "to")
+  # to column should be non-decreasing
+  expect_true(!is.unsorted(edges$to))
+})

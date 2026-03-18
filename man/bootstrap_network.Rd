@@ -89,5 +89,5 @@ boot_wtna <- bootstrap_network(net_wtna, iter = 200)
 }
 \seealso{
 \code{\link{build_network}}, \code{\link{print.net_bootstrap}},
-\code{\link{summary.net_bootstrap}}, \code{\link{plot.net_bootstrap}}
+\code{\link{summary.net_bootstrap}}
 }

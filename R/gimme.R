@@ -1009,21 +1009,13 @@ plot.net_gimme <- function(x, type = c("temporal", "contemporaneous",
     # Threshold: only show paths present in > 50% of subjects
     threshold_mat <- x$temporal
     mat[threshold_mat < (x$n_subjects / 2)] <- 0
-    if (requireNamespace("cograph", quietly = TRUE)) {
-      cograph::splot(mat, title = "Group Temporal Network", ...)
-    } else {
-      .gimme_plot_matrix(mat, "Group Temporal Network")
-    }
+    .gimme_plot_matrix(mat, "Group Temporal Network")
 
   } else if (type == "contemporaneous") {
     mat <- x$contemporaneous_avg
     threshold_mat <- x$contemporaneous
     mat[threshold_mat < (x$n_subjects / 2)] <- 0
-    if (requireNamespace("cograph", quietly = TRUE)) {
-      cograph::splot(mat, title = "Group Contemporaneous Network", ...)
-    } else {
-      .gimme_plot_matrix(mat, "Group Contemporaneous Network")
-    }
+    .gimme_plot_matrix(mat, "Group Contemporaneous Network")
 
   } else if (type == "individual") {
     if (is.null(subject)) {
@@ -1048,32 +1040,16 @@ plot.net_gimme <- function(x, type = c("temporal", "contemporaneous",
     colnames(temp_mat) <- x$labels
     cont_mat <- mat[, (p + 1):(2 * p), drop = FALSE]
 
-    if (requireNamespace("cograph", quietly = TRUE)) {
-      old_par <- graphics::par(mfrow = c(1, 2))
-      on.exit(graphics::par(old_par), add = TRUE)
-      cograph::splot(temp_mat,
-                     title = paste0(subj_name, " -- Temporal"), ...)
-      cograph::splot(cont_mat,
-                     title = paste0(subj_name, " -- Contemporaneous"), ...)
-    } else {
-      old_par <- graphics::par(mfrow = c(1, 2))
-      on.exit(graphics::par(old_par), add = TRUE)
-      .gimme_plot_matrix(temp_mat, paste0(subj_name, " -- Temporal"))
-      .gimme_plot_matrix(cont_mat, paste0(subj_name, " -- Contemporaneous"))
-    }
+    old_par <- graphics::par(mfrow = c(1, 2))
+    on.exit(graphics::par(old_par), add = TRUE)
+    .gimme_plot_matrix(temp_mat, paste0(subj_name, " -- Temporal"))
+    .gimme_plot_matrix(cont_mat, paste0(subj_name, " -- Contemporaneous"))
 
   } else if (type == "counts") {
     old_par <- graphics::par(mfrow = c(1, 2))
     on.exit(graphics::par(old_par), add = TRUE)
-    if (requireNamespace("cograph", quietly = TRUE)) {
-      cograph::splot(x$temporal / x$n_subjects,
-                     title = "Temporal Path Proportions", ...)
-      cograph::splot(x$contemporaneous / x$n_subjects,
-                     title = "Contemporaneous Path Proportions", ...)
-    } else {
-      .gimme_plot_matrix(x$temporal, "Temporal Path Counts")
-      .gimme_plot_matrix(x$contemporaneous, "Contemporaneous Path Counts")
-    }
+    .gimme_plot_matrix(x$temporal, "Temporal Path Counts")
+    .gimme_plot_matrix(x$contemporaneous, "Contemporaneous Path Counts")
 
   } else if (type == "fit") {
     fit_data <- x$fit

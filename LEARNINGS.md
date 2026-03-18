@@ -27,6 +27,9 @@
 
 ### 2026-03-17
 - [testthat info param]: `expect_s3_class()` and `expect_null()` do NOT accept `info` parameter. Use `expect_true(inherits(...), info=)` and `expect_true(is.null(...), info=)` instead.
+- [plot.net_mogen ... forwarding]: `plot.net_mogen(type="pathways")` hardcodes `min_count=5L` in its `pathways()` call and forwards `...` too. Passing `min_count` again via `...` causes "formal argument matched by multiple actual arguments" error. Do not pass `min_count` through `plot()` for this method.
+- [build_hypa no-edges stop]: When k is large relative to trajectory length, `.mogen_count_kgrams()` produces edges=0 rows, triggering `stop("No edges at order k")` in `build_hypa()`. Test with k=3 on length-3 trajectories.
+- [.mogen_log_likelihood k=0]: When k=0, `order_used` for any step >= 2 is `min(step-1, 0)=0`, hitting the `order_used == 0L` branch that uses the marginal distribution for every state. This branch was covered by a new test with `trans_mats = list(marginal)` only.
 - [tna ward.D2 bug]: tna v1.2.1 lowercases hclust method names, so `"ward.D2"` becomes `"ward.d2"` which errors. Skip ward.D2 in tna cross-validation tests. Our own code passes it correctly to `hclust()`.
 - [test-mmm parallel fork]: `build_mmm()` tests fail during R CMD check with `"N simultaneous processes spawned"` — the check sandbox restricts `parallel::mclapply`. Pre-existing, not a regression.
 - [build_network metadata]: `build_network()` classifies columns as state vs metadata by checking if all non-void values are in the network's node names. Character columns like Gender (M/F) can be misclassified as state columns if letters overlap. Numeric columns (Age, Score) always go to `$metadata` since they can't be state names.

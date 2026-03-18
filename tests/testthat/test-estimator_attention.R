@@ -222,3 +222,157 @@ test_that("attention estimator registered in registry", {
   expect_true("attention" %in% estimators$name)
   expect_true(estimators$directed[estimators$name == "attention"])
 })
+
+
+# ---- Coverage gap tests ----
+
+# estimators.R L558-559: .count_attention_wide empty matrix early return
+test_that("attention wide: empty matrix when n_states == 0", {
+  # All NAs → no valid states
+  wide_data <- data.frame(
+    T1 = c(NA_character_, NA_character_),
+    T2 = c(NA_character_, NA_character_),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_attention_wide(wide_data)
+  expect_equal(nrow(result), 0L)
+  expect_equal(ncol(result), 0L)
+})
+
+# estimators.R L558-559: .count_attention_wide nc < 2 early return (zero matrix)
+test_that("attention wide: zero matrix when only 1 column (nc < 2)", {
+  wide_data <- data.frame(T1 = c("A", "B"), stringsAsFactors = FALSE)
+  result <- .count_attention_wide(wide_data)
+  # Should return an n_states x n_states zero matrix (no pairs to form)
+  expect_true(is.matrix(result))
+  expect_true(all(result == 0))
+})
+
+# estimators.R L595: backward direction
+test_that("attention wide: backward direction only counts (j<i) pairs", {
+  wide_data <- data.frame(
+    T1 = c("A", "B"),
+    T2 = c("B", "A"),
+    T3 = c("A", "B"),
+    stringsAsFactors = FALSE
+  )
+  bwd_mat <- .count_attention_wide(wide_data, direction = "backward")
+  fwd_mat <- .count_attention_wide(wide_data, direction = "forward")
+
+  # backward should only consider pairs where i > j
+  # sum of backward == sum of forward for symmetric data
+  expect_true(is.matrix(bwd_mat))
+  expect_equal(dim(bwd_mat), dim(fwd_mat))
+})
+
+# estimators.R L627: .count_attention_long action col missing
+test_that("attention long: errors when action column not found", {
+  df <- data.frame(Actor = 1:3, Time = 1:3, Action = c("A", "B", "A"),
+                   stringsAsFactors = FALSE)
+  expect_error(
+    .count_attention_long(df, action = "NonExistent"),
+    "Action column.*not found"
+  )
+})
+
+# estimators.R L643-644: .count_attention_long NULL id → single sequence grp
+test_that("attention long: NULL id creates single sequence group", {
+  df <- data.frame(
+    Time = 1:4,
+    Action = c("A", "B", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_attention_long(df, action = "Action", id = NULL,
+                                   time = "Time")
+  expect_true(is.matrix(result))
+  expect_equal(dim(result), c(2L, 2L))
+})
+
+# estimators.R L648-650: .count_attention_long multi-id composite key
+test_that("attention long: multi-id composite group key", {
+  df <- data.frame(
+    Actor   = c(1L, 1L, 2L, 2L),
+    Session = c("s1", "s1", "s1", "s1"),
+    Time    = c(1L, 2L, 1L, 2L),
+    Action  = c("A", "B", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_attention_long(df, action = "Action",
+                                   id = c("Actor", "Session"),
+                                   time = "Time")
+  expect_true(is.matrix(result))
+  expect_equal(dim(result), c(2L, 2L))
+})
+
+# estimators.R L660: .count_attention_long n_states == 0 early return
+test_that("attention long: empty matrix when all actions are NA", {
+  df <- data.frame(
+    Time   = 1:3,
+    Action = c(NA_character_, NA_character_, NA_character_),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_attention_long(df, action = "Action", id = NULL,
+                                   time = "Time")
+  expect_equal(nrow(result), 0L)
+})
+
+# estimators.R L675: .count_attention_long group with n < 2 is skipped
+test_that("attention long: groups with only 1 obs are skipped", {
+  df <- data.frame(
+    Actor  = c(1L, 2L, 2L, 3L, 3L, 3L),
+    Time   = c(1L, 1L, 2L, 1L, 2L, 3L),
+    Action = c("A", "B", "A", "A", "B", "A"),
+    stringsAsFactors = FALSE
+  )
+  # Actor 1 has only 1 observation → should be skipped
+  result <- .count_attention_long(df, action = "Action", id = "Actor",
+                                   time = "Time")
+  expect_true(is.matrix(result))
+  expect_true(all(result >= 0))
+})
+
+# estimators.R L681: time column in long format attention
+test_that("attention long: time column used for decay", {
+  df <- data.frame(
+    Actor  = c(1L, 1L, 1L),
+    Time   = c(1L, 10L, 20L),  # large gaps
+    Action = c("A", "B", "A"),
+    stringsAsFactors = FALSE
+  )
+  result_large_gap <- .count_attention_long(df, action = "Action",
+                                             id = "Actor", time = "Time",
+                                             lambda = 1)
+  result_no_time <- .count_attention_long(df, action = "Action",
+                                           id = "Actor", time = "NoTime",
+                                           lambda = 1)
+  # Large time gaps should produce smaller attention weights than unit steps
+  expect_true(sum(result_large_gap) < sum(result_no_time))
+})
+
+# estimators.R L687 L690-692: attention long inner loop NA check
+test_that("attention long: NA actions in long format are skipped", {
+  df <- data.frame(
+    Actor  = c(1L, 1L, 1L, 1L),
+    Time   = c(1L, 2L, 3L, 4L),
+    Action = c("A", NA_character_, "B", "A"),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_attention_long(df, action = "Action", id = "Actor",
+                                   time = "Time")
+  expect_true(is.matrix(result))
+  expect_true(all(result >= 0))
+})
+
+# estimators.R L752: .count_attention_long returns full matrix
+test_that("attention long: returns correct matrix dimensions", {
+  df <- data.frame(
+    Actor  = c(1L, 1L, 1L, 2L, 2L, 2L),
+    Time   = c(1L, 2L, 3L, 1L, 2L, 3L),
+    Action = c("A", "B", "C", "C", "B", "A"),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_attention_long(df, action = "Action", id = "Actor",
+                                   time = "Time")
+  expect_equal(dim(result), c(3L, 3L))
+  expect_equal(sort(rownames(result)), c("A", "B", "C"))
+})

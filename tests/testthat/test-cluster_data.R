@@ -850,3 +850,315 @@ test_that("build_network round-trip preserves covariates", {
   expect_true(!is.null(stored$covariates))
   expect_equal(stored$covariates$fit$aic, cl$covariates$fit$aic)
 })
+
+# ==============================================================================
+# 23. dl distance function — zero-length edge cases (L87-88)
+# ==============================================================================
+
+test_that(".dl_dist_r zero-length edge cases work", {
+  # n == 0 → return m
+  expect_equal(Nestimate:::.dl_dist_r(integer(), c(1L, 2L), 0L, 2L), 2)
+  # m == 0 → return n
+  expect_equal(Nestimate:::.dl_dist_r(c(1L, 2L), integer(), 2L, 0L), 2)
+  # Same sequence → 0
+  expect_equal(Nestimate:::.dl_dist_r(c(1L, 2L, 3L), c(1L, 2L, 3L), 3L, 3L), 0)
+  # Transposition: one transposition = 1 in DL
+  expect_equal(Nestimate:::.dl_dist_r(c(1L, 2L), c(2L, 1L), 2L, 2L), 1)
+})
+
+# ==============================================================================
+# 24. levenshtein zero-length edge cases (L103)
+# ==============================================================================
+
+test_that(".levenshtein_dist_r zero-length handles both empty", {
+  # both empty → 0
+  expect_equal(Nestimate:::.levenshtein_dist_r(integer(), integer(), 0L, 0L), 0)
+})
+
+# ==============================================================================
+# 25. qgram distance functions direct tests (L141-150, L155-160, L165-173, L178-181, L186-187, L195)
+# ==============================================================================
+
+test_that(".get_qgram_r returns empty for n < q", {
+  x <- c(1L, 2L)
+  result <- Nestimate:::.get_qgram_r(x, 2L, 3L)
+  expect_length(result, 0L)
+})
+
+test_that(".qgram_dist_r computes correct L1 distance", {
+  qx <- c("A\x01B" = 2L, "B\x01C" = 1L)
+  qy <- c("A\x01B" = 1L, "C\x01D" = 2L)
+  # |2-1| + |1-0| + |0-2| = 1 + 1 + 2 = 4
+  expect_equal(Nestimate:::.qgram_dist_r(NULL, NULL, qx, qy), 4L)
+})
+
+test_that(".cosine_dist_r is zero for identical profiles", {
+  qx <- c("AB" = 3L, "BC" = 2L)
+  expect_equal(Nestimate:::.cosine_dist_r(NULL, NULL, qx, qx), 0)
+})
+
+test_that(".cosine_dist_r returns 1 when denominator is zero", {
+  # Both zero-norm profiles: den == 0
+  qx <- integer()
+  qy <- integer()
+  expect_equal(Nestimate:::.cosine_dist_r(NULL, NULL, qx, qy), 1)
+})
+
+test_that(".jaccard_dist_r returns 0 for empty vs empty", {
+  expect_equal(Nestimate:::.jaccard_dist_r(integer(), integer()), 0)
+})
+
+test_that(".jaccard_dist_r is correct for known inputs", {
+  qx <- c("AB" = 1L, "BC" = 1L)
+  qy <- c("BC" = 1L, "CD" = 1L)
+  # |intersection| / |union| = 1 / 3 → distance = 1 - 1/3 = 2/3
+  expect_equal(Nestimate:::.jaccard_dist_r(qx, qy), 2/3)
+})
+
+test_that(".jaro_dist_r returns 0 for identical", {
+  x <- c(1L, 2L, 3L)
+  expect_equal(Nestimate:::.jaro_dist_r(x, x, 3L, 3L), 0)
+})
+
+# ==============================================================================
+# 26. Cosine distance matrix with zero-norm rows (L319-322)
+# ==============================================================================
+
+test_that("cosine distance R path handles all-NA sequences (zero-norm rows)", {
+  # Tests the zero_rows path in .cosine_matrix_tdm via the R fallback
+  df <- data.frame(
+    T1 = c("A", "%", "B"),
+    T2 = c("B", "%", "C"),
+    T3 = c("C", "%", "A"),
+    stringsAsFactors = FALSE
+  )
+  enc <- Nestimate:::.encode_sequences(df, c("*", "%"))
+  dm <- as.matrix(
+    Nestimate:::.dissimilarity_matrix_r(enc, "cosine", lambda = 0, q = 2L, p = 0.1)
+  )
+  # Row 2 is all NA → distance to rows 1 and 3 should be 1
+  expect_equal(dm[2, 1], 1)
+  expect_equal(dm[2, 3], 1)
+  expect_equal(dm[2, 2], 0)
+})
+
+# ==============================================================================
+# 27. tna / cograph_network covariates rejection (L430, L440)
+# ==============================================================================
+
+test_that("tna input with column-name covariates errors", {
+  skip_if_not_installed("tna")
+  model <- tna::tna(tna::group_regulation[1:20, ])
+  expect_error(
+    cluster_data(model, k = 2, covariates = "some_col"),
+    "tna/cograph_network"
+  )
+})
+
+test_that("cograph_network input with column-name covariates errors", {
+  cg <- structure(
+    list(data = make_test_data(n = 20, k = 5),
+         weights = matrix(0, 4, 4), directed = TRUE),
+    class = c("cograph_network", "list")
+  )
+  expect_error(
+    cluster_data(cg, k = 2, covariates = "some_col"),
+    "tna/cograph_network"
+  )
+})
+
+# ==============================================================================
+# 28. netobject covariate lookup: missing column error (L477, L485)
+# ==============================================================================
+
+test_that("netobject covariate with missing column errors", {
+  set.seed(1)
+  df <- data.frame(
+    T1 = sample(LETTERS[1:3], 30, replace = TRUE),
+    T2 = sample(LETTERS[1:3], 30, replace = TRUE),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(df, method = "relative")
+  expect_error(
+    cluster_data(net, k = 2, covariates = "NonExistent"),
+    "not found"
+  )
+})
+
+# ==============================================================================
+# 29. Raw data.frame covariate with missing column error (L497-498)
+# ==============================================================================
+
+test_that("data.frame covariate missing column errors with helpful message", {
+  df <- make_cov_data()
+  expect_error(
+    cluster_data(df, k = 3, covariates = c("Age", "NotAColumn")),
+    "not found|NotAColumn"
+  )
+})
+
+# ==============================================================================
+# 30. Unsupported input type for cluster_data (L755 via .extract_sequence_data)
+# ==============================================================================
+
+test_that(".extract_sequence_data errors on unsupported input", {
+  expect_error(
+    cluster_data(list(a = 1, b = 2), k = 2),
+    "Unsupported input"
+  )
+})
+
+# ==============================================================================
+# 31. summary.net_clustering single-member cluster (L755 singleton path)
+# ==============================================================================
+
+test_that("summary.net_clustering handles singleton clusters", {
+  # Force a single-member cluster by using PAM with extreme data
+  df <- data.frame(
+    T1 = c("A", "A", "A", "Z"),
+    T2 = c("A", "A", "A", "Z"),
+    T3 = c("A", "A", "A", "Z"),
+    stringsAsFactors = FALSE
+  )
+  cl <- cluster_data(df, k = 2, dissimilarity = "hamming")
+  out <- capture.output(res <- summary(cl))
+  expect_true(is.data.frame(res))
+})
+
+# ==============================================================================
+# 32. .run_covariate_analysis: small-cluster warning (L895-896)
+# ==============================================================================
+
+test_that("covariate analysis warns when cluster too small for params", {
+  # Create highly imbalanced clusters: 1 observation in one cluster
+  # Use tiny n and 2 clusters to force min_cl < n_params
+  set.seed(2)
+  df <- data.frame(
+    T1 = sample(LETTERS[1:3], 8, replace = TRUE),
+    T2 = sample(LETTERS[1:3], 8, replace = TRUE),
+    T3 = sample(LETTERS[1:3], 8, replace = TRUE),
+    X1 = rnorm(8),
+    X2 = rnorm(8),
+    X3 = rnorm(8),
+    X4 = rnorm(8),
+    stringsAsFactors = FALSE
+  )
+  # Use many covariates and small k to trigger the warning
+  expect_warning(
+    cluster_data(df, k = 2, covariates = c("X1", "X2", "X3", "X4")),
+    "parameters|Estimates may be unreliable"
+  )
+})
+
+# ==============================================================================
+# 33. ordered factor covariate gets unordered (L925-926, L930)
+# ==============================================================================
+
+test_that("ordered factor covariates are coerced to unordered", {
+  df <- make_cov_data()
+  df$Level <- factor(sample(c("Low", "Med", "High"), nrow(df), replace = TRUE),
+                     levels = c("Low", "Med", "High"), ordered = TRUE)
+  cl <- cluster_data(df, k = 3, covariates = "Level")
+  expect_true(!is.null(cl$covariates))
+})
+
+# ==============================================================================
+# 34. .print_covariate_profiles called directly via summary (L950, L959-964)
+# ==============================================================================
+
+test_that(".print_covariate_profiles prints both numeric and categorical", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 3, covariates = c("Age", "Gender"))
+  out <- capture.output(summary(cl))
+  expect_true(any(grepl("Cluster Profiles.*numeric", out)))
+  expect_true(any(grepl("Cluster Profiles.*categorical", out)))
+})
+
+# ==============================================================================
+# 35. .print_covariate_profiles: categorical level missing in a cluster (L1242)
+# ==============================================================================
+
+test_that(".print_covariate_profiles handles missing level in a cluster", {
+  # Use a rare level that may not appear in every cluster
+  set.seed(9)
+  df <- data.frame(
+    T1 = sample(LETTERS[1:4], 30, replace = TRUE),
+    T2 = sample(LETTERS[1:4], 30, replace = TRUE),
+    Group = c(rep("X", 25), rep("Y", 5)),  # Y is rare
+    stringsAsFactors = FALSE
+  )
+  cl <- cluster_data(df, k = 3, covariates = "Group")
+  out <- capture.output(summary(cl))
+  expect_true(any(grepl("0 \\(0%\\)", out)))
+})
+
+# ==============================================================================
+# 36. .resolve_covariates: no variables specified (L971-972, L982-987, L992-993)
+# ==============================================================================
+
+test_that(".resolve_covariates formula with no vars errors", {
+  df <- make_cov_data()
+  # An empty formula-like string would parse to no vars; use empty char vector
+  expect_error(
+    cluster_data(df, k = 3, covariates = character(0)),
+    "No covariate|specified"
+  )
+})
+
+# ==============================================================================
+# 37. .resolve_covariates: bad type (L997-1000)
+# ==============================================================================
+
+test_that(".resolve_covariates rejects non-supported type", {
+  df <- make_cov_data()
+  expect_error(
+    cluster_data(df, k = 3, covariates = 42),
+    "formula|character|data.frame"
+  )
+})
+
+# ==============================================================================
+# 38. .resolve_covariates: nrow mismatch via resolved cov_df (L997-1000)
+# ==============================================================================
+
+test_that(".resolve_covariates errors on row mismatch from raw data extraction", {
+  # This tests the path where raw_data is df but cov_names not present → error
+  # with "Available:" message
+  df <- make_cov_data()
+  expect_error(
+    cluster_data(df, k = 3, covariates = "MissingColumn"),
+    "MissingColumn|not found"
+  )
+})
+
+# ==============================================================================
+# 39. .run_covariate_analysis: k=2 returns vector not matrix (L1085)
+# ==============================================================================
+
+test_that("k=2 covariate analysis still produces a proper coef data.frame", {
+  df <- make_cov_data()
+  cl <- cluster_data(df, k = 2, covariates = c("Age", "Gender"))
+  coefs <- cl$covariates$coefficients
+  expect_true(is.data.frame(coefs))
+  expect_true("cluster" %in% names(coefs))
+  expect_true("variable" %in% names(coefs))
+  # For k=2, there is only one row of clusters
+  expect_equal(length(unique(coefs$cluster)), 1L)
+})
+
+# ==============================================================================
+# 40. .run_covariate_analysis: n_dropped > 0 → profiles on complete-case (L1121-1124)
+# ==============================================================================
+
+test_that("covariate NA rows use complete-case for profiles", {
+  df <- make_cov_data()
+  df$Age[1:5] <- NA
+  expect_warning(
+    cl <- cluster_data(df, k = 3, covariates = "Age"),
+    "Dropped 5"
+  )
+  # Profiles should reflect 35 complete cases
+  np <- cl$covariates$profiles$numeric
+  total_n <- sum(unique(np[, c("cluster", "n")])$n)
+  expect_equal(total_n, 35L)
+})

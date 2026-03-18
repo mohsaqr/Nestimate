@@ -349,3 +349,191 @@ test_that("covariate with NAs warns and works", {
   expect_true(!is.null(mmm$covariates))
   expect_equal(mmm$n_sequences, 57L)
 })
+
+# ============================================
+# Coverage gap: .mmm_em called with NULL init_posterior (L29-30)
+# ============================================
+
+test_that("build_mmm runs without init_posterior (random init path)", {
+  data <- .make_mmm_data()
+  # n_starts = 1 → only one init via .mmm_init_kmeans, rest random
+  mmm <- build_mmm(data, k = 2, n_starts = 1, seed = 7)
+  expect_s3_class(mmm, "net_mmm")
+})
+
+# ============================================
+# Coverage gap: .mmm_em called with NULL from_ind (L39-41)
+# ============================================
+
+test_that("build_mmm handles NULL from_ind path via direct EM call", {
+  # build_mmm always computes from_ind; test via a single EM run
+  data <- .make_mmm_data(n_per_group = 10, n_cols = 5)
+  states <- c("A", "B", "C")
+  n_states <- 3L
+  counts_raw <- matrix(0L, 20, n_states^2)
+  counts_raw[1, 1] <- 1L  # minimal data
+  init_st <- rep(1L, 20)
+  # Call .mmm_em directly with from_ind = NULL to trigger the computation path
+  result <- Nestimate:::.mmm_em(counts_raw, init_st, 2L, 10L, 1e-6, 0.1,
+                                 n_states, init_posterior = NULL,
+                                 from_ind = NULL, cov_df = NULL)
+  expect_true(is.list(result))
+  expect_true(!is.null(result$posterior))
+})
+
+# ============================================
+# Coverage gap: .mmm_init_kmeans when N <= n_comp (L149-151)
+# ============================================
+
+test_that(".mmm_init_kmeans handles N <= n_comp edge case", {
+  # N = 2, n_comp = 3 → cannot cluster, use round-robin assignment
+  counts <- matrix(c(1, 0, 0, 0, 0, 0, 0, 1, 0), nrow = 2, ncol = 9)
+  post <- Nestimate:::.mmm_init_kmeans(counts, 3L)
+  expect_equal(nrow(post), 2L)
+  expect_equal(ncol(post), 3L)
+  # Each row should be a valid probability vector
+  expect_equal(unname(rowSums(post)), c(1, 1), tolerance = 1e-10)
+})
+
+# ============================================
+# Coverage gap: .mmm_init_kmeans when kmeans fails (L160-161)
+# ============================================
+
+test_that(".mmm_init_kmeans returns random post when kmeans fails", {
+  # Pass degenerate all-zero data to force kmeans failure
+  counts <- matrix(0, 5, 9)
+  post <- Nestimate:::.mmm_init_kmeans(counts, 3L)
+  expect_equal(nrow(post), 5L)
+  expect_equal(ncol(post), 3L)
+  # Should still be valid posterior (rows sum to 1)
+  rs <- rowSums(post)
+  expect_equal(unname(rs), rep(1, 5), tolerance = 1e-10)
+})
+
+# ============================================
+# Coverage gap: build_mmm with k=2 covariates Newton step (L266, L270-282)
+# ============================================
+
+test_that("build_mmm with k=2 covariate Newton step runs without error", {
+  sim <- .make_mmm_cov_data(n = 80, seed = 11)
+  mmm <- build_mmm(sim$data, k = 2, n_starts = 2, seed = 11,
+                    covariates = "Age")
+  expect_s3_class(mmm, "net_mmm")
+  expect_true(!is.null(mmm$covariates$beta))
+  expect_equal(ncol(mmm$covariates$beta), 2L)  # intercept + Age
+})
+
+# ============================================
+# Coverage gap: build_mmm with k=3 covariates general Newton step (L396-397)
+# ============================================
+
+test_that("build_mmm with k=3 runs general covariate Newton step", {
+  sim <- .make_mmm_cov_data(n = 90, seed = 21)
+  mmm <- build_mmm(sim$data, k = 3, n_starts = 2, seed = 21,
+                    covariates = "Age")
+  expect_s3_class(mmm, "net_mmm")
+  expect_equal(mmm$k, 3L)
+  expect_true(!is.null(mmm$covariates))
+})
+
+# ============================================
+# Coverage gap: compare_mmm print with matching BIC and ICL (L499-500, L507, L512, L515)
+# ============================================
+
+test_that("print.mmm_compare handles case where best_bic == best_icl", {
+  data <- .make_mmm_data()
+  comp <- compare_mmm(data, k = 2:3, n_starts = 2, seed = 1)
+  # Manually force best_bic == best_icl
+  comp$BIC[1] <- -1000
+  comp$ICL[1] <- -1000
+  out <- capture.output(print(comp))
+  expect_true(any(grepl("BIC", out)))
+})
+
+test_that("print.mmm_compare handles case where best_bic != best_icl", {
+  data <- .make_mmm_data(n_per_group = 50)
+  comp <- compare_mmm(data, k = 2:4, n_starts = 2, seed = 5)
+  # Force mismatch
+  comp$BIC[1] <- min(comp$BIC) - 1
+  comp$ICL[2] <- min(comp$ICL) - 1
+  out <- capture.output(print(comp))
+  expect_true(any(grepl("<-- BIC", out)))
+  expect_true(any(grepl("<-- ICL", out)))
+})
+
+# ============================================
+# Coverage gap: plot.net_mmm type='posterior' (L727-728)
+# ============================================
+
+test_that("plot.net_mmm type='posterior' returns ggplot invisibly", {
+  data <- .make_mmm_data()
+  mmm <- build_mmm(data, k = 2, n_starts = 2, seed = 1)
+  p <- plot(mmm, type = "posterior")
+  expect_s3_class(p, "ggplot")
+})
+
+# ============================================
+# Coverage gap: plot.net_mmm type='networks' removed
+# ============================================
+
+test_that("plot.net_mmm rejects removed 'networks' type", {
+  data <- .make_mmm_data()
+  mmm <- build_mmm(data, k = 2, n_starts = 2, seed = 1)
+  expect_error(plot(mmm, type = "networks"), "should be one of")
+})
+
+# ============================================
+# Coverage gap: plot.mmm_compare returns ggplot (L755-756, L759-773)
+# ============================================
+
+test_that("plot.mmm_compare returns ggplot", {
+  data <- .make_mmm_data()
+  comp <- compare_mmm(data, k = 2:3, n_starts = 2, seed = 1)
+  p <- plot(comp)
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot.mmm_compare errors without ggplot2", {
+  skip_if(requireNamespace("ggplot2", quietly = TRUE),
+          "ggplot2 installed; skipping test")
+  data <- .make_mmm_data()
+  comp <- compare_mmm(data, k = 2:3, n_starts = 2, seed = 1)
+  expect_error(plot(comp), "ggplot2")
+})
+
+# ============================================
+# Coverage gap: .plot_mmm_posterior requires ggplot2 (L783)
+# ============================================
+
+test_that(".plot_mmm_posterior errors without ggplot2", {
+  skip_if(requireNamespace("ggplot2", quietly = TRUE),
+          "ggplot2 installed; skipping test")
+  data <- .make_mmm_data()
+  mmm <- build_mmm(data, k = 2, n_starts = 2, seed = 1)
+  expect_error(plot(mmm, type = "posterior"), "ggplot2")
+})
+
+# ============================================
+# Coverage gap: summary.net_mmm with covariates calls .print_covariate_profiles (L790-791)
+# ============================================
+
+test_that("summary.net_mmm with covariates prints profiles", {
+  sim <- .make_mmm_cov_data(n = 60)
+  mmm <- build_mmm(sim$data, k = 2, n_starts = 2, seed = 42,
+                    covariates = "Age")
+  out <- capture.output(summary(mmm))
+  expect_true(any(grepl("Covariate Analysis", out)))
+})
+
+# ============================================
+# Coverage gap: build_mmm cograph_network input (L794-811 region: decode path)
+# ============================================
+
+test_that("build_mmm works with cograph_network (decode path)", {
+  data <- .make_mmm_data()
+  net <- build_network(data, method = "relative")
+  # net inherits both netobject and cograph_network
+  mmm <- build_mmm(net, k = 2, n_starts = 2, seed = 1)
+  expect_s3_class(mmm, "net_mmm")
+  expect_equal(mmm$k, 2L)
+})

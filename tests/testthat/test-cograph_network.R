@@ -113,7 +113,8 @@ test_that("centrality_stability works with cograph_network", {
   cg <- make_cograph_net()
 
   cs <- centrality_stability(
-    cg, iter = 10, drop_prop = c(0.3, 0.5), seed = 1
+    cg, iter = 10, drop_prop = c(0.3, 0.5), seed = 1,
+    measures = c("InStrength", "OutStrength")
   )
 
   expect_s3_class(cs, "net_stability")
@@ -174,7 +175,8 @@ test_that("boot_glasso works with cograph_network wrapping glasso netobject", {
     meta = list(source = "test", tna = list(method = "glasso"))
   ), class = c("cograph_network", "list"))
 
-  boot <- boot_glasso(cg, iter = 20, cs_iter = 10, seed = 1)
+  boot <- boot_glasso(cg, iter = 20, cs_iter = 10, seed = 1,
+                      centrality = c("strength", "expected_influence"))
   expect_s3_class(boot, "boot_glasso")
   expect_equal(boot$iter, 20L)
 })

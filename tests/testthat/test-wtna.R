@@ -376,3 +376,100 @@ test_that("wcna permutation errors with build_network (no stored data)", {
     "requires the original data"
   )
 })
+
+
+# ---- .resolve_codes() coverage ----
+
+test_that(".resolve_codes with numeric indices returns column names (L219-220)", {
+  df <- data.frame(id = 1:3, A = c(1, 0, 1), B = c(0, 1, 0))
+  result <- Nestimate:::.resolve_codes(df, codes = 2:3)
+  expect_equal(result, c("A", "B"))
+})
+
+test_that(".resolve_codes with column range string returns range (L225-231)", {
+  df <- data.frame(A = c(1, 0), B = c(0, 1), C = c(1, 1), D = c(0, 0))
+  result <- Nestimate:::.resolve_codes(df, codes = "B:D")
+  expect_equal(result, c("B", "C", "D"))
+})
+
+test_that(".resolve_codes range errors on missing start column (L229)", {
+  df <- data.frame(A = c(1, 0), B = c(0, 1))
+  expect_error(
+    Nestimate:::.resolve_codes(df, codes = "Z:B"),
+    "not found"
+  )
+})
+
+test_that(".resolve_codes range errors on missing end column (L230)", {
+  df <- data.frame(A = c(1, 0), B = c(0, 1))
+  expect_error(
+    Nestimate:::.resolve_codes(df, codes = "A:Z"),
+    "not found"
+  )
+})
+
+# ---- .wtna_to_matrix: overlapping window with fewer rows than window_size (L125) ----
+
+test_that(".wtna_to_matrix returns empty matrix when n < window_size (L125)", {
+  # 2-row data, window_size = 5 -> n(2) < ws(5) -> returns 0-row matrix
+  df <- data.frame(A = c(1, 0), B = c(0, 1))
+  result <- Nestimate:::.wtna_to_matrix(df, codes = c("A", "B"),
+                                        window_size = 5L,
+                                        mode = "overlapping")
+  expect_true(nrow(result) == 0L)
+  expect_equal(ncol(result), 2L)
+})
+
+# ---- .wtna_compute_by_actor: multiple actor columns (L175-176) ----
+
+test_that(".wtna_compute_by_actor with multi-column actor key (L175-176)", {
+  df <- data.frame(
+    actor   = c(1, 1, 2, 2),
+    group   = c("g1", "g1", "g1", "g1"),
+    A = c(1, 0, 0, 1),
+    B = c(0, 1, 1, 0)
+  )
+  codes <- c("A", "B")
+  result <- Nestimate:::.wtna_compute_by_actor(df, codes = codes,
+                                               window_size = 1L,
+                                               mode = "non-overlapping",
+                                               actor = c("actor", "group"),
+                                               method = "transition")
+  expect_true(is.matrix(result))
+  expect_equal(dim(result), c(2L, 2L))
+})
+
+# ---- .wtna_compute_by_actor: method='both' summing (L185-188) ----
+
+test_that(".wtna_compute_by_actor method='both' with multiple actors (L185-188)", {
+  df <- data.frame(
+    actor = c(1, 1, 2, 2),
+    A = c(1, 0, 0, 1),
+    B = c(0, 1, 1, 0)
+  )
+  result <- Nestimate:::.wtna_compute_by_actor(df, codes = c("A", "B"),
+                                               window_size = 1L,
+                                               mode = "non-overlapping",
+                                               actor = "actor",
+                                               method = "both")
+  expect_true(is.list(result))
+  expect_true(all(c("transition", "cooccurrence") %in% names(result)))
+  expect_true(is.matrix(result$transition))
+  expect_true(is.matrix(result$cooccurrence))
+})
+
+# ---- .estimator_wtna: sequence fallback path (L394-397) ----
+
+test_that(".estimator_wtna falls back to frequency for long-format non-binary data (L394-397)", {
+  # Long format with action column -> not one-hot -> uses .estimator_frequency
+  df <- data.frame(
+    id = c(1, 1, 1, 2, 2),
+    time = c(1, 2, 3, 1, 2),
+    Action = c("A", "B", "A", "B", "A"),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(df, method = "wtna", format = "long",
+                       action = "Action", id = "id", time = "time")
+  expect_s3_class(net, "netobject")
+  expect_true(net$weights["A", "B"] > 0 || net$weights["B", "A"] > 0)
+})

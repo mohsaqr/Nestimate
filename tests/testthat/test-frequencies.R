@@ -354,3 +354,139 @@ test_that("convert_sequence_format errors on missing columns", {
     "not found"
   )
 })
+
+
+# ---- .build_pairs_long() coverage ----
+
+test_that(".build_pairs_long errors on missing action column", {
+  df <- data.frame(actor = 1:3, time = 1:3, stringsAsFactors = FALSE)
+  expect_error(
+    Nestimate:::.build_pairs_long(df, action = "Action", id = NULL, time = "time"),
+    "not found"
+  )
+})
+
+test_that(".build_pairs_long errors on missing ID column", {
+  df <- data.frame(actor = 1:3, Action = c("A", "B", "C"), stringsAsFactors = FALSE)
+  expect_error(
+    Nestimate:::.build_pairs_long(df, action = "Action", id = c("actor", "missing_id"), time = "time"),
+    "not found"
+  )
+})
+
+test_that(".build_pairs_long with multiple ID columns uses interaction grouping", {
+  df <- data.frame(
+    actor  = c(1, 1, 2, 2),
+    group  = c("g1", "g1", "g1", "g1"),
+    Action = c("A", "B", "C", "D"),
+    stringsAsFactors = FALSE
+  )
+  result <- Nestimate:::.build_pairs_long(df, action = "Action",
+                                          id = c("actor", "group"), time = "time")
+  expect_s3_class(result, "data.frame")
+  expect_true(all(c("from", "to") %in% names(result)))
+  expect_equal(nrow(result), 2L)
+})
+
+test_that(".build_pairs_long with NULL id treats all rows as single sequence", {
+  df <- data.frame(Action = c("A", "B", "A"), stringsAsFactors = FALSE)
+  result <- Nestimate:::.build_pairs_long(df, action = "Action", id = NULL, time = "time")
+  expect_equal(nrow(result), 2L)
+  expect_equal(result$from, c("A", "B"))
+  expect_equal(result$to, c("B", "A"))
+})
+
+test_that(".build_pairs_long with single-row group returns empty data.frame", {
+  df <- data.frame(
+    actor  = c(1, 2),
+    Action = c("A", "B"),
+    stringsAsFactors = FALSE
+  )
+  result <- Nestimate:::.build_pairs_long(df, action = "Action", id = "actor", time = "time")
+  expect_equal(nrow(result), 0L)
+  expect_true(all(c("from", "to") %in% names(result)))
+})
+
+test_that(".build_pairs_long sorts by time column when present", {
+  df <- data.frame(
+    actor  = c(1, 1, 1),
+    time   = c(3, 1, 2),
+    Action = c("C", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+  result <- Nestimate:::.build_pairs_long(df, action = "Action", id = "actor", time = "time")
+  expect_equal(result$from, c("A", "B"))
+  expect_equal(result$to, c("B", "C"))
+})
+
+# ---- .build_pairs_wide() coverage ----
+
+test_that(".build_pairs_wide errors on missing columns", {
+  df <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"), stringsAsFactors = FALSE)
+  expect_error(
+    Nestimate:::.build_pairs_wide(df, id = NULL, cols = c("T1", "T3")),
+    "not found"
+  )
+})
+
+test_that(".build_pairs_wide errors when fewer than 2 state columns", {
+  df <- data.frame(T1 = c("A", "B"), stringsAsFactors = FALSE)
+  expect_error(
+    Nestimate:::.build_pairs_wide(df, id = NULL, cols = c("T1")),
+    "At least 2"
+  )
+})
+
+test_that(".build_pairs_wide with NULL cols uses all columns", {
+  df <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"), stringsAsFactors = FALSE)
+  result <- Nestimate:::.build_pairs_wide(df, id = NULL, cols = NULL)
+  expect_equal(nrow(result), 2L)
+})
+
+test_that(".build_pairs_wide with id excludes id from state cols", {
+  df <- data.frame(id = c(1, 2), T1 = c("A", "B"), T2 = c("B", "A"),
+                   stringsAsFactors = FALSE)
+  result <- Nestimate:::.build_pairs_wide(df, id = "id", cols = NULL)
+  # Only T1, T2 used, not id
+  expect_true(all(result$from %in% c("A", "B")))
+  expect_equal(nrow(result), 2L)
+})
+
+test_that(".build_pairs_wide row with all NAs returns empty data.frame", {
+  df <- data.frame(T1 = c(NA, "A"), T2 = c(NA, "B"), stringsAsFactors = FALSE)
+  result <- Nestimate:::.build_pairs_wide(df, id = NULL, cols = c("T1", "T2"))
+  # First row has all NAs, contributes 0; second row A->B
+  expect_equal(nrow(result), 1L)
+  expect_equal(result$from, "A")
+  expect_equal(result$to, "B")
+})
+
+# ---- .fmt_edgelist and .fmt_follows single-row edge cases ----
+
+test_that("convert_sequence_format edgelist handles single-action sequences", {
+  # Actor with only one action -> no transitions -> contributes 0 rows
+  wide_data <- data.frame(
+    id = c(1, 2),
+    T1 = c("A", "B"),
+    T2 = c("B", NA),
+    stringsAsFactors = FALSE
+  )
+  result <- convert_sequence_format(wide_data, id_col = "id", format = "edgelist")
+  # Actor 2 has only B (T2 is NA) -> 0 edges
+  expect_equal(nrow(result), 1L)
+  expect_equal(result$from, "A")
+  expect_equal(result$to, "B")
+})
+
+test_that("convert_sequence_format follows handles single-action sequences", {
+  wide_data <- data.frame(
+    id = c(1, 2),
+    T1 = c("A", "B"),
+    T2 = c("B", NA),
+    stringsAsFactors = FALSE
+  )
+  result <- convert_sequence_format(wide_data, id_col = "id", format = "follows")
+  expect_equal(nrow(result), 1L)
+  expect_equal(result$act, "B")
+  expect_equal(result$follows, "A")
+})

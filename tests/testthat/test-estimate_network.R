@@ -496,3 +496,86 @@ test_that("estimate_network frequency matches frequencies() output", {
 
   expect_equal(net$weights, freq_mat)
 })
+
+
+# ---- Coverage gap tests ----
+
+# estimate_network.R L81: minmax scaling when all non-zero values equal
+test_that(".apply_scaling minmax: no-op when all non-zero values equal", {
+  # Build a matrix where all non-zero values are the same
+  mat <- matrix(c(0, 0.5, 0.5, 0), 2, 2)
+  result <- .apply_scaling(mat, "minmax")
+  # When rng[1] == rng[2], should return unchanged mat
+  expect_equal(result, mat)
+})
+
+# estimate_network.R L81: minmax scaling when matrix is all-zero
+test_that(".apply_scaling minmax: no-op on all-zero matrix", {
+  mat <- matrix(0, 3, 3)
+  result <- .apply_scaling(mat, "minmax")
+  expect_equal(result, mat)
+})
+
+# estimate_network.R L93: rank scaling when all values zero
+test_that(".apply_scaling rank: no-op when all values zero", {
+  mat <- matrix(0, 3, 3)
+  result <- .apply_scaling(mat, "rank")
+  expect_equal(result, mat)
+})
+
+# estimate_network.R L101: normalize scaling when all row sums zero
+test_that(".apply_scaling normalize: no-op when all rows zero", {
+  mat <- matrix(0, 3, 3)
+  result <- .apply_scaling(mat, "normalize")
+  expect_equal(result, mat)
+})
+
+# estimate_network.R L163: .decompose_multilevel errors when id_col not in data
+test_that(".decompose_multilevel errors when id_col not found", {
+  df <- data.frame(x = rnorm(10), y = rnorm(10))
+  expect_error(
+    .decompose_multilevel(df, id_col = "person", level = "between"),
+    "id_col.*not found"
+  )
+})
+
+# estimate_network.R L172: .decompose_multilevel errors with < 2 numeric cols
+test_that(".decompose_multilevel errors when < 2 numeric columns available", {
+  df <- data.frame(
+    person = 1:10,
+    x = rnorm(10)
+  )
+  expect_error(
+    .decompose_multilevel(df, id_col = "person", level = "between"),
+    "At least 2 numeric columns"
+  )
+})
+
+# estimate_network.R L199-200: .decompose_multilevel within: < 3 rows remain
+test_that(".decompose_multilevel within: errors when < 3 rows after dropping singles", {
+  # Only 2 persons with 1 obs each → all dropped → < 3 rows
+  df <- data.frame(
+    person = c(1L, 2L),
+    x = rnorm(2),
+    y = rnorm(2)
+  )
+  expect_error(
+    .decompose_multilevel(df, id_col = "person", level = "within"),
+    "Fewer than 3 rows"
+  )
+})
+
+# estimate_network.R L212: .decompose_multilevel returns data unchanged for
+# unknown level (fallthrough)
+test_that(".decompose_multilevel returns original data for unrecognised level", {
+  df <- data.frame(
+    person = 1:6,
+    x = rnorm(6),
+    y = rnorm(6)
+  )
+  # Call with a level that is neither "between" nor "within"
+  # This tests the final fallthrough `data` return at L212
+  result <- .decompose_multilevel(df, id_col = "person", level = "neither")
+  expect_identical(result, df)
+})
+

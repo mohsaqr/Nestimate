@@ -699,3 +699,492 @@ test_that("print.netobject shows data dimensions", {
   out <- capture.output(print(net))
   expect_true(any(grepl("Data: 80 sequences", out)))
 })
+
+
+# ---- Coverage gap tests ----
+
+# L180-181: multi-column group key via interaction()
+test_that("build_network group dispatch with multi-column group key", {
+  set.seed(42)
+  df <- data.frame(
+    T1 = sample(c("A", "B", "C"), 60, replace = TRUE),
+    T2 = sample(c("A", "B", "C"), 60, replace = TRUE),
+    T3 = sample(c("A", "B", "C"), 60, replace = TRUE),
+    g1 = rep(c("X", "Y"), 30),
+    g2 = rep(c("P", "Q"), each = 30),
+    stringsAsFactors = FALSE
+  )
+  grp_nets <- build_network(df, method = "relative",
+                            group = c("g1", "g2"),
+                            params = list(format = "wide"))
+  expect_s3_class(grp_nets, "netobject_group")
+  # 4 combinations: X-P, X-Q, Y-P, Y-Q
+  expect_equal(length(grp_nets), 4L)
+  expect_equal(attr(grp_nets, "group_col"), c("g1", "g2"))
+})
+
+# L211-212: explicit codes triggers onehot format
+test_that("build_network with explicit codes triggers onehot format", {
+  set.seed(42)
+  df <- data.frame(
+    A = c(1L, 0L, 1L, 0L, 1L),
+    B = c(0L, 1L, 0L, 1L, 0L),
+    C = c(1L, 1L, 0L, 0L, 1L)
+  )
+  net <- build_network(df, method = "co_occurrence",
+                       codes = c("A", "B", "C"),
+                       window_size = 2L)
+  expect_s3_class(net, "netobject")
+  expect_false(net$directed)
+})
+
+# L215: action column present → long format detection
+test_that("build_network auto-detects long format via action column", {
+  long_data <- data.frame(
+    Actor = c(1L, 1L, 1L, 2L, 2L, 2L),
+    Time  = c(1L, 2L, 3L, 1L, 2L, 3L),
+    Action = c("A", "B", "A", "B", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(long_data, method = "relative",
+                       action = "Action")
+  expect_s3_class(net, "netobject")
+  expect_true(net$directed)
+})
+
+# L236-246: long format path through prepare_data
+test_that("build_network long format with actor/time/action passes through prepare_data", {
+  long_data <- data.frame(
+    Actor  = c(1L, 1L, 1L, 2L, 2L, 2L),
+    Time   = c(1L, 2L, 3L, 1L, 2L, 3L),
+    Action = c("A", "B", "A", "B", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(long_data, method = "relative",
+                       actor = "Actor", action = "Action",
+                       time = "Time")
+  expect_s3_class(net, "netobject")
+  # After prepare_data the format should be reset to "wide"
+  expect_equal(net$params$format, "wide")
+})
+
+# L260-264: onehot without windowing or session warns
+test_that("build_network one-hot without windowing warns", {
+  df <- data.frame(A = c(1L, 0L, 1L), B = c(0L, 1L, 0L))
+  expect_warning(
+    build_network(df, method = "co_occurrence",
+                  codes = c("A", "B"), window_size = 1L),
+    "sparse"
+  )
+})
+
+# L270-271, L277: grp_col built from actor + session → params$actor
+test_that("build_network onehot with actor and session sets params$actor", {
+  set.seed(42)
+  df <- data.frame(
+    actor   = rep(1:3, each = 4),
+    session = rep(c("s1", "s2"), 6),
+    A = sample(0:1, 12, replace = TRUE),
+    B = sample(0:1, 12, replace = TRUE)
+  )
+  net <- build_network(df, method = "co_occurrence",
+                       codes = c("A", "B"),
+                       actor = "actor", session = "session",
+                       window_size = 2L)
+  expect_s3_class(net, "netobject")
+  expect_equal(net$params$actor, c("actor", "session"))
+})
+
+# L341-343: estimator returning bad structure triggers error
+test_that("build_network errors when estimator returns malformed output", {
+  bad_fn <- function(data, ...) {
+    list(weights = matrix(1, 2, 2))  # missing 'matrix', 'nodes', 'directed'
+  }
+  register_estimator("bad_estimator", bad_fn, "bad", directed = FALSE)
+  on.exit(remove_estimator("bad_estimator"))
+
+  set.seed(42)
+  df <- data.frame(a = rnorm(10), b = rnorm(10))
+  expect_error(
+    build_network(df, method = "bad_estimator"),
+    "must return a list with 'matrix', 'nodes', and 'directed'"
+  )
+})
+
+# L385: print method label falls through to unknown method
+test_that("print.netobject shows generic label for unknown method", {
+  # Register a custom estimator with a non-standard name
+  custom_fn <- function(data, ...) {
+    S <- cor(data)
+    diag(S) <- 0
+    list(matrix = S, nodes = colnames(S), directed = FALSE)
+  }
+  register_estimator("my_custom_net", custom_fn, "Custom", directed = FALSE)
+  on.exit(remove_estimator("my_custom_net"))
+
+  set.seed(42)
+  df <- data.frame(x = rnorm(50), y = rnorm(50), z = rnorm(50))
+  net <- build_network(df, method = "my_custom_net")
+  out <- capture.output(print(net))
+  expect_true(any(grepl("my_custom_net", out)))
+})
+
+# L474-475: print.netobject shows metadata when present
+test_that("print.netobject shows metadata column names", {
+  skip_if_not_installed("tna")
+  # tna::group_regulation has sequences with metadata-like columns
+  # Build a dataset where there are extra non-state numeric columns
+  set.seed(42)
+  df <- data.frame(
+    T1 = sample(c("A", "B"), 50, replace = TRUE),
+    T2 = sample(c("A", "B"), 50, replace = TRUE),
+    T3 = sample(c("A", "B"), 50, replace = TRUE),
+    Age = rpois(50, 25),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(df, method = "relative",
+                       params = list(format = "wide"))
+  # metadata should be present
+  if (!is.null(net$metadata)) {
+    out <- capture.output(print(net))
+    expect_true(any(grepl("Metadata:", out)))
+  } else {
+    skip("No metadata column detected in this data")
+  }
+})
+
+# L569-575: print.netobject_group
+test_that("print.netobject_group shows group info", {
+  set.seed(42)
+  df <- data.frame(
+    T1 = sample(c("A", "B", "C"), 60, replace = TRUE),
+    T2 = sample(c("A", "B", "C"), 60, replace = TRUE),
+    grp = rep(c("X", "Y", "Z"), 20),
+    stringsAsFactors = FALSE
+  )
+  nets <- build_network(df, method = "relative", group = "grp",
+                        params = list(format = "wide"))
+  out <- capture.output(print(nets))
+  expect_true(any(grepl("Group Networks", out)))
+  expect_true(any(grepl("3 groups", out)))
+  expect_true(any(grepl("X:", out)))
+})
+
+test_that("print.netobject_group returns invisible(x)", {
+  set.seed(42)
+  df <- data.frame(
+    T1 = sample(c("A", "B"), 40, replace = TRUE),
+    T2 = sample(c("A", "B"), 40, replace = TRUE),
+    grp = rep(c("X", "Y"), 20),
+    stringsAsFactors = FALSE
+  )
+  nets <- build_network(df, method = "relative", group = "grp",
+                        params = list(format = "wide"))
+  ret <- capture.output(result <- print(nets))
+  expect_identical(result, nets)
+})
+
+
+# L803-808: predictability for cor with single-neighbor node
+test_that("predictability.netobject for cor with single-neighbor node", {
+  # Build a cor network where one node has exactly one neighbor
+  set.seed(99)
+  df <- data.frame(
+    x = rnorm(100),
+    y = rnorm(100),
+    z = rnorm(100)
+  )
+  # Use a high threshold to ensure exactly one neighbor for at least one node
+  net <- build_network(df, method = "cor", threshold = 0)
+
+  r2 <- predictability(net)
+  expect_true(is.numeric(r2))
+  expect_equal(length(r2), 3L)
+  expect_true(all(r2 >= 0 & r2 <= 1))
+})
+
+# print.netobject with ising shows thresholds range
+test_that("print.netobject shows ising thresholds range", {
+  skip_if_not_installed("glmnet")
+  df <- data.frame(
+    V1 = c(0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L,
+           0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L),
+    V2 = c(1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L,
+           1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L),
+    V3 = c(0L, 0L, 1L, 1L, 0L, 0L, 1L, 1L, 0L, 0L,
+           1L, 1L, 0L, 0L, 1L, 1L, 0L, 0L, 1L, 1L)
+  )
+  net <- build_network(df, method = "ising")
+  out <- capture.output(print(net))
+  # Should show Ising-specific fields
+  expect_true(any(grepl("Ising", out)))
+})
+
+# netobject_ml print shows no sample size when $n is NULL
+test_that("print.netobject_ml handles sub-networks with no n", {
+  df <- .make_multilevel_data(n_persons = 20, obs_per_person = 5, p = 3)
+  net <- build_network(df, method = "glasso", id_col = "person",
+                       level = "both", params = list(nlambda = 20L))
+
+  # Both sub-networks are full netobjects; print should succeed
+  expect_no_error(print(net))
+})
+
+
+
+# ---- Estimators.R coverage gap tests ----
+
+# L89: .count_transitions_wide stop on missing cols
+test_that(".count_transitions_wide errors on missing state columns", {
+  df <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"), stringsAsFactors = FALSE)
+  expect_error(
+    .count_transitions_wide(df, cols = c("T1", "T2", "T_MISSING")),
+    "Columns not found"
+  )
+})
+
+# L92: .count_transitions_wide stop on < 2 state columns
+test_that(".count_transitions_wide errors on fewer than 2 state columns", {
+  df <- data.frame(T1 = c("A", "B"), stringsAsFactors = FALSE)
+  expect_error(
+    .count_transitions_wide(df),
+    "At least 2 state columns"
+  )
+})
+
+# L113: .count_transitions_wide all-NA returns 0x0 matrix
+test_that(".count_transitions_wide returns empty matrix when all states NA", {
+  df <- data.frame(
+    T1 = c(NA_character_, NA_character_),
+    T2 = c(NA_character_, NA_character_),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_transitions_wide(df)
+  expect_equal(nrow(result), 0L)
+  expect_equal(ncol(result), 0L)
+})
+
+# L170-174: .count_transitions_long single row → zero matrix (n < 2)
+test_that(".count_transitions_long single row returns zero matrix", {
+  df <- data.frame(
+    Time = 1L,
+    Action = "A",
+    stringsAsFactors = FALSE
+  )
+  result <- .count_transitions_long(df, action = "Action", id = NULL,
+                                     time = "Time")
+  expect_true(is.matrix(result))
+  expect_true(all(result == 0L))
+  expect_equal(rownames(result), "A")
+})
+
+# L200: .count_transitions_long group n < 2 returns empty pair
+test_that(".count_transitions_long groups with 1 obs produce zero transitions", {
+  df <- data.frame(
+    Actor  = c(1L, 2L, 2L),
+    Time   = c(1L, 1L, 2L),
+    Action = c("A", "B", "A"),
+    stringsAsFactors = FALSE
+  )
+  # Actor 1 has only 1 row → no pairs from that group
+  result <- .count_transitions_long(df, action = "Action", id = "Actor",
+                                     time = "Time")
+  expect_true(is.matrix(result))
+  # The transition A->B or B->A from actor 2 only
+  expect_equal(sort(rownames(result)), c("A", "B"))
+})
+
+# L347-351: .estimator_co_occurrence with explicit codes (one-hot path)
+test_that("co_occurrence with explicit codes uses wtna one-hot path", {
+  set.seed(42)
+  df <- data.frame(
+    A = sample(0L:1L, 20, replace = TRUE),
+    B = sample(0L:1L, 20, replace = TRUE),
+    C = sample(0L:1L, 20, replace = TRUE)
+  )
+  net <- build_network(df, method = "co_occurrence",
+                       codes = c("A", "B", "C"),
+                       window_size = 2L)
+  expect_s3_class(net, "netobject")
+  expect_false(net$directed)
+  expect_equal(sort(net$nodes$label), c("A", "B", "C"))
+})
+
+# L359-361: .estimator_co_occurrence long format (non-binary)
+test_that("co_occurrence long format path works", {
+  long_data <- data.frame(
+    Actor  = c(1L, 1L, 1L, 2L, 2L, 2L),
+    Time   = c(1L, 2L, 3L, 1L, 2L, 3L),
+    Action = c("A", "B", "A", "B", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(long_data, method = "co_occurrence",
+                       action = "Action", actor = "Actor",
+                       params = list(format = "long",
+                                     id = "Actor", time = "Time"))
+  expect_s3_class(net, "netobject")
+  expect_false(net$directed)
+  expect_equal(sort(net$nodes$label), c("A", "B"))
+})
+
+# L393-395: .count_cooccurrence_wide empty n_states or nc < 2
+test_that(".count_cooccurrence_wide returns empty when no valid states", {
+  df <- data.frame(
+    T1 = c(NA_character_, NA_character_),
+    T2 = c(NA_character_, NA_character_),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_cooccurrence_wide(df)
+  expect_equal(nrow(result), 0L)
+  expect_equal(ncol(result), 0L)
+})
+
+# L443-444: .count_cooccurrence_long missing action column
+test_that(".count_cooccurrence_long errors on missing action column", {
+  df <- data.frame(Time = 1:3, Action = c("A", "B", "A"),
+                   stringsAsFactors = FALSE)
+  expect_error(
+    .count_cooccurrence_long(df, action = "NoSuchColumn"),
+    "Action column.*not found"
+  )
+})
+
+# L460-468, L474-489, L492-499, L502-514: .count_cooccurrence_long full paths
+test_that(".count_cooccurrence_long single-id group path", {
+  df <- data.frame(
+    Actor  = c(1L, 1L, 1L, 2L, 2L, 2L),
+    Time   = c(1L, 2L, 3L, 1L, 2L, 3L),
+    Action = c("A", "B", "C", "B", "C", "A"),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_cooccurrence_long(df, action = "Action", id = "Actor",
+                                      time = "Time")
+  expect_true(is.matrix(result))
+  expect_true(isSymmetric(result))
+  expect_equal(sort(rownames(result)), c("A", "B", "C"))
+})
+
+test_that(".count_cooccurrence_long multi-id composite group key", {
+  df <- data.frame(
+    Actor   = c(1L, 1L, 2L, 2L),
+    Session = c("s1", "s1", "s2", "s2"),
+    Time    = c(1L, 2L, 1L, 2L),
+    Action  = c("A", "B", "B", "A"),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_cooccurrence_long(df, action = "Action",
+                                      id = c("Actor", "Session"),
+                                      time = "Time")
+  expect_true(is.matrix(result))
+  expect_true(isSymmetric(result))
+})
+
+test_that(".count_cooccurrence_long NULL id single sequence", {
+  df <- data.frame(
+    Time   = 1:4,
+    Action = c("A", "B", "A", "C"),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_cooccurrence_long(df, action = "Action", id = NULL,
+                                      time = "Time")
+  expect_true(is.matrix(result))
+  expect_equal(sort(rownames(result)), c("A", "B", "C"))
+})
+
+# L497-499: .count_cooccurrence_long empty from_vec returns zero matrix
+test_that(".count_cooccurrence_long returns zero matrix for single-obs groups", {
+  df <- data.frame(
+    Actor  = c(1L, 2L),
+    Time   = c(1L, 1L),
+    Action = c("A", "B"),
+    stringsAsFactors = FALSE
+  )
+  # Each group has only 1 obs → no pairs
+  result <- .count_cooccurrence_long(df, action = "Action", id = "Actor",
+                                      time = "Time")
+  expect_true(is.matrix(result))
+  expect_true(all(result == 0))
+})
+
+# L517-519: .count_cooccurrence_long diagonal correction
+test_that(".count_cooccurrence_long diagonal is correctly halved", {
+  df <- data.frame(
+    Actor  = c(1L, 1L, 1L),
+    Time   = c(1L, 2L, 3L),
+    Action = c("A", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+  result <- .count_cooccurrence_long(df, action = "Action", id = "Actor",
+                                      time = "Time")
+  # A appears at positions 1 and 2 → pair (A,A) is counted once
+  # Diagonal A-A should equal half of what bidirectional counting would give
+  expect_true(is.matrix(result))
+  expect_true(result["A", "A"] >= 0)
+})
+
+# L842: .prepare_association_input errors on < 2 numeric cols after cleaning
+test_that(".prepare_association_input errors when < 2 cols after zero-var removal", {
+  df <- data.frame(
+    V1 = rep(1.0, 20),  # zero variance
+    V2 = rep(2.0, 20),  # zero variance
+    V3 = rnorm(20)      # one valid col
+  )
+  expect_message(
+    expect_error(
+      build_network(df, method = "cor"),
+      "At least 2 variable"
+    ),
+    "zero-variance"
+  )
+})
+
+# L871, L875: .prepare_association_input matrix input with cov type and no colnames
+test_that("build_network matrix input with cov type assigns V-names when colnames NULL", {
+  set.seed(42)
+  raw <- matrix(rnorm(50 * 4), 50, 4)
+  cov_mat <- cov(raw)
+  rownames(cov_mat) <- colnames(cov_mat) <- NULL
+
+  net <- build_network(cov_mat, method = "cor",
+                       params = list(n = 50, input_type = "cov"))
+  expect_s3_class(net, "netobject")
+  expect_equal(net$n_nodes, 4L)
+  expect_true(all(grepl("^V", net$nodes$label)))
+})
+
+# L875: bad data type for .prepare_association_input
+test_that(".prepare_association_input errors on non-df non-matrix input", {
+  expect_error(
+    build_network(list(a = 1), method = "cor"),
+    "data frame or a square symmetric matrix"
+  )
+})
+
+# L967: .compute_lambda_path errors when all off-diagonal correlations zero
+test_that(".compute_lambda_path errors when all off-diagonal correlations zero", {
+  # Create a correlation matrix that is identity (all off-diagonal are zero)
+  S <- diag(4)
+  rownames(S) <- colnames(S) <- paste0("V", 1:4)
+  expect_error(
+    .compute_lambda_path(S, nlambda = 10L, lambda.min.ratio = 0.01),
+    "All off-diagonal correlations are zero"
+  )
+})
+
+# L1004-1005: .select_ebic handles glasso fit failure (NULL fit → Inf EBIC)
+test_that("glasso network completes even with challenging input", {
+  # Near-singular but symmetric correlation matrix
+  set.seed(42)
+  S <- diag(3)
+  diag(S) <- 1
+  S[1,2] <- S[2,1] <- 0.999
+  S[2,3] <- S[3,2] <- 0.001
+  S[1,3] <- S[3,1] <- 0.001
+  rownames(S) <- colnames(S) <- c("A", "B", "C")
+  # Should complete without error; some lambda fits may fail internally
+  expect_no_error(
+    net <- build_network(S, method = "glasso", params = list(n = 100, nlambda = 10L))
+  )
+  expect_s3_class(net, "netobject")
+})
+

@@ -18,14 +18,13 @@ d <- read.csv("saqrvibcoding.csv", stringsAsFactors = FALSE)
 ```{r}
 
 freqs <- build_network(d, method = "frequency", format = "long", action = "superclass")
-cograph::splot(freqs$matrix)
+COg <- cograph::splot(freqs$matrix)
 
 
 
 reld <- build_network(d, method = "relative",  action = "superclass") 
 
 
-as_tna(reld)
 
 ```
 

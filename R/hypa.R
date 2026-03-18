@@ -257,29 +257,3 @@ summary.net_hypa <- function(object, ...) {
   invisible(object)
 }
 
-#' @param type Character. Which anomalies to plot: \code{"over"}
-#'   (default), \code{"under"}, or \code{"all"}.
-#' @param top Integer or NULL. Show only the top N pathways
-#'   (default: 10).
-#' @param ... Additional arguments passed to
-#'   \code{cograph::plot_simplicial()}.
-#'
-#' @export
-plot.net_hypa <- function(x, type = "over", top = 10L, ...) {
-  if (!requireNamespace("cograph", quietly = TRUE)) {
-    stop("Package 'cograph' is required for plotting. ",
-         "Install it with: install.packages('cograph')")
-  }
-
-  pw <- pathways(x, type = type)
-  if (!is.null(top) && length(pw) > top) {
-    pw <- pw[seq_len(top)]
-  }
-  if (length(pw) == 0L) {
-    message("No anomalous pathways to plot")
-    return(invisible(x))
-  }
-
-  p <- cograph::plot_simplicial(x = NULL, pathways = pw, ...)
-  invisible(p)
-}

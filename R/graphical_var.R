@@ -1,50 +1,52 @@
 #' Graphical VAR Estimation
 #'
-#' @description
 #' Estimate a graphical vector autoregressive (GVAR) model from time series or
 #' panel data. Jointly estimates a sparse temporal network (L1-penalized VAR
-#' coefficients) and a sparse contemporaneous network (GLASSO on residuals)
-#' using EBIC model selection over a lambda grid.
+#' coefficients) and a sparse contemporaneous network (graphical lasso on
+#' residuals) using EBIC model selection over a lambda grid.
 #'
-#' Follows the algorithm of Epskamp et al. (2018): alternating optimization
-#' of temporal (beta) and contemporaneous (kappa) parameters, with joint EBIC
-#' for model selection.
+#' Follows the two-step approach of Epskamp et al. (2018):
+#' \enumerate{
+#'   \item Estimate sparse temporal coefficients (beta) via L1-penalized
+#'     regression across a lambda grid.
+#'   \item For each temporal model, estimate the contemporaneous precision
+#'     matrix (kappa) via graphical lasso on the residual covariance.
+#'   \item Select the (lambda_beta, lambda_kappa) pair minimizing joint EBIC.
+#' }
 #'
-#' @param data A data.frame with columns for variables, and optionally id, day,
-#'   beep columns for panel/ESM data.
+#' @param data A data.frame or matrix with columns for variables, and optionally
+#'   id, day, beep columns for panel/ESM data.
 #' @param vars Character vector of variable names.
 #' @param id Character. Name of the person-ID column. If NULL, assumes single
 #'   subject.
 #' @param day Character. Name of the day/session column. Default: NULL.
 #' @param beep Character. Name of the beep/measurement column. Default: NULL.
 #' @param n_lambda Integer. Number of lambda values per penalty dimension.
-#'   Creates an n_lambda x n_lambda grid. Default: 30.
+#'   Default: 30.
 #' @param gamma Numeric. EBIC hyperparameter (0 = BIC, higher = sparser).
 #'   Default: 0.5.
 #' @param scale Logical. Whether to standardize variables. Default: TRUE.
-#' @param center_within Logical. Whether to center within person (removes
-#'   between-person variance). Default: TRUE.
-#' @param maxit_in Integer. Max inner iterations for beta update. Default: 100.
-#' @param maxit_out Integer. Max outer alternating iterations. Default: 100.
-#' @param lambda_min_kappa Numeric. Ratio of min/max lambda for kappa.
-#'   Default: 0.01.
-#' @param lambda_min_beta Numeric. Ratio of min/max lambda for beta.
-#'   Default: 0.01.
+#' @param center_within Logical. Whether to center within person when id is
+#'   provided (removes between-person variance). Default: TRUE.
+#' @param lambda_min_ratio Numeric. Ratio of min/max lambda for both beta and
+#'   kappa grids. Default: 0.01.
 #' @param penalize_diagonal Logical. Penalize autoregressive diagonal in beta.
 #'   Default: TRUE.
 #'
 #' @return A list of class \code{gvar_result} containing:
 #' \describe{
-#'   \item{beta}{Temporal coefficient matrix (p x p). \code{beta[i,j]} =
-#'     effect of variable j at t-1 on variable i at t. Sparse (L1-penalized).}
+#'   \item{beta}{Temporal coefficient matrix (p x p). Each entry represents the
+#'     effect of a variable at t-1 on another at t. Sparse (L1-penalized).}
 #'   \item{kappa}{Precision matrix (p x p, symmetric). Inverse of residual
-#'     covariance. Sparse (GLASSO-penalized).}
+#'     covariance. Sparse (graphical lasso).}
 #'   \item{PCC}{Partial contemporaneous correlations (p x p, symmetric).
 #'     Derived from kappa: \code{-cov2cor(kappa)}, diagonal zeroed.}
 #'   \item{PDC}{Partial directed correlations (p x p). Standardized temporal
 #'     coefficients scaled by residual covariance.}
+#'   \item{temporal}{Alias for \code{beta}.}
+#'   \item{contemporaneous}{Alias for \code{PCC}.}
 #'   \item{labels}{Variable names.}
-#'   \item{n_obs}{Number of valid observations used.}
+#'   \item{n_obs}{Number of valid lag-pair observations.}
 #'   \item{lambda_beta}{Selected lambda for temporal penalty.}
 #'   \item{lambda_kappa}{Selected lambda for contemporaneous penalty.}
 #'   \item{gamma}{EBIC gamma used.}
@@ -59,15 +61,16 @@
 #' @examples
 #' \dontrun{
 #' # Single subject
-#' data <- matrix(rnorm(500 * 4), 500, 4)
-#' colnames(data) <- c("V1", "V2", "V3", "V4")
-#' res <- graphical_var(as.data.frame(data), vars = colnames(data))
+#' set.seed(1)
+#' data <- data.frame(matrix(rnorm(200 * 4), 200, 4))
+#' names(data) <- c("V1", "V2", "V3", "V4")
+#' res <- graphical_var(data, vars = names(data))
 #' res$beta    # temporal
 #' res$PCC     # contemporaneous
 #' }
 #'
 #' @importFrom glasso glasso
-#' @importFrom stats cov2cor lm.fit
+#' @importFrom stats cov cov2cor
 #' @export
 graphical_var <- function(data,
                           vars,
@@ -78,10 +81,7 @@ graphical_var <- function(data,
                           gamma = 0.5,
                           scale = TRUE,
                           center_within = TRUE,
-                          maxit_in = 100L,
-                          maxit_out = 100L,
-                          lambda_min_kappa = 0.05,
-                          lambda_min_beta = lambda_min_kappa,
+                          lambda_min_ratio = 0.01,
                           penalize_diagonal = TRUE) {
 
   stopifnot(is.data.frame(data) || is.matrix(data))
@@ -89,251 +89,253 @@ graphical_var <- function(data,
   stopifnot(is.numeric(gamma), gamma >= 0)
   stopifnot(is.numeric(n_lambda), n_lambda >= 2L)
 
-  if (!requireNamespace("graphicalVAR", quietly = TRUE)) {
-    stop("Package 'graphicalVAR' is required. Install with: ",
-         "install.packages('graphicalVAR')", call. = FALSE)
-  }
-
   data <- as.data.frame(data)
   d <- length(vars)
 
-  # ---- Build arguments for graphicalVAR::graphicalVAR ----
-  gvar_args <- list(
-    data       = data,
-    vars       = vars,
-    nLambda    = as.integer(n_lambda),
-    gamma      = gamma,
-    scale      = scale,
-    verbose    = FALSE,
-    maxit.in   = as.integer(maxit_in),
-    maxit.out  = as.integer(maxit_out),
-    lambda_min_kappa    = lambda_min_kappa,
-    lambda_min_beta     = lambda_min_beta,
-    penalize.diagonal   = penalize_diagonal,
-    centerWithin        = center_within
-  )
-  if (!is.null(id))   gvar_args$idvar   <- id
-  if (!is.null(day))  gvar_args$dayvar  <- day
-  if (!is.null(beep)) gvar_args$beepvar <- beep
+  # ---- 1. Build lag pairs ----
+  lag_data <- .gvar_build_lag_pairs(data, vars, id, day, beep)
+  Y <- lag_data$Y
+  X <- lag_data$X
+  n <- nrow(Y)
 
-  # ---- Run graphicalVAR ----
-  fit <- tryCatch(
-    suppressWarnings(do.call(graphicalVAR::graphicalVAR, gvar_args)),
-    error = function(e) {
-      stop("graphicalVAR estimation failed: ", e$message, call. = FALSE)
+  if (n < d + 1L) {
+    stop("Too few lag pairs (", n, ") for ", d, " variables.", call. = FALSE)
+  }
+
+  # ---- 2. Center / scale ----
+  if (!is.null(id) && center_within) {
+    ids <- lag_data$id_vec
+    uid <- unique(ids)
+    Y_means <- matrix(0, n, d)
+    X_means <- matrix(0, n, d)
+    for (u in uid) {
+      idx <- which(ids == u)
+      Y_means[idx, ] <- rep(colMeans(Y[idx, , drop = FALSE]), each = length(idx))
+      X_means[idx, ] <- rep(colMeans(X[idx, , drop = FALSE]), each = length(idx))
     }
-  )
+    Y <- Y - Y_means
+    X <- X - X_means
+  }
 
-  # ---- Extract and repackage ----
-  beta_full <- fit$beta  # d x (d+1), col 1 = intercept
-  beta_net <- beta_full[, -1, drop = FALSE]
-  colnames(beta_net) <- rownames(beta_net) <- vars
+  if (scale) {
+    Y_sd <- apply(Y, 2, sd)
+    X_sd <- apply(X, 2, sd)
+    Y_sd[Y_sd == 0] <- 1
+    X_sd[X_sd == 0] <- 1
+    Y <- t(t(Y) / Y_sd)
+    X <- t(t(X) / X_sd)
+  }
 
-  kappa <- fit$kappa
+  # ---- 3-4. Fit temporal models across lambda grid ----
+  cross_cor <- abs(crossprod(X, Y)) / n
+  if (!penalize_diagonal) diag(cross_cor) <- 0
+  lambda_max_beta <- max(cross_cor)
+  if (lambda_max_beta == 0) lambda_max_beta <- 1
+  lambda_beta_seq <- exp(seq(log(lambda_max_beta),
+                              log(lambda_max_beta * lambda_min_ratio),
+                              length.out = n_lambda))
+
+  # Variable-by-variable lasso via coordinate descent
+  beta_fits <- lapply(lambda_beta_seq, function(lam) {
+    B <- .gvar_multivariate_lasso(X, Y, lam, penalize_diagonal)
+    resid <- Y - X %*% B
+    list(beta = B, residuals = resid)
+  })
+
+  # ---- 5. Lambda grid for kappa + joint EBIC search ----
+  best_ebic <- Inf
+  best_result <- NULL
+
+  for (bi in seq_along(beta_fits)) {
+    fit <- beta_fits[[bi]]
+    S <- crossprod(fit$residuals) / n
+    S <- (S + t(S)) / 2
+    eig <- eigen(S, symmetric = TRUE, only.values = TRUE)$values
+    if (min(eig) <= 0) S <- S + (abs(min(eig)) + 1e-6) * diag(d)
+
+    # Lambda grid for kappa
+    lambda_max_kappa <- max(abs(S[upper.tri(S)]))
+    if (lambda_max_kappa == 0) lambda_max_kappa <- 1
+    lam_kappa_seq <- exp(seq(log(lambda_max_kappa),
+                              log(lambda_max_kappa * lambda_min_ratio),
+                              length.out = n_lambda))
+
+    prev_wi <- prev_w <- NULL
+    for (lk in lam_kappa_seq) {
+      gl <- tryCatch(
+        glasso::glasso(S, rho = lk, penalize.diagonal = FALSE,
+                       start = if (!is.null(prev_wi)) "warm" else "cold",
+                       wi.init = prev_wi, w.init = prev_w),
+        error = function(e) NULL
+      )
+      if (is.null(gl)) next
+      prev_wi <- gl$wi
+      prev_w <- gl$w
+
+      kappa_fit <- gl$wi
+      n_beta <- sum(fit$beta != 0)
+      n_kappa <- sum(kappa_fit[upper.tri(kappa_fit)] != 0)
+      n_params <- n_beta + n_kappa
+
+      # Log-likelihood: multivariate normal
+      loglik <- (n / 2) * (determinant(kappa_fit, logarithm = TRUE)$modulus -
+                             sum(diag(S %*% kappa_fit)) - d * log(2 * pi))
+
+      # EBIC (Foygel & Drton, 2010; graphicalVAR convention)
+      ebic <- -2 * as.numeric(loglik) +
+        n_params * log(n) +
+        4 * gamma * (n_beta * log(d * d) + n_kappa * log(d))
+
+      if (ebic < best_ebic) {
+        best_ebic <- ebic
+        best_result <- list(
+          beta = fit$beta,
+          kappa = kappa_fit,
+          lambda_beta = bi,
+          lambda_kappa = lk,
+          ebic = ebic,
+          n_obs = n
+        )
+      }
+    }
+  }
+
+  if (is.null(best_result)) {
+    stop("Graphical VAR estimation failed: no valid model found.", call. = FALSE)
+  }
+
+  # ---- 6. Extract PCC, PDC ----
+  # Transpose beta to standard convention: beta[outcome, predictor]
+  beta <- t(best_result$beta)
+  kappa <- best_result$kappa
+  colnames(beta) <- rownames(beta) <- vars
   colnames(kappa) <- rownames(kappa) <- vars
 
-  pcc <- fit$PCC
+  pcc <- .gvar_compute_pcc(kappa)
+  pdc <- .gvar_compute_pdc(beta, kappa)
   colnames(pcc) <- rownames(pcc) <- vars
-
-  pdc <- fit$PDC
   colnames(pdc) <- rownames(pdc) <- vars
 
-  # Extract selected lambdas from the best result
-  all_ebics <- vapply(fit$allResults, `[[`, numeric(1), "EBIC")
-  best_idx <- which.min(all_ebics)
-
   result <- list(
-    beta            = beta_net,
+    beta            = beta,
     kappa           = kappa,
     PCC             = pcc,
     PDC             = pdc,
+    temporal        = beta,
+    contemporaneous = pcc,
     labels          = vars,
-    n_obs           = fit$N,
-    lambda_beta     = fit$path$beta[best_idx],
-    lambda_kappa    = fit$path$kappa[best_idx],
+    n_obs           = best_result$n_obs,
+    lambda_beta     = best_result$lambda_beta,
+    lambda_kappa    = best_result$lambda_kappa,
     gamma           = gamma,
-    EBIC            = min(all_ebics, na.rm = TRUE)
+    EBIC            = best_result$ebic
   )
   class(result) <- "gvar_result"
   result
 }
 
 
+# ============================================================
+# Internal: Lag pair construction
+# ============================================================
 
-
-#' Multilevel Graphical VAR (Panel GVAR)
+#' Build lag-1 pairs for GVAR
 #'
-#' @description
-#' Estimate a multilevel graphical VAR model from panel/ESM data with multiple
-#' subjects. Produces three network layers:
-#' \itemize{
-#'   \item \strong{Temporal}: Group-level VAR coefficients (fixed effects)
-#'   \item \strong{Contemporaneous}: Group-level partial correlations among
-#'     within-person residuals
-#'   \item \strong{Between-subjects}: Partial correlations of person means
-#' }
-#' Optionally estimates individual (subject-level) networks.
-#'
-#' Wraps \code{graphicalVAR::mlGraphicalVAR()} for exact numerical equivalence.
-#'
-#' @param data A data.frame with columns for variables, id, and optionally
-#'   day/beep.
-#' @param vars Character vector of variable names.
-#' @param id Character. Name of the person-ID column.
-#' @param day Character. Day/session column. Default: NULL.
-#' @param beep Character. Beep/measurement column. Default: NULL.
-#' @param gamma Numeric. EBIC hyperparameter. Default: 0.5.
-#' @param scale Logical. Standardize variables. Default: TRUE.
-#' @param center_within Logical. Center within person. Default: TRUE.
-#' @param subject_networks Logical. Estimate per-subject networks. Default: TRUE.
-#' @param verbose Logical. Show progress. Default: FALSE.
-#' @param ... Additional arguments passed to
-#'   \code{graphicalVAR::mlGraphicalVAR()}.
-#'
-#' @return A list of class \code{ml_graphical_var_result} containing:
-#' \describe{
-#'   \item{temporal}{Group-level temporal coefficient matrix (p x p).}
-#'   \item{PCC}{Group-level partial contemporaneous correlations (p x p).}
-#'   \item{PDC}{Group-level partial directed correlations (p x p).}
-#'   \item{between}{Between-subjects partial correlation network (p x p).}
-#'   \item{subject_PCC}{List of per-subject contemporaneous networks (if
-#'     \code{subject_networks = TRUE}).}
-#'   \item{subject_PDC}{List of per-subject temporal networks (if
-#'     \code{subject_networks = TRUE}).}
-#'   \item{labels}{Variable names.}
-#'   \item{ids}{Subject identifiers.}
-#'   \item{n_subjects}{Number of subjects.}
-#'   \item{gamma}{EBIC gamma used.}
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' res <- ml_graphical_var(esm_data, vars = c("happy", "sad", "anxious"),
-#'                   id = "subject", day = "day", beep = "beep")
-#' res$temporal  # group-level temporal
-#' res$PCC       # group-level contemporaneous
-#' res$between   # between-subjects
-#' }
-#'
-#' @export
-ml_graphical_var <- function(data,
-                       vars,
-                       id,
-                       day = NULL,
-                       beep = NULL,
-                       gamma = 0.5,
-                       scale = TRUE,
-                       center_within = TRUE,
-                       subject_networks = TRUE,
-                       verbose = FALSE,
-                       ...) {
-
-  if (!requireNamespace("graphicalVAR", quietly = TRUE)) {
-    stop("Package 'graphicalVAR' is required. Install with: ",
-         "install.packages('graphicalVAR')", call. = FALSE)
-  }
-
-  stopifnot(is.data.frame(data))
-  stopifnot(is.character(vars), length(vars) >= 2L)
-  stopifnot(is.character(id), length(id) == 1L, id %in% names(data))
-
-  data <- as.data.frame(data)
+#' Handles single-subject and panel data with optional day/beep boundaries.
+#' @param data data.frame with vars and optional id/day/beep columns.
+#' @param vars character vector of variable names.
+#' @param id character or NULL.
+#' @param day character or NULL.
+#' @param beep character or NULL.
+#' @return List with Y (n x d outcome), X (n x d predictor), id_vec.
+#' @noRd
+.gvar_build_lag_pairs <- function(data, vars, id, day, beep) {
   d <- length(vars)
 
-  # Build arguments
-  ml_args <- list(
-    data            = data,
-    vars            = vars,
-    idvar           = id,
-    gamma           = gamma,
-    scale           = scale,
-    centerWithin    = center_within,
-    subjectNetworks = subject_networks,
-    verbose         = verbose,
-    ...
-  )
-  if (!is.null(day))  ml_args$dayvar  <- day
-  if (!is.null(beep)) ml_args$beepvar <- beep
+  # Coerce vars to numeric, drop NA rows
+  check_cols <- c(vars, id, day, beep)
+  check_cols <- check_cols[!is.null(check_cols)]
+  complete <- complete.cases(data[, check_cols, drop = FALSE])
+  data <- data[complete, , drop = FALSE]
 
-  fit <- tryCatch(
-    suppressWarnings(do.call(graphicalVAR::mlGraphicalVAR, ml_args)),
-    error = function(e) {
-      stop("mlGraphicalVAR estimation failed: ", e$message, call. = FALSE)
+  for (v in vars) data[[v]] <- as.numeric(data[[v]])
+
+  n <- nrow(data)
+  if (n < 3L) stop("Fewer than 3 complete rows.", call. = FALSE)
+
+  # Sort
+  if (!is.null(id)) {
+    order_cols <- id
+    if (!is.null(day)) order_cols <- c(order_cols, day)
+    if (!is.null(beep)) order_cols <- c(order_cols, beep)
+    data <- data[do.call(order, data[, order_cols, drop = FALSE]), ]
+  }
+
+  # Lag-1 pairing
+  idx_t <- 2:n
+  idx_lag <- 1:(n - 1L)
+
+  # Same subject
+  valid <- rep(TRUE, n - 1L)
+  if (!is.null(id)) valid <- valid & (data[[id]][idx_t] == data[[id]][idx_lag])
+  if (!is.null(day)) valid <- valid & (data[[day]][idx_t] == data[[day]][idx_lag])
+  if (!is.null(beep)) {
+    valid <- valid & (data[[beep]][idx_t] - data[[beep]][idx_lag] == 1L)
+  }
+
+  Y <- as.matrix(data[idx_t[valid], vars, drop = FALSE])
+  X <- as.matrix(data[idx_lag[valid], vars, drop = FALSE])
+  id_vec <- if (!is.null(id)) data[[id]][idx_t[valid]] else rep(1L, sum(valid))
+
+  if (nrow(Y) < 3L) stop("Fewer than 3 valid lag pairs.", call. = FALSE)
+
+  list(Y = Y, X = X, id_vec = id_vec)
+}
+
+
+# ============================================================
+# Internal: Multivariate lasso via coordinate descent
+# ============================================================
+
+#' Fit multivariate lasso (variable-by-variable)
+#'
+#' Estimates beta matrix where Y_j = X * beta_j + epsilon_j for each
+#' outcome variable j, using coordinate descent with L1 penalty.
+#'
+#' @param X n x p predictor matrix.
+#' @param Y n x d outcome matrix.
+#' @param lambda L1 penalty.
+#' @param penalize_diagonal Logical. If FALSE, diagonal of beta is unpenalized.
+#' @return d x d beta matrix.
+#' @noRd
+.gvar_multivariate_lasso <- function(X, Y, lambda, penalize_diagonal = TRUE) {
+  n <- nrow(X)
+  d <- ncol(X)
+  beta <- matrix(0, d, d)
+
+  # Precompute X'X / n and X'Y / n
+  XtX <- crossprod(X) / n
+  XtY <- crossprod(X, Y) / n
+  diag_XtX <- diag(XtX)
+
+  # Coordinate descent for each outcome variable (sequential by nature)
+  for (j in seq_len(d)) {
+    b <- rep(0, d)
+    pen <- rep(lambda, d)
+    if (!penalize_diagonal) pen[j] <- 0
+
+    for (iter in seq_len(200L)) {
+      b_old <- b
+      for (k in seq_len(d)) {
+        r_k <- XtY[k, j] - sum(XtX[k, ] * b) + XtX[k, k] * b[k]
+        b[k] <- sign(r_k) * max(0, abs(r_k) - pen[k]) / diag_XtX[k]
+      }
+      if (max(abs(b - b_old)) < 1e-8) break
     }
-  )
-
-  # Extract temporal beta (remove intercept column)
-  beta_full <- fit$fixedResults$beta
-  beta_net <- beta_full[, -1, drop = FALSE]
-  colnames(beta_net) <- rownames(beta_net) <- vars
-
-  # Fixed PCC / PDC
-  pcc <- fit$fixedPCC
-  colnames(pcc) <- rownames(pcc) <- vars
-  pdc <- fit$fixedPDC
-  colnames(pdc) <- rownames(pdc) <- vars
-
-  # Between-subjects
-  between <- fit$betweenNet
-  colnames(between) <- rownames(between) <- vars
-
-  # Subject-level networks
-  subj_pcc <- NULL
-  subj_pdc <- NULL
-  if (subject_networks && !is.null(fit$subjectPCC)) {
-    subj_pcc <- fit$subjectPCC
-    subj_pdc <- fit$subjectPDC
-    names(subj_pcc) <- names(subj_pdc) <- fit$ids
+    beta[, j] <- b
   }
 
-  result <- list(
-    temporal         = beta_net,
-    PCC              = pcc,
-    PDC              = pdc,
-    between          = between,
-    subject_PCC      = subj_pcc,
-    subject_PDC      = subj_pdc,
-    labels           = vars,
-    ids              = fit$ids,
-    n_subjects       = length(fit$ids),
-    gamma            = gamma
-  )
-  class(result) <- "ml_graphical_var_result"
-  result
-}
-
-
-#' @export
-print.ml_graphical_var_result <- function(x, ...) {
-  d <- length(x$labels)
-  n_temp <- sum(x$temporal != 0)
-  n_contemp <- sum(x$PCC[upper.tri(x$PCC)] != 0)
-  n_between <- sum(x$between[upper.tri(x$between)] != 0)
-
-  cat("Panel Graphical VAR Result\n")
-  cat(sprintf("  Variables:      %d (%s)\n", d,
-              paste(x$labels, collapse = ", ")))
-  cat(sprintf("  Subjects:       %d\n", x$n_subjects))
-  cat(sprintf("  Temporal edges: %d / %d\n", n_temp, d * d))
-  cat(sprintf("  Contemp edges:  %d / %d\n", n_contemp, d * (d - 1) / 2))
-  cat(sprintf("  Between edges:  %d / %d\n", n_between, d * (d - 1) / 2))
-  if (!is.null(x$subject_PCC)) {
-    cat(sprintf("  Subject nets:   %d\n", length(x$subject_PCC)))
-  }
-  cat(sprintf("  EBIC gamma:     %.2f\n", x$gamma))
-  invisible(x)
-}
-
-
-#' @export
-summary.ml_graphical_var_result <- function(object, ...) {
-  cat("=== Temporal Network (beta) ===\n")
-  print(round(object$temporal, 4))
-  cat("\n=== Contemporaneous Network (PCC) ===\n")
-  print(round(object$PCC, 4))
-  cat("\n=== Between-Subjects Network ===\n")
-  print(round(object$between, 4))
-  invisible(object)
+  beta
 }
 
 
@@ -356,7 +358,9 @@ summary.ml_graphical_var_result <- function(object, ...) {
   sigma <- tryCatch(solve(kappa), error = function(e) diag(nrow(kappa)))
   sigma_diag <- diag(sigma)
   kappa_diag <- diag(kappa)
-  pdc <- t(beta / sqrt(sigma_diag %o% kappa_diag + beta^2))
+  denom <- sqrt(sigma_diag %o% kappa_diag + beta^2)
+  denom[denom == 0] <- 1
+  pdc <- t(beta / denom)
   pdc
 }
 

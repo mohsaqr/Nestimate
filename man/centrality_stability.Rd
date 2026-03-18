@@ -12,6 +12,7 @@ centrality_stability(
   threshold = 0.7,
   certainty = 0.95,
   method = "pearson",
+  centrality_fn = NULL,
   loops = FALSE,
   seed = NULL
 )
@@ -39,6 +40,14 @@ threshold (default: 0.95).}
 
 \item{method}{Character. Correlation method: \code{"pearson"},
 \code{"spearman"}, or \code{"kendall"} (default: \code{"pearson"}).}
+
+\item{centrality_fn}{Optional function. A custom centrality function
+that takes a weight matrix and returns a named list of centrality
+vectors. When \code{NULL} (default), only \code{"InStrength"} and
+\code{"OutStrength"} are computed via \code{colSums}/\code{rowSums}.
+When provided, the function is called as \code{centrality_fn(mat)}
+and should return a named list (e.g.,
+\code{list(Betweenness = ..., Closeness = ...)}).}
 
 \item{loops}{Logical. If \code{FALSE} (default), self-loops (diagonal)
 are excluded from centrality computation. This does not modify the

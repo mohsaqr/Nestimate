@@ -34,7 +34,7 @@ test_that("correlation matrices have correct dimensions", {
   net <- build_network(tna::group_regulation, method = "relative")
   dp <- seq(0.1, 0.5, by = 0.1)
   cs <- centrality_stability(net, iter = 30,
-                             measures = c("InStrength", "Betweenness"),
+                             measures = c("InStrength", "OutStrength"),
                              drop_prop = dp, seed = 42)
 
   for (m in cs$measures) {
@@ -71,24 +71,50 @@ test_that("seed produces reproducible results", {
 })
 
 
-test_that("betweenness works with igraph", {
+test_that("betweenness works with centrality_fn", {
   skip_if_not_installed("tna")
+  skip_if_not_installed("igraph")
   net <- build_network(tna::group_regulation, method = "relative")
+  my_fn <- function(mat) {
+    g <- igraph::graph_from_adjacency_matrix(mat, mode = "directed",
+                                              weighted = TRUE)
+    w_inv <- 1 / igraph::E(g)$weight
+    list(Betweenness = igraph::betweenness(g, weights = w_inv))
+  }
   cs <- centrality_stability(net, iter = 30,
                              measures = c("Betweenness"),
-                             seed = 42)
+                             centrality_fn = my_fn, seed = 42)
 
   expect_s3_class(cs, "net_stability")
   expect_true("Betweenness" %in% names(cs$cs))
 })
 
-
-test_that("closeness measures work", {
+test_that("betweenness without centrality_fn errors", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
+  expect_error(
+    centrality_stability(net, iter = 30, measures = c("Betweenness"),
+                         seed = 42),
+    "centrality_fn is required"
+  )
+})
+
+test_that("closeness measures work with centrality_fn", {
+  skip_if_not_installed("tna")
+  skip_if_not_installed("igraph")
+  net <- build_network(tna::group_regulation, method = "relative")
+  my_fn <- function(mat) {
+    g <- igraph::graph_from_adjacency_matrix(mat, mode = "directed",
+                                              weighted = TRUE)
+    w_inv <- 1 / igraph::E(g)$weight
+    list(
+      InCloseness = igraph::closeness(g, mode = "in", weights = w_inv),
+      OutCloseness = igraph::closeness(g, mode = "out", weights = w_inv)
+    )
+  }
   cs <- centrality_stability(net, iter = 30,
                              measures = c("InCloseness", "OutCloseness"),
-                             seed = 42)
+                             centrality_fn = my_fn, seed = 42)
 
   expect_s3_class(cs, "net_stability")
   expect_length(cs$cs, 2)
@@ -166,12 +192,12 @@ test_that("input validation catches bad arguments", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
 
-  expect_error(centrality_stability("not_a_netobject"))
-  expect_error(centrality_stability(net, iter = 0))
-  expect_error(centrality_stability(net, threshold = 2))
-  expect_error(centrality_stability(net, certainty = -0.1))
-  expect_error(centrality_stability(net, measures = c("FakeMeasure")))
-  expect_error(centrality_stability(net, method = "invalid"))
+  expect_error(centrality_stability("not_a_netobject"), "must be a netobject")
+  expect_error(centrality_stability(net, iter = 0), "iter >= 2")
+  expect_error(centrality_stability(net, threshold = 2), "threshold <= 1")
+  expect_error(centrality_stability(net, certainty = -0.1), "certainty >= 0")
+  expect_error(centrality_stability(net, measures = c("FakeMeasure")), "Unknown measures")
+  expect_error(centrality_stability(net, method = "invalid"), "should be one of")
 })
 
 
@@ -229,4 +255,128 @@ test_that("plot method returns ggplot", {
 
   p <- plot(cs)
   expect_s3_class(p, "ggplot")
+})
+
+
+# ---- missing $data error (L81-82) ----
+
+test_that("centrality_stability errors when $data is NULL", {
+  skip_if_not_installed("tna")
+  net <- build_network(tna::group_regulation, method = "relative")
+  net$data <- NULL
+  expect_error(centrality_stability(net, iter = 10L),
+               "does not contain \\$data")
+})
+
+
+# ---- zero-variance warning and early return (L124-140) ----
+
+test_that("centrality_stability warns and returns zeros when all measures have zero variance", {
+  skip_if_not_installed("tna")
+  net <- build_network(tna::group_regulation, method = "relative")
+  # Force weights to a constant value (all rows identical → all centralities identical)
+  n <- nrow(net$weights)
+  net$weights[] <- 1 / n
+
+  # OutStrength for relative = 1 always (zero variance); InStrength constant too
+  expect_warning(
+    cs <- centrality_stability(net, iter = 20L,
+                               measures = c("InStrength", "OutStrength"),
+                               seed = 1),
+    "zero variance"
+  )
+  expect_s3_class(cs, "net_stability")
+  expect_true(all(cs$cs == 0))
+  # Correlation matrices should be all NA
+  expect_true(all(is.na(cs$correlations[["InStrength"]])))
+})
+
+
+# ---- association path setup (L156-161) ----
+
+test_that("centrality_stability works for cor (association) method", {
+  set.seed(5)
+  df <- as.data.frame(matrix(rpois(100 * 5, 10), nrow = 100))
+  colnames(df) <- paste0("V", 1:5)
+  net <- build_network(df, method = "cor")
+  cs <- centrality_stability(net, iter = 20L,
+                             measures = c("InStrength", "OutStrength"),
+                             drop_prop = c(0.2, 0.4),
+                             seed = 5)
+
+  expect_s3_class(cs, "net_stability")
+  expect_true(all(cs$cs %in% c(0, cs$drop_prop)))
+})
+
+
+# ---- association build_matrix function (L181-197) ----
+
+test_that("centrality_stability association path tolerates estimator errors gracefully", {
+  set.seed(9)
+  df <- as.data.frame(matrix(rpois(60 * 4, 10), nrow = 60))
+  colnames(df) <- paste0("V", 1:4)
+  net <- build_network(df, method = "pcor")
+  cs <- centrality_stability(net, iter = 20L,
+                             measures = c("InStrength"),
+                             drop_prop = c(0.3, 0.6),
+                             seed = 9)
+
+  expect_s3_class(cs, "net_stability")
+  # CS should be 0 or a valid drop_prop value
+  expect_true(cs$cs["InStrength"] %in% c(0, cs$drop_prop))
+})
+
+
+# ---- single-measure storage path (L216 and L222) ----
+
+test_that("centrality_stability handles single measure correctly", {
+  skip_if_not_installed("tna")
+  net <- build_network(tna::group_regulation, method = "relative")
+  cs <- centrality_stability(net, iter = 30L,
+                             measures = "InStrength",
+                             drop_prop = c(0.1, 0.3, 0.5),
+                             seed = 77)
+
+  expect_s3_class(cs, "net_stability")
+  expect_equal(cs$measures, "InStrength")
+  expect_equal(ncol(cs$correlations[["InStrength"]]), 3L)
+  expect_equal(nrow(cs$correlations[["InStrength"]]), 30L)
+  # CS value must be 0 or in drop_prop
+  expect_true(cs$cs["InStrength"] %in% c(0, cs$drop_prop))
+})
+
+
+# ---- CS-coefficient computation (L296-297) ----
+
+test_that(".calculate_cs returns 0 when no prop_above meets certainty", {
+  # Build a correlation matrix where certainty is never met
+  iter <- 10L
+  n_prop <- 3L
+  corr_mat <- matrix(0, nrow = iter, ncol = n_prop)  # all zeros < threshold
+  result <- Nestimate:::.calculate_cs(corr_mat, threshold = 0.7, certainty = 0.95,
+                                      drop_prop = c(0.1, 0.3, 0.5))
+  expect_equal(result, 0)
+})
+
+test_that(".calculate_cs returns max valid drop_prop when certainty is met", {
+  iter <- 20L
+  n_prop <- 3L
+  corr_mat <- matrix(1, nrow = iter, ncol = n_prop)  # all ones >= threshold
+  result <- Nestimate:::.calculate_cs(corr_mat, threshold = 0.7, certainty = 0.95,
+                                      drop_prop = c(0.1, 0.3, 0.5))
+  expect_equal(result, 0.5)
+})
+
+
+# ---- cograph_network input (L76) ----
+
+test_that("centrality_stability accepts cograph_network input", {
+  skip_if_not_installed("tna")
+  net <- build_network(tna::group_regulation, method = "relative")
+  cograph_net <- net
+  class(cograph_net) <- "cograph_network"
+  cs <- centrality_stability(cograph_net, iter = 20L,
+                             measures = "InStrength",
+                             seed = 1)
+  expect_s3_class(cs, "net_stability")
 })

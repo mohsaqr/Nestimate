@@ -67,7 +67,7 @@
 #' }
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{print.net_bootstrap}},
-#'   \code{\link{summary.net_bootstrap}}, \code{\link{plot.net_bootstrap}}
+#'   \code{\link{summary.net_bootstrap}}
 #'
 #' @importFrom stats quantile sd
 #' @export
@@ -573,43 +573,3 @@ summary.net_bootstrap <- function(object, ...) {
 }
 
 
-#' Plot Method for net_bootstrap
-#'
-#' @description
-#' Plots the original and bootstrapped (significant-only) networks
-#' side by side using \code{cograph::splot()}.
-#'
-#' @param x A \code{net_bootstrap} object.
-#' @param ... Additional arguments passed to \code{cograph::splot()}.
-#'
-#' @importFrom graphics par
-#' @export
-plot.net_bootstrap <- function(x, ...) {
-  if (!requireNamespace("cograph", quietly = TRUE)) {
-    stop(
-      "Package 'cograph' is required for plotting. ",
-      "Install it with: install.packages('cograph')"
-    )
-  }
-
-  old_par <- graphics::par(mfrow = c(1, 2))
-  on.exit(graphics::par(old_par))
-
-  node_cols <- .node_colors(x$original$n_nodes)
-
-  dots <- list(
-    directed = x$original$directed,
-    node_fill = node_cols,
-    edge_labels = TRUE,
-    edge_label_size = 0.65,
-    node_size = 8,
-    theme = "colorblind",
-    ...
-  )
-
-  dots_orig <- c(list(x = x$original$weights, title = "Original"), dots)
-  dots_sig <- c(list(x = x$significant, title = "Significant"), dots)
-
-  do.call(cograph::splot, dots_orig)
-  do.call(cograph::splot, dots_sig)
-}

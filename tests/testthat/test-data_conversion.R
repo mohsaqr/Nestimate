@@ -326,3 +326,79 @@ test_that("prepare_onehot codes attribute set", {
   result <- prepare_onehot(d, cols = c("X", "Y"))
   expect_equal(attr(result, "codes"), c("X", "Y"))
 })
+
+
+# --- prepare_for_tna auto-detect: both time-cols AND action col present ----
+
+test_that("prepare_for_tna auto detects long when nrow >> n_ids (both cols present)", {
+  # Data has both V-pattern cols AND an action column, with many rows per id
+  d <- data.frame(
+    V1 = rep(NA_character_, 8),
+    Action = rep(c("A", "B"), 4),
+    id = rep(1:2, each = 4),
+    stringsAsFactors = FALSE
+  )
+  # Many rows (8) vs 2 unique ids => auto should pick "long"
+  result <- prepare_for_tna(d, type = "auto", id_col = "id",
+                             action_col = "Action")
+  expect_true(all(grepl("^V[0-9]+$", names(result))))
+})
+
+test_that("prepare_for_tna auto falls back to sequences when nrow <= n_ids * 2", {
+  # Each id has just 1 row -> nrow(2) is NOT > n_ids(2) * 2 -> sequences
+  d <- data.frame(
+    V1 = c("A", "B"),
+    Action = c("X", "Y"),
+    id = c(1, 2),
+    stringsAsFactors = FALSE
+  )
+  result <- prepare_for_tna(d, type = "auto", id_col = "id",
+                             action_col = "Action")
+  expect_equal(names(result), "V1")
+})
+
+test_that("prepare_for_tna auto falls back to sequences when no id_col", {
+  # Both V-cols and Action col present but no id_col -> sequences
+  d <- data.frame(
+    V1 = c("A", "B"),
+    Action = c("X", "Y"),
+    stringsAsFactors = FALSE
+  )
+  result <- prepare_for_tna(d, type = "auto")
+  expect_equal(names(result), "V1")
+})
+
+test_that("prepare_for_tna long errors on missing id col", {
+  d <- data.frame(Actor = 1:3, Time = 1:3, Action = c("A", "B", "C"))
+  expect_error(
+    prepare_for_tna(d, type = "long", id_col = "no_such_col"),
+    "not found"
+  )
+})
+
+# --- prepare_onehot: overlapping window with group shorter than window_size ---
+
+test_that("prepare_onehot overlapping window: group shorter than window_size produces NA row", {
+  # Group has 1 row, window_size = 3 -> n < window_size -> that group's row is NA
+  # actor=1 has 1 row < ws=3; actor=2 has 3 rows -> 1 window
+  # Both groups still produce 1 row each (2 total), actor=1 row has NA content
+  d <- data.frame(actor = c(1, 2, 2, 2), A = c(1, 1, 0, 1), B = c(0, 0, 1, 0))
+  result <- prepare_onehot(d, cols = c("A", "B"), actor = "actor",
+                           window_size = 3, window_type = "overlapping")
+  expect_s3_class(result, "data.frame")
+  expect_true(attr(result, "windowed"))
+  # actor=2 contributes a non-NA window
+  expect_true(any(!is.na(result[[grep("^W", names(result))[1]]])))
+})
+
+# --- prepare_onehot: interval grouping ---
+
+test_that("prepare_onehot with interval creates wider columns", {
+  # interval creates W0_T*, W1_T* columns within the single output row
+  d <- data.frame(A = c(1, 0, 1, 0, 1, 0), B = c(0, 1, 0, 1, 0, 1))
+  result <- prepare_onehot(d, cols = c("A", "B"), interval = 2L)
+  expect_s3_class(result, "data.frame")
+  # Multiple W* columns created for the interval windows
+  w_cols <- grep("^W", names(result), value = TRUE)
+  expect_true(length(w_cols) > 2L)
+})

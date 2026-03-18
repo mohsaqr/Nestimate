@@ -150,3 +150,16 @@ test_that("plot.net_honem works", {
   emb <- build_honem(mat, dim = 2L)
   expect_no_error(plot(emb))
 })
+
+# ===========================================================================
+# Section 7: Coverage for plot.net_honem with dim < 2
+# ===========================================================================
+
+test_that("plot.net_honem issues message and returns invisibly when dim < 2", {
+  mat <- matrix(c(0, 1, 1, 0), 2, 2,
+                dimnames = list(c("A", "B"), c("A", "B")))
+  emb <- build_honem(mat, dim = 1L)
+  expect_equal(emb$dim, 1L)
+  expect_message(result <- plot(emb), "at least 2 dimensions")
+  expect_identical(result, emb)
+})

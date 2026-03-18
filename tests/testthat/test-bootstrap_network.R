@@ -286,3 +286,120 @@ test_that("scaling is applied to bootstrap replicates", {
   # Mean bootstrap values should also be bounded
   expect_true(max(abs(boot$mean)) <= 1 + 1e-10)
 })
+
+
+# ---- netobject_group dispatch (L84-90) ----
+
+test_that("bootstrap_network dispatches over netobject_group", {
+  skip_if_not_installed("tna")
+  df <- tna::group_regulation
+  df$grp <- rep(c("A", "B"), length.out = nrow(df))
+  group_net <- build_network(df, method = "relative", group = "grp")
+  expect_s3_class(group_net, "netobject_group")
+
+  results <- bootstrap_network(group_net, iter = 20L, seed = 1)
+  expect_true(is.list(results))
+  expect_equal(length(results), 2L)
+  expect_s3_class(results[[1]], "net_bootstrap")
+  expect_s3_class(results[[2]], "net_bootstrap")
+})
+
+
+# ---- cograph_network input (L96) ----
+
+test_that("bootstrap_network accepts cograph_network input", {
+  wide <- .make_boot_wide()
+  net <- build_network(wide, method = "relative")
+  # Strip the netobject class to get a bare cograph_network
+  cograph_net <- net
+  class(cograph_net) <- "cograph_network"
+  expect_no_error({
+    boot <- bootstrap_network(cograph_net, iter = 20L, seed = 1)
+  })
+  expect_s3_class(boot, "net_bootstrap")
+})
+
+
+# ---- missing $data error (L98-100) ----
+
+test_that("bootstrap_network errors when $data is NULL", {
+  wide <- .make_boot_wide()
+  net <- build_network(wide, method = "relative")
+  net$data <- NULL
+  expect_error(bootstrap_network(net, iter = 20L),
+               "does not contain \\$data")
+})
+
+
+# ---- auto edge_threshold with all-zero weights (L163) ----
+
+test_that("auto edge_threshold defaults to 0 when all weights are zero", {
+  wide <- .make_boot_wide()
+  net <- build_network(wide, method = "relative", threshold = 0.99)
+  # Force all weights to zero so the auto-threshold logic hits the else branch
+  net$weights[] <- 0
+  boot <- bootstrap_network(net, iter = 20L, seed = 1, inference = "threshold")
+  expect_equal(boot$edge_threshold, 0)
+})
+
+
+# ---- long-format data error in .precompute_per_sequence (L291-295) ----
+
+test_that(".precompute_per_sequence errors on long-format data", {
+  # Directly construct a netobject whose stored data still contains an
+  # action column so the auto-detect resolves to "long" at bootstrap time.
+  states <- c("A", "B", "C")
+  set.seed(42)
+  wide <- .make_boot_wide()
+  net <- build_network(wide, method = "relative")
+  # Inject long-format data and params so the fast path triggers the error
+  net$data <- data.frame(
+    id = rep(1:10, each = 5),
+    Action = sample(states, 50, replace = TRUE),
+    stringsAsFactors = FALSE
+  )
+  net$params$format <- "auto"
+  net$params$action <- "Action"
+  expect_error(
+    bootstrap_network(net, iter = 10L),
+    "wide-format"
+  )
+})
+
+
+# ---- association bootstrap with threshold (L412-414) ----
+
+test_that("bootstrap_network applies threshold in association path", {
+  df <- .make_boot_assoc(n = 80, p = 4)
+  net <- build_network(df, method = "cor", threshold = 0.01)
+  boot <- bootstrap_network(net, iter = 20L, seed = 1)
+  expect_s3_class(boot, "net_bootstrap")
+  # With a small threshold, significant edges may differ from no-threshold
+  expect_true(is.matrix(boot$mean))
+})
+
+
+# ---- print: threshold inference branch (L556) ----
+
+test_that("print shows edge_threshold for threshold inference", {
+  wide <- .make_boot_wide()
+  boot <- bootstrap_network(build_network(wide, method = "relative"),
+                            iter = 30L, seed = 1, inference = "threshold")
+  out <- capture.output(print(boot))
+  expect_true(any(grepl("Edge threshold", out)))
+})
+
+
+# ---- print: unknown method label (L541 fallback) ----
+
+test_that("print shows generic label for unknown method", {
+  wide <- .make_boot_wide()
+  boot <- bootstrap_network(build_network(wide, method = "relative"),
+                            iter = 20L, seed = 1)
+  # Hack the method to something not in the label table
+  boot$method <- "custom_unknown_xyz"
+  out <- capture.output(print(boot))
+  expect_true(any(grepl("custom_unknown_xyz", out)))
+})
+
+

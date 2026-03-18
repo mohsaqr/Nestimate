@@ -215,12 +215,6 @@
 # Covariate M-step helpers
 # ---------------------------------------------------------------------------
 
-#' Softmax M-step: fit multinomial regression on posteriors
-#'
-#' @param post N x k posterior matrix (soft labels)
-#' @param cov_df N x p data.frame of covariates (no intercept -- nnet adds it)
-#' @return List with log_pi_mat (N x k), beta (coefficient matrix), fit (multinom)
-#' @noRd
 #' Fast softmax regression M-step via Newton-Raphson
 #'
 #' Replaces nnet::multinom() inside the EM loop. Does a few Newton steps
@@ -492,6 +486,9 @@ build_mmm <- function(data,
   n_cores <- 1L
   if (.Platform$OS.type == "unix" && n_starts > 1L) {
     n_cores <- min(parallel::detectCores(logical = FALSE) %||% 1L, n_starts)
+    if (isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE")))) {
+      n_cores <- 1L
+    }
   }
 
   .run_screen <- function(init) {
@@ -709,7 +706,7 @@ summary.net_mmm <- function(object, ...) {
 }
 
 #' @export
-plot.net_mmm <- function(x, type = c("networks", "posterior", "covariates"), ...) {
+plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
   type <- match.arg(type)
 
   if (type == "covariates") {
@@ -726,26 +723,6 @@ plot.net_mmm <- function(x, type = c("networks", "posterior", "covariates"), ...
 
   if (type == "posterior") {
     return(.plot_mmm_posterior(x))
-  }
-
-  if (!requireNamespace("cograph", quietly = TRUE)) {
-    stop("Package 'cograph' is required for plotting.", call. = FALSE)
-  }
-
-  plots <- lapply(seq_len(x$k), function(m) {
-    n_in <- sum(x$assignments == m)
-    title <- sprintf("Cluster %d (%.0f%%, n=%d)",
-                     m, x$mixing[m] * 100, n_in)
-    cograph::splot(x$models[[m]]$weights, title = title, ...)
-  })
-
-  if (requireNamespace("patchwork", quietly = TRUE)) {
-    p <- patchwork::wrap_plots(plots, nrow = 1)
-    print(p)
-    invisible(p)
-  } else {
-    lapply(plots, print)
-    invisible(plots)
   }
 }
 

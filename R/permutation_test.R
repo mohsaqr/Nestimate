@@ -64,8 +64,7 @@
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{bootstrap_network}},
 #'   \code{\link{print.net_permutation}},
-#'   \code{\link{summary.net_permutation}},
-#'   \code{\link{plot.net_permutation}}
+#'   \code{\link{summary.net_permutation}}
 #'
 #' @importFrom stats p.adjust sd
 #' @export
@@ -566,43 +565,3 @@ summary.net_permutation <- function(object, ...) {
 }
 
 
-#' Plot Method for net_permutation
-#'
-#' @description
-#' Plots the two networks side by side, highlighting significant differences
-#' using \code{cograph::splot()}.
-#'
-#' @param x A \code{net_permutation} object.
-#' @param ... Additional arguments passed to \code{cograph::splot()}.
-#'
-#' @importFrom graphics par
-#' @export
-plot.net_permutation <- function(x, ...) {
-  if (!requireNamespace("cograph", quietly = TRUE)) {
-    stop(
-      "Package 'cograph' is required for plotting. ",
-      "Install it with: install.packages('cograph')"
-    )
-  }
-
-  old_par <- graphics::par(mfrow = c(1, 2))
-  on.exit(graphics::par(old_par))
-
-  node_cols <- .node_colors(x$x$n_nodes)
-
-  dots <- list(
-    directed = x$x$directed,
-    node_fill = node_cols,
-    edge_labels = TRUE,
-    edge_label_size = 0.65,
-    node_size = 8,
-    theme = "colorblind",
-    ...
-  )
-
-  dots_x <- c(list(x = x$x$weights, title = "Network X"), dots)
-  dots_y <- c(list(x = x$diff_sig, title = "Significant Differences"), dots)
-
-  do.call(cograph::splot, dots_x)
-  do.call(cograph::splot, dots_y)
-}

@@ -115,3 +115,27 @@ test_that("custom estimator can be used with build_network", {
   # Clean up
   remove_estimator("test_scaled_cor")
 })
+
+
+# ---- Coverage gap tests ----
+
+# L94-99: list_estimators() empty registry path
+test_that("list_estimators returns empty data frame when registry is empty", {
+  # Create a fresh empty registry and test directly
+  result <- Nestimate:::.estimator_registry
+  saved_nms <- ls(envir = result)
+
+  # Remove all estimators temporarily
+  rm(list = saved_nms, envir = result)
+
+  df <- list_estimators()
+  expect_true(is.data.frame(df))
+  expect_equal(nrow(df), 0L)
+  expect_equal(names(df), c("name", "description", "directed"))
+  expect_equal(class(df$name), "character")
+  expect_equal(class(df$description), "character")
+  expect_equal(class(df$directed), "logical")
+
+  # Restore all estimators
+  .register_builtin_estimators()
+})

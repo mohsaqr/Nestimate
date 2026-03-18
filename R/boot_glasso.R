@@ -24,6 +24,13 @@
 #' @param centrality Character vector. Centrality measures to compute.
 #'   Options: \code{"strength"}, \code{"expected_influence"},
 #'   \code{"closeness"}, \code{"betweenness"} (default: all four).
+#' @param centrality_fn Optional function. A custom centrality function
+#'   that takes a weight matrix and returns a named list of centrality
+#'   vectors. When \code{NULL} (default), only \code{"strength"} and
+#'   \code{"expected_influence"} are computed via \code{rowSums}/
+#'   \code{colSums}. When provided, the function is called as
+#'   \code{centrality_fn(mat)} and should return a named list (e.g.,
+#'   \code{list(closeness = ..., betweenness = ...)}).
 #' @param cor_method Character. Correlation method: \code{"pearson"}
 #'   (default), \code{"spearman"}, or \code{"kendall"}.
 #' @param ncores Integer. Number of parallel cores for mclapply
@@ -101,6 +108,7 @@ boot_glasso <- function(x,
                         nlambda = 100L,
                         centrality = c("strength", "expected_influence",
                                        "closeness", "betweenness"),
+                        centrality_fn = NULL,
                         cor_method = "pearson",
                         ncores = 1L,
                         seed = NULL) {
@@ -125,6 +133,10 @@ boot_glasso <- function(x,
   centrality <- match.arg(centrality, c("strength", "expected_influence",
                                          "closeness", "betweenness"),
                           several.ok = TRUE)
+
+  if (!is.null(centrality_fn)) {
+    stopifnot("centrality_fn must be a function" = is.function(centrality_fn))
+  }
 
   if (!is.null(seed)) {
     stopifnot(is.numeric(seed), length(seed) == 1)
@@ -190,7 +202,8 @@ boot_glasso <- function(x,
   colnames(pcor_orig) <- rownames(pcor_orig) <- nodes
 
   # Original centrality
-  cent_orig <- .bg_compute_centrality(pcor_orig, p, nodes, centrality)
+  cent_orig <- .bg_compute_centrality(pcor_orig, p, nodes, centrality,
+                                       centrality_fn)
 
 
   # Original predictability
@@ -208,7 +221,7 @@ boot_glasso <- function(x,
     idx <- sample.int(n, n, replace = TRUE)
     .bg_estimate_once(data_mat[idx, , drop = FALSE], p, gamma, nlambda,
                       penalize_diag = FALSE, cor_method, lambda_path,
-                      centrality)
+                      centrality, centrality_fn)
   }
 
   if (ncores > 1L) {
@@ -247,7 +260,7 @@ boot_glasso <- function(x,
   # ---- Phase 3: Case-dropping ----
   cs_result <- .bg_case_drop(
     data_mat, p, gamma, nlambda, cor_method, lambda_path, centrality,
-    cs_iter, cs_drop, cent_orig, ncores
+    cs_iter, cs_drop, cent_orig, ncores, centrality_fn
   )
 
   cs_coef <- vapply(centrality, function(m) {
@@ -382,7 +395,8 @@ boot_glasso <- function(x,
 #' Single bootstrap iteration: cor -> glassopath -> EBIC -> pcor -> centrality
 #' @noRd
 .bg_estimate_once <- function(data_mat, p, gamma, nlambda, penalize_diag,
-                               cor_method, lambda_path, centrality) {
+                               cor_method, lambda_path, centrality,
+                               centrality_fn = NULL) {
   n_boot <- nrow(data_mat)
   nodes <- colnames(data_mat)
 
@@ -413,7 +427,7 @@ boot_glasso <- function(x,
   edges <- pcor[upper.tri(pcor)]
 
   # Centrality
-  cent <- .bg_compute_centrality(pcor, p, nodes, centrality)
+  cent <- .bg_compute_centrality(pcor, p, nodes, centrality, centrality_fn)
 
   # Predictability
   pred <- pmin(pmax(1 - 1 / diag(Wi), 0), 1)
@@ -424,28 +438,27 @@ boot_glasso <- function(x,
 
 #' Compute requested centrality measures
 #'
-#' strength and expected_influence use rowSums (fast).
-#' closeness and betweenness use igraph (lazy load).
+#' strength and expected_influence use rowSums (fast, no dependencies).
+#' closeness and betweenness require a user-supplied \code{centrality_fn}.
 #'
+#' @param pcor Partial correlation matrix.
+#' @param p Number of nodes.
+#' @param nodes Character vector of node names.
+#' @param measures Character vector of requested measures.
+#' @param centrality_fn Optional function taking a weight matrix and
+#'   returning a named list of centrality vectors. Required for
+#'   measures other than strength/expected_influence.
 #' @noRd
-.bg_compute_centrality <- function(pcor, p, nodes, measures) {
+.bg_compute_centrality <- function(pcor, p, nodes, measures,
+                                    centrality_fn = NULL) {
+  # Built-in measures (no dependencies)
+  builtin <- c("strength", "expected_influence")
+  external <- setdiff(measures, builtin)
+
   result <- vector("list", length(measures))
   names(result) <- measures
 
-  need_igraph <- any(c("closeness", "betweenness") %in% measures)
-  g <- NULL
-
-  if (need_igraph) {
-    if (!requireNamespace("igraph", quietly = TRUE)) {
-      stop("igraph is required for closeness/betweenness centrality.",
-           call. = FALSE)
-    }
-    abs_pcor <- abs(pcor)
-    g <- igraph::graph_from_adjacency_matrix(abs_pcor, mode = "undirected",
-                                              weighted = TRUE, diag = FALSE)
-  }
-
-  for (m in measures) {
+  for (m in intersect(measures, builtin)) {
     result[[m]] <- switch(m,
       strength = {
         v <- rowSums(abs(pcor))
@@ -456,21 +469,30 @@ boot_glasso <- function(x,
         v <- rowSums(pcor)
         names(v) <- nodes
         v
-      },
-      closeness = {
-        # Invert weights for distance: distance = 1/|weight|
-        inv_weights <- 1 / igraph::E(g)$weight
-        cl <- igraph::closeness(g, weights = inv_weights)
-        names(cl) <- nodes
-        cl
-      },
-      betweenness = {
-        inv_weights <- 1 / igraph::E(g)$weight
-        bt <- igraph::betweenness(g, weights = inv_weights)
-        names(bt) <- nodes
-        bt
       }
     )
+  }
+
+  if (length(external) > 0L) {
+    if (is.null(centrality_fn)) {
+      stop("centrality_fn is required for measures: ",
+           paste(external, collapse = ", "),
+           ". Provide a function that takes a weight matrix and returns ",
+           "a named list of centrality vectors.", call. = FALSE)
+    }
+    custom <- centrality_fn(pcor)
+    if (!is.list(custom)) {
+      stop("centrality_fn must return a named list.", call. = FALSE)
+    }
+    for (m in external) {
+      if (is.null(custom[[m]])) {
+        stop("centrality_fn did not return measure '", m, "'.",
+             call. = FALSE)
+      }
+      v <- custom[[m]]
+      names(v) <- nodes
+      result[[m]] <- v
+    }
   }
 
   result
@@ -488,7 +510,8 @@ boot_glasso <- function(x,
 #' @noRd
 .bg_case_drop <- function(data_mat, p, gamma, nlambda, cor_method,
                            lambda_path, centrality, cs_iter, cs_drop,
-                           original_centralities, ncores) {
+                           original_centralities, ncores,
+                           centrality_fn = NULL) {
   n <- nrow(data_mat)
   nodes <- colnames(data_mat)
   n_drop <- length(cs_drop)
@@ -505,7 +528,7 @@ boot_glasso <- function(x,
     idx <- sample.int(n, n_sub, replace = FALSE)
     res <- .bg_estimate_once(data_mat[idx, , drop = FALSE], p, gamma,
                               nlambda, FALSE, cor_method, lambda_path,
-                              centrality)
+                              centrality, centrality_fn)
     if (is.null(res)) return(list(d_idx = d_idx, cors = NULL))
 
     # Compute Pearson correlation with original for each measure
@@ -840,7 +863,7 @@ summary.boot_glasso <- function(object, type = "edges", ...) {
 #' @param x A \code{boot_glasso} object.
 #' @param type Character. Plot type: \code{"edges"} (default),
 #'   \code{"stability"}, \code{"edge_diff"}, \code{"centrality_diff"},
-#'   \code{"inclusion"}, or \code{"network"}.
+#'   or \code{"inclusion"}.
 #' @param measure Character. Centrality measure for
 #'   \code{type = "centrality_diff"} (default: first available measure).
 #' @param ... Additional arguments passed to plotting functions. For
@@ -851,22 +874,18 @@ summary.boot_glasso <- function(object, type = "edges", ...) {
 #' @export
 plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {
   type <- match.arg(type, c("edges", "stability", "edge_diff",
-                              "centrality_diff", "inclusion", "network"))
+                              "centrality_diff", "inclusion"))
 
-  if (type == "network") {
-    .bg_plot_network(x, ...)
-  } else {
-    if (!requireNamespace("ggplot2", quietly = TRUE)) {
-      stop("ggplot2 is required for this plot type.", call. = FALSE)
-    }
-    switch(type,
-      edges           = .bg_plot_edges(x, ...),
-      stability       = .bg_plot_stability(x, ...),
-      edge_diff       = .bg_plot_edge_diff(x, ...),
-      centrality_diff = .bg_plot_centrality_diff(x, measure, ...),
-      inclusion       = .bg_plot_inclusion(x, ...)
-    )
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("ggplot2 is required for this plot type.", call. = FALSE)
   }
+  switch(type,
+    edges           = .bg_plot_edges(x, ...),
+    stability       = .bg_plot_stability(x, ...),
+    edge_diff       = .bg_plot_edge_diff(x, ...),
+    centrality_diff = .bg_plot_centrality_diff(x, measure, ...),
+    inclusion       = .bg_plot_inclusion(x, ...)
+  )
 }
 
 
@@ -1153,28 +1172,3 @@ plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {
 }
 
 
-#' Network plot: thresholded network with predictability
-#' @noRd
-.bg_plot_network <- function(x, ...) {
-  if (!requireNamespace("cograph", quietly = TRUE)) {
-    stop("cograph is required for network plotting.", call. = FALSE)
-  }
-
-  node_cols <- .node_colors(x$p)
-
-  dots <- list(
-    x = x$thresholded_pcor,
-    directed = FALSE,
-    node_fill = node_cols,
-    edge_labels = TRUE,
-    edge_label_size = 0.65,
-    node_size = 8,
-    theme = "colorblind",
-    pie_values = x$original_predictability,
-    pie_colors = "#377EB8",
-    title = "Thresholded Network (Bootstrap)",
-    ...
-  )
-
-  do.call(cograph::splot, dots)
-}

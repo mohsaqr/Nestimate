@@ -1193,26 +1193,3 @@ summary.net_hon <- function(object, ...) {
   invisible(object)
 }
 
-#' @param min_count Integer. Minimum edge count to display
-#'   (default: 5). Filters noise from rare observations.
-#' @param top Integer or NULL. Show only the top N pathways by count
-#'   (default: 10).
-#' @param ... Additional arguments passed to
-#'   \code{cograph::plot_simplicial()}.
-#'
-#' @export
-plot.net_hon <- function(x, min_count = 5L, top = 10L, ...) {
-  if (!requireNamespace("cograph", quietly = TRUE)) {
-    stop("Package 'cograph' is required for plotting. ",
-         "Install it with: install.packages('cograph')")
-  }
-
-  pw <- pathways(x, min_count = min_count, top = top)
-  if (length(pw) == 0L) {
-    message("No higher-order pathways to plot (try lowering min_count)")
-    return(invisible(x))
-  }
-
-  p <- cograph::plot_simplicial(x = NULL, pathways = pw, ...)
-  invisible(p)
-}

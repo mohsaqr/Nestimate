@@ -11,7 +11,7 @@
 
 \item{type}{Character. Plot type: \code{"edges"} (default),
 \code{"stability"}, \code{"edge_diff"}, \code{"centrality_diff"},
-\code{"inclusion"}, or \code{"network"}.}
+or \code{"inclusion"}.}
 
 \item{measure}{Character. Centrality measure for
 \code{type = "centrality_diff"} (default: first available measure).}
