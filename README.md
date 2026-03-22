@@ -63,7 +63,6 @@ Both paradigms share the same `build_network()` interface, validation engine, an
 | `build_mcml()` | Multi-Cluster Multi-Layer networks |
 | `mlvar()` | Multilevel vector autoregression |
 | `graphical_var()` | Graphical VAR (temporal + contemporaneous) |
-| `build_gimme()` | Group Iterative Multiple Model Estimation |
 | `wtna()` | Windowed temporal network analysis |
 
 ### Data Utilities

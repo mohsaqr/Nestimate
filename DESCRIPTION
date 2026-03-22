@@ -1,5 +1,5 @@
 Package: Nestimate
-Title: Network Estimation, Bootstrap, and Temporal Analysis
+Title: Network Estimation, Bootstrap, and Higher-Order Analysis
 Version: 0.2.0
 Authors@R: person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph"))
 Description: Estimate networks from sequence and panel data. Supports transition
@@ -7,10 +7,8 @@ Description: Estimate networks from sequence and panel data. Supports transition
     (correlation, partial correlation, graphical lasso, Ising), bootstrap
     inference, permutation testing, and higher-order networks (Higher-Order
     Network, Higher-Order Network Embedding, Hyper-Path Anomaly, Multi-Order
-    Generative Model). Includes Group Iterative Multiple Model Estimation
-    (GIMME), multi-cluster multi-layer networks (MCML), multilevel vector
-    autoregression (VAR), graphical VAR, and temporal network analysis with
-    time-varying centrality, velocity, and proximity timelines.
+    Generative Model). Includes multi-cluster multi-layer networks (MCML),
+    multilevel vector autoregression (VAR), and graphical VAR.
 License: MIT + file LICENSE
 URL: https://github.com/mohsaqr/Nestimate
 BugReports: https://github.com/mohsaqr/Nestimate/issues
