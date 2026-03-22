@@ -352,33 +352,40 @@ print.nestimate_data <- function(x, ...) {
 #' @noRd
 .aggregate_metadata <- function(df, session_col, extra_cols) {
   sessions <- unique(df[[session_col]])
+  tie_counts <- integer(0)
 
   agg_list <- lapply(extra_cols, function(col) {
     vals <- df[[col]]
     if (is.numeric(vals)) {
       tapply(vals, df[[session_col]], mean, na.rm = TRUE)[sessions]
     } else {
-      tapply(vals, df[[session_col]], function(v) {
+      n_ties <- 0L
+      result <- tapply(vals, df[[session_col]], function(v) {
         v <- v[!is.na(v)]
         if (length(v) == 0L) return(NA_character_)
         tab <- table(v)
         max_count <- max(tab)
         modes <- names(tab)[tab == max_count]
         if (length(modes) > 1L) {
-          # Tie: use first occurring value
-          chosen <- v[v %in% modes][1L]
-          message(sprintf(
-            "Column '%s': tied mode (%s), using first value '%s'",
-            col, paste(modes, collapse = ", "), chosen
-          ))
-          chosen
+          n_ties <<- n_ties + 1L
+          v[v %in% modes][1L]
         } else {
           modes
         }
       })[sessions]
+      if (n_ties > 0L) tie_counts[[col]] <<- n_ties
+      result
     }
   })
   names(agg_list) <- extra_cols
+
+  if (length(tie_counts) > 0L) {
+    parts <- vapply(names(tie_counts), function(col) {
+      sprintf("'%s' (%d sessions)", col, tie_counts[[col]])
+    }, character(1))
+    message("Metadata aggregated per session: ties resolved by first ",
+            "occurrence in ", paste(parts, collapse = ", "))
+  }
 
   result <- data.frame(
     .session_id = sessions,

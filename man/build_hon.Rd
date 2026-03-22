@@ -20,6 +20,9 @@ Trailing \code{NA}s are stripped. All non-NA values are coerced to
 character.
 \item \code{list}: each element is a character (or coercible) vector
 representing one trajectory.
+\item \code{tna}: a tna object with sequence data. Numeric state
+IDs are automatically converted to label names.
+\item \code{netobject}: a netobject with sequence data.
 }}
 
 \item{max_order}{Integer. Maximum order of the HON. Default 5.

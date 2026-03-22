@@ -117,7 +117,10 @@
 #' Paths occurring more or less often than expected under the null model are
 #' flagged as over- or under-represented.
 #'
-#' @param data A data.frame (rows = trajectories) or list of character vectors.
+#' @param data A data.frame (rows = trajectories), list of character vectors,
+#'   \code{tna} object, or \code{netobject} with sequence data. For
+#'   \code{tna}/\code{netobject}, numeric state IDs are automatically
+#'   converted to label names.
 #' @param k Integer. Order of the De Bruijn graph (default 2). Detects
 #'   anomalies in paths of length k.
 #' @param alpha Numeric. Significance threshold for anomaly classification
@@ -160,6 +163,9 @@
 #'
 #' @export
 build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
+  # --- Coerce tna/netobject to labeled data.frame ---
+  data <- .coerce_sequence_input(data)
+
   k <- as.integer(k)
   min_count <- as.integer(min_count)
   stopifnot(

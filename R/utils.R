@@ -90,6 +90,56 @@ safe_sd <- function(x) {
 }
 
 
+#' Coerce tna or netobject to labeled sequence data.frame
+#'
+#' When \code{data} is a \code{tna} or \code{netobject}, extracts the
+#' sequence data and converts numeric state IDs to label names. This
+#' allows \code{build_hon()}, \code{build_hypa()}, and other pathway
+#' functions to accept model objects directly.
+#'
+#' @param data Input: data.frame, list, tna, or netobject.
+#' @return A data.frame or list suitable for \code{.hon_parse_input()}.
+#' @noRd
+.coerce_sequence_input <- function(data) {
+  if (inherits(data, "tna")) {
+    if (is.null(data$data)) {
+      stop("tna object has no sequence data ($data). ",
+           "Build the tna from sequence data, not a raw matrix.",
+           call. = FALSE)
+    }
+    df <- as.data.frame(data$data, stringsAsFactors = FALSE)
+    lbl <- attr(data$data, "labels") %||% data$labels
+    if (!is.null(lbl) && length(lbl) > 0L &&
+        (is.integer(df[[1]]) || is.numeric(df[[1]]))) {
+      df[] <- lapply(df, function(col) {
+        idx <- as.integer(col)
+        ifelse(is.na(idx) | idx < 1L | idx > length(lbl),
+               NA_character_, lbl[idx])
+      })
+    }
+    return(df)
+  }
+  if (inherits(data, "netobject")) {
+    if (is.null(data$data)) {
+      stop("netobject has no sequence data ($data). ",
+           "Build the network from sequence data.",
+           call. = FALSE)
+    }
+    df <- as.data.frame(data$data, stringsAsFactors = FALSE)
+    lbl <- rownames(data$weights)
+    if (!is.null(lbl) && length(lbl) > 0L &&
+        (is.integer(df[[1]]) || is.numeric(df[[1]]))) {
+      df[] <- lapply(df, function(col) {
+        idx <- as.integer(col)
+        ifelse(is.na(idx) | idx < 1L | idx > length(lbl),
+               NA_character_, lbl[idx])
+      })
+    }
+    return(df)
+  }
+  data
+}
+
 #' Convert pure cograph_network to dual-class netobject/cograph_network
 #'
 #' Internal converter so that downstream functions (bootstrap, permutation,

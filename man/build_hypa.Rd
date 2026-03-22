@@ -7,7 +7,10 @@
 build_hypa(data, k = 3L, alpha = 0.05, min_count = 5L)
 }
 \arguments{
-\item{data}{A data.frame (rows = trajectories) or list of character vectors.}
+\item{data}{A data.frame (rows = trajectories), list of character vectors,
+\code{tna} object, or \code{netobject} with sequence data. For
+\code{tna}/\code{netobject}, numeric state IDs are automatically
+converted to label names.}
 
 \item{k}{Integer. Order of the De Bruijn graph (default 2). Detects
 anomalies in paths of length k.}

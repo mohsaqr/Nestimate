@@ -241,6 +241,7 @@
 #' @export
 build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt"),
                         lrt_alpha = 0.01) {
+  data <- .coerce_sequence_input(data)
   criterion <- match.arg(criterion)
   max_order <- as.integer(max_order)
   stopifnot(
@@ -468,6 +469,7 @@ mogen_transitions <- function(x, order = NULL, min_count = 1L) {
 #'
 #' @export
 path_counts <- function(data, k = 2L, top = NULL) {
+  data <- .coerce_sequence_input(data)
   k <- as.integer(k)
   stopifnot("'k' must be >= 2" = k >= 2L)
 
@@ -522,6 +524,7 @@ path_counts <- function(data, k = 2L, top = NULL) {
 #'
 #' @export
 state_frequencies <- function(data) {
+  data <- .coerce_sequence_input(data)
   if (is.data.frame(data)) {
     all_states <- as.character(unlist(data, use.names = FALSE))
   } else {
