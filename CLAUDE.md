@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-Nestimate is an R package for network estimation from sequence and panel data. Split from Saqrlab v0.3.0 — contains all computation code, no simulation or benchmarking. Those live in Saqrlab, which depends on Nestimate.
+Nestimate (v0.2.0) is an R package for network estimation from sequence and panel data. Split from Saqrlab v0.3.0 — contains all computation code, no simulation or benchmarking. Those live in Saqrlab, which depends on Nestimate.
 
 ## Build & Test Commands
 
@@ -19,8 +19,6 @@ devtools::install()                                        # Install locally
 Tests use testthat edition 3. Test helpers in `tests/testthat/helper-simulate.R` provide standalone `simulate_mtna()` and `simulate_data("mlvar")` — no Saqrlab dependency needed for tests.
 
 ## Architecture
-
-See `docs/ARCHITECTURE.md` for the full module map.
 
 ### Estimator Registry Pattern
 
@@ -62,7 +60,7 @@ All classes have `print`, `summary`, `plot` methods. Naming convention:
 | `boot_glasso` | `boot_glasso.R` | `boot_glasso()` |
 | `net_permutation` | `permutation_test.R` | `permutation_test()` |
 | `net_gimme` | `gimme.R` | `build_gimme()` |
-| `mcml_network` | `mcml.R` | `build_mcml()` |
+| `mcml_network` / `mcml` | `mcml.R` | `build_mcml()` / `cluster_summary()` |
 | `mlvar_result` | `mlvar.R` | `mlvar()` |
 | `net_hon` | `hon.R` | `build_hon()` |
 | `net_honem` | `honem.R` | `build_honem()` |
@@ -72,17 +70,17 @@ All classes have `print`, `summary`, `plot` methods. Naming convention:
 | `mmm_compare` | `mmm.R` | `compare_mmm()` |
 | `net_clustering` | `cluster_data.R` | `cluster_data()` |
 | `gvar_result` | `graphical_var.R` | `graphical_var()` |
-| `ml_graphical_var_result` | `graphical_var.R` | `ml_graphical_var()` |
-| `net_reliability` | `reliability.R` | `reliability_network()` |
+| `net_reliability` | `reliability.R` | `reliability()` |
 | `net_stability` | `centrality_stability.R` | `centrality_stability()` |
-| `temporal_network` | `temporal_network.R` | `temporal_network()` |
-| `tna_velocity` | `velocity_tna.R` | `velocity_tna()` |
+| `simplicial_complex` | `simplicial.R` | `build_simplicial()` |
+| `persistent_homology` | `simplicial.R` | `persistent_homology()` |
+| `q_analysis` | `simplicial.R` | `q_analysis()` |
 
 ### Window-based TNA
 
 `wtna()` — computes networks from one-hot binary matrices using temporal windowing. Supports transition (directed), co-occurrence (undirected), or both. Uses `crossprod()` for efficient computation. Tumbling/sliding window modes. Per-actor grouping.
 
-`import_onehot()` — converts binary indicator data to wide sequence format with optional windowed aggregation.
+`action_to_onehot()` / `prepare_onehot()` — convert action data and binary indicator data to one-hot/wide sequence format.
 
 ### Bootstrap & Inference
 
@@ -100,6 +98,14 @@ HON, HONEM, HYPA, MOGen share infrastructure:
 - Unified edge columns: `path`, `from`, `to`, `count`, `probability`
 - Arrow notation for node names: `"A -> B -> C"`
 
+### Simplicial Complex Analysis
+
+`R/simplicial.R` — topological analysis of networks and higher-order pathway data:
+- `build_simplicial()` — constructs simplicial complexes via clique, pathway, or Vietoris-Rips methods → `simplicial_complex`
+- `persistent_homology()` — filtration-based Betti number tracking across thresholds → `persistent_homology`
+- `q_analysis()` — Atkin's Q-analysis (structure vectors, Q-connectivity) → `q_analysis`
+- `betti_numbers()`, `euler_characteristic()`, `simplicial_degree()`, `verify_simplicial()` — utility functions
+
 ### Mixed Markov Models
 
 `build_mmm()` — EM-based mixture of Markov chains (soft assignments, per-component transition matrices as netobjects, BIC/AIC/ICL, optional covariate regression). Returns `net_mmm`. `compare_mmm()` compares BIC/AIC/ICL across k values → `mmm_compare`.
@@ -110,22 +116,17 @@ HON, HONEM, HYPA, MOGen share infrastructure:
 
 ### Graphical VAR
 
-`graphical_var()` / `ml_graphical_var()` — idiographic and multilevel VAR network estimation. Return `gvar_result` / `ml_graphical_var_result`.
+`graphical_var()` — idiographic GVAR estimation (two-step: L1-penalized VAR → graphical lasso on residuals → EBIC selection). Returns `gvar_result` with `$temporal`, `$contemporaneous`, `$pcc` matrices.
 
 ### Reliability & Stability
 
-`reliability_network()` — split-half reliability of network edges → `net_reliability`.
+`reliability()` — split-half reliability of network edges → `net_reliability`.
 `centrality_stability()` — CS-coefficient via case-dropping subsets → `net_stability`.
 
 ### Network Utilities
 
-`pathways()` — generic dispatching on `net_hon`, `net_hypa`, `net_mogen`; returns character vector of pathway strings in arrow notation. No dedicated return class.
-Network comparison functions in `network_comparison.R` (correlation, RMSE, MAE, cosine between two matrices).
-
-### Temporal Networks
-
-`temporal_network()` — 21 snapshot metrics, temporal BFS (multi-pass for non-DAG), proximity timeline plot.
-`velocity_tna()` — edge velocity/acceleration (regression, GLLA, finite difference).
+`pathways()` — generic dispatching on `net_hon`, `net_hypa`, `net_mogen`; returns character vector of pathway strings in arrow notation.
+`predictability()` — generic dispatching on `netobject` and `netobject_ml` for node predictability.
 
 ## Key Design Decisions
 
@@ -134,8 +135,8 @@ Network comparison functions in `network_comparison.R` (correlation, RMSE, MAE, 
 - MCML between-cluster: does NOT collapse consecutive same-cluster states
 - HON unified output: columns `path`, `from`, `to`, `count`, `probability`
 - Bootstrap precomputes per-sequence counts — resample via `colSums()` not re-counting
-- Proximity timeline: strength-based positioning, interleaved slots, spline interpolation
 - Plotting uses `cograph::splot()` for static networks
+- Graphical VAR uses own coordinate descent (not glmnet) — matched graphicalVAR better
 
 ## Internal Conventions
 
@@ -146,11 +147,20 @@ Network comparison functions in `network_comparison.R` (correlation, RMSE, MAE, 
 - **Fast transitions**: `tabulate()` on integer-encoded pairs (vectorized, no loops)
 - **Error handling**: `tryCatch()` with `stop(..., call. = FALSE)` for informative messages
 
+## Sidelined Modules
+
+In `sidelined/` — removed from active package but preserved for future reintegration:
+- `temporal_network.R` — dynamic network analysis (21 snapshot metrics, temporal BFS, proximity timeline). Class: `temporal_network`
+- `velocity_tna.R` — edge velocity/acceleration (regression, GLLA, finite difference). Class: `tna_velocity`
+- `network_comparison.R` — compare two networks (correlation, RMSE, MAE, cosine)
+- `fit_network_model.R`, `mcml_old.R` — older implementations
+
 ## Known Open Issues (Pre-existing)
 
 - HON/HONEM/HYPA/MOGen classes still use their own `$matrix`/`$nodes` fields — they are NOT `cograph_network` compatible
 - `print.mcml` S3 method conflict between Nestimate and cograph
 - `test-mmm.R` fails during `R CMD check` due to parallel fork restriction in the check sandbox — not a regression
+- `docs/ARCHITECTURE.md` is stale (lists old dependencies like dplyr/tidyr/tna as Imports) — treat CLAUDE.md as authoritative
 
 ## Testing Gotchas
 
@@ -159,6 +169,7 @@ Network comparison functions in `network_comparison.R` (correlation, RMSE, MAE, 
 - `build_network()` classifies columns as state vs metadata by checking if values are in node names — numeric columns always go to `$metadata`; character columns with letters overlapping node names can be misclassified
 - `nnet::multinom` with k=2: `summary()$coefficients` returns a named vector, not a matrix — must detect and wrap into a 1-row matrix
 - Formula environment: build `as.formula()` inside the fitting function so variables resolve in the correct environment
+- `build_mmm()` uses `parallel::mclapply()` which fails in R CMD check sandbox — guard with `_R_CHECK_LIMIT_CORES_` env var check
 
 ## Dependencies
 

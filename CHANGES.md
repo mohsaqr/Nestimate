@@ -1,5 +1,15 @@
 # Changes
 
+### 2026-03-20 — CLAUDE.md refresh, temporal spec, vibcoding datasets
+- CLAUDE.md: Removed phantom modules, added simplicial complex, fixed reliability() name, added sidelined section
+- docs/temporal/SPEC.md: Enterprise-grade temporal network build spec with cograph-compatible output
+- docs/temporal/ref-*.R: Copied sidelined implementations as reference
+- data-raw/vibcoding.R: Build script for 12 datasets from raw human-AI vibe coding CSV
+- R/data.R: Documentation for 12 datasets (9 long, 2 wide, 1 edge list)
+- data/*.rda: 12 datasets bundled (human_ai, human_ai_cat, human_ai_super, human_detailed, human_cat, human_super, ai_detailed, ai_cat, ai_super, human_wide, ai_wide, human_ai_edges)
+- DESCRIPTION: Added LazyData: true, Depends: R (>= 3.5)
+- Tests: 2779 pass, 1 pre-existing failure (test-prepare_data.R:382)
+
 ### 2026-03-18 — v0.2.0: Dependency reduction, coverage, CRAN prep
 - DESCRIPTION: Reduced Imports from 6 to 4 (removed igraph, tna). Version 0.2.0.
 - R/graphical_var.R: Reimplemented from scratch — own coordinate descent lasso + glasso + EBIC. Dropped graphicalVAR dependency and ml_graphical_var().

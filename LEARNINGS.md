@@ -49,3 +49,8 @@
 - [CRAN DESCRIPTION]: Never start with "This package" or "Comprehensive toolkit". Expand all acronyms on first mention. Add `[cph]` to Authors@R. Keep Title < 65 chars in title case.
 - [_R_CHECK_LIMIT_CORES_]: `build_mmm()` uses `parallel::mclapply()` which fails during R CMD check. Guard with `if (isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE")))) n_cores <- 1L`.
 - [.Rbuildignore .claude]: The `.claude` directory must be excluded — R CMD check --as-cran flags hidden directories.
+
+### 2026-03-20
+- [usethis::use_data]: Automatically adds `Depends: R (>= 3.5)` and `LazyData: true` to DESCRIPTION. Both are fine for CRAN.
+- [vibcoding data]: Raw CSV has multiple codes per turn (same id, different code/category/superclass rows). Each row becomes a separate action in the sequence, ordered by id within session.
+- [CLAUDE.md accuracy]: Phantom modules can accumulate — temporal_network.R, velocity_tna.R, network_comparison.R, ml_graphical_var() were all listed but didn't exist in R/. They were in sidelined/. Always verify against actual file system before documenting.
