@@ -85,8 +85,9 @@ wtna <- function(data,
   stopifnot(length(codes) >= 2L)
 
   if (is.null(actor)) {
-    X <- .wtna_to_matrix(df, codes, window_size, mode)
-    weights <- .wtna_compute_weights(X, method)
+    X_raw <- as.matrix(df[, codes, drop = FALSE])
+    storage.mode(X_raw) <- "integer"
+    weights <- .wtna_compute_weights(X_raw, method, window_size, mode)
   } else {
     stopifnot(all(actor %in% names(df)))
     weights <- .wtna_compute_by_actor(df, codes, window_size, mode, actor, method)
@@ -105,60 +106,116 @@ wtna <- function(data,
 
 # ---- Private helpers ----
 
-#' Aggregate data into windowed binary matrix
-#' @noRd
-.wtna_to_matrix <- function(df, codes, window_size, mode) {
-  X <- as.matrix(df[, codes, drop = FALSE])
-  storage.mode(X) <- "integer"
-
-  if (window_size <= 1L) return(X)
-
-  n <- nrow(X)
-  if (mode == "non-overlapping") {
-    wid <- (seq_len(n) - 1L) %/% window_size
-    res <- rowsum(X, wid)
-    res[res > 0L] <- 1L
-    return(res)
-  }
-
-  # Overlapping (rolling) window
-  if (n < window_size) return(matrix(0L, 0L, length(codes)))
-
-  n_windows <- n - window_size + 1L
-  combined <- X[seq_len(n_windows), , drop = FALSE]
-  for (i in seq_len(window_size - 1L)) {
-    combined <- combined | X[(1L + i):(n_windows + i), , drop = FALSE]
-  }
-  storage.mode(combined) <- "integer"
-  combined
-}
-
 
 #' Compute transition counts
+#'
+#' For window_size <= 1: consecutive crossprod (t->t+1).
+#' For window_size > 1: pairwise between-window transitions matching tna's
+#' windowed algorithm — every position in window_i paired with every position
+#' in window_{i+1}.
 #' @noRd
-.wtna_transitions <- function(X) {
+.wtna_transitions <- function(X, window_size = 1L, mode = "non-overlapping") {
   n <- nrow(X)
-  if (n < 2L) return(matrix(0, ncol(X), ncol(X)))
-  crossprod(X[-n, , drop = FALSE], X[-1L, , drop = FALSE])
+  k <- ncol(X)
+  if (n < 2L) return(matrix(0, k, k))
+
+  if (window_size <= 1L) {
+    return(crossprod(X[-n, , drop = FALSE], X[-1L, , drop = FALSE]))
+  }
+
+  weights <- matrix(0, k, k)
+
+  if (mode == "non-overlapping") {
+    # Match tna's compute_transitions_windowed: pair every position in
+    # window_i with every position in window_{i+1}
+    divides <- n %% window_size == 0L
+    q <- n %/% window_size - 1L * divides
+    for (i in seq_len(q)) {
+      j_idx <- seq((i - 1L) * window_size + 1L, i * window_size)
+      k_idx <- seq(i * window_size + 1L, min(n, (i + 1L) * window_size))
+      # Loop over all from-to position pairs (blocks may differ in size)
+      for (j in j_idx) {
+        for (ki in k_idx) {
+          # Outer product of two binary row vectors: k x k matrix
+          weights <- weights + tcrossprod(X[j, ], X[ki, ])
+        }
+      }
+    }
+  } else {
+    # Overlapping: consecutive windows shifted by 1
+    n_windows <- n - window_size + 1L
+    if (n_windows < 2L) return(weights)
+    for (i in seq_len(n_windows - 1L)) {
+      j_idx <- seq(i, i + window_size - 1L)
+      k_idx <- seq(i + 1L, i + window_size)
+      for (j in j_idx) {
+        for (ki in k_idx) {
+          weights <- weights + tcrossprod(X[j, ], X[ki, ])
+        }
+      }
+    }
+  }
+  weights
 }
 
 
 #' Compute co-occurrence counts
+#'
+#' For window_size <= 1: standard crossprod across all rows.
+#' For window_size > 1: within-window pairwise co-occurrence matching tna's
+#' windowed algorithm — every position in a window paired with every other
+#' position in the same window.
 #' @noRd
-.wtna_cooccurrence <- function(X) {
-  crossprod(X)
+.wtna_cooccurrence <- function(X, window_size = 1L, mode = "non-overlapping") {
+  n <- nrow(X)
+  k <- ncol(X)
+
+  if (window_size <= 1L) return(crossprod(X))
+
+  weights <- matrix(0, k, k)
+
+  if (mode == "non-overlapping") {
+    # Match tna: pair every position with every other position within
+    # the same window (including self-pairs at same position)
+    n_windows <- ceiling(n / window_size)
+    for (i in seq_len(n_windows)) {
+      idx <- seq((i - 1L) * window_size + 1L, min(n, i * window_size))
+      for (j in idx) {
+        for (ki in idx) {
+          weights <- weights + tcrossprod(X[j, ], X[ki, ])
+        }
+      }
+    }
+  } else {
+    n_windows <- n - window_size + 1L
+    if (n_windows < 1L) return(weights)
+    for (i in seq_len(n_windows)) {
+      idx <- seq(i, i + window_size - 1L)
+      for (j in idx) {
+        for (ki in idx) {
+          weights <- weights + tcrossprod(X[j, ], X[ki, ])
+        }
+      }
+    }
+  }
+  weights
 }
 
 
 #' Dispatch weight computation by method
+#'
+#' @param X_raw Raw one-hot matrix (not collapsed). Transitions use this
+#'   directly with pairwise between-window counting. Co-occurrence collapses
+#'   windows first via \code{.wtna_to_matrix}.
 #' @noRd
-.wtna_compute_weights <- function(X, method) {
+.wtna_compute_weights <- function(X_raw, method, window_size = 1L,
+                                   mode = "non-overlapping") {
   switch(method,
-    transition = .wtna_transitions(X),
-    cooccurrence = .wtna_cooccurrence(X),
+    transition = .wtna_transitions(X_raw, window_size, mode),
+    cooccurrence = .wtna_cooccurrence(X_raw, window_size, mode),
     both = list(
-      transition = .wtna_transitions(X),
-      cooccurrence = .wtna_cooccurrence(X)
+      transition = .wtna_transitions(X_raw, window_size, mode),
+      cooccurrence = .wtna_cooccurrence(X_raw, window_size, mode)
     )
   )
 }
@@ -177,8 +234,9 @@ wtna <- function(data,
   }
 
   matrices <- lapply(groups, function(g) {
-    X <- .wtna_to_matrix(g, codes, window_size, mode)
-    .wtna_compute_weights(X, method)
+    X_raw <- as.matrix(g[, codes, drop = FALSE])
+    storage.mode(X_raw) <- "integer"
+    .wtna_compute_weights(X_raw, method, window_size, mode)
   })
 
   if (method == "both") {
@@ -330,8 +388,9 @@ wtna <- function(data,
   window_size <- as.integer(window_size)
 
   if (is.null(actor)) {
-    X <- .wtna_to_matrix(df, codes, window_size, mode)
-    weights <- .wtna_compute_weights(X, wtna_method)
+    X_raw <- as.matrix(df[, codes, drop = FALSE])
+    storage.mode(X_raw) <- "integer"
+    weights <- .wtna_compute_weights(X_raw, wtna_method, window_size, mode)
   } else {
     stopifnot(all(actor %in% names(df)))
     weights <- .wtna_compute_by_actor(df, codes, window_size, mode,

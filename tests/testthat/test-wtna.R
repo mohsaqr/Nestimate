@@ -82,12 +82,16 @@ test_that("wtna overlapping window aggregation", {
               window_size = 2, mode = "overlapping")
   expect_s3_class(net, "netobject")
 
-  # Overlapping with ws=2: windows at rows (1,2), (2,3), (3,4)
+  # Overlapping with ws=2: windows (1,2), (2,3), (3,4)
+  # Pairwise between-window transitions:
+  # Window(1,2)->Window(2,3): rows {1,2} x rows {2,3} = 4 pairs
+  # Window(2,3)->Window(3,4): rows {2,3} x rows {3,4} = 4 pairs
   X <- as.matrix(df)
-  n <- nrow(X)
-  combined <- X[1:3, ] | X[2:4, ]
-  storage.mode(combined) <- "integer"
-  expected <- crossprod(combined[-3, ], combined[-1, ])
+  expected <- matrix(0, 2, 2)
+  # w1->w2: (1,2)x(2,3)
+  for (j in 1:2) for (k in 2:3) expected <- expected + tcrossprod(X[j,], X[k,])
+  # w2->w3: (2,3)x(3,4)
+  for (j in 2:3) for (k in 3:4) expected <- expected + tcrossprod(X[j,], X[k,])
   expect_equal(unname(net$weights), unname(expected))
 })
 
@@ -408,16 +412,14 @@ test_that(".resolve_codes range errors on missing end column (L230)", {
   )
 })
 
-# ---- .wtna_to_matrix: overlapping window with fewer rows than window_size (L125) ----
+# ---- wtna: overlapping window with fewer rows than window_size ----
 
-test_that(".wtna_to_matrix returns empty matrix when n < window_size (L125)", {
-  # 2-row data, window_size = 5 -> n(2) < ws(5) -> returns 0-row matrix
+test_that("wtna returns zero matrix when n < window_size (overlapping)", {
+  # 2-row data, window_size = 5 -> too few rows -> zero weights
   df <- data.frame(A = c(1, 0), B = c(0, 1))
-  result <- Nestimate:::.wtna_to_matrix(df, codes = c("A", "B"),
-                                        window_size = 5L,
-                                        mode = "overlapping")
-  expect_true(nrow(result) == 0L)
-  expect_equal(ncol(result), 2L)
+  net <- wtna(df, method = "transition", type = "frequency",
+              window_size = 5L, mode = "overlapping")
+  expect_true(all(net$weights == 0))
 })
 
 # ---- .wtna_compute_by_actor: multiple actor columns (L175-176) ----
