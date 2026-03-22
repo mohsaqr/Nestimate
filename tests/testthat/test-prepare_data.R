@@ -381,7 +381,7 @@ test_that("tied-mode character extra column emits message and returns first valu
   )
   expect_message(
     res <- prepare_data(ev2, actor = "student", action = "code"),
-    "tied mode"
+    "ties resolved by first occurrence"
   )
   expect_true(res$meta_data$level %in% c("high", "low"))
 })

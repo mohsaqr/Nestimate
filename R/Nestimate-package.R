@@ -28,5 +28,8 @@ utils::globalVariables(c(
   # permutation_test data.table columns
   "weight_x", "weight_y",
   # mmm ggplot2 aes variables
-  "max_posterior", "cluster", "k", "criterion"
+  "max_posterior", "cluster", "k", "criterion",
+  # simplicial plot aes variables
+  "threshold", "betti", "dim_label", "birth", "death",
+  "persistence", "components", "count", "total"
 ))
