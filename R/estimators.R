@@ -1044,6 +1044,17 @@
 
 #' Convert precision matrix to partial correlations
 #' @noRd
+#' Convert precision matrix to partial correlations (qgraph-compatible)
+#' Uses cov2cor for numerical stability, matching qgraph::wi2net.
+#' @noRd
+.wi2net <- function(x) {
+  x <- -stats::cov2cor(x)
+  diag(x) <- 0
+  # forceSymmetric: copy upper triangle to lower (matches qgraph)
+  x[lower.tri(x)] <- t(x)[lower.tri(x)]
+  x
+}
+
 .precision_to_pcor <- function(Wi, threshold) {
   d <- sqrt(diag(Wi))
   pcor <- -Wi / outer(d, d)
@@ -1084,7 +1095,26 @@
   lambda_path <- .compute_lambda_path(S, nlambda, lambda.min.ratio)
   selected <- .select_ebic(S, lambda_path, n_obs, gamma, penalize.diagonal)
 
-  pcor <- .precision_to_pcor(selected$wi, threshold)
+  # Refit with zero-constrained unregularized glasso (matches qgraph behavior):
+  # 1. Get sparsity pattern via wi2net (cov2cor + symmetrize)
+  # 2. Refit glasso with lambda=0 and zero constraints
+  # 3. Convert refitted precision to pcor via same wi2net
+  wi <- selected$wi
+  net <- -.wi2net(wi)
+  zero_idx <- which(net == 0 & upper.tri(net), arr.ind = TRUE)
+  if (nrow(zero_idx) > 0L) {
+    refit <- suppressWarnings(glasso::glasso(
+      S, rho = 0, zero = zero_idx, trace = 0,
+      penalize.diagonal = penalize.diagonal))
+  } else {
+    refit <- suppressWarnings(glasso::glasso(
+      S, rho = 0, trace = 0,
+      penalize.diagonal = penalize.diagonal))
+  }
+  wi <- refit$wi
+
+  pcor <- .wi2net(wi)
+  pcor[abs(pcor) < threshold] <- 0
   colnames(pcor) <- rownames(pcor) <- colnames(S)
 
   nodes <- colnames(pcor)
@@ -1093,7 +1123,7 @@
     nodes = nodes,
     directed = FALSE,
     cleaned_data = prepared$mat,
-    precision_matrix = selected$wi,
+    precision_matrix = wi,
     cor_matrix = S,
     lambda_selected = selected$lambda,
     ebic_selected = selected$ebic,

@@ -900,9 +900,11 @@ test_that("boot_glasso original matches build_network glasso", {
                          cs_drop = SMALL_CS_DROP, centrality = FAST_CENT,
                          gamma = 0.5, nlambda = 100L, seed = 1)
 
-  # The partial correlation matrices should match closely
-  # (both use the same lambda path and EBIC selection)
-  expect_equal(result$original_pcor, net$weights, tolerance = 1e-6)
+  # build_network applies a zero-constrained refit (matching qgraph),
+  # boot_glasso uses the direct EBIC-selected fit for bootstrap consistency.
+  # Sparsity pattern and sign structure must match; values differ by refit.
+  expect_equal(result$original_pcor != 0, net$weights != 0)
+  expect_equal(sign(result$original_pcor), sign(net$weights))
 })
 
 test_that("boot_glasso CS mean correlations are high for structured data", {
