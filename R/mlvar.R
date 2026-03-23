@@ -148,21 +148,23 @@ mlvar <- function(data,
 
   n_subjects_pairs <- length(unique(id_vec))
 
-  # Step 3: Within-center
-  centered <- .mlvar_within_center(Y, X, id_vec, standardize)
+  # Step 3: Within-center (person means from ALL data, grand SD)
+  centered <- .mlvar_within_center(Y, X, id_vec, standardize,
+                                    full_data = prepared, vars = vars,
+                                    id_col = id)
   Y_c <- centered$Y
   X_c <- centered$X
 
   # Step 4: Temporal OLS
   temporal_result <- .mlvar_temporal_ols(Y_c, X_c, n_subjects_pairs, vars)
 
-  # Step 5: Contemporaneous network (nodewise lmer on residuals, matching mlVAR)
+  # Step 5: Contemporaneous network
   contemporaneous <- .mlvar_contemporaneous(
-    temporal_result$residuals, id_vec, vars
+    temporal_result$residuals, n_obs, gamma, nlambda
   )
 
-  # Step 6: Between-subjects network (partial correlations of person means)
-  between <- .mlvar_between(prepared, vars, id)
+  # Step 6: Between-subjects network (EBIC-GLASSO on person mean correlations)
+  between <- .mlvar_between(prepared, vars, id, n_subjects, gamma, nlambda)
 
   # Step 7: Assemble result
   result <- list(
@@ -334,30 +336,47 @@ mlvar <- function(data,
 #'
 #' @return List with centered Y and X matrices.
 #' @noRd
-.mlvar_within_center <- function(Y, X, id_vec, standardize) {
+.mlvar_within_center <- function(Y, X, id_vec, standardize,
+                                  full_data = NULL, vars = NULL,
+                                  id_col = NULL) {
   d <- ncol(Y)
 
-  # Center Y: subtract person means
-  Y_c <- Y
-  for (j in seq_len(d)) {
-    person_means <- ave(Y[, j], id_vec, FUN = mean)
-    Y_c[, j] <- Y[, j] - person_means
-  }
-
-  # Center X: subtract person means
-  X_c <- X
-  for (j in seq_len(d)) {
-    person_means <- ave(X[, j], id_vec, FUN = mean)
-    X_c[, j] <- X[, j] - person_means
+  if (!is.null(full_data) && !is.null(vars) && !is.null(id_col)) {
+    # Person means from ALL observations (matches psychaj/mlVAR)
+    agg <- stats::aggregate(full_data[, vars, drop = FALSE],
+                            by = list(.id = full_data[[id_col]]), FUN = mean)
+    pm <- as.matrix(agg[, vars, drop = FALSE])
+    rownames(pm) <- agg$.id
+    mean_mat <- pm[match(id_vec, rownames(pm)), , drop = FALSE]
+    Y_c <- Y - mean_mat
+    X_c <- X - mean_mat
+  } else {
+    # Fallback: center from lag-pair means
+    Y_c <- Y
+    for (j in seq_len(d)) {
+      Y_c[, j] <- Y[, j] - ave(Y[, j], id_vec, FUN = mean)
+    }
+    X_c <- X
+    for (j in seq_len(d)) {
+      X_c[, j] <- X[, j] - ave(X[, j], id_vec, FUN = mean)
+    }
   }
 
   if (standardize) {
-    # Pooled SD: computed across all observations (already centered)
-    for (j in seq_len(d)) {
-      sd_y <- stats::sd(Y_c[, j])
-      sd_x <- stats::sd(X_c[, j])
-      if (sd_y > 0) Y_c[, j] <- Y_c[, j] / sd_y
-      if (sd_x > 0) X_c[, j] <- X_c[, j] / sd_x
+    if (!is.null(full_data) && !is.null(vars)) {
+      # Grand SD from all raw data (matches psychaj/mlVAR)
+      sd_vec <- vapply(vars, function(v) stats::sd(full_data[[v]]), numeric(1))
+      sd_vec[sd_vec < 1e-12] <- 1
+      sd_mat <- matrix(sd_vec, nrow = nrow(Y_c), ncol = d, byrow = TRUE)
+      Y_c <- Y_c / sd_mat
+      X_c <- X_c / sd_mat
+    } else {
+      for (j in seq_len(d)) {
+        sd_y <- stats::sd(Y_c[, j])
+        sd_x <- stats::sd(X_c[, j])
+        if (sd_y > 0) Y_c[, j] <- Y_c[, j] / sd_y
+        if (sd_x > 0) X_c[, j] <- X_c[, j] / sd_x
+      }
     }
   }
 
@@ -396,8 +415,10 @@ mlvar <- function(data,
   df_ratio <- sqrt(df_ols / df_correct)
 
   for (k in seq_len(d)) {
-    fit <- stats::lm.fit(X, Y[, k])
-    beta <- fit$coefficients
+    # Include intercept (matches psychaj — absorbs residual centering)
+    X_int <- cbind(1, X)
+    fit <- stats::lm.fit(X_int, Y[, k])
+    beta <- fit$coefficients[-1L]  # drop intercept
     resid <- fit$residuals
 
     # Corrected SE
@@ -448,93 +469,67 @@ mlvar <- function(data,
 #'
 #' @return d x d partial correlation matrix (symmetric, zero diagonal).
 #' @noRd
-.mlvar_contemporaneous <- function(residuals, id_vec, vars) {
+.mlvar_contemporaneous <- function(residuals, n_obs, gamma, nlambda) {
   d <- ncol(residuals)
-  zero_mat <- matrix(0, d, d, dimnames = list(vars, vars))
+  vars <- colnames(residuals)
 
-  # Nodewise lmer on residuals (matches mlVAR "correlated" default):
-  # For each residual k, regress on all other residuals with random slopes per subject
-  Gamma <- matrix(0, d, d, dimnames = list(vars, vars))
-  resid_SD <- numeric(d)
-  names(resid_SD) <- vars
+  S <- stats::cor(residuals)
 
-  for (k in seq_len(d)) {
-    lmer_df <- data.frame(.y = residuals[, k], .subject = id_vec,
-                          stringsAsFactors = FALSE)
-    other_idx <- seq_len(d)[-k]
-    for (j in other_idx) {
-      lmer_df[[vars[j]]] <- residuals[, j]
-    }
+  # Guard: if any correlations are NA or all zero
 
-    # Random slopes for all other residuals (orthogonal = ||)
-    rhs_fixed <- paste(vars[other_idx], collapse = " + ")
-    rhs_random <- paste0("(", paste(vars[other_idx], collapse = " + "),
-                         " || .subject)")
-    fm <- stats::as.formula(paste(".y ~", rhs_fixed, "+", rhs_random))
-
-    fit <- tryCatch(
-      lme4::lmer(fm, data = lmer_df, REML = FALSE),
-      error = function(e) NULL
-    )
-    if (is.null(fit)) return(zero_mat)
-
-    fe <- lme4::fixef(fit)
-    for (j in other_idx) {
-      if (vars[j] %in% names(fe)) Gamma[k, j] <- fe[[vars[j]]]
-    }
-    resid_SD[k] <- stats::sigma(fit)
+  if (any(is.na(S))) {
+    warning("NA correlations in residuals. Returning zero matrix.",
+            call. = FALSE)
+    mat <- matrix(0, d, d, dimnames = list(vars, vars))
+    return(mat)
   }
 
-  if (any(resid_SD == 0)) return(zero_mat)
+  # Use existing GLASSO pipeline
+  lambda_path <- tryCatch(
+    .compute_lambda_path(S, nlambda, 0.01),
+    error = function(e) NULL
+  )
 
-  # Precision: K = D(I - Gamma), D = diag(1/sigma^2)
-  D <- diag(1 / resid_SD^2)
-  K <- D %*% (diag(d) - Gamma)
-  K <- (K + t(K)) / 2
-
-  # Force positive definite
-  eig <- eigen(K, symmetric = TRUE)$values
-  if (any(eig < 0)) {
-    K <- K - diag(d) * (min(eig) - 0.001)
+  if (is.null(lambda_path)) {
+    mat <- matrix(0, d, d, dimnames = list(vars, vars))
+    return(mat)
   }
 
-  # Covariance -> correlation (partial correlations)
-  Sigma <- tryCatch(solve(K), error = function(e) NULL)
-  if (is.null(Sigma)) return(zero_mat)
+  selected <- tryCatch(
+    .select_ebic(S, lambda_path, n_obs, gamma, FALSE),
+    error = function(e) NULL
+  )
 
-  pcor <- stats::cov2cor(Sigma)
+  if (is.null(selected)) {
+    mat <- matrix(0, d, d, dimnames = list(vars, vars))
+    return(mat)
+  }
+
+  pcor <- .precision_to_pcor(selected$wi, 0)
+  pcor <- (pcor + t(pcor)) / 2  # force exact symmetry
   colnames(pcor) <- rownames(pcor) <- vars
   pcor
 }
 
 
-#' Between-subjects network via partial correlations of person means
+#' Between-subjects network via EBIC-GLASSO on person means
 #'
-#' Computes person means, then converts their correlation matrix to partial
-#' correlations via pseudoinverse (matching mlVAR / corpcor::cor2pcor).
-#'
-#' @return d x d partial correlation matrix (symmetric, unit diagonal).
+#' @return d x d partial correlation matrix (symmetric, zero diagonal).
 #' @noRd
-.mlvar_between <- function(full_data, vars, id) {
+.mlvar_between <- function(full_data, vars, id, n_subjects, gamma, nlambda) {
   d <- length(vars)
   zero_mat <- matrix(0, d, d, dimnames = list(vars, vars))
-  n_subjects <- length(unique(full_data[[id]]))
 
-  if (n_subjects < d + 1L) return(zero_mat)
+  if (n_subjects < max(d + 1L, 3L)) return(zero_mat)
 
-  # Person means from all observations
+  # Person means from ALL observations
   agg <- stats::aggregate(full_data[, vars, drop = FALSE],
                           by = list(.id = full_data[[id]]), FUN = mean)
   pm_mat <- as.matrix(agg[, vars, drop = FALSE])
 
-  # Partial correlations via inverse of correlation matrix (cor2pcor)
+  # EBIC-GLASSO on person mean correlations (matches psychaj reference)
   S <- stats::cor(pm_mat)
-  K <- tryCatch(solve(S), error = function(e) NULL)
-  if (is.null(K)) return(zero_mat)
-
-  pcor <- -stats::cov2cor(K)
-  diag(pcor) <- 1
-  pcor <- (pcor + t(pcor)) / 2
+  pcor <- .mlvar_contemporaneous(pm_mat, n_subjects, gamma, nlambda)
   colnames(pcor) <- rownames(pcor) <- vars
   pcor
 }
