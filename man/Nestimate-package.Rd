@@ -4,9 +4,9 @@
 \name{Nestimate-package}
 \alias{Nestimate}
 \alias{Nestimate-package}
-\title{Nestimate: Network Estimation, Bootstrap, and Temporal Analysis}
+\title{Nestimate: Network Estimation, Bootstrap, and Higher-Order Analysis}
 \description{
-Estimate networks from sequence and panel data. Supports transition networks (relative, frequency, co-occurrence), association networks (correlation, partial correlation, graphical lasso, Ising), bootstrap inference, permutation testing, and higher-order networks (Higher-Order Network, Higher-Order Network Embedding, Hyper-Path Anomaly, Multi-Order Generative Model). Includes Group Iterative Multiple Model Estimation (GIMME), multi-cluster multi-layer networks (MCML), multilevel vector autoregression (VAR), graphical VAR, and temporal network analysis with time-varying centrality, velocity, and proximity timelines.
+Estimate networks from sequence and panel data. Supports transition networks (relative, frequency, co-occurrence), association networks (correlation, partial correlation, graphical lasso, Ising), bootstrap inference, permutation testing, and higher-order networks (Higher-Order Network, Higher-Order Network Embedding, Hyper-Path Anomaly, Multi-Order Generative Model). Includes multi-cluster multi-layer networks (MCML), multilevel vector autoregression (VAR), and graphical VAR.
 }
 \seealso{
 Useful links:

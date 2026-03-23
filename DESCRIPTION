@@ -28,13 +28,11 @@ Suggests:
     igraph,
     glmnet,
     lavaan,
-    lme4,
     stringdist,
     nnet,
     IsingFit,
     bootnet,
     gimme,
-    mlVAR,
     qgraph,
     reticulate,
     gridExtra

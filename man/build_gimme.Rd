@@ -120,5 +120,5 @@ plot(res, type = "individual", subject = 1)
 
 }
 \seealso{
-\code{\link{mlvar}}
+\code{\link{build_network}}
 }

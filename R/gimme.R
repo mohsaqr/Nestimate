@@ -78,7 +78,7 @@
 #' plot(res, type = "individual", subject = 1)
 #' }
 #'
-#' @seealso \code{\link{mlvar}}
+#' @seealso \code{\link{build_network}}
 #'
 #' @export
 build_gimme <- function(data,
