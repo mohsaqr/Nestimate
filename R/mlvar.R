@@ -163,8 +163,9 @@ mlvar <- function(data,
     temporal_result$residuals, n_obs, gamma, nlambda
   )
 
-  # Step 6: Between-subjects network (EBIC-GLASSO on person mean correlations)
-  between <- .mlvar_between(prepared, vars, id, n_subjects, gamma, nlambda)
+  # Step 6: Between-subjects network (Epskamp et al. 2017 Eq. 3)
+  between <- .mlvar_between(lag_result, prepared, vars, id, day, beep,
+                            n_subjects, as.integer(lag))
 
   # Step 7: Assemble result
   result <- list(
@@ -512,24 +513,102 @@ mlvar <- function(data,
 }
 
 
-#' Between-subjects network via EBIC-GLASSO on person means
+#' Between-subjects network via nodewise lmer (Epskamp et al. 2017)
 #'
 #' @return d x d partial correlation matrix (symmetric, zero diagonal).
 #' @noRd
-.mlvar_between <- function(full_data, vars, id, n_subjects, gamma, nlambda) {
+.mlvar_between <- function(lag_data, full_data, vars, id, day, beep,
+                           n_subjects, lag_int) {
   d <- length(vars)
   zero_mat <- matrix(0, d, d, dimnames = list(vars, vars))
 
-  if (n_subjects < max(d + 1L, 3L)) return(zero_mat)
+  # Guard: need at least d+1 subjects for meaningful estimation
+  if (n_subjects < d + 1L) return(zero_mat)
 
-  # Person means from ALL observations
+  # Person means computed from ALL observations (not just lag-paired)
   agg <- stats::aggregate(full_data[, vars, drop = FALSE],
                           by = list(.id = full_data[[id]]), FUN = mean)
   pm_mat <- as.matrix(agg[, vars, drop = FALSE])
+  rownames(pm_mat) <- agg$.id
 
-  # EBIC-GLASSO on person mean correlations (matches psychaj reference)
-  S <- stats::cor(pm_mat)
-  pcor <- .mlvar_contemporaneous(pm_mat, n_subjects, gamma, nlambda)
+  # Build lag-pair data frame for lmer: outcome Y, within-centered lagged X,
+  # person means of other vars
+  Y_mat <- lag_data$Y
+  X_mat <- lag_data$X
+  id_vec <- lag_data$id_vec
+
+  # Within-center lagged predictors: X_within = X - person_mean(X_lagged)
+  X_within <- X_mat
+  for (j in seq_len(d)) {
+    pm_lag <- ave(X_mat[, j], id_vec, FUN = mean)
+    X_within[, j] <- X_mat[, j] - pm_lag
+  }
+
+  # Build person-mean matrix aligned to lag-pair rows
+  pm_rows <- pm_mat[match(id_vec, rownames(pm_mat)), , drop = FALSE]
+
+  # Nodewise lmer: for each outcome k, fit
+  # Y_k ~ X_within[,1..d] + pm[, -k] + (1|subject)  with REML = FALSE
+  Gamma <- matrix(0, d, d, dimnames = list(vars, vars))
+  mu_SD <- numeric(d)
+  names(mu_SD) <- vars
+
+  for (k in seq_len(d)) {
+    lmer_df <- data.frame(
+      .y = Y_mat[, k],
+      .subject = id_vec,
+      stringsAsFactors = FALSE
+    )
+
+    # Within-centered lagged predictors (all d vars)
+    for (j in seq_len(d)) {
+      lmer_df[[paste0(".xw", j)]] <- X_within[, j]
+    }
+    # Person means of other vars (d-1 predictors)
+    other_idx <- seq_len(d)[-k]
+    for (j in other_idx) {
+      lmer_df[[paste0(".pm", j)]] <- pm_rows[, j]
+    }
+
+    # Build formula
+    xw_terms <- paste0(".xw", seq_len(d))
+    pm_terms <- paste0(".pm", other_idx)
+    rhs <- paste(c(xw_terms, pm_terms), collapse = " + ")
+    fm <- stats::as.formula(paste(".y ~", rhs, "+ (1 | .subject)"))
+
+    fit <- tryCatch(
+      lme4::lmer(fm, data = lmer_df, REML = FALSE),
+      error = function(e) NULL
+    )
+    if (is.null(fit)) return(zero_mat)
+
+    # Extract between regression coefficients (Gamma row k)
+    fe <- lme4::fixef(fit)
+    for (j in other_idx) {
+      Gamma[k, j] <- fe[[paste0(".pm", j)]]
+    }
+
+    # Random intercept SD
+    vc <- lme4::VarCorr(fit)
+    ri_var <- as.numeric(vc$.subject)
+    if (is.na(ri_var) || ri_var == 0) return(zero_mat)  # zero-SD guard
+    mu_SD[k] <- sqrt(ri_var)
+  }
+
+  # Precision matrix K = D(I - Gamma), D = diag(1/mu_SD^2)
+  D <- diag(1 / mu_SD^2)
+  K <- D %*% (diag(d) - Gamma)
+  K <- (K + t(K)) / 2  # symmetrize
+
+  # Force positive definite (matches mlVAR:::forcePositive exactly)
+  eig <- eigen(K)$values
+  if (any(eig < 0)) {
+    K <- K - (diag(d) * min(eig) - 0.001)
+  }
+
+  # Convert to partial correlations
+  pcor <- .precision_to_pcor(K, 0)
+  pcor <- (pcor + t(pcor)) / 2
   colnames(pcor) <- rownames(pcor) <- vars
   pcor
 }
