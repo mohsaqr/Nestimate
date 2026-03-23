@@ -527,16 +527,9 @@ mlvar <- function(data,
                           by = list(.id = full_data[[id]]), FUN = mean)
   pm_mat <- as.matrix(agg[, vars, drop = FALSE])
 
-  # Partial correlations via matrix inverse of correlation matrix
+  # Partial correlations via inverse of correlation matrix (cor2pcor)
   S <- stats::cor(pm_mat)
-  K <- tryCatch(solve(S), error = function(e) {
-    # Fallback to pseudoinverse for singular/near-singular matrices
-    if (requireNamespace("corpcor", quietly = TRUE)) {
-      corpcor::pseudoinverse(S)
-    } else {
-      NULL
-    }
-  })
+  K <- tryCatch(solve(S), error = function(e) NULL)
   if (is.null(K)) return(zero_mat)
 
   pcor <- -stats::cov2cor(K)
