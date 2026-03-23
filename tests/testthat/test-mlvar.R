@@ -913,28 +913,30 @@ test_that(".mlvar_contemporaneous returns zero matrix when lmer fails", {
 
 # ---- L562: lmer fit NULL → zero_mat ----
 
-test_that(".mlvar_between returns zero matrix when lmer fails (L562)", {
-  # Create degenerate lag data to cause lmer to fail
+test_that(".mlvar_between returns zero matrix when too few subjects", {
   d <- 2L
   vars <- c("V1", "V2")
-  n_obs <- 10L
-  # All identical Y values → lmer converges but may fail with perfect fit
-  Y_mat <- matrix(rep(1, n_obs * d), n_obs, d, dimnames = list(NULL, vars))
-  X_mat <- matrix(rnorm(n_obs * d), n_obs, d, dimnames = list(NULL, vars))
-  id_vec <- rep(c("s1", "s2"), each = 5)
-  lag_data <- list(Y = Y_mat, X = X_mat, id_vec = id_vec)
-
-  full_data <- data.frame(
-    id = c("s1", "s1", "s2", "s2"),
-    V1 = rnorm(4), V2 = rnorm(4)
-  )
-
-  result <- suppressWarnings(
-    Nestimate:::.mlvar_between(lag_data, full_data, vars, "id",
-                               NULL, NULL, 2L, 1L)
-  )
+  # Only 1 subject (need d+1 = 3)
+  full_data <- data.frame(id = c("s1", "s1"), V1 = rnorm(2), V2 = rnorm(2))
+  result <- Nestimate:::.mlvar_between(full_data, vars, "id")
   expect_true(is.matrix(result))
   expect_equal(dim(result), c(d, d))
+  expect_true(all(result == 0))
+})
+
+test_that(".mlvar_between returns valid pcor matrix", {
+  d <- 3L
+  vars <- c("V1", "V2", "V3")
+  set.seed(1)
+  full_data <- data.frame(
+    id = rep(1:10, each = 5),
+    V1 = rnorm(50), V2 = rnorm(50), V3 = rnorm(50)
+  )
+  result <- Nestimate:::.mlvar_between(full_data, vars, "id")
+  expect_true(is.matrix(result))
+  expect_equal(dim(result), c(d, d))
+  expect_true(isSymmetric(unname(result)))
+  expect_true(all(diag(result) == 1))
 })
 
 # ---- L649, L663: summary with no significant edges ----
