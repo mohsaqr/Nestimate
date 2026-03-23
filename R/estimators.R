@@ -1048,6 +1048,7 @@
   d <- sqrt(diag(Wi))
   pcor <- -Wi / outer(d, d)
   diag(pcor) <- 0
+  pcor <- (pcor + t(pcor)) / 2  # symmetrize (glasso convergence can leave tiny asymmetry)
   pcor[abs(pcor) < threshold] <- 0
   pcor
 }
