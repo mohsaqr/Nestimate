@@ -82,7 +82,8 @@ mlvar <- function(data,
                   lag = 1L,
                   standardize = TRUE,
                   gamma = 0.5,
-                  nlambda = 100L) {
+                  nlambda = 100L,
+                  estimator = c("ols", "lmer")) {
   # ---- Input validation ----
   stopifnot(
     is.data.frame(data),
@@ -122,6 +123,14 @@ mlvar <- function(data,
          paste(missing_cols, collapse = ", "), call. = FALSE)
   }
 
+  estimator <- match.arg(estimator)
+  if (estimator == "lmer") {
+    if (!requireNamespace("lme4", quietly = TRUE)) {
+      stop("lme4 is required for estimator = 'lmer'. Install with: ",
+           "install.packages('lme4')", call. = FALSE)
+    }
+  }
+
   d <- length(vars)
 
   # Step 1: Prepare data
@@ -148,13 +157,16 @@ mlvar <- function(data,
 
   n_subjects_pairs <- length(unique(id_vec))
 
-  # Step 3: Within-center
-  centered <- .mlvar_within_center(Y, X, id_vec, standardize)
-  Y_c <- centered$Y
-  X_c <- centered$X
-
-  # Step 4: Temporal OLS
-  temporal_result <- .mlvar_temporal_ols(Y_c, X_c, n_subjects_pairs, vars)
+  if (estimator == "lmer") {
+    # lmer path: matches mlVAR more closely
+    temporal_result <- .mlvar_temporal_lmer(Y, X, id_vec, vars, standardize)
+  } else {
+    # OLS path (default): within-center then OLS
+    centered <- .mlvar_within_center(Y, X, id_vec, standardize)
+    Y_c <- centered$Y
+    X_c <- centered$X
+    temporal_result <- .mlvar_temporal_ols(Y_c, X_c, n_subjects_pairs, vars)
+  }
 
   # Step 5: Contemporaneous network
   contemporaneous <- .mlvar_contemporaneous(
@@ -439,6 +451,95 @@ mlvar <- function(data,
       ci_upper  = as.numeric(ci_upper),
       stringsAsFactors = FALSE
     )
+  }
+
+  list(B = B, coefs = coefs_list, residuals = residuals)
+}
+
+
+#' Temporal lmer for mlVAR
+#'
+#' Matches mlVAR's default approach: for each outcome, fit lmer with
+#' all lagged variables as fixed + random effects (orthogonal).
+#' Extracts fixed effects as temporal coefficients.
+#'
+#' @return List with B, coefs, residuals (same structure as OLS version).
+#' @noRd
+.mlvar_temporal_lmer <- function(Y, X, id_vec, vars, standardize) {
+  n_obs <- nrow(Y)
+  d <- ncol(Y)
+
+  # Standardize: grand SD across all observations
+  if (standardize) {
+    for (j in seq_len(d)) {
+      sd_y <- stats::sd(Y[, j])
+      sd_x <- stats::sd(X[, j])
+      if (sd_y > 0) Y[, j] <- Y[, j] / sd_y
+      if (sd_x > 0) X[, j] <- X[, j] / sd_x
+    }
+  }
+
+  B <- matrix(0, d, d, dimnames = list(vars, vars))
+  residuals <- matrix(0, n_obs, d, dimnames = list(NULL, vars))
+  coefs_list <- vector("list", d)
+  names(coefs_list) <- vars
+
+  for (k in seq_len(d)) {
+    lmer_df <- data.frame(.y = Y[, k], .subject = id_vec,
+                          stringsAsFactors = FALSE)
+    for (j in seq_len(d)) {
+      lmer_df[[vars[j]]] <- X[, j]
+    }
+
+    # Orthogonal random slopes (matches mlVAR temporal = "orthogonal")
+    rhs_fixed <- paste(vars, collapse = " + ")
+    rhs_random <- paste0("(", paste(vars, collapse = " + "), " || .subject)")
+    fm <- stats::as.formula(paste(".y ~", rhs_fixed, "+", rhs_random))
+
+    fit <- tryCatch(
+      suppressWarnings(lme4::lmer(fm, data = lmer_df, REML = FALSE)),
+      error = function(e) NULL
+    )
+
+    if (is.null(fit)) {
+      # Fallback to OLS
+      fit_lm <- stats::lm.fit(X, Y[, k])
+      B[, k] <- fit_lm$coefficients
+      residuals[, k] <- fit_lm$residuals
+    } else {
+      fe <- lme4::fixef(fit)
+      for (j in seq_len(d)) {
+        if (vars[j] %in% names(fe)) B[j, k] <- fe[[vars[j]]]
+      }
+      residuals[, k] <- stats::residuals(fit)
+
+      # Extract SEs, t, p from lmer summary
+      sfe <- summary(fit)$coefficients
+      beta_vec <- numeric(d)
+      se_vec <- numeric(d)
+      t_vec <- numeric(d)
+      p_vec <- rep(1, d)
+      for (j in seq_len(d)) {
+        if (vars[j] %in% rownames(sfe)) {
+          beta_vec[j] <- sfe[vars[j], "Estimate"]
+          se_vec[j] <- sfe[vars[j], "Std. Error"]
+          t_vec[j] <- sfe[vars[j], "t value"]
+          p_vec[j] <- 2 * stats::pt(abs(t_vec[j]), df = n_obs - d - 1,
+                                     lower.tail = FALSE)
+        }
+      }
+
+      coefs_list[[k]] <- data.frame(
+        predictor = vars,
+        beta = beta_vec,
+        se = se_vec,
+        t = t_vec,
+        p = p_vec,
+        ci_lower = beta_vec - 1.96 * se_vec,
+        ci_upper = beta_vec + 1.96 * se_vec,
+        stringsAsFactors = FALSE
+      )
+    }
   }
 
   list(B = B, coefs = coefs_list, residuals = residuals)
