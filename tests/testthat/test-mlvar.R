@@ -649,7 +649,7 @@ test_that("temporal coefficients match mlVAR exactly (5 seeds)", {
   # Temporal B: exact match (machine precision)
   B_diffs <- vapply(results, `[[`, numeric(1), "B_max_diff")
   expect_true(
-    all(B_diffs < 0.05),
+    all(B_diffs < 1e-10),
     info = sprintf("Temporal B max diffs: %s",
                    paste(formatC(B_diffs, format = "e", digits = 2),
                          collapse = ", "))
@@ -665,7 +665,7 @@ test_that("temporal p-values agree with mlVAR (5 seeds)", {
   # P-values: close but not exact (t-dist vs normal approx)
   p_diffs <- vapply(results, `[[`, numeric(1), "p_max_diff")
   expect_true(
-    all(p_diffs < 0.10),
+    all(p_diffs < 0.01),
     info = sprintf("P-value max diffs: %s",
                    paste(round(p_diffs, 5), collapse = ", "))
   )
@@ -749,11 +749,11 @@ test_that("mlVAR equivalence with 20 random configurations", {
 
   # All 20: temporal B exact, p-values close, residual cors high
   expect_true(
-    all(B_diffs < 0.05),
+    all(B_diffs < 1e-10),
     info = sprintf("20-seed B max diff: max=%.2e", max(B_diffs))
   )
   expect_true(
-    all(p_diffs < 0.10),
+    all(p_diffs < 0.01),
     info = sprintf("20-seed p max diff: max=%.5f", max(p_diffs))
   )
   expect_true(

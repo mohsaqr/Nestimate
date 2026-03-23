@@ -148,10 +148,8 @@ mlvar <- function(data,
 
   n_subjects_pairs <- length(unique(id_vec))
 
-  # Step 3: Within-center (person means from ALL data, grand SD)
-  centered <- .mlvar_within_center(Y, X, id_vec, standardize,
-                                    full_data = prepared, vars = vars,
-                                    id_col = id)
+  # Step 3: Within-center
+  centered <- .mlvar_within_center(Y, X, id_vec, standardize)
   Y_c <- centered$Y
   X_c <- centered$X
 
@@ -337,47 +335,30 @@ mlvar <- function(data,
 #'
 #' @return List with centered Y and X matrices.
 #' @noRd
-.mlvar_within_center <- function(Y, X, id_vec, standardize,
-                                  full_data = NULL, vars = NULL,
-                                  id_col = NULL) {
+.mlvar_within_center <- function(Y, X, id_vec, standardize) {
   d <- ncol(Y)
 
-  if (!is.null(full_data) && !is.null(vars) && !is.null(id_col)) {
-    # Person means from ALL observations (matches psychaj/mlVAR)
-    agg <- stats::aggregate(full_data[, vars, drop = FALSE],
-                            by = list(.id = full_data[[id_col]]), FUN = mean)
-    pm <- as.matrix(agg[, vars, drop = FALSE])
-    rownames(pm) <- agg$.id
-    mean_mat <- pm[match(id_vec, rownames(pm)), , drop = FALSE]
-    Y_c <- Y - mean_mat
-    X_c <- X - mean_mat
-  } else {
-    # Fallback: center from lag-pair means
-    Y_c <- Y
-    for (j in seq_len(d)) {
-      Y_c[, j] <- Y[, j] - ave(Y[, j], id_vec, FUN = mean)
-    }
-    X_c <- X
-    for (j in seq_len(d)) {
-      X_c[, j] <- X[, j] - ave(X[, j], id_vec, FUN = mean)
-    }
+  # Center Y: subtract person means
+  Y_c <- Y
+  for (j in seq_len(d)) {
+    person_means <- ave(Y[, j], id_vec, FUN = mean)
+    Y_c[, j] <- Y[, j] - person_means
+  }
+
+  # Center X: subtract person means
+  X_c <- X
+  for (j in seq_len(d)) {
+    person_means <- ave(X[, j], id_vec, FUN = mean)
+    X_c[, j] <- X[, j] - person_means
   }
 
   if (standardize) {
-    if (!is.null(full_data) && !is.null(vars)) {
-      # Grand SD from all raw data (matches psychaj/mlVAR)
-      sd_vec <- vapply(vars, function(v) stats::sd(full_data[[v]]), numeric(1))
-      sd_vec[sd_vec < 1e-12] <- 1
-      sd_mat <- matrix(sd_vec, nrow = nrow(Y_c), ncol = d, byrow = TRUE)
-      Y_c <- Y_c / sd_mat
-      X_c <- X_c / sd_mat
-    } else {
-      for (j in seq_len(d)) {
-        sd_y <- stats::sd(Y_c[, j])
-        sd_x <- stats::sd(X_c[, j])
-        if (sd_y > 0) Y_c[, j] <- Y_c[, j] / sd_y
-        if (sd_x > 0) X_c[, j] <- X_c[, j] / sd_x
-      }
+    # Pooled SD: computed across all observations (already centered)
+    for (j in seq_len(d)) {
+      sd_y <- stats::sd(Y_c[, j])
+      sd_x <- stats::sd(X_c[, j])
+      if (sd_y > 0) Y_c[, j] <- Y_c[, j] / sd_y
+      if (sd_x > 0) X_c[, j] <- X_c[, j] / sd_x
     }
   }
 
@@ -416,10 +397,8 @@ mlvar <- function(data,
   df_ratio <- sqrt(df_ols / df_correct)
 
   for (k in seq_len(d)) {
-    # Include intercept (matches psychaj — absorbs residual centering)
-    X_int <- cbind(1, X)
-    fit <- stats::lm.fit(X_int, Y[, k])
-    beta <- fit$coefficients[-1L]  # drop intercept
+    fit <- stats::lm.fit(X, Y[, k])
+    beta <- fit$coefficients
     resid <- fit$residuals
 
     # Corrected SE
@@ -513,7 +492,7 @@ mlvar <- function(data,
 }
 
 
-#' Between-subjects network via nodewise lmer (Epskamp et al. 2017)
+#' Between-subjects network via EBIC-GLASSO on person means
 #'
 #' @return d x d partial correlation matrix (symmetric, zero diagonal).
 #' @noRd
