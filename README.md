@@ -61,7 +61,6 @@ Both paradigms share the same `build_network()` interface, validation engine, an
 | Function | Description |
 |---|---|
 | `build_mcml()` | Multi-Cluster Multi-Layer networks |
-| `graphical_var()` | Graphical VAR (temporal + contemporaneous) |
 | `wtna()` | Windowed temporal network analysis |
 
 ### Data Utilities
