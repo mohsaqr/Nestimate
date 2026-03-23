@@ -156,9 +156,9 @@ mlvar <- function(data,
   # Step 4: Temporal OLS
   temporal_result <- .mlvar_temporal_ols(Y_c, X_c, n_subjects_pairs, vars)
 
-  # Step 5: Contemporaneous network
+  # Step 5: Contemporaneous network (nodewise lmer on residuals, matching mlVAR)
   contemporaneous <- .mlvar_contemporaneous(
-    temporal_result$residuals, n_obs, gamma, nlambda
+    temporal_result$residuals, id_vec, vars
   )
 
   # Step 6: Between-subjects network (Epskamp et al. 2017 Eq. 3)
@@ -449,44 +449,61 @@ mlvar <- function(data,
 #'
 #' @return d x d partial correlation matrix (symmetric, zero diagonal).
 #' @noRd
-.mlvar_contemporaneous <- function(residuals, n_obs, gamma, nlambda) {
+.mlvar_contemporaneous <- function(residuals, id_vec, vars) {
   d <- ncol(residuals)
-  vars <- colnames(residuals)
+  zero_mat <- matrix(0, d, d, dimnames = list(vars, vars))
 
-  S <- stats::cor(residuals)
+  # Nodewise lmer on residuals (matches mlVAR "correlated" default):
+  # For each residual k, regress on all other residuals with random slopes per subject
+  Gamma <- matrix(0, d, d, dimnames = list(vars, vars))
+  resid_SD <- numeric(d)
+  names(resid_SD) <- vars
 
-  # Guard: if any correlations are NA or all zero
+  for (k in seq_len(d)) {
+    lmer_df <- data.frame(.y = residuals[, k], .subject = id_vec,
+                          stringsAsFactors = FALSE)
+    other_idx <- seq_len(d)[-k]
+    for (j in other_idx) {
+      lmer_df[[vars[j]]] <- residuals[, j]
+    }
 
-  if (any(is.na(S))) {
-    warning("NA correlations in residuals. Returning zero matrix.",
-            call. = FALSE)
-    mat <- matrix(0, d, d, dimnames = list(vars, vars))
-    return(mat)
+    # Random slopes for all other residuals (orthogonal = ||)
+    rhs_fixed <- paste(vars[other_idx], collapse = " + ")
+    rhs_random <- paste0("(", paste(vars[other_idx], collapse = " + "),
+                         " || .subject)")
+    fm <- stats::as.formula(paste(".y ~", rhs_fixed, "+", rhs_random))
+
+    fit <- tryCatch(
+      lme4::lmer(fm, data = lmer_df, REML = FALSE),
+      error = function(e) NULL
+    )
+    if (is.null(fit)) return(zero_mat)
+
+    fe <- lme4::fixef(fit)
+    for (j in other_idx) {
+      if (vars[j] %in% names(fe)) Gamma[k, j] <- fe[[vars[j]]]
+    }
+    resid_SD[k] <- stats::sigma(fit)
   }
 
-  # Use existing GLASSO pipeline
-  lambda_path <- tryCatch(
-    .compute_lambda_path(S, nlambda, 0.01),
-    error = function(e) NULL
-  )
+  if (any(resid_SD == 0)) return(zero_mat)
 
-  if (is.null(lambda_path)) {
-    mat <- matrix(0, d, d, dimnames = list(vars, vars))
-    return(mat)
+  # Precision: K = D(I - Gamma), D = diag(1/sigma^2)
+  D <- diag(1 / resid_SD^2)
+  K <- D %*% (diag(d) - Gamma)
+  K <- (K + t(K)) / 2
+
+  # Force positive definite
+  eig <- eigen(K, symmetric = TRUE)$values
+  if (any(eig < 0)) {
+    K <- K - diag(d) * (min(eig) - 0.001)
   }
 
-  selected <- tryCatch(
-    .select_ebic(S, lambda_path, n_obs, gamma, FALSE),
-    error = function(e) NULL
-  )
+  # Covariance -> correlation (partial correlations)
+  Sigma <- tryCatch(solve(K), error = function(e) NULL)
+  if (is.null(Sigma)) return(zero_mat)
 
-  if (is.null(selected)) {
-    mat <- matrix(0, d, d, dimnames = list(vars, vars))
-    return(mat)
-  }
-
-  pcor <- .precision_to_pcor(selected$wi, 0)
-  pcor <- (pcor + t(pcor)) / 2  # force exact symmetry
+  pcor <- stats::cov2cor(Sigma)
   colnames(pcor) <- rownames(pcor) <- vars
   pcor
 }
@@ -579,15 +596,17 @@ mlvar <- function(data,
   K <- D %*% (diag(d) - Gamma)
   K <- (K + t(K)) / 2  # symmetrize
 
-  # Force positive definite (matches mlVAR:::forcePositive exactly)
-  eig <- eigen(K)$values
+  # Force positive definite (matches mlVAR:::forcePositive)
+  eig <- eigen(K, symmetric = TRUE)$values
   if (any(eig < 0)) {
-    K <- K - (diag(d) * min(eig) - 0.001)
+    K <- K - diag(d) * (min(eig) - 0.001)
   }
 
-  # Convert to partial correlations
-  pcor <- .precision_to_pcor(K, 0)
-  pcor <- (pcor + t(pcor)) / 2
+  # Covariance -> correlation (matches mlVAR: pseudoinverse -> cov2cor)
+  Sigma <- tryCatch(solve(K), error = function(e) NULL)
+  if (is.null(Sigma)) return(zero_mat)
+
+  pcor <- stats::cov2cor(Sigma)
   colnames(pcor) <- rownames(pcor) <- vars
   pcor
 }
