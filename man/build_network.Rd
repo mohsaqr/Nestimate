@@ -139,37 +139,23 @@ the data (between-person means or within-person centering).
 }
 }
 \examples{
-\dontrun{
-library(tna)
-
+\donttest{
 # Transition network (relative probabilities)
-net <- build_network(group_regulation, method = "relative")
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
 print(net)
 
-# Aliases
-net_tna <- build_network(group_regulation, method = "tna")
-net_ftna <- build_network(group_regulation, method = "ftna")
-net_cna <- build_network(group_regulation, method = "cna")
-
 # Association network (glasso)
-freq_data <- convert_sequence_format(group_regulation, format = "frequency")
+freq_data <- convert_sequence_format(seqs, format = "frequency")
 net_glasso <- build_network(freq_data, method = "glasso",
                              params = list(gamma = 0.5, nlambda = 50))
 
-# Partial correlation network
-net_pcor <- build_network(freq_data, method = "pcor")
-
-# Correlation network with alias
-net_cor <- build_network(freq_data, method = "corr")
-
 # With scaling
-net_scaled <- build_network(group_regulation, method = "relative",
+net_scaled <- build_network(seqs, method = "relative",
                              scaling = c("rank", "minmax"))
-
-# Composable: replay config on new data
-config <- net_glasso$params
-net2 <- build_network(new_data, method = net_glasso$method,
-                       params = config)
 }
 
 }

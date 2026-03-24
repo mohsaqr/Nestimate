@@ -174,6 +174,8 @@ test_that("HYPA $edges is set and matches $scores", {
 
 test_that("pathways output is parseable by plot_simplicial", {
   skip_if_not_installed("cograph")
+  skip_if(!exists(".parse_pathways", envir = asNamespace("cograph")),
+          "cograph:::.parse_pathways not available in this version")
   seqs <- .make_ho_seqs()
   hon <- build_hon(seqs, max_order = 3)
   pw <- pathways(hon, min_prob = 0.5)

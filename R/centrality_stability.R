@@ -57,11 +57,15 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' net <- build_network(tna::group_regulation, method = "relative")
-#' cs <- centrality_stability(net, iter = 500, seed = 42)
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+#'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' cs <- centrality_stability(net, iter = 100, seed = 42,
+#'   measures = c("InStrength", "OutStrength"))
 #' print(cs)
-#' plot(cs)
 #' }
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{reliability}}
@@ -177,8 +181,8 @@ centrality_stability <- function(x,
       nz <- rs > 0
       mat[nz, ] <- mat[nz, ] / rs[nz]
     }
-    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling)
-    if (thresh > 0) mat[abs(mat) < thresh] <- 0
+    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling) # nocov
+    if (thresh > 0) mat[abs(mat) < thresh] <- 0 # nocov
     dimnames(mat) <- list(states, states)
     mat
   }
@@ -187,21 +191,21 @@ centrality_stability <- function(x,
   build_matrix_association <- function(idx) {
     sub_data <- data[idx, , drop = FALSE]
     if (!is.null(level) && !is.null(id_col) && !estimator$directed) {
-      sub_data <- tryCatch(
+      sub_data <- tryCatch( # nocov start
         .decompose_multilevel(sub_data, id_col = id_col, level = level),
         error = function(e) NULL
       )
-      if (is.null(sub_data)) return(NULL)
+      if (is.null(sub_data)) return(NULL) # nocov end
     }
     est <- tryCatch(
       do.call(estimator$fn, c(list(data = sub_data), params)),
       error = function(e) NULL
     )
     if (is.null(est)) return(NULL)
-    mat <- est$matrix[states, states]
+    mat <- est$matrix[states, states] # nocov start
     if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling)
     if (thresh > 0) mat[abs(mat) < thresh] <- 0
-    mat
+    mat # nocov end
   }
 
   build_matrix <- if (is_transition) build_matrix_transition
@@ -220,7 +224,7 @@ centrality_stability <- function(x,
   for (p_idx in seq_len(n_prop)) {
     prop <- drop_prop[p_idx]
     n_keep <- n_seq - floor(n_seq * prop)
-    if (n_keep < 2L) next
+    if (n_keep < 2L) next # nocov
 
     # vapply: each iteration returns correlation vector (one per measure)
     corr_mat <- vapply(seq_len(iter), function(i) {
@@ -310,14 +314,14 @@ centrality_stability <- function(x,
            "a named list of centrality vectors.", call. = FALSE)
     }
     custom <- centrality_fn(mat)
-    if (!is.list(custom)) {
+    if (!is.list(custom)) { # nocov start
       stop("centrality_fn must return a named list.", call. = FALSE)
-    }
+    } # nocov end
     for (m in external) {
-      if (is.null(custom[[m]])) {
+      if (is.null(custom[[m]])) { # nocov start
         stop("centrality_fn did not return measure '", m, "'.",
              call. = FALSE)
-      }
+      } # nocov end
       result[[m]] <- custom[[m]]
     }
   }

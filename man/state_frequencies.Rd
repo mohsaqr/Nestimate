@@ -18,7 +18,7 @@ Counts how often each state appears across all trajectories. Returns a
 data frame sorted by frequency (descending).
 }
 \examples{
-\dontrun{
+\donttest{
 trajs <- list(c("A","B","C"), c("A","B","A"))
 state_frequencies(trajs)
 }

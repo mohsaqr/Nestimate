@@ -74,16 +74,15 @@ and custom estimators), the full estimator is called on resampled rows
 each iteration.
 }
 \examples{
-\dontrun{
-# Build network, then bootstrap it
-net <- build_network(tna::group_regulation, method = "relative")
-boot <- bootstrap_network(net, iter = 500)
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+boot <- bootstrap_network(net, iter = 100)
 print(boot)
 summary(boot)
-
-# One-hot data
-net_wtna <- build_network(onehot_df, method = "wtna", actor = "student")
-boot_wtna <- bootstrap_network(net_wtna, iter = 200)
 }
 
 }

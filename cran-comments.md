@@ -4,8 +4,8 @@
 
 ## Test environments
 
-* local macOS (Darwin 25.3.0), R 4.5
-* R CMD check --as-cran
+* local macOS (Darwin 25.3.0), R 4.5.2
+* R CMD check --as-cran --run-donttest
 
 ## Downstream dependencies
 

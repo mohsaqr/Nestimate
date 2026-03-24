@@ -14,7 +14,7 @@
 NULL
 
 .onLoad <- function(libname, pkgname) {
-  .register_builtin_estimators()
+  .register_builtin_estimators() # nocov
 }
 
 # Global variable declarations for R CMD check

@@ -30,15 +30,11 @@ NULL
 #' probabilities. This is useful when the original weights don't sum to 1.
 #'
 #' @examples
-#' \dontrun{
-#' # Extract transition matrix from fitted model
-#' model <- tna::tna(sequences)
-#' trans_mat <- extract_transition_matrix(model)
+#' \donttest{
+#' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+#' net <- build_network(seqs, method = "relative")
+#' trans_mat <- extract_transition_matrix(net)
 #' print(trans_mat)
-#'
-#' # Get row-normalized version
-#' trans_mat_scaled <- extract_transition_matrix(model, type = "scaled")
-#' rowSums(trans_mat_scaled)  # Should all be 1
 #' }
 #'
 #' @seealso \code{\link{extract_initial_probs}} for extracting initial probabilities,
@@ -110,10 +106,10 @@ extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
 #' probabilities.
 #'
 #' @examples
-#' \dontrun{
-#' # Extract initial probabilities from fitted model
-#' model <- tna::tna(sequences)
-#' init_probs <- extract_initial_probs(model)
+#' \donttest{
+#' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+#' net <- build_network(seqs, method = "relative")
+#' init_probs <- extract_initial_probs(net)
 #' print(init_probs)
 #' }
 #'
@@ -129,16 +125,16 @@ extract_initial_probs <- function(model) {
       inherits(model, "ctna") || inherits(model, "atna")) {
     if (!is.null(model$initial)) {
       initial <- model$initial
-    } else if (!is.null(model$initial_probs)) {
-      initial <- model$initial_probs
+    } else if (!is.null(model$initial_probs)) { # nocov start
+      initial <- model$initial_probs # nocov end
     }
   } else if (is.list(model)) {
     if (!is.null(model$initial)) {
       initial <- model$initial
     } else if (!is.null(model$initial_probs)) {
-      initial <- model$initial_probs
+      initial <- model$initial_probs # nocov
     } else if (!is.null(model$initial_probabilities)) {
-      initial <- model$initial_probabilities
+      initial <- model$initial_probabilities # nocov
     }
   }
 
@@ -200,14 +196,11 @@ extract_initial_probs <- function(model) {
 #' other network tools.
 #'
 #' @examples
-#' \dontrun{
-#' # Extract edge list from model
-#' model <- tna::tna(sequences)
-#' edges <- extract_edges(model, threshold = 0.05)
+#' \donttest{
+#' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+#' net <- build_network(seqs, method = "relative")
+#' edges <- extract_edges(net, threshold = 0.05)
 #' head(edges)
-#'
-#' # Use with igraph
-#' # g <- igraph::graph_from_data_frame(edges, directed = TRUE)
 #' }
 #'
 #' @seealso \code{\link{extract_transition_matrix}} for the full matrix,

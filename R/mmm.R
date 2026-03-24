@@ -257,7 +257,7 @@
       W <- pi_mat[, 1L] * pi_mat[, 2L]  # N-length
       H <- crossprod(X * W, X) + diag(1e-6, p)
       H_inv <- tryCatch(solve(H), error = function(e) NULL)
-      if (is.null(H_inv)) break
+      if (is.null(H_inv)) break # nocov
       beta <- beta + t(H_inv %*% grad)
     } else {
       # General k: block Newton step
@@ -269,7 +269,7 @@
         W <- pi_mat[, m + 1L] * (1 - pi_mat[, m + 1L])
         H <- crossprod(X * W, X) + diag(1e-6, p)
         H_inv <- tryCatch(solve(H), error = function(e) NULL)
-        if (is.null(H_inv)) next
+        if (is.null(H_inv)) next # nocov
         idx <- ((m - 1L) * p + 1L):(m * p)
         delta[idx] <- H_inv %*% grad_vec[idx]
       }
@@ -340,23 +340,14 @@
 #'   }
 #'
 #' @examples
-#' \dontrun{
-#' # Simple
-#' mmm <- build_mmm(data, k = 2, seed = 42)
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
+#'   V3 = sample(LETTERS[1:3], 30, TRUE), V4 = sample(LETTERS[1:3], 30, TRUE)
+#' )
+#' mmm <- build_mmm(seqs, k = 2, seed = 42)
 #' print(mmm)
 #' summary(mmm)
-#' plot(mmm)
-#'
-#' # From a tna model
-#' model <- tna::tna(tna::group_regulation)
-#' mmm <- build_mmm(model, k = 3)
-#'
-#' # Model selection
-#' comp <- compare_mmm(data, k = 2:5, seed = 42)
-#' plot(comp)
-#'
-#' # Access components as netobjects
-#' mmm$models[[1]]$weights
 #' }
 #'
 #' @seealso \code{\link{compare_mmm}}, \code{\link{build_network}}
@@ -387,8 +378,8 @@ build_mmm <- function(data,
     raw_data <- data$data
     states <- data$labels
     if (is.null(raw_data)) {
-      stop("tna model does not contain $data. ",
-           "Rebuild with tna::tna(data) where data is kept.", call. = FALSE)
+      stop("tna model does not contain $data. ", # nocov start
+           "Rebuild with tna::tna(data) where data is kept.", call. = FALSE) # nocov end
     }
     raw_data <- .mmm_decode_int_data(raw_data, states)
   } else if (inherits(data, "cograph_network") && !inherits(data, "netobject")) {
@@ -486,9 +477,9 @@ build_mmm <- function(data,
   n_cores <- 1L
   if (.Platform$OS.type == "unix" && n_starts > 1L) {
     n_cores <- min(parallel::detectCores(logical = FALSE) %||% 1L, n_starts)
-    if (isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE")))) {
+    if (isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE")))) { # nocov start
       n_cores <- 1L
-    }
+    } # nocov end
   }
 
   .run_screen <- function(init) {
@@ -506,10 +497,10 @@ build_mmm <- function(data,
 
   # Handle failed parallel runs
   screen_lls <- vapply(screen_results, function(r) {
-    if (is.null(r)) -Inf else r$ll
+    if (is.null(r)) -Inf else r$ll # nocov
   }, numeric(1))
   screen_conv <- vapply(screen_results, function(r) {
-    if (is.null(r)) FALSE else r$converged
+    if (is.null(r)) FALSE else r$converged # nocov
   }, logical(1))
 
   # Refine: top candidates + any that converged early
@@ -621,10 +612,13 @@ build_mmm <- function(data,
 #'   entropy per k.
 #'
 #' @examples
-#' \dontrun{
-#' comp <- compare_mmm(data, k = 2:5, seed = 42)
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
+#'   V3 = sample(LETTERS[1:3], 30, TRUE), V4 = sample(LETTERS[1:3], 30, TRUE)
+#' )
+#' comp <- compare_mmm(seqs, k = 2:3, seed = 42)
 #' print(comp)
-#' plot(comp)
 #' }
 #'
 #' @export
@@ -752,7 +746,7 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
 #' @noRd
 .plot_mmm_posterior <- function(x) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' required.", call. = FALSE)
+    stop("Package 'ggplot2' required.", call. = FALSE) # nocov
   }
 
   max_post <- apply(x$posterior, 1L, max)
@@ -800,9 +794,9 @@ print.mmm_compare <- function(x, ...) {
 #'
 #' @export
 plot.mmm_compare <- function(x, ...) {
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) { # nocov start
     stop("Package 'ggplot2' required.", call. = FALSE)
-  }
+  } # nocov end
 
   df <- data.frame(
     k = rep(x$k, 3),

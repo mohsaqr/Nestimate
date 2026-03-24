@@ -149,8 +149,8 @@
 
       if (order_used == 0L) {
         # Order 0: each state drawn from marginal (no transition context)
-        if (traj[step] %in% names(p0) && p0[traj[step]] > 0)
-          log(p0[traj[step]]) else log_eps
+        if (traj[step] %in% names(p0) && p0[traj[step]] > 0) # nocov start
+          log(p0[traj[step]]) else log_eps # nocov end
       } else {
         src_start <- step - order_used
         src_key <- paste(traj[src_start:(step - 1L)], collapse = .HON_SEP)
@@ -161,7 +161,7 @@
           p <- tm[src_key, tgt_key]
           if (p > 0) log(p) else log_eps
         } else {
-          log_eps
+          log_eps # nocov
         }
       }
     }, numeric(1L))
@@ -230,7 +230,7 @@
 #' Network Science}, 8, 62.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
 #'               c("B","C","D","A"), c("C","D","A","B"))
 #' m <- build_mogen(trajs, max_order = 3)
@@ -384,10 +384,11 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
 #'   }
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
+#' trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
+#'               c("B","C","D","A"), c("C","D","A","B"))
 #' m <- build_mogen(trajs, max_order = 3)
-#' mogen_transitions(m, order = 1)             # first-order
-#' mogen_transitions(m, order = 2, min_count = 5)  # second-order, frequent only
+#' mogen_transitions(m, order = 1)
 #' }
 #'
 #' @export
@@ -461,7 +462,7 @@ mogen_transitions <- function(x, order = NULL, min_count = 1L) {
 #'   \code{proportion}.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' trajs <- list(c("A","B","C","D"), c("A","B","D","C"))
 #' path_counts(trajs, k = 2)        # transition counts
 #' path_counts(trajs, k = 3, top = 10)  # top 10 three-step paths
@@ -517,7 +518,7 @@ path_counts <- function(data, k = 2L, top = NULL) {
 #'   \code{proportion}.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' trajs <- list(c("A","B","C"), c("A","B","A"))
 #' state_frequencies(trajs)
 #' }

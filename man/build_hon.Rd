@@ -89,7 +89,7 @@ higher-order nodes are properly connected.
 }
 }
 \examples{
-\dontrun{
+\donttest{
 # From list of trajectories
 trajs <- list(
   c("A", "B", "C", "D", "A"),

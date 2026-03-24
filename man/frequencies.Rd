@@ -57,21 +57,17 @@ consecutive time points. Transitions are counted across consecutive columns,
 skipping any \code{NA} values.
 }
 \examples{
-\dontrun{
-library(tna)
+\donttest{
+# Wide format
+seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+freq <- frequencies(seqs, format = "wide")
 
 # Long format
-freq <- frequencies(group_regulation_long, action = "Action", id = "Actor")
-model <- tna::tna(freq)
-
-# Multiple ID columns
-freq <- frequencies(group_regulation_long,
-  action = "Action",
-  id = c("Actor", "Group")
+long <- data.frame(
+  Actor = rep(1:2, each = 3), Time = rep(1:3, 2),
+  Action = c("A","B","C","B","A","C")
 )
-
-# Wide format
-freq <- frequencies(group_regulation, format = "wide")
+freq <- frequencies(long, action = "Action", id = "Actor")
 }
 
 }

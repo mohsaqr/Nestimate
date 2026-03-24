@@ -66,7 +66,7 @@ active for the window.
 per group and summed.
 }
 \examples{
-\dontrun{
+\donttest{
 # Simple one-hot data
 df <- data.frame(
   A = c(1, 0, 1, 0, 1),

@@ -38,21 +38,10 @@ NULL
 #' to the long format used by many TNA functions and analyses.
 #'
 #' @examples
-#' \dontrun{
-#' # Generate wide format sequences
-#' trans_mat <- matrix(c(0.7, 0.2, 0.1, 0.3, 0.5, 0.2, 0.2, 0.3, 0.5),
-#'                     nrow = 3, byrow = TRUE)
-#' rownames(trans_mat) <- colnames(trans_mat) <- c("A", "B", "C")
-#' init_probs <- c(A = 0.5, B = 0.3, C = 0.2)
-#'
-#' wide_data <- simulate_sequences(
-#'   transition_matrix = trans_mat,
-#'   initial_probabilities = init_probs,
-#'   max_seq_length = 10,
-#'   num_rows = 50
+#' \donttest{
+#' wide_data <- data.frame(
+#'   V1 = c("A", "B", "C"), V2 = c("B", "C", "A"), V3 = c("C", "A", "B")
 #' )
-#'
-#' # Convert to long format
 #' long_data <- wide_to_long(wide_data)
 #' head(long_data)
 #' }
@@ -147,15 +136,12 @@ wide_to_long <- function(data,
 #' will use the ordering within each sequence to create time indices.
 #'
 #' @examples
-#' \dontrun{
-#' # Generate long format data
-#' long_data <- simulate_long_data(
-#'   n_groups = 5,
-#'   actors_per_group = 10,
-#'   seed = 42
+#' \donttest{
+#' long_data <- data.frame(
+#'   Actor = rep(1:3, each = 4),
+#'   Time = rep(1:4, 3),
+#'   Action = sample(c("A", "B", "C"), 12, replace = TRUE)
 #' )
-#'
-#' # Convert to wide format
 #' wide_data <- long_to_wide(long_data, id_col = "Actor")
 #' head(wide_data)
 #' }
@@ -275,21 +261,13 @@ long_to_wide <- function(data,
 #' }
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # From wide format sequences
-#' sequences <- simulate_sequences(
-#'   transition_matrix = trans_mat,
-#'   initial_probabilities = init_probs,
-#'   max_seq_length = 15,
-#'   num_rows = 100
+#' sequences <- data.frame(
+#'   V1 = c("A","B","C","A"), V2 = c("B","C","A","B"),
+#'   V3 = c("C","A","B","C"), V4 = c("A","B","A","B")
 #' )
 #' tna_data <- prepare_for_tna(sequences, type = "sequences")
-#' model <- tna::tna(tna_data)
-#'
-#' # From long format
-#' long_data <- simulate_long_data(n_groups = 10, seed = 42)
-#' tna_data <- prepare_for_tna(long_data, type = "long")
-#' model <- tna::tna(tna_data)
 #' }
 #'
 #' @seealso \code{\link{wide_to_long}}, \code{\link{long_to_wide}} for
@@ -404,21 +382,15 @@ prepare_for_tna <- function(data,
 #' @return Data frame with one-hot encoded columns (0/1 integers).
 #'
 #' @examples
-#' \dontrun{
-#' # Generate long format data
-#' long_data <- simulate_long_data(n_groups = 3, seed = 42)
-#'
-#' # Convert to one-hot encoding
+#' \donttest{
+#' long_data <- data.frame(
+#'   Actor = rep(1:3, each = 4),
+#'   Time = rep(1:4, 3),
+#'   Action = sample(c("A", "B", "C"), 12, replace = TRUE)
+#' )
 #' onehot_data <- action_to_onehot(long_data)
 #' head(onehot_data)
-#'
-#' # With custom prefix
-#' onehot_data <- action_to_onehot(long_data, prefix = "state_")
-#' names(onehot_data)
 #' }
-#'
-#' @seealso \code{simulate_onehot_data()} for directly generating one-hot data,
-#'   \code{simulate_long_data()} for generating long format data.
 #'
 #' @export
 action_to_onehot <- function(data, action_col = "Action", states = NULL,
@@ -480,7 +452,7 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
 #'   are set on the result.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Simple binary data
 #' df <- data.frame(
 #'   A = c(1, 0, 1, 0, 1),

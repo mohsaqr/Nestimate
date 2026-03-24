@@ -72,7 +72,7 @@ For \code{net_mogen}: extracts all transitions at the optimal order
 
 }}
 \examples{
-\dontrun{
+\donttest{
 seqs <- list(c("A","B","C","D"), c("A","B","C","A"))
 hon <- build_hon(seqs, max_order = 3)
 pw <- pathways(hon)

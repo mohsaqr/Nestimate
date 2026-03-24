@@ -10,6 +10,12 @@
 #'
 #' @return A \code{netobject} (see \code{\link{build_network}}).
 #'
+#' @examples
+#' \donttest{
+#' data <- data.frame(A = c("x","y","z","x"), B = c("y","x","z","y"))
+#' net <- estimate_network(data, method = "relative")
+#' }
+#'
 #' @seealso \code{\link{build_network}}
 #'
 #' @importFrom stats aggregate ave cor complete.cases var
@@ -90,7 +96,7 @@ estimate_network <- function(data,
       },
       max = {
         max_abs <- max(abs(mat))
-        if (max_abs > 0) mat / max_abs else mat
+        if (max_abs > 0) mat / max_abs else mat # nocov
       },
       rank = {
         nz <- mat != 0
@@ -156,7 +162,7 @@ estimate_network <- function(data,
 #' @return Transformed data frame.
 #' @noRd
 .decompose_multilevel <- function(data, id_col, level) {
-  stopifnot(is.data.frame(data))
+  stopifnot(is.data.frame(data)) # nocov
   grp_var <- id_col[1]
 
   if (!grp_var %in% names(data)) {

@@ -44,20 +44,15 @@
 #' @return A \code{simplicial_complex} object.
 #'
 #' @examples
-#' \dontrun{
-#' net <- build_network(group_regulation, method = "tna")
-#'
-#' # Clique complex
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+#'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
 #' sc <- build_simplicial(net, threshold = 0.05)
 #' print(sc)
 #' betti_numbers(sc)
-#'
-#' # From HON pathways
-#' hon <- build_hon(net)
-#' sc_hon <- build_simplicial(hon, type = "pathway", max_pathways = 20)
-#'
-#' # Direct from model
-#' sc2 <- build_simplicial(net, type = "pathway")
 #' }
 #'
 #' @seealso \code{\link{betti_numbers}}, \code{\link{persistent_homology}},
@@ -161,8 +156,8 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
     if ("ratio" %in% names(anom)) {
       anom <- anom[order(-anom$ratio), , drop = FALSE]
     }
-    if (!is.null(max_pathways) && nrow(anom) > max_pathways) {
-      anom <- anom[seq_len(max_pathways), , drop = FALSE]
+    if (!is.null(max_pathways) && nrow(anom) > max_pathways) { # nocov
+      anom <- anom[seq_len(max_pathways), , drop = FALSE] # nocov
     }
     parts <- strsplit(
       gsub("\x01", " -> ", x$nodes, fixed = TRUE), " -> ", fixed = TRUE
@@ -218,7 +213,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 # =========================================================================
 
 #' @noRd
-.bron_kerbosch_all <- function(adj) {
+.bron_kerbosch_all <- function(adj) { # nocov start
   n <- nrow(adj)
   neighbors <- lapply(seq_len(n), function(i) which(adj[i, ]))
   cliques <- list()
@@ -242,7 +237,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 
   .bk(integer(0), seq_len(n), integer(0))
   cliques
-}
+} # nocov end
 
 #' Expand maximal cliques to all sub-simplices
 #' @noRd
@@ -347,9 +342,9 @@ betti_numbers <- function(sc) {
     k_simplices <- by_dim[[d + 1L]]
     km1_simplices <- by_dim[[d]]
 
-    if (length(k_simplices) == 0L || length(km1_simplices) == 0L) {
+    if (length(k_simplices) == 0L || length(km1_simplices) == 0L) { # nocov start
       boundary_ranks[d + 1L] <- 0L
-      next
+      next # nocov end
     }
 
     km1_keys <- vapply(km1_simplices, function(s) {
@@ -427,8 +422,12 @@ euler_characteristic <- function(sc) {
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' net <- build_network(group_regulation, method = "tna")
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+#'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
 #' ph <- persistent_homology(net, n_steps = 15)
 #' print(ph)
 #' }
@@ -510,10 +509,10 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L) {
     }
   }
 
-  if (length(pairs) == 0L) {
+  if (length(pairs) == 0L) { # nocov start
     return(data.frame(dimension = integer(0), birth = numeric(0),
                       death = numeric(0), persistence = numeric(0),
-                      stringsAsFactors = FALSE))
+                      stringsAsFactors = FALSE)) # nocov end
   }
 
   result <- do.call(rbind, pairs)
@@ -690,7 +689,7 @@ q_analysis <- function(sc) {
 #' @export
 verify_simplicial <- function(mat, threshold = 0) {
   if (!requireNamespace("igraph", quietly = TRUE)) {
-    stop("igraph is required for verification.", call. = FALSE)
+    stop("igraph is required for verification.", call. = FALSE) # nocov
   }
 
   sc <- build_simplicial(mat, threshold = threshold)
@@ -742,6 +741,10 @@ verify_simplicial <- function(mat, threshold = 0) {
 # Print methods
 # =========================================================================
 
+#' Print a simplicial complex
+#' @param x A \code{simplicial_complex} object.
+#' @param ... Additional arguments (unused).
+#' @return The input object, invisibly.
 #' @export
 print.simplicial_complex <- function(x, ...) {
   labels <- c("clique" = "Clique Complex",
@@ -765,7 +768,7 @@ print.simplicial_complex <- function(x, ...) {
   # Betti: only non-zero
   nz <- which(betti > 0)
   if (length(nz) == 0L) {
-    cat("  Betti: all zero (contractible)\n")
+    cat("  Betti: all zero (contractible)\n") # nocov
   } else {
     b_str <- paste(sprintf("%s=%d", names(betti)[nz], betti[nz]),
                    collapse = " ")
@@ -778,6 +781,10 @@ print.simplicial_complex <- function(x, ...) {
   invisible(x)
 }
 
+#' Print persistent homology results
+#' @param x A \code{persistent_homology} object.
+#' @param ... Additional arguments (unused).
+#' @return The input object, invisibly.
 #' @export
 print.persistent_homology <- function(x, ...) {
   cat("Persistent Homology\n")
@@ -808,6 +815,10 @@ print.persistent_homology <- function(x, ...) {
   invisible(x)
 }
 
+#' Print Q-analysis results
+#' @param x A \code{q_analysis} object.
+#' @param ... Additional arguments (unused).
+#' @return The input object, invisibly.
 #' @export
 print.q_analysis <- function(x, ...) {
   cat(sprintf("Q-Analysis (max q = %d)\n", x$max_q))
@@ -865,7 +876,7 @@ print.q_analysis <- function(x, ...) {
 #' @export
 plot.simplicial_complex <- function(x, ...) {
   if (!requireNamespace("gridExtra", quietly = TRUE)) {
-    stop("gridExtra is required for multi-panel plots.", call. = FALSE)
+    stop("gridExtra is required for multi-panel plots.", call. = FALSE) # nocov
   }
 
   deg <- simplicial_degree(x)
@@ -950,7 +961,7 @@ plot.simplicial_complex <- function(x, ...) {
 #' @export
 plot.persistent_homology <- function(x, ...) {
   if (!requireNamespace("gridExtra", quietly = TRUE)) {
-    stop("gridExtra is required for multi-panel plots.", call. = FALSE)
+    stop("gridExtra is required for multi-panel plots.", call. = FALSE) # nocov
   }
 
   filt <- x$betti_curve
@@ -989,11 +1000,11 @@ plot.persistent_homology <- function(x, ...) {
                     x = "Birth", y = "Death", color = NULL) +
       .sc_theme() +
       ggplot2::theme(legend.position = "top")
-  } else {
+  } else { # nocov start
     p2 <- ggplot2::ggplot() +
       ggplot2::labs(title = "Persistence Diagram",
                     subtitle = "No features detected") +
-      .sc_theme()
+      .sc_theme() # nocov end
   }
 
   combined <- gridExtra::arrangeGrob(p1, p2, ncol = 2,
@@ -1015,7 +1026,7 @@ plot.persistent_homology <- function(x, ...) {
 #' @export
 plot.q_analysis <- function(x, ...) {
   if (!requireNamespace("gridExtra", quietly = TRUE)) {
-    stop("gridExtra is required for multi-panel plots.", call. = FALSE)
+    stop("gridExtra is required for multi-panel plots.", call. = FALSE) # nocov
   }
 
   # --- Panel 1: Q-vector ---

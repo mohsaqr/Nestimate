@@ -59,23 +59,14 @@ Expectation-Maximization. Each mixture component has its own transition
 matrix. Sequences are probabilistically assigned to components.
 }
 \examples{
-\dontrun{
-# Simple
-mmm <- build_mmm(data, k = 2, seed = 42)
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
+  V3 = sample(LETTERS[1:3], 30, TRUE), V4 = sample(LETTERS[1:3], 30, TRUE)
+)
+mmm <- build_mmm(seqs, k = 2, seed = 42)
 print(mmm)
 summary(mmm)
-plot(mmm)
-
-# From a tna model
-model <- tna::tna(tna::group_regulation)
-mmm <- build_mmm(model, k = 3)
-
-# Model selection
-comp <- compare_mmm(data, k = 2:5, seed = 42)
-plot(comp)
-
-# Access components as netobjects
-mmm$models[[1]]$weights
 }
 
 }

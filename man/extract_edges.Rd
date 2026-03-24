@@ -34,14 +34,11 @@ which is useful for visualization, analysis with igraph, or export to
 other network tools.
 }
 \examples{
-\dontrun{
-# Extract edge list from model
-model <- tna::tna(sequences)
-edges <- extract_edges(model, threshold = 0.05)
+\donttest{
+seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+net <- build_network(seqs, method = "relative")
+edges <- extract_edges(net, threshold = 0.05)
 head(edges)
-
-# Use with igraph
-# g <- igraph::graph_from_data_frame(edges, directed = TRUE)
 }
 
 }

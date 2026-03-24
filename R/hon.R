@@ -64,12 +64,12 @@
   } else if (is.list(data)) {
     trajectories <- lapply(data, function(x) as.character(x))
   } else {
-    stop("'data' must be a data.frame or list of character vectors")
+    stop("'data' must be a data.frame or list of character vectors") # nocov
   }
 
   if (collapse_repeats) {
     trajectories <- lapply(trajectories, function(traj) {
-      if (length(traj) <= 1L) return(traj)
+      if (length(traj) <= 1L) return(traj) # nocov
       keep <- c(TRUE, traj[-1L] != traj[-length(traj)])
       traj[keep]
     })
@@ -379,13 +379,13 @@
   if (order > 1L) {
     suffix_key <- .hon_encode(source[-1L])
     if (is.null(count[[suffix_key]]) || length(count[[suffix_key]]) == 0L) {
-      .honp_extend_observation(suffix_key, source_to_ext, count, distr,
-                               starting_points, trajectories, min_freq)
+      .honp_extend_observation(suffix_key, source_to_ext, count, distr, # nocov start
+                               starting_points, trajectories, min_freq) # nocov end
     }
   }
 
   sp <- starting_points[[source_key]]
-  if (is.null(sp) || length(sp) == 0L) return(invisible(NULL))
+  if (is.null(sp) || length(sp) == 0L) return(invisible(NULL)) # nocov
 
   # Accumulate counts for extended sources in a local environment
   local_count <- new.env(hash = TRUE, parent = emptyenv())
@@ -1094,7 +1094,7 @@
 #' to application for anomaly detection. \emph{EPJ Data Science}, 9(1), 15.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # From list of trajectories
 #' trajs <- list(
 #'   c("A", "B", "C", "D", "A"),

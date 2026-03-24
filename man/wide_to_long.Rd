@@ -48,21 +48,10 @@ This function converts data from the format produced by \code{simulate_sequences
 to the long format used by many TNA functions and analyses.
 }
 \examples{
-\dontrun{
-# Generate wide format sequences
-trans_mat <- matrix(c(0.7, 0.2, 0.1, 0.3, 0.5, 0.2, 0.2, 0.3, 0.5),
-                    nrow = 3, byrow = TRUE)
-rownames(trans_mat) <- colnames(trans_mat) <- c("A", "B", "C")
-init_probs <- c(A = 0.5, B = 0.3, C = 0.2)
-
-wide_data <- simulate_sequences(
-  transition_matrix = trans_mat,
-  initial_probabilities = init_probs,
-  max_seq_length = 10,
-  num_rows = 50
+\donttest{
+wide_data <- data.frame(
+  V1 = c("A", "B", "C"), V2 = c("B", "C", "A"), V3 = c("C", "A", "B")
 )
-
-# Convert to long format
 long_data <- wide_to_long(wide_data)
 head(long_data)
 }

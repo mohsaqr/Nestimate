@@ -54,26 +54,11 @@ Convert wide or long sequence data into frequency counts, one-hot encoding,
 edge lists, or follows format.
 }
 \examples{
-\dontrun{
-library(tna)
-
+\donttest{
 # Wide format input
-convert_sequence_format(group_regulation, id_col = "id", format = "frequency")
-convert_sequence_format(group_regulation, format = "edgelist")
-
-# Long format input
-convert_sequence_format(group_regulation_long,
-  action = "Action", id_col = "Actor", format = "frequency"
-)
-convert_sequence_format(group_regulation_long,
-  action = "Action", id_col = "Actor", time = "Time", format = "edgelist"
-)
-
-# Multiple ID columns
-convert_sequence_format(group_regulation_long,
-  action = "Action", id_col = c("Actor", "Group"),
-  time = "Time", format = "onehot"
-)
+seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+convert_sequence_format(seqs, format = "frequency")
+convert_sequence_format(seqs, format = "edgelist")
 }
 
 }

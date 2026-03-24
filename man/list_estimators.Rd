@@ -13,6 +13,10 @@ A data frame with columns \code{name}, \code{description},
 \description{
 Return a data frame summarising all registered network estimators.
 }
+\examples{
+list_estimators()
+
+}
 \seealso{
 \code{\link{register_estimator}}, \code{\link{get_estimator}}
 }

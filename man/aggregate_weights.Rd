@@ -29,4 +29,8 @@ w <- c(0.5, 0.8, 0.3, 0.9)
 aggregate_weights(w, "sum")   # 2.5
 aggregate_weights(w, "mean")  # 0.625
 aggregate_weights(w, "max")   # 0.9
+\donttest{
+mat <- matrix(c(0, 0.5, 0.5, 0.3, 0, 0.7, 0.4, 0.6, 0), 3, 3, byrow = TRUE)
+aggregate_weights(mat)
+}
 }

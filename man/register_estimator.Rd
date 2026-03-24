@@ -28,15 +28,16 @@ Estimators registered here can be used by \code{\link{estimate_network}}
 via the \code{method} parameter.
 }
 \examples{
-\dontrun{
-# Register a custom estimator
+\donttest{
 my_fn <- function(data, ...) {
   m <- cor(data)
   diag(m) <- 0
   list(matrix = m, nodes = colnames(m), directed = FALSE)
 }
 register_estimator("my_cor", my_fn, "Custom correlation", directed = FALSE)
-estimate_network(data, method = "my_cor")
+df <- data.frame(A = rnorm(20), B = rnorm(20), C = rnorm(20))
+net <- build_network(df, method = "my_cor")
+remove_estimator("my_cor")
 }
 
 }

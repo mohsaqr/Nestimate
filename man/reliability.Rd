@@ -51,18 +51,14 @@ for fast resampling (same infrastructure as
 \code{\link{bootstrap_network}}).
 }
 \examples{
-\dontrun{
-# Single model
-net <- build_network(tna::group_regulation, method = "relative")
-rel <- reliability(net, iter = 500, seed = 42)
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+rel <- reliability(net, iter = 100, seed = 42)
 print(rel)
-plot(rel)
-
-# Multi-model comparison
-net_f <- build_network(tna::group_regulation, method = "frequency")
-rel2 <- reliability(net, net_f, iter = 500, scale = "minmax", seed = 42)
-print(rel2)
-plot(rel2)
 }
 
 }

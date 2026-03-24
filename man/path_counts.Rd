@@ -26,7 +26,7 @@ Useful for understanding which sequences dominate the data before applying
 formal models.
 }
 \examples{
-\dontrun{
+\donttest{
 trajs <- list(c("A","B","C","D"), c("A","B","D","C"))
 path_counts(trajs, k = 2)        # transition counts
 path_counts(trajs, k = 3, top = 10)  # top 10 three-step paths

@@ -1,51 +1,46 @@
-# Session Handoff — 2026-03-20
+# Session Handoff — 2026-03-23
 
 ## Completed
 
-### 1. CLAUDE.md improvements
-- Removed phantom modules (temporal_network.R, velocity_tna.R, network_comparison.R, ml_graphical_var) that were referenced but don't exist in R/
-- Added simplicial complex module (R/simplicial.R) with 3 new S3 classes
-- Fixed `reliability_network()` → `reliability()` (actual export name)
-- Added sidelined modules section documenting what's in `sidelined/`
-- Noted `docs/ARCHITECTURE.md` is stale — CLAUDE.md is authoritative
-- Added testing gotchas: `_R_CHECK_LIMIT_CORES_`, `build_mmm()` parallel
-
-### 2. Temporal network build spec
-- Created `docs/temporal/SPEC.md` — enterprise-grade temporal network analysis spec
-- Single file scope: `R/temporal_network.R` with cograph_network-compatible output format
-- 3-phase plan: core metrics (no igraph) → snapshots (igraph enhanced) → visualization
-- Copied reference implementations from sidelined/ into `docs/temporal/ref-*.R`
-
-### 3. Bundled vibcoding datasets (12 datasets)
-- Created `data-raw/vibcoding.R` build script from raw CSV (19,347 coded interactions)
-- 9 long-format datasets: `human_ai`, `human_ai_cat`, `human_ai_super`, `human_detailed`, `human_cat`, `human_super`, `ai_detailed`, `ai_cat`, `ai_super`
-- 2 wide-format datasets (category level): `human_wide`, `ai_wide`
-- 1 edge list: `human_ai_edges` (18,918 non-aggregated transitions with session, order, timepoint, from/to actor/category/superclass)
-- Documentation in `R/data.R`, DESCRIPTION updated with `LazyData: true`, `Depends: R (>= 3.5)`
+### CRAN Preparation
+- Fixed .Rbuildignore: added .DS_Store and tests/testthat/_problems exclusions
+- Fixed duplicate @noRd tag in estimators.R
+- Converted all `\dontrun{}` to `\donttest{}` across all R files (~40 occurrences)
+- Added missing @return tags to 5 exported functions (predictability methods, simplicial print methods)
+- Rewrote all examples using undefined functions (simulate_long_data, simulate_sequences, simulate_gimme, etc.) to use inline data
+- Rewrote examples referencing `tna::group_regulation` to use self-contained data
+- Fixed examples using `centrality_fn` (boot_glasso, centrality_stability) to use strength-only measures
+- Fixed `cluster_summary` example passing raw matrix to `build_network` (needs data.frame)
+- Fixed `mogen_transitions` example missing `trajs` definition
+- Fixed `register_estimator` example with undefined `data`
+- Fixed `prepare_data` example with undefined `df`
+- Added complete roxygen headers to simplicial print methods
+- Created inst/WORDLIST with ~150 technical terms for spelling check
+- Updated cran-comments.md
 
 ## Current State
-- **2779 tests pass**, 1 failure (pre-existing: `test-prepare_data.R:382` expects a message not thrown), 19 warnings (data.table shallow copy), 4 skips
-- 12 `.rda` files in `data/`, documented in `man/vibcoding-data.Rd` and `man/human_ai_edges.Rd`
-- `docs/temporal/` ready with spec and reference code for temporal network implementation
+- **R CMD check --as-cran --run-donttest**: 0 errors, 0 warnings, 0 notes
+- **CRAN incoming checks**: 0 errors, 0 warnings, 0 notes
+- **Tests**: 2580 pass, 0 fail, 19 warnings (data.table shallow copy), 4 skips
+- **Spelling**: Clean
+- **URLs**: All valid
+- Package ready for CRAN submission
 
 ## Key Decisions
-- Long format as default for datasets (matches raw data structure), wide only for human/ai category
-- Edge list is non-aggregated (weight=1 per transition) with all three granularity levels carried along
-- Temporal network spec: single file (`R/temporal_network.R`), velocity and network_comparison excluded for now
+- Replaced all `tna::group_regulation` references in examples with inline data to avoid Suggests dependency in examples
+- Used `\donttest{}` instead of `\dontrun{}` per CRAN preference (examples are runnable but slow)
+- Kept S3 method examples minimal (no `@examples` added to print/summary/plot methods — they inherit from generics)
 
 ## Open Issues
-- `test-prepare_data.R:382` failure — expects message from `prepare_data()` that isn't thrown (pre-existing)
 - HON/HONEM/HYPA/MOGen classes still not cograph_network compatible
 - `print.mcml` S3 method conflict (pre-existing)
 - `docs/ARCHITECTURE.md` is stale
 
 ## Next Steps
-1. Implement `R/temporal_network.R` per `docs/temporal/SPEC.md` (Phase 1: core metrics)
-2. Fix the `test-prepare_data.R:382` failure
-3. Add `@examples` to remaining exported functions
-4. Consider adding dataset-based examples to existing function docs
+1. Submit to CRAN via `devtools::submit_cran()`
+2. Consider running rhub checks on additional platforms (Windows, Linux)
+3. Implement temporal network analysis per docs/temporal/SPEC.md
 
 ## Context
 - Nestimate: `/Users/mohammedsaqr/Documents/Github/Nestimate/` (branch: `main`)
-- Raw data: `/Users/mohammedsaqr/Library/CloudStorage/GoogleDrive-saqr@saqr.me/.tmp/1097498/Git/Saqrvibcodingtna.csv`
-- R 4.5, macOS Darwin 25.3.0, testthat edition 3
+- R 4.5.2, macOS Darwin 25.3.0, testthat edition 3

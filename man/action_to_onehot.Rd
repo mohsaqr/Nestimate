@@ -34,21 +34,14 @@ Data frame with one-hot encoded columns (0/1 integers).
 Convert a categorical Action column to one-hot (binary indicator) columns.
 }
 \examples{
-\dontrun{
-# Generate long format data
-long_data <- simulate_long_data(n_groups = 3, seed = 42)
-
-# Convert to one-hot encoding
+\donttest{
+long_data <- data.frame(
+  Actor = rep(1:3, each = 4),
+  Time = rep(1:4, 3),
+  Action = sample(c("A", "B", "C"), 12, replace = TRUE)
+)
 onehot_data <- action_to_onehot(long_data)
 head(onehot_data)
-
-# With custom prefix
-onehot_data <- action_to_onehot(long_data, prefix = "state_")
-names(onehot_data)
 }
 
-}
-\seealso{
-\code{simulate_onehot_data()} for directly generating one-hot data,
-\code{simulate_long_data()} for generating long format data.
 }

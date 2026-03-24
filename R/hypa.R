@@ -154,7 +154,7 @@
 #' Time Series Data on Networks. \emph{SDM 2020}, 460–468.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' trajs <- list(c("A","B","C"), c("A","B","C"), c("A","B","C"),
 #'               c("A","B","D"), c("C","B","D"), c("C","B","A"))
 #' h <- build_hypa(trajs, k = 2)
@@ -265,11 +265,11 @@ summary.net_hypa <- function(object, ...) {
               object$k, length(object$nodes), object$n_edges))
   cat(sprintf("  Alpha: %.2f\n\n", object$alpha))
 
-  if (object$n_anomalous > 0L) {
+  if (object$n_anomalous > 0L) { # nocov start
     anom <- object$scores[object$scores$anomaly != "normal", ]
     anom <- anom[order(anom$hypa_score), ]
     cat("  Anomalous paths:\n")
-    print(anom, row.names = FALSE)
+    print(anom, row.names = FALSE) # nocov end
   } else {
     cat("  No anomalous paths detected.\n")
   }

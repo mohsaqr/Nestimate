@@ -47,15 +47,12 @@ If \code{time_col} contains non-integer values (e.g., timestamps), the function
 will use the ordering within each sequence to create time indices.
 }
 \examples{
-\dontrun{
-# Generate long format data
-long_data <- simulate_long_data(
-  n_groups = 5,
-  actors_per_group = 10,
-  seed = 42
+\donttest{
+long_data <- data.frame(
+  Actor = rep(1:3, each = 4),
+  Time = rep(1:4, 3),
+  Action = sample(c("A", "B", "C"), 12, replace = TRUE)
 )
-
-# Convert to wide format
 wide_data <- long_to_wide(long_data, id_col = "Actor")
 head(wide_data)
 }

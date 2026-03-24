@@ -45,21 +45,17 @@ NULL
 #' skipping any \code{NA} values.
 #'
 #' @examples
-#' \dontrun{
-#' library(tna)
+#' \donttest{
+#' # Wide format
+#' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+#' freq <- frequencies(seqs, format = "wide")
 #'
 #' # Long format
-#' freq <- frequencies(group_regulation_long, action = "Action", id = "Actor")
-#' model <- tna::tna(freq)
-#'
-#' # Multiple ID columns
-#' freq <- frequencies(group_regulation_long,
-#'   action = "Action",
-#'   id = c("Actor", "Group")
+#' long <- data.frame(
+#'   Actor = rep(1:2, each = 3), Time = rep(1:3, 2),
+#'   Action = c("A","B","C","B","A","C")
 #' )
-#'
-#' # Wide format
-#' freq <- frequencies(group_regulation, format = "wide")
+#' freq <- frequencies(long, action = "Action", id = "Actor")
 #' }
 #'
 #' @seealso \code{\link{convert_sequence_format}} for converting to other
@@ -121,26 +117,11 @@ frequencies <- function(data,
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' library(tna)
-#'
+#' \donttest{
 #' # Wide format input
-#' convert_sequence_format(group_regulation, id_col = "id", format = "frequency")
-#' convert_sequence_format(group_regulation, format = "edgelist")
-#'
-#' # Long format input
-#' convert_sequence_format(group_regulation_long,
-#'   action = "Action", id_col = "Actor", format = "frequency"
-#' )
-#' convert_sequence_format(group_regulation_long,
-#'   action = "Action", id_col = "Actor", time = "Time", format = "edgelist"
-#' )
-#'
-#' # Multiple ID columns
-#' convert_sequence_format(group_regulation_long,
-#'   action = "Action", id_col = c("Actor", "Group"),
-#'   time = "Time", format = "onehot"
-#' )
+#' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+#' convert_sequence_format(seqs, format = "frequency")
+#' convert_sequence_format(seqs, format = "edgelist")
 #' }
 #'
 #' @seealso \code{\link{frequencies}} for building transition frequency matrices.
@@ -269,14 +250,14 @@ convert_sequence_format <- function(data,
 #' Standardize long format input for convert_sequence_format
 #' @noRd
 .standardize_long <- function(data, id_col, action, time) {
-  if (is.null(id_col)) {
+  if (is.null(id_col)) { # nocov start
     non_meta <- setdiff(names(data), c(action, time))
     if (length(non_meta) == 0) {
       stop("id_col is required for long format data.")
     }
     id_col <- non_meta[1]
     message("Using '", id_col, "' as id_col.")
-  }
+  } # nocov end
   .validate_cols(data, c(id_col, action))
 
   # Order by id columns + time

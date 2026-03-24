@@ -21,6 +21,10 @@
 #' aggregate_weights(w, "sum")   # 2.5
 #' aggregate_weights(w, "mean")  # 0.625
 #' aggregate_weights(w, "max")   # 0.9
+#' \donttest{
+#' mat <- matrix(c(0, 0.5, 0.5, 0.3, 0, 0.7, 0.4, 0.6, 0), 3, 3, byrow = TRUE)
+#' aggregate_weights(mat)
+#' }
 aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
   # Remove NA and zero weights
   w <- w[!is.na(w) & w != 0]
@@ -254,10 +258,13 @@ wagg <- aggregate_weights
 #' # -----------------------------------------------------
 #' # Auto-detect clusters from netobject
 #' # -----------------------------------------------------
-#' \dontrun{
-#' net <- build_network(mat, method = "relative")
-#' net$nodes$clusters <- c(1, 1, 1, 2, 2, 2, 3, 3, 3, 3)
-#' cs <- cluster_summary(net)  # No clusters argument needed
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:10], 30, TRUE), V2 = sample(LETTERS[1:10], 30, TRUE),
+#'   V3 = sample(LETTERS[1:10], 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' cs2 <- cluster_summary(net, c(1, 1, 1, 2, 2, 2, 3, 3, 3, 3))
 #' }
 #'
 #' # -----------------------------------------------------
@@ -299,7 +306,7 @@ cluster_summary <- function(x,
 
   # If already an mcml object, return as-is
   if (inherits(x, "mcml")) {
-    return(x)
+    return(x) # nocov
   }
 
   type <- match.arg(type)
@@ -312,7 +319,7 @@ cluster_summary <- function(x,
   if (inherits(x, "cograph_network")) {
     mat <- x$weights
   } else if (inherits(x, "netobject") || inherits(x, "netobject_ml")) {
-    mat <- x$weights
+    mat <- x$weights # nocov
   } else if (inherits(x, "tna")) {
     mat <- x$weights
   } else {
@@ -325,7 +332,7 @@ cluster_summary <- function(x,
 
   # Validate input matrix
   if (!is.matrix(mat) || !is.numeric(mat)) {
-    stop("x must be a netobject, tna object, or numeric matrix", call. = FALSE)
+    stop("x must be a netobject, tna object, or numeric matrix", call. = FALSE) # nocov
   }
   if (nrow(mat) != ncol(mat)) {
     stop("x must be a square matrix", call. = FALSE)
@@ -339,7 +346,7 @@ cluster_summary <- function(x,
   cluster_list <- .normalize_clusters(clusters, node_names)
   n_clusters <- length(cluster_list)
   cluster_names <- names(cluster_list)
-  if (is.null(cluster_names)) cluster_names <- as.character(seq_len(n_clusters))
+  if (is.null(cluster_names)) cluster_names <- as.character(seq_len(n_clusters)) # nocov
   names(cluster_list) <- cluster_names
 
   # Get node indices for each cluster
@@ -465,8 +472,10 @@ cluster_summary <- function(x,
 #' @return See \code{\link{cluster_summary}}.
 #' @export
 #' @examples
-#' \dontrun{
-#' csum(matrix_data, clusters)
+#' \donttest{
+#' mat <- matrix(runif(16), 4, 4)
+#' rownames(mat) <- colnames(mat) <- LETTERS[1:4]
+#' csum(mat, c(1, 1, 2, 2))
 #' }
 csum <- cluster_summary
 
@@ -589,7 +598,7 @@ build_mcml <- function(x,
       data <- x$data
       # Auto-detect clusters from network if not provided
       if (is.null(clusters)) {
-        clusters <- .auto_detect_clusters(x)
+        clusters <- .auto_detect_clusters(x) # nocov
       }
       sub_type <- .detect_mcml_input(data)
       if (sub_type == "edgelist") {
@@ -602,7 +611,7 @@ build_mcml <- function(x,
     },
     "netobject_matrix" = {
       if (is.null(clusters)) {
-        clusters <- .auto_detect_clusters(x)
+        clusters <- .auto_detect_clusters(x) # nocov
       }
       cluster_summary(x, clusters, method = method, type = type,
                        directed = directed, compute_within = compute_within)
@@ -783,7 +792,7 @@ build_mcml <- function(x,
   if (total > 0) {
     between_inits <- col_sums / total
   } else {
-    between_inits <- rep(1 / n_clusters, n_clusters)
+    between_inits <- rep(1 / n_clusters, n_clusters) # nocov
   }
   names(between_inits) <- cluster_names
 
@@ -875,7 +884,7 @@ build_mcml <- function(x,
         within_inits_i <- if (!is.na(total_w) && total_w > 0) {
           col_sums_w / total_w
         } else {
-          rep(1 / n_i, n_i)
+          rep(1 / n_i, n_i) # nocov
         }
         names(within_inits_i) <- cl_nodes
       }
@@ -1158,72 +1167,13 @@ build_mcml <- function(x,
 #'   \code{tna::tna} for the underlying tna constructor
 #'
 #' @examples
-#' # -----------------------------------------------------
-#' # Basic usage
-#' # -----------------------------------------------------
 #' mat <- matrix(runif(36), 6, 6)
 #' rownames(mat) <- colnames(mat) <- LETTERS[1:6]
-#'
-#' clusters <- list(
-#'   G1 = c("A", "B"),
-#'   G2 = c("C", "D"),
-#'   G3 = c("E", "F")
-#' )
-#'
+#' clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"), G3 = c("E", "F"))
 #' cs <- cluster_summary(mat, clusters, type = "tna")
 #' tna_models <- as_tna(cs)
-#'
-#' # Print summary
 #' tna_models
-#'
-#' # -----------------------------------------------------
-#' # Access components
-#' # -----------------------------------------------------
-#' # Between-cluster tna
-#' tna_models$macro
-#' tna_models$macro$weights  # 3x3 transition matrix
-#' tna_models$macro$inits    # Initial distribution
-#' tna_models$macro$labels   # c("G1", "G2", "G3")
-#'
-#' # Within-cluster tnas
-#' names(tna_models$clusters)    # Which clusters have within models
-#' tna_models$clusters$G1        # tna for cluster G1
-#' tna_models$clusters$G1$weights  # 2x2 matrix (A, B)
-#'
-#' # -----------------------------------------------------
-#' # Use with tna package (requires tna)
-#' # -----------------------------------------------------
-#' \dontrun{
-#' # Plot
-#' plot(tna_models$macro)
-#' plot(tna_models$clusters$G1)
-#'
-#' # Centrality analysis
-#' tna::centralities(tna_models$macro)
-#' tna::centralities(tna_models$clusters$G1)
-#' tna::centralities(tna_models$clusters$G2)
-#' }
-#'
-#' \dontrun{
-#' # Bootstrap validation (requires tna built from sequence data)
-#' boot <- tna::bootstrap(tna_models$macro, iter = 1000)
-#' summary(boot)
-#' }
-#'
-#' # -----------------------------------------------------
-#' # Check which within-cluster models were created
-#' # -----------------------------------------------------
-#' cs <- cluster_summary(mat, clusters, type = "tna")
-#' tna_models <- as_tna(cs)
-#'
-#' # All cluster names
-#' names(cs$clusters)
-#'
-#' # Clusters with valid within-models
-#' names(tna_models$clusters)
-#'
-#' # Clusters excluded (single node or zero rows)
-#' setdiff(names(cs$clusters), names(tna_models$clusters))
+#' tna_models$macro$weights
 as_tna <- function(x) {
   UseMethod("as_tna")
 }

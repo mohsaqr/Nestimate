@@ -53,7 +53,7 @@ column represents a state; rows where the value is 1 are marked with the
 column name. Supports optional windowed aggregation.
 }
 \examples{
-\dontrun{
+\donttest{
 # Simple binary data
 df <- data.frame(
   A = c(1, 0, 1, 0, 1),

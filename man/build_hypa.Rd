@@ -50,7 +50,7 @@ Paths occurring more or less often than expected under the null model are
 flagged as over- or under-represented.
 }
 \examples{
-\dontrun{
+\donttest{
 trajs <- list(c("A","B","C"), c("A","B","C"), c("A","B","C"),
               c("A","B","D"), c("C","B","D"), c("C","B","A"))
 h <- build_hypa(trajs, k = 2)

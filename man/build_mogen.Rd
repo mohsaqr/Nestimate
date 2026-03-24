@@ -49,7 +49,7 @@ between overlapping k-tuples. The model tests increasingly complex Markov
 orders and selects the one that best balances fit and parsimony.
 }
 \examples{
-\dontrun{
+\donttest{
 trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
               c("B","C","D","A"), c("C","D","A","B"))
 m <- build_mogen(trajs, max_order = 3)

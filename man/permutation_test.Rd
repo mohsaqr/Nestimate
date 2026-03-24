@@ -73,13 +73,17 @@ and custom estimators), the full estimator is called on each permuted
 group split.
 }
 \examples{
-\dontrun{
-library(tna)
-d1 <- group_regulation[1:1000, ]
-d2 <- group_regulation[1001:2000, ]
+\donttest{
+set.seed(1)
+d1 <- data.frame(V1 = sample(LETTERS[1:4], 20, TRUE),
+                 V2 = sample(LETTERS[1:4], 20, TRUE),
+                 V3 = sample(LETTERS[1:4], 20, TRUE))
+d2 <- data.frame(V1 = sample(LETTERS[1:4], 20, TRUE),
+                 V2 = sample(LETTERS[1:4], 20, TRUE),
+                 V3 = sample(LETTERS[1:4], 20, TRUE))
 net1 <- build_network(d1, method = "relative")
 net2 <- build_network(d2, method = "relative")
-perm <- permutation_test(net1, net2, iter = 500, seed = 42)
+perm <- permutation_test(net1, net2, iter = 100, seed = 42)
 print(perm)
 summary(perm)
 }

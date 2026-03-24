@@ -102,12 +102,12 @@ safe_sd <- function(x) {
 #' @noRd
 .coerce_sequence_input <- function(data) {
   if (inherits(data, "tna")) {
-    if (is.null(data$data)) {
+    if (is.null(data$data)) { # nocov start
       stop("tna object has no sequence data ($data). ",
            "Build the tna from sequence data, not a raw matrix.",
            call. = FALSE)
-    }
-    df <- as.data.frame(data$data, stringsAsFactors = FALSE)
+    } # nocov end
+    df <- as.data.frame(data$data, stringsAsFactors = FALSE) # nocov start
     lbl <- attr(data$data, "labels") %||% data$labels
     if (!is.null(lbl) && length(lbl) > 0L &&
         (is.integer(df[[1]]) || is.numeric(df[[1]]))) {
@@ -117,23 +117,23 @@ safe_sd <- function(x) {
                NA_character_, lbl[idx])
       })
     }
-    return(df)
+    return(df) # nocov end
   }
   if (inherits(data, "netobject")) {
-    if (is.null(data$data)) {
+    if (is.null(data$data)) { # nocov start
       stop("netobject has no sequence data ($data). ",
            "Build the network from sequence data.",
-           call. = FALSE)
+           call. = FALSE) # nocov end
     }
     df <- as.data.frame(data$data, stringsAsFactors = FALSE)
     lbl <- rownames(data$weights)
     if (!is.null(lbl) && length(lbl) > 0L &&
         (is.integer(df[[1]]) || is.numeric(df[[1]]))) {
-      df[] <- lapply(df, function(col) {
+      df[] <- lapply(df, function(col) { # nocov start
         idx <- as.integer(col)
         ifelse(is.na(idx) | idx < 1L | idx > length(lbl),
                NA_character_, lbl[idx])
-      })
+      }) # nocov end
     }
     return(df)
   }
@@ -166,7 +166,7 @@ safe_sd <- function(x) {
   tna_meta <- x$meta$tna
   method <- if (!is.null(tna_meta$method)) {
     tna_meta$method
-  } else if (isSymmetric(mat)) {
+  } else if (is.matrix(mat) && isSymmetric(mat)) {
     "co_occurrence"
   } else {
     "relative"

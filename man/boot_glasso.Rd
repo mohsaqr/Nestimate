@@ -110,18 +110,15 @@ thresholded network into one function. Designed as a faster alternative
 to bootnet with richer output.
 }
 \examples{
-\dontrun{
-# From raw data
-freq <- convert_sequence_format(tna::group_regulation, format = "frequency")
-boot <- boot_glasso(freq, iter = 500, cs_iter = 200, seed = 42)
+\donttest{
+set.seed(42)
+mat <- matrix(rnorm(60), ncol = 4)
+colnames(mat) <- LETTERS[1:4]
+net <- build_network(as.data.frame(mat), method = "glasso")
+boot <- boot_glasso(net, iter = 100, cs_iter = 50, seed = 42,
+  centrality = c("strength", "expected_influence"))
 print(boot)
 summary(boot, type = "edges")
-plot(boot, type = "edges")
-plot(boot, type = "stability")
-
-# From a netobject
-net <- build_network(freq, method = "glasso", params = list(gamma = 0.5))
-boot <- boot_glasso(net, iter = 500, seed = 42)
 }
 
 }

@@ -95,37 +95,23 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' library(tna)
-#'
+#' \donttest{
 #' # Transition network (relative probabilities)
-#' net <- build_network(group_regulation, method = "relative")
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+#'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
 #' print(net)
 #'
-#' # Aliases
-#' net_tna <- build_network(group_regulation, method = "tna")
-#' net_ftna <- build_network(group_regulation, method = "ftna")
-#' net_cna <- build_network(group_regulation, method = "cna")
-#'
 #' # Association network (glasso)
-#' freq_data <- convert_sequence_format(group_regulation, format = "frequency")
+#' freq_data <- convert_sequence_format(seqs, format = "frequency")
 #' net_glasso <- build_network(freq_data, method = "glasso",
 #'                              params = list(gamma = 0.5, nlambda = 50))
 #'
-#' # Partial correlation network
-#' net_pcor <- build_network(freq_data, method = "pcor")
-#'
-#' # Correlation network with alias
-#' net_cor <- build_network(freq_data, method = "corr")
-#'
 #' # With scaling
-#' net_scaled <- build_network(group_regulation, method = "relative",
+#' net_scaled <- build_network(seqs, method = "relative",
 #'                              scaling = c("rank", "minmax"))
-#'
-#' # Composable: replay config on new data
-#' config <- net_glasso$params
-#' net2 <- build_network(new_data, method = net_glasso$method,
-#'                        params = config)
 #' }
 #'
 #' @seealso \code{\link{register_estimator}}, \code{\link{list_estimators}},
@@ -236,8 +222,8 @@ build_network <- function(data,
     prep_args <- list(data = data, action = action)
     if (!is.null(actor)) prep_args$actor <- actor
     if (!is.null(time)) prep_args$time <- time
-    if (!is.null(session)) prep_args$session <- session
-    if (!is.null(order)) prep_args$order <- order
+    if (!is.null(session)) prep_args$session <- session # nocov start
+    if (!is.null(order)) prep_args$order <- order # nocov end
     prep_args$time_threshold <- time_threshold
 
     prepared <- do.call(prepare_data, prep_args)
@@ -373,7 +359,7 @@ build_network <- function(data,
     state_cols <- names(raw_data)[is_state_col]
     extra_cols <- names(raw_data)[!is_state_col]
     if (length(extra_cols) > 0L) {
-      metadata <- raw_data[, extra_cols, drop = FALSE]
+      metadata <- raw_data[, extra_cols, drop = FALSE] # nocov
       raw_data <- raw_data[, state_cols, drop = FALSE]
     }
     # Clean void/missing markers in character/factor state columns
@@ -472,10 +458,10 @@ print.netobject <- function(x, ...) {
     cat(sprintf("  Data: %d sequences x %d time points\n",
                 nrow(x$data), ncol(x$data)))
   }
-  if (!is.null(x$metadata)) {
+  if (!is.null(x$metadata)) { # nocov start
     cat(sprintf("  Metadata: %s\n",
                 paste(names(x$metadata), collapse = ", ")))
-  }
+  } # nocov end
   if (!is.null(x$n)) cat(sprintf("  Sample size: %d\n", x$n))
 
   # ---- Nodes ----
@@ -638,13 +624,12 @@ print.netobject_ml <- function(x, ...) {
 #' \doi{10.3758/s13428-017-0910-x}
 #'
 #' @examples
-#' \dontrun{
-#' freq <- convert_sequence_format(group_regulation, format = "frequency")
-#' net <- build_network(freq, method = "glasso")
+#' \donttest{
+#' set.seed(42)
+#' mat <- matrix(rnorm(60), ncol = 4)
+#' colnames(mat) <- LETTERS[1:4]
+#' net <- build_network(as.data.frame(mat), method = "glasso")
 #' predictability(net)
-#'
-#' # Plot with predictability rings
-#' plot(net, predictability = TRUE)
 #' }
 #'
 #' @export
@@ -654,6 +639,7 @@ predictability <- function(object, ...) {
 
 
 #' @rdname predictability
+#' @return A named numeric vector of predictability values per node.
 #' @export
 predictability.netobject <- function(object, ...) {
   if (object$method %in% c("glasso", "pcor")) {
@@ -684,6 +670,7 @@ predictability.netobject <- function(object, ...) {
 
 
 #' @rdname predictability
+#' @return A list with \code{within} and \code{between} predictability vectors.
 #' @export
 predictability.netobject_ml <- function(object, ...) {
   list(

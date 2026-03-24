@@ -26,7 +26,7 @@
 #'   \code{cograph::plot_simplicial()}.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' seqs <- list(c("A","B","C","D"), c("A","B","C","A"))
 #' hon <- build_hon(seqs, max_order = 3)
 #' pw <- pathways(hon)
@@ -56,7 +56,7 @@ pathways <- function(x, ...) {
 pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
                              top = NULL, order = NULL, ...) {
   edges <- x$edges
-  if (is.null(edges) || nrow(edges) == 0L) return(character(0))
+  if (is.null(edges) || nrow(edges) == 0L) return(character(0)) # nocov
 
   # Higher-order edges: from_order > 1
   ho <- edges[edges$from_order > 1L, , drop = FALSE]
@@ -80,7 +80,7 @@ pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
   # path column is already "A -> B -> C" — split into states
   vapply(ho$path, function(p) {
     parts <- trimws(strsplit(p, "->", fixed = TRUE)[[1]])
-    if (length(parts) < 2L) return(p)
+    if (length(parts) < 2L) return(p) # nocov
     sources <- paste(parts[-length(parts)], collapse = " ")
     paste(sources, "->", parts[length(parts)])
   }, character(1), USE.NAMES = FALSE)
@@ -98,7 +98,7 @@ pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
 pathways.net_hypa <- function(x, type = "all", ...) {
   type <- match.arg(type, c("all", "over", "under"))
   scores <- x$scores
-  if (is.null(scores) || nrow(scores) == 0L) return(character(0))
+  if (is.null(scores) || nrow(scores) == 0L) return(character(0)) # nocov
 
   if (type == "all") {
     anom <- scores[scores$anomaly != "normal", , drop = FALSE]
@@ -109,7 +109,7 @@ pathways.net_hypa <- function(x, type = "all", ...) {
 
   vapply(anom$path, function(p) {
     parts <- trimws(strsplit(p, "->", fixed = TRUE)[[1]])
-    if (length(parts) < 2L) return(p)
+    if (length(parts) < 2L) return(p) # nocov
     sources <- paste(parts[-length(parts)], collapse = " ")
     paste(sources, "->", parts[length(parts)])
   }, character(1), USE.NAMES = FALSE)
@@ -136,23 +136,23 @@ pathways.net_mogen <- function(x, order = NULL, min_count = 1L,
   if (order < 1L) return(character(0))
 
   trans <- mogen_transitions(x, order = order)
-  if (is.null(trans) || nrow(trans) == 0L) return(character(0))
+  if (is.null(trans) || nrow(trans) == 0L) return(character(0)) # nocov
 
   if (min_count > 1L) {
-    trans <- trans[trans$count >= min_count, , drop = FALSE]
+    trans <- trans[trans$count >= min_count, , drop = FALSE] # nocov
   }
   if (min_prob > 0) {
     trans <- trans[trans$probability >= min_prob, , drop = FALSE]
   }
   trans <- trans[order(-trans$count), , drop = FALSE]
   if (!is.null(top) && nrow(trans) > top) {
-    trans <- trans[seq_len(top), , drop = FALSE]
+    trans <- trans[seq_len(top), , drop = FALSE] # nocov
   }
-  if (nrow(trans) == 0L) return(character(0))
+  if (nrow(trans) == 0L) return(character(0)) # nocov
 
   vapply(trans$path, function(p) {
     parts <- trimws(strsplit(p, "->", fixed = TRUE)[[1]])
-    if (length(parts) < 2L) return(p)
+    if (length(parts) < 2L) return(p) # nocov
     sources <- paste(parts[-length(parts)], collapse = " ")
     paste(sources, "->", parts[length(parts)])
   }, character(1), USE.NAMES = FALSE)

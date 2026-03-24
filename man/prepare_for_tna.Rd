@@ -60,21 +60,13 @@ This function performs several preparations:
 }
 }
 \examples{
-\dontrun{
+\donttest{
 # From wide format sequences
-sequences <- simulate_sequences(
-  transition_matrix = trans_mat,
-  initial_probabilities = init_probs,
-  max_seq_length = 15,
-  num_rows = 100
+sequences <- data.frame(
+  V1 = c("A","B","C","A"), V2 = c("B","C","A","B"),
+  V3 = c("C","A","B","C"), V4 = c("A","B","A","B")
 )
 tna_data <- prepare_for_tna(sequences, type = "sequences")
-model <- tna::tna(tna_data)
-
-# From long format
-long_data <- simulate_long_data(n_groups = 10, seed = 42)
-tna_data <- prepare_for_tna(long_data, type = "long")
-model <- tna::tna(tna_data)
 }
 
 }

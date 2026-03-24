@@ -54,3 +54,15 @@
 - [usethis::use_data]: Automatically adds `Depends: R (>= 3.5)` and `LazyData: true` to DESCRIPTION. Both are fine for CRAN.
 - [vibcoding data]: Raw CSV has multiple codes per turn (same id, different code/category/superclass rows). Each row becomes a separate action in the sequence, ordered by id within session.
 - [CLAUDE.md accuracy]: Phantom modules can accumulate — temporal_network.R, velocity_tna.R, network_comparison.R, ml_graphical_var() were all listed but didn't exist in R/. They were in sidelined/. Always verify against actual file system before documenting.
+
+### 2026-03-23
+- [CRAN \donttest examples]: When converting `\dontrun{}` to `\donttest{}`, all example code WILL be executed during `--run-donttest`. Every function call must be defined — no references to `simulate_*()` helpers that only exist in test code. Use inline data instead.
+- [CRAN examples Suggests]: Examples referencing Suggests packages (e.g., `tna::group_regulation`) fail if the package isn't installed. Replace with self-contained inline data or wrap in `if (requireNamespace(...))`.
+- [centrality_fn requirement]: `boot_glasso()` and `centrality_stability()` require `centrality_fn` parameter for betweenness/closeness. Examples must either provide the function or restrict to strength-only measures.
+- [build_network matrix input]: `build_network()` with `method = "relative"` requires a data.frame, not a raw matrix. Examples must pass `as.data.frame()` or create a data.frame directly.
+- [roxygen @noRd without title]: `@return` and `@export` tags alone don't create valid Rd files — they need a title line (first line of the roxygen block). Always include `#' Title` as the first roxygen comment line.
+- [CRAN WORDLIST]: The `inst/WORDLIST` file (one word per line, sorted) silences spelling::spell_check_package() for technical terms, proper nouns, and package names. Created with ~150 entries for Nestimate.
+
+### 2026-03-24
+- [bootstrap tna cross-validation]: Nestimate `bootstrap_network()` and tna `bootstrap()` produce identical results: means (machine epsilon), SDs, CI bounds, CR bounds, and significant edges all match exactly. P-values differ by at most 0.007 with 1000 iterations due to slightly different RNG consumption order. Zero-weight edges: tna sets p=1, Nestimate computes actual p-value. Both are valid.
+- [permutation tna cross-validation]: Nestimate `permutation_test()` and tna `permutation_test()` produce identical true differences (max diff = 0). P-values correlate > 0.999 with 1000 iterations (max abs diff < 0.05) — the difference is Monte Carlo noise from different RNG consumption patterns (tna samples raw rows, Nestimate samples precomputed count indices). Significance agreement: at most 1-2 borderline edges may flip.

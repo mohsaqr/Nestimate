@@ -221,10 +221,13 @@ cs$clusters$Alpha       # Within Alpha cluster
 # -----------------------------------------------------
 # Auto-detect clusters from netobject
 # -----------------------------------------------------
-\dontrun{
-net <- build_network(mat, method = "relative")
-net$nodes$clusters <- c(1, 1, 1, 2, 2, 2, 3, 3, 3, 3)
-cs <- cluster_summary(net)  # No clusters argument needed
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:10], 30, TRUE), V2 = sample(LETTERS[1:10], 30, TRUE),
+  V3 = sample(LETTERS[1:10], 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+cs2 <- cluster_summary(net, c(1, 1, 1, 2, 2, 2, 3, 3, 3, 3))
 }
 
 # -----------------------------------------------------
@@ -256,8 +259,10 @@ cs <- cluster_summary(mat, clusters, type = "tna")
 tna_models <- as_tna(cs)
 # tna_models$macro      # tna object
 # tna_models$clusters$Alpha # tna object
-\dontrun{
-csum(matrix_data, clusters)
+\donttest{
+mat <- matrix(runif(16), 4, 4)
+rownames(mat) <- colnames(mat) <- LETTERS[1:4]
+csum(mat, c(1, 1, 2, 2))
 }
 }
 \seealso{

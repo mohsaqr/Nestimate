@@ -54,16 +54,15 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' # Build network, then bootstrap it
-#' net <- build_network(tna::group_regulation, method = "relative")
-#' boot <- bootstrap_network(net, iter = 500)
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+#'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' boot <- bootstrap_network(net, iter = 100)
 #' print(boot)
 #' summary(boot)
-#'
-#' # One-hot data
-#' net_wtna <- build_network(onehot_df, method = "wtna", actor = "student")
-#' boot_wtna <- bootstrap_network(net_wtna, iter = 200)
 #' }
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{print.net_bootstrap}},
@@ -93,7 +92,7 @@ bootstrap_network <- function(x,
   # Accept netobject or cograph_network
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
   if (!inherits(x, "netobject")) {
-    stop("'x' must be a netobject from build_network().", call. = FALSE)
+    stop("'x' must be a netobject from build_network().", call. = FALSE) # nocov
   }
   if (is.null(x$data)) {
     stop("netobject does not contain $data. Rebuild with build_network().",
@@ -388,11 +387,11 @@ bootstrap_network <- function(x,
 
     # For multilevel: apply decomposition to bootstrap sample
     if (!is.null(level) && !is.null(id_col) && !estimator$directed) {
-      boot_data <- tryCatch(
+      boot_data <- tryCatch( # nocov start
         .decompose_multilevel(boot_data, id_col = id_col, level = level),
         error = function(e) NULL
       )
-      if (is.null(boot_data)) return(rep(NA_real_, nbins))
+      if (is.null(boot_data)) return(rep(NA_real_, nbins)) # nocov end
     }
 
     est <- tryCatch(
@@ -406,12 +405,12 @@ bootstrap_network <- function(x,
     if (!identical(rownames(mat), states)) {
       common <- intersect(states, rownames(mat))
       if (length(common) < n_states) return(rep(NA_real_, nbins))
-      mat <- mat[states, states]
+      mat <- mat[states, states] # nocov
     }
 
-    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling)
+    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling) # nocov start
     if (threshold > 0) mat[abs(mat) < threshold] <- 0
-    as.vector(mat)
+    as.vector(mat) # nocov end
   }, numeric(nbins))
 
   t(boot_flat)

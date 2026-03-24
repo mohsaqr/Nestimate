@@ -30,15 +30,11 @@ For "scaled" type, each row is divided by its sum to create valid transition
 probabilities. This is useful when the original weights don't sum to 1.
 }
 \examples{
-\dontrun{
-# Extract transition matrix from fitted model
-model <- tna::tna(sequences)
-trans_mat <- extract_transition_matrix(model)
+\donttest{
+seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
+net <- build_network(seqs, method = "relative")
+trans_mat <- extract_transition_matrix(net)
 print(trans_mat)
-
-# Get row-normalized version
-trans_mat_scaled <- extract_transition_matrix(model, type = "scaled")
-rowSums(trans_mat_scaled)  # Should all be 1
 }
 
 }

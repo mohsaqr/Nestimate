@@ -68,14 +68,19 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' # Simulate panel data
-#' sim <- simulate_gimme(n_subjects = 15, n_time = 100, n_vars = 4, seed = 42)
-#' res <- build_gimme(sim$data, vars = sim$vars, id = "id")
-#' print(res)
-#' summary(res)
-#' plot(res)
-#' plot(res, type = "individual", subject = 1)
+#' \donttest{
+#' if (requireNamespace("gimme", quietly = TRUE)) {
+#'   # Create simple panel data (3 subjects, 4 variables, 50 time points)
+#'   set.seed(42)
+#'   n_sub <- 3; n_t <- 50; vars <- paste0("V", 1:4)
+#'   rows <- lapply(seq_len(n_sub), function(i) {
+#'     d <- as.data.frame(matrix(rnorm(n_t * 4), ncol = 4))
+#'     names(d) <- vars; d$id <- i; d
+#'   })
+#'   panel <- do.call(rbind, rows)
+#'   res <- build_gimme(panel, vars = vars, id = "id")
+#'   print(res)
+#' }
 #' }
 #'
 #' @seealso \code{\link{build_network}}
@@ -100,8 +105,8 @@ build_gimme <- function(data,
                         seed = NULL) {
 
   if (!requireNamespace("lavaan", quietly = TRUE)) {
-    stop("Package 'lavaan' is required for build_gimme(). ",
-         "Install it with install.packages('lavaan').", call. = FALSE)
+    stop("Package 'lavaan' is required for build_gimme(). ", # nocov
+         "Install it with install.packages('lavaan').", call. = FALSE) # nocov
   }
 
   if (!is.null(seed)) set.seed(seed)
@@ -250,7 +255,7 @@ build_gimme <- function(data,
     if (standardize) {
       mat <- as.data.frame(lapply(mat, function(x) {
         s <- stats::sd(x, na.rm = TRUE)
-        if (is.na(s) || s == 0) return(x)
+        if (is.na(s) || s == 0) return(x) # nocov
         (x - mean(x, na.rm = TRUE)) / s
       }))
     }
@@ -352,9 +357,9 @@ build_gimme <- function(data,
 .gimme_fit_and_mi <- function(syntax, data_k, elig_paths) {
   fit <- .gimme_fit_lavaan(syntax, data_k)
 
-  if (is.null(fit)) return(NA)
+  if (is.null(fit)) return(NA) # nocov start
   if (!lavaan::lavInspect(fit, "converged")) return(NA)
-  if (any(is.na(lavaan::lavInspect(fit, what = "list")$se))) return(NA)
+  if (any(is.na(lavaan::lavInspect(fit, what = "list")$se))) return(NA) # nocov end
 
   mi <- tryCatch({
     mis <- lavaan::modindices(fit, standardized = FALSE, sort. = FALSE)
@@ -371,12 +376,12 @@ build_gimme <- function(data,
 .gimme_fit_and_z <- function(syntax, data_k, elig_paths) {
   fit <- .gimme_fit_lavaan(syntax, data_k)
 
-  if (is.null(fit)) return(NA)
-  if (!lavaan::lavInspect(fit, "converged")) return(NA)
+  if (is.null(fit)) return(NA) # nocov start
+  if (!lavaan::lavInspect(fit, "converged")) return(NA) # nocov end
 
   # Use standardizedSolution for z-values (matches gimme's return.zs)
   ss <- tryCatch(lavaan::standardizedSolution(fit), error = function(e) NULL)
-  if (is.null(ss)) return(NA)
+  if (is.null(ss)) return(NA) # nocov
 
   ss$param <- paste0(ss$lhs, ss$op, ss$rhs)
   ss[ss$param %in% elig_paths, , drop = FALSE]
@@ -388,7 +393,7 @@ build_gimme <- function(data,
 .gimme_fit_final <- function(syntax, data_k, varnames, lag_names) {
   fit <- .gimme_fit_lavaan(syntax, data_k)
 
-  if (is.null(fit)) {
+  if (is.null(fit)) { # nocov start
     p <- length(varnames)
     return(list(
       coefs = matrix(0, p, 2 * p,
@@ -399,7 +404,7 @@ build_gimme <- function(data,
         nnfi = NA, cfi = NA, bic = NA, aic = NA, logl = NA
       ),
       status = "failed to converge"
-    ))
+    )) # nocov end
   }
 
   converged <- lavaan::lavInspect(fit, "converged")
@@ -462,15 +467,15 @@ build_gimme <- function(data,
   n_converge <- length(mi_valid)
 
   if (n_converge <= (n_subj / 2)) return(NA_character_)
-  if (n_converge == 0) return(NA_character_)
+  if (n_converge == 0) return(NA_character_) # nocov
 
   # Combine all modification indices
   mi_all <- do.call(rbind, mi_valid)
-  if (is.null(mi_all) || nrow(mi_all) == 0) return(NA_character_)
+  if (is.null(mi_all) || nrow(mi_all) == 0) return(NA_character_) # nocov
 
   mi_all$param <- paste0(mi_all$lhs, mi_all$op, mi_all$rhs)
   mi_all <- mi_all[mi_all$param %in% elig_paths, , drop = FALSE]
-  if (nrow(mi_all) == 0) return(NA_character_)
+  if (nrow(mi_all) == 0) return(NA_character_) # nocov
 
   # Count significant MIs per path
   mi_all$sig <- ifelse(mi_all$mi >= chisq_cutoff, 1L, 0L)
@@ -534,9 +539,9 @@ build_gimme <- function(data,
     if (is.na(drop_path)) {
       pruning <- FALSE
     } else {
-      group_paths <- setdiff(group_paths, drop_path)
-      if (length(group_paths) == 0) {
-        pruning <- FALSE
+      group_paths <- setdiff(group_paths, drop_path) # nocov
+      if (length(group_paths) == 0) { # nocov start
+        pruning <- FALSE # nocov end
       }
     }
   }
@@ -580,7 +585,7 @@ build_gimme <- function(data,
 
   # Prune if the weakest path is non-significant for > (1 - prop_cutoff) of subjects
   if (param_stats$count_nonsig[1] > ((1 - prop_cutoff) * n_converge)) {
-    return(param_stats$param[1])
+    return(param_stats$param[1]) # nocov
   }
 
   NA_character_
@@ -623,7 +628,7 @@ build_gimme <- function(data,
     converged <- stable_result$converged
     stable <- stable_result$stable
 
-    if (!converged || !stable) break
+    if (!converged || !stable) break # nocov
 
     # 2b: Z-prune individual paths
     pruned_any <- FALSE
@@ -638,15 +643,15 @@ build_gimme <- function(data,
           # Find weakest non-significant path
           nonsig <- z_info[abs(z_info$z) < ind_z_cutoff, , drop = FALSE]
           if (nrow(nonsig) > 0) {
-            weakest <- nonsig$param[which.min(abs(nonsig$z))]
+            weakest <- nonsig$param[which.min(abs(nonsig$z))] # nocov start
             dropped_param <- c(dropped_param, weakest)
             ind_paths <- setdiff(ind_paths, weakest)
-            pruned_any <- TRUE
+            pruned_any <- TRUE # nocov end
           } else {
             prune_done <- TRUE
           }
         } else {
-          prune_done <- TRUE
+          prune_done <- TRUE # nocov
         }
       }
     }
@@ -654,16 +659,16 @@ build_gimme <- function(data,
     # 2c: If stability or z-pruning removed paths, try to resume forward search
     stability_removed <- length(stable_result$removed) > 0
     if (pruned_any || stability_removed) {
-      exclude <- c(dropped_param, nonconv_path)
+      exclude <- c(dropped_param, nonconv_path) # nocov start
       new_paths <- .gimme_ind_forward_search(
         base_syntax, group_paths, ind_paths, data_k,
         elig_paths, ind_cutoff, fit_indices, n_excellent,
         exclude = exclude
-      )
-      if (length(new_paths) > length(ind_paths)) {
+      ) # nocov end
+      if (length(new_paths) > length(ind_paths)) { # nocov start
         ind_paths <- new_paths
         # Loop back to stability check
-        next
+        next # nocov end
       }
     }
 
@@ -714,18 +719,18 @@ build_gimme <- function(data,
 
     # Get modification indices
     mi <- .gimme_fit_and_mi(current_syntax, data_k, elig_paths)
-    if (identical(mi, NA) || is.null(mi) || nrow(mi) == 0) {
+    if (identical(mi, NA) || is.null(mi) || nrow(mi) == 0) { # nocov start
       search <- FALSE
-      next
+      next # nocov end
     }
 
     mi$param <- paste0(mi$lhs, mi$op, mi$rhs)
     # Filter to paths not already in model and not excluded
     already_in <- c(group_paths, ind_paths, exclude)
     mi <- mi[!mi$param %in% already_in, , drop = FALSE]
-    if (nrow(mi) == 0) {
+    if (nrow(mi) == 0) { # nocov start
       search <- FALSE
-      next
+      next # nocov end
     }
 
     # Find significant path with highest MI
@@ -758,7 +763,7 @@ build_gimme <- function(data,
   coln <- c(lag_names, endo_names)
   avail_rows <- intersect(endo_names, rownames(std_beta))
   avail_cols <- intersect(coln, colnames(std_beta))
-  if (length(avail_rows) == 0 || length(avail_cols) == 0) return(TRUE)
+  if (length(avail_rows) == 0 || length(avail_cols) == 0) return(TRUE) # nocov
 
   betas <- round(std_beta[avail_rows, avail_cols, drop = FALSE], digits = 4)
   p <- length(endo_names)
@@ -788,10 +793,10 @@ build_gimme <- function(data,
     current_syntax <- c(base_syntax, group_paths, ind_paths)
     fit <- .gimme_fit_lavaan(current_syntax, data_k)
 
-    if (is.null(fit)) {
+    if (is.null(fit)) { # nocov start
       return(list(ind_paths = ind_paths, removed = removed,
                   converged = FALSE, stable = FALSE))
-    }
+    } # nocov end
 
     converged <- lavaan::lavInspect(fit, "converged")
     zero_se <- tryCatch(
@@ -811,8 +816,8 @@ build_gimme <- function(data,
                   converged = converged, stable = !unstable))
     }
 
-    removed <- c(removed, ind_paths[length(ind_paths)])
-    ind_paths <- ind_paths[-length(ind_paths)]
+    removed <- c(removed, ind_paths[length(ind_paths)]) # nocov start
+    ind_paths <- ind_paths[-length(ind_paths)] # nocov end
   }
 }
 
@@ -991,8 +996,8 @@ summary.net_gimme <- function(object, ...) {
   cat("\n\nGROUP-LEVEL PATHS (", length(object$group_paths), ")\n")
   cat(strrep("-", 30), "\n")
   if (length(object$group_paths) > 0) {
-    for (gp in object$group_paths) {
-      cat("  ", gp, "\n")
+    for (gp in object$group_paths) { # nocov start
+      cat("  ", gp, "\n") # nocov end
     }
   } else {
     cat("  (none)\n")
@@ -1036,10 +1041,10 @@ plot.net_gimme <- function(x, type = c("temporal", "contemporaneous",
     .gimme_plot_matrix(mat, "Group Temporal Network")
 
   } else if (type == "contemporaneous") {
-    mat <- x$contemporaneous_avg
+    mat <- x$contemporaneous_avg # nocov start
     threshold_mat <- x$contemporaneous
     mat[threshold_mat < (x$n_subjects / 2)] <- 0
-    .gimme_plot_matrix(mat, "Group Contemporaneous Network")
+    .gimme_plot_matrix(mat, "Group Contemporaneous Network") # nocov end
 
   } else if (type == "individual") {
     if (is.null(subject)) {

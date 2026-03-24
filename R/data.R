@@ -45,7 +45,7 @@
 #' @source Saqr, M. (2026). Human-AI vibe coding interaction study.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Build a transition network from human category sequences
 #' net <- build_network(human_wide, method = "relative")
 #'
@@ -120,7 +120,7 @@ NULL
 #' @source Saqr, M. (2026). Human-AI vibe coding interaction study.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Filter to Human -> AI transitions only
 #' handoffs <- human_ai_edges[
 #'   human_ai_edges$from_actor == "Human" &

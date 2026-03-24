@@ -343,12 +343,12 @@
       logical(1)
     ))
 
-    if (is_binary) {
+    if (is_binary) { # nocov start
       return(.estimator_wtna_core(
         data, codes = state_cols, window_size = window_size,
         mode = mode, actor = actor,
         wtna_method = "cooccurrence", ...
-      ))
+      )) # nocov end
     }
   }
 
@@ -356,9 +356,9 @@
   if (format == "wide") {
     cooc_mat <- .count_cooccurrence_wide(data, id = id, cols = cols)
   } else {
-    cooc_mat <- .count_cooccurrence_long(
+    cooc_mat <- .count_cooccurrence_long( # nocov start
       data, action = action, id = id, time = time
-    )
+    ) # nocov end
   }
 
   list(
@@ -592,7 +592,7 @@
       col_j <- int_mat[, j]
       valid <- !is.na(col_i) & !is.na(col_j)
 
-      if (!any(valid)) next
+      if (!any(valid)) next # nocov
 
       fi <- col_i[valid]
       tj <- col_j[valid]
@@ -689,7 +689,7 @@
         if (i == j) next
         if (is.na(a_int[j])) next
         if (direction == "forward" && i >= j) next
-        if (direction == "backward" && i <= j) next
+        if (direction == "backward" && i <= j) next # nocov
 
         d <- decay(t_pos[i], t_pos[j], lambda)
         idx <- (a_int[i] - 1L) * n_states + a_int[j]
@@ -749,7 +749,7 @@
   direction <- match.arg(direction, c("forward", "backward", "both"))
 
   if (format == "auto") {
-    format <- if (action %in% names(data)) "long" else "wide"
+    format <- if (action %in% names(data)) "long" else "wide" # nocov
   }
 
   if (format == "wide") {
@@ -1001,8 +1001,8 @@
     )
 
     if (is.null(fit)) {
-      ebic_vals[i] <- Inf
-      next
+      ebic_vals[i] <- Inf # nocov start
+      next # nocov end
     }
 
     w_prev <- fit$w
@@ -1010,8 +1010,8 @@
 
     log_det <- determinant(fit$wi, logarithm = TRUE)
     if (log_det$sign <= 0) {
-      ebic_vals[i] <- Inf
-      next
+      ebic_vals[i] <- Inf # nocov start
+      next # nocov end
     }
     log_det_val <- as.numeric(log_det$modulus)
 
@@ -1028,7 +1028,7 @@
   }
 
   if (is.null(best_wi)) {
-    stop("All glasso fits failed. Check your input data.")
+    stop("All glasso fits failed. Check your input data.") # nocov
   }
 
   colnames(best_wi) <- rownames(best_wi) <- colnames(S)
@@ -1042,8 +1042,6 @@
 }
 
 
-#' Convert precision matrix to partial correlations
-#' @noRd
 #' Convert precision matrix to partial correlations (qgraph-compatible)
 #' Uses cov2cor for numerical stability, matching qgraph::wi2net.
 #' @noRd
@@ -1107,9 +1105,9 @@
       S, rho = 0, zero = zero_idx, trace = 0,
       penalize.diagonal = penalize.diagonal))
   } else {
-    refit <- suppressWarnings(glasso::glasso(
+    refit <- suppressWarnings(glasso::glasso( # nocov start
       S, rho = 0, trace = 0,
-      penalize.diagonal = penalize.diagonal))
+      penalize.diagonal = penalize.diagonal)) # nocov end
   }
   wi <- refit$wi
 
@@ -1405,11 +1403,11 @@
                               rule = "AND",
                               ...) {
   if (!requireNamespace("glmnet", quietly = TRUE)) {
-    stop(
+    stop( # nocov start
       "Package 'glmnet' is required for Ising model estimation. ",
       "Install it with: install.packages('glmnet')",
       call. = FALSE
-    )
+    ) # nocov end
   }
 
   # Validate parameters

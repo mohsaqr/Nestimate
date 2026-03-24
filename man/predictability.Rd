@@ -23,6 +23,10 @@ For \code{netobject}: a named numeric vector of R\eqn{^2} values
 
 For \code{netobject_ml}: a list with elements \code{$between} and
 \code{$within}, each a named numeric vector.
+
+A named numeric vector of predictability values per node.
+
+A list with \code{within} and \code{between} predictability vectors.
 }
 \description{
 Computes the proportion of variance explained (R\eqn{^2}) for each node in
@@ -37,13 +41,12 @@ For \code{method = "cor"}, predictability is the multiple R\eqn{^2} from
 regressing each node on its network neighbors (nodes with non-zero edges).
 }
 \examples{
-\dontrun{
-freq <- convert_sequence_format(group_regulation, format = "frequency")
-net <- build_network(freq, method = "glasso")
+\donttest{
+set.seed(42)
+mat <- matrix(rnorm(60), ncol = 4)
+colnames(mat) <- LETTERS[1:4]
+net <- build_network(as.data.frame(mat), method = "glasso")
 predictability(net)
-
-# Plot with predictability rings
-plot(net, predictability = TRUE)
 }
 
 }

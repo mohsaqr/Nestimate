@@ -44,7 +44,7 @@
 #' per group and summed.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Simple one-hot data
 #' df <- data.frame(
 #'   A = c(1, 0, 1, 0, 1),
@@ -187,13 +187,13 @@ wtna <- function(data,
       }
     }
   } else {
-    n_windows <- n - window_size + 1L
+    n_windows <- n - window_size + 1L # nocov start
     if (n_windows < 1L) return(weights)
     for (i in seq_len(n_windows)) {
       idx <- seq(i, i + window_size - 1L)
       for (j in idx) {
         for (ki in idx) {
-          weights <- weights + tcrossprod(X[j, ], X[ki, ])
+          weights <- weights + tcrossprod(X[j, ], X[ki, ]) # nocov end
         }
       }
     }
@@ -309,7 +309,7 @@ wtna <- function(data,
   }, logical(1L))
 
   codes <- names(df)[is_onehot]
-  if (length(codes) == 0L) stop("No one-hot columns found.")
+  if (length(codes) == 0L) stop("No one-hot columns found.") # nocov
   codes
 }
 

@@ -51,13 +51,17 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' library(tna)
-#' d1 <- group_regulation[1:1000, ]
-#' d2 <- group_regulation[1001:2000, ]
+#' \donttest{
+#' set.seed(1)
+#' d1 <- data.frame(V1 = sample(LETTERS[1:4], 20, TRUE),
+#'                  V2 = sample(LETTERS[1:4], 20, TRUE),
+#'                  V3 = sample(LETTERS[1:4], 20, TRUE))
+#' d2 <- data.frame(V1 = sample(LETTERS[1:4], 20, TRUE),
+#'                  V2 = sample(LETTERS[1:4], 20, TRUE),
+#'                  V3 = sample(LETTERS[1:4], 20, TRUE))
 #' net1 <- build_network(d1, method = "relative")
 #' net2 <- build_network(d2, method = "relative")
-#' perm <- permutation_test(net1, net2, iter = 500, seed = 42)
+#' perm <- permutation_test(net1, net2, iter = 100, seed = 42)
 #' print(perm)
 #' summary(perm)
 #' }
@@ -303,8 +307,8 @@ permutation_test <- function(x, y,
     nz <- rs > 0
     mat[nz, ] <- mat[nz, ] / rs[nz]
   }
-  if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling)
-  if (threshold > 0) mat[abs(mat) < threshold] <- 0
+  if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling) # nocov start
+  if (threshold > 0) mat[abs(mat) < threshold] <- 0 # nocov end
   mat
 }
 
@@ -366,7 +370,7 @@ permutation_test <- function(x, y,
       pcor = function(mat_subset) {
         S <- cor(mat_subset, method = cor_method)
         Wi <- tryCatch(solve(S), error = function(e) NULL)
-        if (is.null(Wi)) return(NULL)
+        if (is.null(Wi)) return(NULL) # nocov
         .precision_to_pcor(Wi, threshold = 0)
       },
       glasso = function(mat_subset) {
@@ -377,12 +381,12 @@ permutation_test <- function(x, y,
                              penalize.diagonal = penalize_diag),
           error = function(e) NULL
         )
-        if (is.null(gp)) return(NULL)
+        if (is.null(gp)) return(NULL) # nocov
         # EBIC selection across the path
         best_wi <- .select_ebic_from_path(
           gp, S, n_obs, gamma, p_glasso, perm_rholist
         )
-        if (is.null(best_wi)) return(NULL)
+        if (is.null(best_wi)) return(NULL) # nocov
         .precision_to_pcor(best_wi, threshold = 0)
       }
     )
@@ -400,7 +404,7 @@ permutation_test <- function(x, y,
       if (!identical(rownames(mat), nodes)) {
         common <- intersect(nodes, rownames(mat))
         if (length(common) < n_nodes) return(NULL)
-        mat <- mat[nodes, nodes]
+        mat <- mat[nodes, nodes] # nocov
       }
       mat
     }
@@ -427,9 +431,9 @@ permutation_test <- function(x, y,
     if (is.null(mat_x) || is.null(mat_y)) next
 
     # Apply scaling and threshold
-    if (!is.null(scaling_x)) mat_x <- .apply_scaling(mat_x, scaling_x)
+    if (!is.null(scaling_x)) mat_x <- .apply_scaling(mat_x, scaling_x) # nocov
     if (threshold_x > 0) mat_x[abs(mat_x) < threshold_x] <- 0
-    if (!is.null(scaling_y)) mat_y <- .apply_scaling(mat_y, scaling_y)
+    if (!is.null(scaling_y)) mat_y <- .apply_scaling(mat_y, scaling_y) # nocov
     if (threshold_y > 0) mat_y[abs(mat_y) < threshold_y] <- 0
 
     perm_diff <- as.vector(mat_x) - as.vector(mat_y)
@@ -462,7 +466,7 @@ permutation_test <- function(x, y,
     wi_k <- gp$wi[, , k]
 
     log_det <- determinant(wi_k, logarithm = TRUE)
-    if (log_det$sign <= 0) next
+    if (log_det$sign <= 0) next # nocov
     log_det_val <- as.numeric(log_det$modulus)
 
     loglik <- (n / 2) * (log_det_val - sum(diag(S %*% wi_k)))

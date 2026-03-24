@@ -29,8 +29,12 @@ decreasing weight thresholds and tracking the birth/death of
 topological features.
 }
 \examples{
-\dontrun{
-net <- build_network(group_regulation, method = "tna")
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
 ph <- persistent_homology(net, n_steps = 15)
 print(ph)
 }

@@ -21,10 +21,13 @@ entropy per k.
 Compare MMM fits across different k
 }
 \examples{
-\dontrun{
-comp <- compare_mmm(data, k = 2:5, seed = 42)
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
+  V3 = sample(LETTERS[1:3], 30, TRUE), V4 = sample(LETTERS[1:3], 30, TRUE)
+)
+comp <- compare_mmm(seqs, k = 2:3, seed = 42)
 print(comp)
-plot(comp)
 }
 
 }

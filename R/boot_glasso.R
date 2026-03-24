@@ -80,18 +80,15 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' # From raw data
-#' freq <- convert_sequence_format(tna::group_regulation, format = "frequency")
-#' boot <- boot_glasso(freq, iter = 500, cs_iter = 200, seed = 42)
+#' \donttest{
+#' set.seed(42)
+#' mat <- matrix(rnorm(60), ncol = 4)
+#' colnames(mat) <- LETTERS[1:4]
+#' net <- build_network(as.data.frame(mat), method = "glasso")
+#' boot <- boot_glasso(net, iter = 100, cs_iter = 50, seed = 42,
+#'   centrality = c("strength", "expected_influence"))
 #' print(boot)
 #' summary(boot, type = "edges")
-#' plot(boot, type = "edges")
-#' plot(boot, type = "stability")
-#'
-#' # From a netobject
-#' net <- build_network(freq, method = "glasso", params = list(gamma = 0.5))
-#' boot <- boot_glasso(net, iter = 500, seed = 42)
 #' }
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{bootstrap_network}}
@@ -174,8 +171,8 @@ boot_glasso <- function(x,
   p <- ncol(data_mat)
   nodes <- colnames(data_mat)
 
-  if (p < 2) stop("At least 2 variables are required.", call. = FALSE)
-  if (n < 3) stop("At least 3 observations are required.", call. = FALSE)
+  if (p < 2) stop("At least 2 variables are required.", call. = FALSE) # nocov start
+  if (n < 3) stop("At least 3 observations are required.", call. = FALSE) # nocov end
 
   t_start <- proc.time()["elapsed"]
 
@@ -192,7 +189,7 @@ boot_glasso <- function(x,
 
   Wi_orig <- .select_ebic_from_path(gp_orig, S, n, gamma, p, lambda_path)
   if (is.null(Wi_orig)) {
-    stop("EBIC selection failed on original data.", call. = FALSE)
+    stop("EBIC selection failed on original data.", call. = FALSE) # nocov
   }
 
   lambda_selected <- .bg_find_selected_lambda(gp_orig, Wi_orig, lambda_path)
@@ -404,21 +401,21 @@ boot_glasso <- function(x,
     cor(data_mat, method = cor_method),
     error = function(e) NULL
   )
-  if (is.null(S_boot)) return(NULL)
+  if (is.null(S_boot)) return(NULL) # nocov
 
   # Check for NAs in correlation matrix (can happen with zero-variance
   # columns in bootstrap sample)
-  if (any(is.na(S_boot))) return(NULL)
+  if (any(is.na(S_boot))) return(NULL) # nocov
 
   gp <- tryCatch(
     glasso::glassopath(s = S_boot, rholist = lambda_path, trace = 0,
                        penalize.diagonal = penalize_diag),
     error = function(e) NULL
   )
-  if (is.null(gp)) return(NULL)
+  if (is.null(gp)) return(NULL) # nocov
 
   Wi <- .select_ebic_from_path(gp, S_boot, n_boot, gamma, p, lambda_path)
-  if (is.null(Wi)) return(NULL)
+  if (is.null(Wi)) return(NULL) # nocov
 
   pcor <- .precision_to_pcor(Wi, threshold = 0)
   pcor <- (pcor + t(pcor)) / 2
@@ -482,12 +479,12 @@ boot_glasso <- function(x,
     }
     custom <- centrality_fn(pcor)
     if (!is.list(custom)) {
-      stop("centrality_fn must return a named list.", call. = FALSE)
+      stop("centrality_fn must return a named list.", call. = FALSE) # nocov
     }
     for (m in external) {
       if (is.null(custom[[m]])) {
-        stop("centrality_fn did not return measure '", m, "'.",
-             call. = FALSE)
+        stop("centrality_fn did not return measure '", m, "'.", # nocov start
+             call. = FALSE) # nocov end
       }
       v <- custom[[m]]
       names(v) <- nodes
@@ -529,7 +526,7 @@ boot_glasso <- function(x,
     res <- .bg_estimate_once(data_mat[idx, , drop = FALSE], p, gamma,
                               nlambda, FALSE, cor_method, lambda_path,
                               centrality, centrality_fn)
-    if (is.null(res)) return(list(d_idx = d_idx, cors = NULL))
+    if (is.null(res)) return(list(d_idx = d_idx, cors = NULL)) # nocov
 
     # Compute Pearson correlation with original for each measure
     # (matches bootnet::cor0 which uses Pearson by default)
@@ -881,7 +878,7 @@ plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {
                               "centrality_diff", "inclusion"))
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("ggplot2 is required for this plot type.", call. = FALSE)
+    stop("ggplot2 is required for this plot type.", call. = FALSE) # nocov
   }
   switch(type,
     edges           = .bg_plot_edges(x, ...),

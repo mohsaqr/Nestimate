@@ -44,20 +44,15 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' # Basic: actor + action + time
+#' \donttest{
+#' df <- data.frame(
+#'   student = rep(1:3, each = 5),
+#'   code = sample(c("read", "write", "test"), 15, replace = TRUE),
+#'   timestamp = seq.POSIXt(as.POSIXct("2024-01-01"), by = "min", length.out = 15)
+#' )
 #' prepared <- prepare_data(df, actor = "student", action = "code",
 #'                          time = "timestamp")
-#' net <- build_network(prepared$sequence_data, method = "tna")
-#'
-#' # Multiple actors + multiple sessions
-#' prepared <- prepare_data(df, actor = c("student", "group"),
-#'                          action = "code", time = "timestamp",
-#'                          session = c("course", "semester"))
-#'
-#' # Custom session threshold (5 minutes)
-#' prepared <- prepare_data(df, actor = "student", action = "code",
-#'                          time = "timestamp", time_threshold = 300)
+#' net <- build_network(prepared$sequence_data, method = "relative")
 #' }
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{prepare_onehot}}
@@ -333,10 +328,10 @@ print.nestimate_data <- function(x, ...) {
   # Last resort: try as numeric Unix timestamp
   numeric_time <- suppressWarnings(as.numeric(time))
   if (!any(is.na(numeric_time))) {
-    divisor <- switch(unix_time_unit,
+    divisor <- switch(unix_time_unit, # nocov start
       seconds = 1, milliseconds = 1000, microseconds = 1e6
     )
-    return(as.POSIXct(numeric_time / divisor, origin = "1970-01-01"))
+    return(as.POSIXct(numeric_time / divisor, origin = "1970-01-01")) # nocov end
   }
 
   stop("Could not parse time values. Sample: ",

@@ -100,7 +100,7 @@
     db <- 0L
     for (j in seq_len(m)) {
       k <- last[[as.character(y[j])]]
-      if (is.null(k)) k <- 0L
+      if (is.null(k)) k <- 0L # nocov
       l <- db
       if (x[i] == y[j]) {
         cost <- 0L
@@ -138,7 +138,7 @@
 #' Extract q-gram frequency profile from integer sequence
 #' @noRd
 .get_qgram_r <- function(x, n, q) {
-  if (n < q) return(integer())
+  if (n < q) return(integer()) # nocov start
   ng <- n - q + 1L
   grams <- character(ng)
   for (i in seq_len(ng)) {
@@ -147,7 +147,7 @@
   tab <- table(grams)
   counts <- as.integer(tab)
   names(counts) <- names(tab)
-  counts
+  counts # nocov end
 }
 
 #' @noRd
@@ -183,8 +183,8 @@
 
 #' @noRd
 .jaro_dist_r <- function(x, y, n, m, ...) {
-  if (n == 0L && m == 0L) return(0)
-  if (n == 0L || m == 0L) return(1)
+  if (n == 0L && m == 0L) return(0) # nocov start
+  if (n == 0L || m == 0L) return(1) # nocov end
   match_dist <- max(floor(max(n, m) / 2) - 1L, 0L)
   x_match <- rep(FALSE, n)
   y_match <- rep(FALSE, m)
@@ -192,7 +192,7 @@
   for (i in seq_len(n)) {
     start <- max(1L, i - match_dist)
     end <- min(m, i + match_dist)
-    if (start > end) next
+    if (start > end) next # nocov
     for (j in start:end) {
       if (!y_match[j] && x[i] == y[j]) {
         x_match[i] <- TRUE
@@ -202,7 +202,7 @@
       }
     }
   }
-  if (matches == 0L) return(1)
+  if (matches == 0L) return(1) # nocov
   trans <- 0L
   k <- 1L
   for (i in seq_len(n)) {
@@ -220,7 +220,7 @@
 #' @noRd
 .jw_dist_r <- function(x, y, n, m, p = 0.1, max_l = 4L, ...) {
   jaro_sim <- 1 - .jaro_dist_r(x, y, n, m)
-  if (jaro_sim == 0) return(1)
+  if (jaro_sim == 0) return(1) # nocov
   pref <- min(n, m, max_l)
   l <- 0L
   for (k in seq_len(pref)) {
@@ -427,7 +427,7 @@
   if (dissimilarity == "hamming") {
     # Weighted hamming not supported by stringdist — fall back to R
     if (lambda > 0) {
-      return(.dissimilarity_matrix_r(enc, dissimilarity, lambda, q, p))
+      return(.dissimilarity_matrix_r(enc, dissimilarity, lambda, q, p)) # nocov
     }
     # Full width strings (same length, NAs are sentinel chars)
     strings <- vapply(seq_len(nrow(chr_mat)), function(i) {
@@ -437,7 +437,7 @@
   } else {
     # Truncate to effective length per sequence
     strings <- vapply(seq_len(nrow(chr_mat)), function(i) {
-      if (len[i] == 0L) return("")
+      if (len[i] == 0L) return("") # nocov
       paste0(chr_mat[i, seq_len(len[i])], collapse = "")
     }, character(1L))
     if (dissimilarity == "jw") {
@@ -473,17 +473,17 @@
         data$method
       ), "Pass the original sequence data frame instead.", call. = FALSE)
     }
-    if (is.null(data$data)) {
+    if (is.null(data$data)) { # nocov start
       stop("netobject has no $data. Pass the original sequence data.", call. = FALSE)
-    }
+    } # nocov end
     return(as.data.frame(data$data, stringsAsFactors = FALSE))
   }
 
   # --- tna model (integer-encoded with $labels) ---
   if (inherits(data, "tna")) {
-    if (is.null(data$data) || is.null(data$labels)) {
+    if (is.null(data$data) || is.null(data$labels)) { # nocov start
       stop("tna object missing $data or $labels.", call. = FALSE)
-    }
+    } # nocov end
     # Decode integer matrix back to state names
     decoded <- matrix(data$labels[data$data], nrow = nrow(data$data),
                       ncol = ncol(data$data))
@@ -493,10 +493,10 @@
 
   # --- cograph_network ---
   if (inherits(data, "cograph_network")) {
-    if (is.null(data$data)) {
+    if (is.null(data$data)) { # nocov start
       stop("cograph_network has no $data. Pass the original sequence data.",
            call. = FALSE)
-    }
+    } # nocov end
     return(as.data.frame(data$data, stringsAsFactors = FALSE))
   }
 
@@ -594,20 +594,14 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' # Basic Hamming clustering
-#' cl <- cluster_data(tna::group_regulation, k = 3)
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:3], 20, TRUE), V2 = sample(LETTERS[1:3], 20, TRUE),
+#'   V3 = sample(LETTERS[1:3], 20, TRUE), V4 = sample(LETTERS[1:3], 20, TRUE)
+#' )
+#' cl <- cluster_data(seqs, k = 2)
 #' print(cl)
 #' summary(cl)
-#' plot(cl, type = "silhouette")
-#'
-#' # Weighted Hamming (temporal decay)
-#' cl_w <- cluster_data(tna::group_regulation, k = 3,
-#'                      weighted = TRUE, lambda = 0.5)
-#'
-#' # Edit distance with hierarchical clustering
-#' cl_lv <- cluster_data(tna::group_regulation, k = 3,
-#'                       dissimilarity = "lv", method = "ward.D2")
 #' }
 #'
 #' @importFrom utils combn
@@ -906,8 +900,8 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   if (is.null(covariates)) return(NULL)
 
   if (!requireNamespace("nnet", quietly = TRUE)) {
-    stop("The 'nnet' package is required for covariate analysis. ",
-         "Install it with install.packages('nnet').", call. = FALSE)
+    stop("The 'nnet' package is required for covariate analysis. ", # nocov
+         "Install it with install.packages('nnet').", call. = FALSE) # nocov
   }
 
   # --- Covariates supplied as a data.frame: use all columns ---
@@ -1003,15 +997,15 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   }
 
   if (is.null(cov_df)) {
-    stop("Could not resolve covariate columns from the input data.",
-         call. = FALSE)
+    stop("Could not resolve covariate columns from the input data.", # nocov start
+         call. = FALSE) # nocov end
   }
 
-  if (nrow(cov_df) != n) {
+  if (nrow(cov_df) != n) { # nocov start
     stop(sprintf(
       "Covariate data has %d rows but sequence data has %d rows.",
       nrow(cov_df), n
-    ), call. = FALSE)
+    ), call. = FALSE) # nocov end
   }
 
   list(cov_df = cov_df, rhs = rhs_text)

@@ -15,6 +15,10 @@ A list with elements \code{fn}, \code{description}, \code{directed}.
 \description{
 Retrieve a registered network estimator by name.
 }
+\examples{
+est <- get_estimator("relative")
+
+}
 \seealso{
 \code{\link{register_estimator}}, \code{\link{list_estimators}}
 }

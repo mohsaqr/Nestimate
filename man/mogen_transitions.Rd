@@ -37,10 +37,11 @@ For example, at order 2, the edge from node "AI -> FAIL" to node
 The \code{path} column reconstructs this full sequence for readability.
 }
 \examples{
-\dontrun{
+\donttest{
+trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
+              c("B","C","D","A"), c("C","D","A","B"))
 m <- build_mogen(trajs, max_order = 3)
-mogen_transitions(m, order = 1)             # first-order
-mogen_transitions(m, order = 2, min_count = 5)  # second-order, frequent only
+mogen_transitions(m, order = 1)
 }
 
 }

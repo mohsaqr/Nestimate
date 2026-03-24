@@ -83,11 +83,15 @@ for fast resampling. Strength centralities (InStrength, OutStrength)
 are computed directly from the matrix without igraph.
 }
 \examples{
-\dontrun{
-net <- build_network(tna::group_regulation, method = "relative")
-cs <- centrality_stability(net, iter = 500, seed = 42)
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+cs <- centrality_stability(net, iter = 100, seed = 42,
+  measures = c("InStrength", "OutStrength"))
 print(cs)
-plot(cs)
 }
 
 }

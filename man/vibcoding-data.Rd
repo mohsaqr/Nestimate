@@ -108,7 +108,7 @@ columns = T1, T2, ...):
 }
 }
 \examples{
-\dontrun{
+\donttest{
 # Build a transition network from human category sequences
 net <- build_network(human_wide, method = "relative")
 

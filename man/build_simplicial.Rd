@@ -52,20 +52,15 @@ resulting graph become simplices.
 }
 }
 \examples{
-\dontrun{
-net <- build_network(group_regulation, method = "tna")
-
-# Clique complex
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
 sc <- build_simplicial(net, threshold = 0.05)
 print(sc)
 betti_numbers(sc)
-
-# From HON pathways
-hon <- build_hon(net)
-sc_hon <- build_simplicial(hon, type = "pathway", max_pathways = 20)
-
-# Direct from model
-sc2 <- build_simplicial(net, type = "pathway")
 }
 
 }

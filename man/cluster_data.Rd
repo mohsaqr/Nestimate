@@ -126,20 +126,14 @@ distance. When the \pkg{stringdist} package is available, uses C-level
 distance computation for 100-1000x speedup on edit distances.
 }
 \examples{
-\dontrun{
-# Basic Hamming clustering
-cl <- cluster_data(tna::group_regulation, k = 3)
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:3], 20, TRUE), V2 = sample(LETTERS[1:3], 20, TRUE),
+  V3 = sample(LETTERS[1:3], 20, TRUE), V4 = sample(LETTERS[1:3], 20, TRUE)
+)
+cl <- cluster_data(seqs, k = 2)
 print(cl)
 summary(cl)
-plot(cl, type = "silhouette")
-
-# Weighted Hamming (temporal decay)
-cl_w <- cluster_data(tna::group_regulation, k = 3,
-                     weighted = TRUE, lambda = 0.5)
-
-# Edit distance with hierarchical clustering
-cl_lv <- cluster_data(tna::group_regulation, k = 3,
-                      dissimilarity = "lv", method = "ward.D2")
 }
 
 }

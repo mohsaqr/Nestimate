@@ -23,15 +23,16 @@
 #' @return Invisible \code{NULL}.
 #'
 #' @examples
-#' \dontrun{
-#' # Register a custom estimator
+#' \donttest{
 #' my_fn <- function(data, ...) {
 #'   m <- cor(data)
 #'   diag(m) <- 0
 #'   list(matrix = m, nodes = colnames(m), directed = FALSE)
 #' }
 #' register_estimator("my_cor", my_fn, "Custom correlation", directed = FALSE)
-#' estimate_network(data, method = "my_cor")
+#' df <- data.frame(A = rnorm(20), B = rnorm(20), C = rnorm(20))
+#' net <- build_network(df, method = "my_cor")
+#' remove_estimator("my_cor")
 #' }
 #'
 #' @seealso \code{\link{get_estimator}}, \code{\link{list_estimators}},
@@ -60,6 +61,9 @@ register_estimator <- function(name, fn, description, directed) {
 #'
 #' @return A list with elements \code{fn}, \code{description}, \code{directed}.
 #'
+#' @examples
+#' est <- get_estimator("relative")
+#'
 #' @seealso \code{\link{register_estimator}}, \code{\link{list_estimators}}
 #'
 #' @export
@@ -84,6 +88,9 @@ get_estimator <- function(name) {
 #'
 #' @return A data frame with columns \code{name}, \code{description},
 #'   \code{directed}.
+#'
+#' @examples
+#' list_estimators()
 #'
 #' @seealso \code{\link{register_estimator}}, \code{\link{get_estimator}}
 #'
@@ -120,6 +127,13 @@ list_estimators <- function() {
 #' @param name Character. Name of the estimator to remove.
 #'
 #' @return Invisible \code{NULL}.
+#'
+#' @examples
+#' \donttest{
+#' register_estimator("test_est", function(data, ...) diag(3),
+#'   description = "test", directed = FALSE)
+#' remove_estimator("test_est")
+#' }
 #'
 #' @seealso \code{\link{register_estimator}}, \code{\link{list_estimators}}
 #'

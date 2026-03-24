@@ -16,3 +16,5 @@
 ^\.claude$
 ^cran-comments\.md$
 ^data-raw$
+^\.DS_Store$
+^tests/testthat/_problems$
