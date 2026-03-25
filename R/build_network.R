@@ -144,12 +144,25 @@ build_network <- function(data,
   }
 
   # --- Early dispatch for net_mmm objects ---
-  # MMM components are already netobjects; wrap them as a netobject_group.
   if (inherits(data, "net_mmm")) {
-    nets <- data$models
-    if (is.null(names(nets))) {
-      names(nets) <- paste0("Component ", seq_along(nets))
+    resolved <- if (!missing(method)) .resolve_method_alias(method) else "relative"
+    if (resolved != "relative") {
+      # Re-build per-component networks from hard assignments using requested method
+      raw_data   <- data$models[[1L]]$data
+      assignments <- data$assignments
+      k_comp     <- data$k
+      nets <- lapply(seq_len(k_comp), function(m) {
+        sub <- raw_data[assignments == m, , drop = FALSE]
+        build_network(sub, method = method, ...)
+      })
+      names(nets) <- paste0("Component_", seq_len(k_comp))
+      attr(nets, "group_col") <- "component"
+      class(nets) <- "netobject_group"
+      return(nets)
     }
+    # Default: wrap pre-built "relative" models (retain $initial from EM)
+    nets <- data$models
+    if (is.null(names(nets))) names(nets) <- paste0("Component ", seq_along(nets))
     attr(nets, "group_col") <- "component"
     class(nets) <- "netobject_group"
     return(nets)

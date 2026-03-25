@@ -822,3 +822,23 @@ plot.mmm_compare <- function(x, ...) {
   print(p)
   invisible(p)
 }
+
+# ---------------------------------------------------------------------------
+# cluster_mmm — convenience alias for build_mmm
+# ---------------------------------------------------------------------------
+
+#' Cluster sequences using Mixed Markov Models
+#'
+#' Convenience alias for \code{\link{build_mmm}}. Fits a mixture of Markov
+#' chains to sequence data and returns per-component transition networks with
+#' EM-fitted initial state probabilities.
+#'
+#' Use \code{\link{build_network}} on the result to extract per-cluster
+#' networks with any estimation method, or use \code{\link{cluster_network}}
+#' for a one-shot clustering + network call.
+#'
+#' @inheritParams build_mmm
+#' @return A \code{net_mmm} object. See \code{\link{build_mmm}} for details.
+#' @seealso \code{\link{build_mmm}}, \code{\link{cluster_network}}
+#' @export
+cluster_mmm <- build_mmm

@@ -21,9 +21,9 @@ centrality_stability(
 \item{x}{A \code{netobject} from \code{\link{build_network}}.}
 
 \item{measures}{Character vector. Centrality measures to assess.
-Options: \code{"InStrength"}, \code{"OutStrength"},
-\code{"Betweenness"}, \code{"Closeness"},
-\code{"InCloseness"}, \code{"OutCloseness"}.
+Built-in: \code{"InStrength"}, \code{"OutStrength"}, \code{"Betweenness"},
+\code{"InCloseness"}, \code{"OutCloseness"}, \code{"Closeness"}.
+Custom measures beyond these require \code{centrality_fn}.
 Default: \code{c("InStrength", "OutStrength", "Betweenness")}.}
 
 \item{iter}{Integer. Number of bootstrap iterations per drop

@@ -12,7 +12,7 @@ boot_glasso(
   alpha = 0.05,
   gamma = 0.5,
   nlambda = 100L,
-  centrality = c("strength", "expected_influence", "closeness", "betweenness"),
+  centrality = c("strength", "expected_influence", "betweenness", "closeness"),
   centrality_fn = NULL,
   cor_method = "pearson",
   ncores = 1L,
@@ -40,8 +40,10 @@ computation (default: \code{seq(0.1, 0.9, by = 0.1)}).}
 path (default: 100).}
 
 \item{centrality}{Character vector. Centrality measures to compute.
-Options: \code{"strength"}, \code{"expected_influence"},
-\code{"closeness"}, \code{"betweenness"} (default: all four).}
+Built-in: \code{"strength"}, \code{"expected_influence"},
+\code{"betweenness"}, \code{"closeness"}.
+Custom measures beyond these require \code{centrality_fn}.
+Default: \code{c("strength", "expected_influence", "betweenness", "closeness")}.}
 
 \item{centrality_fn}{Optional function. A custom centrality function
 that takes a weight matrix and returns a named list of centrality
