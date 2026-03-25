@@ -696,7 +696,8 @@ cluster_data <- function(data, k, dissimilarity = "hamming", method = "pam",
       weighted = weighted,
       lambda = lambda,
       covariates = cov_result,
-      network_method = if (inherits(raw_data, "netobject")) raw_data$method else NULL
+      network_method = if (inherits(raw_data, "netobject")) raw_data$method else NULL,
+      build_args     = if (inherits(raw_data, "netobject")) raw_data$build_args else NULL
     ),
     class = "net_clustering"
   )
@@ -1326,9 +1327,14 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   seq_data <- x$data
   k <- x$k
 
+  # Merge stored build_args with caller's ...; caller takes precedence
+  dots <- list(...)
+  build_args <- if (!is.null(x$build_args))
+    modifyList(x$build_args, dots) else dots
+
   nets <- lapply(seq_len(k), function(cl) {
     sub <- seq_data[assignments == cl, , drop = FALSE]
-    build_network(sub, method = method, ...)
+    do.call(build_network, c(list(data = sub, method = method), build_args))
   })
 
   names(nets) <- paste("Cluster", seq_len(k))
@@ -1389,9 +1395,12 @@ cluster_network <- function(data, k, cluster_by = "pam",
                              dissimilarity = "hamming", ...) {
   dots <- list(...)
 
-  # Inherit network method from input netobject when not explicitly specified
-  if (inherits(data, "netobject") && is.null(dots$method)) {
-    dots$method <- data$method
+  # Inherit build_args and method from input netobject when not explicitly set
+  if (inherits(data, "netobject")) {
+    if (!is.null(data$build_args))
+      dots <- modifyList(data$build_args, dots)
+    if (is.null(dots$method))
+      dots$method <- data$method
   }
 
   if (identical(cluster_by, "mmm")) {

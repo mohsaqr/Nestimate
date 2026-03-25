@@ -429,6 +429,11 @@ build_network <- function(data,
     n_edges = nrow(edges),
     level = level,
     prepared = prepared,
+    build_args = list(
+      actor = actor, action = action, time = time, session = session,
+      order = order, codes = codes, format = format,
+      window_size = window_size, mode = mode
+    ),
     meta = list(
       source = "nestimate",
       layout = NULL,
