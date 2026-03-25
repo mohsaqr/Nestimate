@@ -6,10 +6,7 @@ make_cograph_net <- function() {
   skip_if_not_installed("tna")
 
   model <- tna::tna(tna::group_regulation)
-  cg <- cograph::as_cograph(model)
-  skip_if(!is.matrix(cg$weights),
-          "cograph::as_cograph() did not produce a matrix $weights")
-  cg
+  cograph::as_cograph(model)
 }
 
 # ---- .as_netobject converter ----

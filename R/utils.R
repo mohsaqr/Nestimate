@@ -157,9 +157,8 @@ safe_sd <- function(x) {
   }
 
   mat <- x$weights
-  if (!is.matrix(mat) || !is.numeric(mat)) {
-    stop("cograph_network $weights must be a numeric matrix.", call. = FALSE)
-  }
+  if (!is.matrix(mat)) mat <- as.matrix(mat)
+  if (!is.numeric(mat)) storage.mode(mat) <- "double"
   nodes_df <- x$nodes
   states <- nodes_df$label
   raw_data <- x$data
