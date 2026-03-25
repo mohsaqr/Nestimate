@@ -485,102 +485,66 @@ print.netobject <- function(x, ...) {
     sprintf("Network (method: %s)", x$method)
   }
 
-  dir_label <- if (x$directed) " [directed]" else " [undirected]"
-  level_label <- if (!is.null(x$level)) {
-    sprintf(" [%s-person]", x$level)
-  } else ""
-
+  dir_label   <- if (x$directed) " [directed]" else " [undirected]"
+  level_label <- if (!is.null(x$level)) sprintf(" [%s-person]", x$level) else ""
   cat(label, dir_label, level_label, "\n", sep = "")
 
-  # ---- Data overview ----
-  if (!is.null(x$data)) {
-    cat(sprintf("  Data: %d sequences x %d time points\n",
-                nrow(x$data), ncol(x$data)))
-  }
-  if (!is.null(x$metadata)) { # nocov start
-    cat(sprintf("  Metadata: %s\n",
-                paste(names(x$metadata), collapse = ", ")))
-  } # nocov end
   if (!is.null(x$n)) cat(sprintf("  Sample size: %d\n", x$n))
 
-  # ---- Nodes ----
-  labels <- x$nodes$label
-  cat(sprintf("  Nodes (%d): %s\n", x$n_nodes,
-              if (x$n_nodes <= 8) paste(labels, collapse = ", ")
-              else paste(c(labels[1:6], sprintf("... +%d more", x$n_nodes - 6)),
-                         collapse = ", ")))
-
-  # ---- Network structure ----
+  # ---- Weight summary (one line) ----
   mat <- x$weights
-  n <- x$n_nodes
-  max_possible <- if (x$directed) n * (n - 1) else n * (n - 1) / 2
-  density <- if (max_possible > 0) x$n_edges / max_possible else 0
-  cat(sprintf("  Edges: %d / %d (density: %.1f%%)\n",
-              x$n_edges, as.integer(max_possible), density * 100))
-
-  # Edge weight summary
   if (x$directed) {
     nz <- mat[mat != 0 & row(mat) != col(mat)]
   } else {
     nz <- mat[upper.tri(mat) & mat != 0]
   }
-
   if (length(nz) > 0) {
     is_assoc <- x$method %in% c("cor", "pcor", "glasso", "ising")
     if (is_assoc) {
-      n_pos <- sum(nz > 0)
-      n_neg <- sum(nz < 0)
       cat(sprintf("  Weights: [%.3f, %.3f]  |  +%d / -%d edges\n",
-                  min(nz), max(nz), n_pos, n_neg))
+                  min(nz), max(nz), sum(nz > 0), sum(nz < 0)))
     } else {
       cat(sprintf("  Weights: [%.3f, %.3f]  |  mean: %.3f\n",
                   min(nz), max(nz), mean(nz)))
     }
-
-    # Top edges
-    if (x$directed) {
-      idx <- which(mat != 0 & row(mat) != col(mat), arr.ind = TRUE)
-    } else {
-      idx <- which(upper.tri(mat) & mat != 0, arr.ind = TRUE)
-    }
-    if (nrow(idx) > 0) {
-      w <- mat[idx]
-      top_k <- min(5L, nrow(idx))
-      ord <- order(abs(w), decreasing = TRUE)[seq_len(top_k)]
-      cat("  Strongest edges:\n")
-      for (j in ord) {
-        arrow <- if (x$directed) " -> " else " -- "
-        cat(sprintf("    %s%s%s  %.3f\n",
-                    labels[idx[j, 1]], arrow, labels[idx[j, 2]], w[j]))
-      }
-    }
   }
 
-  # Self-loops
-  diag_vals <- diag(mat)
-  n_self <- sum(diag_vals != 0)
-  if (n_self > 0) {
-    cat(sprintf("  Self-loops: %d  |  range: [%.3f, %.3f]\n",
-                n_self, min(diag_vals[diag_vals != 0]),
-                max(diag_vals[diag_vals != 0])))
+  # ---- Weight matrix ----
+  cat("\n  Weight matrix:\n")
+  digits <- if (all(nz == floor(nz))) 0L else 3L
+  mat_r  <- round(mat, digits)
+  labels <- x$nodes$label
+  dimnames(mat_r) <- list(labels, labels)
+  formatted <- capture.output(print(mat_r))
+  cat(paste0("  ", formatted, collapse = "\n"), "\n")
+
+  # ---- Initial probabilities ----
+  if (!is.null(x$initial) && length(x$initial) > 0) {
+    cat("\n  Initial probabilities:\n")
+    init  <- x$initial
+    ord   <- order(init, decreasing = TRUE)
+    bar_w <- 40L
+    max_v <- max(init)
+    vapply(ord, function(i) {
+      bars <- if (max_v > 0) strrep("\u2588", round(init[i] / max_v * bar_w)) else ""
+      cat(sprintf("  %-12s  %.3f  %s\n", names(init)[i], init[i], bars))
+      invisible("")
+    }, character(1L))
   }
 
-  # ---- Method-specific ----
+  # ---- Method-specific params ----
   if (x$method == "glasso" && !is.null(x$gamma)) {
-    cat(sprintf("  Gamma: %.2f  |  Lambda: %.4f\n",
-                x$gamma, x$lambda_selected))
+    cat(sprintf("\n  Gamma: %.2f  |  Lambda: %.4f\n", x$gamma, x$lambda_selected))
   }
   if (x$method == "ising") {
-    cat(sprintf("  Gamma: %.2f  |  Rule: %s\n", x$gamma, x$rule))
+    cat(sprintf("\n  Gamma: %.2f  |  Rule: %s\n", x$gamma, x$rule))
     if (!is.null(x$thresholds)) {
       thr_rng <- range(x$thresholds)
       cat(sprintf("  Thresholds: [%.3f, %.3f]\n", thr_rng[1], thr_rng[2]))
     }
   }
-  if (!is.null(x$scaling)) {
-    cat(sprintf("  Scaling: %s\n", paste(x$scaling, collapse = " -> ")))
-  }
-  if (x$threshold > 0) cat(sprintf("  Threshold: %g\n", x$threshold))
+  if (!is.null(x$scaling))  cat(sprintf("\n  Scaling: %s\n",   paste(x$scaling, collapse = " -> ")))
+  if (x$threshold > 0)      cat(sprintf("  Threshold: %g\n",  x$threshold))
 
   invisible(x)
 }
