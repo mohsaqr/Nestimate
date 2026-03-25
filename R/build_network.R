@@ -154,7 +154,10 @@ build_network <- function(data,
       nets <- lapply(seq_len(k_comp), function(m) {
         sub <- raw_data[assignments == m, , drop = FALSE]
         net <- build_network(sub, method = method, ...)
-        net$initial <- data$models[[m]]$initial  # always use EM-fitted initials
+        # Inject EM-fitted initials only for directed sequence methods
+        if (resolved %in% c("relative", "frequency", "attention")) {
+          net$initial <- data$models[[m]]$initial
+        }
         net
       })
       names(nets) <- paste0("Component_", seq_len(k_comp))
