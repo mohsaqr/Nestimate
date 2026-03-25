@@ -542,22 +542,4 @@ print.wtna_mixed <- function(x, ...) {
 }
 
 
-#' Plot Method for wtna_mixed
-#'
-#' @param x A \code{wtna_mixed} object.
-#' @param type Character. \code{"group"} (default) plots the transition and
-#'   co-occurrence networks as two separate panels via \code{cograph::splot()}.
-#' @param ... Additional arguments passed to \code{cograph::splot()}.
-#' @return The input object, invisibly.
-#' @export
-plot.wtna_mixed <- function(x, ...) {
-  if (!requireNamespace("cograph", quietly = TRUE))
-    stop("Package 'cograph' is required for plot.wtna_mixed.", call. = FALSE)
-  group <- structure(
-    list(Transition = x$transition, `Co-occurrence` = x$cooccurrence),
-    group_col = "network_type",
-    class = "netobject_group"
-  )
-  cograph::splot(group, ...)
-  invisible(x)
-}
+
