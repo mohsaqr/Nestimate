@@ -130,6 +130,45 @@ NULL
 "human_ai_edges"
 
 
+#' Group Regulation in Collaborative Learning (Long Format)
+#'
+#' Students' regulation strategies during collaborative learning, in long
+#' format. Contains 27,533 timestamped action records from multiple students
+#' working in groups across two courses.
+#'
+#' @format A data frame with 27,533 rows and 6 columns:
+#' \describe{
+#'   \item{Actor}{Integer. Student identifier.}
+#'   \item{Achiever}{Character. Achievement level: \code{"High"} or \code{"Low"}.}
+#'   \item{Group}{Numeric. Collaboration group identifier.}
+#'   \item{Course}{Character. Course identifier (\code{"A"}, \code{"B"}, or \code{"C"}).}
+#'   \item{Time}{POSIXct. Timestamp of the action.}
+#'   \item{Action}{Character. Regulation action (e.g., cohesion, consensus,
+#'     discuss, synthesis).}
+#' }
+#'
+#' @source Synthetically generated from the \code{group_regulation} dataset
+#'   in the \pkg{tna} package.
+#'
+#' @seealso \code{\link{learning_activities}}, \code{\link{srl_strategies}}
+#'
+#' @examples
+#' \donttest{
+#' # Build a transition network per actor
+#' net <- build_network(group_regulation_long,
+#'                      actor = "Actor", action = "Action", time = "Time")
+#' net
+#'
+#' # Group networks by achievement level
+#' nets <- build_network(group_regulation_long,
+#'                       actor = "Actor", action = "Action", time = "Time",
+#'                       groups = "Achiever")
+#' nets
+#' }
+#'
+"group_regulation_long"
+
+
 #' Self-Regulated Learning Strategy Frequencies
 #'
 #' Simulated frequency counts of 9 self-regulated learning (SRL) strategies
