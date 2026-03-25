@@ -6,3 +6,5 @@
 tmp/
 ..Rcheck/
 .superpowers/
+/doc/
+/Meta/

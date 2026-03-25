@@ -242,6 +242,73 @@
 
 # ---- Transition estimators ----
 
+#' Compute initial state probability distribution
+#'
+#' Returns a named numeric vector (summing to 1) of the proportion of sequences
+#' starting in each state. States present in the transition matrix but never
+#' observed as a first state receive probability 0.
+#'
+#' @param data Data frame of sequence data.
+#' @param states Character vector of all state names (from the transition matrix).
+#' @param format Character: \code{"wide"} or \code{"long"}.
+#' @param action Character. Action column name (long format).
+#' @param id Character vector or NULL. ID column(s).
+#' @param time Character. Time column name (long format).
+#' @param cols Character vector or NULL. State columns (wide format).
+#'
+#' @return Named numeric vector of initial probabilities aligned to \code{states}.
+#' @noRd
+.compute_initial_probs <- function(data, states,
+                                    format = "wide",
+                                    action = "Action",
+                                    id = NULL,
+                                    time = "Time",
+                                    cols = NULL) {
+  if (format == "wide") {
+    state_cols <- .select_state_cols(data, id, cols)
+    mat <- as.matrix(data[, state_cols, drop = FALSE])
+    mat[] <- .clean_states(mat)
+    first_states <- apply(mat, 1L, function(r) {
+      r <- r[!is.na(r)]
+      if (length(r)) r[[1L]] else NA_character_
+    })
+  } else {
+    dt <- data.table::as.data.table(data)
+    dt[[action]] <- .clean_states(as.character(dt[[action]]))
+    dt[, .orig_row := .I]
+    order_cols <- c(id, if (time %in% names(dt)) time, ".orig_row")
+    data.table::setorderv(dt, order_cols)
+    if (is.null(id)) {
+      vals <- dt[[action]]
+      vals <- vals[!is.na(vals)]
+      first_states <- if (length(vals)) vals[[1L]] else character(0)
+    } else {
+      grp_col <- if (length(id) == 1L) {
+        id
+      } else {
+        dt[, .grp_key := do.call(paste, c(.SD, sep = "\x1f")), .SDcols = id]
+        ".grp_key"
+      }
+      firsts <- dt[, {
+        a <- get(action)
+        a <- a[!is.na(a)]
+        list(first = if (length(a)) a[[1L]] else NA_character_)
+      }, by = grp_col]
+      first_states <- firsts$first
+    }
+  }
+
+  first_states <- first_states[!is.na(first_states)]
+  initial <- setNames(numeric(length(states)), states)
+  if (length(first_states) == 0L) return(initial)
+  counts <- tabulate(match(first_states, states), nbins = length(states))
+  total <- sum(counts)
+  if (total > 0L) initial <- counts / total
+  names(initial) <- states
+  initial
+}
+
+
 #' Frequency estimator: raw transition counts
 #' @noRd
 .estimator_frequency <- function(data,
@@ -255,12 +322,20 @@
     data, format = format, action = action, id = id, time = time, cols = cols
   )
   states <- rownames(freq_mat)
+  resolved_format <- if (format == "auto") {
+    if (action %in% names(data)) "long" else "wide"
+  } else format
+  initial <- .compute_initial_probs(
+    data, states, format = resolved_format,
+    action = action, id = id, time = time, cols = cols
+  )
   list(
     matrix = freq_mat,
     nodes = states,
     directed = TRUE,
     cleaned_data = data,
-    frequency_matrix = freq_mat
+    frequency_matrix = freq_mat,
+    initial = initial
   )
 }
 
@@ -286,12 +361,20 @@
   nonzero <- row_sums > 0
   rel_mat[nonzero, ] <- rel_mat[nonzero, ] / row_sums[nonzero]
 
+  resolved_format <- if (format == "auto") {
+    if (action %in% names(data)) "long" else "wide"
+  } else format
+  initial <- .compute_initial_probs(
+    data, states, format = resolved_format,
+    action = action, id = id, time = time, cols = cols
+  )
   list(
     matrix = rel_mat,
     nodes = states,
     directed = TRUE,
     cleaned_data = data,
-    frequency_matrix = freq_mat
+    frequency_matrix = freq_mat,
+    initial = initial
   )
 }
 
@@ -767,11 +850,16 @@
   }
 
   states <- rownames(attn_mat)
+  initial <- .compute_initial_probs(
+    data, states, format = format,
+    action = action, id = id, time = time, cols = cols
+  )
   list(
     matrix = attn_mat,
     nodes = states,
     directed = TRUE,
-    cleaned_data = data
+    cleaned_data = data,
+    initial = initial
   )
 }
 

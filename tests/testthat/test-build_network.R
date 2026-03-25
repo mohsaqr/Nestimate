@@ -1171,6 +1171,39 @@ test_that(".compute_lambda_path errors when all off-diagonal correlations zero",
   )
 })
 
+# initial probabilities stored for tna / ftna / atna
+test_that("build_network stores initial probs for tna, ftna, atna", {
+  set.seed(1)
+  seqs <- data.frame(
+    V1 = sample(c("A","B","C"), 30, TRUE),
+    V2 = sample(c("A","B","C"), 30, TRUE),
+    V3 = sample(c("A","B","C"), 30, TRUE)
+  )
+  for (m in c("tna", "ftna", "atna")) {
+    net <- build_network(seqs, method = m)
+    expect_false(is.null(net$initial), info = paste(m, "has $initial"))
+    expect_named(net$initial)
+    expect_equal(sum(net$initial), 1, tolerance = 1e-9,
+                 info = paste(m, "$initial sums to 1"))
+    expect_true(all(net$initial >= 0), info = paste(m, "$initial non-negative"))
+    expect_true(all(names(net$initial) %in% net$nodes$label),
+                info = paste(m, "initial names match nodes"))
+  }
+})
+
+# .compute_initial_probs: states never appearing as first get prob 0
+test_that(".compute_initial_probs gives 0 to states never starting a sequence", {
+  seqs <- data.frame(
+    V1 = c("A","A","A"),
+    V2 = c("B","C","B"),
+    V3 = c("C","B","C")
+  )
+  net <- build_network(seqs, method = "tna")
+  expect_equal(net$initial[["A"]], 1)
+  expect_equal(net$initial[["B"]], 0)
+  expect_equal(net$initial[["C"]], 0)
+})
+
 # L1004-1005: .select_ebic handles glasso fit failure (NULL fit → Inf EBIC)
 test_that("glasso network completes even with challenging input", {
   # Near-singular but symmetric correlation matrix
