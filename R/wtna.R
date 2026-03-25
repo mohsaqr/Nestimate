@@ -93,9 +93,14 @@ wtna <- function(data,
     weights <- .wtna_compute_by_actor(df, codes, window_size, mode, actor, method)
   }
 
+  # Initial state probs for transition networks (directed only)
+  initial <- if (method %in% c("transition", "both"))
+    .wtna_initial_probs(df, codes, actor) else NULL
+
   if (method == "both") {
     result <- list(
-      transition   = .wtna_finalize(weights$transition,   type, codes, data, "transition"),
+      transition   = .wtna_finalize(weights$transition,   type, codes, data, "transition",
+                                    initial = initial),
       cooccurrence = .wtna_finalize(weights$cooccurrence, type, codes, data, "cooccurrence"),
       method = "wtna_both"
     )
@@ -103,7 +108,7 @@ wtna <- function(data,
     return(result)
   }
 
-  .wtna_finalize(weights, type, codes, data, method)
+  .wtna_finalize(weights, type, codes, data, method, initial = initial)
 }
 
 
@@ -317,9 +322,44 @@ wtna <- function(data,
 }
 
 
+#' Compute initial state probabilities for wtna transition networks
+#' @noRd
+.wtna_initial_probs <- function(df, codes, actor) {
+  X <- as.matrix(df[, codes, drop = FALSE])
+  storage.mode(X) <- "integer"
+
+  if (is.null(actor)) {
+    active_rows <- which(rowSums(X) > 0L)
+    if (length(active_rows) == 0L) return(NULL)
+    first_col <- which(X[active_rows[1L], ] > 0L)[1L]
+    if (is.na(first_col)) return(NULL)
+    init <- setNames(numeric(length(codes)), codes)
+    init[first_col] <- 1.0
+    return(init)
+  }
+
+  grp <- df[[actor[1L]]]
+  actor_ids <- unique(grp)
+
+  first_states <- vapply(actor_ids, function(id) {
+    rows <- which(grp == id)
+    sub  <- X[rows, , drop = FALSE]
+    active <- which(rowSums(sub) > 0L)
+    if (length(active) == 0L) return(NA_character_)
+    first_col <- which(sub[active[1L], ] > 0L)[1L]
+    if (length(first_col) == 0L) return(NA_character_)
+    codes[first_col]
+  }, character(1L))
+
+  valid <- !is.na(first_states)
+  if (!any(valid)) return(NULL)
+  counts <- tabulate(match(first_states[valid], codes), nbins = length(codes))
+  setNames(counts / sum(counts), codes)
+}
+
 #' Finalize: row-normalize and build netobject
 #' @noRd
-.wtna_finalize <- function(weights, type, codes, data, method) {
+.wtna_finalize <- function(weights, type, codes, data, method, initial = NULL) {
   if (type == "relative") {
     rs <- rowSums(weights)
     rs[rs == 0] <- 1
@@ -356,6 +396,7 @@ wtna <- function(data,
       n_nodes = length(codes),
       n_edges = nrow(edges),
       level = NULL,
+      initial = initial,
       meta = list(source = "nestimate", layout = NULL,
                   tna = list(method = wtna_method)),
       node_groups = NULL
