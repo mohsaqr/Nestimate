@@ -1,5 +1,10 @@
 # Learnings
 
+### 2026-03-25
+- [wtna transition equivalence]: Validated across 100 Saqrlab-generated one-hot datasets: Nestimate `wtna(type="relative")` produces byte-identical transition weight matrices to tna-dev's `tna()` (100/100 exact match, max abs diff = 0). Comparison script: `tmp/compare_wtna_tnadev.R`.
+- [wtna vs ctna co-occurrence]: Nestimate `wtna(cooccurrence, type="frequency")` and tna-dev `ctna(import_onehot(...))` are numerically identical: 100/100 exact match (max abs diff = 0) across 100 Saqrlab-generated one-hot datasets. Both count simultaneous co-activity (diagonal = self-count, off-diagonal = 0 for strict one-hot data). The earlier apparent mismatch was purely a normalization artifact: Nestimate `type="relative"` divides by row sums, tna `ctna()` returns raw counts. Use `type="frequency"` on the Nestimate side for a like-for-like comparison. Comparison script: `tmp/compare_wtna_tnadev.R`.
+- [wtna initial probs bug]: Original implementation picked only the first active column at t=1, ignoring all other simultaneously-active states and all actors when no actor arg given. Fix: distribute probability uniformly across ALL active states at each actor's first time point, then average across actors. Result always sums to 1.
+
 ### 2026-03-14
 - [package split]: When splitting an R package, the `.onLoad()` function must be duplicated — it registers estimators in the global registry environment. Without it, `build_network()` fails with "Estimator not found."
 - [test helpers]: Tests that depend on simulation functions from the parent package need standalone helpers. `helper-simulate.R` files in `tests/testthat/` are auto-loaded by testthat before test execution.
