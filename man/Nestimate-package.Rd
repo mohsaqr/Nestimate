@@ -6,7 +6,7 @@
 \alias{Nestimate-package}
 \title{Nestimate: Network Estimation, Bootstrap, and Higher-Order Analysis}
 \description{
-Estimate networks from sequence and panel data. Supports transition networks (relative, frequency, co-occurrence), association networks (correlation, partial correlation, graphical lasso, Ising), bootstrap inference, permutation testing, and higher-order networks (Higher-Order Network, Higher-Order Network Embedding, Hyper-Path Anomaly, Multi-Order Generative Model). Includes multi-cluster multi-layer networks (MCML), multilevel vector autoregression (VAR), and graphical VAR.
+Estimate, compare, and analyze dynamic and probabilistic networks using a unified interface. Provides transition network analysis (TNA) estimation (transition, frequency, co-occurrence, attention-weighted) as described in Saqr, López-Pernas, Törmänen, Kaliisa, Misiejuk, and Tikka (2025) \doi{10.1145/3706468.3706513}, probabilistic network methods (correlation, partial correlation, graphical lasso, Ising) as described in Saqr, Beck, and López-Pernas (2024) \doi{10.1007/978-3-031-54464-4_19}, and higher-order network methods including Higher-Order Network (HON), HO Network Embedding, Hyper-Path Anomaly (HyPa), and Multi-Order Generative model. Supports bootstrap inference, permutation testing, split-half reliability, centrality stability analysis, mixed Markov models, multi-cluster multi-layer (MCML) decomposition and clustering.
 }
 \seealso{
 Useful links:

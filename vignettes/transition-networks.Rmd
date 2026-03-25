@@ -1,0 +1,105 @@
+---
+title: "Transition Network Analysis with Nestimate"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Transition Network Analysis with Nestimate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+Nestimate provides a unified interface for estimating networks from sequence data. This vignette demonstrates transition network estimation, group comparison, and bootstrap inference using the `human_ai_cat` dataset --- coded interaction sequences from 429 human-AI pair programming sessions.
+
+## Data
+
+The `human_cat` dataset contains 10,796 coded human interactions classified into 9 categories.
+
+```{r data}
+library(Nestimate)
+head(human_cat[, c("session_id", "category")], 8)
+table(human_cat$category)
+```
+
+## Building networks
+
+`build_network()` accepts long-format data directly. The `action` parameter specifies the state column, `actor` defines sequences, and `time` provides ordering.
+
+### Transition network (TNA)
+
+Row-normalized transition probabilities --- each row sums to 1.
+
+```{r tna}
+net_tna <- build_network(human_cat, method = "tna",
+                         action = "category", actor = "session_id",
+                         time = "id")
+net_tna
+```
+
+### Frequency network (FTNA)
+
+Raw transition counts --- preserves how often each transition occurs.
+
+```{r ftna}
+net_ftna <- build_network(human_cat, method = "ftna",
+                          action = "category", actor = "session_id",
+                          time = "id")
+net_ftna
+```
+
+### Attention network (ATNA)
+
+Decay-weighted transitions --- recent transitions receive more weight. The `lambda` parameter controls decay rate.
+
+```{r atna}
+net_atna <- build_network(human_cat, method = "atna",
+                          action = "category", actor = "session_id",
+                          time = "id", lambda = 0.5)
+net_atna
+```
+
+## Group comparison
+
+The `group` parameter builds separate networks per group. Here we compare human and AI interaction patterns using the full `human_ai_cat` dataset (19,347 interactions).
+
+```{r groups}
+nets <- build_network(human_ai_cat, method = "tna",
+                      action = "category", actor = "session_id",
+                      time = "id", group = "actor")
+nets
+```
+
+```{r group-detail}
+nets$Human
+nets$AI
+```
+
+## Bootstrap inference
+
+Bootstrap resampling assesses which edges are statistically stable. Sequences are resampled with replacement and the network is re-estimated each iteration.
+
+```{r bootstrap}
+boot <- bootstrap_network(nets, iter = 1000, seed = 42)
+```
+
+```{r boot-human}
+summary(boot$Human)
+```
+
+```{r boot-ai}
+summary(boot$AI)
+```
+
+The pruned model retains only significant edges:
+
+```{r pruned}
+boot$Human$model
+boot$AI$model
+```

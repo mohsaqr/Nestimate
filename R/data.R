@@ -128,3 +128,55 @@ NULL
 #' }
 #'
 "human_ai_edges"
+
+
+#' Self-Regulated Learning Strategy Frequencies
+#'
+#' Simulated frequency counts of 9 self-regulated learning (SRL) strategies
+#' for 250 university students. Strategies are grouped into three clusters:
+#' metacognitive (Planning, Monitoring, Evaluating), cognitive (Elaboration,
+#' Organization, Rehearsal), and resource management (Help_Seeking, Time_Mgmt,
+#' Effort_Reg). Within-cluster correlations are moderate (0.3--0.6),
+#' cross-cluster correlations are weaker.
+#'
+#' @format A data frame with 250 rows and 9 columns. Each column is an
+#'   integer count of how often the student used that strategy.
+#'
+#' @examples
+#' \donttest{
+#' net <- build_network(srl_strategies, method = "glasso",
+#'                      params = list(gamma = 0.5))
+#' net
+#' }
+#'
+"srl_strategies"
+
+
+#' Online Learning Activity Indicators
+#'
+#' Simulated binary time-series data for 200 students across 30 time points.
+#' At each time point, one or more learning activities may be active (1) or
+#' inactive (0). Activities: Reading, Video, Forum, Quiz, Coding, Review.
+#' Includes temporal persistence (activities tend to continue across
+#' adjacent time points).
+#'
+#' @format A data frame with 6,000 rows and 7 columns:
+#' \describe{
+#'   \item{student}{Integer. Student identifier (1--200).}
+#'   \item{Reading}{Integer (0/1). Reading activity indicator.}
+#'   \item{Video}{Integer (0/1). Video watching indicator.}
+#'   \item{Forum}{Integer (0/1). Discussion forum indicator.}
+#'   \item{Quiz}{Integer (0/1). Quiz/assessment indicator.}
+#'   \item{Coding}{Integer (0/1). Coding practice indicator.}
+#'   \item{Review}{Integer (0/1). Review/revision indicator.}
+#' }
+#'
+#' @examples
+#' \donttest{
+#' net <- build_network(learning_activities, method = "cna",
+#'                      actor = "student", codes = c("Reading", "Video",
+#'                      "Forum", "Quiz", "Coding", "Review"), window_size = 3)
+#' net
+#' }
+#'
+"learning_activities"
