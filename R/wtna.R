@@ -24,7 +24,7 @@
 #' @return For \code{method = "transition"} or \code{"cooccurrence"}: a
 #'   \code{netobject} (see \code{\link{build_network}}).
 #'
-#'   For \code{method = "both"}: a named list with elements
+#'   For \code{method = "both"}: a \code{wtna_mixed} object with elements
 #'   \code{$transition} and \code{$cooccurrence}, each a \code{netobject}.
 #'
 #' @details
@@ -94,10 +94,13 @@ wtna <- function(data,
   }
 
   if (method == "both") {
-    return(list(
-      transition = .wtna_finalize(weights$transition, type, codes, data, "transition"),
-      cooccurrence = .wtna_finalize(weights$cooccurrence, type, codes, data, "cooccurrence")
-    ))
+    result <- list(
+      transition   = .wtna_finalize(weights$transition,   type, codes, data, "transition"),
+      cooccurrence = .wtna_finalize(weights$cooccurrence, type, codes, data, "cooccurrence"),
+      method = "wtna_both"
+    )
+    class(result) <- "wtna_mixed"
+    return(result)
   }
 
   .wtna_finalize(weights, type, codes, data, method)
@@ -457,3 +460,21 @@ wtna <- function(data,
 }
 
 
+
+
+#' Print Method for wtna_mixed
+#'
+#' @param x A \code{wtna_mixed} object.
+#' @param ... Additional arguments (ignored).
+#' @return The input object, invisibly.
+#' @export
+print.wtna_mixed <- function(x, ...) {
+  cat("Mixed Window TNA (transition + co-occurrence)\n")
+  cat("-- Transition (directed) --\n")
+  t <- x$transition
+  cat(sprintf("  Nodes: %d  |  Edges: %d\n", t$n_nodes, t$n_edges))
+  cat("-- Co-occurrence (undirected) --\n")
+  co <- x$cooccurrence
+  cat(sprintf("  Nodes: %d  |  Edges: %d\n", co$n_nodes, co$n_edges))
+  invisible(x)
+}

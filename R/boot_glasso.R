@@ -22,8 +22,10 @@
 #' @param nlambda Integer. Number of lambda values in the regularization
 #'   path (default: 100).
 #' @param centrality Character vector. Centrality measures to compute.
-#'   Options: \code{"strength"}, \code{"expected_influence"},
-#'   \code{"closeness"}, \code{"betweenness"} (default: all four).
+#'   Built-in: \code{"strength"}, \code{"expected_influence"},
+#'   \code{"betweenness"}, \code{"closeness"}.
+#'   Custom measures beyond these require \code{centrality_fn}.
+#'   Default: \code{c("strength", "expected_influence", "betweenness", "closeness")}.
 #' @param centrality_fn Optional function. A custom centrality function
 #'   that takes a weight matrix and returns a named list of centrality
 #'   vectors. When \code{NULL} (default), only \code{"strength"} and
@@ -104,7 +106,7 @@ boot_glasso <- function(x,
                         gamma = 0.5,
                         nlambda = 100L,
                         centrality = c("strength", "expected_influence",
-                                       "closeness", "betweenness"),
+                                       "betweenness", "closeness"),
                         centrality_fn = NULL,
                         cor_method = "pearson",
                         ncores = 1L,
@@ -449,25 +451,33 @@ boot_glasso <- function(x,
 .bg_compute_centrality <- function(pcor, p, nodes, measures,
                                     centrality_fn = NULL) {
   # Built-in measures (no dependencies)
-  builtin <- c("strength", "expected_influence")
+  builtin  <- c("strength", "expected_influence",
+                "betweenness", "closeness")
   external <- setdiff(measures, builtin)
 
   result <- vector("list", length(measures))
   names(result) <- measures
 
-  for (m in intersect(measures, builtin)) {
-    result[[m]] <- switch(m,
-      strength = {
-        v <- rowSums(abs(pcor))
-        names(v) <- nodes
-        v
-      },
-      expected_influence = {
-        v <- rowSums(pcor)
-        names(v) <- nodes
-        v
-      }
-    )
+  # Strength measures (rowSums based)
+  if ("strength" %in% measures) {
+    v <- rowSums(abs(pcor)); names(v) <- nodes
+    result[["strength"]] <- v
+  }
+  if ("expected_influence" %in% measures) {
+    v <- rowSums(pcor); names(v) <- nodes
+    result[["expected_influence"]] <- v
+  }
+
+  # Path-based measures (Floyd-Warshall, no igraph needed)
+  path_mat <- pcor
+  rownames(path_mat) <- colnames(path_mat) <- nodes
+  if ("betweenness" %in% measures) {
+    result[["betweenness"]] <- .betweenness(abs(path_mat),
+                                             directed = FALSE, invert = TRUE)
+  }
+  if ("closeness" %in% measures) {
+    cl <- .closeness(abs(path_mat), directed = FALSE, invert = TRUE)
+    result[["closeness"]] <- cl[["Closeness"]]
   }
 
   if (length(external) > 0L) {
