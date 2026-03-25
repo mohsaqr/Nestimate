@@ -316,10 +316,11 @@ cluster_summary <- function(x,
   x_orig <- x
 
   # Extract matrix from various input types
-  if (inherits(x, "cograph_network")) {
+  if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
+    x <- .as_netobject(x)
     mat <- x$weights
   } else if (inherits(x, "netobject") || inherits(x, "netobject_ml")) {
-    mat <- x$weights # nocov
+    mat <- x$weights
   } else if (inherits(x, "tna")) {
     mat <- x$weights
   } else {
