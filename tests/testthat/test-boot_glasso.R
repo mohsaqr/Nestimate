@@ -852,15 +852,14 @@ test_that("boot_glasso computes all four centrality measures with centrality_fn"
   expect_equal(length(result$centrality_diff_p), 4)
 })
 
-test_that("boot_glasso closeness and betweenness require centrality_fn", {
+test_that("boot_glasso closeness and betweenness work without centrality_fn (built-in)", {
   df <- .make_test_data(100, 4)
-  expect_error(
-    boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
-                cs_drop = SMALL_CS_DROP,
-                centrality = c("closeness", "betweenness"),
-                seed = 1),
-    "centrality_fn is required"
-  )
+  result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                        cs_drop = SMALL_CS_DROP,
+                        centrality = c("closeness", "betweenness"),
+                        seed = 1)
+  expect_true("closeness" %in% names(result$centrality_ci))
+  expect_true("betweenness" %in% names(result$centrality_ci))
 })
 
 test_that("boot_glasso closeness and betweenness are non-negative with centrality_fn", {

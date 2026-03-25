@@ -89,14 +89,13 @@ test_that("betweenness works with centrality_fn", {
   expect_true("Betweenness" %in% names(cs$cs))
 })
 
-test_that("betweenness without centrality_fn errors", {
+test_that("betweenness works without centrality_fn (built-in)", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  expect_error(
-    centrality_stability(net, iter = 30, measures = c("Betweenness"),
-                         seed = 42),
-    "centrality_fn is required"
-  )
+  cs <- centrality_stability(net, iter = 30, measures = c("Betweenness"),
+                              seed = 42)
+  expect_s3_class(cs, "net_stability")
+  expect_true("Betweenness" %in% names(cs$cs))
 })
 
 test_that("closeness measures work with centrality_fn", {

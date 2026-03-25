@@ -374,6 +374,8 @@ build_mmm <- function(data,
   )
 
   # ---- Extract data and states ----
+  network_method <- NULL
+  build_args     <- NULL
   if (inherits(data, "tna") || inherits(data, "ftna")) {
     raw_data <- data$data
     states <- data$labels
@@ -388,6 +390,8 @@ build_mmm <- function(data,
     raw_data <- data$data
     states <- data$nodes$label
   } else if (inherits(data, "netobject")) {
+    network_method <- data$method
+    build_args     <- data$build_args
     raw_data <- data$data
     states <- data$nodes$label
   } else {
@@ -599,7 +603,9 @@ build_mmm <- function(data,
     converged = best$converged,
     states = states,
     n_sequences = N,
-    covariates = cov_result
+    covariates = cov_result,
+    network_method = network_method,
+    build_args     = build_args
   ), class = "net_mmm")
 }
 

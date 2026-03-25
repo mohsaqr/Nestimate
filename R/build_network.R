@@ -145,15 +145,19 @@ build_network <- function(data,
 
   # --- Early dispatch for net_mmm objects ---
   if (inherits(data, "net_mmm")) {
-    resolved <- if (!missing(method)) .resolve_method_alias(method) else "relative"
+    if (missing(method)) method <- data$network_method %||% "relative"
+    resolved <- .resolve_method_alias(method)
     if (resolved != "relative") {
       # Re-build per-component networks from hard assignments using requested method
-      raw_data   <- data$models[[1L]]$data
+      raw_data    <- data$models[[1L]]$data
       assignments <- data$assignments
-      k_comp     <- data$k
+      k_comp      <- data$k
+      # Merge stored build_args with caller's ...; caller takes precedence
+      dots      <- list(...)
+      call_args <- if (!is.null(data$build_args)) modifyList(data$build_args, dots) else dots
       nets <- lapply(seq_len(k_comp), function(m) {
         sub <- raw_data[assignments == m, , drop = FALSE]
-        net <- build_network(sub, method = method, ...)
+        net <- do.call(build_network, c(list(data = sub, method = method), call_args))
         # Inject EM-fitted initials only for directed sequence methods
         if (resolved %in% c("relative", "frequency", "attention")) {
           net$initial <- data$models[[m]]$initial
