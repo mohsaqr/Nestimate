@@ -323,38 +323,46 @@ wtna <- function(data,
 
 
 #' Compute initial state probabilities for wtna transition networks
+#'
+#' For each actor (or the whole dataset if no actor), finds the first active
+#' row and distributes probability uniformly across all simultaneously active
+#' states. Results are averaged across actors to produce a distribution summing
+#' to 1. This handles binary data where multiple states can be active at once.
 #' @noRd
 .wtna_initial_probs <- function(df, codes, actor) {
   X <- as.matrix(df[, codes, drop = FALSE])
   storage.mode(X) <- "integer"
 
-  if (is.null(actor)) {
-    active_rows <- which(rowSums(X) > 0L)
+  .first_row_probs <- function(mat) {
+    active_rows <- which(rowSums(mat) > 0L)
     if (length(active_rows) == 0L) return(NULL)
-    first_col <- which(X[active_rows[1L], ] > 0L)[1L]
-    if (is.na(first_col)) return(NULL)
+    active_cols <- which(mat[active_rows[1L], ] > 0L)
+    if (length(active_cols) == 0L) return(NULL)
     init <- setNames(numeric(length(codes)), codes)
-    init[first_col] <- 1.0
-    return(init)
+    init[active_cols] <- 1.0 / length(active_cols)
+    init
   }
 
-  grp <- df[[actor[1L]]]
+  if (is.null(actor)) {
+    return(.first_row_probs(X))
+  }
+
+  grp       <- df[[actor[1L]]]
   actor_ids <- unique(grp)
 
-  first_states <- vapply(actor_ids, function(id) {
-    rows <- which(grp == id)
-    sub  <- X[rows, , drop = FALSE]
-    active <- which(rowSums(sub) > 0L)
-    if (length(active) == 0L) return(NA_character_)
-    first_col <- which(sub[active[1L], ] > 0L)[1L]
-    if (length(first_col) == 0L) return(NA_character_)
-    codes[first_col]
-  }, character(1L))
+  prob_accum <- setNames(numeric(length(codes)), codes)
+  n_valid    <- 0L
 
-  valid <- !is.na(first_states)
-  if (!any(valid)) return(NULL)
-  counts <- tabulate(match(first_states[valid], codes), nbins = length(codes))
-  setNames(counts / sum(counts), codes)
+  for (id in actor_ids) {
+    p <- .first_row_probs(X[grp == id, , drop = FALSE])
+    if (is.null(p)) next
+    prob_accum <- prob_accum + p
+    n_valid    <- n_valid + 1L
+  }
+
+  if (n_valid == 0L) return(NULL)
+  prob <- prob_accum / n_valid
+  prob / sum(prob)   # ensure exact sum = 1 despite floating point
 }
 
 #' Finalize: row-normalize and build netobject
