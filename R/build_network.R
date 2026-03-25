@@ -139,7 +139,7 @@ build_network <- function(data,
                           ...) {
   # --- Early dispatch for net_clustering objects ---
   if (inherits(data, "net_clustering")) {
-    if (missing(method)) method <- "relative"
+    if (missing(method)) method <- data$network_method %||% "relative"
     return(.build_network_clustering(data, method = method, ...))
   }
 
@@ -153,7 +153,9 @@ build_network <- function(data,
       k_comp     <- data$k
       nets <- lapply(seq_len(k_comp), function(m) {
         sub <- raw_data[assignments == m, , drop = FALSE]
-        build_network(sub, method = method, ...)
+        net <- build_network(sub, method = method, ...)
+        net$initial <- data$models[[m]]$initial  # always use EM-fitted initials
+        net
       })
       names(nets) <- paste0("Component_", seq_len(k_comp))
       attr(nets, "group_col") <- "component"

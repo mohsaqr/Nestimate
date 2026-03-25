@@ -695,7 +695,8 @@ cluster_data <- function(data, k, dissimilarity = "hamming", method = "pam",
       seed = seed,
       weighted = weighted,
       lambda = lambda,
-      covariates = cov_result
+      covariates = cov_result,
+      network_method = if (inherits(raw_data, "netobject")) raw_data$method else NULL
     ),
     class = "net_clustering"
   )
