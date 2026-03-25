@@ -61,8 +61,8 @@ estimate_network <- function(data,
     ftna              = "frequency",
     cna               = "co_occurrence",
     wcna              = "co_occurrence",
-    wtna_transition   = "relative",
-    wtna_cooccurrence = "co_occurrence",
+    wtna_transition   = "wtna",
+    wtna_cooccurrence = "wtna_cooccurrence",
     isingfit          = "ising",
     atna              = "attention"
   )

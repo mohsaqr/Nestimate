@@ -100,15 +100,18 @@ wtna <- function(data,
   if (method == "both") {
     result <- list(
       transition   = .wtna_finalize(weights$transition,   type, codes, data, "transition",
-                                    initial = initial),
-      cooccurrence = .wtna_finalize(weights$cooccurrence, type, codes, data, "cooccurrence"),
+                                    initial = initial, window_size = window_size,
+                                    mode = mode, actor = actor),
+      cooccurrence = .wtna_finalize(weights$cooccurrence, type, codes, data, "cooccurrence",
+                                    window_size = window_size, mode = mode, actor = actor),
       method = "wtna_both"
     )
     class(result) <- "wtna_mixed"
     return(result)
   }
 
-  .wtna_finalize(weights, type, codes, data, method, initial = initial)
+  .wtna_finalize(weights, type, codes, data, method, initial = initial,
+                 window_size = window_size, mode = mode, actor = actor)
 }
 
 
@@ -367,7 +370,9 @@ wtna <- function(data,
 
 #' Finalize: row-normalize and build netobject
 #' @noRd
-.wtna_finalize <- function(weights, type, codes, data, method, initial = NULL) {
+.wtna_finalize <- function(weights, type, codes, data, method, initial = NULL,
+                            window_size = 1L, mode = "non-overlapping",
+                            actor = NULL) {
   if (type == "relative") {
     rs <- rowSums(weights)
     rs[rs == 0] <- 1
@@ -398,7 +403,8 @@ wtna <- function(data,
       edges = edges,
       directed = directed,
       method = wtna_method,
-      params = list(type = type, window_size = 1L, mode = "non-overlapping"),
+      params = list(type = type, window_size = window_size, mode = mode,
+                    codes = codes, actor = actor),
       scaling = NULL,
       threshold = 0,
       n_nodes = length(codes),
@@ -431,7 +437,8 @@ wtna <- function(data,
 #' @noRd
 .estimator_wtna_core <- function(data, codes = NULL, window_size = 1L,
                                   mode = "non-overlapping", actor = NULL,
-                                  wtna_method = "transition", ...) {
+                                  wtna_method = "transition",
+                                  type = "frequency", ...) {
   df <- as.data.frame(data)
   codes <- .resolve_codes(df, codes, exclude = actor)
 
@@ -447,6 +454,12 @@ wtna <- function(data,
     stopifnot(all(actor %in% names(df)))
     weights <- .wtna_compute_by_actor(df, codes, window_size, mode,
                                        actor, wtna_method)
+  }
+
+  if (type == "relative") {
+    rs <- rowSums(weights)
+    rs[rs == 0] <- 1
+    weights <- weights / rs
   }
 
   dimnames(weights) <- list(codes, codes)
@@ -525,5 +538,26 @@ print.wtna_mixed <- function(x, ...) {
   cat("-- Co-occurrence (undirected) --\n")
   co <- x$cooccurrence
   cat(sprintf("  Nodes: %d  |  Edges: %d\n", co$n_nodes, co$n_edges))
+  invisible(x)
+}
+
+
+#' Plot Method for wtna_mixed
+#'
+#' @param x A \code{wtna_mixed} object.
+#' @param type Character. \code{"group"} (default) plots the transition and
+#'   co-occurrence networks as two separate panels via \code{cograph::splot()}.
+#' @param ... Additional arguments passed to \code{cograph::splot()}.
+#' @return The input object, invisibly.
+#' @export
+plot.wtna_mixed <- function(x, ...) {
+  if (!requireNamespace("cograph", quietly = TRUE))
+    stop("Package 'cograph' is required for plot.wtna_mixed.", call. = FALSE)
+  group <- structure(
+    list(Transition = x$transition, `Co-occurrence` = x$cooccurrence),
+    group_col = "network_type",
+    class = "netobject_group"
+  )
+  cograph::splot(group, ...)
   invisible(x)
 }

@@ -78,6 +78,23 @@ bootstrap_network <- function(x,
                               edge_threshold = NULL,
                               seed = NULL) {
 
+  # ---- wtna_mixed dispatch: bootstrap both components ----
+  if (inherits(x, "wtna_mixed")) {
+    if (!is.null(seed)) set.seed(seed)
+    result <- list(
+      transition   = bootstrap_network(x$transition,   iter = iter,
+                                       ci_level = ci_level, inference = inference,
+                                       consistency_range = consistency_range,
+                                       edge_threshold = edge_threshold),
+      cooccurrence = bootstrap_network(x$cooccurrence, iter = iter,
+                                       ci_level = ci_level, inference = inference,
+                                       consistency_range = consistency_range,
+                                       edge_threshold = edge_threshold)
+    )
+    class(result) <- "wtna_boot_mixed"
+    return(result)
+  }
+
   # ---- netobject_group dispatch: bootstrap each element ----
   if (inherits(x, "netobject_group")) {
     results <- lapply(x, function(net) {
@@ -571,6 +588,41 @@ print.net_bootstrap <- function(x, ...) {
 #' @export
 summary.net_bootstrap <- function(object, ...) {
   object$summary
+}
+
+
+
+#' Print Method for wtna_boot_mixed
+#'
+#' @param x A \code{wtna_boot_mixed} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
+#' @export
+print.wtna_boot_mixed <- function(x, ...) {
+  cat("Mixed Window TNA Bootstrap\n")
+  cat("-- Transition --\n")
+  print(x$transition)
+  cat("-- Co-occurrence --\n")
+  print(x$cooccurrence)
+  invisible(x)
+}
+
+
+#' Summary Method for wtna_boot_mixed
+#'
+#' @param object A \code{wtna_boot_mixed} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return A list with \code{$transition} and \code{$cooccurrence} summary data frames.
+#'
+#' @export
+summary.wtna_boot_mixed <- function(object, ...) {
+  list(
+    transition   = summary(object$transition),
+    cooccurrence = summary(object$cooccurrence)
+  )
 }
 
 
