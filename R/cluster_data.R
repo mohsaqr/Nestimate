@@ -1384,8 +1384,11 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' # Default: PAM clustering, relative (transition) networks
 #' grp <- cluster_network(seqs, k = 3)
 #'
-#' # Specify network method
-#' grp <- cluster_network(seqs, k = 3, method = "cor")
+#' # Specify network method (cor requires numeric panel data)
+#' \dontrun{
+#' panel <- as.data.frame(matrix(rnorm(500), nrow = 100, ncol = 5))
+#' grp <- cluster_network(panel, k = 3, method = "cor")
+#' }
 #'
 #' # MMM-based clustering
 #' grp <- cluster_network(seqs, k = 2, cluster_by = "mmm")

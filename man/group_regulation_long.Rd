@@ -32,11 +32,13 @@ working in groups across two courses.
 \donttest{
 # Build a transition network per actor
 net <- build_network(group_regulation_long,
+                     method = "relative",
                      actor = "Actor", action = "Action", time = "Time")
 net
 
 # Group networks by achievement level
 nets <- build_network(group_regulation_long,
+                      method = "relative",
                       actor = "Actor", action = "Action", time = "Time",
                       groups = "Achiever")
 nets

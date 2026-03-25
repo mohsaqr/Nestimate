@@ -118,6 +118,7 @@
 #'   \code{\link{bootstrap_network}}
 #'
 #' @importFrom stats aggregate ave cor complete.cases var
+#' @importFrom utils capture.output
 #' @export
 build_network <- function(data,
                           method,
