@@ -143,6 +143,18 @@ build_network <- function(data,
     return(.build_network_clustering(data, method = method, ...))
   }
 
+  # --- Early dispatch for net_mmm objects ---
+  # MMM components are already netobjects; wrap them as a netobject_group.
+  if (inherits(data, "net_mmm")) {
+    nets <- data$models
+    if (is.null(names(nets))) {
+      names(nets) <- paste0("Component ", seq_along(nets))
+    }
+    attr(nets, "group_col") <- "component"
+    class(nets) <- "netobject_group"
+    return(nets)
+  }
+
   stopifnot(is.character(method), length(method) == 1)
   stopifnot(is.list(params))
   stopifnot(is.numeric(threshold), length(threshold) == 1, threshold >= 0)

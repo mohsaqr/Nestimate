@@ -522,6 +522,15 @@ build_mmm <- function(data,
     if (run$ll > best$ll) best <- run
   }
 
+  # ---- Compute initial probabilities per component ----
+  # Weighted first-state distribution: for each sequence, weight its first
+  # state by the posterior probability of belonging to component m.
+  first_states <- vapply(seq_len(nrow(raw_data)), function(i) {
+    row <- as.character(raw_data[i, ])
+    row <- row[!is.na(row) & !(row %in% .void_markers)]
+    if (length(row)) row[[1L]] else NA_character_
+  }, character(1))
+
   # ---- Build netobjects for each component ----
   models <- lapply(seq_len(k), function(m) {
     P_vec <- best$P_all[, m]
@@ -534,6 +543,18 @@ build_mmm <- function(data,
       id = seq_along(states), label = states, name = states,
       x = NA_real_, y = NA_real_, stringsAsFactors = FALSE
     )
+
+    # Weighted initial probabilities using posterior of this component
+    w <- best$posterior[, m]
+    init <- setNames(numeric(n_states), states)
+    valid <- !is.na(first_states) & first_states %in% states
+    if (any(valid)) {
+      counts <- vapply(states, function(s)
+        sum(w[valid][first_states[valid] == s]), numeric(1))
+      total <- sum(counts)
+      if (total > 0) init <- counts / total
+    }
+
     structure(list(
       data = raw_data,
       weights = P_mat,
@@ -547,6 +568,7 @@ build_mmm <- function(data,
       n_nodes = n_states,
       n_edges = nrow(edges),
       level = NULL,
+      initial = init,
       meta = list(source = "nestimate", layout = NULL,
                   tna = list(method = "relative")),
       node_groups = NULL
