@@ -1,7 +1,10 @@
 Package: Nestimate
 Title: Network Estimation, Bootstrap, and Higher-Order Analysis
 Version: 0.2.0
-Authors@R: person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph"))
+Authors@R: c(
+    person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
+    person("Sonsoles", "López-Pernas", email = "sonsoles.lopez@uef.fi", role = "aut")
+    )
 Description: Estimate networks from sequence and panel data. Supports transition
     networks (relative, frequency, co-occurrence), association networks
     (correlation, partial correlation, graphical lasso, Ising), bootstrap
