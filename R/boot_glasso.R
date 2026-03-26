@@ -947,107 +947,167 @@ plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {
 
 #' Edge difference heatmap
 #'
-#' Upper triangle heatmap with red (significant) / green (non-significant)
-#' tiles and sample edge weights on the diagonal.
+#' Upper-triangle heatmap coloured by the mean bootstrap difference between
+#' each edge pair. Red = row edge stronger; blue = column edge stronger.
+#' Significant cells (p < alpha) are shown at full intensity with p-value
+#' stars; non-significant cells are nearly invisible. Diagonal shows the
+#' sample edge weight.
 #'
 #' @param x boot_glasso object.
 #' @param order Character. \code{"sample"} (default) orders edges by
-#'   absolute sample weight (ascending, strongest top-right); \code{"id"}
-#'   orders alphabetically.
+#'   absolute sample weight; \code{"id"} orders alphabetically.
+#' @param pos_color Colour for positive differences (row edge > col edge).
+#'   Default \code{"#C0392B"} (crimson).
+#' @param neg_color Colour for negative differences (col edge > row edge).
+#'   Default \code{"#2C6E8A"} (teal).
 #' @param ... Ignored.
 #' @noRd
-.bg_plot_edge_diff <- function(x, order = c("sample", "id"), ...) {
-  if (is.null(x$edge_diff_p)) {
+.bg_plot_edge_diff <- function(x,
+                                order     = c("sample", "id"),
+                                pos_color = "#C0392B",
+                                neg_color = "#2C6E8A",
+                                ...) {
+  if (is.null(x$edge_diff_p))
     stop("Edge difference test was not computed (too many edges).",
          call. = FALSE)
-  }
+
   order <- match.arg(order)
 
-  p_mat <- x$edge_diff_p
-  alpha <- x$alpha
+  p_mat      <- x$edge_diff_p
+  alpha      <- x$alpha
+  boot_mat   <- x$boot_edges
   edge_names <- colnames(p_mat)
-  n_e <- length(edge_names)
+  n_e        <- length(edge_names)
 
-  # Edge weights lookup
+  # Mean bootstrap differences: E[edge_i - edge_j] = mean(edge_i) - mean(edge_j)
+  edge_means    <- colMeans(boot_mat, na.rm = TRUE)
+  mean_diff_mat <- outer(edge_means, edge_means, `-`)
+  rownames(mean_diff_mat) <- colnames(mean_diff_mat) <- edge_names
+
+  # Edge weight lookup (diagonal labels)
   edge_weights <- x$edge_ci$weight
   names(edge_weights) <- x$edge_ci$edge
 
-  # Determine ordering
+  # Ordering
   if (order == "sample") {
     ordered_names <- edge_names[order(abs(edge_weights[edge_names]))]
   } else {
     ordered_names <- sort(edge_names)
   }
 
-  # Build grid: upper triangle + diagonal only
-  grid <- expand.grid(
-    edge1 = ordered_names,
-    edge2 = ordered_names,
-    stringsAsFactors = FALSE
-  )
+  # Build full grid
+  grid <- expand.grid(edge1 = ordered_names, edge2 = ordered_names,
+                      stringsAsFactors = FALSE)
   idx1 <- match(grid$edge1, ordered_names)
   idx2 <- match(grid$edge2, ordered_names)
 
-  grid$p_value <- vapply(seq_len(nrow(grid)), function(i) {
-    p_mat[grid$edge1[i], grid$edge2[i]]
-  }, numeric(1))
-
-  is_diag <- idx1 == idx2
   is_upper <- idx1 < idx2
-  is_lower <- idx1 > idx2
+  is_diag  <- idx1 == idx2
 
-  grid$fill <- ifelse(
-    is_diag, "diagonal",
-    ifelse(is_lower, "blank",
-      ifelse(grid$p_value < alpha, "significant", "non-significant")
-    )
+  grid$p_value   <- p_mat[cbind(grid$edge1, grid$edge2)]
+  grid$mean_diff <- mean_diff_mat[cbind(grid$edge1, grid$edge2)]
+  grid$sig       <- grid$p_value < alpha
+
+  # Fill value: mean_diff for upper triangle, 0 (midpoint) otherwise
+  grid$fill_val  <- ifelse(is_upper | is_diag, grid$mean_diff, NA_real_)
+  grid$fill_val[is_diag] <- 0
+
+  # Alpha: sig upper = 1, non-sig upper = 0.08, diagonal = 0.06, lower = 0
+  grid$alpha_val <- 0
+  grid$alpha_val[is_upper &  grid$sig] <- 1
+  grid$alpha_val[is_upper & !grid$sig] <- 0.08
+  grid$alpha_val[is_diag]              <- 0.06
+
+  # Significance stars for upper-triangle significant cells
+  grid$stars <- ""
+  grid$stars[is_upper & grid$sig] <- vapply(
+    grid$p_value[is_upper & grid$sig],
+    function(p) if (p < 0.001) "***" else if (p < 0.01) "**" else "*",
+    character(1)
   )
 
-  # Diagonal labels: sample edge weight
+  # Diagonal weight labels
   grid$label <- ifelse(is_diag,
-    sprintf("%.2f", edge_weights[grid$edge1]), "")
+                        sprintf("%.2f", edge_weights[grid$edge1]), "")
 
   grid$edge1 <- factor(grid$edge1, levels = ordered_names)
   grid$edge2 <- factor(grid$edge2, levels = rev(ordered_names))
 
-  label_size <- if (n_e <= 10) 3 else if (n_e <= 20) 2.2 else 1.5
+  label_size <- if (n_e <= 10) 3.2 else if (n_e <= 20) 2.5 else 1.8
+  star_size  <- label_size * 0.80
 
-  # Count significant pairs
-  ut <- which(upper.tri(p_mat), arr.ind = TRUE)
-  n_sig <- sum(p_mat[ut] < alpha)
+  # Subtitle
+  ut     <- which(upper.tri(p_mat), arr.ind = TRUE)
+  n_sig  <- sum(p_mat[ut] < alpha)
   n_pairs <- nrow(ut)
-  subtitle <- sprintf("%d of %d pairs significantly different (p < %s)",
-                       n_sig, n_pairs, alpha)
+  subtitle <- sprintf(
+    "%d of %d pairs significantly different (p < %s)  |  Red: row > col  |  Blue: col > row",
+    n_sig, n_pairs, alpha
+  )
 
-  ggplot2::ggplot(grid,
-    ggplot2::aes(x = .data$edge1, y = .data$edge2, fill = .data$fill)) +
-    ggplot2::geom_tile(colour = "white", linewidth = 0.3) +
+  # Abs max for symmetric scale
+  diff_max <- max(abs(grid$fill_val), na.rm = TRUE)
+  if (diff_max == 0) diff_max <- 0.1
+
+  ggplot2::ggplot(grid, ggplot2::aes(x = .data$edge1, y = .data$edge2)) +
+    # White background for all cells
+    ggplot2::geom_tile(fill = "white", colour = "#F0F0F0", linewidth = 0.25) +
+    # Coloured tiles (significant: full; non-sig: faint; diagonal: near-white)
+    ggplot2::geom_tile(
+      ggplot2::aes(fill = .data$fill_val, alpha = .data$alpha_val),
+      colour = "white", linewidth = 0.25
+    ) +
+    # Stars on significant cells
     ggplot2::geom_text(
+      data = grid[is_upper & grid$sig, ],
+      ggplot2::aes(label = .data$stars),
+      size = star_size, colour = "white", fontface = "bold"
+    ) +
+    # Edge weight on diagonal
+    ggplot2::geom_text(
+      data = grid[is_diag, ],
       ggplot2::aes(label = .data$label),
-      size = label_size, colour = "black"
+      size = label_size * 0.88, colour = "#444444"
     ) +
-    ggplot2::scale_fill_manual(
-      values = c(
-        "significant"     = "#E74C3C",
-        "non-significant" = "#2ECC71",
-        "diagonal"        = "white",
-        "blank"           = "white"
-      ),
-      labels = c(
-        "significant"     = sprintf("p < %s", alpha),
-        "non-significant" = sprintf("p >= %s", alpha)
-      ),
-      breaks = c("significant", "non-significant"),
-      name = NULL
+    ggplot2::scale_fill_gradient2(
+      low      = neg_color,
+      high     = pos_color,
+      mid      = "white",
+      midpoint = 0,
+      limits   = c(-diff_max, diff_max),
+      na.value = "transparent",
+      name     = "Mean\ndifference"
     ) +
-    ggplot2::labs(title = "Edge Difference Test",
-                   subtitle = subtitle, x = NULL, y = NULL) +
+    ggplot2::scale_alpha_identity() +
+    ggplot2::labs(
+      title    = "Bootstrap Edge Difference Test",
+      subtitle = subtitle,
+      x = NULL, y = NULL
+    ) +
     ggplot2::coord_fixed() +
-    ggplot2::theme_minimal() +
+    ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
-      panel.grid = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5),
-      axis.text.y = ggplot2::element_text()
+      panel.grid       = ggplot2::element_blank(),
+      axis.text.x      = ggplot2::element_text(
+        angle  = 45, hjust = 1, vjust = 1,
+        size   = label_size * 2.8, colour = "#333333"
+      ),
+      axis.text.y      = ggplot2::element_text(
+        size   = label_size * 2.8, colour = "#333333"
+      ),
+      plot.title       = ggplot2::element_text(
+        size = 13, face = "bold", colour = "#1A1A1A",
+        margin = ggplot2::margin(b = 4)
+      ),
+      plot.subtitle    = ggplot2::element_text(
+        size = 9, colour = "#666666",
+        margin = ggplot2::margin(b = 10)
+      ),
+      legend.title     = ggplot2::element_text(size = 8.5, colour = "#444444"),
+      legend.text      = ggplot2::element_text(size = 8, colour = "#555555"),
+      legend.key.width = ggplot2::unit(0.5, "cm"),
+      plot.background  = ggplot2::element_rect(fill = "white", colour = NA),
+      plot.margin      = ggplot2::margin(12, 12, 12, 12)
     )
 }
 
