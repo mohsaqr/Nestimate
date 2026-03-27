@@ -62,6 +62,8 @@ reference:
       - cluster_data
       - cluster_sequences
       - cluster_summary
+      - cluster_mmm
+      - cluster_network
       - csum
       - build_mcml
       - build_mmm
@@ -97,6 +99,7 @@ reference:
       - state_frequencies
       - aggregate_weights
       - wagg
+      - centrality
       - as_tna
       - extract_edges
       - extract_initial_probs
@@ -114,6 +117,7 @@ reference:
       - human_ai_edges
       - srl_strategies
       - learning_activities
+      - group_regulation_long
 
   - title: S3 Methods
     desc: Print, summary, and plot methods for package classes

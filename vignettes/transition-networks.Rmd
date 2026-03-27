@@ -145,11 +145,12 @@ print(net_wtna_rel)
 splot(net_wtna_rel)
 ```
 
+
+
 ```{r wtna-mixed, eval = requireNamespace("cograph", quietly = TRUE)}
 net_wtna_mixed <- wtna(learning_activities, method = "both", type = "relative")
 print(net_wtna_mixed)
-splot(net_wtna_mixed)
-splot(net_wtna_mixed, type = "group")
+splot(net_wtna_mixed$transition)
 ```
 
 ## Validation
