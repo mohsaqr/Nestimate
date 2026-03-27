@@ -18,7 +18,7 @@ d <- read.csv("saqrvibcoding.csv", stringsAsFactors = FALSE)
 ```{r}
 
 freqs <- build_network(d, method = "frequency", format = "long", action = "superclass")
-COg <- cograph::splot(freqs$matrix)
+COg <- cograph::splot(freqs$weights)
 
 
 
@@ -28,43 +28,20 @@ reld <- build_network(d, method = "relative",  action = "superclass")
 
 ```
 
-# 3. Group Networks
-
-```{r}
-grp <- build_network(wide, method = "relative", group = "Project")
-print(grp)
-
-```
-
-# 4. Multilevel (between/within)
-
-```{r}
-net_ml <- build_network(wide, method = "relative", id = "Project",
-                        level = "both")
-print(net_ml)
-round(net_ml$between$matrix, 3)
-round(net_ml$within$matrix, 3)
-```
 
 # 5. Bootstrap
 
 ```{r}
+net_rel <- build_network(d, method = "frequency", format = "long", action = "superclass")
+
 boot <- bootstrap_network(net_rel, iter = 500, seed = 42)
 print(boot)
 summary(boot)
+splot(boot)
+
+
 ```
 
-# 6. Permutation Test
-
-```{r}
-# Compare two large projects
-p7 <- wide[wide$Project == "Project_7", grep("^T", names(wide))]
-p5 <- wide[wide$Project == "Project_5", grep("^T", names(wide))]
-net7 <- build_network(p7, method = "relative")
-net5 <- build_network(p5, method = "relative")
-perm <- permutation_test(net7, net5, iter = 500, seed = 42)
-print(perm)
-```
 
 # 7. Reliability
 
@@ -76,18 +53,21 @@ print(rel)
 # 8. Centrality Stability
 
 ```{r}
+library(cograph)
 cs <- centrality_stability(net_rel, iter = 200, seed = 42)
 print(cs)
+
 ```
 
 # 9. Clustering
 
 ```{r}
-cl <- cluster_data(seq_wide, k = 3, seed = 42)
+cl <- cluster_network(net_rel)
 print(cl)
 summary(cl)
 plot(cl, type = "silhouette")
 plot(cl, type = "mds")
+
 ```
 
 ## With covariates

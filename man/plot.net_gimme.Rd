@@ -27,3 +27,16 @@ The input object, invisibly.
 \description{
 Plot Method for net_gimme
 }
+\examples{
+\donttest{
+set.seed(1)
+panel <- data.frame(
+  id = rep(1:5, each = 20),
+  t  = rep(seq_len(20), 5),
+  A  = rnorm(100), B = rnorm(100), C = rnorm(100)
+)
+gm <- build_gimme(panel, vars = c("A","B","C"), id = "id", time = "t")
+plot(gm, type = "temporal")
+}
+
+}

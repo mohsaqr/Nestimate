@@ -17,3 +17,17 @@ A data frame with edge-level permutation test results.
 \description{
 Summary Method for net_permutation
 }
+\examples{
+\donttest{
+set.seed(1)
+d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),
+                 V3 = c("C","A","C"))
+d2 <- data.frame(V1 = c("C","A","C"), V2 = c("A","B","A"),
+                 V3 = c("B","C","B"))
+net1 <- build_network(d1, method = "relative")
+net2 <- build_network(d2, method = "relative")
+perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+summary(perm)
+}
+
+}

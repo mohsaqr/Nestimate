@@ -1167,6 +1167,17 @@ build_hon <- function(data, max_order = 5L, min_freq = 1L,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' hon <- build_hon(seqs, max_order = 2L)
+#' print(hon)
+#' }
+#'
 #' @export
 print.net_hon <- function(x, ...) {
   cat("Higher-Order Network (HON)\n")
@@ -1186,6 +1197,17 @@ print.net_hon <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' hon <- build_hon(seqs, max_order = 2L)
+#' summary(hon)
+#' }
 #'
 #' @export
 summary.net_hon <- function(object, ...) {

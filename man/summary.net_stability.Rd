@@ -18,3 +18,18 @@ A data frame with columns \code{measure}, \code{drop_prop},
 \description{
 Returns the mean correlation at each drop proportion for each measure.
 }
+\examples{
+\donttest{
+set.seed(1)
+seqs <- data.frame(
+  V1 = sample(c("A","B","C"), 30, TRUE),
+  V2 = sample(c("A","B","C"), 30, TRUE),
+  V3 = sample(c("A","B","C"), 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+stab <- centrality_stability(net, measures = c("InStrength","OutStrength"),
+                              iter = 10)
+summary(stab)
+}
+
+}

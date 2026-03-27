@@ -606,16 +606,16 @@ test_that("plot.boot_glasso edge_diff order='id' sorts alphabetically", {
   expect_equal(edge_levels, sort(edge_levels))
 })
 
-test_that("plot.boot_glasso edge_diff uses discrete fill", {
+test_that("plot.boot_glasso edge_diff has fill_val column", {
   skip_if_not_installed("ggplot2")
   df <- .make_test_data(100, 4)
   result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
                          cs_drop = SMALL_CS_DROP, centrality = FAST_CENT,
                          seed = 1)
   p <- plot(result, type = "edge_diff")
-  # Data should have fill column with discrete values
-  expect_true("fill" %in% names(p$data))
-  expect_true(all(p$data$fill %in% c("significant", "non-significant", "diagonal", "blank")))
+  # Data should have fill_val column for continuous colour encoding
+  expect_true("fill_val" %in% names(p$data))
+  expect_true(is.numeric(p$data$fill_val) || all(is.na(p$data$fill_val)))
 })
 
 test_that("plot.boot_glasso edge_diff full matrix has n^2 tiles", {
@@ -852,15 +852,14 @@ test_that("boot_glasso computes all four centrality measures with centrality_fn"
   expect_equal(length(result$centrality_diff_p), 4)
 })
 
-test_that("boot_glasso closeness and betweenness require centrality_fn", {
+test_that("boot_glasso closeness and betweenness work without centrality_fn (built-in)", {
   df <- .make_test_data(100, 4)
-  expect_error(
-    boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
-                cs_drop = SMALL_CS_DROP,
-                centrality = c("closeness", "betweenness"),
-                seed = 1),
-    "centrality_fn is required"
-  )
+  result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                        cs_drop = SMALL_CS_DROP,
+                        centrality = c("closeness", "betweenness"),
+                        seed = 1)
+  expect_true("closeness" %in% names(result$centrality_ci))
+  expect_true("betweenness" %in% names(result$centrality_ci))
 })
 
 test_that("boot_glasso closeness and betweenness are non-negative with centrality_fn", {

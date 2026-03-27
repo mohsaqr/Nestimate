@@ -21,6 +21,14 @@ are q-connected if they share a face of dimension \eqn{\geq q}. Reports:
 \item \strong{Structure vector}: highest simplex dimension per node
 }
 }
+\examples{
+\donttest{
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+sc <- build_simplicial(mat, threshold = 0.3)
+q_analysis(sc)
+}
+}
 \references{
 Atkin, R. H. (1974). \emph{Mathematical Structure in Human Affairs}.
 }

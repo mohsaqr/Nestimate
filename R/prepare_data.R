@@ -238,6 +238,17 @@ prepare_data <- function(data,
 #' @param x A \code{nestimate_data} object.
 #' @param ... Additional arguments (ignored).
 #' @return The input object, invisibly.
+#' @examples
+#' \donttest{
+#' events <- data.frame(
+#'   actor  = c("u1","u1","u1","u2","u2","u2"),
+#'   action = c("A","B","C","B","A","C"),
+#'   time   = c(1,2,3,1,2,3)
+#' )
+#' nd <- prepare_data(events, action = "action",
+#'                    actor = "actor", time = "time")
+#' print(nd)
+#' }
 #' @export
 print.nestimate_data <- function(x, ...) {
   cat("Prepared Data for Network Estimation\n")

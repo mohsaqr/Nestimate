@@ -24,7 +24,7 @@
 #' @return For \code{method = "transition"} or \code{"cooccurrence"}: a
 #'   \code{netobject} (see \code{\link{build_network}}).
 #'
-#'   For \code{method = "both"}: a named list with elements
+#'   For \code{method = "both"}: a \code{wtna_mixed} object with elements
 #'   \code{$transition} and \code{$cooccurrence}, each a \code{netobject}.
 #'
 #' @details
@@ -93,14 +93,25 @@ wtna <- function(data,
     weights <- .wtna_compute_by_actor(df, codes, window_size, mode, actor, method)
   }
 
+  # Initial state probs for transition networks (directed only)
+  initial <- if (method %in% c("transition", "both"))
+    .wtna_initial_probs(df, codes, actor) else NULL
+
   if (method == "both") {
-    return(list(
-      transition = .wtna_finalize(weights$transition, type, codes, data, "transition"),
-      cooccurrence = .wtna_finalize(weights$cooccurrence, type, codes, data, "cooccurrence")
-    ))
+    result <- list(
+      transition   = .wtna_finalize(weights$transition,   type, codes, data, "transition",
+                                    initial = initial, window_size = window_size,
+                                    mode = mode, actor = actor),
+      cooccurrence = .wtna_finalize(weights$cooccurrence, type, codes, data, "cooccurrence",
+                                    window_size = window_size, mode = mode, actor = actor),
+      method = "wtna_both"
+    )
+    class(result) <- "wtna_mixed"
+    return(result)
   }
 
-  .wtna_finalize(weights, type, codes, data, method)
+  .wtna_finalize(weights, type, codes, data, method, initial = initial,
+                 window_size = window_size, mode = mode, actor = actor)
 }
 
 
@@ -314,9 +325,54 @@ wtna <- function(data,
 }
 
 
+#' Compute initial state probabilities for wtna transition networks
+#'
+#' For each actor (or the whole dataset if no actor), finds the first active
+#' row and distributes probability uniformly across all simultaneously active
+#' states. Results are averaged across actors to produce a distribution summing
+#' to 1. This handles binary data where multiple states can be active at once.
+#' @noRd
+.wtna_initial_probs <- function(df, codes, actor) {
+  X <- as.matrix(df[, codes, drop = FALSE])
+  storage.mode(X) <- "integer"
+
+  .first_row_probs <- function(mat) {
+    active_rows <- which(rowSums(mat) > 0L)
+    if (length(active_rows) == 0L) return(NULL)
+    active_cols <- which(mat[active_rows[1L], ] > 0L)
+    if (length(active_cols) == 0L) return(NULL)
+    init <- setNames(numeric(length(codes)), codes)
+    init[active_cols] <- 1.0 / length(active_cols)
+    init
+  }
+
+  if (is.null(actor)) {
+    return(.first_row_probs(X))
+  }
+
+  grp       <- df[[actor[1L]]]
+  actor_ids <- unique(grp)
+
+  prob_accum <- setNames(numeric(length(codes)), codes)
+  n_valid    <- 0L
+
+  for (id in actor_ids) {
+    p <- .first_row_probs(X[grp == id, , drop = FALSE])
+    if (is.null(p)) next
+    prob_accum <- prob_accum + p
+    n_valid    <- n_valid + 1L
+  }
+
+  if (n_valid == 0L) return(NULL)
+  prob <- prob_accum / n_valid
+  prob / sum(prob)   # ensure exact sum = 1 despite floating point
+}
+
 #' Finalize: row-normalize and build netobject
 #' @noRd
-.wtna_finalize <- function(weights, type, codes, data, method) {
+.wtna_finalize <- function(weights, type, codes, data, method, initial = NULL,
+                            window_size = 1L, mode = "non-overlapping",
+                            actor = NULL) {
   if (type == "relative") {
     rs <- rowSums(weights)
     rs[rs == 0] <- 1
@@ -347,12 +403,14 @@ wtna <- function(data,
       edges = edges,
       directed = directed,
       method = wtna_method,
-      params = list(type = type, window_size = 1L, mode = "non-overlapping"),
+      params = list(type = type, window_size = window_size, mode = mode,
+                    codes = codes, actor = actor),
       scaling = NULL,
       threshold = 0,
       n_nodes = length(codes),
       n_edges = nrow(edges),
       level = NULL,
+      initial = initial,
       meta = list(source = "nestimate", layout = NULL,
                   tna = list(method = wtna_method)),
       node_groups = NULL
@@ -379,7 +437,8 @@ wtna <- function(data,
 #' @noRd
 .estimator_wtna_core <- function(data, codes = NULL, window_size = 1L,
                                   mode = "non-overlapping", actor = NULL,
-                                  wtna_method = "transition", ...) {
+                                  wtna_method = "transition",
+                                  type = "frequency", ...) {
   df <- as.data.frame(data)
   codes <- .resolve_codes(df, codes, exclude = actor)
 
@@ -395,6 +454,12 @@ wtna <- function(data,
     stopifnot(all(actor %in% names(df)))
     weights <- .wtna_compute_by_actor(df, codes, window_size, mode,
                                        actor, wtna_method)
+  }
+
+  if (type == "relative") {
+    rs <- rowSums(weights)
+    rs[rs == 0] <- 1
+    weights <- weights / rs
   }
 
   dimnames(weights) <- list(codes, codes)
@@ -455,5 +520,36 @@ wtna <- function(data,
     time = time, cols = cols, ...
   )
 }
+
+
+
+
+#' Print Method for wtna_mixed
+#'
+#' @param x A \code{wtna_mixed} object.
+#' @param ... Additional arguments (ignored).
+#' @return The input object, invisibly.
+#' @examples
+#' \donttest{
+#' oh <- data.frame(
+#'   A = c(1,0,1,0,1,0,1,0),
+#'   B = c(0,1,0,1,0,1,0,1),
+#'   C = c(1,1,0,0,1,1,0,0)
+#' )
+#' mixed <- wtna(oh, method = "both")
+#' print(mixed)
+#' }
+#' @export
+print.wtna_mixed <- function(x, ...) {
+  cat("Mixed Window TNA (transition + co-occurrence)\n")
+  cat("-- Transition (directed) --\n")
+  t <- x$transition
+  cat(sprintf("  Nodes: %d  |  Edges: %d\n", t$n_nodes, t$n_edges))
+  cat("-- Co-occurrence (undirected) --\n")
+  co <- x$cooccurrence
+  cat(sprintf("  Nodes: %d  |  Edges: %d\n", co$n_nodes, co$n_edges))
+  invisible(x)
+}
+
 
 

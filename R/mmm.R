@@ -374,6 +374,8 @@ build_mmm <- function(data,
   )
 
   # ---- Extract data and states ----
+  network_method <- NULL
+  build_args     <- NULL
   if (inherits(data, "tna") || inherits(data, "ftna")) {
     raw_data <- data$data
     states <- data$labels
@@ -388,6 +390,8 @@ build_mmm <- function(data,
     raw_data <- data$data
     states <- data$nodes$label
   } else if (inherits(data, "netobject")) {
+    network_method <- data$method
+    build_args     <- data$build_args
     raw_data <- data$data
     states <- data$nodes$label
   } else {
@@ -534,6 +538,10 @@ build_mmm <- function(data,
       id = seq_along(states), label = states, name = states,
       x = NA_real_, y = NA_real_, stringsAsFactors = FALSE
     )
+
+    # Initial state probabilities from EM M-step (states x components matrix)
+    init <- setNames(best$init_all[, m], states)
+
     structure(list(
       data = raw_data,
       weights = P_mat,
@@ -547,13 +555,14 @@ build_mmm <- function(data,
       n_nodes = n_states,
       n_edges = nrow(edges),
       level = NULL,
+      initial = init,
       meta = list(source = "nestimate", layout = NULL,
                   tna = list(method = "relative")),
       node_groups = NULL
     ), class = c("netobject", "cograph_network"))
   })
 
-  names(models) <- paste0("Component_", seq_len(k))
+  names(models) <- paste0("Cluster ", seq_len(k))
 
   # ---- Assignments & quality ----
   assignments <- apply(best$posterior, 1L, which.max)
@@ -594,7 +603,9 @@ build_mmm <- function(data,
     converged = best$converged,
     states = states,
     n_sequences = N,
-    covariates = cov_result
+    covariates = cov_result,
+    network_method = network_method,
+    build_args     = build_args
   ), class = "net_mmm")
 }
 
@@ -654,6 +665,18 @@ compare_mmm <- function(data, k = 2:5, ...) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
+#' print(mmm)
+#' }
+#'
 #' @export
 print.net_mmm <- function(x, ...) {
   cat("Mixed Markov Model\n")
@@ -690,6 +713,18 @@ print.net_mmm <- function(x, ...) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
+#' summary(mmm)
+#' }
+#'
 #' @export
 summary.net_mmm <- function(object, ...) {
   print(object)
@@ -720,6 +755,18 @@ summary.net_mmm <- function(object, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return A \code{ggplot} object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
+#' plot(mmm, type = "posterior")
+#' }
 #'
 #' @export
 plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
@@ -773,6 +820,18 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 5, seed = 1)
+#' print(cmp)
+#' }
+#'
 #' @export
 print.mmm_compare <- function(x, ...) {
   cat("MMM Model Comparison\n\n")
@@ -791,6 +850,18 @@ print.mmm_compare <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return A \code{ggplot} object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 5, seed = 1)
+#' plot(cmp)
+#' }
 #'
 #' @export
 plot.mmm_compare <- function(x, ...) {
@@ -817,3 +888,33 @@ plot.mmm_compare <- function(x, ...) {
   print(p)
   invisible(p)
 }
+
+# ---------------------------------------------------------------------------
+# cluster_mmm — convenience alias for build_mmm
+# ---------------------------------------------------------------------------
+
+#' Cluster sequences using Mixed Markov Models
+#'
+#' Convenience alias for \code{\link{build_mmm}}. Fits a mixture of Markov
+#' chains to sequence data and returns per-component transition networks with
+#' EM-fitted initial state probabilities.
+#'
+#' Use \code{\link{build_network}} on the result to extract per-cluster
+#' networks with any estimation method, or use \code{\link{cluster_network}}
+#' for a one-shot clustering + network call.
+#'
+#' @inheritParams build_mmm
+#' @return A \code{net_mmm} object. See \code{\link{build_mmm}} for details.
+#' @seealso \code{\link{build_mmm}}, \code{\link{cluster_network}}
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:3], 40, TRUE),
+#'   V2 = sample(LETTERS[1:3], 40, TRUE),
+#'   V3 = sample(LETTERS[1:3], 40, TRUE)
+#' )
+#' mmm <- cluster_mmm(seqs, k = 2)
+#' print(mmm)
+#' }
+#' @export
+cluster_mmm <- build_mmm

@@ -355,6 +355,19 @@ reliability <- function(..., iter = 1000L, split = 0.5,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' rel <- reliability(net, iter = 20, seed = 1)
+#' print(rel)
+#' }
+#'
 #' @export
 print.net_reliability <- function(x, ...) {
   cat(sprintf("Split-Half Reliability (%d iterations, split = %.0f%%",
@@ -397,6 +410,19 @@ print.net_reliability <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return A \code{ggplot} object (invisibly).
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' rel <- reliability(net, iter = 20, seed = 1)
+#' plot(rel)
+#' }
 #'
 #' @export
 plot.net_reliability <- function(x, ...) {

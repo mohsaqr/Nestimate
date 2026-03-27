@@ -78,6 +78,23 @@ bootstrap_network <- function(x,
                               edge_threshold = NULL,
                               seed = NULL) {
 
+  # ---- wtna_mixed dispatch: bootstrap both components ----
+  if (inherits(x, "wtna_mixed")) {
+    if (!is.null(seed)) set.seed(seed)
+    result <- list(
+      transition   = bootstrap_network(x$transition,   iter = iter,
+                                       ci_level = ci_level, inference = inference,
+                                       consistency_range = consistency_range,
+                                       edge_threshold = edge_threshold),
+      cooccurrence = bootstrap_network(x$cooccurrence, iter = iter,
+                                       ci_level = ci_level, inference = inference,
+                                       consistency_range = consistency_range,
+                                       edge_threshold = edge_threshold)
+    )
+    class(result) <- "wtna_boot_mixed"
+    return(result)
+  }
+
   # ---- netobject_group dispatch: bootstrap each element ----
   if (inherits(x, "netobject_group")) {
     results <- lapply(x, function(net) {
@@ -86,6 +103,7 @@ bootstrap_network <- function(x,
                         consistency_range = consistency_range,
                         edge_threshold = edge_threshold, seed = seed)
     })
+    class(results) <- c("net_bootstrap_group", "list")
     return(results)
   }
 
@@ -524,38 +542,73 @@ bootstrap_network <- function(x,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),
+#'   V3 = c("C","A","C","B","A")
+#' )
+#' net  <- build_network(seqs, method = "relative")
+#' boot <- bootstrap_network(net, iter = 20)
+#' print(boot)
+#' }
+#'
 #' @export
 print.net_bootstrap <- function(x, ...) {
   method_labels <- c(
-    relative      = "Transition Network (relative probabilities)",
-    frequency     = "Transition Network (frequency counts)",
+    relative      = "Transition Network (relative)",
+    frequency     = "Transition Network (frequency)",
     co_occurrence = "Co-occurrence Network",
-    glasso        = "Partial Correlation Network (EBICglasso)",
-    pcor          = "Partial Correlation Network (unregularised)",
+    glasso        = "Partial Correlation (EBICglasso)",
+    pcor          = "Partial Correlation",
     cor           = "Correlation Network",
-    attention     = "Attention Network (decay-weighted transitions)",
-    wtna          = "Window TNA (transitions)"
+    attention     = "Attention Network",
+    wtna          = "Window TNA"
   )
-  label <- if (x$method %in% names(method_labels)) {
-    method_labels[[x$method]]
-  } else {
-    sprintf("Network (method: %s)", x$method)
+  lbl_raw   <- method_labels[x$method]
+  label     <- if (is.na(lbl_raw)) sprintf("Network (%s)", x$method) else unname(lbl_raw)
+  dir_label <- if (x$original$directed) "directed" else "undirected"
+  ci_pct    <- sprintf("%d%%", round((1 - x$ci_level) * 100))
+  n_orig    <- x$original$n_edges
+  n_sig     <- x$model$n_edges
+  n_nonsig  <- n_orig - n_sig
+
+  # Top significant edges first
+  s <- x$summary
+  if (!is.null(s) && nrow(s) > 0L) {
+    sig_s <- s[s$sig, , drop = FALSE]
+    if (nrow(sig_s) > 0L) {
+      sig_s <- sig_s[order(abs(sig_s$mean), decreasing = TRUE), , drop = FALSE]
+      top   <- head(sig_s, 5L)
+      cat("  Edge                   Mean     95% CI          p\n")
+      cat("  -----------------------------------------------\n")
+      for (i in seq_len(nrow(top))) {
+        r <- top[i, ]
+        lbl <- if (!is.null(r$from) && !is.null(r$to))
+          sprintf("%-20s", paste0(r$from, " \u2192 ", r$to))
+        else
+          sprintf("%-20s", r$edge)
+        stars <- if (r$p_value < 0.001) "***" else if (r$p_value < 0.01) "** " else "*  "
+        cat(sprintf("  %s  %6.3f  [%5.3f, %5.3f]  %s\n",
+                    lbl, r$mean, r$ci_lower, r$ci_upper, stars))
+      }
+      if (nrow(sig_s) > 5L)
+        cat(sprintf("  ... and %d more significant edges\n", nrow(sig_s) - 5L))
+      cat("\n")
+    }
   }
 
-  dir_label <- if (x$original$directed) " [directed]" else " [undirected]"
-
-  cat("Bootstrap:", label, dir_label, "\n", sep = "")
-  cat(sprintf("  Iterations: %d  |  CI level: %.2f  |  Inference: %s\n",
-              x$iter, x$ci_level, x$inference))
-  cat(sprintf("  Nodes: %d  |  Original edges: %d  |  Significant edges: %d\n",
-              x$original$n_nodes, x$original$n_edges, x$model$n_edges))
-
+  cat(sprintf("Bootstrap Network  [%s | %s]\n", label, dir_label))
+  cat(sprintf("  Iterations : %d  |  Nodes : %d\n", x$iter, x$original$n_nodes))
+  cat(sprintf("  Edges      : %d significant / %d total\n", n_sig, n_orig))
+  cat(sprintf("  CI         : %s  |  Inference: %s", ci_pct, x$inference))
   if (x$inference == "stability") {
-    cat(sprintf("  Consistency range: [%.2f, %.2f]\n",
-                x$consistency_range[1], x$consistency_range[2]))
+    cat(sprintf("  |  CR [%.2f, %.2f]", x$consistency_range[1L], x$consistency_range[2L]))
   } else {
-    cat(sprintf("  Edge threshold: %g\n", x$edge_threshold))
+    cat(sprintf("  |  Threshold: %g", x$edge_threshold))
   }
+  cat("\n")
 
   invisible(x)
 }
@@ -568,9 +621,184 @@ print.net_bootstrap <- function(x, ...) {
 #'
 #' @return A data frame with edge-level bootstrap statistics.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),
+#'   V3 = c("C","A","C","B","A")
+#' )
+#' net  <- build_network(seqs, method = "relative")
+#' boot <- bootstrap_network(net, iter = 20)
+#' summary(boot)
+#' }
+#'
 #' @export
 summary.net_bootstrap <- function(object, ...) {
   object$summary
+}
+
+#' Print Method for net_bootstrap_group
+#' @param x A \code{net_bootstrap_group} object.
+#' @param ... Ignored.
+#' @return \code{x} invisibly.
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C","B","A"),
+#'   V2 = c("B","C","B","A","C","B"),
+#'   V3 = c("C","A","C","B","A","C"),
+#'   grp = c("X","X","X","Y","Y","Y")
+#' )
+#' nets <- build_network(seqs, method = "relative", group = "grp")
+#' boot <- bootstrap_network(nets, iter = 20)
+#' print(boot)
+#' }
+#' @export
+print.net_bootstrap_group <- function(x, ...) {
+  grp_names <- names(x)
+  iter      <- x[[1L]]$iter
+  ci_pct    <- sprintf("%d%%", round((1 - x[[1L]]$ci_level) * 100))
+
+  # Per-group edge counts
+  grp_stats <- vapply(grp_names, function(nm) {
+    b <- x[[nm]]
+    c(total = b$original$n_edges, sig = b$model$n_edges)
+  }, numeric(2L))
+
+  # Helper: make edge keys "from→to" from a summary df
+  .edge_keys <- function(s) {
+    if (is.null(s) || nrow(s) == 0L) return(character(0L))
+    idx <- which(s$sig)
+    if (length(idx) == 0L) return(character(0L))
+    paste0(s$from[idx], "\u2192", s$to[idx])
+  }
+
+  # Shared significant edges (present in all groups)
+  sig_keys  <- lapply(grp_names, function(nm) .edge_keys(x[[nm]]$summary))
+  shared    <- Reduce(intersect, sig_keys)
+
+  # Top shared edges table first
+  if (length(shared) > 0L) {
+    .mean_for_key <- function(nm, key) {
+      s <- x[[nm]]$summary
+      parts <- strsplit(key, "\u2192", fixed = TRUE)[[1L]]
+      idx <- which(s$from == parts[1L] & s$to == parts[2L])
+      if (length(idx) == 0L) NA_real_ else s$mean[idx[1L]]
+    }
+    shared_max <- vapply(shared, function(k) {
+      max(abs(vapply(grp_names, .mean_for_key, numeric(1L), key = k)), na.rm = TRUE)
+    }, numeric(1L))
+    top_shared <- shared[order(shared_max, decreasing = TRUE)][seq_len(min(5L, length(shared)))]
+    hdr <- paste(sprintf("%-8s", grp_names), collapse = "  ")
+    cat(sprintf("  Edge                   %s\n", hdr))
+    cat(sprintf("  %s\n", strrep("-", 24L + 10L * length(grp_names))))
+    for (k in top_shared) {
+      grp_vals <- vapply(grp_names, .mean_for_key, numeric(1L), key = k)
+      vals_str <- paste(sprintf("%-8.3f", grp_vals), collapse = "  ")
+      cat(sprintf("  %-22s  %s\n", k, vals_str))
+    }
+    if (length(shared) > 5L)
+      cat(sprintf("  ... and %d more shared significant edges\n", length(shared) - 5L))
+    cat("\n")
+  }
+
+  cat(sprintf("Grouped Bootstrap  [%d groups | %d iterations | %s CI]\n",
+              length(grp_names), iter, ci_pct))
+  for (nm in grp_names) {
+    cat(sprintf("  %-20s  %d sig / %d total\n",
+                nm, grp_stats["sig", nm], grp_stats["total", nm]))
+  }
+  cat(sprintf("  Shared (all groups)   %d edges\n", length(shared)))
+
+  invisible(x)
+}
+
+#' Summary Method for net_bootstrap_group
+#' @param object A \code{net_bootstrap_group} object.
+#' @param ... Ignored.
+#' @return A data frame with group, edge, and bootstrap statistics columns.
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C","B","A"),
+#'   V2 = c("B","C","B","A","C","B"),
+#'   V3 = c("C","A","C","B","A","C"),
+#'   grp = c("X","X","X","Y","Y","Y")
+#' )
+#' nets <- build_network(seqs, method = "relative", group = "grp")
+#' boot <- bootstrap_network(nets, iter = 20)
+#' summary(boot)
+#' }
+#' @export
+summary.net_bootstrap_group <- function(object, ...) {
+  do.call(rbind, lapply(names(object), function(nm) {
+    df       <- object[[nm]]$summary
+    df$group <- nm
+    df[c("group", setdiff(names(df), "group"))]
+  }))
+}
+
+
+#' Print Method for wtna_boot_mixed
+#'
+#' @param x A \code{wtna_boot_mixed} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' oh <- data.frame(
+#'   A = c(1,0,1,0,1,0,1,0),
+#'   B = c(0,1,0,1,0,1,0,1),
+#'   C = c(1,1,0,0,1,1,0,0)
+#' )
+#' mixed <- wtna(oh, method = "both")
+#' boot  <- bootstrap_network(mixed, iter = 20)
+#' print(boot)
+#' }
+#'
+#' @export
+print.wtna_boot_mixed <- function(x, ...) {
+  cat("Mixed Window TNA Bootstrap\n")
+  cat("-- Transition --\n")
+  print(x$transition)
+  cat("-- Co-occurrence --\n")
+  print(x$cooccurrence)
+  invisible(x)
+}
+
+
+#' Summary Method for wtna_boot_mixed
+#'
+#' @param object A \code{wtna_boot_mixed} object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return A list with \code{$transition} and \code{$cooccurrence} summary data frames.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' oh <- data.frame(
+#'   A = c(1,0,1,0,1,0,1,0),
+#'   B = c(0,1,0,1,0,1,0,1),
+#'   C = c(1,1,0,0,1,1,0,0)
+#' )
+#' mixed <- wtna(oh, method = "both")
+#' boot  <- bootstrap_network(mixed, iter = 20)
+#' summary(boot)
+#' }
+#'
+#' @export
+summary.wtna_boot_mixed <- function(object, ...) {
+  list(
+    transition   = summary(object$transition),
+    cooccurrence = summary(object$cooccurrence)
+  )
 }
 
 

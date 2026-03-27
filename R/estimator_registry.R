@@ -174,4 +174,14 @@ remove_estimator <- function(name) {
                      "Decay-weighted attention transitions", directed = TRUE)
   register_estimator("wtna", .estimator_wtna,
                      "Window-based TNA transitions (one-hot)", directed = TRUE)
+  register_estimator("wtna_cooccurrence",
+                     function(data, codes = NULL, window_size = 1L,
+                              mode = "non-overlapping", actor = NULL,
+                              type = "frequency", ...) {
+                       .estimator_wtna_core(data, codes = codes,
+                         window_size = window_size, mode = mode,
+                         actor = actor, wtna_method = "cooccurrence",
+                         type = type, ...)
+                     },
+                     "Window-based TNA co-occurrence (one-hot)", directed = FALSE)
 }

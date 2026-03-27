@@ -292,7 +292,7 @@ test_that("wcna bootstrap works via wtna()", {
   net <- wtna(df, method = "cooccurrence")
   boot <- bootstrap_network(net, iter = 20, seed = 1)
   expect_s3_class(boot, "net_bootstrap")
-  expect_equal(boot$method, "co_occurrence")
+  expect_equal(boot$method, "wtna_cooccurrence")
   expect_false(boot$original$directed)
 })
 
@@ -359,7 +359,7 @@ test_that("wcna permutation test works via wtna()", {
   perm <- permutation_test(net1, net2, iter = 20, seed = 1)
 
   expect_s3_class(perm, "net_permutation")
-  expect_equal(perm$method, "co_occurrence")
+  expect_equal(perm$method, "wtna_cooccurrence")
 })
 
 test_that("wcna permutation errors with build_network (no stored data)", {

@@ -938,6 +938,18 @@ build_gimme <- function(data,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' panel <- data.frame(
+#'   id = rep(1:5, each = 20),
+#'   t  = rep(seq_len(20), 5),
+#'   A  = rnorm(100), B = rnorm(100), C = rnorm(100)
+#' )
+#' gm <- build_gimme(panel, vars = c("A","B","C"), id = "id", time = "t")
+#' print(gm)
+#' }
+#'
 #' @export
 print.net_gimme <- function(x, ...) {
   cat("GIMME Network Analysis\n")
@@ -973,6 +985,18 @@ print.net_gimme <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' panel <- data.frame(
+#'   id = rep(1:5, each = 20),
+#'   t  = rep(seq_len(20), 5),
+#'   A  = rnorm(100), B = rnorm(100), C = rnorm(100)
+#' )
+#' gm <- build_gimme(panel, vars = c("A","B","C"), id = "id", time = "t")
+#' summary(gm)
+#' }
 #'
 #' @export
 summary.net_gimme <- function(object, ...) {
@@ -1026,6 +1050,18 @@ summary.net_gimme <- function(object, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' panel <- data.frame(
+#'   id = rep(1:5, each = 20),
+#'   t  = rep(seq_len(20), 5),
+#'   A  = rnorm(100), B = rnorm(100), C = rnorm(100)
+#' )
+#' gm <- build_gimme(panel, vars = c("A","B","C"), id = "id", time = "t")
+#' plot(gm, type = "temporal")
+#' }
 #'
 #' @export
 plot.net_gimme <- function(x, type = c("temporal", "contemporaneous",

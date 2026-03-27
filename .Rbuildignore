@@ -18,6 +18,9 @@
 ^data-raw$
 ^\.DS_Store$
 ^tests/testthat/_problems$
+<<<<<<< HEAD
 ^_pkgdown\.yml$
 ^\.github$
 ^pkgdown$
+^doc$
+^Meta$

@@ -118,6 +118,7 @@
 #'   \code{\link{bootstrap_network}}
 #'
 #' @importFrom stats aggregate ave cor complete.cases var
+#' @importFrom utils capture.output
 #' @export
 build_network <- function(data,
                           method,
@@ -139,8 +140,42 @@ build_network <- function(data,
                           ...) {
   # --- Early dispatch for net_clustering objects ---
   if (inherits(data, "net_clustering")) {
-    if (missing(method)) method <- "relative"
+    if (missing(method)) method <- data$network_method %||% "relative"
     return(.build_network_clustering(data, method = method, ...))
+  }
+
+  # --- Early dispatch for net_mmm objects ---
+  if (inherits(data, "net_mmm")) {
+    if (missing(method)) method <- data$network_method %||% "relative"
+    resolved <- .resolve_method_alias(method)
+    if (resolved != "relative") {
+      # Re-build per-component networks from hard assignments using requested method
+      raw_data    <- data$models[[1L]]$data
+      assignments <- data$assignments
+      k_comp      <- data$k
+      # Merge stored build_args with caller's ...; caller takes precedence
+      dots      <- list(...)
+      call_args <- if (!is.null(data$build_args)) modifyList(data$build_args, dots) else dots
+      nets <- lapply(seq_len(k_comp), function(m) {
+        sub <- raw_data[assignments == m, , drop = FALSE]
+        net <- do.call(build_network, c(list(data = sub, method = method), call_args))
+        # Inject EM-fitted initials only for directed sequence methods
+        if (resolved %in% c("relative", "frequency", "attention")) {
+          net$initial <- data$models[[m]]$initial
+        }
+        net
+      })
+      names(nets) <- paste0("Cluster ", seq_len(k_comp))
+      attr(nets, "group_col") <- "component"
+      class(nets) <- "netobject_group"
+      return(nets)
+    }
+    # Default: wrap pre-built "relative" models (retain $initial from EM)
+    nets <- data$models
+    if (is.null(names(nets))) names(nets) <- paste0("Cluster ", seq_along(nets))
+    attr(nets, "group_col") <- "component"
+    class(nets) <- "netobject_group"
+    return(nets)
   }
 
   stopifnot(is.character(method), length(method) == 1)
@@ -350,6 +385,13 @@ build_network <- function(data,
   # A column is a state column if all its non-void/non-NA values are in nodes
   raw_data <- est_result$cleaned_data
   metadata <- NULL
+  # Use prepared$meta_data when available (long format path)
+  if (!is.null(prepared) && !is.null(prepared$meta_data)) {
+    md <- prepared$meta_data
+    # Drop internal .session_id column
+    md <- md[, setdiff(names(md), ".session_id"), drop = FALSE]
+    if (ncol(md) > 0L) metadata <- md
+  }
   if (is.data.frame(raw_data)) {
     is_state_col <- vapply(raw_data, function(col) {
       vals <- .clean_states(as.character(col))
@@ -359,7 +401,7 @@ build_network <- function(data,
     state_cols <- names(raw_data)[is_state_col]
     extra_cols <- names(raw_data)[!is_state_col]
     if (length(extra_cols) > 0L) {
-      metadata <- raw_data[, extra_cols, drop = FALSE] # nocov
+      if (is.null(metadata)) metadata <- raw_data[, extra_cols, drop = FALSE]
       raw_data <- raw_data[, state_cols, drop = FALSE]
     }
     # Clean void/missing markers in character/factor state columns
@@ -399,6 +441,11 @@ build_network <- function(data,
     n_edges = nrow(edges),
     level = level,
     prepared = prepared,
+    build_args = list(
+      actor = actor, action = action, time = time, session = session,
+      order = order, codes = codes, format = format,
+      window_size = window_size, mode = mode
+    ),
     meta = list(
       source = "nestimate",
       layout = NULL,
@@ -426,6 +473,16 @@ build_network <- function(data,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+#'   V3 = c("C","A","C","B")
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' print(net)
+#' }
+#'
 #' @export
 print.netobject <- function(x, ...) {
   method_labels <- c(
@@ -446,102 +503,66 @@ print.netobject <- function(x, ...) {
     sprintf("Network (method: %s)", x$method)
   }
 
-  dir_label <- if (x$directed) " [directed]" else " [undirected]"
-  level_label <- if (!is.null(x$level)) {
-    sprintf(" [%s-person]", x$level)
-  } else ""
-
+  dir_label   <- if (x$directed) " [directed]" else " [undirected]"
+  level_label <- if (!is.null(x$level)) sprintf(" [%s-person]", x$level) else ""
   cat(label, dir_label, level_label, "\n", sep = "")
 
-  # ---- Data overview ----
-  if (!is.null(x$data)) {
-    cat(sprintf("  Data: %d sequences x %d time points\n",
-                nrow(x$data), ncol(x$data)))
-  }
-  if (!is.null(x$metadata)) { # nocov start
-    cat(sprintf("  Metadata: %s\n",
-                paste(names(x$metadata), collapse = ", ")))
-  } # nocov end
   if (!is.null(x$n)) cat(sprintf("  Sample size: %d\n", x$n))
 
-  # ---- Nodes ----
-  labels <- x$nodes$label
-  cat(sprintf("  Nodes (%d): %s\n", x$n_nodes,
-              if (x$n_nodes <= 8) paste(labels, collapse = ", ")
-              else paste(c(labels[1:6], sprintf("... +%d more", x$n_nodes - 6)),
-                         collapse = ", ")))
-
-  # ---- Network structure ----
+  # ---- Weight summary (one line) ----
   mat <- x$weights
-  n <- x$n_nodes
-  max_possible <- if (x$directed) n * (n - 1) else n * (n - 1) / 2
-  density <- if (max_possible > 0) x$n_edges / max_possible else 0
-  cat(sprintf("  Edges: %d / %d (density: %.1f%%)\n",
-              x$n_edges, as.integer(max_possible), density * 100))
-
-  # Edge weight summary
   if (x$directed) {
     nz <- mat[mat != 0 & row(mat) != col(mat)]
   } else {
     nz <- mat[upper.tri(mat) & mat != 0]
   }
-
   if (length(nz) > 0) {
     is_assoc <- x$method %in% c("cor", "pcor", "glasso", "ising")
     if (is_assoc) {
-      n_pos <- sum(nz > 0)
-      n_neg <- sum(nz < 0)
       cat(sprintf("  Weights: [%.3f, %.3f]  |  +%d / -%d edges\n",
-                  min(nz), max(nz), n_pos, n_neg))
+                  min(nz), max(nz), sum(nz > 0), sum(nz < 0)))
     } else {
       cat(sprintf("  Weights: [%.3f, %.3f]  |  mean: %.3f\n",
                   min(nz), max(nz), mean(nz)))
     }
-
-    # Top edges
-    if (x$directed) {
-      idx <- which(mat != 0 & row(mat) != col(mat), arr.ind = TRUE)
-    } else {
-      idx <- which(upper.tri(mat) & mat != 0, arr.ind = TRUE)
-    }
-    if (nrow(idx) > 0) {
-      w <- mat[idx]
-      top_k <- min(5L, nrow(idx))
-      ord <- order(abs(w), decreasing = TRUE)[seq_len(top_k)]
-      cat("  Strongest edges:\n")
-      for (j in ord) {
-        arrow <- if (x$directed) " -> " else " -- "
-        cat(sprintf("    %s%s%s  %.3f\n",
-                    labels[idx[j, 1]], arrow, labels[idx[j, 2]], w[j]))
-      }
-    }
   }
 
-  # Self-loops
-  diag_vals <- diag(mat)
-  n_self <- sum(diag_vals != 0)
-  if (n_self > 0) {
-    cat(sprintf("  Self-loops: %d  |  range: [%.3f, %.3f]\n",
-                n_self, min(diag_vals[diag_vals != 0]),
-                max(diag_vals[diag_vals != 0])))
+  # ---- Weight matrix ----
+  cat("\n  Weight matrix:\n")
+  digits <- if (all(nz == floor(nz))) 0L else 3L
+  mat_r  <- round(mat, digits)
+  labels <- x$nodes$label
+  dimnames(mat_r) <- list(labels, labels)
+  formatted <- capture.output(print(mat_r))
+  cat(paste0("  ", formatted, collapse = "\n"), "\n")
+
+  # ---- Initial probabilities ----
+  if (!is.null(x$initial) && length(x$initial) > 0) {
+    cat("\n  Initial probabilities:\n")
+    init  <- x$initial
+    ord   <- order(init, decreasing = TRUE)
+    bar_w <- 40L
+    max_v <- max(init)
+    vapply(ord, function(i) {
+      bars <- if (max_v > 0) strrep("\u2588", round(init[i] / max_v * bar_w)) else ""
+      cat(sprintf("  %-12s  %.3f  %s\n", names(init)[i], init[i], bars))
+      invisible("")
+    }, character(1L))
   }
 
-  # ---- Method-specific ----
+  # ---- Method-specific params ----
   if (x$method == "glasso" && !is.null(x$gamma)) {
-    cat(sprintf("  Gamma: %.2f  |  Lambda: %.4f\n",
-                x$gamma, x$lambda_selected))
+    cat(sprintf("\n  Gamma: %.2f  |  Lambda: %.4f\n", x$gamma, x$lambda_selected))
   }
   if (x$method == "ising") {
-    cat(sprintf("  Gamma: %.2f  |  Rule: %s\n", x$gamma, x$rule))
+    cat(sprintf("\n  Gamma: %.2f  |  Rule: %s\n", x$gamma, x$rule))
     if (!is.null(x$thresholds)) {
       thr_rng <- range(x$thresholds)
       cat(sprintf("  Thresholds: [%.3f, %.3f]\n", thr_rng[1], thr_rng[2]))
     }
   }
-  if (!is.null(x$scaling)) {
-    cat(sprintf("  Scaling: %s\n", paste(x$scaling, collapse = " -> ")))
-  }
-  if (x$threshold > 0) cat(sprintf("  Threshold: %g\n", x$threshold))
+  if (!is.null(x$scaling))  cat(sprintf("\n  Scaling: %s\n",   paste(x$scaling, collapse = " -> ")))
+  if (x$threshold > 0)      cat(sprintf("  Threshold: %g\n",  x$threshold))
 
   invisible(x)
 }
@@ -553,6 +574,18 @@ print.netobject <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C","B","A"),
+#'   V2 = c("B","C","B","A","C","B"),
+#'   V3 = c("C","A","C","B","A","C"),
+#'   grp = c("X","X","X","Y","Y","Y")
+#' )
+#' nets <- build_network(seqs, method = "relative", group = "grp")
+#' print(nets)
+#' }
 #'
 #' @export
 print.netobject_group <- function(x, ...) {
@@ -572,6 +605,19 @@ print.netobject_group <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' obs <- data.frame(
+#'   id  = rep(1:5, each = 8),
+#'   A   = rnorm(40), B = rnorm(40),
+#'   C   = rnorm(40), D = rnorm(40)
+#' )
+#' net_ml <- build_network(obs, method = "cor",
+#'                          params = list(id = "id"), level = "both")
+#' print(net_ml)
+#' }
 #'
 #' @export
 print.netobject_ml <- function(x, ...) {

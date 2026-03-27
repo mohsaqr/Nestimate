@@ -17,3 +17,17 @@ The input object, invisibly.
 \description{
 Print Method for Multilevel Network Object
 }
+\examples{
+\donttest{
+set.seed(1)
+obs <- data.frame(
+  id  = rep(1:5, each = 8),
+  A   = rnorm(40), B = rnorm(40),
+  C   = rnorm(40), D = rnorm(40)
+)
+net_ml <- build_network(obs, method = "cor",
+                         params = list(id = "id"), level = "both")
+print(net_ml)
+}
+
+}

@@ -17,3 +17,14 @@ The input object, invisibly.
 \description{
 Print Method for Network Object
 }
+\examples{
+\donttest{
+seqs <- data.frame(
+  V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+  V3 = c("C","A","C","B")
+)
+net <- build_network(seqs, method = "relative")
+print(net)
+}
+
+}

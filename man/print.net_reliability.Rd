@@ -17,3 +17,17 @@ The input object, invisibly.
 \description{
 Print Method for net_reliability
 }
+\examples{
+\donttest{
+set.seed(1)
+seqs <- data.frame(
+  V1 = sample(c("A","B","C"), 30, TRUE),
+  V2 = sample(c("A","B","C"), 30, TRUE),
+  V3 = sample(c("A","B","C"), 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+rel <- reliability(net, iter = 20, seed = 1)
+print(rel)
+}
+
+}

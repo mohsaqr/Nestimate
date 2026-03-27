@@ -41,7 +41,7 @@ computation. If NULL, treats all rows as one group. Default: NULL.}
 For \code{method = "transition"} or \code{"cooccurrence"}: a
 \code{netobject} (see \code{\link{build_network}}).
 
-For \code{method = "both"}: a named list with elements
+For \code{method = "both"}: a \code{wtna_mixed} object with elements
 \code{$transition} and \code{$cooccurrence}, each a \code{netobject}.
 }
 \description{

@@ -695,7 +695,9 @@ cluster_data <- function(data, k, dissimilarity = "hamming", method = "pam",
       seed = seed,
       weighted = weighted,
       lambda = lambda,
-      covariates = cov_result
+      covariates = cov_result,
+      network_method = if (inherits(raw_data, "netobject")) raw_data$method else NULL,
+      build_args     = if (inherits(raw_data, "netobject")) raw_data$build_args else NULL
     ),
     class = "net_clustering"
   )
@@ -715,6 +717,18 @@ cluster_sequences <- cluster_data
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 20, TRUE),
+#'   V2 = sample(c("A","B","C"), 20, TRUE),
+#'   V3 = sample(c("A","B","C"), 20, TRUE)
+#' )
+#' cl <- cluster_data(seqs, k = 2)
+#' print(cl)
+#' }
 #'
 #' @export
 print.net_clustering <- function(x, ...) {
@@ -746,6 +760,18 @@ print.net_clustering <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 20, TRUE),
+#'   V2 = sample(c("A","B","C"), 20, TRUE),
+#'   V3 = sample(c("A","B","C"), 20, TRUE)
+#' )
+#' cl <- cluster_data(seqs, k = 2)
+#' summary(cl)
+#' }
 #'
 #' @export
 summary.net_clustering <- function(object, ...) {
@@ -799,6 +825,18 @@ summary.net_clustering <- function(object, ...) {
 #'   Default: \code{"silhouette"}.
 #' @param ... Additional arguments (currently unused).
 #' @return A \code{ggplot} object (invisibly).
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 20, TRUE),
+#'   V2 = sample(c("A","B","C"), 20, TRUE),
+#'   V3 = sample(c("A","B","C"), 20, TRUE)
+#' )
+#' cl <- cluster_data(seqs, k = 2)
+#' plot(cl, type = "silhouette")
+#' }
 #'
 #' @import ggplot2
 #' @export
@@ -1325,9 +1363,14 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   seq_data <- x$data
   k <- x$k
 
+  # Merge stored build_args with caller's ...; caller takes precedence
+  dots <- list(...)
+  build_args <- if (!is.null(x$build_args))
+    modifyList(x$build_args, dots) else dots
+
   nets <- lapply(seq_len(k), function(cl) {
     sub <- seq_data[assignments == cl, , drop = FALSE]
-    build_network(sub, method = method, ...)
+    do.call(build_network, c(list(data = sub, method = method), build_args))
   })
 
   names(nets) <- paste("Cluster", seq_len(k))
@@ -1335,4 +1378,76 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   attr(nets, "clustering") <- x
   class(nets) <- "netobject_group"
   nets
+}
+
+# ==============================================================================
+# 9. cluster_network — one-shot clustering + network estimation
+# ==============================================================================
+
+#' Cluster data and build per-cluster networks in one step
+#'
+#' Combines sequence clustering and network estimation into a single call.
+#' Clusters the data using the specified algorithm, then calls
+#' \code{\link{build_network}} on each cluster subset.
+#'
+#' If \code{data} is a \code{netobject} and \code{method} is not provided in
+#' \code{...}, the original network method is inherited automatically so the
+#' per-cluster networks match the type of the input network.
+#'
+#' @param data Sequence data. Accepts a data frame, matrix, or
+#'   \code{netobject}. See \code{\link{cluster_data}} for supported formats.
+#' @param k Integer. Number of clusters.
+#' @param cluster_by Character. Clustering algorithm passed to
+#'   \code{\link{cluster_data}}'s \code{method} parameter (\code{"pam"},
+#'   \code{"ward.D2"}, \code{"ward.D"}, \code{"complete"}, \code{"average"},
+#'   \code{"single"}, \code{"mcquitty"}, \code{"median"}, \code{"centroid"}),
+#'   or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.
+#' @param dissimilarity Character. Distance metric for sequence clustering
+#'   (ignored when \code{cluster_by = "mmm"}). Default: \code{"hamming"}.
+#' @param ... Passed directly to \code{\link{build_network}}. Use
+#'   \code{method} to specify the network type; \code{threshold},
+#'   \code{scaling}, and all other \code{build_network} arguments are
+#'   supported.
+#' @return A \code{netobject_group}.
+#' @seealso \code{\link{cluster_data}}, \code{\link{cluster_mmm}},
+#'   \code{\link{build_network}}
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:4], 50, TRUE), V2 = sample(LETTERS[1:4], 50, TRUE),
+#'   V3 = sample(LETTERS[1:4], 50, TRUE), V4 = sample(LETTERS[1:4], 50, TRUE)
+#' )
+#' # Default: PAM clustering, relative (transition) networks
+#' grp <- cluster_network(seqs, k = 3)
+#'
+#' # Specify network method (cor requires numeric panel data)
+#' \dontrun{
+#' panel <- as.data.frame(matrix(rnorm(500), nrow = 100, ncol = 5))
+#' grp <- cluster_network(panel, k = 3, method = "cor")
+#' }
+#'
+#' # MMM-based clustering
+#' grp <- cluster_network(seqs, k = 2, cluster_by = "mmm")
+#' }
+#' @export
+cluster_network <- function(data, k, cluster_by = "pam",
+                             dissimilarity = "hamming", ...) {
+  dots <- list(...)
+
+  # Inherit build_args and method from input netobject when not explicitly set
+  if (inherits(data, "netobject")) {
+    if (!is.null(data$build_args))
+      dots <- modifyList(data$build_args, dots)
+    if (is.null(dots$method))
+      dots$method <- data$method
+  }
+
+  if (identical(cluster_by, "mmm")) {
+    mmm_fit <- build_mmm(data, k = k)
+    return(do.call(build_network, c(list(data = mmm_fit), dots)))
+  }
+
+  cls <- cluster_data(data, k = k, method = cluster_by,
+                      dissimilarity = dissimilarity)
+  do.call(build_network, c(list(data = cls), dots))
 }

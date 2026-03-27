@@ -19,3 +19,16 @@ A \code{ggplot} object, invisibly.
 \description{
 Plot Method for net_mmm
 }
+\examples{
+\donttest{
+set.seed(1)
+seqs <- data.frame(
+  V1 = sample(c("A","B","C"), 30, TRUE),
+  V2 = sample(c("A","B","C"), 30, TRUE),
+  V3 = sample(c("A","B","C"), 30, TRUE)
+)
+mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
+plot(mmm, type = "posterior")
+}
+
+}

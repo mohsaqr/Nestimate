@@ -72,13 +72,37 @@
 #'
 #' @importFrom stats p.adjust sd
 #' @export
-permutation_test <- function(x, y,
+permutation_test <- function(x, y = NULL,
                              iter = 1000L,
                              alpha = 0.05,
                              paired = FALSE,
                              adjust = "none",
                              nlambda = 50L,
                              seed = NULL) {
+
+  # ---- Single netobject_group: all-pairs permutation tests ----
+  if (inherits(x, "netobject_group") && is.null(y)) {
+    grp_names <- names(x)
+    n_grps <- length(grp_names)
+    if (n_grps < 2L) {
+      stop("Need at least 2 groups for pairwise permutation tests.",
+           call. = FALSE)
+    }
+    pairs <- combn(n_grps, 2L)
+    results <- lapply(seq_len(ncol(pairs)), function(k) {
+      i <- pairs[1L, k]
+      j <- pairs[2L, k]
+      permutation_test(x[[i]], x[[j]], iter = iter, alpha = alpha,
+                       paired = paired, adjust = adjust,
+                       nlambda = nlambda, seed = seed)
+    })
+    pair_labels <- vapply(seq_len(ncol(pairs)), function(k) {
+      paste(grp_names[pairs[1L, k]], "vs", grp_names[pairs[2L, k]])
+    }, character(1))
+    names(results) <- pair_labels
+    class(results) <- c("net_permutation_group", "list")
+    return(results)
+  }
 
   # ---- netobject_group dispatch: permute each matching element ----
   if (inherits(x, "netobject_group") && inherits(y, "netobject_group")) {
@@ -92,6 +116,7 @@ permutation_test <- function(x, y,
                        seed = seed)
     })
     names(results) <- common
+    class(results) <- c("net_permutation_group", "list")
     return(results)
   }
 
@@ -522,6 +547,19 @@ permutation_test <- function(x, y,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),
+#'                  V3 = c("C","A","C"))
+#' d2 <- data.frame(V1 = c("C","A","C"), V2 = c("A","B","A"),
+#'                  V3 = c("B","C","B"))
+#' net1 <- build_network(d1, method = "relative")
+#' net2 <- build_network(d2, method = "relative")
+#' perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+#' print(perm)
+#' }
+#'
 #' @export
 print.net_permutation <- function(x, ...) {
   method_labels <- c(
@@ -565,9 +603,76 @@ print.net_permutation <- function(x, ...) {
 #'
 #' @return A data frame with edge-level permutation test results.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),
+#'                  V3 = c("C","A","C"))
+#' d2 <- data.frame(V1 = c("C","A","C"), V2 = c("A","B","A"),
+#'                  V3 = c("B","C","B"))
+#' net1 <- build_network(d1, method = "relative")
+#' net2 <- build_network(d2, method = "relative")
+#' perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+#' summary(perm)
+#' }
+#'
 #' @export
 summary.net_permutation <- function(object, ...) {
   object$summary
+}
+
+
+#' Print Method for net_permutation_group
+#'
+#' @param x A \code{net_permutation_group} object.
+#' @param ... Additional arguments (ignored).
+#' @return \code{x} invisibly.
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' s1 <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+#'                  V3 = c("C","A","C","B"), grp = c("X","X","Y","Y"))
+#' s2 <- data.frame(V1 = c("C","A","C","B"), V2 = c("A","B","A","C"),
+#'                  V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
+#' nets1 <- build_network(s1, method = "relative", group = "grp")
+#' nets2 <- build_network(s2, method = "relative", group = "grp")
+#' perm  <- permutation_test(nets1, nets2, iter = 20, seed = 1)
+#' print(perm)
+#' }
+#' @export
+print.net_permutation_group <- function(x, ...) {
+  cat("Grouped Permutation Test\n")
+  cat("Groups:", paste(names(x), collapse = ", "), "\n")
+  cat("Use summary() on each element for edge-level results.\n")
+  invisible(x)
+}
+
+#' Summary Method for net_permutation_group
+#'
+#' Returns a combined summary data frame across all groups.
+#'
+#' @param object A \code{net_permutation_group} object.
+#' @param ... Additional arguments (ignored).
+#' @return A data frame with group, edge, p_value, and sig columns.
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' s1 <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+#'                  V3 = c("C","A","C","B"), grp = c("X","X","Y","Y"))
+#' s2 <- data.frame(V1 = c("C","A","C","B"), V2 = c("A","B","A","C"),
+#'                  V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
+#' nets1 <- build_network(s1, method = "relative", group = "grp")
+#' nets2 <- build_network(s2, method = "relative", group = "grp")
+#' perm  <- permutation_test(nets1, nets2, iter = 20, seed = 1)
+#' summary(perm)
+#' }
+#' @export
+summary.net_permutation_group <- function(object, ...) {
+  do.call(rbind, lapply(names(object), function(nm) {
+    df      <- object[[nm]]$summary
+    df$group <- nm
+    df[c("group", setdiff(names(df), "group"))]
+  }))
 }
 
 

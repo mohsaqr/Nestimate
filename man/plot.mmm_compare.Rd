@@ -17,3 +17,16 @@ A \code{ggplot} object, invisibly.
 \description{
 Plot Method for mmm_compare
 }
+\examples{
+\donttest{
+set.seed(1)
+seqs <- data.frame(
+  V1 = sample(c("A","B","C"), 30, TRUE),
+  V2 = sample(c("A","B","C"), 30, TRUE),
+  V3 = sample(c("A","B","C"), 30, TRUE)
+)
+cmp <- compare_mmm(seqs, k = 2:3, n_starts = 5, seed = 1)
+plot(cmp)
+}
+
+}

@@ -1,5 +1,19 @@
 # Changes
 
+### 2026-03-27 — CRAN extra check fixes: 0 errors / 0 warnings / 0 notes
+- R/simplicial.R: Fixed `print.persistent_homology` and `plot.persistent_homology` examples — removed incorrect `sc <- build_simplicial(net, type = "clique")` step and changed `persistent_homology(sc)` to `persistent_homology(net)` (function takes a netobject/matrix, not a simplicial_complex); plot example converted to `\dontrun{}` to avoid Unicode rendering failure with β label in non-UTF8 locales
+- R/centrality_stability.R: Removed non-existent `n_subsets = 3` parameter from all 3 examples (print/summary/plot.net_stability)
+- R/mmm.R: Fixed `compare_mmm` examples — changed `k_range = 2:3` to `k = 2:3` (correct parameter name)
+
+### 2026-03-26 — Informative bootstrap print methods
+- R/bootstrap_network.R: Rewrote `print.net_bootstrap` to show method label, directionality, iterations, nodes, significant/total edge counts, CI level, inference method, CR range, and top 5 significant edges with mean weight, CI, and significance stars
+- R/bootstrap_network.R: Rewrote `print.net_bootstrap_group` to show all groups, per-group sig/total edge counts, shared significant edge count, and top 5 shared edges with per-group means
+- R/bootstrap_network.R: Fixed R quirk — `paste0(character(0), "→", character(0))` returns `"→"` with length 1; fixed by guarding with `which()` before `paste0`
+- R/bootstrap_network.R: Fixed `[[` subscript-out-of-bounds for unknown method names; now uses `[` with `is.na()` guard
+- tests/testthat/test-bootstrap_network.R: Updated print tests to match new output format
+- tests/testthat/test-boot_glasso.R: Updated edge_diff fill-column test to match new `fill_val` continuous encoding
+- Tests: 2739 pass, 0 failures
+
 ### 2026-03-20 — CLAUDE.md refresh, temporal spec, vibcoding datasets
 - CLAUDE.md: Removed phantom modules, added simplicial complex, fixed reliability() name, added sidelined section
 - docs/temporal/SPEC.md: Enterprise-grade temporal network build spec with cograph-compatible output
