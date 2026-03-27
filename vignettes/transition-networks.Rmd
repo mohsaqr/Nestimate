@@ -1,8 +1,10 @@
 ---
-title: "Transition Network Analysis with Nestimate"
-output: rmarkdown::html_vignette
+title: "Network Estimation and Analysis with Nestimate"
+output:
+  rmarkdown::html_vignette:
+    df_print: paged
 vignette: >
-  %\VignetteIndexEntry{Transition Network Analysis with Nestimate}
+  %\VignetteIndexEntry{Network Estimation and Analysis with Nestimate}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -11,95 +13,338 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
+  out.width = "100%",
   fig.width = 7,
-  fig.height = 5
+  fig.height = 5,
+  fig.dpi = 90,
+  dpi = 300,
+  warning = FALSE,
+  message = FALSE
 )
 ```
 
-Nestimate provides a unified interface for estimating networks from sequence data. This vignette demonstrates transition network estimation, group comparison, and bootstrap inference using the `human_ai_cat` dataset --- coded interaction sequences from 429 human-AI pair programming sessions.
+`Nestimate` is a unified framework for estimating, validating, and comparing networks from sequential and cross-sectional data. It implements two complementary paradigms: **Transition Network Analysis (TNA)**, which models the relational dynamics of temporal processes as weighted directed networks using stochastic Markov models; and **Psychological Network Analysis (PNA)**, which estimates the conditional dependency structure among variables using regularized partial correlations and graphical models. Both paradigms share the same `build_network()` interface, the same validation engine (bootstrap, permutation, centrality stability), and the same output format --- enabling researchers to apply a consistent analytic workflow across fundamentally different data types.
+
+This vignette demonstrates both paradigms, covering network estimation, statistical validation, data-driven clustering, and group comparison.
+
+# Part I: Transition Network Analysis
+
+## Theoretical Grounding
+
+TNA uses stochastic process modeling to capture the dynamics of temporal processes, namely Markov models. Markov models align with the view that a temporal process is an outcome of a stochastic data generating process that produces various network configurations or patterns based on rules, constraints, or guiding principles. The transitions are governed by a stochastic process: the specific ways in which the system changes or evolves is rather random and therefore can't be strictly determined. That is, the transitions are probabilistically dependent on preceding states --- a method that assumes events are probabilistically dependent on the preceding ones like Markov models.
+
+The main principle of TNA is representing the transition matrix between events as a graph to take full advantage of graph theory potentials and the wealth of network analysis. TNA brings network measures at the node, edge, and graph level; pattern mining through dyads, triads, and communities; clustering of sub-networks into typical behavioral strategies; and rigorous statistical validation at each edge through bootstrapping, permutation, and case-dropping techniques. Such statistical rigor that brings validation and hypothesis testing at each step of the analysis offers a method for researchers to build, verify, and advance existing theories on the basis of a robust scientific approach.
 
 ## Data
 
-The `human_cat` dataset contains 10,796 coded human interactions classified into 9 categories.
+The `human_cat` dataset contains 10,796 coded human interactions from 429 human-AI pair programming sessions across 34 projects, classified into 9 behavioral categories. Each row represents a single interaction event --- the kind of data typically exported from log files, coded interaction data, or learning management systems.
 
 ```{r data}
 library(Nestimate)
-head(human_cat[, c("session_id", "category")], 8)
-table(human_cat$category)
+head(human_cat)
 ```
 
-## Building networks
+The dataset is in long format with columns recording *what happened* (`category`), *who did it* (`session_id`), and *when* (`timestamp`). Additional columns like `project`, `code`, and `superclass` are automatically preserved as metadata and can be used later for group comparisons or covariate analysis without manual data wrangling.
 
-`build_network()` accepts long-format data directly. The `action` parameter specifies the state column, `actor` defines sequences, and `time` provides ordering.
+## Building Networks
 
-### Transition network (TNA)
+Building networks in Nestimate is a single step: the `build_network()` function is the universal entry point for all network estimation. It accepts long-format event data directly with three key parameters:
 
-Row-normalized transition probabilities --- each row sums to 1.
+- **`action`**: the column containing state labels --- the occurrences or events that become network nodes
+- **`actor`**: the column identifying sequences --- who performed the action (one sequence per actor)
+- **`time`**: the column providing temporal ordering --- when it happened
+
+Under the hood, `build_network()` calls `prepare_data()` to convert the long-format event log into wide-format sequences, automatically handling chronological ordering, session detection, and metadata preservation.
+
+### Transition Network (TNA)
+
+The standard TNA method estimates a first-order Markov model from sequence data. Given a sequence of events, the transition probability $P(v_j | v_i)$ is estimated as the ratio of observed transitions from state $v_i$ to state $v_j$ to the total number of outgoing transitions from $v_i$. These estimated probabilities are assembled into a **transition matrix** $T$, where each element $T_{ij}$ represents the estimated probability of transitioning from $v_i$ to $v_j$. The resulting directed weighted network captures the probabilistic dependencies between events --- the contingencies that shape the temporal process.
 
 ```{r tna}
 net_tna <- build_network(human_cat, method = "tna",
                          action = "category", actor = "session_id",
-                         time = "id")
-net_tna
+                         time = "timestamp")
+print(net_tna)
 ```
 
-### Frequency network (FTNA)
+```{r tna-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+library(cograph)
+splot(net_tna)
+```
 
-Raw transition counts --- preserves how often each transition occurs.
+### Frequency Network (FTNA)
+
+The frequency method preserves raw transition counts rather than normalizing to conditional probabilities. This is useful when absolute frequencies matter --- for instance, a transition that occurs 500 times from a common state may be more practically important than one occurring 5 times from a rare state, even if the latter has a higher conditional probability. Frequency networks retain the magnitude of evidence for each transition, which is lost in the normalization step.
 
 ```{r ftna}
 net_ftna <- build_network(human_cat, method = "ftna",
                           action = "category", actor = "session_id",
-                          time = "id")
-net_ftna
+                          time = "timestamp")
+print(net_ftna)
 ```
 
-### Attention network (ATNA)
+```{r ftna-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(net_ftna)
+```
 
-Decay-weighted transitions --- recent transitions receive more weight. The `lambda` parameter controls decay rate.
+### Attention Network (ATNA)
+
+The attention method applies temporal decay weighting, giving more importance to recent transitions within each sequence. The `lambda` parameter controls the decay rate: higher values produce faster decay. This captures the idea that later events in a process may be more indicative of the underlying dynamics than early ones --- for example, in learning settings where initial exploration gives way to more purposeful regulatory behavior.
 
 ```{r atna}
 net_atna <- build_network(human_cat, method = "atna",
                           action = "category", actor = "session_id",
-                          time = "id", lambda = 0.5)
-net_atna
+                          time = "timestamp")
+print(net_atna)
 ```
 
-## Group comparison
-
-The `group` parameter builds separate networks per group. Here we compare human and AI interaction patterns using the full `human_ai_cat` dataset (19,347 interactions).
-
-```{r groups}
-nets <- build_network(human_ai_cat, method = "tna",
-                      action = "category", actor = "session_id",
-                      time = "id", group = "actor")
-nets
+```{r atna-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(net_atna)
 ```
 
-```{r group-detail}
-nets$Human
-nets$AI
+### Co-occurrence Network from Binary Data
+
+When the data is binary (0/1) --- as is common in learning analytics where multiple activities are coded as present or absent within time windows --- `build_network()` automatically detects the format and uses co-occurrence analysis to model how codes are associated with each other. The resulting undirected network captures which events tend to co-occur, complementing the temporal sequencing captured by TNA.
+
+```{r onehot}
+data(learning_activities)
+net <- build_network(learning_activities, method = "cna", actor = "student")
+print(net)
 ```
 
-## Bootstrap inference
-
-Bootstrap resampling assesses which edges are statistically stable. Sequences are resampled with replacement and the network is re-estimated each iteration.
-
-```{r bootstrap}
-boot <- bootstrap_network(nets, iter = 1000, seed = 42)
+```{r onehot-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(net, layout = "oval")
 ```
 
-```{r boot-human}
-summary(boot$Human)
+### Window-based TNA (WTNA)
+
+The `wtna()` function provides an alternative approach for computing networks from one-hot encoded (binary) data, using temporal windowing. This is useful when multiple states can be active simultaneously within a time window. WTNA supports three modes:
+
+- **`"transition"`**: directed transitions between consecutive windows
+- **`"cooccurrence"`**: undirected co-occurrence within windows
+- **`"both"`**: a mixed network combining transitions and co-occurrences
+
+Since states can co-occur within the same window *and* follow each other from one window to the next, a mixed network captures both relationships simultaneously --- modeling the events that co-occur together and those that transition, which neither a purely directed nor a purely undirected network can represent alone.
+
+```{r wtna-freq}
+net_wtna <- wtna(learning_activities, actor = "student",
+                 method = "transition", type = "frequency")
+print(net_wtna)
 ```
 
-```{r boot-ai}
-summary(boot$AI)
+```{r wtna-freq-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(net_wtna)
 ```
 
-The pruned model retains only significant edges:
+```{r wtna-relative}
+net_wtna_rel <- wtna(learning_activities, method = "transition", type = "relative")
+print(net_wtna_rel)
+```
 
-```{r pruned}
-boot$Human$model
-boot$AI$model
+```{r wtna-relative-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(net_wtna_rel)
+```
+
+```{r wtna-mixed, eval = requireNamespace("cograph", quietly = TRUE)}
+net_wtna_mixed <- wtna(learning_activities, method = "both", type = "relative")
+print(net_wtna_mixed)
+splot(net_wtna_mixed)
+splot(net_wtna_mixed, type = "group")
+```
+
+## Validation
+
+Most research on networks or process mining uses descriptive methods. The validation or the statistical significance of such models are almost absent in the literature. Having validated models allows us to assess the robustness and reproducibility of our models to ensure that the insights we get are not merely a product of chance and are therefore generalizable. TNA offers rigorous validation and hypothesis testing at each step of the analysis.
+
+### Reliability
+
+Split-half reliability assesses whether the network structure is stable when the data is randomly divided into two halves. High reliability means the network structure is a consistent property of the data, not driven by a small number of idiosyncratic sequences.
+
+```{r reliability}
+reliability(net_tna)
+```
+
+### Bootstrap Analysis
+
+Bootstrapping is a re-sampling technique that entails repeatedly --- usually hundreds, if not thousands of times --- drawing samples from the original dataset with replacement to estimate the model for each of these samples. When edges consistently appear across the majority of the estimated models, they are considered stable and significant. In doing so, bootstrapping helps effectively filter out small, negligible, or spurious edges resulting in a stable model and valid model. The bootstrap also provides confidence intervals and p-values for each edge weight, offering a quantifiable measure of uncertainty and robustness for each transition in the network.
+
+```{r bootstrap, cache = TRUE}
+set.seed(42)
+boot <- bootstrap_network(net_tna)
+boot
+```
+
+```{r bootstrap-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(boot)
+```
+
+### Centrality Stability
+
+Centrality measures provide a quantification of the role or importance of a state or an event in the process. However, the robustness of these rankings must be verified. Centrality stability analysis quantifies how robust centrality rankings are to case-dropping: the CS-coefficient is the maximum proportion of cases that can be dropped while maintaining a correlation of at least 0.7 with the original centrality values. A CS-coefficient above 0.5 indicates stable centrality rankings; below 0.25 indicates instability and the centrality ranking should not be interpreted.
+
+```{r cs, cache = TRUE}
+centrality_stability(net_tna)
+```
+
+## Clustering
+
+Clusters represent typical transition networks that recur across different instances. Unlike communities, clusters involve the entire network where groups of sequences are similarly interconnected and each exhibit a distinct transition pattern with its own set of transition probabilities. Identifying clusters captures the dynamics, revealing typical relations that learners frequently adopt as units across different instances. `cluster_data()` computes pairwise dissimilarities between sequences and partitions them into `k` groups, then builds a separate network for each cluster.
+
+```{r clustering}
+Cls <- cluster_data(net_tna, k = 3)
+Clusters <- build_network(Cls, method = "tna")
+Clusters
+```
+
+### Centrality
+
+The `centrality()` function computes centrality measures for each cluster network. For directed networks, the defaults are InStrength (the sum of incoming transition probabilities --- how central a state is as a destination), OutStrength (the sum of outgoing transition probabilities), and Betweenness (how often a state bridges transitions between other states).
+
+```{r centrality}
+Nestimate::centrality(Clusters)
+```
+
+### Permutation Test for Clusters
+
+TNA offers a rigorous systematic method for process comparison based on permutation. Permutation testing is particularly important for data-driven clusters: because clustering algorithms partition sequences to maximize between-group separation, some degree of apparent difference is guaranteed by construction. The permutation test provides the necessary corrective --- by randomly reassigning sequences to groups while preserving internal sequential structure, it constructs null distributions for edge-level differences. Only differences that exceed this null distribution constitute evidence of genuine structural divergence rather than algorithmic artifacts.
+
+```{r perm-clusters, cache = TRUE}
+perm <- permutation_test(Clusters$`Cluster 1`, Clusters$`Cluster 2`)
+perm
+```
+
+```{r perm-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(perm)
+```
+
+## Mixed Markov Models
+
+Mixed Markov Models (MMM) provide an alternative clustering approach that uses an EM algorithm to discover latent subgroups with distinct transition dynamics. Unlike `cluster_data()`, which clusters based on sequence dissimilarity, MMM directly models the transition probabilities within each component and assigns sequences probabilistically through soft assignments. The `covariates` argument integrates external variables into the EM algorithm, allowing mixing proportions to depend on observed characteristics.
+
+```{r mmm, cache = TRUE}
+data("group_regulation_long")
+
+net_GR <- build_network(group_regulation_long, method = "tna",
+                        action = "Action", actor = "Actor",
+                        time = "Time")
+
+mmmCls <- build_mmm(net_GR, k = 2, covariates = c("Group"))
+summary(mmmCls)
+```
+
+Building networks from the MMM result produces one network per discovered cluster:
+
+```{r mmm-networks}
+Mnets <- build_network(mmmCls)
+Mnets
+```
+
+```{r mmm-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(Mnets)
+```
+
+## Post-hoc Covariate Analysis
+
+`cluster_data()` supports post-hoc covariate analysis: covariates do not influence the clustering but are analyzed after the fact to characterize who ends up in which cluster. This is the appropriate approach when the clustering should reflect behavioral patterns alone, and the researcher then asks whether those patterns are associated with external variables.
+
+```{r posthoc, cache = TRUE}
+Post <- cluster_data(net_GR, k = 2, covariates = c("Achiever"))
+summary(Post)
+```
+
+```{r posthoc-networks}
+Postgr <- build_network(Post)
+Postgr
+```
+
+```{r posthoc-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(Postgr)
+```
+
+# Part II: Psychological Network Analysis
+
+## Theoretical Grounding
+
+Probabilistic processes are commonly --- and indeed best --- represented mathematically as matrices, where rows represent nodes and columns denote direct probabilistic interactions between them. Several probabilistic network disciplines have recently become popular, most notably psychological networks, which estimate the conditional dependency structure among a set of variables. In psychological network analysis, variables (e.g., symptoms, traits, behaviors) are represented as nodes, and edges represent partial correlations --- the association between two variables after controlling for all others. This approach reveals which variables are directly connected versus those whose association is mediated through other variables.
+
+`Nestimate` supports three estimation methods for psychological networks, all accessed through the same `build_network()` interface.
+
+## Data
+
+The `srl_strategies` dataset contains frequency counts of 9 self-regulated learning strategies for 250 students, falling into three clusters: metacognitive (Planning, Monitoring, Evaluating), cognitive (Elaboration, Organization, Rehearsal), and resource management (Help_Seeking, Time_Mgmt, Effort_Reg).
+
+```{r pna-data}
+data(srl_strategies)
+head(srl_strategies)
+```
+
+## Correlation Network
+
+The simplest approach estimates pairwise Pearson correlations. This produces a fully connected undirected network where every pair of variables has an edge. While informative as a starting point, correlation networks do not distinguish direct from indirect associations.
+
+```{r cor}
+net_cor <- build_network(srl_strategies, method = "cor")
+net_cor
+```
+
+```{r cor-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(net_cor)
+```
+
+## Partial Correlation Network
+
+Partial correlations control for all other variables, revealing direct associations only. If two variables are correlated solely because they share a common cause, their partial correlation will be near zero. This provides a more accurate picture of the dependency structure than zero-order correlations, though the resulting network can still be noisy in small samples.
+
+```{r pcor}
+net_pcor <- build_network(srl_strategies, method = "pcor")
+net_pcor
+```
+
+```{r pcor-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(net_pcor)
+```
+
+## Regularized Network (EBICglasso)
+
+The graphical lasso applies L1 regularization to the precision matrix (the inverse of the covariance matrix), producing a sparse network where weak or unreliable edges are shrunk to exactly zero. The `gamma` parameter controls sparsity through EBIC model selection --- higher values yield sparser networks. This is the recommended approach for psychological network analysis, as it balances model fit against complexity and produces interpretable, replicable network structures.
+
+```{r glasso}
+net_glasso <- build_network(srl_strategies, method = "glasso",
+                            params = list(gamma = 0.5))
+net_glasso
+```
+
+```{r glasso-plot, eval = requireNamespace("cograph", quietly = TRUE)}
+splot(net_glasso)
+```
+
+## Predictability
+
+Node predictability measures how well each node is predicted by its neighbors (R-squared from the network structure). High predictability indicates that a node's variance is largely explained by its direct connections in the network; low predictability suggests the node is driven by factors outside the estimated network.
+
+```{r predictability}
+pred <- predictability(net_glasso)
+round(pred, 3)
+```
+
+## Bootstrap Inference
+
+Non-parametric bootstrap assesses edge stability, centrality stability, and provides significance tests for edge and centrality differences. The `boot_glasso()` function is specialized for graphical lasso networks, providing edge inclusion frequencies, confidence intervals, CS-coefficients, and pairwise difference tests in a single call.
+
+```{r boot-glasso, cache = TRUE}
+boot_gl <- boot_glasso(net_glasso, iter = 1000,
+                       centrality = c("strength", "expected_influence"),
+                       seed = 42)
+```
+
+### Edge Significance
+
+```{r boot-edges}
+summary(boot_gl, type = "edges")
+```
+
+### Centrality Stability
+
+```{r boot-stability}
+summary(boot_gl, type = "centrality")
 ```

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-Nestimate (v0.2.0) is an R package for network estimation from sequence and panel data. Split from Saqrlab v0.3.0 — contains all computation code, no simulation or benchmarking. Those live in Saqrlab, which depends on Nestimate.
+Nestimate (v0.2.11) is an R package for network estimation from sequence and panel data. Split from Saqrlab v0.3.0 — contains all computation code, no simulation or benchmarking. Those live in Saqrlab, which depends on Nestimate. CRAN-ready (0 errors / 0 warnings / 0 notes with `--as-cran`).
 
 ## Build & Test Commands
 
@@ -13,6 +13,7 @@ devtools::test()                                           # Run all tests
 testthat::test_file("tests/testthat/test-build_network.R") # Run single test file
 devtools::document()                                       # Rebuild roxygen2 → man/ + NAMESPACE
 devtools::check()                                          # Full R CMD check
+devtools::check(args = c("--as-cran"), env_vars = c(NOT_CRAN = ""))  # CRAN-level check
 devtools::install()                                        # Install locally
 ```
 
@@ -61,7 +62,6 @@ All classes have `print`, `summary`, `plot` methods. Naming convention:
 | `net_permutation` | `permutation_test.R` | `permutation_test()` |
 | `net_gimme` | `gimme.R` | `build_gimme()` |
 | `mcml_network` / `mcml` | `mcml.R` | `build_mcml()` / `cluster_summary()` |
-| `mlvar_result` | `mlvar.R` | `mlvar()` |
 | `net_hon` | `hon.R` | `build_hon()` |
 | `net_honem` | `honem.R` | `build_honem()` |
 | `net_hypa` | `hypa.R` | `build_hypa()` |
@@ -69,7 +69,6 @@ All classes have `print`, `summary`, `plot` methods. Naming convention:
 | `net_mmm` | `mmm.R` | `build_mmm()` |
 | `mmm_compare` | `mmm.R` | `compare_mmm()` |
 | `net_clustering` | `cluster_data.R` | `cluster_data()` |
-| `gvar_result` | `graphical_var.R` | `graphical_var()` |
 | `net_reliability` | `reliability.R` | `reliability()` |
 | `net_stability` | `centrality_stability.R` | `centrality_stability()` |
 | `simplicial_complex` | `simplicial.R` | `build_simplicial()` |
@@ -114,9 +113,20 @@ HON, HONEM, HYPA, MOGen share infrastructure:
 
 `cluster_data()` — clusters sequences (ward/k-means/latent-class), then calls `build_network()` per cluster → `netobject_group`. Underlying clustering results returned as `net_clustering`.
 
-### Graphical VAR
+### Built-in Centrality Measures
 
-`graphical_var()` — idiographic GVAR estimation (two-step: L1-penalized VAR → graphical lasso on residuals → EBIC selection). Returns `gvar_result` with `$temporal`, `$contemporaneous`, `$pcc` matrices.
+`R/centrality_measures.R` — igraph-free centrality computation:
+- Floyd-Warshall all-pairs shortest paths (`.floyd_warshall_sp()`)
+- Strength (in/out), Betweenness, Closeness (in/out) — all computed from weight matrix directly
+- Used as the default `centrality_fn` in `centrality_stability()` and `boot_glasso()`
+- Users can supply custom `centrality_fn(matrix) → named list` for additional measures
+
+### Bundled Datasets
+
+15 `.rda` files in `data/` documented in `R/data.R`. Three families:
+- **Human-AI vibe coding** (9 datasets): `human_ai`, `human_detailed`, `ai_cat`, etc. — coded interaction sequences from 429 sessions across 34 projects, at 3 granularities (code/category/superclass)
+- **Learning activities**: `learning_activities`, `srl_strategies` — educational sequence data
+- **Network edges**: `human_ai_edges` — pre-computed edge list
 
 ### Reliability & Stability
 
@@ -136,7 +146,6 @@ HON, HONEM, HYPA, MOGen share infrastructure:
 - HON unified output: columns `path`, `from`, `to`, `count`, `probability`
 - Bootstrap precomputes per-sequence counts — resample via `colSums()` not re-counting
 - Plotting uses `cograph::splot()` for static networks
-- Graphical VAR uses own coordinate descent (not glmnet) — matched graphicalVAR better
 
 ## Internal Conventions
 
@@ -174,7 +183,18 @@ In `sidelined/` — removed from active package but preserved for future reinteg
 ## Dependencies
 
 **Imports (4):** ggplot2, glasso, data.table, cluster
-**Suggests (source, 7):** tna, glmnet, lavaan, lme4, stringdist, nnet, cograph
-**Suggests (test-only, 8):** testthat, igraph, IsingFit, bootnet, gimme, mlVAR, qgraph, reticulate
+**Suggests (source):** tna, cograph, glmnet, lavaan, stringdist, nnet, igraph, IsingFit, gridExtra
+**Suggests (test/build):** testthat, bootnet, gimme, qgraph, reticulate, knitr, rmarkdown
 
 Nestimate is a computation engine — no plot methods delegate to cograph. Users call `cograph::splot(net)` directly. The `centrality_fn` parameter in `centrality_stability()` and `boot_glasso()` accepts an external centrality function (igraph is not required).
+
+**Vignettes:** `vignettes/transition-networks.Rmd`, `vignettes/psychological-networks.Rmd` — built with knitr.
+
+## CRAN Submission Notes
+
+- `\donttest{}` runs under `--as-cran` (which enables `--run-donttest`). Only `\dontrun{}` is truly skipped.
+- Examples must be self-contained — no `simulate_*()` helpers from test code. Use inline data or bundled datasets.
+- Examples using Suggests packages must wrap in `if (requireNamespace(...))`.
+- Unicode (e.g., `\u03B2`) in ggplot labels causes conversion failure in non-UTF8 check locales — use `\dontrun{}` for those examples.
+- `.claude` directory must be in `.Rbuildignore` — hidden dirs flagged by `--as-cran`.
+- All exported functions (including S3 print/summary/plot methods) require `@return` roxygen tags.

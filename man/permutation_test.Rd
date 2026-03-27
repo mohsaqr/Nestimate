@@ -6,7 +6,7 @@
 \usage{
 permutation_test(
   x,
-  y,
+  y = NULL,
   iter = 1000L,
   alpha = 0.05,
   paired = FALSE,

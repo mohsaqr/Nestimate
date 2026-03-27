@@ -562,7 +562,7 @@ build_mmm <- function(data,
     ), class = c("netobject", "cograph_network"))
   })
 
-  names(models) <- paste0("Component_", seq_len(k))
+  names(models) <- paste0("Cluster ", seq_len(k))
 
   # ---- Assignments & quality ----
   assignments <- apply(best$posterior, 1L, which.max)

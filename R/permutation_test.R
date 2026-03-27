@@ -72,13 +72,37 @@
 #'
 #' @importFrom stats p.adjust sd
 #' @export
-permutation_test <- function(x, y,
+permutation_test <- function(x, y = NULL,
                              iter = 1000L,
                              alpha = 0.05,
                              paired = FALSE,
                              adjust = "none",
                              nlambda = 50L,
                              seed = NULL) {
+
+  # ---- Single netobject_group: all-pairs permutation tests ----
+  if (inherits(x, "netobject_group") && is.null(y)) {
+    grp_names <- names(x)
+    n_grps <- length(grp_names)
+    if (n_grps < 2L) {
+      stop("Need at least 2 groups for pairwise permutation tests.",
+           call. = FALSE)
+    }
+    pairs <- combn(n_grps, 2L)
+    results <- lapply(seq_len(ncol(pairs)), function(k) {
+      i <- pairs[1L, k]
+      j <- pairs[2L, k]
+      permutation_test(x[[i]], x[[j]], iter = iter, alpha = alpha,
+                       paired = paired, adjust = adjust,
+                       nlambda = nlambda, seed = seed)
+    })
+    pair_labels <- vapply(seq_len(ncol(pairs)), function(k) {
+      paste(grp_names[pairs[1L, k]], "vs", grp_names[pairs[2L, k]])
+    }, character(1))
+    names(results) <- pair_labels
+    class(results) <- c("net_permutation_group", "list")
+    return(results)
+  }
 
   # ---- netobject_group dispatch: permute each matching element ----
   if (inherits(x, "netobject_group") && inherits(y, "netobject_group")) {

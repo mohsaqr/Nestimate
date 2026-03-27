@@ -165,14 +165,14 @@ build_network <- function(data,
         }
         net
       })
-      names(nets) <- paste0("Component_", seq_len(k_comp))
+      names(nets) <- paste0("Cluster ", seq_len(k_comp))
       attr(nets, "group_col") <- "component"
       class(nets) <- "netobject_group"
       return(nets)
     }
     # Default: wrap pre-built "relative" models (retain $initial from EM)
     nets <- data$models
-    if (is.null(names(nets))) names(nets) <- paste0("Component ", seq_along(nets))
+    if (is.null(names(nets))) names(nets) <- paste0("Cluster ", seq_along(nets))
     attr(nets, "group_col") <- "component"
     class(nets) <- "netobject_group"
     return(nets)
@@ -385,6 +385,13 @@ build_network <- function(data,
   # A column is a state column if all its non-void/non-NA values are in nodes
   raw_data <- est_result$cleaned_data
   metadata <- NULL
+  # Use prepared$meta_data when available (long format path)
+  if (!is.null(prepared) && !is.null(prepared$meta_data)) {
+    md <- prepared$meta_data
+    # Drop internal .session_id column
+    md <- md[, setdiff(names(md), ".session_id"), drop = FALSE]
+    if (ncol(md) > 0L) metadata <- md
+  }
   if (is.data.frame(raw_data)) {
     is_state_col <- vapply(raw_data, function(col) {
       vals <- .clean_states(as.character(col))
@@ -394,7 +401,7 @@ build_network <- function(data,
     state_cols <- names(raw_data)[is_state_col]
     extra_cols <- names(raw_data)[!is_state_col]
     if (length(extra_cols) > 0L) {
-      metadata <- raw_data[, extra_cols, drop = FALSE] # nocov
+      if (is.null(metadata)) metadata <- raw_data[, extra_cols, drop = FALSE]
       raw_data <- raw_data[, state_cols, drop = FALSE]
     }
     # Clean void/missing markers in character/factor state columns

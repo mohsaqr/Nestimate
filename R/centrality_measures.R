@@ -115,3 +115,75 @@
     )
   }
 }
+
+
+# ---- Exported centrality() generic ----
+
+#' Compute Centrality Measures for a Network
+#'
+#' Computes centrality measures from a \code{netobject} or
+#' \code{netobject_group}. For directed networks the default measures are
+#' InStrength, OutStrength, and Betweenness. For undirected networks the
+#' defaults are Strength (column sums) and Betweenness.
+#'
+#' @param x A \code{netobject} or \code{netobject_group}.
+#' @param measures Character vector. Centrality measures to compute.
+#'   Built-in: \code{"InStrength"}, \code{"OutStrength"},
+#'   \code{"Betweenness"}, \code{"InCloseness"}, \code{"OutCloseness"},
+#'   \code{"Closeness"}. Default depends on directedness.
+#' @param loops Logical. Include self-loops (diagonal) in computation?
+#'   Default: \code{FALSE}.
+#' @param centrality_fn Optional function. Custom centrality function that
+#'   takes a weight matrix and returns a named list of centrality vectors.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return For a \code{netobject}: a data frame with node names as rows and
+#'   centrality measures as columns. For a \code{netobject_group}: a named
+#'   list of such data frames (one per group).
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+#'   V3 = c("C","A","C","B"))
+#' net <- build_network(seqs, method = "relative")
+#' centrality(net)
+#' }
+#'
+#' @export
+centrality <- function(x, ...) {
+  UseMethod("centrality")
+}
+
+
+#' @rdname centrality
+#' @export
+centrality.netobject <- function(x, measures = NULL, loops = FALSE,
+                                  centrality_fn = NULL, ...) {
+  mat      <- x$weights
+  states   <- x$nodes$label
+  directed <- x$directed
+
+  if (is.null(measures)) {
+    measures <- if (directed) {
+      c("InStrength", "OutStrength", "Betweenness")
+    } else {
+      c("Closeness", "Betweenness")
+    }
+  }
+
+  res <- .compute_centralities(mat, states, directed, measures,
+                                loops = loops, centrality_fn = centrality_fn)
+  as.data.frame(res, row.names = states)
+}
+
+
+#' @rdname centrality
+#' @export
+centrality.netobject_group <- function(x, measures = NULL, loops = FALSE,
+                                        centrality_fn = NULL, ...) {
+  lapply(x, function(net) {
+    centrality.netobject(net, measures = measures, loops = loops,
+                         centrality_fn = centrality_fn)
+  })
+}
