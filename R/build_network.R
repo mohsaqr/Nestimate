@@ -466,6 +466,16 @@ build_network <- function(data,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+#'   V3 = c("C","A","C","B")
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' print(net)
+#' }
+#'
 #' @export
 print.netobject <- function(x, ...) {
   method_labels <- c(
@@ -558,6 +568,18 @@ print.netobject <- function(x, ...) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C","B","A"),
+#'   V2 = c("B","C","B","A","C","B"),
+#'   V3 = c("C","A","C","B","A","C"),
+#'   grp = c("X","X","X","Y","Y","Y")
+#' )
+#' nets <- build_network(seqs, method = "relative", group = "grp")
+#' print(nets)
+#' }
+#'
 #' @export
 print.netobject_group <- function(x, ...) {
   grps <- names(x)
@@ -576,6 +598,19 @@ print.netobject_group <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' obs <- data.frame(
+#'   id  = rep(1:5, each = 8),
+#'   A   = rnorm(40), B = rnorm(40),
+#'   C   = rnorm(40), D = rnorm(40)
+#' )
+#' net_ml <- build_network(obs, method = "cor",
+#'                          params = list(id = "id"), level = "both")
+#' print(net_ml)
+#' }
 #'
 #' @export
 print.netobject_ml <- function(x, ...) {

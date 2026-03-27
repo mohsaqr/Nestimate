@@ -1326,6 +1326,17 @@ as_tna.default <- function(x) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   T1 = c("A","B","A"), T2 = c("B","C","B"),
+#'   T3 = c("C","A","C"), T4 = c("A","B","A")
+#' )
+#' clusters <- c("Alpha", "Beta", "Alpha")
+#' cs <- build_mcml(seqs, clusters, type = "raw")
+#' print(cs)
+#' }
+#'
 #' @export
 print.mcml <- function(x, ...) {
   n_clusters <- x$meta$n_clusters
@@ -1363,6 +1374,17 @@ print.mcml <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   T1 = c("A","B","A"), T2 = c("B","C","B"),
+#'   T3 = c("C","A","C"), T4 = c("A","B","A")
+#' )
+#' clusters <- c("Alpha", "Beta", "Alpha")
+#' cs <- build_mcml(seqs, clusters, type = "raw")
+#' summary(cs)
+#' }
 #'
 #' @export
 summary.mcml <- function(object, ...) {

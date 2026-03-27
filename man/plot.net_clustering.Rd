@@ -22,3 +22,16 @@ A \code{ggplot} object (invisibly).
 \description{
 Plot Sequence Clustering Results
 }
+\examples{
+\donttest{
+set.seed(1)
+seqs <- data.frame(
+  V1 = sample(c("A","B","C"), 20, TRUE),
+  V2 = sample(c("A","B","C"), 20, TRUE),
+  V3 = sample(c("A","B","C"), 20, TRUE)
+)
+cl <- cluster_data(seqs, k = 2)
+plot(cl, type = "silhouette")
+}
+
+}

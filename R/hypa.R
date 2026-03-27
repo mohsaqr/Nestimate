@@ -240,6 +240,18 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B","C","A","B","C","A"),
+#'   V2 = c("B","C","A","B","C","A","B","C","A","B"),
+#'   V3 = c("C","A","B","C","A","B","C","A","B","C"),
+#'   V4 = c("A","B","C","A","B","C","A","B","C","A")
+#' )
+#' hypa <- build_hypa(seqs, k = 2L)
+#' print(hypa)
+#' }
+#'
 #' @export
 print.net_hypa <- function(x, ...) {
   cat("HYPA: Path Anomaly Detection\n")
@@ -257,6 +269,18 @@ print.net_hypa <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B","C","A","B","C","A"),
+#'   V2 = c("B","C","A","B","C","A","B","C","A","B"),
+#'   V3 = c("C","A","B","C","A","B","C","A","B","C"),
+#'   V4 = c("A","B","C","A","B","C","A","B","C","A")
+#' )
+#' hypa <- build_hypa(seqs, k = 2L)
+#' summary(hypa)
+#' }
 #'
 #' @export
 summary.net_hypa <- function(object, ...) {

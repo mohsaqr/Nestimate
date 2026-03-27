@@ -718,6 +718,18 @@ cluster_sequences <- cluster_data
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 20, TRUE),
+#'   V2 = sample(c("A","B","C"), 20, TRUE),
+#'   V3 = sample(c("A","B","C"), 20, TRUE)
+#' )
+#' cl <- cluster_data(seqs, k = 2)
+#' print(cl)
+#' }
+#'
 #' @export
 print.net_clustering <- function(x, ...) {
   cat("Sequence Clustering\n")
@@ -748,6 +760,18 @@ print.net_clustering <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 20, TRUE),
+#'   V2 = sample(c("A","B","C"), 20, TRUE),
+#'   V3 = sample(c("A","B","C"), 20, TRUE)
+#' )
+#' cl <- cluster_data(seqs, k = 2)
+#' summary(cl)
+#' }
 #'
 #' @export
 summary.net_clustering <- function(object, ...) {
@@ -801,6 +825,18 @@ summary.net_clustering <- function(object, ...) {
 #'   Default: \code{"silhouette"}.
 #' @param ... Additional arguments (currently unused).
 #' @return A \code{ggplot} object (invisibly).
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 20, TRUE),
+#'   V2 = sample(c("A","B","C"), 20, TRUE),
+#'   V3 = sample(c("A","B","C"), 20, TRUE)
+#' )
+#' cl <- cluster_data(seqs, k = 2)
+#' plot(cl, type = "silhouette")
+#' }
 #'
 #' @import ggplot2
 #' @export

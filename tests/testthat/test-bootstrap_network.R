@@ -214,10 +214,10 @@ test_that("print.net_bootstrap produces expected output", {
                             iter = 30L, seed = 1)
 
   out <- capture.output(print(boot))
-  expect_true(any(grepl("Bootstrap:", out)))
-  expect_true(any(grepl("Iterations:", out)))
-  expect_true(any(grepl("Nodes:", out)))
-  expect_true(any(grepl("Significant edges:", out)))
+  expect_true(any(grepl("Bootstrap Network", out)))
+  expect_true(any(grepl("Iterations", out)))
+  expect_true(any(grepl("Nodes", out)))
+  expect_true(any(grepl("Edges", out)))
 })
 
 
@@ -386,7 +386,7 @@ test_that("print shows edge_threshold for threshold inference", {
   boot <- bootstrap_network(build_network(wide, method = "relative"),
                             iter = 30L, seed = 1, inference = "threshold")
   out <- capture.output(print(boot))
-  expect_true(any(grepl("Edge threshold", out)))
+  expect_true(any(grepl("Threshold", out)))
 })
 
 

@@ -17,3 +17,17 @@ The input object, invisibly.
 \description{
 Print Method for wtna_boot_mixed
 }
+\examples{
+\donttest{
+set.seed(1)
+oh <- data.frame(
+  A = c(1,0,1,0,1,0,1,0),
+  B = c(0,1,0,1,0,1,0,1),
+  C = c(1,1,0,0,1,1,0,0)
+)
+mixed <- wtna(oh, method = "both")
+boot  <- bootstrap_network(mixed, iter = 20)
+print(boot)
+}
+
+}

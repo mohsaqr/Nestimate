@@ -19,3 +19,15 @@ The input object, invisibly.
 \description{
 Plot Method for net_mogen
 }
+\examples{
+\donttest{
+seqs <- data.frame(
+  V1 = c("A","B","C","A","B"),
+  V2 = c("B","C","A","B","C"),
+  V3 = c("C","A","B","C","A")
+)
+mog <- build_mogen(seqs, max_order = 2L)
+plot(mog, type = "ic")
+}
+
+}

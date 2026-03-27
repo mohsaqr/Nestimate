@@ -17,3 +17,15 @@ The input object, invisibly.
 \description{
 Print Method for mcml
 }
+\examples{
+\donttest{
+seqs <- data.frame(
+  T1 = c("A","B","A"), T2 = c("B","C","B"),
+  T3 = c("C","A","C"), T4 = c("A","B","A")
+)
+clusters <- c("Alpha", "Beta", "Alpha")
+cs <- build_mcml(seqs, clusters, type = "raw")
+print(cs)
+}
+
+}

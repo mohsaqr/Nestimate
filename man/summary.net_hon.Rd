@@ -17,3 +17,15 @@ The input object, invisibly.
 \description{
 Summary Method for net_hon
 }
+\examples{
+\donttest{
+seqs <- data.frame(
+  V1 = c("A","B","C","A","B"),
+  V2 = c("B","C","A","B","C"),
+  V3 = c("C","A","B","C","A")
+)
+hon <- build_hon(seqs, max_order = 2L)
+summary(hon)
+}
+
+}

@@ -51,6 +51,17 @@ Use \code{\link{build_network}} on the result to extract per-cluster
 networks with any estimation method, or use \code{\link{cluster_network}}
 for a one-shot clustering + network call.
 }
+\examples{
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:3], 40, TRUE),
+  V2 = sample(LETTERS[1:3], 40, TRUE),
+  V3 = sample(LETTERS[1:3], 40, TRUE)
+)
+mmm <- cluster_mmm(seqs, k = 2)
+print(mmm)
+}
+}
 \seealso{
 \code{\link{build_mmm}}, \code{\link{cluster_network}}
 }

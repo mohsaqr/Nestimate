@@ -665,6 +665,18 @@ compare_mmm <- function(data, k = 2:5, ...) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
+#' print(mmm)
+#' }
+#'
 #' @export
 print.net_mmm <- function(x, ...) {
   cat("Mixed Markov Model\n")
@@ -701,6 +713,18 @@ print.net_mmm <- function(x, ...) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
+#' summary(mmm)
+#' }
+#'
 #' @export
 summary.net_mmm <- function(object, ...) {
   print(object)
@@ -731,6 +755,18 @@ summary.net_mmm <- function(object, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return A \code{ggplot} object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
+#' plot(mmm, type = "posterior")
+#' }
 #'
 #' @export
 plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
@@ -784,6 +820,18 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 5, seed = 1)
+#' print(cmp)
+#' }
+#'
 #' @export
 print.mmm_compare <- function(x, ...) {
   cat("MMM Model Comparison\n\n")
@@ -802,6 +850,18 @@ print.mmm_compare <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return A \code{ggplot} object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 5, seed = 1)
+#' plot(cmp)
+#' }
 #'
 #' @export
 plot.mmm_compare <- function(x, ...) {
@@ -846,5 +906,15 @@ plot.mmm_compare <- function(x, ...) {
 #' @inheritParams build_mmm
 #' @return A \code{net_mmm} object. See \code{\link{build_mmm}} for details.
 #' @seealso \code{\link{build_mmm}}, \code{\link{cluster_network}}
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:3], 40, TRUE),
+#'   V2 = sample(LETTERS[1:3], 40, TRUE),
+#'   V3 = sample(LETTERS[1:3], 40, TRUE)
+#' )
+#' mmm <- cluster_mmm(seqs, k = 2)
+#' print(mmm)
+#' }
 #' @export
 cluster_mmm <- build_mmm

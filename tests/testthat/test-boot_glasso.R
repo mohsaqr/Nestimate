@@ -606,16 +606,16 @@ test_that("plot.boot_glasso edge_diff order='id' sorts alphabetically", {
   expect_equal(edge_levels, sort(edge_levels))
 })
 
-test_that("plot.boot_glasso edge_diff uses discrete fill", {
+test_that("plot.boot_glasso edge_diff has fill_val column", {
   skip_if_not_installed("ggplot2")
   df <- .make_test_data(100, 4)
   result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
                          cs_drop = SMALL_CS_DROP, centrality = FAST_CENT,
                          seed = 1)
   p <- plot(result, type = "edge_diff")
-  # Data should have fill column with discrete values
-  expect_true("fill" %in% names(p$data))
-  expect_true(all(p$data$fill %in% c("significant", "non-significant", "diagonal", "blank")))
+  # Data should have fill_val column for continuous colour encoding
+  expect_true("fill_val" %in% names(p$data))
+  expect_true(is.numeric(p$data$fill_val) || all(is.na(p$data$fill_val)))
 })
 
 test_that("plot.boot_glasso edge_diff full matrix has n^2 tiles", {

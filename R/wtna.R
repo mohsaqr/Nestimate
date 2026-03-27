@@ -529,6 +529,16 @@ wtna <- function(data,
 #' @param x A \code{wtna_mixed} object.
 #' @param ... Additional arguments (ignored).
 #' @return The input object, invisibly.
+#' @examples
+#' \donttest{
+#' oh <- data.frame(
+#'   A = c(1,0,1,0,1,0,1,0),
+#'   B = c(0,1,0,1,0,1,0,1),
+#'   C = c(1,1,0,0,1,1,0,0)
+#' )
+#' mixed <- wtna(oh, method = "both")
+#' print(mixed)
+#' }
 #' @export
 print.wtna_mixed <- function(x, ...) {
   cat("Mixed Window TNA (transition + co-occurrence)\n")

@@ -17,3 +17,14 @@ The input object, invisibly.
 \description{
 Print Method for wtna_mixed
 }
+\examples{
+\donttest{
+oh <- data.frame(
+  A = c(1,0,1,0,1,0,1,0),
+  B = c(0,1,0,1,0,1,0,1),
+  C = c(1,1,0,0,1,1,0,0)
+)
+mixed <- wtna(oh, method = "both")
+print(mixed)
+}
+}

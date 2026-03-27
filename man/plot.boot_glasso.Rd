@@ -27,3 +27,14 @@ A \code{ggplot} object, invisibly.
 \description{
 Plots bootstrap results for GLASSO networks.
 }
+\examples{
+\donttest{
+set.seed(42)
+mat <- matrix(rnorm(60), ncol = 4)
+colnames(mat) <- LETTERS[1:4]
+boot <- boot_glasso(as.data.frame(mat), iter = 20, cs_iter = 10,
+  centrality = "strength", seed = 42)
+plot(boot, type = "edges")
+}
+
+}

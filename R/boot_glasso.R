@@ -780,6 +780,16 @@ boot_glasso <- function(x,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' mat <- matrix(rnorm(60), ncol = 4)
+#' colnames(mat) <- LETTERS[1:4]
+#' boot <- boot_glasso(as.data.frame(mat), iter = 20, cs_iter = 10,
+#'   centrality = "strength", seed = 42)
+#' print(boot)
+#' }
+#'
 #' @export
 print.boot_glasso <- function(x, ...) {
   cat(sprintf(
@@ -829,6 +839,16 @@ print.boot_glasso <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return A data frame or list of data frames depending on \code{type}.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' mat <- matrix(rnorm(60), ncol = 4)
+#' colnames(mat) <- LETTERS[1:4]
+#' boot <- boot_glasso(as.data.frame(mat), iter = 20, cs_iter = 10,
+#'   centrality = "strength", seed = 42)
+#' summary(boot, type = "edges")
+#' }
 #'
 #' @export
 summary.boot_glasso <- function(object, type = "edges", ...) {
@@ -881,6 +901,16 @@ summary.boot_glasso <- function(object, type = "edges", ...) {
 #'   or \code{"id"} (alphabetical).
 #'
 #' @return A \code{ggplot} object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' mat <- matrix(rnorm(60), ncol = 4)
+#' colnames(mat) <- LETTERS[1:4]
+#' boot <- boot_glasso(as.data.frame(mat), iter = 20, cs_iter = 10,
+#'   centrality = "strength", seed = 42)
+#' plot(boot, type = "edges")
+#' }
 #'
 #' @export
 plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {

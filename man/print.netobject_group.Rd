@@ -17,3 +17,16 @@ The input object, invisibly.
 \description{
 Print Method for Group Network Object
 }
+\examples{
+\donttest{
+seqs <- data.frame(
+  V1 = c("A","B","A","C","B","A"),
+  V2 = c("B","C","B","A","C","B"),
+  V3 = c("C","A","C","B","A","C"),
+  grp = c("X","X","X","Y","Y","Y")
+)
+nets <- build_network(seqs, method = "relative", group = "grp")
+print(nets)
+}
+
+}

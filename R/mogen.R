@@ -552,6 +552,17 @@ state_frequencies <- function(data) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' mog <- build_mogen(seqs, max_order = 2L)
+#' print(mog)
+#' }
+#'
 #' @export
 print.net_mogen <- function(x, ...) {
   cat("Multi-Order Generative Model (MOGen)\n")
@@ -578,6 +589,17 @@ print.net_mogen <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' mog <- build_mogen(seqs, max_order = 2L)
+#' summary(mog)
+#' }
 #'
 #' @export
 summary.net_mogen <- function(object, ...) {
@@ -613,6 +635,17 @@ summary.net_mogen <- function(object, ...) {
 #' @param ... Additional arguments passed to \code{\link[graphics]{plot}}.
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' mog <- build_mogen(seqs, max_order = 2L)
+#' plot(mog, type = "ic")
+#' }
 #'
 #' @export
 plot.net_mogen <- function(x, type = c("ic", "likelihood"), ...) {

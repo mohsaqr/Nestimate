@@ -17,3 +17,16 @@ The input object, invisibly.
 \description{
 Print Method for net_hypa
 }
+\examples{
+\donttest{
+seqs <- data.frame(
+  V1 = c("A","B","C","A","B","C","A","B","C","A"),
+  V2 = c("B","C","A","B","C","A","B","C","A","B"),
+  V3 = c("C","A","B","C","A","B","C","A","B","C"),
+  V4 = c("A","B","C","A","B","C","A","B","C","A")
+)
+hypa <- build_hypa(seqs, k = 2L)
+print(hypa)
+}
+
+}

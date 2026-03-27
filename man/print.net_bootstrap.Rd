@@ -17,3 +17,16 @@ The input object, invisibly.
 \description{
 Print Method for net_bootstrap
 }
+\examples{
+\donttest{
+set.seed(1)
+seqs <- data.frame(
+  V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),
+  V3 = c("C","A","C","B","A")
+)
+net  <- build_network(seqs, method = "relative")
+boot <- bootstrap_network(net, iter = 20)
+print(boot)
+}
+
+}

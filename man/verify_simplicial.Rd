@@ -20,3 +20,10 @@ A list with \code{$cliques_match} (logical),
 Cross-validates clique finding and Betti numbers against igraph
 and known topological invariants. Useful for testing.
 }
+\examples{
+\dontshow{if (requireNamespace("igraph", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+verify_simplicial(mat, threshold = 0.3)
+\dontshow{\}) # examplesIf}
+}

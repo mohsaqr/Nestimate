@@ -363,6 +363,20 @@ centrality_stability <- function(x,
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' stab <- centrality_stability(net, measures = c("InStrength","OutStrength"),
+#'                               iter = 10)
+#' print(stab)
+#' }
+#'
 #' @export
 print.net_stability <- function(x, ...) {
   cat(sprintf("Centrality Stability (%d iterations, threshold = %.1f)\n",
@@ -387,6 +401,20 @@ print.net_stability <- function(x, ...) {
 #'
 #' @return A data frame with columns \code{measure}, \code{drop_prop},
 #'   \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' stab <- centrality_stability(net, measures = c("InStrength","OutStrength"),
+#'                               iter = 10)
+#' summary(stab)
+#' }
 #'
 #' @export
 summary.net_stability <- function(object, ...) {
@@ -420,6 +448,20 @@ summary.net_stability <- function(object, ...) {
 #' @param ... Additional arguments (ignored).
 #'
 #' @return A \code{ggplot} object (invisibly).
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' seqs <- data.frame(
+#'   V1 = sample(c("A","B","C"), 30, TRUE),
+#'   V2 = sample(c("A","B","C"), 30, TRUE),
+#'   V3 = sample(c("A","B","C"), 30, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' stab <- centrality_stability(net, measures = c("InStrength","OutStrength"),
+#'                               iter = 10)
+#' plot(stab)
+#' }
 #'
 #' @export
 plot.net_stability <- function(x, ...) {

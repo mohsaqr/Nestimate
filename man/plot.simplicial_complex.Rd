@@ -18,3 +18,16 @@ A grid grob (invisibly).
 Produces a multi-panel summary: f-vector, simplicial degree ranking,
 and degree-by-dimension heatmap.
 }
+\examples{
+\donttest{
+seqs <- data.frame(
+  V1 = c("A","B","C","A","B"),
+  V2 = c("B","C","A","B","C"),
+  V3 = c("C","A","B","C","A")
+)
+net <- build_network(seqs, method = "relative")
+sc  <- build_simplicial(net, type = "clique")
+plot(sc)
+}
+
+}

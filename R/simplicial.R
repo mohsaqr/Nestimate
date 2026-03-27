@@ -322,7 +322,13 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #'
 #' @param sc A \code{simplicial_complex} object.
 #' @return Named integer vector \code{c(b0 = ..., b1 = ..., ...)}.
-#'
+#' @examples
+#' \donttest{
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' sc <- build_simplicial(mat, threshold = 0.3)
+#' betti_numbers(sc)
+#' }
 #' @export
 betti_numbers <- function(sc) {
   stopifnot(inherits(sc, "simplicial_complex"))
@@ -389,7 +395,13 @@ betti_numbers <- function(sc) {
 #'
 #' @param sc A \code{simplicial_complex} object.
 #' @return Integer.
-#'
+#' @examples
+#' \donttest{
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' sc <- build_simplicial(mat, threshold = 0.3)
+#' euler_characteristic(sc)
+#' }
 #' @export
 euler_characteristic <- function(sc) {
   stopifnot(inherits(sc, "simplicial_complex"))
@@ -534,7 +546,13 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L) {
 #'
 #' @return Data frame with \code{node}, columns \code{d0} through
 #'   \code{d_k}, and \code{total} (sum of d1+). Sorted by total descending.
-#'
+#' @examples
+#' \donttest{
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' sc <- build_simplicial(mat, threshold = 0.3)
+#' simplicial_degree(sc)
+#' }
 #' @export
 simplicial_degree <- function(sc, normalized = FALSE) {
   stopifnot(inherits(sc, "simplicial_complex"))
@@ -586,7 +604,13 @@ simplicial_degree <- function(sc, normalized = FALSE) {
 #'
 #' @references
 #' Atkin, R. H. (1974). \emph{Mathematical Structure in Human Affairs}.
-#'
+#' @examples
+#' \donttest{
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' sc <- build_simplicial(mat, threshold = 0.3)
+#' q_analysis(sc)
+#' }
 #' @export
 q_analysis <- function(sc) {
   stopifnot(inherits(sc, "simplicial_complex"))
@@ -685,7 +709,10 @@ q_analysis <- function(sc) {
 #' @return A list with \code{$cliques_match} (logical),
 #'   \code{$n_simplices_ours}, \code{$n_simplices_igraph},
 #'   \code{$betti}, and \code{$euler}.
-#'
+#' @examplesIf requireNamespace("igraph", quietly = TRUE)
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' verify_simplicial(mat, threshold = 0.3)
 #' @export
 verify_simplicial <- function(mat, threshold = 0) {
   if (!requireNamespace("igraph", quietly = TRUE)) {
@@ -745,6 +772,17 @@ verify_simplicial <- function(mat, threshold = 0) {
 #' @param x A \code{simplicial_complex} object.
 #' @param ... Additional arguments (unused).
 #' @return The input object, invisibly.
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' sc  <- build_simplicial(net, type = "clique")
+#' print(sc)
+#' }
 #' @export
 print.simplicial_complex <- function(x, ...) {
   labels <- c("clique" = "Clique Complex",
@@ -785,6 +823,17 @@ print.simplicial_complex <- function(x, ...) {
 #' @param x A \code{persistent_homology} object.
 #' @param ... Additional arguments (unused).
 #' @return The input object, invisibly.
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' ph  <- persistent_homology(net)
+#' print(ph)
+#' }
 #' @export
 print.persistent_homology <- function(x, ...) {
   cat("Persistent Homology\n")
@@ -819,6 +868,18 @@ print.persistent_homology <- function(x, ...) {
 #' @param x A \code{q_analysis} object.
 #' @param ... Additional arguments (unused).
 #' @return The input object, invisibly.
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' sc  <- build_simplicial(net, type = "clique")
+#' qa  <- q_analysis(sc)
+#' print(qa)
+#' }
 #' @export
 print.q_analysis <- function(x, ...) {
   cat(sprintf("Q-Analysis (max q = %d)\n", x$max_q))
@@ -872,6 +933,18 @@ print.q_analysis <- function(x, ...) {
 #' @param x A \code{simplicial_complex} object.
 #' @param ... Ignored.
 #' @return A grid grob (invisibly).
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' sc  <- build_simplicial(net, type = "clique")
+#' plot(sc)
+#' }
 #'
 #' @export
 plot.simplicial_complex <- function(x, ...) {
@@ -958,6 +1031,18 @@ plot.simplicial_complex <- function(x, ...) {
 #' @param ... Ignored.
 #' @return A grid grob (invisibly).
 #'
+#' @examples
+#' \dontrun{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' ph  <- persistent_homology(net)
+#' plot(ph)
+#' }
+#'
 #' @export
 plot.persistent_homology <- function(x, ...) {
   if (!requireNamespace("gridExtra", quietly = TRUE)) {
@@ -1022,6 +1107,19 @@ plot.persistent_homology <- function(x, ...) {
 #' @param x A \code{q_analysis} object.
 #' @param ... Ignored.
 #' @return A grid grob (invisibly).
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = c("A","B","C","A","B"),
+#'   V2 = c("B","C","A","B","C"),
+#'   V3 = c("C","A","B","C","A")
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' sc  <- build_simplicial(net, type = "clique")
+#' qa  <- q_analysis(sc)
+#' plot(qa)
+#' }
 #'
 #' @export
 plot.q_analysis <- function(x, ...) {

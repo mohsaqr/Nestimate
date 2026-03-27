@@ -18,3 +18,18 @@ A \code{ggplot} object (invisibly).
 Plots mean correlation vs drop proportion for each centrality measure.
 The CS-coefficient is marked where the curve crosses the threshold.
 }
+\examples{
+\donttest{
+set.seed(1)
+seqs <- data.frame(
+  V1 = sample(c("A","B","C"), 30, TRUE),
+  V2 = sample(c("A","B","C"), 30, TRUE),
+  V3 = sample(c("A","B","C"), 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+stab <- centrality_stability(net, measures = c("InStrength","OutStrength"),
+                              iter = 10)
+plot(stab)
+}
+
+}
