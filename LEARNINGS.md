@@ -1,5 +1,12 @@
 # Learnings
 
+### 2026-03-27 (CRAN --as-cran example fixes)
+- [donttest runs under --as-cran]: `\donttest{}` is executed when check is run with `--run-donttest`, which `--as-cran` enables. Only `\dontrun{}` is truly never executed. All examples that require unavailable packages or locale-sensitive graphics must use `\dontrun{}`.
+- [persistent_homology input type]: `persistent_homology(x)` expects a netobject, matrix, tna, or net_hon — NOT a `simplicial_complex`. `.sc_extract_matrix()` does not handle `simplicial_complex`. Example pattern: `net <- build_network(seqs, method="relative"); ph <- persistent_homology(net)`.
+- [Unicode β fails in check locale]: `\u03B2` (β) in ggplot axis/title labels causes `grid.Call(C_textBounds) : conversion failure` in CRAN's non-UTF8 check locale. Wrap any plot example using non-Latin-1 Unicode labels in `\dontrun{}`.
+- [compare_mmm parameter is k, not k_range]: `compare_mmm(data, k = 2:5, ...)` — the range parameter is `k`. There is no `k_range`. Passing `k_range` via `...` forwards to `build_mmm()` which also rejects it.
+- [centrality_stability has no n_subsets]: The function signature uses `iter`, `drop_prop`, `threshold`, `certainty` — there is no `n_subsets` parameter.
+
 ### 2026-03-25
 - [wtna transition equivalence]: Validated across 100 Saqrlab-generated one-hot datasets: Nestimate `wtna(type="relative")` produces byte-identical transition weight matrices to tna-dev's `tna()` (100/100 exact match, max abs diff = 0). Comparison script: `tmp/compare_wtna_tnadev.R`.
 - [wtna vs ctna co-occurrence]: Nestimate `wtna(cooccurrence, type="frequency")` and tna-dev `ctna(import_onehot(...))` are numerically identical: 100/100 exact match (max abs diff = 0) across 100 Saqrlab-generated one-hot datasets. Both count simultaneous co-activity (diagonal = self-count, off-diagonal = 0 for strict one-hot data). The earlier apparent mismatch was purely a normalization artifact: Nestimate `type="relative"` divides by row sums, tna `ctna()` returns raw counts. Use `type="frequency"` on the Nestimate side for a like-for-like comparison. Comparison script: `tmp/compare_wtna_tnadev.R`.
