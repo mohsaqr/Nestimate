@@ -1,0 +1,129 @@
+url: https://mohsaqr.github.io/Nestimate/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: Transition Networks
+          href: articles/transition-networks.html
+        - text: Co-occurrence & Ising Networks
+          href: articles/co-occurrence-networks.html
+        - text: Psychological Networks
+          href: articles/psychological-networks.html
+        - text: Clustering & Multi-Level Analysis
+          href: articles/clustering.html
+
+reference:
+  - title: Network Estimation
+    desc: Core functions for building networks from data
+    contents:
+      - build_network
+      - estimate_network
+      - register_estimator
+      - get_estimator
+      - list_estimators
+      - remove_estimator
+      - wtna
+
+  - title: Higher-Order Networks
+    desc: Methods for capturing higher-order dependencies
+    contents:
+      - build_hon
+      - build_honem
+      - build_hypa
+      - build_mogen
+      - pathways
+      - mogen_transitions
+      - path_counts
+
+  - title: Bootstrap & Inference
+    desc: Statistical inference for network estimation
+    contents:
+      - bootstrap_network
+      - boot_glasso
+      - permutation_test
+
+  - title: Reliability & Stability
+    desc: Assess reliability and stability of network estimates
+    contents:
+      - reliability
+      - centrality_stability
+
+  - title: Clustering & Grouping
+    desc: Cluster-based and multilevel network analysis
+    contents:
+      - cluster_data
+      - cluster_sequences
+      - cluster_summary
+      - csum
+      - build_mcml
+      - build_mmm
+      - compare_mmm
+
+  - title: Simplicial Complex Analysis
+    desc: Topological analysis of networks
+    contents:
+      - build_simplicial
+      - persistent_homology
+      - q_analysis
+      - betti_numbers
+      - euler_characteristic
+      - simplicial_degree
+      - verify_simplicial
+
+  - title: Data Preparation
+    desc: Convert and prepare data for network estimation
+    contents:
+      - prepare_data
+      - prepare_for_tna
+      - action_to_onehot
+      - prepare_onehot
+      - wide_to_long
+      - long_to_wide
+      - convert_sequence_format
+
+  - title: Utilities
+    desc: Helper functions and extractors
+    contents:
+      - predictability
+      - frequencies
+      - state_frequencies
+      - aggregate_weights
+      - wagg
+      - as_tna
+      - extract_edges
+      - extract_initial_probs
+      - extract_transition_matrix
+
+  - title: Other Methods
+    desc: Additional network estimation approaches
+    contents:
+      - build_gimme
+
+  - title: Data
+    desc: Example datasets
+    contents:
+      - vibcoding-data
+      - human_ai_edges
+      - srl_strategies
+      - learning_activities
+
+  - title: S3 Methods
+    desc: Print, summary, and plot methods for package classes
+    contents:
+      - starts_with("print.")
+      - starts_with("summary.")
+      - starts_with("plot.")
+
+authors:
+  Mohammed Saqr:
+    href: https://saqr.me
+  Sonsoles López-Pernas:
+    href: https://sonsoles.me

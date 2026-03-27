@@ -6,3 +6,6 @@
 tmp/
 ..Rcheck/
 .superpowers/
+.Rproj.user
+docs/
+inst/doc

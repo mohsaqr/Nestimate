@@ -18,7 +18,7 @@ Description: Estimate, compare, and analyze dynamic and probabilistic networks
     split-half reliability, centrality stability analysis, mixed Markov
     models, multi-cluster multi-layer (MCML) decomposition and clustering.
 License: MIT + file LICENSE
-URL: https://github.com/mohsaqr/Nestimate
+URL: https://mohsaqr.github.io/Nestimate/, https://github.com/mohsaqr/Nestimate
 BugReports: https://github.com/mohsaqr/Nestimate/issues
 Language: en-US
 Encoding: UTF-8
@@ -32,7 +32,6 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     tna,
-    cograph,
     igraph,
     glmnet,
     lavaan,
@@ -45,7 +44,8 @@ Suggests:
     reticulate,
     gridExtra,
     knitr,
-    rmarkdown
+    rmarkdown,
+    pkgdown
 Config/testthat/edition: 3
 Depends: 
     R (>= 3.5)
