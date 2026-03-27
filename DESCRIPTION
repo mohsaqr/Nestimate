@@ -18,7 +18,7 @@ Description: Estimate, compare, and analyze dynamic and probabilistic networks
     split-half reliability, centrality stability analysis, mixed Markov
     models, multi-cluster multi-layer (MCML) decomposition and clustering.
 License: MIT + file LICENSE
-URL: https://mohsaqr.github.io/Nestimate/, https://github.com/mohsaqr/Nestimate
+URL: https://github.com/mohsaqr/Nestimate
 BugReports: https://github.com/mohsaqr/Nestimate/issues
 Language: en-US
 Encoding: UTF-8

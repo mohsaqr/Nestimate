@@ -1,3 +1,7 @@
+# Nestimate 0.2.15
+
+* Preparing for publication
+
 # Nestimate 0.2.0
 
 * Reduced hard dependencies from 6 to 4 Imports (ggplot2, glasso, data.table, cluster).

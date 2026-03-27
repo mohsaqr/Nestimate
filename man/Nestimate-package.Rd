@@ -11,7 +11,6 @@ Estimate, compare, and analyze dynamic and probabilistic networks using a unifie
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://mohsaqr.github.io/Nestimate/}
   \item \url{https://github.com/mohsaqr/Nestimate}
   \item Report bugs at \url{https://github.com/mohsaqr/Nestimate/issues}
 }
