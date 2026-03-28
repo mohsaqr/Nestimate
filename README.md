@@ -215,7 +215,7 @@ Methods that capture dependencies beyond first-order transitions:
 | `build_mogen()` | Multi-Order Generative model — optimal Markov order per node |
 
 ```r
-hon <- build_hon(net$data, max_order = 2)
+hon <- build_hon(net, max_order = 2)
 pathways(hon)
 ```
 
