@@ -1050,7 +1050,7 @@ plot.persistent_homology <- function(x, ...) {
   }
 
   filt <- x$betti_curve
-  filt$dim_label <- factor(paste0("\u03B2", filt$dimension))
+  filt$dim_label <- factor(paste0("B", filt$dimension))
 
   # --- Panel 1: Betti curve ---
   p1 <- ggplot2::ggplot(filt, ggplot2::aes(x = threshold, y = betti,
@@ -1068,7 +1068,7 @@ plot.persistent_homology <- function(x, ...) {
   pers <- x$persistence[x$persistence$persistence > 0, ]
 
   if (nrow(pers) > 0L) {
-    pers$dim_label <- factor(paste0("\u03B2", pers$dimension))
+    pers$dim_label <- factor(paste0("B", pers$dimension))
     lim <- max(c(pers$birth, pers$death)) * 1.15
 
     p2 <- ggplot2::ggplot(pers, ggplot2::aes(x = birth, y = death,

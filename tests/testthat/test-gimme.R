@@ -585,12 +585,12 @@ test_that(".gimme_fit_final returns zeros when lavaan fails", {
   varnames <- c("V1", "V2")
   lag_names <- c("V1lag", "V2lag")
   # Empty syntax to guarantee failure
-  result <- Nestimate:::.gimme_fit_final(
+  result <- suppressWarnings(Nestimate:::.gimme_fit_final(
     syntax = "V1 ~ V2lag\nV2 ~ V1lag",
     data_k = data.frame(V1 = 1:2, V2 = 1:2, V1lag = 1:2, V2lag = 1:2),
     varnames = varnames,
     lag_names = lag_names
-  )
+  ))
   expect_true(is.list(result))
   expect_true("coefs" %in% names(result))
   expect_true("fit_indices" %in% names(result))
@@ -917,12 +917,12 @@ test_that(".gimme_fit_and_mi returns NA when model does not converge", {
   # Provide data with only 3 rows to guarantee non-convergence
   bad_data <- data.frame(V1 = 1:3, V2 = 1:3, V1lag = c(0, 1, 2),
                           V2lag = c(0, 1, 2))
-  result <- Nestimate:::.gimme_fit_and_mi(
+  result <- suppressWarnings(Nestimate:::.gimme_fit_and_mi(
     syntax = c("V1~~V1", "V2~~V2", "V1~1", "V2~1",
                "V1lag~~V1lag", "V2lag~~V2lag"),
     data_k = bad_data,
     elig_paths = "V1~V2lag"
-  )
+  ))
   # Should return NA (non-converged or failed)
   expect_true(is.na(result) || is.data.frame(result))
 })
@@ -936,11 +936,11 @@ test_that(".gimme_fit_and_z returns NA when model fit fails", {
   skip_if_not_installed("lavaan")
   bad_data <- data.frame(V1 = 1:3, V2 = 1:3, V1lag = c(0, 1, 2),
                           V2lag = c(0, 1, 2))
-  result <- Nestimate:::.gimme_fit_and_z(
+  result <- suppressWarnings(Nestimate:::.gimme_fit_and_z(
     syntax = c("V1~~V1", "V2~~V2", "V1~1", "V2~1"),
     data_k = bad_data,
     elig_paths = "V1~V2lag"
-  )
+  ))
   expect_true(is.na(result) || is.data.frame(result))
 })
 
