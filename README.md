@@ -266,7 +266,7 @@ Computes InStrength, OutStrength, and Betweenness for directed networks; Strengt
 
 ## Data Preparation
 
-Nestimate accepts long format (event logs), wide format (sequences as columns), or one-hot encoded binary matrices. `build_network()` auto-detects the format.
+Data preparation is not necessary — `build_network()` accepts long format, wide format, and one-hot binary matrices directly and handles conversion internally. The following utilities are provided for convenience when working outside `build_network()`:
 
 ```r
 prepare_data(event_log, action = "code", actor = "student", time = "timestamp")
