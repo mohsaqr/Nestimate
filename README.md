@@ -77,10 +77,10 @@ net_atna <- build_network(human_cat, method = "atna",
                           action = "category", actor = "session_id",
                           time = "timestamp")
 
-# Per-group networks — one network per project, no extra steps
+# Per-group networks — one network per superclass, no extra steps
 group_nets <- build_network(human_cat, method = "tna",
                             action = "category", actor = "session_id",
-                            time = "timestamp", group = "project")
+                            time = "timestamp", group = "superclass")
 ```
 
 ### Window-Based TNA
