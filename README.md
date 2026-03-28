@@ -17,7 +17,7 @@ Both paradigms share the same validation engine (bootstrap, permutation, central
 
 ### What Sets Nestimate Apart
 
-- **Binary and mixed data natively supported.** Most network packages handle either sequences or continuous data. Nestimate also handles binary indicator data (multiple states active/inactive simultaneously) through co-occurrence networks, Ising models, and windowed TNA — producing directed, undirected, or *mixed* networks that capture both contemporaneous co-occurrence and temporal transitions in a single model.
+- **Dynamic networks from binary event data.** Most network packages require either sequential event logs or continuous variables. Nestimate also builds dynamic networks directly from binary indicator data (multiple states active/inactive simultaneously) through co-occurrence networks and windowed TNA — producing directed, undirected, or *mixed* networks that capture both contemporaneous co-occurrence and temporal transitions in a single model.
 
 - **Self-contained implementations, minimal dependencies.** Nestimate implements its own EBICglasso estimation, Floyd-Warshall shortest paths, betweenness/closeness centrality, and coordinate descent regularization — all from scratch. The entire package requires only 4 imports (ggplot2, glasso, data.table, cluster). No dependency on igraph, bootnet, qgraph, or graphicalVAR for core functionality.
 
@@ -71,15 +71,15 @@ All methods are accessed through `build_network()` with a `method` argument:
 | `"frequency"` | `"ftna"`, `"counts"` | Raw transition counts (directed) |
 | `"co_occurrence"` | `"cna"` | Co-occurrence counts from binary data (undirected) |
 | `"attention"` | `"atna"` | Decay-weighted transitions emphasizing recent events (directed) |
-| `"ising"` | — | L1-regularized logistic regression for binary data (undirected) |
 
-### Psychological Networks (Cross-Sectional Data)
+### Psychological Networks (Cross-Sectional/Panel Data)
 
 | Method | Aliases | Description |
 |--------|---------|-------------|
 | `"cor"` | `"corr"`, `"correlation"` | Pearson correlations (undirected) |
 | `"pcor"` | `"partial"` | Partial correlations controlling for all other variables (undirected) |
 | `"glasso"` | `"ebicglasso"`, `"regularized"` | L1-regularized precision matrix with EBIC selection (undirected, sparse) |
+| `"ising"` | — | L1-regularized logistic regression for binary variables (undirected, sparse) |
 
 All PNA estimators are implemented from scratch within Nestimate — including EBICglasso with coordinate descent regularization, partial correlations via precision matrix inversion, and EBIC model selection. This eliminates hard dependencies on external network packages while producing numerically equivalent results (validated against `graphicalVAR` and `bootnet` across multiple synthetic and real datasets).
 
@@ -166,12 +166,11 @@ mcml$between   # Between-cluster flow matrix
 summary(mcml)
 ```
 
-## Binary Data and Window-Based TNA
+## Dynamic Networks from Binary Data
 
-Many real-world datasets are binary: at each time point, multiple states are either active (1) or inactive (0) — learning activities, coded behaviors, sensor signals. Nestimate provides dedicated methods for this data type:
+Many real-world datasets are binary: at each time point, multiple states are either active (1) or inactive (0) — learning activities, coded behaviors, sensor signals. Nestimate builds dynamic networks directly from this data type:
 
 - **Co-occurrence networks** (`method = "co_occurrence"`) count how often pairs of states are both active simultaneously. Windowed co-occurrence aggregates across temporal neighborhoods rather than exact time points.
-- **Ising networks** (`method = "ising"`) use L1-regularized logistic regression to estimate conditional dependencies between binary variables, producing sparse networks where edges represent direct relationships controlling for all others.
 - **Window-based TNA** (`wtna()`) applies temporal windowing to binary matrices, computing directed transitions between consecutive windows, undirected co-occurrence within windows, or both.
 
 The `method = "both"` mode produces a **mixed network** — a single model that combines directed edges (state A leads to state B across windows) with undirected edges (states A and B co-occur within the same window). This captures both the temporal sequencing and the contemporaneous structure that neither a purely directed nor a purely undirected network can represent alone:
@@ -182,14 +181,12 @@ data(learning_activities)
 # Co-occurrence network
 net_co <- build_network(learning_activities, method = "cna", actor = "student")
 
-# Ising network (sparse, conditional)
-net_ising <- build_network(learning_activities, method = "ising",
-                           params = list(gamma = 0.25))
-
 # Mixed network: transitions + co-occurrence in one model
 net_mixed <- wtna(learning_activities, actor = "student",
                   method = "both", type = "relative")
 ```
+
+For conditional dependency estimation on binary variables (controlling for all others), see the **Ising model** (`method = "ising"`) under Psychological Networks above.
 
 ## Higher-Order Networks
 
