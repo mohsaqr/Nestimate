@@ -27,7 +27,10 @@ Nestimate has a strict validation techniques to ensure that the resulting models
 ## Installation
 
 ```r
-# From GitHub
+# From CRAN
+install.packages("Nestimate")
+
+# Development version from GitHub
 devtools::install_github("mohsaqr/Nestimate")
 ```
 
@@ -294,11 +297,11 @@ See `?vibcoding-data` for the full family of human-AI coding datasets at three g
 
 ## Documentation
 
-- [Transition Networks](https://mohsaqr.github.io/Nestimate/articles/transition-networks.html) — TNA, FTNA, ATNA, co-occurrence, WTNA, validation, clustering, MMM
-- [Co-occurrence & Ising Networks](https://mohsaqr.github.io/Nestimate/articles/co-occurrence-networks.html) — binary data analysis
-- [Psychological Networks](https://mohsaqr.github.io/Nestimate/articles/psychological-networks.html) — correlation, partial correlation, glasso, bootstrap
-- [Clustering](https://mohsaqr.github.io/Nestimate/articles/clustering.html) — dissimilarity-based clustering, MMM, per-cluster networks
-- [Full Reference](https://github.com/mohsaqr/Nestimate)
+- [Transition Networks](https://saqr.me/Nestimate/articles/transition-networks.html) — TNA, FTNA, ATNA, co-occurrence, WTNA, validation, clustering, MMM
+- [Co-occurrence & Ising Networks](https://saqr.me/Nestimate/articles/co-occurrence-networks.html) — binary data analysis
+- [Psychological Networks](https://saqr.me/Nestimate/articles/psychological-networks.html) — correlation, partial correlation, glasso, bootstrap
+- [Clustering](https://saqr.me/Nestimate/articles/clustering.html) — dissimilarity-based clustering, MMM, per-cluster networks
+- [Full Reference](https://saqr.me/Nestimate/reference/)
 
 ## Citation
 

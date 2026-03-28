@@ -220,6 +220,14 @@ print.net_honem <- function(x, ...) {
 #'
 #' @return The input object, invisibly.
 #'
+#' @examples
+#' \donttest{
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hon <- build_hon(seqs, max_order = 3)
+#' he <- build_honem(hon, dim = 2)
+#' summary(he)
+#' }
+#'
 #' @export
 summary.net_honem <- function(object, ...) {
   cat("HONEM Summary\n\n")
@@ -241,6 +249,14 @@ summary.net_honem <- function(object, ...) {
 #' @param ... Additional arguments passed to \code{\link[graphics]{plot}}.
 #'
 #' @return The input object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hon <- build_hon(seqs, max_order = 3)
+#' he <- build_honem(hon, dim = 2)
+#' plot(he)
+#' }
 #'
 #' @export
 plot.net_honem <- function(x, dims = c(1L, 2L), ...) {

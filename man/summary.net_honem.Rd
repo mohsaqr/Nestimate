@@ -17,3 +17,12 @@ The input object, invisibly.
 \description{
 Summary Method for net_honem
 }
+\examples{
+\donttest{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hon <- build_hon(seqs, max_order = 3)
+he <- build_honem(hon, dim = 2)
+summary(he)
+}
+
+}

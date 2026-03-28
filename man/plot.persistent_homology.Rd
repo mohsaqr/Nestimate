@@ -19,7 +19,7 @@ Two panels: Betti curve (threshold vs Betti number) and persistence
 diagram (birth vs death).
 }
 \examples{
-\dontrun{
+\donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),
   V2 = c("B","C","A","B","C"),
@@ -27,7 +27,7 @@ seqs <- data.frame(
 )
 net <- build_network(seqs, method = "relative")
 ph  <- persistent_homology(net)
-plot(ph)
+if (requireNamespace("gridExtra", quietly = TRUE)) plot(ph)
 }
 
 }

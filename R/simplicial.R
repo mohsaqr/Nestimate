@@ -1032,7 +1032,7 @@ plot.simplicial_complex <- function(x, ...) {
 #' @return A grid grob (invisibly).
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
 #'   V2 = c("B","C","A","B","C"),
@@ -1040,7 +1040,7 @@ plot.simplicial_complex <- function(x, ...) {
 #' )
 #' net <- build_network(seqs, method = "relative")
 #' ph  <- persistent_homology(net)
-#' plot(ph)
+#' if (requireNamespace("gridExtra", quietly = TRUE)) plot(ph)
 #' }
 #'
 #' @export
