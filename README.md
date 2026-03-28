@@ -150,15 +150,20 @@ mcml2 <- build_mcml(sequences, clusters)
 
 ### Sequence Clustering
 
-`cluster_data()` computes pairwise sequence distances and partitions into `k` groups. Supports 9 distance metrics (Hamming, Levenshtein, LCS, cosine, Jaccard, and more), 8 clustering methods (PAM, Ward, complete/average/single linkage), and optional temporal weighting:
+`cluster_data()` computes pairwise sequence distances and partitions into `k` groups. Supports 9 distance metrics (Hamming, Levenshtein, LCS, cosine, Jaccard, and more), 8 clustering methods (PAM, Ward, complete/average/single linkage), and optional temporal weighting.
+
+Both `cluster_data()` and `build_mmm()` results can be passed directly to `build_network()`, which builds a separate network per cluster and returns a `netobject_group` — a named list of networks ready for comparison, permutation testing, or visualization.
 
 ```r
 clust <- cluster_data(net, k = 3, dissimilarity = "hamming", method = "ward.D2")
 plot(clust, type = "silhouette")
 plot(clust, type = "mds")
 
-# Build per-cluster networks
+# Convert to per-cluster networks
 cluster_nets <- build_network(clust, method = "tna")
+
+# Compare clusters with permutation test
+permutation_test(cluster_nets$`Cluster 1`, cluster_nets$`Cluster 2`)
 ```
 
 ### Mixed Markov Models
@@ -168,6 +173,23 @@ cluster_nets <- build_network(clust, method = "tna")
 ```r
 mmm <- build_mmm(net, k = 3, covariates = c("project"))
 compare_mmm(net, k = 2:6)
+
+# Convert to per-cluster networks
+mmm_nets <- build_network(mmm)
+```
+
+### Covariates
+
+Both clustering methods support covariate analysis, but with different roles. In `cluster_data()`, covariates are **post-hoc**: they do not influence the clustering itself but characterize who ends up in which cluster via multinomial logistic regression after the fact. In `build_mmm()`, covariates are **integrated into the EM algorithm**: they model covariate-dependent mixing proportions, so the covariate structure directly influences cluster membership during estimation.
+
+```r
+# Post-hoc: clustering is purely behavioral, covariates analyzed afterward
+clust <- cluster_data(net, k = 2, covariates = c("Achiever"))
+summary(clust)  # Includes covariate profiles and odds ratios
+
+# Integrated: covariates influence cluster assignments during EM
+mmm <- build_mmm(net, k = 2, covariates = c("Group"))
+summary(mmm)
 ```
 
 ## Higher-Order Networks
