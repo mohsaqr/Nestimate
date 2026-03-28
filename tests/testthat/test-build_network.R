@@ -1221,3 +1221,132 @@ test_that("glasso network completes even with challenging input", {
   expect_s3_class(net, "netobject")
 })
 
+
+# ---- build_network net_mmm dispatch (L149-178) ----
+
+test_that("build_network wraps net_mmm default (relative) models (L173-178)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  data <- data.frame(
+    V1 = sample(states, 80, TRUE), V2 = sample(states, 80, TRUE),
+    V3 = sample(states, 80, TRUE), V4 = sample(states, 80, TRUE),
+    V5 = sample(states, 80, TRUE), stringsAsFactors = FALSE
+  )
+  mmm <- build_mmm(data, k = 2, n_starts = 3, seed = 1)
+  grp <- build_network(mmm)
+  expect_true(inherits(grp, "netobject_group"))
+  expect_equal(length(grp), 2)
+  expect_true(all(vapply(grp, function(x) inherits(x, "netobject"), logical(1))))
+})
+
+test_that("build_network assigns Cluster names when mmm models unnamed (L175)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  data <- data.frame(
+    V1 = sample(states, 80, TRUE), V2 = sample(states, 80, TRUE),
+    V3 = sample(states, 80, TRUE), V4 = sample(states, 80, TRUE),
+    V5 = sample(states, 80, TRUE), stringsAsFactors = FALSE
+  )
+  mmm <- build_mmm(data, k = 2, n_starts = 3, seed = 1)
+  names(mmm$models) <- NULL
+  grp <- build_network(mmm)
+  expect_equal(names(grp), c("Cluster 1", "Cluster 2"))
+})
+
+test_that("build_network rebuilds net_mmm with non-relative method (L151-171)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  data <- data.frame(
+    V1 = sample(states, 80, TRUE), V2 = sample(states, 80, TRUE),
+    V3 = sample(states, 80, TRUE), V4 = sample(states, 80, TRUE),
+    V5 = sample(states, 80, TRUE), stringsAsFactors = FALSE
+  )
+  mmm <- build_mmm(data, k = 2, n_starts = 3, seed = 1)
+
+  # frequency method: resolved in (relative, frequency, attention) -> injects initial
+  grp_freq <- build_network(mmm, method = "frequency")
+  expect_true(inherits(grp_freq, "netobject_group"))
+  expect_equal(grp_freq[[1]]$method, "frequency")
+
+  # co_occurrence method: resolved NOT in relative/frequency/attention -> no initial injection
+  grp_co <- build_network(mmm, method = "co_occurrence")
+  expect_true(inherits(grp_co, "netobject_group"))
+  expect_equal(grp_co[[1]]$method, "co_occurrence")
+})
+
+
+# ---- .compute_initial_probs long-format paths (estimators.R) ----
+
+# These call the estimator functions directly via the registry to bypass
+# build_network()'s long->wide conversion and hit the long-format branches
+# in .compute_initial_probs() and the format auto-detection code.
+
+test_that(".compute_initial_probs multi-id long format via estimator (L282-290)", {
+  df <- data.frame(
+    pid = c(1,1,1,2,2,2),
+    sid = c("a","a","a","b","b","b"),
+    Time = c(1,2,3,1,2,3),
+    Action = c("X","Y","Z","Y","Z","X"),
+    stringsAsFactors = FALSE
+  )
+  est <- get_estimator("relative")
+  result <- est$fn(data = df, format = "long", action = "Action",
+                   id = c("pid","sid"), time = "Time")
+  expect_false(is.null(result$initial))
+  expect_equal(sum(result$initial), 1)
+  expect_equal(length(result$initial), 3)
+})
+
+test_that(".compute_initial_probs long format with no id via estimator (L281-284)", {
+  df <- data.frame(
+    Time = 1:5,
+    Action = c("X","Y","Z","X","Y"),
+    stringsAsFactors = FALSE
+  )
+  est <- get_estimator("relative")
+  result <- est$fn(data = df, format = "long", action = "Action",
+                   id = NULL, time = "Time")
+  expect_false(is.null(result$initial))
+  expect_equal(unname(result$initial[["X"]]), 1)
+})
+
+test_that(".compute_initial_probs returns zero vector when all first_states NA (L303)", {
+  # Call internal function directly — line 303 triggers when
+  # all first_states are NA (no valid starting states)
+  init <- Nestimate:::.compute_initial_probs(
+    data.frame(Time = 1:3, Action = rep(NA_character_, 3)),
+    states = c("X","Y"), format = "long",
+    action = "Action", id = NULL, time = "Time"
+  )
+  expect_equal(unname(init), c(0, 0))
+})
+
+test_that("frequency estimator auto-detects long format via registry (L325-326)", {
+  df <- data.frame(
+    id = c(1,1,1,2,2,2),
+    Time = c(1,2,3,1,2,3),
+    Action = c("X","Y","Z","Y","Z","X"),
+    stringsAsFactors = FALSE
+  )
+  est <- get_estimator("frequency")
+  result <- est$fn(data = df, format = "auto", action = "Action",
+                   id = "id", time = "Time")
+  expect_false(is.null(result$initial))
+  expect_true(is.matrix(result$matrix))
+})
+
+test_that("relative estimator auto-detects long format via registry (L364-366)", {
+  df <- data.frame(
+    id = c(1,1,1,2,2,2),
+    Time = c(1,2,3,1,2,3),
+    Action = c("X","Y","Z","Y","Z","X"),
+    stringsAsFactors = FALSE
+  )
+  est <- get_estimator("relative")
+  result <- est$fn(data = df, format = "auto", action = "Action",
+                   id = "id", time = "Time")
+  expect_false(is.null(result$initial))
+  rs <- rowSums(result$matrix)
+  expect_true(all(rs == 0 | abs(rs - 1) < 1e-10))
+})
+

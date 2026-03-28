@@ -453,3 +453,101 @@ test_that("bootstrap_network matches tna::bootstrap numerically", {
 })
 
 
+# ---- Group and mixed dispatches ----
+
+test_that("bootstrap_network dispatches for wtna_mixed (L83-95)", {
+  set.seed(1)
+  oh <- data.frame(
+    A = c(1,0,1,0,1,0,1,0), B = c(0,1,0,1,0,1,0,1),
+    C = c(1,1,0,0,1,1,0,0)
+  )
+  mixed <- wtna(oh, method = "both")
+  boot_mixed <- bootstrap_network(mixed, iter = 10, seed = 1)
+  expect_true(inherits(boot_mixed, "wtna_boot_mixed"))
+  expect_true(all(c("transition", "cooccurrence") %in% names(boot_mixed)))
+  expect_s3_class(boot_mixed$transition, "net_bootstrap")
+  expect_s3_class(boot_mixed$cooccurrence, "net_bootstrap")
+})
+
+test_that("print.net_bootstrap_group shows grouped output with shared edges (L660-715)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  n <- 300
+  seqs <- data.frame(
+    V1 = sample(states, n, TRUE), V2 = sample(states, n, TRUE),
+    V3 = sample(states, n, TRUE), V4 = sample(states, n, TRUE),
+    grp = rep(c("X","Y"), each = n / 2),
+    stringsAsFactors = FALSE
+  )
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  boot_grp <- bootstrap_network(nets, iter = 100, seed = 1)
+  expect_true(inherits(boot_grp, "net_bootstrap_group"))
+  out <- capture.output(print(boot_grp))
+  expect_true(any(grepl("Grouped Bootstrap", out)))
+  # With enough data, shared significant edges should appear in the table
+  expect_true(any(grepl("Edge", out)))
+})
+
+test_that("summary.net_bootstrap_group returns combined data frame (L737-741)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  n <- 300
+  seqs <- data.frame(
+    V1 = sample(states, n, TRUE), V2 = sample(states, n, TRUE),
+    V3 = sample(states, n, TRUE), V4 = sample(states, n, TRUE),
+    grp = rep(c("X","Y"), each = n / 2),
+    stringsAsFactors = FALSE
+  )
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  boot_grp <- bootstrap_network(nets, iter = 100, seed = 1)
+  s <- summary(boot_grp)
+  expect_true(is.data.frame(s))
+  expect_true("group" %in% names(s))
+  expect_true(all(c("X", "Y") %in% s$group))
+})
+
+test_that("print.wtna_boot_mixed shows both components (L767-772)", {
+  set.seed(1)
+  oh <- data.frame(
+    A = c(1,0,1,0,1,0,1,0), B = c(0,1,0,1,0,1,0,1),
+    C = c(1,1,0,0,1,1,0,0)
+  )
+  mixed <- wtna(oh, method = "both")
+  boot_mixed <- bootstrap_network(mixed, iter = 10, seed = 1)
+  out <- capture.output(print(boot_mixed))
+  expect_true(any(grepl("Mixed Window TNA", out)))
+  expect_true(any(grepl("Transition", out)))
+  expect_true(any(grepl("Co-occurrence", out)))
+})
+
+test_that("summary.wtna_boot_mixed returns list of summaries (L798-801)", {
+  set.seed(1)
+  oh <- data.frame(
+    A = c(1,0,1,0,1,0,1,0), B = c(0,1,0,1,0,1,0,1),
+    C = c(1,1,0,0,1,1,0,0)
+  )
+  mixed <- wtna(oh, method = "both")
+  boot_mixed <- bootstrap_network(mixed, iter = 10, seed = 1)
+  s <- summary(boot_mixed)
+  expect_true(is.list(s))
+  expect_true(all(c("transition", "cooccurrence") %in% names(s)))
+  expect_true(is.data.frame(s$transition))
+  expect_true(is.data.frame(s$cooccurrence))
+})
+
+test_that("print.net_bootstrap shows '...and N more' for >5 sig edges (L597)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  wide <- data.frame(
+    V1 = sample(states, 500, TRUE), V2 = sample(states, 500, TRUE),
+    V3 = sample(states, 500, TRUE), V4 = sample(states, 500, TRUE),
+    V5 = sample(states, 500, TRUE), V6 = sample(states, 500, TRUE),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(wide, method = "relative")
+  boot <- bootstrap_network(net, iter = 100, seed = 1)
+  out <- capture.output(print(boot))
+  expect_true(any(grepl("and.*more significant", out)))
+})
+
+

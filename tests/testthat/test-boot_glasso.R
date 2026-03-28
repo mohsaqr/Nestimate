@@ -1413,3 +1413,53 @@ test_that("plot.boot_glasso rejects 'network' type (removed)", {
                          seed = 1)
   expect_error(plot(result, type = "network"), "should be one of")
 })
+
+
+# ========================================================================
+# Coverage gap: .bg_compute_centrality external centrality_fn (L484-501)
+# ========================================================================
+
+test_that(".bg_compute_centrality with external centrality_fn (L484-501)", {
+  pcor <- matrix(c(1, 0.3, 0.3, 1), nrow = 2,
+                 dimnames = list(c("V1","V2"), c("V1","V2")))
+  custom_fn <- function(mat) {
+    list(my_cent = setNames(rowSums(abs(mat)), rownames(mat)))
+  }
+  result <- Nestimate:::.bg_compute_centrality(
+    pcor, p = 2, nodes = c("V1","V2"),
+    measures = c("strength", "my_cent"),
+    centrality_fn = custom_fn
+  )
+  expect_true("my_cent" %in% names(result))
+  expect_equal(names(result$my_cent), c("V1", "V2"))
+})
+
+test_that(".bg_compute_centrality errors for external measure without fn (L484-489)", {
+  pcor <- matrix(c(1, 0.3, 0.3, 1), nrow = 2,
+                 dimnames = list(c("V1","V2"), c("V1","V2")))
+  expect_error(
+    Nestimate:::.bg_compute_centrality(
+      pcor, p = 2, nodes = c("V1","V2"),
+      measures = c("strength", "bad_measure")
+    ),
+    "centrality_fn is required"
+  )
+})
+
+
+# ========================================================================
+# Coverage gap: edge_diff plot with diff_max == 0 (L1080)
+# ========================================================================
+
+test_that("edge_diff plot handles diff_max == 0 gracefully (L1080)", {
+  df <- .make_test_data(100, 4)
+  result <- boot_glasso(df, iter = SMALL_ITER, cs_iter = SMALL_CS_ITER,
+                         cs_drop = SMALL_CS_DROP, centrality = FAST_CENT,
+                         seed = 1)
+  # Force all edge bootstrap columns identical -> diff_max = 0
+  n_cols <- ncol(result$boot_edges)
+  result$boot_edges <- matrix(0.5, nrow = nrow(result$boot_edges), ncol = n_cols)
+  colnames(result$boot_edges) <- colnames(result$edge_diff_p)
+  p <- plot(result, type = "edge_diff")
+  expect_true(inherits(p, "gg"))
+})

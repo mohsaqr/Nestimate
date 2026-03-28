@@ -475,3 +475,49 @@ test_that(".estimator_wtna falls back to frequency for long-format non-binary da
   expect_s3_class(net, "netobject")
   expect_true(net$weights["A", "B"] > 0 || net$weights["B", "A"] > 0)
 })
+
+
+# ---- .wtna_initial_probs edge cases ----
+
+test_that("wtna with all-zero data produces NULL initial (L343)", {
+  df_empty <- data.frame(A = c(0,0,0,0), B = c(0,0,0,0))
+  net <- wtna(df_empty, method = "transition")
+  expect_null(net$initial)
+})
+
+test_that("wtna with all-zero actor data produces NULL initial (L366)", {
+  df4 <- data.frame(actor = c("a","a","b","b"), A = c(0,0,0,0), B = c(0,0,0,0))
+  net <- wtna(df4, method = "transition", actor = "actor")
+  expect_null(net$initial)
+})
+
+test_that("wtna with mixed actor data produces valid initial (L361)", {
+  df3 <- data.frame(actor = c("a","a","b","b"), A = c(0,0,1,0), B = c(0,0,0,1))
+  net <- wtna(df3, method = "transition", actor = "actor")
+  expect_false(is.null(net$initial))
+  expect_equal(sum(net$initial), 1)
+})
+
+
+# ---- .estimator_wtna_core type="relative" (L460-462) ----
+
+test_that(".estimator_wtna_core normalizes to relative (L460-462)", {
+  df <- data.frame(
+    A = c(1, 0, 1, 0, 1), B = c(0, 1, 0, 1, 0), C = c(0, 0, 0, 0, 0)
+  )
+  net <- build_network(df, method = "wtna", params = list(type = "relative"))
+  expect_s3_class(net, "netobject")
+  expect_true(all(rowSums(net$weights) <= 1 + 1e-10))
+})
+
+
+# ---- print.wtna_mixed (L544-551) ----
+
+test_that("print.wtna_mixed shows both components (L544-551)", {
+  oh <- data.frame(A = c(1,0,1,0), B = c(0,1,0,1), C = c(1,1,0,0))
+  mixed <- wtna(oh, method = "both")
+  out <- capture.output(print(mixed))
+  expect_true(any(grepl("Mixed Window TNA", out)))
+  expect_true(any(grepl("Transition", out)))
+  expect_true(any(grepl("Co-occurrence", out)))
+})

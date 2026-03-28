@@ -512,3 +512,60 @@ test_that("permutation_test matches tna::permutation_test numerically", {
 })
 
 
+# ---- Group dispatches ----
+
+test_that("permutation_test single netobject_group runs all-pairs (L85-104)", {
+  set.seed(1)
+  seqs <- data.frame(
+    V1 = c("A","B","A","C","B","A","A","B","C"),
+    V2 = c("B","C","B","A","C","B","B","C","A"),
+    V3 = c("C","A","C","B","A","C","C","A","B"),
+    grp = c("X","X","X","Y","Y","Y","Z","Z","Z")
+  )
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  perm <- permutation_test(nets, iter = 10, seed = 1)
+  expect_true(inherits(perm, "net_permutation_group"))
+  expect_equal(length(perm), 3)  # 3 choose 2 = 3 pairs
+  expect_true(all(vapply(perm, function(x) inherits(x, "net_permutation"), logical(1))))
+})
+
+test_that("permutation_test single group with < 2 groups errors (L87-89)", {
+  seqs <- data.frame(
+    V1 = c("A","B","A"), V2 = c("B","C","B"), V3 = c("C","A","C"),
+    grp = c("X","X","X")
+  )
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  expect_error(permutation_test(nets, iter = 10), "at least 2")
+})
+
+test_that("print.net_permutation_group shows groups (L644-647)", {
+  set.seed(1)
+  seqs <- data.frame(
+    V1 = c("A","B","A","C","B","A"),
+    V2 = c("B","C","B","A","C","B"),
+    V3 = c("C","A","C","B","A","C"),
+    grp = c("X","X","X","Y","Y","Y")
+  )
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  perm <- permutation_test(nets, iter = 10, seed = 1)
+  out <- capture.output(print(perm))
+  expect_true(any(grepl("Grouped Permutation", out)))
+  expect_true(any(grepl("Groups:", out)))
+})
+
+test_that("summary.net_permutation_group returns combined data frame (L671-675)", {
+  set.seed(1)
+  seqs <- data.frame(
+    V1 = c("A","B","A","C","B","A"),
+    V2 = c("B","C","B","A","C","B"),
+    V3 = c("C","A","C","B","A","C"),
+    grp = c("X","X","X","Y","Y","Y")
+  )
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  perm <- permutation_test(nets, iter = 10, seed = 1)
+  s <- summary(perm)
+  expect_true(is.data.frame(s))
+  expect_true("group" %in% names(s))
+})
+
+

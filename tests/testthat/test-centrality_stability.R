@@ -379,3 +379,75 @@ test_that("centrality_stability accepts cograph_network input", {
                              seed = 1)
   expect_s3_class(cs, "net_stability")
 })
+
+
+# ---- centrality() generic (centrality_measures.R) ----
+
+test_that("centrality.netobject returns correct directed defaults (L163-177)", {
+  seqs <- data.frame(
+    V1 = c("A","B","A","C","B","A"),
+    V2 = c("B","C","B","A","C","B"),
+    V3 = c("C","A","C","B","A","C")
+  )
+  net <- build_network(seqs, method = "relative")
+  c1 <- centrality(net)
+  expect_true(is.data.frame(c1))
+  expect_equal(nrow(c1), 3)
+  expect_true(all(c("InStrength", "OutStrength", "Betweenness") %in% names(c1)))
+})
+
+test_that("centrality.netobject returns correct undirected defaults (L163-177)", {
+  set.seed(42)
+  panel <- data.frame(V1 = rnorm(50), V2 = rnorm(50), V3 = rnorm(50))
+  net_ud <- build_network(panel, method = "cor")
+  c2 <- centrality(net_ud)
+  expect_true(is.data.frame(c2))
+  expect_true(all(c("Closeness", "Betweenness") %in% names(c2)))
+})
+
+test_that("centrality.netobject_group returns list of data frames (L185-188)", {
+  seqs <- data.frame(
+    V1 = c("A","B","A","C","B","A"),
+    V2 = c("B","C","B","A","C","B"),
+    V3 = c("C","A","C","B","A","C"),
+    grp = c("X","X","X","Y","Y","Y")
+  )
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  c3 <- centrality(nets)
+  expect_true(is.list(c3))
+  expect_equal(length(c3), 2)
+  expect_true(all(vapply(c3, is.data.frame, logical(1))))
+})
+
+test_that(".betweenness returns zeros for n < 3 (L53)", {
+  W <- matrix(c(0, 1, 1, 0), nrow = 2, dimnames = list(c("A","B"), c("A","B")))
+  btw <- Nestimate:::.betweenness(W, directed = TRUE)
+  expect_equal(unname(btw), c(0, 0))
+  expect_equal(names(btw), c("A", "B"))
+})
+
+test_that(".compute_centralities handles external centrality_fn (L325-340)", {
+  seqs <- data.frame(
+    V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+    V3 = c("C","A","C","B")
+  )
+  net <- build_network(seqs, method = "relative")
+  custom_fn <- function(mat) {
+    list(MyMeasure = setNames(rowSums(abs(mat)), rownames(mat)))
+  }
+  c4 <- centrality(net, measures = c("InStrength", "MyMeasure"),
+                    centrality_fn = custom_fn)
+  expect_true("MyMeasure" %in% names(c4))
+  expect_true(is.data.frame(c4))
+})
+
+test_that(".compute_centralities errors when external measure lacks centrality_fn (L325-329)", {
+  seqs <- data.frame(
+    V1 = c("A","B","A"), V2 = c("B","C","B"), V3 = c("C","A","C")
+  )
+  net <- build_network(seqs, method = "relative")
+  expect_error(
+    centrality(net, measures = c("InStrength", "BadMeasure")),
+    "centrality_fn is required"
+  )
+})

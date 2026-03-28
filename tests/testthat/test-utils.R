@@ -135,3 +135,34 @@ test_that(".as_netobject decodes integer-encoded data for sequence methods (L133
   expect_true(all(result$data[[1]] %in% c("A", "B")))
 })
 
+
+test_that(".as_netobject converts data.frame weights to matrix (L160)", {
+  nodes_df <- data.frame(id = 1:2, label = c("A","B"), name = c("A","B"),
+                         x = 1:2, y = 1:2, stringsAsFactors = FALSE)
+  w_df <- data.frame(A = c(0, 0.3), B = c(0.7, 0))
+  rownames(w_df) <- c("A", "B")
+  cg <- structure(list(
+    weights = w_df, nodes = nodes_df, directed = TRUE,
+    meta = list(source = "test", layout = NULL, tna = list(method = "relative")),
+    node_groups = NULL, data = NULL
+  ), class = c("cograph_network", "list"))
+  result <- Nestimate:::.as_netobject(cg)
+  expect_true(is.matrix(result$weights))
+  expect_true(is.numeric(result$weights))
+})
+
+test_that(".as_netobject converts non-numeric matrix to double (L161)", {
+  nodes_df <- data.frame(id = 1:2, label = c("A","B"), name = c("A","B"),
+                         x = 1:2, y = 1:2, stringsAsFactors = FALSE)
+  w_mat <- matrix(c("0", "0.3", "0.7", "0"), nrow = 2,
+                  dimnames = list(c("A","B"), c("A","B")))
+  cg <- structure(list(
+    weights = w_mat, nodes = nodes_df, directed = TRUE,
+    meta = list(source = "test", layout = NULL, tna = list(method = "relative")),
+    node_groups = NULL, data = NULL
+  ), class = c("cograph_network", "list"))
+  result <- Nestimate:::.as_netobject(cg)
+  expect_true(is.matrix(result$weights))
+  expect_true(is.numeric(result$weights))
+})
+

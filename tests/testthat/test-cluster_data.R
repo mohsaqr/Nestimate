@@ -1166,3 +1166,46 @@ test_that("covariate NA rows use complete-case for profiles", {
   total_n <- sum(unique(np[, c("cluster", "n")])$n)
   expect_equal(total_n, 35L)
 })
+
+
+# ==============================================================================
+# cluster_network() convenience wrapper (L1435-1452)
+# ==============================================================================
+
+test_that("cluster_network with default pam returns netobject_group (L1435-1452)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  data <- data.frame(
+    V1 = sample(states, 50, TRUE), V2 = sample(states, 50, TRUE),
+    V3 = sample(states, 50, TRUE), V4 = sample(states, 50, TRUE),
+    stringsAsFactors = FALSE
+  )
+  grp <- cluster_network(data, k = 2)
+  expect_true(inherits(grp, "netobject_group"))
+  expect_equal(length(grp), 2)
+})
+
+test_that("cluster_network with mmm returns netobject_group (L1445-1448)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  data <- data.frame(
+    V1 = sample(states, 50, TRUE), V2 = sample(states, 50, TRUE),
+    V3 = sample(states, 50, TRUE), V4 = sample(states, 50, TRUE),
+    stringsAsFactors = FALSE
+  )
+  grp <- cluster_network(data, k = 2, cluster_by = "mmm")
+  expect_true(inherits(grp, "netobject_group"))
+})
+
+test_that("cluster_network from netobject inherits build_args (L1438-1443)", {
+  set.seed(42)
+  states <- c("A","B","C")
+  data <- data.frame(
+    V1 = sample(states, 50, TRUE), V2 = sample(states, 50, TRUE),
+    V3 = sample(states, 50, TRUE), V4 = sample(states, 50, TRUE),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(data, method = "relative")
+  grp <- cluster_network(net, k = 2)
+  expect_true(inherits(grp, "netobject_group"))
+})
