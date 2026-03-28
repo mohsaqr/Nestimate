@@ -18,9 +18,9 @@ Nestimate is a computational package for building, validating, and comparing net
 
 ### What Sets Nestimate Apart
 
-Nestimate implements four families of transition network estimation: standard TNA (row-normalized transition probabilities), frequency TNA (raw counts), attention TNA (temporal decay weighting that emphasizes recent transitions), and co-occurrence networks from binary data. On top of these, windowed TNA (`wtna()`) builds networks from binary indicator matrices using temporal windows — producing directed transitions between windows, undirected co-occurrence within windows, or mixed networks that combine both in a single model.
+Nestimate implements four families of transition network estimation: standard TNA (transition probabilities), frequency TNA (raw counts), attention TNA (temporal decay weighting that emphasizes recent transitions), and co-occurrence networks from binary data. On top of these, windowed TNA (`wtna()`) builds networks from binary indicator matrices using temporal windows — producing directed transitions between windows, undirected co-occurrence within windows, or mixed networks that combine both in a single model.
 
-For psychological networks, Nestimate implements EBICglasso, partial correlations, and Ising estimation from scratch using coordinate descent regularization, precision matrix inversion, and EBIC model selection. These require no external network packages — the entire package has only 4 imports (ggplot2, glasso, data.table, cluster) — yet produce numerically equivalent results. Transition networks and bootstrap are byte-identical to the `tna` package; permutation tests match to Monte Carlo precision; EBICglasso yields correlations >=0.98 with `graphicalVAR`. All equivalence tests compare outputs value by value on identical synthetic datasets.
+For psychological networks, Nestimate implements EBICglasso, partial correlations, and Ising estimation from scratch using coordinate descent regularization, precision matrix inversion, and EBIC model selection. These require no external network packages — the entire package has only 4 imports (ggplot2, glasso, data.table, cluster) — yet produce numerically equivalent results. Transition networks and bootstrap are byte-identical to the `tna` package; permutation tests match to Monte Carlo precision; EBICglasso produces numerically equivalent results to established implementations. All equivalence tests compare outputs value by value on identical synthetic datasets.
 
 Every network type — dynamic, psychological, higher-order — shares the same validation pipeline: bootstrap confidence intervals, permutation testing, split-half reliability, and centrality stability analysis. These are not separate packages bolted on; they are part of the same interface.
 
@@ -59,7 +59,7 @@ All dynamic network methods are accessed through `build_network()` with a `metho
 
 | Method | Aliases | Description |
 |--------|---------|-------------|
-| `"relative"` | `"tna"`, `"transition"` | Row-normalized transition probabilities (directed) |
+| `"relative"` | `"tna"`, `"transition"` | Transition probabilities (directed) |
 | `"frequency"` | `"ftna"`, `"counts"` | Raw transition counts (directed) |
 | `"attention"` | `"atna"` | Decay-weighted transitions emphasizing recent events (directed) |
 | `"co_occurrence"` | `"cna"` | Co-occurrence counts from binary data (undirected) |
@@ -110,7 +110,7 @@ net_mixed <- wtna(learning_activities, actor = "student",
 | `"glasso"` | `"ebicglasso"`, `"regularized"` | L1-regularized precision matrix with EBIC selection (undirected, sparse) |
 | `"ising"` | — | L1-regularized logistic regression for binary variables (undirected, sparse) |
 
-All estimators are implemented from scratch — EBICglasso with coordinate descent, partial correlations via precision matrix inversion, EBIC model selection — with no dependency on igraph, bootnet, qgraph, or graphicalVAR.
+All estimators are implemented from scratch — EBICglasso with coordinate descent, partial correlations via precision matrix inversion, EBIC model selection — with no dependency on igraph, bootnet, or qgraph.
 
 ```r
 data(srl_strategies)
