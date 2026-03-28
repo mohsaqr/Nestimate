@@ -67,10 +67,6 @@ net_tna <- build_network(human_cat, method = "tna",
 print(net_tna)
 ```
 
-```{r tna-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-library(cograph)
-splot(net_tna)
-```
 
 ### Frequency Network (FTNA)
 
@@ -83,9 +79,6 @@ net_ftna <- build_network(human_cat, method = "ftna",
 print(net_ftna)
 ```
 
-```{r ftna-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(net_ftna)
-```
 
 ### Attention Network (ATNA)
 
@@ -98,9 +91,6 @@ net_atna <- build_network(human_cat, method = "atna",
 print(net_atna)
 ```
 
-```{r atna-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(net_atna)
-```
 
 ### Co-occurrence Network from Binary Data
 
@@ -112,9 +102,6 @@ net <- build_network(learning_activities, method = "cna", actor = "student")
 print(net)
 ```
 
-```{r onehot-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(net, layout = "oval")
-```
 
 ### Window-based TNA (WTNA)
 
@@ -132,26 +119,21 @@ net_wtna <- wtna(learning_activities, actor = "student",
 print(net_wtna)
 ```
 
-```{r wtna-freq-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(net_wtna)
-```
 
 ```{r wtna-relative}
 net_wtna_rel <- wtna(learning_activities, method = "transition", type = "relative")
 print(net_wtna_rel)
 ```
 
-```{r wtna-relative-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(net_wtna_rel)
-```
+### Mixed network (transitions + co-occurrences)
 
+Since states can co-occur within the same window *and* follow each other from one window to the next, a mixed network captures both relationships simultaneously.
 
-
-```{r wtna-mixed, eval = requireNamespace("cograph", quietly = TRUE)}
+```{r wtna-mixed}
 net_wtna_mixed <- wtna(learning_activities, method = "both", type = "relative")
 print(net_wtna_mixed)
-splot(net_wtna_mixed$transition)
 ```
+
 
 ## Validation
 
@@ -175,9 +157,6 @@ boot <- bootstrap_network(net_tna)
 boot
 ```
 
-```{r bootstrap-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(boot)
-```
 
 ### Centrality Stability
 
@@ -214,9 +193,6 @@ perm <- permutation_test(Clusters$`Cluster 1`, Clusters$`Cluster 2`)
 perm
 ```
 
-```{r perm-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(perm)
-```
 
 ## Mixed Markov Models
 
@@ -240,9 +216,6 @@ Mnets <- build_network(mmmCls)
 Mnets
 ```
 
-```{r mmm-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(Mnets)
-```
 
 ## Post-hoc Covariate Analysis
 
@@ -258,9 +231,6 @@ Postgr <- build_network(Post)
 Postgr
 ```
 
-```{r posthoc-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(Postgr)
-```
 
 # Part II: Psychological Network Analysis
 
@@ -288,9 +258,6 @@ net_cor <- build_network(srl_strategies, method = "cor")
 net_cor
 ```
 
-```{r cor-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(net_cor)
-```
 
 ## Partial Correlation Network
 
@@ -301,9 +268,6 @@ net_pcor <- build_network(srl_strategies, method = "pcor")
 net_pcor
 ```
 
-```{r pcor-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(net_pcor)
-```
 
 ## Regularized Network (EBICglasso)
 
@@ -315,9 +279,6 @@ net_glasso <- build_network(srl_strategies, method = "glasso",
 net_glasso
 ```
 
-```{r glasso-plot, eval = requireNamespace("cograph", quietly = TRUE)}
-splot(net_glasso)
-```
 
 ## Predictability
 

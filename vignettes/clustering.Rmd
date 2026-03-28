@@ -236,12 +236,6 @@ cluster_net <- build_network(clust,
                   group = "assignments")
 ```
 
-We can plot them using `cograph`.
-```{r cluster-nets-plot, fig.alt = "Networks for each cluster"}
-if (requireNamespace("cograph", quietly = TRUE)) {
-  cograph::splot(cluster_net)
-}
-```
 
 We may also compare which transition probabilities differ significantly among clusters using permutation testing:
 ```{r}

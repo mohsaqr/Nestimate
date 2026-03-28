@@ -67,12 +67,6 @@ net_cna <- build_network(learning_activities,
 net_cna
 ```
 
-```{r cna-plot, fig.alt = "Co-occurrence network of learning activities"}
-if (requireNamespace("cograph", quietly = TRUE)) {
-  library(cograph)
-  splot(net_cna,  title = "Learning Activity Co-occurrence", edge_label_template = "{est}{stars}")
-}
-```
 
 **Interpretation**: Edge weights represent raw co-occurrence counts summed across all students and time points. Higher weights mean those activities frequently happen together.
 
@@ -100,11 +94,6 @@ net_cna_windowed <- build_network(learning_activities,
 net_cna_windowed
 ```
 
-```{r cna-window-plot, fig.alt = "Windowed co-occurrence network"}
-if (requireNamespace("cograph", quietly = TRUE)) {
-  cograph::splot(net_cna_windowed, title = "Co-occurrence (Window = 10)")
-}
-```
 
 Larger windows capture broader temporal associations at the cost of temporal precision.
 
@@ -142,11 +131,6 @@ cat("Ising networks require the 'glmnet' package.\n")
 cat("Install with: install.packages('glmnet')\n")
 ```
 
-```{r ising-plot, eval = has_glmnet, fig.alt = "Ising network showing conditional dependencies"}
-if (requireNamespace("cograph", quietly = TRUE)) {
-  cograph::splot(net_ising, title = "Learning Activity Ising Network")
-}
-```
 
 ### Ising Parameters
 
