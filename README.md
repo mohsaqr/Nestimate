@@ -1,6 +1,6 @@
 # Nestimate <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
-> Estimate, validate, and compare networks from sequential and cross-sectional data in R.
+> A computational R package for network estimation, validation, and comparison.
 
 <!-- badges: start -->
 [![R-CMD-check](https://img.shields.io/badge/R--CMD--check-passing-brightgreen)](https://github.com/mohsaqr/Nestimate)
@@ -8,12 +8,13 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
-Nestimate is a unified framework for building and validating networks from sequence and panel data. It implements two complementary paradigms through a single `build_network()` interface:
+Nestimate is a computational package for building, validating, and comparing networks. It provides a unified `build_network()` interface across five areas:
 
-- **Transition Network Analysis (TNA)** models the dynamics of temporal processes as weighted directed networks using stochastic Markov models — capturing how events follow one another.
-- **Psychological Network Analysis (PNA)** estimates the conditional dependency structure among variables using regularized partial correlations and graphical models — capturing how variables relate to each other.
-
-Both paradigms share the same validation engine (bootstrap, permutation, centrality stability), clustering methods, and output format.
+- **Dynamic networks** — transition, frequency, attention-weighted, and co-occurrence networks from sequential and binary event data
+- **Psychological networks** — correlation, partial correlation, graphical lasso (EBICglasso), and Ising models from cross-sectional or panel data
+- **Multi-cluster networks** — MCML decomposition of networks into macro (between-cluster) and micro (within-cluster) layers, plus sequence clustering and mixed Markov models
+- **Higher-order networks** — HON, HONEM, HyPa, and Multi-Order Generative models that capture dependencies beyond first-order transitions
+- **Statistical validation** — bootstrap, permutation testing, split-half reliability, centrality stability, and difference tests across all network types
 
 ### What Sets Nestimate Apart
 
