@@ -23,7 +23,7 @@ Both paradigms share the same validation engine (bootstrap, permutation, central
 
 - **Numerically validated against reference packages.** Every estimator and validation method has been cross-validated against established R packages: transition networks and bootstrap produce byte-identical results to `tna`; permutation tests match to Monte Carlo precision; EBICglasso yields correlations &ge;0.98 with `graphicalVAR`. These equivalence tests use identical synthetic datasets to verify output value by value.
 
-- **Multi-Cluster Multi-Layer (MCML) decomposition.** A unique analysis that clusters sequences, then decomposes dynamics into within-cluster transition patterns and between-cluster flow — revealing both what happens inside each behavioral subgroup and how subgroups connect.
+- **Multi-Cluster Multi-Layer (MCML) decomposition.** Given a network whose nodes are grouped into clusters (e.g., by topic, function, or community), MCML decomposes it into a macro-level between-cluster network (how clusters connect to each other) and micro-level within-cluster networks (how nodes interact inside each cluster) — a two-layer view that reveals both the internal dynamics of each group and the higher-level flow between them.
 
 - **Full validation pipeline built in.** Bootstrap, permutation, reliability, centrality stability, and difference tests — all working identically across TNA and PNA paradigms, not bolted on as separate packages.
 
@@ -157,13 +157,24 @@ compare_mmm(net, k = 2:6)  # Compare model fit across k values
 
 ### Multi-Cluster Multi-Layer (MCML)
 
-MCML is a two-stage analysis that first clusters sequences into behavioral subgroups, then decomposes the dynamics into two layers: **within-cluster** networks (the transition patterns internal to each subgroup) and a **between-cluster** network (how the system moves from one subgroup's behavior to another's). This reveals structure that neither clustering alone nor a single aggregate network can capture — for example, that learners in a "strategic" cluster cycle between planning and monitoring internally, while the system-level flow shows transitions from "disengaged" behavior toward "strategic" behavior over time.
+MCML decomposes a network whose nodes belong to known groups (communities, categories, topics) into two layers. The **macro** (between-cluster) layer aggregates node-to-node edges into a cluster-to-cluster network — showing how groups connect to each other. The **micro** (within-cluster) layer extracts the internal transition structure inside each group. This two-level view reveals dynamics invisible in either the full network or the cluster-level summary alone.
+
+`cluster_summary()` computes MCML from a pre-existing weight matrix; `build_mcml()` works from raw transition data (edge lists or sequences) by recoding node labels to cluster labels and counting actual transitions — producing the true Markov chain over cluster states.
 
 ```r
-mcml <- build_mcml(net, k = 3)
-mcml$within    # List of per-cluster transition matrices
-mcml$between   # Between-cluster flow matrix
-summary(mcml)
+# Nodes grouped into clusters
+clusters <- list(
+  Metacognitive = c("Planning", "Monitoring", "Evaluating"),
+  Cognitive = c("Elaboration", "Organization", "Rehearsal"),
+  Resource = c("Help_Seeking", "Time_Mgmt", "Effort_Reg")
+)
+
+mcml <- cluster_summary(net, clusters, type = "tna")
+mcml$macro$weights    # 3x3 cluster-to-cluster transition matrix
+mcml$clusters$Metacognitive$weights  # Within-cluster transitions
+
+# Or from raw sequence/edge data
+mcml2 <- build_mcml(sequences, clusters)
 ```
 
 ## Dynamic Networks from Binary Data
