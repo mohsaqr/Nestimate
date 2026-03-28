@@ -10,7 +10,7 @@
 
 Nestimate is a computational package for building, validating, and comparing networks. It provides a unified `build_network()` interface across five areas:
 
-- **Dynamic networks** — transition, frequency, attention-weighted, and co-occurrence networks from sequential and binary event data
+- **Dynamic networks** — transition, frequency, attention-weighted, co-occurrence, windowed transition, and mixed (directed + undirected) networks from sequential and binary event data
 - **Psychological networks** — correlation, partial correlation, graphical lasso (EBICglasso), and Ising models from cross-sectional or panel data
 - **Multi-cluster networks** — MCML decomposition of networks into macro (between-cluster) and micro (within-cluster) layers, plus sequence clustering and mixed Markov models
 - **Higher-order networks** — HON, HONEM, HyPa, and Multi-Order Generative models that capture dependencies beyond first-order transitions
@@ -18,7 +18,7 @@ Nestimate is a computational package for building, validating, and comparing net
 
 ### What Sets Nestimate Apart
 
-- **Dynamic networks from binary event data.** Most network packages require either sequential event logs or continuous variables. Nestimate also builds dynamic networks directly from binary indicator data (multiple states active/inactive simultaneously) through co-occurrence networks and windowed TNA — producing directed, undirected, or *mixed* networks that capture both contemporaneous co-occurrence and temporal transitions in a single model.
+- **Window-based and mixed networks from binary data.** Beyond standard sequence-to-network estimation, Nestimate builds networks from binary indicator data (multiple states active/inactive simultaneously) using temporal windowing. The `wtna()` function computes directed transitions between windows, undirected co-occurrence within windows, or both — producing *mixed* networks that capture temporal sequencing and contemporaneous structure in a single model.
 
 - **Self-contained implementations, minimal dependencies.** Nestimate implements its own EBICglasso estimation, Floyd-Warshall shortest paths, betweenness/closeness centrality, and coordinate descent regularization — all from scratch. The entire package requires only 4 imports (ggplot2, glasso, data.table, cluster). No dependency on igraph, bootnet, qgraph, or graphicalVAR for core functionality.
 
