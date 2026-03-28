@@ -150,10 +150,10 @@
   dt <- data.table::as.data.table(data)
 
   # Clean void/missing markers in action column
-  dt[[action]] <- .clean_states(as.character(dt[[action]]))
+  data.table::set(dt, j = action, value = .clean_states(as.character(dt[[action]])))
 
   # Preserve original row order as tiebreaker for duplicate timestamps
-  dt[, .orig_row := .I]
+  data.table::set(dt, j = ".orig_row", value = seq_len(nrow(dt)))
 
   # Order by id + time + original row order
   order_cols <- c(id, if (time %in% names(dt)) time, ".orig_row")
@@ -274,8 +274,8 @@
     })
   } else {
     dt <- data.table::as.data.table(data)
-    dt[[action]] <- .clean_states(as.character(dt[[action]]))
-    dt[, .orig_row := .I]
+    data.table::set(dt, j = action, value = .clean_states(as.character(dt[[action]])))
+    data.table::set(dt, j = ".orig_row", value = seq_len(nrow(dt)))
     order_cols <- c(id, if (time %in% names(dt)) time, ".orig_row")
     data.table::setorderv(dt, order_cols)
     if (is.null(id)) {
@@ -530,10 +530,10 @@
   dt <- data.table::as.data.table(data)
 
   # Clean void/missing markers in action column
-  dt[[action]] <- .clean_states(as.character(dt[[action]]))
+  data.table::set(dt, j = action, value = .clean_states(as.character(dt[[action]])))
 
   # Preserve original row order as tiebreaker
-  dt[, .orig_row := .I]
+  data.table::set(dt, j = ".orig_row", value = seq_len(nrow(dt)))
 
   # Order by id + time + original row order
   order_cols <- c(id, if (time %in% names(dt)) time, ".orig_row")
@@ -541,7 +541,7 @@
 
   # Build group key
   if (is.null(id)) {
-    dt[, .seq_grp := 1L]
+    data.table::set(dt, j = ".seq_grp", value = rep(1L, nrow(dt)))
     grp_col <- ".seq_grp"
   } else if (length(id) == 1L) {
     grp_col <- id
@@ -713,7 +713,7 @@
   dt <- data.table::as.data.table(data)
 
   # Clean void/missing markers in action column
-  dt[[action]] <- .clean_states(as.character(dt[[action]]))
+  data.table::set(dt, j = action, value = .clean_states(as.character(dt[[action]])))
 
   # Order by id + time
   order_cols <- c(id, if (time %in% names(dt)) time)
@@ -723,7 +723,7 @@
 
   # Build group key
   if (is.null(id)) {
-    dt[, .seq_grp := 1L]
+    data.table::set(dt, j = ".seq_grp", value = rep(1L, nrow(dt)))
     grp_col <- ".seq_grp"
   } else if (length(id) == 1L) {
     grp_col <- id
