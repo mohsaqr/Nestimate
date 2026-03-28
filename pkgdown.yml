@@ -1,0 +1,12 @@
+pandoc: 3.1.11
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  clustering: clustering.html
+  co-occurrence-networks: co-occurrence-networks.html
+  psychological-networks: psychological-networks.html
+  transition-networks: transition-networks.html
+last_built: 2026-03-28T21:20Z
+urls:
+  reference: https://mohsaqr.github.io/Nestimate/reference
+  article: https://mohsaqr.github.io/Nestimate/articles

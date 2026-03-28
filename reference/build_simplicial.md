@@ -1,0 +1,92 @@
+# Build a Simplicial Complex
+
+Constructs a simplicial complex from a network or higher-order pathway
+object. Three construction methods are available:
+
+- **Clique complex** (`"clique"`): every clique in the thresholded graph
+  becomes a simplex. The standard bridge from graph theory to algebraic
+  topology.
+
+- **Pathway complex** (`"pathway"`): each higher-order pathway from a
+  `net_hon` or `net_hypa` becomes a simplex.
+
+- **Vietoris-Rips** (`"vr"`): nodes with edge weight \\\geq\\
+  `threshold` are connected; all cliques in the resulting graph become
+  simplices.
+
+## Usage
+
+``` r
+build_simplicial(
+  x,
+  type = "clique",
+  threshold = 0,
+  max_dim = 10L,
+  max_pathways = NULL,
+  ...
+)
+```
+
+## Arguments
+
+- x:
+
+  A square matrix, `tna`, `netobject`, `net_hon`, or `net_hypa`.
+
+- type:
+
+  Construction type: `"clique"` (default), `"pathway"`, or `"vr"`.
+
+- threshold:
+
+  Minimum absolute edge weight to include an edge (default 0). Edges
+  below this are ignored.
+
+- max_dim:
+
+  Maximum simplex dimension (default 10). A k-simplex has k+1 nodes.
+
+- max_pathways:
+
+  For `type = "pathway"`: maximum number of pathways to include, ranked
+  by count (HON) or ratio (HYPA). `NULL` includes all. Default `NULL`.
+
+- ...:
+
+  Additional arguments passed to
+  [`build_hon()`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md)
+  when `x` is a `tna`/`netobject` with `type = "pathway"`.
+
+## Value
+
+A `simplicial_complex` object.
+
+## See also
+
+[`betti_numbers`](https://mohsaqr.github.io/Nestimate/reference/betti_numbers.md),
+[`persistent_homology`](https://mohsaqr.github.io/Nestimate/reference/persistent_homology.md),
+[`simplicial_degree`](https://mohsaqr.github.io/Nestimate/reference/simplicial_degree.md),
+[`q_analysis`](https://mohsaqr.github.io/Nestimate/reference/q_analysis.md)
+
+## Examples
+
+``` r
+# \donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
+  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+sc <- build_simplicial(net, threshold = 0.05)
+print(sc)
+#> Clique Complex 
+#>   4 nodes, 15 simplices, dimension 3
+#>   Density: 100.0%  |  Mean dim: 1.13  |  Euler: 1
+#>   f-vector: (f0=4 f1=6 f2=4 f3=1)
+#>   Betti: b0=1
+#>   Nodes: A, B, C, D 
+betti_numbers(sc)
+#> b0 b1 b2 b3 
+#>  1  0  0  0 
+# }
+```

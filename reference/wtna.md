@@ -1,0 +1,145 @@
+# Window-based Transition Network Analysis
+
+Computes networks from one-hot (binary indicator) data using temporal
+windowing. Supports transition (directed), co-occurrence (undirected),
+or both network types.
+
+## Usage
+
+``` r
+wtna(
+  data,
+  method = c("transition", "cooccurrence", "both"),
+  type = c("frequency", "relative"),
+  codes = NULL,
+  window_size = 1L,
+  mode = c("non-overlapping", "overlapping"),
+  actor = NULL
+)
+```
+
+## Arguments
+
+- data:
+
+  Data frame with one-hot encoded columns (0/1 binary).
+
+- method:
+
+  Character. Network type: `"transition"` (directed), `"cooccurrence"`
+  (undirected), or `"both"` (returns list of two networks). Default:
+  `"transition"`.
+
+- type:
+
+  Character. Output type: `"frequency"` (raw counts) or `"relative"`
+  (row-normalized probabilities). Default: `"frequency"`.
+
+- codes:
+
+  Character vector or NULL. Names of the one-hot columns to use. If
+  NULL, auto-detects binary columns. Default: NULL.
+
+- window_size:
+
+  Integer. Number of consecutive rows to aggregate per window. Default:
+  1 (no windowing).
+
+- mode:
+
+  Character. Window mode: `"non-overlapping"` (fixed, separate windows)
+  or `"overlapping"` (rolling, step = 1). Default: `"non-overlapping"`.
+
+- actor:
+
+  Character or NULL. Name of the actor/ID column for per-group
+  computation. If NULL, treats all rows as one group. Default: NULL.
+
+## Value
+
+For `method = "transition"` or `"cooccurrence"`: a `netobject` (see
+[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)).
+
+For `method = "both"`: a `wtna_mixed` object with elements `$transition`
+and `$cooccurrence`, each a `netobject`.
+
+## Details
+
+**Transitions**: Uses `crossprod(X[-n,], X[-1,])` to count how often
+state i is active at time t AND state j at time t+1.
+
+**Co-occurrence**: Uses `crossprod(X)` to count states that are
+simultaneously active in the same row.
+
+**Windowing**: For `window_size > 1`, rows are aggregated into windows
+before computing networks. Non-overlapping windows are fixed, separate
+blocks; overlapping windows roll forward one row at a time. Within each
+window, any active indicator (1) in any row makes that state active for
+the window.
+
+**Per-actor**: When `actor` is specified, networks are computed per
+group and summed.
+
+## See also
+
+[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
+[`prepare_onehot`](https://mohsaqr.github.io/Nestimate/reference/prepare_onehot.md)
+
+## Examples
+
+``` r
+# \donttest{
+# Simple one-hot data
+df <- data.frame(
+  A = c(1, 0, 1, 0, 1),
+  B = c(0, 1, 0, 1, 0),
+  C = c(0, 0, 1, 0, 0)
+)
+
+# Transition network
+net <- wtna(df)
+print(net)
+#> Network (method: wtna_transition) [directed]
+#>   Weights: [1.000, 2.000]  |  mean: 1.500
+#> 
+#>   Weight matrix:
+#>     A B C
+#>   A 0 2 0
+#>   B 2 0 1
+#>   C 0 1 0 
+#> 
+#>   Initial probabilities:
+#>   A             1.000  ████████████████████████████████████████
+#>   B             0.000  
+#>   C             0.000  
+
+# Both networks
+nets <- wtna(df, method = "both")
+print(nets$transition)
+#> Network (method: wtna_transition) [directed]
+#>   Weights: [1.000, 2.000]  |  mean: 1.500
+#> 
+#>   Weight matrix:
+#>     A B C
+#>   A 0 2 0
+#>   B 2 0 1
+#>   C 0 1 0 
+#> 
+#>   Initial probabilities:
+#>   A             1.000  ████████████████████████████████████████
+#>   B             0.000  
+#>   C             0.000  
+print(nets$cooccurrence)
+#> Network (method: wtna_cooccurrence) [undirected]
+#>   Weights: [1.000, 1.000]  |  mean: 1.000
+#> 
+#>   Weight matrix:
+#>     A B C
+#>   A 3 0 1
+#>   B 0 2 0
+#>   C 1 0 1 
+
+# With windowing
+net <- wtna(df, window_size = 2, mode = "non-overlapping")
+# }
+```
