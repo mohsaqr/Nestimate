@@ -6,9 +6,9 @@
 tmp/
 ..Rcheck/
 .superpowers/
-<<<<<<< HEAD
 .Rproj.user
 docs/
 inst/doc
 /doc/
 /Meta/
+docs/*
