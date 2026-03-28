@@ -64,6 +64,8 @@ All dynamic network methods are accessed through `build_network()` with a `metho
 | `"attention"` | `"atna"` | Decay-weighted transitions emphasizing recent events (directed) |
 | `"co_occurrence"` | `"cna"` | Co-occurrence counts from binary data (undirected) |
 
+No data preparation is required. `build_network()` accepts raw event logs directly — pass the column names for `action`, `actor`, and `time`, and the function handles format conversion, session detection, ordering, and metadata preservation internally. A `group` argument builds separate per-group networks in a single call with no extra steps.
+
 ```r
 net_tna  <- build_network(human_cat, method = "tna",
                           action = "category", actor = "session_id",
@@ -74,6 +76,11 @@ net_ftna <- build_network(human_cat, method = "ftna",
 net_atna <- build_network(human_cat, method = "atna",
                           action = "category", actor = "session_id",
                           time = "timestamp")
+
+# Per-group networks — one network per project, no extra steps
+group_nets <- build_network(human_cat, method = "tna",
+                            action = "category", actor = "session_id",
+                            time = "timestamp", group = "project")
 ```
 
 ### Window-Based TNA
