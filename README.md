@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
-Nestimate is a computational package for building, validating, and comparing networks. It provides a unified `build_network()` interface across five areas:
+Nestimate is a computational package for building, validating, and comparing networks. Nestimate is designed to include all types of computational heavy functions in one place that combines a vast array of dynamic, probablisitc and dynamic networks that are estimated (e.g., where the input data will be the basis for computation of the network relationships). Nestimate provides a unified `build_network()` simple interface that simplifies the implenetation of network estimation. As of now, Nestimate supports five areas:
 
 - **Dynamic networks** — transition, frequency, attention-weighted, co-occurrence, windowed transition, and mixed (directed + undirected) networks from sequential and binary event data
 - **Psychological networks** — correlation, partial correlation, graphical lasso (EBICglasso), and Ising models from cross-sectional or panel data
@@ -19,7 +19,6 @@ Nestimate is a computational package for building, validating, and comparing net
 ### What Sets Nestimate Apart
 
 Nestimate implements several families of transition network and dynamic networks: standard TNA (Markov), frequency TNA, attention TNA (transition with memory), and co-occurrence networks from event data. On top of these, windowed TNA (`wtna()`) builds networks from binary data using temporal windows — resulting in directed transitions between windows, undirected co-occurrence within windows, or mixed networks that combine both in a single model.
-
 For psychological networks, Nestimate implements EBICglasso, partial correlations, and Ising estimation from scratch using coordinate descent regularization, precision matrix inversion, and EBIC model selection. These require no external network packages — the entire package has only 4 imports (ggplot2, glasso, data.table, cluster) — and produce numerically equivalent results. These low dependency makes Nestimate versatile, easy to install, run and import. Nestimate is planned to expand and cover different types of other probabliitic networks and several models are already in testing.
 All Nestimate networks and functions are byte-identical to the `tna` package; permutation tests match to Monte Carlo precision; EBICglasso produces numerically equivalent results to established implementations. All equivalence tests compare outputs value by value on identical synthetic datasets.
 Nestimate has a strict validation techniques to ensure that the resulting models are accurate, verifiable and replicable. Every network type — dynamic, psychological, higher-order — shares the same validation pipeline: bootstrap confidence intervals, permutation testing, split-half reliability, and centrality stability analysis. These are not separate packages bolted on; they are part of the same interface.
