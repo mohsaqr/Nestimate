@@ -190,12 +190,16 @@ mmm_nets <- build_network(mmm)
 Both clustering methods support covariate analysis, but with different roles. In `cluster_data()`, covariates are **post-hoc**: they do not influence the clustering itself but characterize who ends up in which cluster via multinomial logistic regression after the fact. In `build_mmm()`, covariates are **integrated into the EM algorithm**: they model covariate-dependent mixing proportions, so the covariate structure directly influences cluster membership during estimation.
 
 ```r
+data(group_regulation_long)
+net_GR <- build_network(group_regulation_long, method = "tna",
+                        action = "Action", actor = "Actor", time = "Time")
+
 # Post-hoc: clustering is purely behavioral, covariates analyzed afterward
-clust <- cluster_data(net, k = 2, covariates = c("Achiever"))
+clust <- cluster_data(net_GR, k = 2, covariates = c("Achiever"))
 summary(clust)  # Includes covariate profiles and odds ratios
 
 # Integrated: covariates influence cluster assignments during EM
-mmm <- build_mmm(net, k = 2, covariates = c("Group"))
+mmm <- build_mmm(net_GR, k = 2, covariates = c("Group"))
 summary(mmm)
 ```
 
@@ -211,7 +215,7 @@ Methods that capture dependencies beyond first-order transitions:
 | `build_mogen()` | Multi-Order Generative model — optimal Markov order per node |
 
 ```r
-hon <- build_hon(sequences, k = 2)
+hon <- build_hon(net$data, max_order = 2)
 pathways(hon)
 ```
 
@@ -225,7 +229,7 @@ betti_numbers(sc)
 euler_characteristic(sc)
 
 ph <- persistent_homology(net)
-qa <- q_analysis(net)
+qa <- q_analysis(sc)
 ```
 
 ## Statistical Validation
@@ -294,7 +298,7 @@ See `?vibcoding-data` for the full family of human-AI coding datasets at three g
 - [Co-occurrence & Ising Networks](https://mohsaqr.github.io/Nestimate/articles/co-occurrence-networks.html) — binary data analysis
 - [Psychological Networks](https://mohsaqr.github.io/Nestimate/articles/psychological-networks.html) — correlation, partial correlation, glasso, bootstrap
 - [Clustering](https://mohsaqr.github.io/Nestimate/articles/clustering.html) — dissimilarity-based clustering, MMM, per-cluster networks
-- [Full Reference](https://mohsaqr.github.io/Nestimate/reference/)
+- [Full Reference](https://github.com/mohsaqr/Nestimate)
 
 ## Citation
 
