@@ -18,15 +18,11 @@ Nestimate is a computational package for building, validating, and comparing net
 
 ### What Sets Nestimate Apart
 
-- **Window-based and mixed networks from binary data.** Beyond standard sequence-to-network estimation, Nestimate builds networks from binary indicator data (multiple states active/inactive simultaneously) using temporal windowing. The `wtna()` function computes directed transitions between windows, undirected co-occurrence within windows, or both — producing *mixed* networks that capture temporal sequencing and contemporaneous structure in a single model.
+Nestimate implements four families of transition network estimation: standard TNA (row-normalized transition probabilities), frequency TNA (raw counts), attention TNA (temporal decay weighting that emphasizes recent transitions), and co-occurrence networks from binary data. On top of these, windowed TNA (`wtna()`) builds networks from binary indicator matrices using temporal windows — producing directed transitions between windows, undirected co-occurrence within windows, or mixed networks that combine both in a single model.
 
-- **Self-contained implementations, minimal dependencies.** Nestimate implements its own EBICglasso estimation, Floyd-Warshall shortest paths, betweenness/closeness centrality, and coordinate descent regularization — all from scratch. The entire package requires only 4 imports (ggplot2, glasso, data.table, cluster). No dependency on igraph, bootnet, qgraph, or graphicalVAR for core functionality.
+For psychological networks, Nestimate implements EBICglasso, partial correlations, and Ising estimation from scratch using coordinate descent regularization, precision matrix inversion, and EBIC model selection. These require no external network packages — the entire package has only 4 imports (ggplot2, glasso, data.table, cluster) — yet produce numerically equivalent results. Transition networks and bootstrap are byte-identical to the `tna` package; permutation tests match to Monte Carlo precision; EBICglasso yields correlations >=0.98 with `graphicalVAR`. All equivalence tests compare outputs value by value on identical synthetic datasets.
 
-- **Numerically validated against reference packages.** Every estimator and validation method has been cross-validated against established R packages: transition networks and bootstrap produce byte-identical results to `tna`; permutation tests match to Monte Carlo precision; EBICglasso yields correlations &ge;0.98 with `graphicalVAR`. These equivalence tests use identical synthetic datasets to verify output value by value.
-
-- **Multi-Cluster Multi-Layer (MCML) decomposition.** Given a network whose nodes are grouped into clusters (e.g., by topic, function, or community), MCML decomposes it into a macro-level between-cluster network (how clusters connect to each other) and micro-level within-cluster networks (how nodes interact inside each cluster) — a two-layer view that reveals both the internal dynamics of each group and the higher-level flow between them.
-
-- **Full validation pipeline built in.** Bootstrap, permutation, reliability, centrality stability, and difference tests — all working identically across TNA and PNA paradigms, not bolted on as separate packages.
+Every network type — dynamic, psychological, higher-order — shares the same validation pipeline: bootstrap confidence intervals, permutation testing, split-half reliability, and centrality stability analysis. These are not separate packages bolted on; they are part of the same interface.
 
 ## Installation
 
@@ -40,40 +36,72 @@ devtools::install_github("mohsaqr/Nestimate")
 ```r
 library(Nestimate)
 
-# --- Transition network from event-log data ---
+# Transition network from event-log data
 data(human_cat)
 net <- build_network(human_cat, method = "tna",
                      action = "category", actor = "session_id",
                      time = "timestamp")
 
-# --- Psychological network from cross-sectional data ---
+# Psychological network from cross-sectional data
 data(srl_strategies)
 net_pna <- build_network(srl_strategies, method = "glasso",
                          params = list(gamma = 0.5))
 
-# --- Validate with bootstrap ---
+# Validate with bootstrap
 boot <- bootstrap_network(net, iter = 1000)
-
-# --- Plot with cograph ---
-# install.packages("cograph", repos = "https://mohsaqr.r-universe.dev")
-cograph::splot(net)
-cograph::splot(boot)
 ```
 
-## Network Estimation Methods
+## Dynamic Networks
 
-All methods are accessed through `build_network()` with a `method` argument:
+All dynamic network methods are accessed through `build_network()` with a `method` argument. The function accepts long-format event logs directly — specifying `action` (what happened), `actor` (who), and `time` (when) — and handles format conversion internally.
 
-### Transition Networks (Sequential Data)
+### Estimation Methods
 
 | Method | Aliases | Description |
 |--------|---------|-------------|
 | `"relative"` | `"tna"`, `"transition"` | Row-normalized transition probabilities (directed) |
 | `"frequency"` | `"ftna"`, `"counts"` | Raw transition counts (directed) |
-| `"co_occurrence"` | `"cna"` | Co-occurrence counts from binary data (undirected) |
 | `"attention"` | `"atna"` | Decay-weighted transitions emphasizing recent events (directed) |
+| `"co_occurrence"` | `"cna"` | Co-occurrence counts from binary data (undirected) |
 
-### Psychological Networks (Cross-Sectional/Panel Data)
+```r
+net_tna  <- build_network(human_cat, method = "tna",
+                          action = "category", actor = "session_id",
+                          time = "timestamp")
+net_ftna <- build_network(human_cat, method = "ftna",
+                          action = "category", actor = "session_id",
+                          time = "timestamp")
+net_atna <- build_network(human_cat, method = "atna",
+                          action = "category", actor = "session_id",
+                          time = "timestamp")
+```
+
+### Window-Based TNA
+
+`wtna()` builds networks from binary (one-hot) data using temporal windowing. Many datasets are binary: at each time point, multiple states are either active (1) or inactive (0). WTNA supports three modes:
+
+- **`"transition"`**: directed transitions between consecutive windows
+- **`"cooccurrence"`**: undirected co-occurrence within windows
+- **`"both"`**: a mixed network combining directed and undirected edges
+
+The mixed mode captures both the temporal sequencing (which states follow each other across windows) and the contemporaneous structure (which states co-occur within the same window) in a single model.
+
+```r
+data(learning_activities)
+
+# Co-occurrence network
+net_co <- build_network(learning_activities, method = "cna", actor = "student")
+
+# Windowed transition network
+net_wtna <- wtna(learning_activities, actor = "student",
+                 method = "transition", type = "relative")
+
+# Mixed network: transitions + co-occurrence
+net_mixed <- wtna(learning_activities, actor = "student",
+                  method = "both", type = "relative")
+```
+
+## Psychological Networks
 
 | Method | Aliases | Description |
 |--------|---------|-------------|
@@ -82,13 +110,96 @@ All methods are accessed through `build_network()` with a `method` argument:
 | `"glasso"` | `"ebicglasso"`, `"regularized"` | L1-regularized precision matrix with EBIC selection (undirected, sparse) |
 | `"ising"` | — | L1-regularized logistic regression for binary variables (undirected, sparse) |
 
-All PNA estimators are implemented from scratch within Nestimate — including EBICglasso with coordinate descent regularization, partial correlations via precision matrix inversion, and EBIC model selection. This eliminates hard dependencies on external network packages while producing numerically equivalent results (validated against `graphicalVAR` and `bootnet` across multiple synthetic and real datasets).
+All estimators are implemented from scratch — EBICglasso with coordinate descent, partial correlations via precision matrix inversion, EBIC model selection — with no dependency on igraph, bootnet, qgraph, or graphicalVAR.
+
+```r
+data(srl_strategies)
+net_cor    <- build_network(srl_strategies, method = "cor")
+net_pcor   <- build_network(srl_strategies, method = "pcor")
+net_glasso <- build_network(srl_strategies, method = "glasso",
+                            params = list(gamma = 0.5))
+
+# Node predictability (R-squared from network structure)
+predictability(net_glasso)
+```
 
 Custom estimators can be added via `register_estimator()`.
 
-## Statistical Validation
+## Multi-Cluster Networks
 
-Nestimate provides a full statistical validation toolkit at the edge, node, and network level:
+### MCML
+
+MCML decomposes a network whose nodes belong to known groups (communities, categories, topics) into two layers. The **macro** layer aggregates node-to-node edges into a cluster-to-cluster network. The **micro** layer extracts the internal transition structure inside each group.
+
+`cluster_summary()` computes MCML from a pre-existing weight matrix; `build_mcml()` works from raw transition data by recoding node labels to cluster labels and counting actual transitions.
+
+```r
+clusters <- list(
+  Metacognitive = c("Planning", "Monitoring", "Evaluating"),
+  Cognitive = c("Elaboration", "Organization", "Rehearsal"),
+  Resource = c("Help_Seeking", "Time_Mgmt", "Effort_Reg")
+)
+
+mcml <- cluster_summary(net, clusters, type = "tna")
+mcml$macro$weights                   # Cluster-to-cluster transition matrix
+mcml$clusters$Metacognitive$weights  # Within-cluster transitions
+
+# Or from raw sequence/edge data
+mcml2 <- build_mcml(sequences, clusters)
+```
+
+### Sequence Clustering
+
+`cluster_data()` computes pairwise sequence distances and partitions into `k` groups. Supports 9 distance metrics (Hamming, Levenshtein, LCS, cosine, Jaccard, and more), 8 clustering methods (PAM, Ward, complete/average/single linkage), and optional temporal weighting:
+
+```r
+clust <- cluster_data(net, k = 3, dissimilarity = "hamming", method = "ward.D2")
+plot(clust, type = "silhouette")
+plot(clust, type = "mds")
+
+# Build per-cluster networks
+cluster_nets <- build_network(clust, method = "tna")
+```
+
+### Mixed Markov Models
+
+`build_mmm()` fits a mixture of Markov chains via EM, clustering sequences by their transition dynamics rather than sequence similarity. Supports soft assignments, BIC/AIC/ICL model selection, and covariate regression:
+
+```r
+mmm <- build_mmm(net, k = 3, covariates = c("project"))
+compare_mmm(net, k = 2:6)
+```
+
+## Higher-Order Networks
+
+Methods that capture dependencies beyond first-order transitions:
+
+| Function | Method |
+|----------|--------|
+| `build_hon()` | Higher-Order Network — variable-length memory dependencies |
+| `build_honem()` | Higher-Order Network Embedding |
+| `build_hypa()` | Hyper-Path Anomaly detection |
+| `build_mogen()` | Multi-Order Generative model — optimal Markov order per node |
+
+```r
+hon <- build_hon(sequences, k = 2)
+pathways(hon)
+```
+
+## Simplicial Complex Analysis
+
+Topological analysis of network structure:
+
+```r
+sc <- build_simplicial(net, method = "clique")
+betti_numbers(sc)
+euler_characteristic(sc)
+
+ph <- persistent_homology(net)
+qa <- q_analysis(net)
+```
+
+## Statistical Validation
 
 ```r
 # Split-half reliability
@@ -116,129 +227,20 @@ boot_gl <- boot_glasso(net_pna, iter = 1000,
 | `permutation_test()` | Edge-level comparison between two networks (paired/unpaired) |
 | `boot_glasso()` | Edge inclusion, centrality stability, and difference tests for glasso networks |
 
-## Centrality
-
-Centrality measures quantify how important each node (state or variable) is within the network:
+### Centrality
 
 ```r
 centrality(net)
 ```
 
-Computes InStrength, OutStrength, and Betweenness for directed networks; Strength for undirected. Node predictability (how well each variable is explained by its neighbors) is available for psychological networks:
-
-```r
-predictability(net_pna)
-```
-
-## Clustering
-
-Nestimate supports two approaches to discover subgroups with distinct network structures:
-
-### Dissimilarity-Based Clustering
-
-`cluster_data()` computes pairwise sequence distances and partitions into `k` groups. Supports 9 distance metrics (Hamming, Levenshtein, LCS, cosine, Jaccard, and more), 8 clustering methods (PAM, Ward, complete/average/single linkage), and optional temporal weighting:
-
-```r
-clust <- cluster_data(net, k = 3, dissimilarity = "hamming", method = "ward.D2")
-plot(clust, type = "silhouette")
-plot(clust, type = "mds")
-
-# Build per-cluster networks
-cluster_nets <- build_network(clust, method = "tna")
-```
-
-### Mixed Markov Models
-
-`build_mmm()` fits a mixture of Markov chains via EM, clustering sequences by their transition dynamics rather than sequence similarity. Supports soft assignments, BIC/AIC/ICL model selection, and covariate regression:
-
-```r
-mmm <- build_mmm(net, k = 3, covariates = c("project"))
-compare_mmm(net, k = 2:6)  # Compare model fit across k values
-```
-
-### Multi-Cluster Multi-Layer (MCML)
-
-MCML decomposes a network whose nodes belong to known groups (communities, categories, topics) into two layers. The **macro** (between-cluster) layer aggregates node-to-node edges into a cluster-to-cluster network — showing how groups connect to each other. The **micro** (within-cluster) layer extracts the internal transition structure inside each group. This two-level view reveals dynamics invisible in either the full network or the cluster-level summary alone.
-
-`cluster_summary()` computes MCML from a pre-existing weight matrix; `build_mcml()` works from raw transition data (edge lists or sequences) by recoding node labels to cluster labels and counting actual transitions — producing the true Markov chain over cluster states.
-
-```r
-# Nodes grouped into clusters
-clusters <- list(
-  Metacognitive = c("Planning", "Monitoring", "Evaluating"),
-  Cognitive = c("Elaboration", "Organization", "Rehearsal"),
-  Resource = c("Help_Seeking", "Time_Mgmt", "Effort_Reg")
-)
-
-mcml <- cluster_summary(net, clusters, type = "tna")
-mcml$macro$weights    # 3x3 cluster-to-cluster transition matrix
-mcml$clusters$Metacognitive$weights  # Within-cluster transitions
-
-# Or from raw sequence/edge data
-mcml2 <- build_mcml(sequences, clusters)
-```
-
-## Dynamic Networks from Binary Data
-
-Many real-world datasets are binary: at each time point, multiple states are either active (1) or inactive (0) — learning activities, coded behaviors, sensor signals. Nestimate builds dynamic networks directly from this data type:
-
-- **Co-occurrence networks** (`method = "co_occurrence"`) count how often pairs of states are both active simultaneously. Windowed co-occurrence aggregates across temporal neighborhoods rather than exact time points.
-- **Window-based TNA** (`wtna()`) applies temporal windowing to binary matrices, computing directed transitions between consecutive windows, undirected co-occurrence within windows, or both.
-
-The `method = "both"` mode produces a **mixed network** — a single model that combines directed edges (state A leads to state B across windows) with undirected edges (states A and B co-occur within the same window). This captures both the temporal sequencing and the contemporaneous structure that neither a purely directed nor a purely undirected network can represent alone:
-
-```r
-data(learning_activities)
-
-# Co-occurrence network
-net_co <- build_network(learning_activities, method = "cna", actor = "student")
-
-# Mixed network: transitions + co-occurrence in one model
-net_mixed <- wtna(learning_activities, actor = "student",
-                  method = "both", type = "relative")
-```
-
-For conditional dependency estimation on binary variables (controlling for all others), see the **Ising model** (`method = "ising"`) under Psychological Networks above.
-
-## Higher-Order Networks
-
-Capture dependencies beyond first-order (pairwise) transitions:
-
-| Function | Method |
-|----------|--------|
-| `build_hon()` | Higher-Order Network — variable-length memory dependencies |
-| `build_honem()` | Higher-Order Network Embedding |
-| `build_hypa()` | Hyper-Path Anomaly detection — identifies statistically anomalous pathways |
-| `build_mogen()` | Multi-Order Generative model — optimal Markov order per node |
-
-```r
-hon <- build_hon(sequences, k = 2)
-pathways(hon)  # Extract pathway strings
-```
-
-## Simplicial Complex Analysis
-
-Topological analysis of network structure:
-
-```r
-sc <- build_simplicial(net, method = "clique")
-betti_numbers(sc)
-euler_characteristic(sc)
-
-ph <- persistent_homology(net)   # Filtration-based persistence
-qa <- q_analysis(net)            # Atkin's Q-analysis
-```
+Computes InStrength, OutStrength, and Betweenness for directed networks; Strength for undirected.
 
 ## Data Preparation
 
-Nestimate accepts data in long format (event logs), wide format (sequences as columns), or one-hot encoded binary matrices. `build_network()` auto-detects the format, or you can prepare data explicitly:
+Nestimate accepts long format (event logs), wide format (sequences as columns), or one-hot encoded binary matrices. `build_network()` auto-detects the format.
 
 ```r
-# Long → wide conversion
-prepared <- prepare_data(event_log, action = "code",
-                         actor = "student", time = "timestamp")
-
-# Format conversion utilities
+prepare_data(event_log, action = "code", actor = "student", time = "timestamp")
 wide_to_long(wide_data)
 long_to_wide(long_data, action = "action", actor = "id", time = "time")
 action_to_onehot(long_data, action = "action", actor = "id", time = "time")
@@ -257,20 +259,6 @@ action_to_onehot(long_data, action = "action", actor = "id", time = "time")
 
 See `?vibcoding-data` for the full family of human-AI coding datasets at three granularity levels.
 
-## Visualization
-
-Nestimate objects integrate directly with [cograph](https://github.com/sonsoleslp/cograph) — no conversion needed:
-
-```r
-# install.packages("cograph", repos = "https://mohsaqr.r-universe.dev")
-library(cograph)
-
-splot(net)                # Single network
-splot(boot)               # Bootstrap-filtered network
-splot(perm)               # Permutation difference heatmap
-splot(cluster_nets)       # Per-cluster networks
-```
-
 ## Documentation
 
 - [Transition Networks](https://mohsaqr.github.io/Nestimate/articles/transition-networks.html) — TNA, FTNA, ATNA, co-occurrence, WTNA, validation, clustering, MMM
@@ -283,9 +271,9 @@ splot(cluster_nets)       # Per-cluster networks
 
 If you use Nestimate in your research, please cite:
 
-> Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition Network Analysis: A Novel Framework for Modeling, Visualizing, and Identifying the Temporal Patterns of Learners and Learning. *Proceedings of the 15th Learning Analytics and Knowledge Conference*. doi: [10.1145/3706468.3706513](https://doi.org/10.1145/3706468.3706513)
+> Saqr, M., Lopez-Pernas, S., Tormanen, T., Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition Network Analysis: A Novel Framework for Modeling, Visualizing, and Identifying the Temporal Patterns of Learners and Learning. *Proceedings of the 15th Learning Analytics and Knowledge Conference*. doi: [10.1145/3706468.3706513](https://doi.org/10.1145/3706468.3706513)
 
-> Saqr, M., Beck, E., & López-Pernas, S. (2024). Psychological Networks. In M. Saqr & S. López-Pernas (Eds.), *Learning Analytics Methods and Tutorials* (pp. 513–546). Springer. doi: [10.1007/978-3-031-54464-4_19](https://doi.org/10.1007/978-3-031-54464-4_19)
+> Saqr, M., Beck, E., & Lopez-Pernas, S. (2024). Psychological Networks. In M. Saqr & S. Lopez-Pernas (Eds.), *Learning Analytics Methods and Tutorials* (pp. 513-546). Springer. doi: [10.1007/978-3-031-54464-4_19](https://doi.org/10.1007/978-3-031-54464-4_19)
 
 ## License
 
