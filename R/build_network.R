@@ -421,8 +421,6 @@ build_network <- function(data,
     id = seq_along(nodes),
     label = nodes,
     name = nodes,
-    x = NA_real_,
-    y = NA_real_,
     stringsAsFactors = FALSE
   )
 
@@ -440,7 +438,6 @@ build_network <- function(data,
     n_nodes = length(nodes),
     n_edges = nrow(edges),
     level = level,
-    prepared = prepared,
     build_args = list(
       actor = actor, action = action, time = time, session = session,
       order = order, codes = codes, format = format,
@@ -454,8 +451,9 @@ build_network <- function(data,
     node_groups = NULL
   )
 
-  # Carry over method-specific extras
-  extras <- setdiff(names(est_result), c("matrix", "nodes", "directed"))
+  # Carry over method-specific extras (exclude cleaned_data — identical to $data)
+  extras <- setdiff(names(est_result),
+                    c("matrix", "nodes", "directed", "cleaned_data"))
   for (key in extras) {
     result[[key]] <- est_result[[key]]
   }
