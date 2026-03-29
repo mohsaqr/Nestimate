@@ -49,7 +49,7 @@ seqs <- data.frame(
 grp <- cluster_network(seqs, k = 3)
 
 # Specify network method (cor requires numeric panel data)
-\dontrun{
+\donttest{
 panel <- as.data.frame(matrix(rnorm(500), nrow = 100, ncol = 5))
 grp <- cluster_network(panel, k = 3, method = "cor")
 }
