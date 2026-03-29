@@ -228,16 +228,11 @@ The results show that `k = 2` is indeed the best  clustering solution.
 Once sequences are clustered, we can create separate networks by cluster. We need to pass the clustering result to `build_network` and use the `group` argument to indicate that we want to group by cluster assignment. 
 
 ```{r cluster-networks}
-cluster_net <- build_network(clust,  
-                  method = "tna",
-                  action = "category", 
-                  actor = "session_id",
-                  time = "timestamp",
-                  group = "assignments")
+cluster_net <- build_network(clust)
 ```
 
 
 We may also compare which transition probabilities differ significantly among clusters using permutation testing:
 ```{r}
-comparison <- permutation_test(cluster_net$`Cluster 1`,cluster_net$`Cluster 2`) 
+comparison <- permutation_test(cluster_net) 
 ```
