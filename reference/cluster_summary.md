@@ -309,17 +309,17 @@ cs <- cluster_summary(mat, clusters)
 # Access results
 cs$macro$weights    # 3x3 cluster transition matrix
 #>           1         2         3
-#> 1 0.3096851 0.3024384 0.3878765
-#> 2 0.3022261 0.2590855 0.4386884
-#> 3 0.2565129 0.2628054 0.4806818
+#> 1 0.3979007 0.2754469 0.3266524
+#> 2 0.3466389 0.2756808 0.3776803
+#> 3 0.2638981 0.2832244 0.4528776
 cs$macro$inits      # Initial distribution
 #>         1         2         3 
-#> 0.2868688 0.2746885 0.4384427 
+#> 0.3285056 0.2785954 0.3928990 
 cs$clusters$`1`$weights # Within-cluster 1 transitions
-#>            A         B         C
-#> A 0.35884842 0.6027075 0.0384441
-#> B 0.07374815 0.4482965 0.4779554
-#> C 0.31270223 0.3622318 0.3250660
+#>           A         B         C
+#> A 0.3740496 0.3815244 0.2444261
+#> B 0.2846677 0.2325921 0.4827401
+#> C 0.3632608 0.5158923 0.1208468
 cs$meta               # Metadata
 #> $type
 #> [1] "tna"
@@ -352,19 +352,19 @@ clusters <- list(
 cs <- cluster_summary(mat, clusters, type = "tna")
 cs$macro$weights    # Rows/cols named Alpha, Beta, Gamma
 #>           Alpha      Beta     Gamma
-#> Alpha 0.3096851 0.3024384 0.3878765
-#> Beta  0.3022261 0.2590855 0.4386884
-#> Gamma 0.2565129 0.2628054 0.4806818
+#> Alpha 0.3979007 0.2754469 0.3266524
+#> Beta  0.3466389 0.2756808 0.3776803
+#> Gamma 0.2638981 0.2832244 0.4528776
 cs$clusters$Alpha       # Within Alpha cluster
 #> $weights
-#>            A         B         C
-#> A 0.35884842 0.6027075 0.0384441
-#> B 0.07374815 0.4482965 0.4779554
-#> C 0.31270223 0.3622318 0.3250660
+#>           A         B         C
+#> A 0.3740496 0.3815244 0.2444261
+#> B 0.2846677 0.2325921 0.4827401
+#> C 0.3632608 0.5158923 0.1208468
 #> 
 #> $inits
 #>         A         B         C 
-#> 0.2358790 0.4452836 0.3188374 
+#> 0.3437148 0.3740554 0.2822298 
 #> 
 #> $labels
 #> [1] "A" "B" "C"
@@ -400,7 +400,7 @@ cs_tna <- cluster_summary(mat, clusters, type = "tna")
 
 rowSums(cs_raw$macro$weights)  # Various sums
 #>    Alpha     Beta    Gamma 
-#> 16.59946 14.45172 19.78782 
+#> 14.19908 16.02714 19.74958 
 rowSums(cs_tna$macro$weights)  # All equal to 1
 #> Alpha  Beta Gamma 
 #>     1     1     1 
@@ -434,7 +434,7 @@ csum(mat, c(1, 1, 2, 2))
 #> 
 #> Macro (cluster-level) weights:
 #>        1      2
-#> 1 0.5383 0.4617
-#> 2 0.4832 0.5168
+#> 1 0.4478 0.5522
+#> 2 0.5095 0.4905
 # }
 ```
