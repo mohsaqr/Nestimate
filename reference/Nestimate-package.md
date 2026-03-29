@@ -1,8 +1,8 @@
 # Nestimate: Network Estimation, Bootstrap, and Higher-Order Analysis
 
 Estimate, compare, and analyze dynamic and psychological networks using
-a unified interface. Provides transition network analysis (TNA)
-estimation (transition, frequency, co-occurrence, attention-weighted)
+a unified interface. Provides transition network analysis estimation
+(transition, frequency, co-occurrence, attention-weighted)
 [doi:10.1145/3706468.3706513](https://doi.org/10.1145/3706468.3706513) ,
 psychological network methods (correlation, partial correlation,
 'graphical lasso', 'Ising')
