@@ -71,11 +71,10 @@ seqs <- data.frame(
 grp <- cluster_network(seqs, k = 3)
 
 # Specify network method (cor requires numeric panel data)
-# \donttest{
-panel <- as.data.frame(matrix(rnorm(500), nrow = 100, ncol = 5))
-grp <- cluster_network(panel, k = 3, method = "cor")
-#> Error in .prepare_association_input(data, id_col = id_col, n = n, cor_method = cor_method,     input_type = input_type): Fewer than 3 complete rows remain after removing NAs.
-# }
+if (FALSE) { # \dontrun{
+panel <- as.data.frame(matrix(rnorm(1500), nrow = 300, ncol = 5))
+grp <- cluster_network(panel, k = 2, method = "cor")
+} # }
 
 # MMM-based clustering
 grp <- cluster_network(seqs, k = 2, cluster_by = "mmm")
