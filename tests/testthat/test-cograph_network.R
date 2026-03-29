@@ -6,7 +6,9 @@ make_cograph_net <- function() {
   skip_if_not_installed("tna")
 
   model <- tna::tna(tna::group_regulation)
-  cograph::as_cograph(model)
+  cg <- cograph::as_cograph(model)
+  skip_if(is.null(cg$weights), "cograph_network has no $weights")
+  cg
 }
 
 # ---- .as_netobject converter ----
@@ -141,6 +143,7 @@ test_that("cluster_summary works with cograph_network", {
 
   model <- tna::tna(tna::group_regulation)
   cg <- cograph::as_cograph(model)
+  skip_if(is.null(cg$weights), "cograph_network has no $weights")
 
   states <- cg$nodes$label
   clusters <- list(

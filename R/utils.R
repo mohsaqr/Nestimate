@@ -157,6 +157,9 @@ safe_sd <- function(x) {
   }
 
   mat <- x$weights
+  if (is.null(mat)) {
+    stop("cograph_network has no $weights matrix.", call. = FALSE)
+  }
   if (!is.matrix(mat)) mat <- as.matrix(mat)
   if (!is.numeric(mat)) storage.mode(mat) <- "double"
   nodes_df <- x$nodes

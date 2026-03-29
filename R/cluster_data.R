@@ -1421,9 +1421,9 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' grp <- cluster_network(seqs, k = 3)
 #'
 #' # Specify network method (cor requires numeric panel data)
-#' \donttest{
-#' panel <- as.data.frame(matrix(rnorm(500), nrow = 100, ncol = 5))
-#' grp <- cluster_network(panel, k = 3, method = "cor")
+#' \dontrun{
+#' panel <- as.data.frame(matrix(rnorm(1500), nrow = 300, ncol = 5))
+#' grp <- cluster_network(panel, k = 2, method = "cor")
 #' }
 #'
 #' # MMM-based clustering
