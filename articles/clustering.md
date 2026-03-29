@@ -455,17 +455,12 @@ use the `group` argument to indicate that we want to group by cluster
 assignment.
 
 ``` r
-cluster_net <- build_network(clust,  
-                  method = "tna",
-                  action = "category", 
-                  actor = "session_id",
-                  time = "timestamp",
-                  group = "assignments")
+cluster_net <- build_network(clust)
 ```
 
 We may also compare which transition probabilities differ significantly
 among clusters using permutation testing:
 
 ``` r
-comparison <- permutation_test(cluster_net$`Cluster 1`,cluster_net$`Cluster 2`) 
+comparison <- permutation_test(cluster_net) 
 ```
