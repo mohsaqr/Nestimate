@@ -11,10 +11,10 @@ psychological network methods (correlation, partial correlation,
 (2024)
 [doi:10.1007/978-3-031-54464-4_19](https://doi.org/10.1007/978-3-031-54464-4_19)
 , and higher-order network methods including Higher-Order Network (HON),
-Higher-Order Network Embedding, Hyper-Path Anomaly (HyPa), and
-Multi-Order Generative model. Supports bootstrap inference, permutation
-testing, split-half reliability, centrality stability analysis, mixed
-Markov models, multi-cluster multi-layer (MCML) networks and clustering.
+Higher-Order Network Embedding, Hyper-Path Anomaly, and Multi-Order
+Generative model. Supports bootstrap inference, permutation testing,
+split-half reliability, centrality stability analysis, mixed Markov
+models, multi-cluster multi-layer (MCML) networks and clustering.
 
 ## See also
 
