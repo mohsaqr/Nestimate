@@ -87,6 +87,7 @@ test_that("permutation_test works with cograph_network inputs", {
 
   # Convert one to cograph_network
   cg1 <- cograph::as_cograph(tna::tna(d1))
+  skip_if(is.null(cg1$weights), "cograph_network has no $weights")
 
   # Both netobject (baseline)
   perm_base <- permutation_test(net1, net2, iter = 20, seed = 1)
