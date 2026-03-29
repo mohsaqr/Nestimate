@@ -1,4 +1,4 @@
-# Nestimate <img src="man/figures/logo.png" align="right" height="139" alt="" />
+# Nestimate <img src="man/figures/logo.png" align="right" height="139"  alt="" />
 
 > An R package for network estimation, validation, and comparison.
 
