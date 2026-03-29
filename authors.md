@@ -13,13 +13,13 @@ Source:
 [`DESCRIPTION`](https://github.com/mohsaqr/Nestimate/blob/main/DESCRIPTION)
 
 Saqr M, López-Pernas S (2026). *Nestimate: Network Estimation,
-Bootstrap, and Higher-Order Analysis*. R package version 0.2.16,
+Bootstrap, and Higher-Order Analysis*. R package version 0.2.17,
 <https://github.com/mohsaqr/Nestimate>.
 
     @Manual{,
       title = {Nestimate: Network Estimation, Bootstrap, and Higher-Order Analysis},
       author = {Mohammed Saqr and Sonsoles López-Pernas},
       year = {2026},
-      note = {R package version 0.2.16},
+      note = {R package version 0.2.17},
       url = {https://github.com/mohsaqr/Nestimate},
     }
