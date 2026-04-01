@@ -1,11 +1,17 @@
+Adamic
+Agrawal
 ai
 aic
+al
+Apriori
 Atkin
+auc
 attr
 AvePP
 Betti
 Betweenness
 bic
+binarizing
 bootnet
 Bruijn
 BuildHON
@@ -28,6 +34,8 @@ Damerau
 De
 dev
 df
+directedness
+doi
 DOF
 dplyr
 EBIC
@@ -37,6 +45,7 @@ Eliassi
 Embeddings
 embeddings
 EPJ
+et
 geomean
 ggplot
 GLASSO
@@ -57,10 +66,15 @@ igraph's
 InStrength
 invariants
 Ising
+itemset
+itemsets
 iter
+JASIST
 Jaro
 Kaliisa
 Kaplan
+Katz
+Kleinberg
 Kazemzadeh
 KDD
 kld
@@ -68,6 +82,7 @@ LaRock
 lavaan
 LazyData
 Levenshtein
+Liben
 linewidth
 logl
 lowercasing
@@ -80,6 +95,8 @@ mcml
 md
 MDS
 medoid
+metacognitive
+Mgmt
 Meyur
 minmax
 Misiejuk
@@ -92,6 +109,7 @@ Nanumyan
 nen
 nestimate
 netobject
+Nowell
 netobjects
 NNFI
 nnfi
@@ -104,7 +122,10 @@ params
 Pernas
 pez
 PNA
+POSIXct
 Pre
+Proc
+Psychometrika
 pre
 probabilistically
 pvalue
@@ -123,6 +144,11 @@ Saqrlab
 scalable
 Scholtes
 SDM
+sig
+sociometric
+Srikant
+SRL
+srep
 simplices
 Simplicial
 simplicial
@@ -155,5 +181,8 @@ Waldorp
 Wickramarathne
 Winkler
 wtna
+VLDB
 Xu
 YYYY
+Zhang
+Zhou
