@@ -15,6 +15,12 @@ centrality(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
 
 # S3 method for class 'netobject_group'
 centrality(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
+
+# S3 method for class 'cograph_network'
+centrality(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
+
+# S3 method for class 'mcml'
+centrality(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
 ```
 
 ## Arguments

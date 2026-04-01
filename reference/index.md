@@ -259,6 +259,8 @@ Print, summary, and plot methods for package classes
   : Summary Method for wtna_boot_mixed
 - [`plot(`*`<boot_glasso>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.boot_glasso.md)
   : Plot Method for boot_glasso
+- [`plot(`*`<mcml>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.mcml.md)
+  : Plot Method for mcml
 - [`plot(`*`<mmm_compare>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.mmm_compare.md)
   : Plot Method for mmm_compare
 - [`plot(`*`<net_clustering>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_clustering.md)
