@@ -1,0 +1,291 @@
+---
+title: "Link Prediction and Association Rules"
+output:
+  rmarkdown::html_vignette:
+    df_print: kable
+vignette: >
+  %\VignetteIndexEntry{Link Prediction and Association Rules}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.alt = "Visualization",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Introduction
+
+Nestimate provides two complementary tools for discovering hidden structure in networks:
+
+- **Link prediction** --- which transitions are structurally expected but missing?
+- **Association rules** --- which activities co-occur within sessions?
+
+Both integrate with `cograph::plot_simplicial()` via the `pathways()` method.
+
+# Data
+
+We use the bundled `group_regulation_long` dataset --- self-regulated learning sequences from 2000 students with `Achiever` (High/Low) grouping.
+
+```{r data}
+library(Nestimate)
+data(group_regulation_long)
+head(group_regulation_long)
+```
+
+```{r network}
+net <- build_network(
+  group_regulation_long, method = "relative",
+  actor = "Actor", action = "Action", time = "Time"
+)
+net
+```
+
+---
+
+# Link Prediction
+
+## Running predictions
+
+`predict_links()` runs six methods by default and ranks them by consensus:
+
+```{r predict}
+pred <- predict_links(net, exclude_existing = FALSE)
+pred
+```
+
+The consensus ranking averages each pair's rank across all methods --- pairs consistently ranked high are the strongest predictions:
+
+```{r consensus}
+head(pred$consensus, 10)
+```
+
+## Choosing a method
+
+You can also run a single method:
+
+```{r single-method}
+pred_katz <- predict_links(net, methods = "katz", exclude_existing = FALSE)
+pred_katz
+```
+
+| Method | Idea | Best for |
+|--------|------|----------|
+| `common_neighbors` | Shared out- and in-neighbors | Dense local structure |
+| `resource_allocation` | Shared neighbors weighted by 1/degree | Hub-dominated networks |
+| `adamic_adar` | Shared neighbors weighted by 1/log(degree) | General-purpose |
+| `jaccard` | Shared / union neighbors | Cross-network comparison |
+| `preferential_attachment` | out-degree(i) x in-degree(j) | Scale-free networks |
+| `katz` | All paths weighted by length | Global structure |
+
+## Sparse networks
+
+Link prediction is most useful when edges are missing. Threshold the network to create gaps, then predict what's missing:
+
+```{r sparse}
+net_sparse <- build_network(
+  group_regulation_long, method = "relative",
+  actor = "Actor", action = "Action", time = "Time",
+  threshold = 0.05
+)
+pred_sparse <- predict_links(net_sparse, methods = "resource_allocation")
+pred_sparse
+```
+
+## Evaluating predictions
+
+Use the full network's edges as ground truth to evaluate predictions from the sparse network:
+
+```{r evaluation}
+true_edges <- extract_edges(net)
+pred_eval <- predict_links(net_sparse, exclude_existing = FALSE)
+evaluate_links(pred_eval, true_edges[, c("from", "to")], k = c(3, 5, 10))
+```
+
+## Per-group predictions
+
+Build separate networks per group and predict within each:
+
+```{r per-group-link}
+nets <- build_network(
+  group_regulation_long, method = "relative",
+  actor = "Actor", action = "Action", time = "Time",
+  group = "Achiever", threshold = 0.05
+)
+lapply(nets, function(g) predict_links(g, methods = "katz", top_n = 3))
+```
+
+## Extracting pathways
+
+`pathways()` converts predictions into strings for `cograph::plot_simplicial()`. With `evidence = TRUE` (default), each predicted edge is enriched with common neighbors that structurally bridge source to target:
+
+```{r pathways-link}
+pathways(pred_sparse, top = 5, evidence = TRUE)
+```
+
+`"A cn1 cn2 -> B"` means: A is predicted to connect to B, with cn1 and cn2 as the bridging nodes. Without evidence:
+
+```{r pathways-link-simple}
+pathways(pred_sparse, top = 5, evidence = FALSE)
+```
+
+---
+
+# Association Rules
+
+## Basic usage
+
+`association_rules()` treats each sequence as a basket of its unique states, then finds co-occurrence patterns via Apriori:
+
+```{r rules-basic}
+rules <- association_rules(net, min_support = 0.3,
+                           min_confidence = 0.5, min_lift = 1.0)
+rules
+```
+
+## Understanding the output
+
+```{r rules-summary}
+summary(rules)
+```
+
+| Metric | Meaning |
+|--------|---------|
+| **Support** | P(A and B) --- how common is this pattern? |
+| **Confidence** | P(B given A) --- how reliable is this implication? |
+| **Lift** | > 1 = positive association, < 1 = negative |
+| **Conviction** | Departure from independence (higher = stronger) |
+
+## Adjusting thresholds
+
+```{r threshold-comparison}
+rules_broad  <- association_rules(net, min_support = 0.1,
+                                  min_confidence = 0.3, min_lift = 0)
+rules_strict <- association_rules(net, min_support = 0.5,
+                                  min_confidence = 0.8, min_lift = 1.0)
+data.frame(
+  Setting = c("Broad (sup>=0.1, conf>=0.3)", "Strict (sup>=0.5, conf>=0.8, lift>=1)"),
+  Rules   = c(rules_broad$n_rules, rules_strict$n_rules)
+)
+```
+
+## Per-group rules
+
+```{r per-group-rules}
+nets <- build_network(
+  group_regulation_long, method = "relative",
+  actor = "Actor", action = "Action", time = "Time",
+  group = "Achiever"
+)
+lapply(nets, function(g) {
+  association_rules(g, min_support = 0.3, min_confidence = 0.5, min_lift = 1.0)
+})
+```
+
+Rules unique to one group suggest activity combinations associated with that group's outcomes.
+
+## Plotting rules
+
+Support vs confidence scatter, with point size and color encoding lift:
+
+```{r rules-plot, fig.alt = "Association rules scatter plot"}
+rules <- association_rules(net, min_support = 0.2,
+                           min_confidence = 0.4, min_lift = 1.0)
+if (rules$n_rules > 0) plot(rules)
+```
+
+## Extracting pathways
+
+Each rule `{A, B} => {C}` becomes `"A B -> C"`:
+
+```{r pathways-rules}
+rules <- association_rules(net, min_support = 0.3,
+                           min_confidence = 0.5, min_lift = 1.0)
+pathways(rules)
+```
+
+Filter to the strongest:
+
+```{r pathways-rules-filtered}
+pathways(rules, top = 5, min_lift = 1.2)
+```
+
+## Other input formats
+
+Transaction list:
+
+```{r rules-list}
+transactions <- list(
+  c("plan", "discuss", "execute"),
+  c("plan", "research", "analyze"),
+  c("discuss", "execute", "reflect"),
+  c("plan", "discuss", "execute", "reflect"),
+  c("research", "analyze", "reflect")
+)
+association_rules(transactions, min_support = 0.3,
+                  min_confidence = 0.5, min_lift = 0)
+```
+
+Binary matrix:
+
+```{r rules-matrix}
+mat <- matrix(c(
+  1, 1, 1, 0, 0,
+  1, 0, 0, 1, 1,
+  0, 1, 1, 0, 1,
+  1, 1, 1, 1, 0,
+  1, 0, 1, 0, 1
+), nrow = 5, byrow = TRUE)
+colnames(mat) <- c("plan", "discuss", "execute", "research", "reflect")
+association_rules(mat, min_support = 0.3, min_confidence = 0.5, min_lift = 0)
+```
+
+---
+
+# Simplicial Visualization
+
+Both link predictions and association rules integrate with `cograph::plot_simplicial()` for higher-order visualization. Each pathway becomes a blob grouping source nodes, pointing to the target.
+
+```{r simplicial-rules, eval = requireNamespace("cograph", quietly = TRUE), fig.width = 8, fig.height = 6, fig.alt = "Simplicial visualization of association rules"}
+library(cograph)
+net_sparse <- build_network(
+  group_regulation_long, method = "relative",
+  actor = "Actor", action = "Action", time = "Time",
+  threshold = 0.05
+)
+
+# Association rules as simplicial blobs
+rules <- association_rules(net_sparse, min_support = 0.3,
+                           min_confidence = 0.5, min_lift = 1.0)
+plot_simplicial(net_sparse, pathways(rules, top = 5),
+                title = "Top Association Rules")
+```
+
+```{r simplicial-pred, eval = requireNamespace("cograph", quietly = TRUE), fig.width = 8, fig.height = 6, fig.alt = "Simplicial visualization of predicted links"}
+# Predicted links with structural evidence
+pred <- predict_links(net_sparse, methods = "resource_allocation")
+plot_simplicial(net_sparse, pathways(pred, top = 5, evidence = TRUE),
+                title = "Predicted Links with Evidence",
+                dismantled = TRUE)
+```
+
+The **dismantled** view shows each pathway in its own panel.
+
+Both styles work:
+
+```r
+# Via pathways() (works with any cograph version)
+plot_simplicial(net, pathways(rules, top = 5))
+plot_simplicial(net, pathways(pred, top = 5))
+
+# Direct pass (requires cograph >= 1.9.0)
+plot_simplicial(net, rules)
+plot_simplicial(net, pred)
+```

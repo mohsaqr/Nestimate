@@ -115,6 +115,134 @@ pathways.net_hypa <- function(x, type = "all", ...) {
 }
 
 
+#' @describeIn pathways Extract pathways from association rules
+#'
+#' Converts association rules \code{{A, B} => {C}} into pathway strings
+#' \code{"A B -> C"} suitable for \code{cograph::plot_simplicial()}.
+#' Antecedent items become source nodes; consequent items become the target.
+#'
+#' @param top Integer or NULL. Return only the top N rules ranked by lift
+#'   (default: NULL = all).
+#' @param min_lift Numeric or NULL. Additional lift filter applied on top of
+#'   the object's original threshold (default: NULL).
+#' @param min_confidence Numeric or NULL. Additional confidence filter
+#'   (default: NULL).
+#'
+#' @return A character vector of pathway strings.
+#'
+#' @examples
+#' \donttest{
+#' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
+#' rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.3,
+#'                            min_lift = 0)
+#' pathways(rules)
+#' }
+#'
+#' @export
+pathways.net_association_rules <- function(x, top = NULL, min_lift = NULL,
+                                           min_confidence = NULL, ...) {
+  rules <- x$rules
+  if (nrow(rules) == 0L) return(character(0))
+
+  if (!is.null(min_lift)) {
+    rules <- rules[rules$lift >= min_lift, , drop = FALSE]
+  }
+  if (!is.null(min_confidence)) {
+    rules <- rules[rules$confidence >= min_confidence, , drop = FALSE]
+  }
+  if (nrow(rules) == 0L) return(character(0))
+
+  rules <- rules[order(-rules$lift, -rules$confidence), , drop = FALSE]
+
+  if (!is.null(top) && nrow(rules) > top) {
+    rules <- rules[seq_len(top), , drop = FALSE]
+  }
+
+  vapply(seq_len(nrow(rules)), function(i) {
+    ante <- paste(rules$antecedent[[i]], collapse = " ")
+    cons <- paste(rules$consequent[[i]], collapse = " ")
+    paste(ante, "->", cons)
+  }, character(1), USE.NAMES = FALSE)
+}
+
+
+#' @describeIn pathways Extract pathways from link predictions
+#'
+#' Converts predicted links into pathway strings for
+#' \code{cograph::plot_simplicial()}. When \code{evidence = TRUE}
+#' (default), each predicted edge \code{A -> B} is enriched with common
+#' neighbors that structurally support the prediction, producing
+#' \code{"A cn1 cn2 -> B"}.
+#'
+#' @param method Character or NULL. Which prediction method to use.
+#'   Default: first method in the object.
+#' @param top Integer. Number of top predictions to include (default: 10).
+#' @param evidence Logical. If TRUE, include common neighbor evidence
+#'   nodes in each pathway. Default: TRUE.
+#' @param max_evidence Integer. Maximum number of evidence nodes per
+#'   pathway (default: 3).
+#'
+#' @return A character vector of pathway strings.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:5], 50, TRUE),
+#'   V2 = sample(LETTERS[1:5], 50, TRUE),
+#'   V3 = sample(LETTERS[1:5], 50, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' pred <- predict_links(net, methods = "common_neighbors")
+#' pathways(pred)
+#' }
+#'
+#' @export
+pathways.net_link_prediction <- function(x, method = NULL, top = 10L,
+                                          evidence = TRUE, max_evidence = 3L,
+                                          ...) {
+  if (is.null(method)) method <- x$methods[1]
+  df <- x$predictions[x$predictions$method == method, , drop = FALSE]
+  df <- df[order(-df$score), , drop = FALSE]
+
+  if (!is.null(top) && nrow(df) > top) {
+    df <- df[seq_len(top), , drop = FALSE]
+  }
+  if (nrow(df) == 0L) return(character(0))
+
+  # Simple mode: just "from -> to"
+  if (!isTRUE(evidence) || is.null(x$adjacency)) {
+    return(paste(df$from, "->", df$to))
+  }
+
+  # Evidence mode: include common neighbors as structural bridge
+  A <- x$adjacency
+  nodes <- x$nodes
+
+  vapply(seq_len(nrow(df)), function(i) {
+    from_idx <- match(df$from[i], nodes)
+    to_idx <- match(df$to[i], nodes)
+
+    # Common neighbors: reachable from source AND reaching target
+    from_out <- A[from_idx, ] > 0
+    to_in <- A[, to_idx] > 0
+    cn_mask <- from_out & to_in
+    cn_mask[from_idx] <- FALSE
+    cn_mask[to_idx] <- FALSE
+    cn_indices <- which(cn_mask)
+    cn_nodes <- nodes[cn_indices]
+
+    if (length(cn_nodes) > max_evidence) {
+      # Rank by combined weight to source and target
+      cn_weights <- A[from_idx, cn_indices] + A[cn_indices, to_idx]
+      cn_nodes <- cn_nodes[order(-cn_weights)][seq_len(max_evidence)]
+    }
+
+    sources <- c(df$from[i], cn_nodes)
+    paste(paste(sources, collapse = " "), "->", df$to[i])
+  }, character(1), USE.NAMES = FALSE)
+}
+
+
 #' @describeIn pathways Extract transition pathways from MOGen
 #'
 #' @param order Integer or NULL. Markov order to extract. Default:

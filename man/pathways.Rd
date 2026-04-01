@@ -4,6 +4,8 @@
 \alias{pathways}
 \alias{pathways.net_hon}
 \alias{pathways.net_hypa}
+\alias{pathways.net_association_rules}
+\alias{pathways.net_link_prediction}
 \alias{pathways.net_mogen}
 \title{Extract Pathways from Higher-Order Network Objects}
 \usage{
@@ -12,6 +14,10 @@ pathways(x, ...)
 \method{pathways}{net_hon}(x, min_count = 1L, min_prob = 0, top = NULL, order = NULL, ...)
 
 \method{pathways}{net_hypa}(x, type = "all", ...)
+
+\method{pathways}{net_association_rules}(x, top = NULL, min_lift = NULL, min_confidence = NULL, ...)
+
+\method{pathways}{net_link_prediction}(x, method = NULL, top = 10L, evidence = TRUE, max_evidence = 3L, ...)
 
 \method{pathways}{net_mogen}(x, order = NULL, min_count = 1L, min_prob = 0, top = NULL, ...)
 }
@@ -35,11 +41,30 @@ optimal order from model selection.}
 
 \item{type}{Character. Which anomalies to include: \code{"all"}
 (default), \code{"over"}, or \code{"under"}.}
+
+\item{min_lift}{Numeric or NULL. Additional lift filter applied on top of
+the object's original threshold (default: NULL).}
+
+\item{min_confidence}{Numeric or NULL. Additional confidence filter
+(default: NULL).}
+
+\item{method}{Character or NULL. Which prediction method to use.
+Default: first method in the object.}
+
+\item{evidence}{Logical. If TRUE, include common neighbor evidence
+nodes in each pathway. Default: TRUE.}
+
+\item{max_evidence}{Integer. Maximum number of evidence nodes per
+pathway (default: 3).}
 }
 \value{
 A character vector of pathway strings in arrow notation
 (e.g. \code{"A B -> C"}), suitable for
 \code{cograph::plot_simplicial()}.
+
+A character vector of pathway strings.
+
+A character vector of pathway strings.
 
 A character vector of pathway strings.
 
@@ -68,6 +93,20 @@ For \code{net_mogen}: extracts all transitions at the optimal order
 
 \item \code{pathways(net_hypa)}: Extract anomalous pathways from HYPA
 
+\item \code{pathways(net_association_rules)}: Extract pathways from association rules
+
+Converts association rules \code{{A, B} => {C}} into pathway strings
+\code{"A B -> C"} suitable for \code{cograph::plot_simplicial()}.
+Antecedent items become source nodes; consequent items become the target.
+
+\item \code{pathways(net_link_prediction)}: Extract pathways from link predictions
+
+Converts predicted links into pathway strings for
+\code{cograph::plot_simplicial()}. When \code{evidence = TRUE}
+(default), each predicted edge \code{A -> B} is enriched with common
+neighbors that structurally support the prediction, producing
+\code{"A cn1 cn2 -> B"}.
+
 \item \code{pathways(net_mogen)}: Extract transition pathways from MOGen
 
 }}
@@ -76,6 +115,24 @@ For \code{net_mogen}: extracts all transitions at the optimal order
 seqs <- list(c("A","B","C","D"), c("A","B","C","A"))
 hon <- build_hon(seqs, max_order = 3)
 pw <- pathways(hon)
+}
+
+\donttest{
+trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
+rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.3,
+                           min_lift = 0)
+pathways(rules)
+}
+
+\donttest{
+seqs <- data.frame(
+  V1 = sample(LETTERS[1:5], 50, TRUE),
+  V2 = sample(LETTERS[1:5], 50, TRUE),
+  V3 = sample(LETTERS[1:5], 50, TRUE)
+)
+net <- build_network(seqs, method = "relative")
+pred <- predict_links(net, methods = "common_neighbors")
+pathways(pred)
 }
 
 }
