@@ -40,6 +40,10 @@ If \code{data} is a \code{netobject} and \code{method} is not provided in
 per-cluster networks match the type of the input network.
 }
 \examples{
+seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+                   V3 = c("C","A","B","C","B"))
+grp <- cluster_network(seqs, k = 2)
+grp
 \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 50, TRUE), V2 = sample(LETTERS[1:4], 50, TRUE),

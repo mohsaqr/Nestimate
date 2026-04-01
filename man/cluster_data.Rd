@@ -126,6 +126,10 @@ distance. When the \pkg{stringdist} package is available, uses C-level
 distance computation for 100-1000x speedup on edit distances.
 }
 \examples{
+seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+                   V3 = c("C","A","B","C","B"))
+cl <- cluster_data(seqs, k = 2)
+cl
 \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 20, TRUE), V2 = sample(LETTERS[1:3], 20, TRUE),

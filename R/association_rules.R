@@ -62,7 +62,6 @@
 #' rules. In \emph{Proc. 20th VLDB Conference}, 487--499.
 #'
 #' @examples
-#' \donttest{
 #' # From a list of transactions
 #' trans <- list(
 #'   c("plan", "discuss", "execute"),
@@ -82,7 +81,6 @@
 #' )
 #' net <- build_network(seqs, method = "relative")
 #' rules <- association_rules(net, min_support = 0.1)
-#' }
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{predict_links}}
 #'
@@ -455,12 +453,11 @@ association_rules <- function(x,
 #' @return The input object, invisibly.
 #'
 #' @examples
-#' \donttest{
 #' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
 #' rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.5,
 #'                            min_lift = 0)
 #' print(rules)
-#' }
+#'
 #' @export
 print.net_association_rules <- function(x, ...) {
   cat(sprintf("Association Rules  [%d rules | %d items | %d transactions]\n",
@@ -493,12 +490,11 @@ print.net_association_rules <- function(x, ...) {
 #' @return A data frame summarizing the rules, invisibly.
 #'
 #' @examples
-#' \donttest{
 #' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
 #' rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.5,
 #'                            min_lift = 0)
 #' summary(rules)
-#' }
+#'
 #' @export
 summary.net_association_rules <- function(object, ...) {
   r <- object$rules
@@ -534,13 +530,11 @@ summary.net_association_rules <- function(object, ...) {
 #' @return A \code{ggplot} object, invisibly.
 #'
 #' @examples
-#' \donttest{
 #' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"),
 #'               c("A","C","D"), c("A","B","D"), c("B","C"))
 #' rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.3,
 #'                            min_lift = 0)
 #' plot(rules)
-#' }
 #'
 #' @import ggplot2
 #' @export

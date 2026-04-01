@@ -259,11 +259,9 @@ cs <- cluster_summary(mat, clusters, type = "tna")
 tna_models <- as_tna(cs)
 # tna_models$macro      # tna object
 # tna_models$clusters$Alpha # tna object
-\donttest{
 mat <- matrix(runif(16), 4, 4)
 rownames(mat) <- colnames(mat) <- LETTERS[1:4]
 csum(mat, c(1, 1, 2, 2))
-}
 }
 \seealso{
 \code{as_tna()} to convert results to tna objects,

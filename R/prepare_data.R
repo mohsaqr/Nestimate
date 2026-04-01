@@ -44,7 +44,6 @@
 #' }
 #'
 #' @examples
-#' \donttest{
 #' df <- data.frame(
 #'   student = rep(1:3, each = 5),
 #'   code = sample(c("read", "write", "test"), 15, replace = TRUE),
@@ -53,7 +52,6 @@
 #' prepared <- prepare_data(df, actor = "student", action = "code",
 #'                          time = "timestamp")
 #' net <- build_network(prepared$sequence_data, method = "relative")
-#' }
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{prepare_onehot}}
 #'
@@ -239,7 +237,6 @@ prepare_data <- function(data,
 #' @param ... Additional arguments (ignored).
 #' @return The input object, invisibly.
 #' @examples
-#' \donttest{
 #' events <- data.frame(
 #'   actor  = c("u1","u1","u1","u2","u2","u2"),
 #'   action = c("A","B","C","B","A","C"),
@@ -248,7 +245,6 @@ prepare_data <- function(data,
 #' nd <- prepare_data(events, action = "action",
 #'                    actor = "actor", time = "time")
 #' print(nd)
-#' }
 #' @export
 print.nestimate_data <- function(x, ...) {
   cat("Prepared Data for Network Estimation\n")

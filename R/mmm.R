@@ -340,6 +340,10 @@
 #'   }
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' mmm
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
@@ -623,6 +627,10 @@ build_mmm <- function(data,
 #'   entropy per k.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' comp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
+#' comp
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
@@ -666,6 +674,10 @@ compare_mmm <- function(data, k = 2:5, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' print(mmm)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -714,6 +726,10 @@ print.net_mmm <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' summary(mmm)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -757,6 +773,10 @@ summary.net_mmm <- function(object, ...) {
 #' @return A \code{ggplot} object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' plot(mmm, type = "posterior")
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -821,6 +841,10 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
+#' print(cmp)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -852,6 +876,10 @@ print.mmm_compare <- function(x, ...) {
 #' @return A \code{ggplot} object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
+#' plot(cmp)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -907,6 +935,10 @@ plot.mmm_compare <- function(x, ...) {
 #' @return A \code{net_mmm} object. See \code{\link{build_mmm}} for details.
 #' @seealso \code{\link{build_mmm}}, \code{\link{cluster_network}}
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' mmm
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 40, TRUE),

@@ -51,6 +51,9 @@ for fast resampling (same infrastructure as
 \code{\link{bootstrap_network}}).
 }
 \examples{
+net <- build_network(data.frame(V1 = c("A","B","C","A"),
+  V2 = c("B","C","A","B")), method = "relative")
+rel <- reliability(net, iter = 10)
 \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),

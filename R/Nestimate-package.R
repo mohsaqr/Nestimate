@@ -31,5 +31,7 @@ utils::globalVariables(c(
   "max_posterior", "cluster", "k", "criterion",
   # simplicial plot aes variables
   "threshold", "betti", "dim_label", "birth", "death",
-  "persistence", "components", "count", "total"
+  "persistence", "components", "count", "total",
+  # association_rules plot aes variables
+  "support", "confidence", "lift"
 ))

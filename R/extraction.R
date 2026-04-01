@@ -30,12 +30,10 @@ NULL
 #' probabilities. This is useful when the original weights don't sum to 1.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 #' net <- build_network(seqs, method = "relative")
 #' trans_mat <- extract_transition_matrix(net)
 #' print(trans_mat)
-#' }
 #'
 #' @seealso \code{\link{extract_initial_probs}} for extracting initial probabilities,
 #'   \code{\link{extract_edges}} for extracting an edge list.
@@ -117,12 +115,10 @@ extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
 #' probabilities.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 #' net <- build_network(seqs, method = "relative")
 #' init_probs <- extract_initial_probs(net)
 #' print(init_probs)
-#' }
 #'
 #' @seealso \code{\link{extract_transition_matrix}} for extracting the transition matrix,
 #'   \code{\link{extract_edges}} for extracting an edge list.
@@ -218,12 +214,10 @@ extract_initial_probs <- function(model) {
 #' other network tools.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 #' net <- build_network(seqs, method = "relative")
 #' edges <- extract_edges(net, threshold = 0.05)
 #' head(edges)
-#' }
 #'
 #' @seealso \code{\link{extract_transition_matrix}} for the full matrix,
 #'   \code{\link{build_network}} for network estimation.

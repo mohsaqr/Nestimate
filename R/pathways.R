@@ -131,12 +131,10 @@ pathways.net_hypa <- function(x, type = "all", ...) {
 #' @return A character vector of pathway strings.
 #'
 #' @examples
-#' \donttest{
 #' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
 #' rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.3,
 #'                            min_lift = 0)
 #' pathways(rules)
-#' }
 #'
 #' @export
 pathways.net_association_rules <- function(x, top = NULL, min_lift = NULL,
@@ -185,7 +183,6 @@ pathways.net_association_rules <- function(x, top = NULL, min_lift = NULL,
 #' @return A character vector of pathway strings.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:5], 50, TRUE),
 #'   V2 = sample(LETTERS[1:5], 50, TRUE),
@@ -194,7 +191,6 @@ pathways.net_association_rules <- function(x, top = NULL, min_lift = NULL,
 #' net <- build_network(seqs, method = "relative")
 #' pred <- predict_links(net, methods = "common_neighbors")
 #' pathways(pred)
-#' }
 #'
 #' @export
 pathways.net_link_prediction <- function(x, method = NULL, top = 10L,

@@ -142,13 +142,11 @@
 #'   list of such data frames (one per group).
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
 #'   V3 = c("C","A","C","B"))
 #' net <- build_network(seqs, method = "relative")
 #' centrality(net)
-#' }
 #'
 #' @export
 centrality <- function(x, ...) {

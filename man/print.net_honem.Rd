@@ -18,6 +18,10 @@ The input object, invisibly.
 Print Method for net_honem
 }
 \examples{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+print(hem)
+
 \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),

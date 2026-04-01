@@ -95,6 +95,9 @@
 #' }
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+#' net <- build_network(seqs, method = "relative")
+#' net
 #' \donttest{
 #' # Transition network (relative probabilities)
 #' seqs <- data.frame(
@@ -496,6 +499,9 @@ build_network <- function(data,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+#' net <- build_network(seqs, method = "relative")
+#' print(net)
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
@@ -598,6 +604,10 @@ print.netobject <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","A","B"), V2 = c("B","A","B","A"),
+#'                    grp = c("X","X","Y","Y"))
+#' nets <- build_network(seqs, method = "relative", group = "grp")
+#' print(nets)
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","A","C","B","A"),
@@ -629,6 +639,12 @@ print.netobject_group <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' set.seed(1)
+#' obs <- data.frame(id = rep(1:3, each = 5),
+#'                   A = rnorm(15), B = rnorm(15), C = rnorm(15))
+#' net_ml <- build_network(obs, method = "cor",
+#'                          params = list(id = "id"), level = "both")
+#' print(net_ml)
 #' \donttest{
 #' set.seed(1)
 #' obs <- data.frame(
@@ -692,13 +708,11 @@ print.netobject_ml <- function(x, ...) {
 #' \doi{10.3758/s13428-017-0910-x}
 #'
 #' @examples
-#' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)
 #' colnames(mat) <- LETTERS[1:4]
 #' net <- build_network(as.data.frame(mat), method = "glasso")
 #' predictability(net)
-#' }
 #'
 #' @export
 predictability <- function(object, ...) {

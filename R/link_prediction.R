@@ -77,7 +77,6 @@
 #' \emph{Psychometrika}, 18(1), 39--43.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:5], 50, TRUE),
 #'   V2 = sample(LETTERS[1:5], 50, TRUE),
@@ -87,7 +86,6 @@
 #' pred <- predict_links(net)
 #' print(pred)
 #' summary(pred)
-#' }
 #'
 #' @seealso \code{\link{evaluate_links}} for prediction evaluation,
 #'   \code{\link{build_network}} for network estimation.
@@ -416,7 +414,6 @@ predict_links <- function(x,
 #'   and one precision_at_k column per k value.
 #'
 #' @examples
-#' \donttest{
 #' set.seed(42)
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:5], 50, TRUE),
@@ -430,7 +427,6 @@ predict_links <- function(x,
 #' true <- data.frame(from = pred$predictions$from[1:5],
 #'                    to = pred$predictions$to[1:5])
 #' evaluate_links(pred, true)
-#' }
 #'
 #' @export
 evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
@@ -502,7 +498,6 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 #' @return The input object, invisibly.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE),
 #'   V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -511,7 +506,7 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 #' net <- build_network(seqs, method = "relative")
 #' pred <- predict_links(net)
 #' print(pred)
-#' }
+#'
 #' @export
 print.net_link_prediction <- function(x, ...) {
   dir_lbl <- if (x$directed) "directed" else "undirected"
@@ -564,7 +559,6 @@ print.net_link_prediction <- function(x, ...) {
 #' @return A data frame with per-method summary statistics, invisibly.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE),
 #'   V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -573,7 +567,7 @@ print.net_link_prediction <- function(x, ...) {
 #' net <- build_network(seqs, method = "relative")
 #' pred <- predict_links(net)
 #' summary(pred)
-#' }
+#'
 #' @export
 summary.net_link_prediction <- function(object, ...) {
   df <- object$predictions

@@ -19,12 +19,10 @@ Scatter plot of association rules: support vs confidence, with point
 size proportional to lift.
 }
 \examples{
-\donttest{
 trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"),
               c("A","C","D"), c("A","B","D"), c("B","C"))
 rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.3,
                            min_lift = 0)
 plot(rules)
-}
 
 }

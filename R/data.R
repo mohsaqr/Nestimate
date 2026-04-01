@@ -45,13 +45,11 @@
 #' @source Saqr, M. (2026). Human-AI vibe coding interaction study.
 #'
 #' @examples
-#' \donttest{
 #' # Build a transition network from human category sequences
 #' net <- build_network(human_wide, method = "relative")
 #'
 #' # Use the edge list directly
 #' head(human_ai_edges)
-#' }
 #'
 #' @name vibcoding-data
 #' @aliases human_ai human_ai_cat human_ai_super
@@ -120,12 +118,10 @@ NULL
 #' @source Saqr, M. (2026). Human-AI vibe coding interaction study.
 #'
 #' @examples
-#' \donttest{
 #' # Filter to Human -> AI transitions only
 #' handoffs <- human_ai_edges[
 #'   human_ai_edges$from_actor == "Human" &
 #'   human_ai_edges$to_actor == "AI", ]
-#' }
 #'
 "human_ai_edges"
 
@@ -153,20 +149,11 @@ NULL
 #' @seealso \code{\link{learning_activities}}, \code{\link{srl_strategies}}
 #'
 #' @examples
-#' \donttest{
 #' # Build a transition network per actor
 #' net <- build_network(group_regulation_long,
 #'                      method = "relative",
 #'                      actor = "Actor", action = "Action", time = "Time")
 #' net
-#'
-#' # Group networks by achievement level
-#' nets <- build_network(group_regulation_long,
-#'                       method = "relative",
-#'                       actor = "Actor", action = "Action", time = "Time",
-#'                       groups = "Achiever")
-#' nets
-#' }
 #'
 "group_regulation_long"
 
@@ -184,11 +171,9 @@ NULL
 #'   integer count of how often the student used that strategy.
 #'
 #' @examples
-#' \donttest{
 #' net <- build_network(srl_strategies, method = "glasso",
 #'                      params = list(gamma = 0.5))
 #' net
-#' }
 #'
 "srl_strategies"
 
@@ -213,11 +198,6 @@ NULL
 #' }
 #'
 #' @examples
-#' \donttest{
-#' net <- build_network(learning_activities, method = "cna",
-#'                      actor = "student", codes = c("Reading", "Video",
-#'                      "Forum", "Quiz", "Coding", "Review"), window_size = 3)
-#' net
-#' }
+#' head(learning_activities)
 #'
 "learning_activities"

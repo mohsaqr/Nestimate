@@ -123,6 +123,9 @@
 #' 8(4), 255–269.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+#'
 #' \donttest{
 #' trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
 #'               c("B","C","D","A"), c("C","D","A","B"))
@@ -192,6 +195,10 @@ build_honem <- function(hon, dim = 32L, max_power = 10L) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+#' print(hem)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
@@ -221,6 +228,10 @@ print.net_honem <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+#' summary(hem)
+#'
 #' \donttest{
 #' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
 #' hon <- build_hon(seqs, max_order = 3)
@@ -251,6 +262,10 @@ summary.net_honem <- function(object, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+#' plot(hem)
+#'
 #' \donttest{
 #' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
 #' hon <- build_hon(seqs, max_order = 3)

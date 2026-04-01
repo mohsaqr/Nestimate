@@ -117,14 +117,11 @@ hon <- build_hon(seqs, max_order = 3)
 pw <- pathways(hon)
 }
 
-\donttest{
 trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
 rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.3,
                            min_lift = 0)
 pathways(rules)
-}
 
-\donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:5], 50, TRUE),
   V2 = sample(LETTERS[1:5], 50, TRUE),
@@ -133,6 +130,5 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net, methods = "common_neighbors")
 pathways(pred)
-}
 
 }

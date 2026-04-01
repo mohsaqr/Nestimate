@@ -112,6 +112,10 @@ thresholded network into one function. Designed as a faster alternative
 to bootnet with richer output.
 }
 \examples{
+set.seed(1)
+dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+net <- build_network(dat, method = "glasso")
+bg <- boot_glasso(net, iter = 10, cs_iter = 5, centrality = "strength")
 \donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)

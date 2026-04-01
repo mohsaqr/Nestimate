@@ -48,13 +48,11 @@ This function converts data from the format produced by \code{simulate_sequences
 to the long format used by many TNA functions and analyses.
 }
 \examples{
-\donttest{
 wide_data <- data.frame(
   V1 = c("A", "B", "C"), V2 = c("B", "C", "A"), V3 = c("C", "A", "B")
 )
 long_data <- wide_to_long(wide_data)
 head(long_data)
-}
 
 }
 \seealso{

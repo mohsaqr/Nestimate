@@ -18,6 +18,12 @@ The input object, invisibly.
 Print Method for Multilevel Network Object
 }
 \examples{
+set.seed(1)
+obs <- data.frame(id = rep(1:3, each = 5),
+                  A = rnorm(15), B = rnorm(15), C = rnorm(15))
+net_ml <- build_network(obs, method = "cor",
+                         params = list(id = "id"), level = "both")
+print(net_ml)
 \donttest{
 set.seed(1)
 obs <- data.frame(

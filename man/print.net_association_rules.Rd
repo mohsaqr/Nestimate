@@ -18,10 +18,9 @@ The input object, invisibly.
 Print Method for net_association_rules
 }
 \examples{
-\donttest{
 trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
 rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.5,
                            min_lift = 0)
 print(rules)
-}
+
 }

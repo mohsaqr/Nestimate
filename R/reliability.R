@@ -41,6 +41,9 @@
 #' }
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' rel <- reliability(net, iter = 10)
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -357,6 +360,10 @@ reliability <- function(..., iter = 1000L, split = 0.5,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' rel <- reliability(net, iter = 10)
+#' print(rel)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -413,6 +420,10 @@ print.net_reliability <- function(x, ...) {
 #' @return A \code{ggplot} object (invisibly).
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' rel <- reliability(net, iter = 10)
+#' plot(rel)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(

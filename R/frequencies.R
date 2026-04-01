@@ -45,7 +45,6 @@ NULL
 #' skipping any \code{NA} values.
 #'
 #' @examples
-#' \donttest{
 #' # Wide format
 #' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 #' freq <- frequencies(seqs, format = "wide")
@@ -56,7 +55,6 @@ NULL
 #'   Action = c("A","B","C","B","A","C")
 #' )
 #' freq <- frequencies(long, action = "Action", id = "Actor")
-#' }
 #'
 #' @seealso \code{\link{convert_sequence_format}} for converting to other
 #'   representations (frequency counts, one-hot, edge lists).
@@ -117,12 +115,10 @@ frequencies <- function(data,
 #' }
 #'
 #' @examples
-#' \donttest{
 #' # Wide format input
 #' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 #' convert_sequence_format(seqs, format = "frequency")
 #' convert_sequence_format(seqs, format = "edgelist")
-#' }
 #'
 #' @seealso \code{\link{frequencies}} for building transition frequency matrices.
 #'

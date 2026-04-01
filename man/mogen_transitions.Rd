@@ -37,6 +37,10 @@ For example, at order 2, the edge from node "AI -> FAIL" to node
 The \code{path} column reconstructs this full sequence for readability.
 }
 \examples{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+mg <- build_mogen(seqs, max_order = 2)
+mogen_transitions(mg, order = 1)
+
 \donttest{
 trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
               c("B","C","D","A"), c("C","D","A","B"))

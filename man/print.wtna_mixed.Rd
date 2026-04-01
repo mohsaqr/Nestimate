@@ -18,6 +18,11 @@ The input object, invisibly.
 Print Method for wtna_mixed
 }
 \examples{
+oh <- matrix(c(1,0,0, 0,1,0, 0,0,1, 1,0,0), nrow = 4, byrow = TRUE,
+             dimnames = list(NULL, c("A","B","C")))
+mixed <- wtna(oh, method = "both")
+print(mixed)
+
 \donttest{
 oh <- data.frame(
   A = c(1,0,1,0,1,0,1,0),

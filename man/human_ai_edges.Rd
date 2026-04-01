@@ -35,12 +35,10 @@ Non-aggregated edge list of all consecutive action transitions across
 within a session.
 }
 \examples{
-\donttest{
 # Filter to Human -> AI transitions only
 handoffs <- human_ai_edges[
   human_ai_edges$from_actor == "Human" &
   human_ai_edges$to_actor == "AI", ]
-}
 
 }
 \keyword{datasets}

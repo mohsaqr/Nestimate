@@ -27,12 +27,7 @@ Includes temporal persistence (activities tend to continue across
 adjacent time points).
 }
 \examples{
-\donttest{
-net <- build_network(learning_activities, method = "cna",
-                     actor = "student", codes = c("Reading", "Video",
-                     "Forum", "Quiz", "Coding", "Review"), window_size = 3)
-net
-}
+head(learning_activities)
 
 }
 \keyword{datasets}

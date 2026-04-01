@@ -52,6 +52,10 @@ networks with any estimation method, or use \code{\link{cluster_network}}
 for a one-shot clustering + network call.
 }
 \examples{
+seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+                   V2 = sample(c("A","B","C"), 30, TRUE))
+mmm <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+mmm
 \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 40, TRUE),

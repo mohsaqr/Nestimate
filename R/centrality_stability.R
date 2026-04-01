@@ -57,6 +57,9 @@
 #' }
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -374,6 +377,10 @@ centrality_stability <- function(x,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+#' print(cs)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -413,6 +420,10 @@ print.net_stability <- function(x, ...) {
 #'   \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+#' summary(cs)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -460,6 +471,10 @@ summary.net_stability <- function(object, ...) {
 #' @return A \code{ggplot} object (invisibly).
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+#' plot(cs)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(

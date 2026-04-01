@@ -76,7 +76,6 @@ from independence. Higher = stronger implication.}
 }
 }
 \examples{
-\donttest{
 # From a list of transactions
 trans <- list(
   c("plan", "discuss", "execute"),
@@ -96,7 +95,6 @@ seqs <- data.frame(
 )
 net <- build_network(seqs, method = "relative")
 rules <- association_rules(net, min_support = 0.1)
-}
 
 }
 \references{

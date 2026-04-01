@@ -24,7 +24,6 @@ Computes AUC-ROC, precision\eqn{@}k, and average precision for link
 predictions against a set of known true edges.
 }
 \examples{
-\donttest{
 set.seed(42)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:5], 50, TRUE),
@@ -38,6 +37,5 @@ pred <- predict_links(net, exclude_existing = FALSE)
 true <- data.frame(from = pred$predictions$from[1:5],
                    to = pred$predictions$to[1:5])
 evaluate_links(pred, true)
-}
 
 }

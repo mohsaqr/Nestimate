@@ -46,12 +46,10 @@ InStrength, OutStrength, and Betweenness. For undirected networks the
 defaults are Strength (column sums) and Betweenness.
 }
 \examples{
-\donttest{
 seqs <- data.frame(
   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
   V3 = c("C","A","C","B"))
 net <- build_network(seqs, method = "relative")
 centrality(net)
-}
 
 }

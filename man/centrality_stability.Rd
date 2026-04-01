@@ -83,6 +83,9 @@ for fast resampling. Strength centralities (InStrength, OutStrength)
 are computed directly from the matrix without igraph.
 }
 \examples{
+net <- build_network(data.frame(V1 = c("A","B","C","A"),
+  V2 = c("B","C","A","B")), method = "relative")
+cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
 \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),

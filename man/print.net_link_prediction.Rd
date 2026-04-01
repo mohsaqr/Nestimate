@@ -18,7 +18,6 @@ The input object, invisibly.
 Print Method for net_link_prediction
 }
 \examples{
-\donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE),
   V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -27,5 +26,5 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net)
 print(pred)
-}
+
 }

@@ -30,12 +30,10 @@ For "scaled" type, each row is divided by its sum to create valid transition
 probabilities. This is useful when the original weights don't sum to 1.
 }
 \examples{
-\donttest{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 net <- build_network(seqs, method = "relative")
 trans_mat <- extract_transition_matrix(net)
 print(trans_mat)
-}
 
 }
 \seealso{

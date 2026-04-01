@@ -72,7 +72,6 @@ suitable for \code{\link{build_network}}. Automatically parses timestamps,
 detects sessions from time gaps, and handles tie-breaking.
 }
 \examples{
-\donttest{
 df <- data.frame(
   student = rep(1:3, each = 5),
   code = sample(c("read", "write", "test"), 15, replace = TRUE),
@@ -81,7 +80,6 @@ df <- data.frame(
 prepared <- prepare_data(df, actor = "student", action = "code",
                          time = "timestamp")
 net <- build_network(prepared$sequence_data, method = "relative")
-}
 
 }
 \seealso{

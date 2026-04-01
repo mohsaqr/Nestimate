@@ -18,6 +18,10 @@ The input object, invisibly.
 Print Method for boot_glasso
 }
 \examples{
+set.seed(1)
+dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+print(bg)
 \donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)

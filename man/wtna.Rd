@@ -66,6 +66,10 @@ active for the window.
 per group and summed.
 }
 \examples{
+oh <- matrix(c(1,0,0, 0,1,0, 0,0,1, 1,0,0), nrow = 4, byrow = TRUE,
+             dimnames = list(NULL, c("A","B","C")))
+w <- wtna(oh)
+
 \donttest{
 # Simple one-hot data
 df <- data.frame(

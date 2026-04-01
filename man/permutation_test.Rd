@@ -73,6 +73,11 @@ and custom estimators), the full estimator is called on each permuted
 group split.
 }
 \examples{
+s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
+n1 <- build_network(s1, method = "relative")
+n2 <- build_network(s2, method = "relative")
+perm <- permutation_test(n1, n2, iter = 10)
 \donttest{
 set.seed(1)
 d1 <- data.frame(V1 = sample(LETTERS[1:4], 20, TRUE),

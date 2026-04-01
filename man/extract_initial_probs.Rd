@@ -22,12 +22,10 @@ this function attempts to estimate them from the data or use uniform
 probabilities.
 }
 \examples{
-\donttest{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 net <- build_network(seqs, method = "relative")
 init_probs <- extract_initial_probs(net)
 print(init_probs)
-}
 
 }
 \seealso{

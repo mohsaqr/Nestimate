@@ -18,6 +18,10 @@ The input object, invisibly.
 Print Method for net_bootstrap
 }
 \examples{
+net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
+  method = "relative")
+boot <- bootstrap_network(net, iter = 10)
+print(boot)
 \donttest{
 set.seed(1)
 seqs <- data.frame(

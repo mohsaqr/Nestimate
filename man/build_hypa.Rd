@@ -50,6 +50,9 @@ Paths occurring more or less often than expected under the null model are
 flagged as over- or under-represented.
 }
 \examples{
+seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
+hyp <- build_hypa(seqs, k = 2)
+
 \donttest{
 trajs <- list(c("A","B","C"), c("A","B","C"), c("A","B","C"),
               c("A","B","D"), c("C","B","D"), c("C","B","A"))

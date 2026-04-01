@@ -54,6 +54,9 @@
 #' }
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
+#'   method = "relative")
+#' boot <- bootstrap_network(net, iter = 10)
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -548,6 +551,10 @@ bootstrap_network <- function(x,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
+#'   method = "relative")
+#' boot <- bootstrap_network(net, iter = 10)
+#' print(boot)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -627,6 +634,10 @@ print.net_bootstrap <- function(x, ...) {
 #' @return A data frame with edge-level bootstrap statistics.
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
+#'   method = "relative")
+#' boot <- bootstrap_network(net, iter = 10)
+#' summary(boot)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -648,6 +659,11 @@ summary.net_bootstrap <- function(object, ...) {
 #' @param ... Ignored.
 #' @return \code{x} invisibly.
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","C","A"),
+#'   V3 = c("C","A","B","B"), grp = c("X","X","Y","Y"))
+#' nets <- build_network(seqs, method = "relative", group = "grp")
+#' boot <- bootstrap_network(nets, iter = 10)
+#' print(boot)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -725,6 +741,11 @@ print.net_bootstrap_group <- function(x, ...) {
 #' @param ... Ignored.
 #' @return A data frame with group, edge, and bootstrap statistics columns.
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","C","A"),
+#'   V3 = c("C","A","B","B"), grp = c("X","X","Y","Y"))
+#' nets <- build_network(seqs, method = "relative", group = "grp")
+#' boot <- bootstrap_network(nets, iter = 10)
+#' summary(boot)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -755,6 +776,10 @@ summary.net_bootstrap_group <- function(object, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' oh <- data.frame(A = c(1,0,1,0), B = c(0,1,0,1), C = c(1,1,0,0))
+#' mixed <- wtna(oh, method = "both")
+#' boot  <- bootstrap_network(mixed, iter = 10)
+#' print(boot)
 #' \donttest{
 #' set.seed(1)
 #' oh <- data.frame(
@@ -786,6 +811,10 @@ print.wtna_boot_mixed <- function(x, ...) {
 #' @return A list with \code{$transition} and \code{$cooccurrence} summary data frames.
 #'
 #' @examples
+#' oh <- data.frame(A = c(1,0,1,0), B = c(0,1,0,1), C = c(1,1,0,0))
+#' mixed <- wtna(oh, method = "both")
+#' boot  <- bootstrap_network(mixed, iter = 10)
+#' summary(boot)
 #' \donttest{
 #' set.seed(1)
 #' oh <- data.frame(

@@ -48,10 +48,8 @@ A \code{netobject} (see \code{\link{build_network}}).
 This function is deprecated. Use \code{\link{build_network}} instead.
 }
 \examples{
-\donttest{
 data <- data.frame(A = c("x","y","z","x"), B = c("y","x","z","y"))
 net <- estimate_network(data, method = "relative")
-}
 
 }
 \seealso{

@@ -18,6 +18,10 @@ The input object, invisibly.
 Summary Method for net_clustering
 }
 \examples{
+seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+                   V3 = c("C","A","B","C","B"))
+cl <- cluster_data(seqs, k = 2)
+summary(cl)
 \donttest{
 set.seed(1)
 seqs <- data.frame(

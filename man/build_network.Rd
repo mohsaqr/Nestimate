@@ -139,6 +139,9 @@ the data (between-person means or within-person centering).
 }
 }
 \examples{
+seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+net <- build_network(seqs, method = "relative")
+net
 \donttest{
 # Transition network (relative probabilities)
 seqs <- data.frame(

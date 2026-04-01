@@ -11,10 +11,8 @@
 #' @return A \code{netobject} (see \code{\link{build_network}}).
 #'
 #' @examples
-#' \donttest{
 #' data <- data.frame(A = c("x","y","z","x"), B = c("y","x","z","y"))
 #' net <- estimate_network(data, method = "relative")
-#' }
 #'
 #' @seealso \code{\link{build_network}}
 #'

@@ -49,6 +49,9 @@ between overlapping k-tuples. The model tests increasingly complex Markov
 orders and selects the one that best balances fit and parsimony.
 }
 \examples{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+mg <- build_mogen(seqs, max_order = 2)
+
 \donttest{
 trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
               c("B","C","D","A"), c("C","D","A","B"))

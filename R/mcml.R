@@ -21,10 +21,8 @@
 #' aggregate_weights(w, "sum")   # 2.5
 #' aggregate_weights(w, "mean")  # 0.625
 #' aggregate_weights(w, "max")   # 0.9
-#' \donttest{
 #' mat <- matrix(c(0, 0.5, 0.5, 0.3, 0, 0.7, 0.4, 0.6, 0), 3, 3, byrow = TRUE)
 #' aggregate_weights(mat)
-#' }
 aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
   # Remove NA and zero weights
   w <- w[!is.na(w) & w != 0]
@@ -473,11 +471,9 @@ cluster_summary <- function(x,
 #' @return See \code{\link{cluster_summary}}.
 #' @export
 #' @examples
-#' \donttest{
 #' mat <- matrix(runif(16), 4, 4)
 #' rownames(mat) <- colnames(mat) <- LETTERS[1:4]
 #' csum(mat, c(1, 1, 2, 2))
-#' }
 csum <- cluster_summary
 
 # ==============================================================================
@@ -1327,6 +1323,10 @@ as_tna.default <- function(x) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+#' clusters <- list(G1 = c("A","B"), G2 = c("C"))
+#' cs <- build_mcml(seqs, clusters)
+#' print(cs)
 #' \donttest{
 #' seqs <- data.frame(
 #'   T1 = c("A","B","A"), T2 = c("B","C","B"),
@@ -1413,6 +1413,10 @@ plot.mcml <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+#' clusters <- list(G1 = c("A","B"), G2 = c("C"))
+#' cs <- build_mcml(seqs, clusters)
+#' summary(cs)
 #' \donttest{
 #' seqs <- data.frame(
 #'   T1 = c("A","B","A"), T2 = c("B","C","B"),

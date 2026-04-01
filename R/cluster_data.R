@@ -594,6 +594,10 @@
 #' }
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+#'                    V3 = c("C","A","B","C","B"))
+#' cl <- cluster_data(seqs, k = 2)
+#' cl
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 20, TRUE), V2 = sample(LETTERS[1:3], 20, TRUE),
@@ -719,6 +723,10 @@ cluster_sequences <- cluster_data
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+#'                    V3 = c("C","A","B","C","B"))
+#' cl <- cluster_data(seqs, k = 2)
+#' print(cl)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -762,6 +770,10 @@ print.net_clustering <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+#'                    V3 = c("C","A","B","C","B"))
+#' cl <- cluster_data(seqs, k = 2)
+#' summary(cl)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -827,6 +839,10 @@ summary.net_clustering <- function(object, ...) {
 #' @return A \code{ggplot} object (invisibly).
 #'
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+#'                    V3 = c("C","A","B","C","B"))
+#' cl <- cluster_data(seqs, k = 2)
+#' plot(cl, type = "silhouette")
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -1412,6 +1428,10 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' @seealso \code{\link{cluster_data}}, \code{\link{cluster_mmm}},
 #'   \code{\link{build_network}}
 #' @examples
+#' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+#'                    V3 = c("C","A","B","C","B"))
+#' grp <- cluster_network(seqs, k = 2)
+#' grp
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 50, TRUE), V2 = sample(LETTERS[1:4], 50, TRUE),

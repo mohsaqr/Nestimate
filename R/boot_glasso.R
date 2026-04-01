@@ -82,6 +82,10 @@
 #' }
 #'
 #' @examples
+#' set.seed(1)
+#' dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+#' net <- build_network(dat, method = "glasso")
+#' bg <- boot_glasso(net, iter = 10, cs_iter = 5, centrality = "strength")
 #' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)
@@ -781,6 +785,10 @@ boot_glasso <- function(x,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' set.seed(1)
+#' dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+#' bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+#' print(bg)
 #' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)
@@ -841,6 +849,10 @@ print.boot_glasso <- function(x, ...) {
 #' @return A data frame or list of data frames depending on \code{type}.
 #'
 #' @examples
+#' set.seed(1)
+#' dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+#' bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+#' summary(bg, type = "edges")
 #' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)
@@ -903,6 +915,10 @@ summary.boot_glasso <- function(object, type = "edges", ...) {
 #' @return A \code{ggplot} object, invisibly.
 #'
 #' @examples
+#' set.seed(1)
+#' dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+#' bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+#' plot(bg, type = "edges")
 #' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)

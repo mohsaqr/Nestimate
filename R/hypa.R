@@ -154,6 +154,9 @@
 #' Time Series Data on Networks. \emph{SDM 2020}, 460–468.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
+#' hyp <- build_hypa(seqs, k = 2)
+#'
 #' \donttest{
 #' trajs <- list(c("A","B","C"), c("A","B","C"), c("A","B","C"),
 #'               c("A","B","D"), c("C","B","D"), c("C","B","A"))
@@ -241,6 +244,10 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
+#' hyp <- build_hypa(seqs, k = 2)
+#' print(hyp)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B","C","A","B","C","A"),
@@ -271,6 +278,10 @@ print.net_hypa <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
+#' hyp <- build_hypa(seqs, k = 2)
+#' summary(hyp)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B","C","A","B","C","A"),

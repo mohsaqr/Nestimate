@@ -18,6 +18,10 @@ The input object, invisibly.
 Print Method for mmm_compare
 }
 \examples{
+seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+                   V2 = sample(c("A","B","C"), 30, TRUE))
+cmp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
+print(cmp)
 \donttest{
 set.seed(1)
 seqs <- data.frame(

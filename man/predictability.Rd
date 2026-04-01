@@ -41,13 +41,11 @@ For \code{method = "cor"}, predictability is the multiple R\eqn{^2} from
 regressing each node on its network neighbors (nodes with non-zero edges).
 }
 \examples{
-\donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
 colnames(mat) <- LETTERS[1:4]
 net <- build_network(as.data.frame(mat), method = "glasso")
 predictability(net)
-}
 
 }
 \references{

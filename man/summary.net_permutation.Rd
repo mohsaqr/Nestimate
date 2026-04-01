@@ -18,6 +18,12 @@ A data frame with edge-level permutation test results.
 Summary Method for net_permutation
 }
 \examples{
+s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
+n1 <- build_network(s1, method = "relative")
+n2 <- build_network(s2, method = "relative")
+perm <- permutation_test(n1, n2, iter = 10)
+summary(perm)
 \donttest{
 set.seed(1)
 d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),

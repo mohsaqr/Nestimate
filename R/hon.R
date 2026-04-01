@@ -1094,6 +1094,9 @@
 #' to application for anomaly detection. \emph{EPJ Data Science}, 9(1), 15.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hon <- build_hon(seqs, max_order = 2)
+#'
 #' \donttest{
 #' # From list of trajectories
 #' trajs <- list(
@@ -1168,6 +1171,10 @@ build_hon <- function(data, max_order = 5L, min_freq = 1L,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hon <- build_hon(seqs, max_order = 2)
+#' print(hon)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
@@ -1199,6 +1206,10 @@ print.net_hon <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hon <- build_hon(seqs, max_order = 2)
+#' summary(hon)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),

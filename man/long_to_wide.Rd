@@ -47,7 +47,6 @@ If \code{time_col} contains non-integer values (e.g., timestamps), the function
 will use the ordering within each sequence to create time indices.
 }
 \examples{
-\donttest{
 long_data <- data.frame(
   Actor = rep(1:3, each = 4),
   Time = rep(1:4, 3),
@@ -55,7 +54,6 @@ long_data <- data.frame(
 )
 wide_data <- long_to_wide(long_data, id_col = "Actor")
 head(wide_data)
-}
 
 }
 \seealso{

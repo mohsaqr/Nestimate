@@ -108,13 +108,11 @@ columns = T1, T2, ...):
 }
 }
 \examples{
-\donttest{
 # Build a transition network from human category sequences
 net <- build_network(human_wide, method = "relative")
 
 # Use the edge list directly
 head(human_ai_edges)
-}
 
 }
 \keyword{datasets}
