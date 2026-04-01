@@ -187,3 +187,21 @@ centrality.netobject_group <- function(x, measures = NULL, loops = FALSE,
                          centrality_fn = centrality_fn)
   })
 }
+
+
+#' @rdname centrality
+#' @export
+centrality.cograph_network <- function(x, measures = NULL, loops = FALSE,
+                                        centrality_fn = NULL, ...) {
+  centrality.netobject(.as_netobject(x), measures = measures, loops = loops,
+                        centrality_fn = centrality_fn)
+}
+
+
+#' @rdname centrality
+#' @export
+centrality.mcml <- function(x, measures = NULL, loops = FALSE,
+                             centrality_fn = NULL, ...) {
+  centrality.netobject_group(as_tna(x), measures = measures, loops = loops,
+                              centrality_fn = centrality_fn)
+}

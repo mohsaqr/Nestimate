@@ -80,6 +80,7 @@ reliability <- function(..., iter = 1000L, split = 0.5,
   for (i in seq_along(dots)) {
     obj <- dots[[i]]
     nm <- names(dots)[i]
+    if (inherits(obj, "mcml")) obj <- as_tna(obj)
     if (inherits(obj, "cograph_network")) obj <- .as_netobject(obj)
     if (inherits(obj, "netobject_group")) {
       for (g in names(obj)) {

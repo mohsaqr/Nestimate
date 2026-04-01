@@ -302,6 +302,30 @@ build_network <- function(data,
     if (!"format" %in% names(params)) params$format <- format
   }
 
+  # ---- Auto-convert sequences to frequencies for association methods ----
+  # Association methods (cor, pcor, glasso, ising) require numeric data.
+  # If the data is character/factor sequence data, convert to per-row state
+  # frequency counts automatically so users can pass sequences directly.
+  assoc_methods <- c("cor", "pcor", "glasso")
+  if (method %in% assoc_methods && is.data.frame(data)) {
+    exclude <- intersect(c(actor, session), names(data))
+    check_cols <- setdiff(names(data), exclude)
+    has_char <- length(check_cols) >= 2L && any(vapply(
+      data[, check_cols, drop = FALSE],
+      function(x) is.character(x) || is.factor(x), logical(1)
+    ))
+    if (has_char) {
+      freq_data <- convert_sequence_format(
+        data, id_col = if (length(exclude) == 0L) character(0) else exclude,
+        format = "frequency"
+      )
+      # Drop rid and ID columns, keep only numeric frequency columns
+      drop <- c("rid", exclude)
+      data <- freq_data[, setdiff(names(freq_data), drop), drop = FALSE]
+      params$format <- "wide"
+    }
+  }
+
   # ---- Multilevel decomposition ----
   id_col <- params$id %||% actor
 

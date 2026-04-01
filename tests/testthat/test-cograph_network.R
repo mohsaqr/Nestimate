@@ -184,3 +184,64 @@ test_that("boot_glasso works with cograph_network wrapping glasso netobject", {
   expect_s3_class(boot, "boot_glasso")
   expect_equal(boot$iter, 20L)
 })
+
+
+# ---- centrality() with cograph_network ----
+
+test_that("centrality() works on cograph_network", {
+  cg <- make_cograph_net()
+  cent <- centrality(cg)
+  expect_true(is.data.frame(cent))
+  expect_true(nrow(cent) > 0)
+})
+
+
+# ---- cluster_network() with cograph_network ----
+
+test_that("cluster_network() works on cograph_network", {
+  skip_if_not_installed("cograph")
+  seqs <- data.frame(
+    V1 = sample(LETTERS[1:4], 30, TRUE),
+    V2 = sample(LETTERS[1:4], 30, TRUE),
+    V3 = sample(LETTERS[1:4], 30, TRUE),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(seqs, method = "relative")
+  cg <- structure(list(
+    weights = net$weights,
+    nodes = net$nodes,
+    edges = net$edges,
+    directed = net$directed,
+    data = net$data,
+    meta = list(source = "test", tna = list(method = "relative"))
+  ), class = c("cograph_network", "list"))
+
+  grp <- cluster_network(cg, k = 2, method = "relative")
+  expect_s3_class(grp, "netobject_group")
+})
+
+
+# ---- .coerce_sequence_input() with cograph_network ----
+
+test_that(".coerce_sequence_input handles cograph_network", {
+  skip_if_not_installed("cograph")
+  seqs <- data.frame(
+    V1 = sample(LETTERS[1:4], 20, TRUE),
+    V2 = sample(LETTERS[1:4], 20, TRUE),
+    V3 = sample(LETTERS[1:4], 20, TRUE),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(seqs, method = "relative")
+  cg <- structure(list(
+    weights = net$weights,
+    nodes = net$nodes,
+    edges = net$edges,
+    directed = net$directed,
+    data = net$data,
+    meta = list(source = "test", tna = list(method = "relative"))
+  ), class = c("cograph_network", "list"))
+
+  df <- Nestimate:::.coerce_sequence_input(cg)
+  expect_true(is.data.frame(df))
+  expect_equal(ncol(df), 3)
+})

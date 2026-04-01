@@ -119,6 +119,9 @@ safe_sd <- function(x) {
     }
     return(df) # nocov end
   }
+  if (inherits(data, "cograph_network") && !inherits(data, "netobject")) {
+    data <- .as_netobject(data)
+  }
   if (inherits(data, "netobject")) {
     if (is.null(data$data)) { # nocov start
       stop("netobject has no sequence data ($data). ",

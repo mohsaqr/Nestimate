@@ -85,7 +85,17 @@ centrality_stability <- function(x,
                                  seed = NULL) {
 
   # ---- Input validation ----
+  if (inherits(x, "mcml")) x <- as_tna(x)
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
+  if (inherits(x, "netobject_group")) {
+    return(lapply(x, function(net) {
+      centrality_stability(net, measures = measures, iter = iter,
+                           drop_prop = drop_prop, threshold = threshold,
+                           certainty = certainty, method = method,
+                           centrality_fn = centrality_fn, loops = loops,
+                           seed = seed)
+    }))
+  }
   if (!inherits(x, "netobject")) {
     stop("'x' must be a netobject from build_network().", call. = FALSE)
   }

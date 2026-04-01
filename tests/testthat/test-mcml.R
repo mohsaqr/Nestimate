@@ -930,3 +930,95 @@ test_that("summary.mcml on build_mcml result also works (L1404)", {
   cs <- build_mcml(seqs, list(G1 = "A", G2 = "B"))
   expect_output(summary(cs))
 })
+
+
+# ============================================
+# mcml seamless dispatch to downstream functions
+# ============================================
+
+.make_mcml <- function(seed = 42) {
+  set.seed(seed)
+  seqs <- data.frame(
+    T1 = sample(LETTERS[1:6], 40, TRUE),
+    T2 = sample(LETTERS[1:6], 40, TRUE),
+    T3 = sample(LETTERS[1:6], 40, TRUE),
+    T4 = sample(LETTERS[1:6], 40, TRUE),
+    stringsAsFactors = FALSE
+  )
+  clusters <- list(G1 = c("A", "B", "C"), G2 = c("D", "E", "F"))
+  build_mcml(seqs, clusters, type = "tna")
+}
+
+test_that("centrality() works on mcml", {
+  cs <- .make_mcml()
+  cent <- centrality(cs)
+
+  expect_true(is.list(cent))
+  expect_true("macro" %in% names(cent))
+  expect_true(is.data.frame(cent$macro))
+  # Within-cluster centralities
+  cluster_names <- setdiff(names(cent), "macro")
+  expect_true(length(cluster_names) > 0)
+  for (nm in cluster_names) {
+    expect_true(is.data.frame(cent[[nm]]))
+  }
+})
+
+test_that("centrality_stability() works on mcml", {
+  cs <- .make_mcml()
+  stab <- centrality_stability(cs, iter = 20, seed = 1)
+
+  expect_true(is.list(stab))
+  expect_true("macro" %in% names(stab))
+  for (nm in names(stab)) {
+    expect_s3_class(stab[[nm]], "net_stability")
+  }
+})
+
+test_that("reliability() works on mcml", {
+  cs <- .make_mcml()
+  rel <- reliability(cs, iter = 20, seed = 1)
+
+  expect_s3_class(rel, "net_reliability")
+})
+
+test_that("extract_transition_matrix() works on mcml", {
+  cs <- .make_mcml()
+  mats <- extract_transition_matrix(cs)
+
+  expect_true(is.list(mats))
+  expect_true("macro" %in% names(mats))
+  expect_true(is.matrix(mats$macro))
+  # Within-cluster matrices
+  cluster_names <- setdiff(names(mats), "macro")
+  expect_true(length(cluster_names) > 0)
+  for (nm in cluster_names) {
+    expect_true(is.matrix(mats[[nm]]))
+  }
+})
+
+test_that("extract_initial_probs() works on mcml", {
+  cs <- .make_mcml()
+  inits <- extract_initial_probs(cs)
+
+  expect_true(is.list(inits))
+  expect_true("macro" %in% names(inits))
+  expect_true(is.numeric(inits$macro))
+  expect_equal(sum(inits$macro), 1, tolerance = 1e-6)
+})
+
+test_that("extract_edges() works on mcml", {
+  cs <- .make_mcml()
+  edges <- extract_edges(cs)
+
+  expect_true(is.list(edges))
+  expect_true("macro" %in% names(edges))
+  expect_true(is.data.frame(edges$macro))
+  expect_true(all(c("from", "to", "weight") %in% names(edges$macro)))
+})
+
+test_that("plot.mcml dispatches without error when cograph available", {
+  skip_if_not_installed("cograph")
+  cs <- .make_mcml()
+  expect_invisible(plot(cs))
+})

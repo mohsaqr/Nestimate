@@ -1435,6 +1435,9 @@ cluster_network <- function(data, k, cluster_by = "pam",
   dots <- list(...)
 
   # Inherit build_args and method from input netobject when not explicitly set
+  if (inherits(data, "cograph_network") && !inherits(data, "netobject")) {
+    data <- .as_netobject(data)
+  }
   if (inherits(data, "netobject")) {
     if (!is.null(data$build_args))
       dots <- modifyList(data$build_args, dots)

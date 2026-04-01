@@ -4,6 +4,8 @@
 \alias{centrality}
 \alias{centrality.netobject}
 \alias{centrality.netobject_group}
+\alias{centrality.cograph_network}
+\alias{centrality.mcml}
 \title{Compute Centrality Measures for a Network}
 \usage{
 centrality(x, ...)
@@ -11,6 +13,10 @@ centrality(x, ...)
 \method{centrality}{netobject}(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
 
 \method{centrality}{netobject_group}(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
+
+\method{centrality}{cograph_network}(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
+
+\method{centrality}{mcml}(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{netobject} or \code{netobject_group}.}

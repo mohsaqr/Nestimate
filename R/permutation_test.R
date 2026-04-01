@@ -80,6 +80,10 @@ permutation_test <- function(x, y = NULL,
                              nlambda = 50L,
                              seed = NULL) {
 
+  # ---- mcml dispatch: convert to netobject_group via as_tna ----
+  if (inherits(x, "mcml")) x <- as_tna(x)
+  if (inherits(y, "mcml")) y <- as_tna(y)
+
   # ---- Single netobject_group: all-pairs permutation tests ----
   if (inherits(x, "netobject_group") && is.null(y)) {
     grp_names <- names(x)

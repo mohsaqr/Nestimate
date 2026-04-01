@@ -569,3 +569,35 @@ test_that("summary.net_permutation_group returns combined data frame (L671-675)"
 })
 
 
+# ---- mcml dispatch ----
+
+test_that("permutation_test works with two mcml objects", {
+  set.seed(42)
+  clusters <- list(G1 = c("A", "B", "C"), G2 = c("D", "E", "F"))
+  seqs1 <- data.frame(
+    T1 = sample(LETTERS[1:6], 30, TRUE),
+    T2 = sample(LETTERS[1:6], 30, TRUE),
+    T3 = sample(LETTERS[1:6], 30, TRUE),
+    T4 = sample(LETTERS[1:6], 30, TRUE),
+    stringsAsFactors = FALSE
+  )
+  seqs2 <- data.frame(
+    T1 = sample(LETTERS[1:6], 30, TRUE),
+    T2 = sample(LETTERS[1:6], 30, TRUE),
+    T3 = sample(LETTERS[1:6], 30, TRUE),
+    T4 = sample(LETTERS[1:6], 30, TRUE),
+    stringsAsFactors = FALSE
+  )
+  cs1 <- build_mcml(seqs1, clusters, type = "tna")
+  cs2 <- build_mcml(seqs2, clusters, type = "tna")
+
+  perm <- permutation_test(cs1, cs2, iter = 10, seed = 1)
+
+  expect_s3_class(perm, "net_permutation_group")
+  expect_true(length(perm) > 0)
+  for (nm in names(perm)) {
+    expect_s3_class(perm[[nm]], "net_permutation")
+  }
+})
+
+

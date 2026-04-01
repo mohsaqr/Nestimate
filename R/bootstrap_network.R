@@ -95,6 +95,11 @@ bootstrap_network <- function(x,
     return(result)
   }
 
+  # ---- mcml dispatch: convert to netobject_group via as_tna ----
+  if (inherits(x, "mcml")) {
+    x <- as_tna(x)
+  }
+
   # ---- netobject_group dispatch: bootstrap each element ----
   if (inherits(x, "netobject_group")) {
     results <- lapply(x, function(net) {
