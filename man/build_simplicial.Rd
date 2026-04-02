@@ -52,16 +52,11 @@ resulting graph become simplices.
 }
 }
 \examples{
-\donttest{
-seqs <- data.frame(
-  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
-  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
-)
-net <- build_network(seqs, method = "relative")
-sc <- build_simplicial(net, threshold = 0.05)
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+sc <- build_simplicial(mat, threshold = 0.3)
 print(sc)
 betti_numbers(sc)
-}
 
 }
 \seealso{

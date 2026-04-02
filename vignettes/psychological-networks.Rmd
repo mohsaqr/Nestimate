@@ -70,7 +70,7 @@ round(pred, 3)
 Non-parametric bootstrap assesses edge stability and significance.
 
 ```{r bootstrap}
-boot <- boot_glasso(net_glasso, iter = 1000,
+boot <- boot_glasso(net_glasso, iter = 100,
                     centrality = c("strength", "expected_influence"),
                     seed = 42)
 ```

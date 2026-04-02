@@ -1,6 +1,6 @@
 Package: Nestimate
 Title: Network Estimation, Bootstrap, and Higher-Order Analysis
-Version: 0.2.20
+Version: 0.3.0
 Authors@R: c(
     person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
     person("Sonsoles", "López-Pernas", email = "sonsoles.lopez@uef.fi", role = "aut")
@@ -10,7 +10,7 @@ Description: Estimate, compare, and analyze dynamic and psychological networks
     estimation (transition, frequency, co-occurrence, attention-weighted)
     Saqr et al. (2025) <doi:10.1145/3706468.3706513>, psychological
     network methods (correlation, partial correlation, 'graphical lasso',
-    'Ising') Saqr and Lopez-Pernas (2024)
+    'Ising') Saqr, Beck, and Lopez-Pernas (2024)
     <doi:10.1007/978-3-031-54464-4_19>,
     and higher-order network methods including higher-order networks,
     higher-order network embedding, hyper-path anomaly, and multi-order

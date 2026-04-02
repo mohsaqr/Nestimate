@@ -14,12 +14,18 @@ This is a resubmission. In this version I have:
 * Added authors and year to all DOI references in DESCRIPTION per CRAN
   format requirements (e.g., `Saqr et al. (2025) <doi:...>`).
 
-* Unwrapped `\donttest{}` for all examples that execute in under 5 seconds
-  (data utilities, extraction, frequencies, link prediction, association
-  rules, centrality, estimator registry). Added small fast toy examples
-  (tiny data, iter=10) before `\donttest{}` blocks for slower functions
-  (bootstrap, permutation, reliability, centrality stability). Most Rd
-  files now have at least one automatically tested example.
+* Unwrapped `\donttest{}` for all non-compute-intensive examples
+  (simplicial complex functions, data utilities, extraction, frequencies,
+  link prediction, association rules, centrality, estimator registry).
+  Compute-intensive functions (bootstrap, permutation, clustering, MMM)
+  retain `\donttest{}` with small fast toy examples before the wrapped block.
+
+## Note
+
+The system flags author names in DESCRIPTION references as misspelled.
+We removed them previously to resolve the spelling notes. We received
+feedback from CRAN that author names should be included, so we added
+them again.
 
 ## Downstream dependencies
 

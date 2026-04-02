@@ -41,7 +41,13 @@ The `human_cat` dataset contains 10,796 coded human interactions from 429 human-
 
 ```{r data}
 library(Nestimate)
-head(human_cat)
+
+# Subsample for vignette speed (CRAN build-time limit)
+set.seed(1)
+keep <- sample(unique(human_cat$session_id), 100)
+human_sub <- human_cat[human_cat$session_id %in% keep, ]
+
+head(human_sub)
 ```
 
 The dataset is in long format with columns recording *what happened* (`category`), *who did it* (`session_id`), and *when* (`timestamp`). Additional columns like `project`, `code`, and `superclass` are automatically preserved as metadata and can be used later for group comparisons or covariate analysis without manual data wrangling.
@@ -61,7 +67,7 @@ Under the hood, `build_network()` calls `prepare_data()` to convert the long-for
 The standard TNA method estimates a first-order Markov model from sequence data. Given a sequence of events, the transition probability $P(v_j | v_i)$ is estimated as the ratio of observed transitions from state $v_i$ to state $v_j$ to the total number of outgoing transitions from $v_i$. These estimated probabilities are assembled into a **transition matrix** $T$, where each element $T_{ij}$ represents the estimated probability of transitioning from $v_i$ to $v_j$. The resulting directed weighted network captures the probabilistic dependencies between events --- the contingencies that shape the temporal process.
 
 ```{r tna}
-net_tna <- build_network(human_cat, method = "tna",
+net_tna <- build_network(human_sub, method = "tna",
                          action = "category", actor = "session_id",
                          time = "timestamp")
 print(net_tna)
@@ -73,7 +79,7 @@ print(net_tna)
 The frequency method preserves raw transition counts rather than normalizing to conditional probabilities. This is useful when absolute frequencies matter --- for instance, a transition that occurs 500 times from a common state may be more practically important than one occurring 5 times from a rare state, even if the latter has a higher conditional probability. Frequency networks retain the magnitude of evidence for each transition, which is lost in the normalization step.
 
 ```{r ftna}
-net_ftna <- build_network(human_cat, method = "ftna",
+net_ftna <- build_network(human_sub, method = "ftna",
                           action = "category", actor = "session_id",
                           time = "timestamp")
 print(net_ftna)
@@ -85,7 +91,7 @@ print(net_ftna)
 The attention method applies temporal decay weighting, giving more importance to recent transitions within each sequence. The `lambda` parameter controls the decay rate: higher values produce faster decay. This captures the idea that later events in a process may be more indicative of the underlying dynamics than early ones --- for example, in learning settings where initial exploration gives way to more purposeful regulatory behavior.
 
 ```{r atna}
-net_atna <- build_network(human_cat, method = "atna",
+net_atna <- build_network(human_sub, method = "atna",
                           action = "category", actor = "session_id",
                           time = "timestamp")
 print(net_atna)
@@ -151,9 +157,9 @@ reliability(net_tna)
 
 Bootstrapping is a re-sampling technique that entails repeatedly --- usually hundreds, if not thousands of times --- drawing samples from the original dataset with replacement to estimate the model for each of these samples. When edges consistently appear across the majority of the estimated models, they are considered stable and significant. In doing so, bootstrapping helps effectively filter out small, negligible, or spurious edges resulting in a stable model and valid model. The bootstrap also provides confidence intervals and p-values for each edge weight, offering a quantifiable measure of uncertainty and robustness for each transition in the network.
 
-```{r bootstrap, cache = TRUE}
+```{r bootstrap}
 set.seed(42)
-boot <- bootstrap_network(net_tna)
+boot <- bootstrap_network(net_tna, iter = 100)
 boot
 ```
 
@@ -162,8 +168,8 @@ boot
 
 Centrality measures provide a quantification of the role or importance of a state or an event in the process. However, the robustness of these rankings must be verified. Centrality stability analysis quantifies how robust centrality rankings are to case-dropping: the CS-coefficient is the maximum proportion of cases that can be dropped while maintaining a correlation of at least 0.7 with the original centrality values. A CS-coefficient above 0.5 indicates stable centrality rankings; below 0.25 indicates instability and the centrality ranking should not be interpreted.
 
-```{r cs, cache = TRUE}
-centrality_stability(net_tna)
+```{r cs}
+centrality_stability(net_tna, iter = 100)
 ```
 
 ## Clustering
@@ -188,8 +194,9 @@ Nestimate::centrality(Clusters)
 
 TNA offers a rigorous systematic method for process comparison based on permutation. Permutation testing is particularly important for data-driven clusters: because clustering algorithms partition sequences to maximize between-group separation, some degree of apparent difference is guaranteed by construction. The permutation test provides the necessary corrective --- by randomly reassigning sequences to groups while preserving internal sequential structure, it constructs null distributions for edge-level differences. Only differences that exceed this null distribution constitute evidence of genuine structural divergence rather than algorithmic artifacts.
 
-```{r perm-clusters, cache = TRUE}
-perm <- permutation_test(Clusters$`Cluster 1`, Clusters$`Cluster 2`)
+```{r perm-clusters}
+perm <- permutation_test(Clusters$`Cluster 1`, Clusters$`Cluster 2`,
+                         iter = 100)
 perm
 ```
 
@@ -198,7 +205,7 @@ perm
 
 Mixed Markov Models (MMM) provide an alternative clustering approach that uses an EM algorithm to discover latent subgroups with distinct transition dynamics. Unlike `cluster_data()`, which clusters based on sequence dissimilarity, MMM directly models the transition probabilities within each component and assigns sequences probabilistically through soft assignments. The `covariates` argument integrates external variables into the EM algorithm, allowing mixing proportions to depend on observed characteristics.
 
-```{r mmm, cache = TRUE}
+```{r mmm}
 data("group_regulation_long")
 
 net_GR <- build_network(group_regulation_long, method = "tna",
@@ -221,7 +228,7 @@ Mnets
 
 `cluster_data()` supports post-hoc covariate analysis: covariates do not influence the clustering but are analyzed after the fact to characterize who ends up in which cluster. This is the appropriate approach when the clustering should reflect behavioral patterns alone, and the researcher then asks whether those patterns are associated with external variables.
 
-```{r posthoc, cache = TRUE}
+```{r posthoc}
 Post <- cluster_data(net_GR, k = 2, covariates = c("Achiever"))
 summary(Post)
 ```
@@ -293,8 +300,8 @@ round(pred, 3)
 
 Non-parametric bootstrap assesses edge stability, centrality stability, and provides significance tests for edge and centrality differences. The `boot_glasso()` function is specialized for graphical lasso networks, providing edge inclusion frequencies, confidence intervals, CS-coefficients, and pairwise difference tests in a single call.
 
-```{r boot-glasso, cache = TRUE}
-boot_gl <- boot_glasso(net_glasso, iter = 1000,
+```{r boot-glasso}
+boot_gl <- boot_glasso(net_glasso, iter = 100,
                        centrality = c("strength", "expected_influence"),
                        seed = 42)
 ```
