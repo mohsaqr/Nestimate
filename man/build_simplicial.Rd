@@ -15,7 +15,7 @@ build_simplicial(
 }
 \arguments{
 \item{x}{A square matrix, \code{tna}, \code{netobject},
-\code{net_hon}, or \code{net_hypa}.}
+\code{net_hon}, \code{net_hypa}, or \code{net_mogen}.}
 
 \item{type}{Construction type: \code{"clique"} (default),
 \code{"pathway"}, or \code{"vr"}.}

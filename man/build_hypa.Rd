@@ -4,7 +4,7 @@
 \alias{build_hypa}
 \title{Detect Path Anomalies via HYPA}
 \usage{
-build_hypa(data, k = 3L, alpha = 0.05, min_count = 5L)
+build_hypa(data, k = 3L, alpha = 0.05, min_count = 5L, p_adjust = "BH")
 }
 \arguments{
 \item{data}{A data.frame (rows = trajectories), list of character vectors,
@@ -23,19 +23,30 @@ paths with score > 1-alpha are over-represented.}
 classified as anomalous (default 2). Paths with fewer observations
 are always classified as \code{"normal"} regardless of their
 HYPA score, since single occurrences are unreliable.}
+
+\item{p_adjust}{Character. Method for multiple testing correction of
+p-values. Default \code{"BH"} (Benjamini-Hochberg FDR control).
+Accepts any method from \code{\link[stats]{p.adjust.methods}} or
+\code{"none"} to skip correction. Under- and over-representation
+p-values are adjusted separately (two-sided testing).}
 }
 \value{
 An object of class \code{net_hypa} with components:
 \describe{
 \item{scores}{Data frame with path, from, to, observed, expected,
-ratio, p_value, anomaly columns. The \code{path} column shows
-the full state sequence (e.g., "A -> B -> C"); \code{from} is the
-context (conditioning states); \code{to} is the next state;
-\code{ratio} is observed / expected.}
+ratio, p_value, p_adjusted_under, p_adjusted_over, anomaly
+columns. The \code{path} column shows the full state sequence
+(e.g., "A -> B -> C"); \code{from} is the context (conditioning
+states); \code{to} is the next state; \code{ratio} is
+observed / expected; \code{p_value} is the raw hypergeometric
+CDF value; \code{p_adjusted_under} and \code{p_adjusted_over}
+are the corrected p-values for under- and over-representation
+tests respectively.}
 \item{adjacency}{Weighted adjacency matrix of the De Bruijn graph.}
 \item{xi}{Fitted propensity matrix.}
 \item{k}{Order of the De Bruijn graph.}
 \item{alpha}{Significance threshold used.}
+\item{p_adjust}{Multiple testing correction method used.}
 \item{n_anomalous}{Number of anomalous paths detected.}
 \item{n_over}{Number of over-represented paths.}
 \item{n_under}{Number of under-represented paths.}

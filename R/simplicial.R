@@ -28,7 +28,7 @@
 #' }
 #'
 #' @param x A square matrix, \code{tna}, \code{netobject},
-#'   \code{net_hon}, or \code{net_hypa}.
+#'   \code{net_hon}, \code{net_hypa}, or \code{net_mogen}.
 #' @param type Construction type: \code{"clique"} (default),
 #'   \code{"pathway"}, or \code{"vr"}.
 #' @param threshold Minimum absolute edge weight to include an edge
@@ -159,12 +159,30 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
     )
     nodes <- sort(unique(unlist(parts)))
     raw_paths <- anom$path
+  } else if (inherits(x, "net_mogen")) {
+    # Use mogen_transitions() at optimal (or highest available) order
+    # Its $path column is already in "A -> B -> C" format
+    order_used <- x$optimal_order
+    if (order_used < 1L) order_used <- max(x$orders[x$orders >= 1L], 0L)
+    if (order_used < 1L) {
+      stop("MOGen model has no higher-order transitions (optimal_order = 0)",
+           call. = FALSE)
+    }
+    trans <- mogen_transitions(x, order = order_used)
+    if (nrow(trans) == 0L) {
+      return(.make_simplicial_complex(list(), x$states, "pathway"))
+    }
+    if (!is.null(max_pathways) && nrow(trans) > max_pathways) {
+      trans <- trans[seq_len(max_pathways), , drop = FALSE]
+    }
+    nodes <- x$states
+    raw_paths <- trans$path
   } else if (inherits(x, c("tna", "netobject"))) {
     hon_obj <- build_hon(.coerce_sequence_input(x), ...)
     return(.build_simplicial_pathway(hon_obj, max_dim, max_pathways))
   } else {
-    stop("For type='pathway', x must be a net_hon, net_hypa, tna, ",
-         "or netobject.", call. = FALSE)
+    stop("For type='pathway', x must be a net_hon, net_hypa, net_mogen, ",
+         "tna, or netobject.", call. = FALSE)
   }
 
   if (length(raw_paths) == 0L) {

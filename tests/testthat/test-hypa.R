@@ -310,3 +310,176 @@ test_that("summary.net_hypa shows over/under counts", {
   expect_true(any(grepl("over:", out)))
   expect_true(any(grepl("under:", out)))
 })
+
+
+# ===========================================================================
+# Section 10: Multiple testing correction (p_adjust)
+# ===========================================================================
+
+test_that("p_adjust='none' matches original behavior (no correction)", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(5, c("A", "B", "D"), simplify = FALSE),
+    replicate(5, c("C", "B", "A"), simplify = FALSE),
+    replicate(2, c("D", "B", "C"), simplify = FALSE),
+    replicate(2, c("C", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+                  p_adjust = "none")
+
+  expect_equal(h$p_adjust, "none")
+
+  # With p_adjust="none", p_adjusted_under should equal p_value
+  # and p_adjusted_over should equal 1 - p_value
+  expect_equal(h$scores$p_adjusted_under, h$scores$p_value)
+  expect_equal(h$scores$p_adjusted_over, 1 - h$scores$p_value)
+})
+
+test_that("default BH adjustment produces p_adjusted columns in scores", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(5, c("A", "B", "D"), simplify = FALSE),
+    replicate(5, c("C", "B", "A"), simplify = FALSE),
+    replicate(2, c("D", "B", "C"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+
+  expect_equal(h$p_adjust, "BH")
+  expect_true("p_adjusted_under" %in% names(h$scores))
+  expect_true("p_adjusted_over" %in% names(h$scores))
+  expect_true("p_value" %in% names(h$scores))
+
+  # Adjusted p-values should be in [0, 1]
+  expect_true(all(h$scores$p_adjusted_under >= 0))
+  expect_true(all(h$scores$p_adjusted_under <= 1))
+  expect_true(all(h$scores$p_adjusted_over >= 0))
+  expect_true(all(h$scores$p_adjusted_over <= 1))
+})
+
+test_that("BH adjustment can differ from no correction on biased data", {
+  trajs <- c(
+    replicate(80, c("A", "B", "C"), simplify = FALSE),
+    replicate(3, c("A", "B", "D"), simplify = FALSE),
+    replicate(3, c("C", "B", "A"), simplify = FALSE),
+    replicate(3, c("D", "B", "C"), simplify = FALSE),
+    replicate(3, c("C", "B", "D"), simplify = FALSE),
+    replicate(3, c("A", "C", "B"), simplify = FALSE),
+    replicate(3, c("B", "C", "D"), simplify = FALSE)
+  )
+
+  h_none <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+                       p_adjust = "none")
+  h_bh   <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+                       p_adjust = "BH")
+
+  # BH should be at least as conservative as none (fewer or equal anomalies)
+  expect_true(h_bh$n_anomalous <= h_none$n_anomalous)
+})
+
+test_that("bonferroni is more conservative than BH", {
+  trajs <- c(
+    replicate(80, c("A", "B", "C"), simplify = FALSE),
+    replicate(3, c("A", "B", "D"), simplify = FALSE),
+    replicate(3, c("C", "B", "A"), simplify = FALSE),
+    replicate(3, c("D", "B", "C"), simplify = FALSE),
+    replicate(3, c("C", "B", "D"), simplify = FALSE),
+    replicate(3, c("A", "C", "B"), simplify = FALSE),
+    replicate(3, c("B", "C", "D"), simplify = FALSE)
+  )
+
+  h_bh   <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+                       p_adjust = "BH")
+  h_bonf <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+                       p_adjust = "bonferroni")
+
+  # Bonferroni should be at least as conservative as BH
+  expect_true(h_bonf$n_anomalous <= h_bh$n_anomalous)
+
+  # Bonferroni adjusted p-values should be >= BH adjusted p-values
+  # (merge on path to compare)
+  merged <- merge(h_bh$scores[, c("path", "p_adjusted_under", "p_adjusted_over")],
+                  h_bonf$scores[, c("path", "p_adjusted_under", "p_adjusted_over")],
+                  by = "path", suffixes = c("_bh", "_bonf"))
+  expect_true(all(merged$p_adjusted_under_bonf >= merged$p_adjusted_under_bh - 1e-10))
+  expect_true(all(merged$p_adjusted_over_bonf >= merged$p_adjusted_over_bh - 1e-10))
+})
+
+test_that("$over and $under data frames have p_adjusted columns", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2, c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+
+  # $over and $under should have p_adjusted columns as subsets of scores
+  if (nrow(h$over) > 0L) {
+    expect_true("p_adjusted_under" %in% names(h$over))
+    expect_true("p_adjusted_over" %in% names(h$over))
+  }
+  if (nrow(h$under) > 0L) {
+    expect_true("p_adjusted_under" %in% names(h$under))
+    expect_true("p_adjusted_over" %in% names(h$under))
+  }
+})
+
+test_that("invalid p_adjust method errors", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
+  expect_error(build_hypa(trajs, k = 1L, p_adjust = "invalid_method"),
+               "p_adjust.*must be one of")
+  expect_error(build_hypa(trajs, k = 1L, p_adjust = 42),
+               "p_adjust.*must be one of")
+  expect_error(build_hypa(trajs, k = 1L, p_adjust = c("BH", "bonferroni")),
+               "p_adjust.*must be one of")
+})
+
+test_that("p_adjust stored in result object", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"), c("A", "C", "B"))
+  h_bh <- build_hypa(trajs, k = 1L, p_adjust = "BH")
+  h_none <- build_hypa(trajs, k = 1L, p_adjust = "none")
+  h_bonf <- build_hypa(trajs, k = 1L, p_adjust = "bonferroni")
+
+  expect_equal(h_bh$p_adjust, "BH")
+  expect_equal(h_none$p_adjust, "none")
+  expect_equal(h_bonf$p_adjust, "bonferroni")
+})
+
+test_that("print.net_hypa shows p_adjust", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
+  h <- build_hypa(trajs, k = 1L, p_adjust = "BH")
+  out <- capture.output(print(h))
+  expect_true(any(grepl("p_adjust=BH", out)))
+
+  h_none <- build_hypa(trajs, k = 1L, p_adjust = "none")
+  out_none <- capture.output(print(h_none))
+  expect_true(any(grepl("p_adjust=none", out_none)))
+})
+
+test_that("summary.net_hypa shows p_adjust", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"), c("A", "C", "B"))
+  h <- build_hypa(trajs, k = 1L, p_adjust = "bonferroni")
+  out <- capture.output(summary(h))
+  expect_true(any(grepl("p_adjust: bonferroni", out)))
+})
+
+test_that("two-sided correction adjusts under and over separately", {
+  # Create data with enough edges to see the effect of separate adjustments
+  set.seed(123)
+  trajs <- c(
+    replicate(60, c("A", "B", "C"), simplify = FALSE),
+    replicate(3, c("A", "B", "D"), simplify = FALSE),
+    replicate(3, c("C", "B", "A"), simplify = FALSE),
+    replicate(3, c("D", "B", "C"), simplify = FALSE),
+    replicate(3, c("A", "C", "D"), simplify = FALSE),
+    replicate(3, c("D", "C", "A"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+
+  # Verify that p_adjusted_under and p_adjusted_over are adjusted separately
+  # by checking they equal p.adjust applied to the raw values
+  raw_p_under <- h$scores$p_value
+  raw_p_over <- 1 - h$scores$p_value
+  expect_equal(h$scores$p_adjusted_under,
+               stats::p.adjust(raw_p_under, method = "BH"))
+  expect_equal(h$scores$p_adjusted_over,
+               stats::p.adjust(raw_p_over, method = "BH"))
+})

@@ -130,17 +130,27 @@
 #'   classified as anomalous (default 2). Paths with fewer observations
 #'   are always classified as \code{"normal"} regardless of their
 #'   HYPA score, since single occurrences are unreliable.
+#' @param p_adjust Character. Method for multiple testing correction of
+#'   p-values. Default \code{"BH"} (Benjamini-Hochberg FDR control).
+#'   Accepts any method from \code{\link[stats]{p.adjust.methods}} or
+#'   \code{"none"} to skip correction. Under- and over-representation
+#'   p-values are adjusted separately (two-sided testing).
 #' @return An object of class \code{net_hypa} with components:
 #'   \describe{
 #'     \item{scores}{Data frame with path, from, to, observed, expected,
-#'       ratio, p_value, anomaly columns. The \code{path} column shows
-#'       the full state sequence (e.g., "A -> B -> C"); \code{from} is the
-#'       context (conditioning states); \code{to} is the next state;
-#'       \code{ratio} is observed / expected.}
+#'       ratio, p_value, p_adjusted_under, p_adjusted_over, anomaly
+#'       columns. The \code{path} column shows the full state sequence
+#'       (e.g., "A -> B -> C"); \code{from} is the context (conditioning
+#'       states); \code{to} is the next state; \code{ratio} is
+#'       observed / expected; \code{p_value} is the raw hypergeometric
+#'       CDF value; \code{p_adjusted_under} and \code{p_adjusted_over}
+#'       are the corrected p-values for under- and over-representation
+#'       tests respectively.}
 #'     \item{adjacency}{Weighted adjacency matrix of the De Bruijn graph.}
 #'     \item{xi}{Fitted propensity matrix.}
 #'     \item{k}{Order of the De Bruijn graph.}
 #'     \item{alpha}{Significance threshold used.}
+#'     \item{p_adjust}{Multiple testing correction method used.}
 #'     \item{n_anomalous}{Number of anomalous paths detected.}
 #'     \item{n_over}{Number of over-represented paths.}
 #'     \item{n_under}{Number of under-represented paths.}
@@ -165,12 +175,23 @@
 #' }
 #'
 #' @export
-build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
+build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L,
+                       p_adjust = "BH") {
   # --- Coerce tna/netobject to labeled data.frame ---
   data <- .coerce_sequence_input(data)
 
   k <- as.integer(k)
   min_count <- as.integer(min_count)
+
+  # Validate p_adjust method
+  valid_methods <- c(stats::p.adjust.methods, "none")
+  if (!is.character(p_adjust) || length(p_adjust) != 1L ||
+      !p_adjust %in% valid_methods) {
+    stop(sprintf("'p_adjust' must be one of: %s",
+                 paste(valid_methods, collapse = ", ")),
+         call. = FALSE)
+  }
+
   stopifnot(
     "'data' must be a data.frame or list" =
       is.data.frame(data) || is.list(data),
@@ -204,11 +225,27 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
   # Compute HYPA scores
   scores <- .hypa_compute_scores(adj, xi)
 
+  # Apply multiple testing correction (two-sided: under and over separately)
+  # p_value = P(X <= obs) from hypergeometric CDF
+
+  # Under-representation: small p_value is significant
+  # Over-representation: small (1 - p_value) is significant
+  if (p_adjust != "none" && nrow(scores) > 0L) {
+    scores$p_adjusted_under <- stats::p.adjust(scores$p_value,
+                                               method = p_adjust)
+    scores$p_adjusted_over <- stats::p.adjust(1 - scores$p_value,
+                                              method = p_adjust)
+  } else {
+    scores$p_adjusted_under <- scores$p_value
+    scores$p_adjusted_over <- 1 - scores$p_value
+  }
+
   # Classify anomalies: must exceed alpha AND min_count
   scores$anomaly <- vapply(seq_len(nrow(scores)), function(i) {
     if (scores$observed[i] < min_count) return("normal")
-    s <- scores$p_value[i]
-    if (s < alpha) "under" else if (s > (1 - alpha)) "over" else "normal"
+    if (scores$p_adjusted_under[i] < alpha) "under"
+    else if (scores$p_adjusted_over[i] < alpha) "over"
+    else "normal"
   }, character(1L))
 
   # Pre-sort: anomalous first (over by ratio desc, then under by ratio asc),
@@ -238,6 +275,7 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
     xi = xi,
     k = k,
     alpha = alpha,
+    p_adjust = p_adjust,
     n_anomalous = n_over + n_under,
     n_over = n_over,
     n_under = n_under,
@@ -284,7 +322,13 @@ print.net_hypa <- function(x, ...) {
   cat("HYPA: Path Anomaly Detection\n")
   cat(sprintf("  Order k:      %d\n", x$k))
   cat(sprintf("  Edges:        %d\n", x$n_edges))
-  cat(sprintf("  Anomalous:    %d (alpha=%.2f)\n", x$n_anomalous, x$alpha))
+  p_adj_label <- if (is.null(x$p_adjust) || x$p_adjust == "none") {
+    "none"
+  } else {
+    x$p_adjust
+  }
+  cat(sprintf("  Anomalous:    %d (alpha=%.2f, p_adjust=%s)\n",
+              x$n_anomalous, x$alpha, p_adj_label))
   cat(sprintf("    Over-repr:  %d\n", x$n_over))
   cat(sprintf("    Under-repr: %d\n", x$n_under))
   invisible(x)
@@ -320,7 +364,12 @@ summary.net_hypa <- function(object, n = 10L, ...) {
   cat("HYPA Summary\n\n")
   cat(sprintf("  Order: %d | Nodes: %d | Edges: %d\n",
               object$k, nrow(object$nodes), object$n_edges))
-  cat(sprintf("  Alpha: %.2f\n", object$alpha))
+  p_adj_label <- if (is.null(object$p_adjust) || object$p_adjust == "none") {
+    "none"
+  } else {
+    object$p_adjust
+  }
+  cat(sprintf("  Alpha: %.2f | p_adjust: %s\n", object$alpha, p_adj_label))
   cat(sprintf("  Anomalous: %d (over: %d, under: %d)\n\n",
               object$n_anomalous, object$n_over, object$n_under))
 
