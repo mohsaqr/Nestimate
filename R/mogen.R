@@ -492,6 +492,7 @@ path_counts <- function(data, k = 2L, top = NULL) {
   }
 
   all_grams <- unlist(lapply(trajectories, function(traj) {
+    traj <- traj[!is.na(traj)]
     n <- length(traj)
     if (n < k) return(character(0L))
     vapply(seq_len(n - k + 1L), function(i) {

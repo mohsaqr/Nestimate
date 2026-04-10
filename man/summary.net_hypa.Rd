@@ -4,10 +4,13 @@
 \alias{summary.net_hypa}
 \title{Summary Method for net_hypa}
 \usage{
-\method{summary}{net_hypa}(object, ...)
+\method{summary}{net_hypa}(object, n = 10L, ...)
 }
 \arguments{
 \item{object}{A \code{net_hypa} object.}
+
+\item{n}{Integer. Maximum number of over/under-represented paths to
+display (default: 10).}
 
 \item{...}{Additional arguments (ignored).}
 }

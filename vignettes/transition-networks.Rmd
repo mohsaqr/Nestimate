@@ -83,6 +83,7 @@ net_ftna <- build_network(human_sub, method = "ftna",
                           action = "category", actor = "session_id",
                           time = "timestamp")
 print(net_ftna)
+
 ```
 
 

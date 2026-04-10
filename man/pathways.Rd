@@ -4,6 +4,7 @@
 \alias{pathways}
 \alias{pathways.net_hon}
 \alias{pathways.net_hypa}
+\alias{pathways.netobject}
 \alias{pathways.net_association_rules}
 \alias{pathways.net_link_prediction}
 \alias{pathways.net_mogen}
@@ -14,6 +15,8 @@ pathways(x, ...)
 \method{pathways}{net_hon}(x, min_count = 1L, min_prob = 0, top = NULL, order = NULL, ...)
 
 \method{pathways}{net_hypa}(x, type = "all", ...)
+
+\method{pathways}{netobject}(x, ho_method = c("hon", "hypa"), ...)
 
 \method{pathways}{net_association_rules}(x, top = NULL, min_lift = NULL, min_confidence = NULL, ...)
 
@@ -42,6 +45,9 @@ optimal order from model selection.}
 \item{type}{Character. Which anomalies to include: \code{"all"}
 (default), \code{"over"}, or \code{"under"}.}
 
+\item{ho_method}{Character. Higher-order method: \code{"hon"} (default) or
+\code{"hypa"}.}
+
 \item{min_lift}{Numeric or NULL. Additional lift filter applied on top of
 the object's original threshold (default: NULL).}
 
@@ -61,6 +67,8 @@ pathway (default: 3).}
 A character vector of pathway strings in arrow notation
 (e.g. \code{"A B -> C"}), suitable for
 \code{cograph::plot_simplicial()}.
+
+A character vector of pathway strings.
 
 A character vector of pathway strings.
 
@@ -92,6 +100,12 @@ For \code{net_mogen}: extracts all transitions at the optimal order
 \item \code{pathways(net_hon)}: Extract higher-order pathways from HON
 
 \item \code{pathways(net_hypa)}: Extract anomalous pathways from HYPA
+
+\item \code{pathways(netobject)}: Extract pathways from a netobject
+
+Builds a Higher-Order Network (HON) from the netobject's sequence data
+and returns the higher-order pathways. Requires that the netobject was
+built from sequence data (has \code{$data}).
 
 \item \code{pathways(net_association_rules)}: Extract pathways from association rules
 

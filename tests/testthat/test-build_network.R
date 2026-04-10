@@ -649,10 +649,13 @@ test_that("predictability works for netobject_ml", {
   expect_true(all(r2$within >= 0 & r2$within <= 1))
 })
 
-test_that("print does not show predictability", {
+test_that("print does not show literal 'predictability' (lowercase)", {
   df <- .make_freq_data(n = 80, p = 5)
   net <- build_network(df, method = "glasso", params = list(nlambda = 20L))
   out <- capture.output(print(net))
+  # Predictability display uses capitalised label "Predictability (R²)"
+  expect_true(any(grepl("Predictability", out)))
+  # The lowercase word "predictability" should NOT appear in output
   expect_false(any(grepl("predictability", out)))
 })
 
@@ -1570,5 +1573,102 @@ test_that("auto-convert: grouped glasso from sequences", {
   expect_s3_class(nets, "netobject_group")
   expect_equal(length(nets), 2)
   expect_equal(nets[[1]]$method, "glasso")
+})
+
+# ---- 21. Predictability (R²) auto-computation ----
+
+test_that("glasso netobject carries $predictability by default", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  df$x2 <- df$x1 * 0.8 + rnorm(80, sd = 0.5)
+  net <- build_network(df, method = "glasso")
+  expect_true(!is.null(net$predictability))
+  expect_equal(length(net$predictability), net$n_nodes)
+  expect_equal(names(net$predictability), net$nodes$label)
+  expect_true(all(net$predictability >= 0 & net$predictability <= 1))
+})
+
+test_that("pcor netobject carries $predictability by default", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  net <- build_network(df, method = "pcor")
+  expect_true(!is.null(net$predictability))
+  expect_equal(length(net$predictability), net$n_nodes)
+  expect_true(all(net$predictability >= 0 & net$predictability <= 1))
+})
+
+test_that("cor netobject carries $predictability by default", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  net <- build_network(df, method = "cor")
+  expect_true(!is.null(net$predictability))
+  expect_equal(length(net$predictability), net$n_nodes)
+  expect_true(all(net$predictability >= 0 & net$predictability <= 1))
+})
+
+test_that("predictability = FALSE suppresses computation", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  net <- build_network(df, method = "glasso", predictability = FALSE)
+  expect_null(net$predictability)
+})
+
+test_that("directed networks do not carry $predictability", {
+  seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+  net <- build_network(seqs, method = "relative")
+  expect_null(net$predictability)
+})
+
+test_that("grouped glasso carries per-group predictability", {
+  set.seed(42)
+  df <- data.frame(
+    x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80),
+    grp = rep(c("A", "B"), each = 40)
+  )
+  nets <- build_network(df, method = "glasso", group = "grp")
+  expect_true(!is.null(nets$A$predictability))
+  expect_true(!is.null(nets$B$predictability))
+  expect_equal(length(nets$A$predictability), nets$A$n_nodes)
+})
+
+test_that("predictability.netobject_group returns per-group list", {
+  set.seed(42)
+  df <- data.frame(
+    x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80),
+    grp = rep(c("A", "B"), each = 40)
+  )
+  nets <- build_network(df, method = "glasso", group = "grp")
+  r2 <- predictability(nets)
+  expect_true(is.list(r2))
+  expect_equal(length(r2), 2L)
+  expect_true(all(vapply(r2, is.numeric, logical(1))))
+})
+
+test_that("print.netobject shows predictability for glasso", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  df$x2 <- df$x1 * 0.8 + rnorm(80, sd = 0.5)
+  net <- build_network(df, method = "glasso")
+  out <- capture.output(print(net))
+  expect_true(any(grepl("Predictability", out)))
+})
+
+test_that("predictability() errors informatively on unsupported methods", {
+  seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+  net <- build_network(seqs, method = "relative")
+  expect_error(predictability(net), "does not support predictability")
+})
+
+test_that("predictability = FALSE is honoured in level = 'both'", {
+  set.seed(42)
+  df <- data.frame(
+    x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
+    id = rep(1:20, each = 5)
+  )
+  net <- build_network(df, method = "glasso",
+                       params = list(id = "id", nlambda = 20L),
+                       level = "both", predictability = FALSE)
+  expect_null(net$between$predictability)
+  expect_null(net$within$predictability)
 })
 

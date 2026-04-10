@@ -1,3 +1,10 @@
+# Nestimate 0.3.4
+
+* HYPA: Renamed `hypa_score` column to `p_value` for clarity. Added `$over`, `$under`, `$n_over`, `$n_under` fields to `net_hypa` objects. Scores are now pre-sorted with anomalous paths first.
+* HYPA: `summary.net_hypa()` now shows over/under-represented paths separately with a configurable `n` parameter.
+* `pathways.netobject()`: New S3 method to extract higher-order pathways directly from a netobject (builds HON or HYPA internally).
+* `path_counts()`: Now handles NAs in trajectories by stripping them before k-gram counting.
+
 # Nestimate 0.2.15
 
 * Preparing for publication

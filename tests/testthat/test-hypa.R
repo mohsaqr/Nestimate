@@ -42,12 +42,12 @@ test_that(".hypa_compute_scores returns correct format", {
 
   expect_true(is.data.frame(scores))
   expect_true(all(c("path", "from", "to", "observed", "expected",
-                     "ratio", "hypa_score", "anomaly") %in% names(scores)))
+                     "ratio", "p_value", "anomaly") %in% names(scores)))
   expect_equal(nrow(scores), sum(adj > 0))
 
   # HYPA scores should be in [0, 1]
-  expect_true(all(scores$hypa_score >= 0))
-  expect_true(all(scores$hypa_score <= 1))
+  expect_true(all(scores$p_value >= 0))
+  expect_true(all(scores$p_value <= 1))
 })
 
 test_that(".hypa_compute_scores handles empty graph", {
@@ -127,8 +127,8 @@ test_that("HYPA scores are in [0, 1]", {
   })
   h <- build_hypa(trajs, k = 1L)
 
-  expect_true(all(h$scores$hypa_score >= 0))
-  expect_true(all(h$scores$hypa_score <= 1))
+  expect_true(all(h$scores$p_value >= 0))
+  expect_true(all(h$scores$p_value <= 1))
 })
 
 test_that("HYPA expected values are positive", {
@@ -244,4 +244,69 @@ test_that("pathways.net_hypa returns empty when no anomalies", {
   pw <- pathways(h)
   # With near-zero alpha threshold, likely no anomalies
   expect_true(is.character(pw))
+})
+
+# ===========================================================================
+# Section 9: New fields ($over, $under, $n_over, $n_under, sorting)
+# ===========================================================================
+
+test_that("build_hypa stores $over and $under data frames", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2,  c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+
+  expect_true(is.data.frame(h$over))
+  expect_true(is.data.frame(h$under))
+  expect_equal(nrow(h$over), h$n_over)
+  expect_equal(nrow(h$under), h$n_under)
+  expect_equal(h$n_anomalous, h$n_over + h$n_under)
+
+  # $over should only contain "over" anomalies
+  if (nrow(h$over) > 0L) {
+    expect_true(all(h$over$anomaly == "over"))
+  }
+  # $under should only contain "under" anomalies
+  if (nrow(h$under) > 0L) {
+    expect_true(all(h$under$anomaly == "under"))
+  }
+})
+
+test_that("build_hypa pre-sorts scores: anomalous first", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2,  c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+
+  if (h$n_anomalous > 0L && nrow(h$scores) > h$n_anomalous) {
+    # Anomalous rows should come before normal rows
+    anomaly_positions <- which(h$scores$anomaly != "normal")
+    normal_positions <- which(h$scores$anomaly == "normal")
+    if (length(anomaly_positions) > 0L && length(normal_positions) > 0L) {
+      expect_true(max(anomaly_positions) < min(normal_positions))
+    }
+  }
+})
+
+test_that("summary.net_hypa respects n parameter", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2,  c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  out <- capture.output(summary(h, n = 2L))
+  expect_true(any(grepl("HYPA", out)))
+})
+
+test_that("summary.net_hypa shows over/under counts", {
+  trajs <- c(
+    replicate(50, c("A", "B", "C"), simplify = FALSE),
+    replicate(2,  c("A", "B", "D"), simplify = FALSE)
+  )
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  out <- capture.output(summary(h))
+  expect_true(any(grepl("over:", out)))
+  expect_true(any(grepl("under:", out)))
 })

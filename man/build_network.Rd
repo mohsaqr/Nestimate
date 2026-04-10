@@ -21,6 +21,7 @@ build_network(
   threshold = 0,
   level = NULL,
   time_threshold = 900,
+  predictability = TRUE,
   params = list(),
   ...
 )
@@ -83,6 +84,11 @@ methods. One of \code{NULL}, \code{"between"}, \code{"within"},
 \item{time_threshold}{Numeric. Maximum time gap (seconds) for long format
 session splitting. Default: \code{900}.}
 
+\item{predictability}{Logical. If \code{TRUE} (default), compute and store
+node predictability (R-squared) for undirected association methods
+(glasso, pcor, cor). Stored in \code{$predictability} and auto-displayed
+as donuts by \code{cograph::splot()}.}
+
 \item{params}{Named list. Method-specific parameters passed to the estimator
 function (e.g. \code{list(gamma = 0.5)} for glasso, or
 \code{list(format = "wide")} for transition methods). This is the key
@@ -111,6 +117,9 @@ An object of class \code{c("netobject", "cograph_network")} containing:
 \item{meta}{List with \code{source}, \code{layout}, and \code{tna} metadata
 (cograph-compatible).}
 \item{node_groups}{Node groupings data frame, or NULL.}
+\item{predictability}{Named numeric vector of R-squared predictability
+values per node (for undirected association methods when
+\code{predictability = TRUE}). NULL for directed methods.}
 }
 Method-specific extras (e.g. \code{precision_matrix}, \code{cor_matrix},
 \code{frequency_matrix}, \code{lambda_selected}, etc.) are preserved

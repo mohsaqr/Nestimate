@@ -431,6 +431,18 @@ test_that("path_counts rejects k < 2", {
   expect_error(path_counts(trajs, k = 1L), "k.*must be >= 2")
 })
 
+# --- path_counts: NA handling ---
+test_that("path_counts handles NAs in trajectories", {
+  trajs <- list(c("A", "B", NA, "C", "D"), c("A", NA, "B"))
+  result <- path_counts(trajs, k = 2L)
+  expect_true(is.data.frame(result))
+  # NAs stripped: first traj becomes c("A","B","C","D") → 3 bigrams
+  # second becomes c("A","B") → 1 bigram
+  expect_true(nrow(result) > 0L)
+  # No NA in path column
+  expect_false(any(grepl("NA", result$path, fixed = TRUE)))
+})
+
 # --- state_frequencies: data.frame input branch ---
 test_that("state_frequencies works with data.frame input", {
   df <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"),

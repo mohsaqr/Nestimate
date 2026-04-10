@@ -115,6 +115,28 @@ pathways.net_hypa <- function(x, type = "all", ...) {
 }
 
 
+#' @describeIn pathways Extract pathways from a netobject
+#'
+#' Builds a Higher-Order Network (HON) from the netobject's sequence data
+#' and returns the higher-order pathways. Requires that the netobject was
+#' built from sequence data (has \code{$data}).
+#'
+#' @param ho_method Character. Higher-order method: \code{"hon"} (default) or
+#'   \code{"hypa"}.
+#'
+#' @return A character vector of pathway strings.
+#'
+#' @export
+pathways.netobject <- function(x, ho_method = c("hon", "hypa"), ...) {
+  ho_method <- match.arg(ho_method)
+  if (ho_method == "hon") {
+    pathways(build_hon(x), ...)
+  } else {
+    pathways(build_hypa(x), ...)
+  }
+}
+
+
 #' @describeIn pathways Extract pathways from association rules
 #'
 #' Converts association rules \code{{A, B} => {C}} into pathway strings

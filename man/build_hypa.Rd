@@ -28,7 +28,7 @@ HYPA score, since single occurrences are unreliable.}
 An object of class \code{net_hypa} with components:
 \describe{
 \item{scores}{Data frame with path, from, to, observed, expected,
-ratio, hypa_score, anomaly columns. The \code{path} column shows
+ratio, p_value, anomaly columns. The \code{path} column shows
 the full state sequence (e.g., "A -> B -> C"); \code{from} is the
 context (conditioning states); \code{to} is the next state;
 \code{ratio} is observed / expected.}

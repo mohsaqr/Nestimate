@@ -52,6 +52,10 @@
 #'   \code{"overlapping"}. Default: \code{"non-overlapping"}.
 #' @param time_threshold Numeric. Maximum time gap (seconds) for long format
 #'   session splitting. Default: \code{900}.
+#' @param predictability Logical. If \code{TRUE} (default), compute and store
+#'   node predictability (R-squared) for undirected association methods
+#'   (glasso, pcor, cor). Stored in \code{$predictability} and auto-displayed
+#'   as donuts by \code{cograph::splot()}.
 #' @param ... Additional arguments passed to the estimator function.
 #'
 #' @return An object of class \code{c("netobject", "cograph_network")} containing:
@@ -73,6 +77,9 @@
 #'   \item{meta}{List with \code{source}, \code{layout}, and \code{tna} metadata
 #'     (cograph-compatible).}
 #'   \item{node_groups}{Node groupings data frame, or NULL.}
+#'   \item{predictability}{Named numeric vector of R-squared predictability
+#'     values per node (for undirected association methods when
+#'     \code{predictability = TRUE}). NULL for directed methods.}
 #' }
 #' Method-specific extras (e.g. \code{precision_matrix}, \code{cor_matrix},
 #' \code{frequency_matrix}, \code{lambda_selected}, etc.) are preserved
@@ -139,6 +146,7 @@ build_network <- function(data,
                           threshold = 0,
                           level = NULL,
                           time_threshold = 900,
+                          predictability = TRUE,
                           params = list(),
                           ...) {
   # --- Early dispatch for net_clustering objects ---
@@ -218,7 +226,7 @@ build_network <- function(data,
         group = NULL, format = format, window_size = window_size,
         mode = mode, scaling = scaling, threshold = threshold,
         level = level, time_threshold = time_threshold,
-        params = params, ...
+        predictability = predictability, params = params, ...
       )
     })
     names(nets) <- as.character(grp_levels)
@@ -362,11 +370,13 @@ build_network <- function(data,
   if (identical(level, "both")) {
     between <- build_network(
       data, method = method, params = params, scaling = scaling,
-      threshold = threshold, level = "between"
+      threshold = threshold, level = "between",
+      predictability = predictability
     )
     within_net <- build_network(
       data, method = method, params = params, scaling = scaling,
-      threshold = threshold, level = "within"
+      threshold = threshold, level = "within",
+      predictability = predictability
     )
     result <- list(between = between, within = within_net, method = method)
     class(result) <- "netobject_ml"
@@ -485,6 +495,36 @@ build_network <- function(data,
     result[[key]] <- est_result[[key]]
   }
 
+  # Auto-compute predictability (R²) for undirected association methods
+  if (isTRUE(predictability) && !directed) {
+    if (!is.null(result$precision_matrix)) {
+      # glasso / pcor: analytical R²_j = 1 - 1/Omega_jj
+      omega_diag <- diag(result$precision_matrix)
+      pred <- pmin(pmax(1 - 1 / omega_diag, 0), 1)
+      names(pred) <- nodes
+      result$predictability <- pred
+    } else if (!is.null(result$cor_matrix)) {
+      # cor: multiple R² from correlation matrix
+      S <- result$cor_matrix
+      net_w <- result$weights
+      p <- ncol(net_w)
+      pred <- vapply(seq_len(p), function(j) {
+        neighbors <- which(net_w[j, ] != 0)
+        if (length(neighbors) == 0L) return(0)
+        if (length(neighbors) == 1L) return(S[neighbors, j]^2)
+        r_vec <- S[neighbors, j]
+        R_nn <- S[neighbors, neighbors]
+        tryCatch(
+          as.numeric(crossprod(r_vec, solve(R_nn, r_vec))),
+          error = function(e) 0
+        )
+      }, numeric(1))
+      pred <- pmin(pmax(pred, 0), 1)
+      names(pred) <- nodes
+      result$predictability <- pred
+    }
+  }
+
   structure(result, class = c("netobject", "cograph_network"))
 }
 
@@ -574,6 +614,20 @@ print.netobject <- function(x, ...) {
     vapply(ord, function(i) {
       bars <- if (max_v > 0) strrep("\u2588", round(init[i] / max_v * bar_w)) else ""
       cat(sprintf("  %-12s  %.3f  %s\n", names(init)[i], init[i], bars))
+      invisible("")
+    }, character(1L))
+  }
+
+  # ---- Predictability (R²) ----
+  if (!is.null(x$predictability) && length(x$predictability) > 0) {
+    cat("\n  Predictability (R\u00b2):\n")
+    pred <- x$predictability
+    ord  <- order(pred, decreasing = TRUE)
+    bar_w <- 40L
+    max_v <- max(pred)
+    vapply(ord, function(i) {
+      bars <- if (max_v > 0) strrep("\u2588", round(pred[i] / max_v * bar_w)) else ""
+      cat(sprintf("  %-12s  %.3f  %s\n", names(pred)[i], pred[i], bars))
       invisible("")
     }, character(1L))
   }
@@ -724,11 +778,11 @@ predictability <- function(object, ...) {
 #' @return A named numeric vector of predictability values per node.
 #' @export
 predictability.netobject <- function(object, ...) {
-  if (object$method %in% c("glasso", "pcor")) {
-    # From precision matrix: R²_j = 1 - 1/Omega_jj
+  if (!is.null(object$precision_matrix)) {
+    # glasso / pcor: analytical R²_j = 1 - 1/Omega_jj
     omega_diag <- diag(object$precision_matrix)
     r2 <- 1 - 1 / omega_diag
-  } else {
+  } else if (!is.null(object$cor_matrix)) {
     # cor method: multiple R² from correlation matrix
     S <- object$cor_matrix
     net <- object$weights
@@ -744,6 +798,10 @@ predictability.netobject <- function(object, ...) {
         error = function(e) 0
       )
     }, numeric(1))
+  } else {
+    stop("predictability() requires a precision or correlation matrix ",
+         "(methods: glasso, pcor, cor). Method '", object$method,
+         "' does not support predictability.", call. = FALSE)
   }
   r2 <- pmin(pmax(r2, 0), 1)
   names(r2) <- object$nodes$label
@@ -759,4 +817,12 @@ predictability.netobject_ml <- function(object, ...) {
     between = predictability(object$between),
     within  = predictability(object$within)
   )
+}
+
+
+#' @rdname predictability
+#' @return A named list of per-group predictability vectors.
+#' @export
+predictability.netobject_group <- function(object, ...) {
+  lapply(object, predictability)
 }
