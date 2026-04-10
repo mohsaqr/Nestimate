@@ -993,11 +993,11 @@
 
   result <- structure(
     c(list(
+      weights = mat,
       matrix = mat,
       ho_edges = edges,
       edges = cg$edges,
       nodes = cg$nodes,
-      weights = cg$weights,
       n_nodes = n,
       n_edges = nrow(edges),
       first_order_states = first_order_states,

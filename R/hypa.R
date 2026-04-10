@@ -225,11 +225,7 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L,
   # Compute HYPA scores
   scores <- .hypa_compute_scores(adj, xi)
 
-  # Apply multiple testing correction (two-sided: under and over separately)
-  # p_value = P(X <= obs) from hypergeometric CDF
-
-  # Under-representation: small p_value is significant
-  # Over-representation: small (1 - p_value) is significant
+  # Two-sided p-value correction: p_value = P(X <= obs) from hypergeometric CDF
   if (p_adjust != "none" && nrow(scores) > 0L) {
     scores$p_adjusted_under <- stats::p.adjust(scores$p_value,
                                                method = p_adjust)
@@ -241,12 +237,11 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L,
   }
 
   # Classify anomalies: must exceed alpha AND min_count
-  scores$anomaly <- vapply(seq_len(nrow(scores)), function(i) {
-    if (scores$observed[i] < min_count) return("normal")
-    if (scores$p_adjusted_under[i] < alpha) "under"
-    else if (scores$p_adjusted_over[i] < alpha) "over"
-    else "normal"
-  }, character(1L))
+  scores$anomaly <- ifelse(
+    scores$observed < min_count, "normal",
+    ifelse(scores$p_adjusted_under < alpha, "under",
+           ifelse(scores$p_adjusted_over < alpha, "over", "normal"))
+  )
 
   # Pre-sort: anomalous first (over by ratio desc, then under by ratio asc),
   # then normal
@@ -322,13 +317,8 @@ print.net_hypa <- function(x, ...) {
   cat("HYPA: Path Anomaly Detection\n")
   cat(sprintf("  Order k:      %d\n", x$k))
   cat(sprintf("  Edges:        %d\n", x$n_edges))
-  p_adj_label <- if (is.null(x$p_adjust) || x$p_adjust == "none") {
-    "none"
-  } else {
-    x$p_adjust
-  }
   cat(sprintf("  Anomalous:    %d (alpha=%.2f, p_adjust=%s)\n",
-              x$n_anomalous, x$alpha, p_adj_label))
+              x$n_anomalous, x$alpha, x$p_adjust %||% "none"))
   cat(sprintf("    Over-repr:  %d\n", x$n_over))
   cat(sprintf("    Under-repr: %d\n", x$n_under))
   invisible(x)
@@ -364,12 +354,8 @@ summary.net_hypa <- function(object, n = 10L, ...) {
   cat("HYPA Summary\n\n")
   cat(sprintf("  Order: %d | Nodes: %d | Edges: %d\n",
               object$k, nrow(object$nodes), object$n_edges))
-  p_adj_label <- if (is.null(object$p_adjust) || object$p_adjust == "none") {
-    "none"
-  } else {
-    object$p_adjust
-  }
-  cat(sprintf("  Alpha: %.2f | p_adjust: %s\n", object$alpha, p_adj_label))
+  cat(sprintf("  Alpha: %.2f | p_adjust: %s\n",
+              object$alpha, object$p_adjust %||% "none"))
   cat(sprintf("  Anomalous: %d (over: %d, under: %d)\n\n",
               object$n_anomalous, object$n_over, object$n_under))
 

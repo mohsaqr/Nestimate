@@ -100,9 +100,11 @@ pathways.net_hypa <- function(x, type = "all", ...) {
   if (is.null(scores) || nrow(scores) == 0L) return(character(0)) # nocov
 
   if (type == "all") {
-    anom <- scores[scores$anomaly != "normal", , drop = FALSE]
+    anom <- rbind(x$over, x$under)
+  } else if (type == "over") {
+    anom <- x$over
   } else {
-    anom <- scores[scores$anomaly == type, , drop = FALSE]
+    anom <- x$under
   }
   if (nrow(anom) == 0L) return(character(0))
 

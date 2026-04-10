@@ -497,32 +497,12 @@ build_network <- function(data,
 
   # Auto-compute predictability (R²) for undirected association methods
   if (isTRUE(predictability) && !directed) {
-    if (!is.null(result$precision_matrix)) {
-      # glasso / pcor: analytical R²_j = 1 - 1/Omega_jj
-      omega_diag <- diag(result$precision_matrix)
-      pred <- pmin(pmax(1 - 1 / omega_diag, 0), 1)
-      names(pred) <- nodes
-      result$predictability <- pred
-    } else if (!is.null(result$cor_matrix)) {
-      # cor: multiple R² from correlation matrix
-      S <- result$cor_matrix
-      net_w <- result$weights
-      p <- ncol(net_w)
-      pred <- vapply(seq_len(p), function(j) {
-        neighbors <- which(net_w[j, ] != 0)
-        if (length(neighbors) == 0L) return(0)
-        if (length(neighbors) == 1L) return(S[neighbors, j]^2)
-        r_vec <- S[neighbors, j]
-        R_nn <- S[neighbors, neighbors]
-        tryCatch(
-          as.numeric(crossprod(r_vec, solve(R_nn, r_vec))),
-          error = function(e) 0
-        )
-      }, numeric(1))
-      pred <- pmin(pmax(pred, 0), 1)
-      names(pred) <- nodes
-      result$predictability <- pred
-    }
+    # Temporarily assign class so predictability() dispatches correctly
+    class(result) <- c("netobject", "cograph_network")
+    result$predictability <- tryCatch(
+      predictability(result),
+      error = function(e) NULL
+    )
   }
 
   structure(result, class = c("netobject", "cograph_network"))
