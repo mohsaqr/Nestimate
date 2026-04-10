@@ -54,7 +54,7 @@ pathways <- function(x, ...) {
 #' @export
 pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
                              top = NULL, order = NULL, ...) {
-  edges <- x$edges
+  edges <- x$ho_edges
   if (is.null(edges) || nrow(edges) == 0L) return(character(0)) # nocov
 
   # Higher-order edges: from_order > 1

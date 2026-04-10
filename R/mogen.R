@@ -337,6 +337,16 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
     }
   }
 
+  # Extract optimal-order transition matrix for cograph compatibility
+  opt_mat <- trans_mats[[optimal_order + 1L]]
+  if (is.null(dim(opt_mat))) {
+    # Order 0: marginal vector → 1×n matrix
+    opt_mat <- matrix(opt_mat, nrow = 1,
+                      dimnames = list("marginal", names(opt_mat)))
+  }
+  opt_nodes <- rownames(opt_mat) %||% names(marginal)
+  cg <- .ho_cograph_fields(opt_mat, opt_nodes, method = "mogen")
+
   result <- list(
     optimal_order = as.integer(optimal_order),
     criterion = criterion,
@@ -350,10 +360,18 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
     count_matrices = count_mats,
     states = names(marginal),
     n_paths = length(trajectories),
-    n_observations = n_obs
+    n_observations = n_obs,
+    weights = cg$weights,
+    nodes = cg$nodes,
+    edges = cg$edges,
+    directed = TRUE,
+    n_nodes = cg$n_nodes,
+    n_edges = cg$n_edges,
+    meta = cg$meta,
+    node_groups = NULL
   )
 
-  class(result) <- "net_mogen"
+  class(result) <- c("net_mogen", "cograph_network")
   result
 }
 

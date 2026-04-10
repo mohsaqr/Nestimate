@@ -723,7 +723,7 @@ test_that("build_simplicial pathway HON with max_pathways truncates", {
     c("A", "B", "C", "B", "D")
   )
   hon <- build_hon(trajs, max_order = 2, min_freq = 2)
-  ho <- hon$edges[hon$edges$from_order > 1L, ]
+  ho <- hon$ho_edges[hon$ho_edges$from_order > 1L, ]
   # Ensure we have >1 higher-order edges to test truncation
   expect_gt(nrow(ho), 1L)
   sc <- build_simplicial(hon, type = "pathway", max_pathways = 1)

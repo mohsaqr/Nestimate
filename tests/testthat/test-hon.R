@@ -164,21 +164,21 @@ test_that("KLD threshold increases with order", {
 test_that("build_hon returns correct structure", {
   result <- build_hon(.make_hon_data(), max_order = 2L, min_freq = 1L)
   expect_true(is.matrix(result$matrix))
-  expect_true(is.data.frame(result$edges))
-  expect_true(is.character(result$nodes))
+  expect_true(is.data.frame(result$ho_edges))
+  expect_true(is.data.frame(result$nodes))
   expect_true(result$directed)
   expect_true(result$n_nodes > 0L)
   expect_true(result$n_edges > 0L)
   # Check unified column structure
   expect_true(all(c("path", "from", "to", "count", "probability",
-                     "from_order", "to_order") %in% names(result$edges)))
+                     "from_order", "to_order") %in% names(result$ho_edges)))
 })
 
 test_that("build_hon nodes use arrow notation", {
   trajs <- list(c("A", "B", "C"))
   result <- build_hon(trajs, max_order = 1L, min_freq = 1L)
   # First-order nodes should be simple state names (no arrows)
-  expect_true(all(result$nodes %in% c("A", "B", "C")))
+  expect_true(all(result$nodes$label %in% c("A", "B", "C")))
 })
 
 test_that("sequence_to_node produces readable arrow notation", {
@@ -195,8 +195,8 @@ test_that("print and summary work without error", {
 
 test_that("edge probabilities are in (0, 1]", {
   result <- build_hon(.make_hon_data(), max_order = 2L, min_freq = 1L)
-  expect_true(all(result$edges$probability > 0))
-  expect_true(all(result$edges$probability <= 1))
+  expect_true(all(result$ho_edges$probability > 0))
+  expect_true(all(result$ho_edges$probability <= 1))
 })
 
 test_that("encode/decode roundtrip preserves tuple", {
@@ -214,7 +214,7 @@ test_that("build_hon with max_order=1 produces only first-order nodes", {
   trajs <- list(c("A", "B", "C", "D"))
   result <- build_hon(trajs, max_order = 1L, min_freq = 1L)
   # All nodes should have order 1 (no arrows in name)
-  node_orders <- vapply(result$nodes, function(nd) {
+  node_orders <- vapply(result$nodes$label, function(nd) {
     length(strsplit(nd, " -> ", fixed = TRUE)[[1L]])
   }, integer(1L))
   expect_true(all(node_orders == 1L))
@@ -430,7 +430,7 @@ test_that("pyHON equivalence: simple 4-state trajectories", {
     py_to_node <- .pipe_to_arrow(edge[["to"]])
     # R edges$to is next state (last element of to-node)
     py_next_state <- tail(strsplit(py_to_node, " -> ", fixed = TRUE)[[1L]], 1L)
-    r_match <- r$edges[r$edges$from == py_from & r$edges$to == py_next_state, ]
+    r_match <- r$ho_edges[r$ho_edges$from == py_from & r$ho_edges$to == py_next_state, ]
     expect_equal(nrow(r_match), 1L,
       info = sprintf("Missing edge: %s -> %s", py_from, py_next_state))
     if (nrow(r_match) == 1L) {
@@ -461,7 +461,7 @@ test_that("pyHON equivalence: higher-order dependency dataset", {
     py_from <- .pipe_to_arrow(edge$from)
     py_next <- tail(strsplit(.pipe_to_arrow(edge[["to"]]), " -> ",
                              fixed = TRUE)[[1L]], 1L)
-    r_match <- r$edges[r$edges$from == py_from & r$edges$to == py_next, ]
+    r_match <- r$ho_edges[r$ho_edges$from == py_from & r$ho_edges$to == py_next, ]
     expect_equal(nrow(r_match), 1L,
       info = sprintf("Missing: %s -> %s", py_from, py_next))
     if (nrow(r_match) == 1L) {
@@ -495,7 +495,7 @@ test_that("pyHON equivalence: 5-state diverse trajectories", {
     py_from <- .pipe_to_arrow(edge$from)
     py_next <- tail(strsplit(.pipe_to_arrow(edge[["to"]]), " -> ",
                              fixed = TRUE)[[1L]], 1L)
-    r_match <- r$edges[r$edges$from == py_from & r$edges$to == py_next, ]
+    r_match <- r$ho_edges[r$ho_edges$from == py_from & r$ho_edges$to == py_next, ]
     expect_equal(nrow(r_match), 1L,
       info = sprintf("Missing: %s -> %s", py_from, py_next))
     if (nrow(r_match) == 1L) {
@@ -524,7 +524,7 @@ test_that("pyHON equivalence: with min_freq = 3", {
     py_from <- .pipe_to_arrow(edge$from)
     py_next <- tail(strsplit(.pipe_to_arrow(edge[["to"]]), " -> ",
                              fixed = TRUE)[[1L]], 1L)
-    r_match <- r$edges[r$edges$from == py_from & r$edges$to == py_next, ]
+    r_match <- r$ho_edges[r$ho_edges$from == py_from & r$ho_edges$to == py_next, ]
     expect_equal(nrow(r_match), 1L,
       info = sprintf("Missing: %s -> %s", py_from, py_next))
     if (nrow(r_match) == 1L) {
@@ -552,7 +552,7 @@ test_that("pyHON equivalence: max_order = 2", {
     py_from <- .pipe_to_arrow(edge$from)
     py_next <- tail(strsplit(.pipe_to_arrow(edge[["to"]]), " -> ",
                              fixed = TRUE)[[1L]], 1L)
-    r_match <- r$edges[r$edges$from == py_from & r$edges$to == py_next, ]
+    r_match <- r$ho_edges[r$ho_edges$from == py_from & r$ho_edges$to == py_next, ]
     expect_equal(nrow(r_match), 1L,
       info = sprintf("Missing: %s -> %s", py_from, py_next))
     if (nrow(r_match) == 1L) {
@@ -773,11 +773,11 @@ test_that("hon and hon+ produce identical networks on simple data", {
   r_hon  <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon")
   r_honp <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon+")
 
-  expect_equal(nrow(r_hon$edges), nrow(r_honp$edges))
+  expect_equal(nrow(r_hon$ho_edges), nrow(r_honp$ho_edges))
 
-  e1 <- r_hon$edges[order(r_hon$edges$from, r_hon$edges$to),
+  e1 <- r_hon$ho_edges[order(r_hon$ho_edges$from, r_hon$ho_edges$to),
                     c("from", "to", "probability")]
-  e2 <- r_honp$edges[order(r_honp$edges$from, r_honp$edges$to),
+  e2 <- r_honp$ho_edges[order(r_honp$ho_edges$from, r_honp$ho_edges$to),
                      c("from", "to", "probability")]
   rownames(e1) <- rownames(e2) <- NULL
   expect_equal(e1$from, e2$from)
@@ -794,8 +794,8 @@ test_that("hon and hon+ match on higher-order dependency data", {
   r_hon  <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon")
   r_honp <- build_hon(trajs, max_order = 3L, min_freq = 1L, method = "hon+")
 
-  e1 <- r_hon$edges[order(r_hon$edges$from, r_hon$edges$to), ]
-  e2 <- r_honp$edges[order(r_honp$edges$from, r_honp$edges$to), ]
+  e1 <- r_hon$ho_edges[order(r_hon$ho_edges$from, r_hon$ho_edges$to), ]
+  e2 <- r_honp$ho_edges[order(r_honp$ho_edges$from, r_honp$ho_edges$to), ]
   expect_equal(nrow(e1), nrow(e2))
   expect_equal(e1$probability, e2$probability, tolerance = 1e-10)
 })
@@ -807,9 +807,9 @@ test_that("hon and hon+ match on 5-state data with min_freq filtering", {
   r_hon  <- build_hon(trajs, max_order = 3L, min_freq = 3L, method = "hon")
   r_honp <- build_hon(trajs, max_order = 3L, min_freq = 3L, method = "hon+")
 
-  e1 <- r_hon$edges[order(r_hon$edges$from, r_hon$edges$to),
+  e1 <- r_hon$ho_edges[order(r_hon$ho_edges$from, r_hon$ho_edges$to),
                     c("from", "to", "probability")]
-  e2 <- r_honp$edges[order(r_honp$edges$from, r_honp$edges$to),
+  e2 <- r_honp$ho_edges[order(r_honp$ho_edges$from, r_honp$ho_edges$to),
                      c("from", "to", "probability")]
   rownames(e1) <- rownames(e2) <- NULL
   expect_equal(e1, e2, tolerance = 1e-10)
@@ -1028,12 +1028,12 @@ test_that("hon+ matches pyHON+ on 4-state data", {
     tail(strsplit(arrow, " -> ", fixed = TRUE)[[1L]], 1L)
   }, character(1L))
 
-  expect_equal(nrow(r$edges), nrow(py),
-    info = sprintf("Edge count: R=%d, Python=%d", nrow(r$edges), nrow(py)))
+  expect_equal(nrow(r$ho_edges), nrow(py),
+    info = sprintf("Edge count: R=%d, Python=%d", nrow(r$ho_edges), nrow(py)))
   merged <- merge(
-    r$edges[, c("from", "to", "probability")],
+    r$ho_edges[, c("from", "to", "probability")],
     py, by = c("from", "to"), suffixes = c("_r", "_py"))
-  expect_equal(nrow(merged), nrow(r$edges),
+  expect_equal(nrow(merged), nrow(r$ho_edges),
     info = "Not all edges matched by from/to")
   expect_equal(merged$probability, merged$weight, tolerance = 1e-10)
 })
@@ -1053,12 +1053,12 @@ test_that("hon+ matches pyHON+ on higher-order dependency data", {
     tail(strsplit(arrow, " -> ", fixed = TRUE)[[1L]], 1L)
   }, character(1L))
 
-  expect_equal(nrow(r$edges), nrow(py),
-    info = sprintf("Edge count: R=%d, Python=%d", nrow(r$edges), nrow(py)))
+  expect_equal(nrow(r$ho_edges), nrow(py),
+    info = sprintf("Edge count: R=%d, Python=%d", nrow(r$ho_edges), nrow(py)))
   merged <- merge(
-    r$edges[, c("from", "to", "probability")],
+    r$ho_edges[, c("from", "to", "probability")],
     py, by = c("from", "to"), suffixes = c("_r", "_py"))
-  expect_equal(nrow(merged), nrow(r$edges),
+  expect_equal(nrow(merged), nrow(r$ho_edges),
     info = "Not all edges matched by from/to")
   expect_equal(merged$probability, merged$weight, tolerance = 1e-10)
 })
@@ -1078,12 +1078,12 @@ test_that("hon+ matches pyHON+ with min_freq filtering", {
     tail(strsplit(arrow, " -> ", fixed = TRUE)[[1L]], 1L)
   }, character(1L))
 
-  expect_equal(nrow(r$edges), nrow(py),
-    info = sprintf("Edge count: R=%d, Python=%d", nrow(r$edges), nrow(py)))
+  expect_equal(nrow(r$ho_edges), nrow(py),
+    info = sprintf("Edge count: R=%d, Python=%d", nrow(r$ho_edges), nrow(py)))
   merged <- merge(
-    r$edges[, c("from", "to", "probability")],
+    r$ho_edges[, c("from", "to", "probability")],
     py, by = c("from", "to"), suffixes = c("_r", "_py"))
-  expect_equal(nrow(merged), nrow(r$edges),
+  expect_equal(nrow(merged), nrow(r$ho_edges),
     info = "Not all edges matched by from/to")
   expect_equal(merged$probability, merged$weight, tolerance = 1e-10)
 })
@@ -1106,12 +1106,12 @@ test_that("hon+ matches pyHON+ on group_regulation subset", {
     tail(strsplit(arrow, " -> ", fixed = TRUE)[[1L]], 1L)
   }, character(1L))
 
-  expect_equal(nrow(r$edges), nrow(py),
-    info = sprintf("Edge count: R=%d, Python=%d", nrow(r$edges), nrow(py)))
+  expect_equal(nrow(r$ho_edges), nrow(py),
+    info = sprintf("Edge count: R=%d, Python=%d", nrow(r$ho_edges), nrow(py)))
   merged <- merge(
-    r$edges[, c("from", "to", "probability")],
+    r$ho_edges[, c("from", "to", "probability")],
     py, by = c("from", "to"), suffixes = c("_r", "_py"))
-  expect_equal(nrow(merged), nrow(r$edges),
+  expect_equal(nrow(merged), nrow(r$ho_edges),
     info = "Not all edges matched by from/to")
   expect_equal(merged$probability, merged$weight, tolerance = 1e-10)
 })

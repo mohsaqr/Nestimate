@@ -164,9 +164,9 @@ test_that("HYPA $edges is set and matches $scores", {
   seqs <- .make_ho_seqs()
   hypa <- build_hypa(seqs, k = 2)
 
-  expect_false(is.null(hypa$edges))
-  expect_equal(hypa$edges, hypa$scores)
-  expect_true(all(c("path", "from", "to") %in% names(hypa$edges)))
+  expect_false(is.null(hypa$ho_edges))
+  expect_equal(hypa$ho_edges, hypa$scores)
+  expect_true(all(c("path", "from", "to") %in% names(hypa$ho_edges)))
 })
 
 

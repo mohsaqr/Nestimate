@@ -988,11 +988,16 @@
   # Unique first-order states
   first_order_states <- sort(unique(unlist(trajectories, use.names = FALSE)))
 
+  # cograph-compatible fields
+  cg <- .ho_cograph_fields(mat, nodes, method = "hon")
+
   result <- structure(
-    list(
+    c(list(
       matrix = mat,
-      edges = edges,
-      nodes = nodes,
+      ho_edges = edges,
+      edges = cg$edges,
+      nodes = cg$nodes,
+      weights = cg$weights,
       n_nodes = n,
       n_edges = nrow(edges),
       first_order_states = first_order_states,
@@ -1001,8 +1006,8 @@
       min_freq = min_freq,
       n_trajectories = length(trajectories),
       directed = TRUE
-    ),
-    class = "net_hon"
+    ), cg[c("meta", "node_groups")]),
+    class = c("net_hon", "cograph_network")
   )
 
   result
@@ -1233,7 +1238,7 @@ summary.net_hon <- function(object, ...) {
 
   if (object$n_nodes > 0L) {
     # Order distribution: count arrows to determine order
-    node_orders <- vapply(object$nodes, function(nd) {
+    node_orders <- vapply(object$nodes$label, function(nd) {
       length(strsplit(nd, " -> ", fixed = TRUE)[[1L]])
     }, integer(1L))
     order_tab <- table(node_orders)

@@ -137,7 +137,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 .build_simplicial_pathway <- function(x, max_dim = 10L,
                                        max_pathways = NULL, ...) {
   if (inherits(x, "net_hon")) {
-    edges <- x$edges
+    edges <- x$ho_edges
     ho <- edges[edges$from_order > 1L, , drop = FALSE]
     ho <- ho[order(-ho$count), , drop = FALSE]
     if (!is.null(max_pathways) && nrow(ho) > max_pathways) {
@@ -155,7 +155,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
       anom <- anom[seq_len(max_pathways), , drop = FALSE] # nocov
     }
     parts <- strsplit(
-      gsub("\x01", " -> ", x$nodes, fixed = TRUE), " -> ", fixed = TRUE
+      gsub("\x01", " -> ", x$nodes$label, fixed = TRUE), " -> ", fixed = TRUE
     )
     nodes <- sort(unique(unlist(parts)))
     raw_paths <- anom$path

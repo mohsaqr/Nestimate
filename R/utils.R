@@ -213,3 +213,40 @@ safe_sd <- function(x) {
 }
 
 
+# ---------------------------------------------------------------------------
+# Higher-order → cograph_network bridge
+# ---------------------------------------------------------------------------
+
+#' Add cograph_network fields to a higher-order network object
+#'
+#' @param mat Square weight matrix with named rows/columns.
+#' @param node_names Character vector of node names.
+#' @param method Character. Method label for metadata.
+#' @return Named list with \code{weights}, \code{nodes} (data.frame),
+#'   \code{edges}, \code{directed}, \code{meta} fields.
+#' @noRd
+.ho_cograph_fields <- function(mat, node_names, method = "hon") {
+  nodes_df <- data.frame(
+    id = seq_along(node_names),
+    label = node_names,
+    name = node_names,
+    stringsAsFactors = FALSE
+  )
+  edges <- .extract_edges_from_matrix(mat, directed = TRUE)
+  list(
+    weights = mat,
+    nodes = nodes_df,
+    edges = edges,
+    directed = TRUE,
+    n_nodes = length(node_names),
+    n_edges = nrow(edges),
+    meta = list(
+      source = "nestimate",
+      layout = NULL,
+      tna = list(method = method)
+    ),
+    node_groups = NULL
+  )
+}
+
+

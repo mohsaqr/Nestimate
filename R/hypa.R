@@ -224,12 +224,17 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
   n_over <- nrow(anom_over)
   n_under <- nrow(anom_under)
 
+  # cograph-compatible fields
+  cg <- .ho_cograph_fields(adj, nodes, method = "hypa")
+
   result <- list(
     scores = scores,
-    edges = scores,
+    ho_edges = scores,
+    edges = cg$edges,
     over = anom_over,
     under = anom_under,
     adjacency = adj,
+    weights = cg$weights,
     xi = xi,
     k = k,
     alpha = alpha,
@@ -237,10 +242,13 @@ build_hypa <- function(data, k = 3L, alpha = 0.05, min_count = 5L) {
     n_over = n_over,
     n_under = n_under,
     n_edges = nrow(scores),
-    nodes = nodes
+    nodes = cg$nodes,
+    directed = TRUE,
+    meta = cg$meta,
+    node_groups = NULL
   )
 
-  class(result) <- "net_hypa"
+  class(result) <- c("net_hypa", "cograph_network")
   result
 }
 
@@ -311,7 +319,7 @@ print.net_hypa <- function(x, ...) {
 summary.net_hypa <- function(object, n = 10L, ...) {
   cat("HYPA Summary\n\n")
   cat(sprintf("  Order: %d | Nodes: %d | Edges: %d\n",
-              object$k, length(object$nodes), object$n_edges))
+              object$k, nrow(object$nodes), object$n_edges))
   cat(sprintf("  Alpha: %.2f\n", object$alpha))
   cat(sprintf("  Anomalous: %d (over: %d, under: %d)\n\n",
               object$n_anomalous, object$n_over, object$n_under))
