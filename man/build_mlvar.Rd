@@ -38,31 +38,35 @@ centered and divided by its pooled SD \emph{before} augmentation. Default
 which numerical equivalence has been validated.}
 }
 \value{
-A dual-class \code{c("net_mlvar", "cograph_network")} object — a list
-with both the three mlvar networks and the \code{cograph_network} fields
-(\verb{$weights}, \verb{$nodes}, \verb{$edges}, \verb{$directed}, \verb{$meta}). The default
-cograph view is the temporal network, so calling \code{cograph::splot(fit)}
-(if cograph is installed) plots the temporal matrix directly. cograph
-handles all plot dispatch; Nestimate does not provide a plot method.
-Components:
+A dual-class \code{c("net_mlvar", "netobject_group")} object — a
+named list of three full netobjects, one per network, plus
+model-level metadata stored as attributes. Each element is a
+standard \code{c("netobject", "cograph_network")}, so
+\code{cograph::splot(fit$temporal)} plots directly through the standard
+cograph dispatch and existing \code{netobject_group} dispatch (e.g.
+\code{\link[=centrality]{centrality()}}, \code{\link[=bootstrap_network]{bootstrap_network()}}) iterates over all three
+networks automatically. Structure:
 \describe{
-\item{\code{temporal}}{\verb{d x d} matrix of fixed-effect temporal
-coefficients. Entry \verb{[i, j]} is the effect of variable j at
-t-lag on variable i at t.}
-\item{\code{contemporaneous}}{\verb{d x d} symmetric matrix of partial
-correlations among within-person lmer residuals.}
-\item{\code{between}}{\verb{d x d} symmetric matrix of partial correlations
-among person means, derived from \code{D (I - Gamma)}.}
-\item{\code{coefs}}{Tidy \code{data.frame} with one row per \verb{(outcome, predictor)} pair and columns \code{outcome}, \code{predictor}, \code{beta},
-\code{se}, \code{t}, \code{p}, \code{ci_lower}, \code{ci_upper}, \code{significant}. Filter,
-sort, or plot with base R or the tidyverse.}
-\item{\code{n_obs}}{Number of rows in the augmented panel after na.omit.}
-\item{\code{n_subjects}}{Number of unique subjects remaining.}
-\item{\code{lag}}{Lag order used.}
-\item{\code{standardize}}{Logical; whether pre-augmentation standardization
-was applied.}
-\item{\code{weights}, \code{nodes}, \code{edges}, \code{directed}, \code{meta}}{\code{cograph_network}
-fields, populated with the default temporal view.}
+\item{\code{fit$temporal}}{Directed netobject for the \verb{d x d} matrix of
+fixed-effect lagged coefficients. \verb{$weights[i, j]} is the effect
+of variable j at t-lag on variable i at t. \code{method = "mlvar_temporal"}, \code{directed = TRUE}.}
+\item{\code{fit$contemporaneous}}{Undirected netobject for the \verb{d x d}
+partial-correlation network of within-person lmer residuals.
+\code{method = "mlvar_contemporaneous"}, \code{directed = FALSE}.}
+\item{\code{fit$between}}{Undirected netobject for the \verb{d x d}
+partial-correlation network of person means, derived from
+\code{D (I - Gamma)}. \code{method = "mlvar_between"}, \code{directed = FALSE}.}
+\item{\code{attr(fit, "coefs")} / \code{\link[=coefs]{coefs()}}}{Tidy \code{data.frame} with one
+row per \verb{(outcome, predictor)} pair and columns \code{outcome},
+\code{predictor}, \code{beta}, \code{se}, \code{t}, \code{p}, \code{ci_lower}, \code{ci_upper},
+\code{significant}. Filter, sort, or plot with base R or the tidyverse.
+Retrieve with \code{coefs(fit)}.}
+\item{\code{attr(fit, "n_obs")}}{Number of rows in the augmented panel
+after na.omit.}
+\item{\code{attr(fit, "n_subjects")}}{Number of unique subjects remaining.}
+\item{\code{attr(fit, "lag")}}{Lag order used.}
+\item{\code{attr(fit, "standardize")}}{Logical; whether pre-augmentation
+standardization was applied.}
 }
 }
 \description{

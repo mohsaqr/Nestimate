@@ -49,32 +49,36 @@
 #'   `FALSE`, matching `mlVAR::mlVAR(scale = FALSE)` — the only setting for
 #'   which numerical equivalence has been validated.
 #'
-#' @return A dual-class `c("net_mlvar", "cograph_network")` object — a list
-#'   with both the three mlvar networks and the `cograph_network` fields
-#'   (`$weights`, `$nodes`, `$edges`, `$directed`, `$meta`). The default
-#'   cograph view is the temporal network, so calling `cograph::splot(fit)`
-#'   (if cograph is installed) plots the temporal matrix directly. cograph
-#'   handles all plot dispatch; Nestimate does not provide a plot method.
-#'   Components:
+#' @return A dual-class `c("net_mlvar", "netobject_group")` object — a
+#'   named list of three full netobjects, one per network, plus
+#'   model-level metadata stored as attributes. Each element is a
+#'   standard `c("netobject", "cograph_network")`, so
+#'   `cograph::splot(fit$temporal)` plots directly through the standard
+#'   cograph dispatch and existing `netobject_group` dispatch (e.g.
+#'   [centrality()], [bootstrap_network()]) iterates over all three
+#'   networks automatically. Structure:
 #'   \describe{
-#'     \item{`temporal`}{`d x d` matrix of fixed-effect temporal
-#'       coefficients. Entry `[i, j]` is the effect of variable j at
-#'       t-lag on variable i at t.}
-#'     \item{`contemporaneous`}{`d x d` symmetric matrix of partial
-#'       correlations among within-person lmer residuals.}
-#'     \item{`between`}{`d x d` symmetric matrix of partial correlations
-#'       among person means, derived from `D (I - Gamma)`.}
-#'     \item{`coefs`}{Tidy `data.frame` with one row per `(outcome,
-#'       predictor)` pair and columns `outcome`, `predictor`, `beta`,
-#'       `se`, `t`, `p`, `ci_lower`, `ci_upper`, `significant`. Filter,
-#'       sort, or plot with base R or the tidyverse.}
-#'     \item{`n_obs`}{Number of rows in the augmented panel after na.omit.}
-#'     \item{`n_subjects`}{Number of unique subjects remaining.}
-#'     \item{`lag`}{Lag order used.}
-#'     \item{`standardize`}{Logical; whether pre-augmentation standardization
-#'       was applied.}
-#'     \item{`weights`, `nodes`, `edges`, `directed`, `meta`}{`cograph_network`
-#'       fields, populated with the default temporal view.}
+#'     \item{`fit$temporal`}{Directed netobject for the `d x d` matrix of
+#'       fixed-effect lagged coefficients. `$weights[i, j]` is the effect
+#'       of variable j at t-lag on variable i at t. `method =
+#'       "mlvar_temporal"`, `directed = TRUE`.}
+#'     \item{`fit$contemporaneous`}{Undirected netobject for the `d x d`
+#'       partial-correlation network of within-person lmer residuals.
+#'       `method = "mlvar_contemporaneous"`, `directed = FALSE`.}
+#'     \item{`fit$between`}{Undirected netobject for the `d x d`
+#'       partial-correlation network of person means, derived from
+#'       `D (I - Gamma)`. `method = "mlvar_between"`, `directed = FALSE`.}
+#'     \item{`attr(fit, "coefs")` / [coefs()]}{Tidy `data.frame` with one
+#'       row per `(outcome, predictor)` pair and columns `outcome`,
+#'       `predictor`, `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`,
+#'       `significant`. Filter, sort, or plot with base R or the tidyverse.
+#'       Retrieve with `coefs(fit)`.}
+#'     \item{`attr(fit, "n_obs")`}{Number of rows in the augmented panel
+#'       after na.omit.}
+#'     \item{`attr(fit, "n_subjects")`}{Number of unique subjects remaining.}
+#'     \item{`attr(fit, "lag")`}{Lag order used.}
+#'     \item{`attr(fit, "standardize")`}{Logical; whether pre-augmentation
+#'       standardization was applied.}
 #'   }
 #'
 #' @examples
@@ -130,74 +134,78 @@ build_mlvar <- function(data, vars, id,
   aug      <- .mlvar_augment_data(prepared, vars, id, day, beep, lag)
   Res      <- .mlvar_estimate_lmer(aug$data, aug$predModel, vars, id)
 
-  # Attach the TEMPORAL network as the default cograph_network view so
-  # that `cograph::splot(net)` plots it directly. Nestimate never calls
-  # cograph; plot dispatch is cograph's responsibility. See cograph's
-  # CLAUDE.md "Nestimate net_mlvar" section for the spec of how cograph
-  # should handle the three networks and per-type styling.
-  cg <- .mlvar_cograph_fields(
-    mat = Res$temporal$B, vars = vars,
-    directed = TRUE, type = "temporal"
+  # Wrap each of the three matrices as a full cograph_network netobject via
+  # the package-wide `.wrap_netobject()` constructor. Nestimate never calls
+  # cograph — plotting is handled by cograph's existing splot.netobject /
+  # splot.cograph_network dispatch, which fires automatically because each
+  # constituent here is a standard netobject.
+  temporal_net        <- .wrap_netobject(Res$temporal$B,
+                                         method   = "mlvar_temporal",
+                                         directed = TRUE)
+  contemporaneous_net <- .wrap_netobject(Res$contemporaneous,
+                                         method   = "mlvar_contemporaneous",
+                                         directed = FALSE)
+  between_net         <- .wrap_netobject(Res$between,
+                                         method   = "mlvar_between",
+                                         directed = FALSE)
+
+  nets <- list(
+    temporal        = temporal_net,
+    contemporaneous = contemporaneous_net,
+    between         = between_net
   )
 
-  result <- list(
-    temporal        = Res$temporal$B,
-    contemporaneous = Res$contemporaneous,
-    between         = Res$between,
-    coefs           = Res$temporal$coefs,
-    n_obs           = nrow(aug$data),
-    n_subjects      = length(unique(aug$data[[id]])),
-    lag             = lag,
-    standardize     = standardize,
-    # cograph_network fields (default view = temporal)
-    weights         = cg$weights,
-    nodes           = cg$nodes,
-    edges           = cg$edges,
-    directed        = cg$directed,
-    n_nodes         = cg$n_nodes,
-    n_edges         = cg$n_edges,
-    meta            = cg$meta,
-    node_groups     = NULL
-  )
-  class(result) <- c("net_mlvar", "cograph_network")
-  result
+  # Model-level metadata lives in attributes so the list stays a pure
+  # netobject_group (each element is a netobject). Use coefs(fit) to
+  # retrieve the tidy coefs data.frame.
+  attr(nets, "coefs")       <- Res$temporal$coefs
+  attr(nets, "n_obs")       <- nrow(aug$data)
+  attr(nets, "n_subjects")  <- length(unique(aug$data[[id]]))
+  attr(nets, "lag")         <- lag
+  attr(nets, "standardize") <- standardize
+  attr(nets, "group_col")   <- "network_type"
+
+  class(nets) <- c("net_mlvar", "netobject_group")
+  nets
 }
 
 #' @rdname build_mlvar
 #' @export
 mlvar <- build_mlvar
 
-#' Build cograph_network fields from a single mlvar matrix
+#' Tidy coefficients from a fitted mlvar model
 #'
-#' Lightweight helper that packages one of the three mlvar matrices
-#' (temporal / contemporaneous / between) as a cograph-compatible view
-#' (`$weights`, `$nodes`, `$edges`, `$directed`, `$meta`). Used both to
-#' attach the default temporal view at build time and to swap views inside
-#' `plot.net_mlvar()`.
-#' @noRd
-.mlvar_cograph_fields <- function(mat, vars, directed, type) {
-  nodes_df <- data.frame(
-    id    = seq_along(vars),
-    label = vars,
-    name  = vars,
-    stringsAsFactors = FALSE
-  )
-  edges <- .extract_edges_from_matrix(mat, directed = directed)
-  list(
-    weights  = mat,
-    nodes    = nodes_df,
-    edges    = edges,
-    directed = directed,
-    n_nodes  = length(vars),
-    n_edges  = nrow(edges),
-    meta = list(
-      source = "nestimate",
-      layout = NULL,
-      tna    = list(method = paste0("mlvar_", type))
-    )
-  )
+#' Generic accessor for the tidy coefficient table stored on a
+#' [build_mlvar()] result. Returns a `data.frame` with one row per
+#' `(outcome, predictor)` pair and columns `outcome`, `predictor`,
+#' `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`, `significant`.
+#'
+#' Only the within-person (temporal) coefficients are tabulated —
+#' these are the lagged fixed effects that populate `fit$temporal`.
+#' The between-subjects effects that go into `fit$between` are handled
+#' via the `D (I - Gamma)` transformation and are not exposed as a
+#' separate tidy table.
+#'
+#' @param x A fitted model object — currently only `net_mlvar` is supported.
+#' @param ... Unused.
+#' @return A tidy `data.frame` of coefficient estimates.
+#' @export
+coefs <- function(x, ...) {
+  UseMethod("coefs")
 }
 
+#' @rdname coefs
+#' @export
+coefs.net_mlvar <- function(x, ...) {
+  attr(x, "coefs")
+}
+
+#' @rdname coefs
+#' @export
+coefs.default <- function(x, ...) {
+  stop("No coefs() method for object of class '",
+       class(x)[1], "'", call. = FALSE)
+}
 
 # ---- Internal helpers --------------------------------------------------
 
@@ -514,16 +522,22 @@ mlvar <- build_mlvar
 #' @return Invisibly returns `x`.
 #' @export
 print.net_mlvar <- function(x, ...) {
-  d <- nrow(x$temporal)
-  n_sig <- sum(x$coefs$significant, na.rm = TRUE)
-  n_tot <- nrow(x$coefs)
+  coef_df <- attr(x, "coefs")
+  d <- nrow(x$temporal$weights)
+  n_sig <- sum(coef_df$significant, na.rm = TRUE)
+  n_tot <- nrow(coef_df)
 
   cat(sprintf("mlVAR result: %d subjects, %d observations, %d variables (lag %d)\n",
-              x$n_subjects, x$n_obs, d, x$lag))
-  cat(sprintf("  Temporal network:        %d x %d directed  (%d/%d edges significant at p<0.05)\n",
+              attr(x, "n_subjects"),
+              attr(x, "n_obs"),
+              d,
+              attr(x, "lag")))
+  cat(sprintf("  $temporal        %d x %d directed    (%d/%d edges significant at p<0.05)\n",
               d, d, n_sig, n_tot))
-  cat(sprintf("  Contemporaneous network: %d x %d undirected\n", d, d))
-  cat(sprintf("  Between network:         %d x %d undirected\n", d, d))
+  cat(sprintf("  $contemporaneous %d x %d undirected\n", d, d))
+  cat(sprintf("  $between         %d x %d undirected\n", d, d))
+  cat("Access: fit$temporal, fit$contemporaneous, fit$between (each a netobject);",
+      "coefs(fit) for tidy coefs.\n")
   invisible(x)
 }
 
@@ -534,21 +548,22 @@ print.net_mlvar <- function(x, ...) {
 #' @return Invisibly returns `object`.
 #' @export
 summary.net_mlvar <- function(object, ...) {
-  vars <- rownames(object$temporal)
-  d <- length(vars)
+  coef_df <- attr(object, "coefs")
+  vars    <- rownames(object$temporal$weights)
+  d       <- length(vars)
 
   cat("=== mlVAR Summary ===\n")
-  cat("Subjects:", object$n_subjects,
-      " | Observations:", object$n_obs,
-      " | Variables:", d,
-      " | Lag:", object$lag, "\n")
-  cat("Standardized:", object$standardize, "\n\n")
+  cat("Subjects:",      attr(object, "n_subjects"),
+      " | Observations:", attr(object, "n_obs"),
+      " | Variables:",  d,
+      " | Lag:",        attr(object, "lag"), "\n")
+  cat("Standardized:",  attr(object, "standardize"), "\n\n")
 
   cat("--- Temporal Network (B matrix) ---\n")
-  print(round(object$temporal, 4))
+  print(round(object$temporal$weights, 4))
   cat("\n")
 
-  sig_rows <- object$coefs[object$coefs$significant, , drop = FALSE]
+  sig_rows <- coef_df[coef_df$significant, , drop = FALSE]
   if (nrow(sig_rows) > 0L) {
     cat("Significant temporal edges (p < 0.05):\n")
     sig_print <- sig_rows[, c("outcome", "predictor",
@@ -565,11 +580,11 @@ summary.net_mlvar <- function(object, ...) {
   cat("\n")
 
   cat("--- Contemporaneous Network ---\n")
-  print(round(object$contemporaneous, 4))
+  print(round(object$contemporaneous$weights, 4))
   cat("\n")
 
   cat("--- Between-Subjects Network ---\n")
-  print(round(object$between, 4))
+  print(round(object$between$weights, 4))
   cat("\n")
 
   invisible(object)
