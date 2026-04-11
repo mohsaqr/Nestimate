@@ -97,6 +97,7 @@ safe_sd <- function(x) {
 #' allows \code{build_hon()}, \code{build_hypa()}, and other pathway
 #' functions to accept model objects directly.
 #'
+
 #' @param data Input: data.frame, list, tna, or netobject.
 #' @return A data.frame or list suitable for \code{.hon_parse_input()}.
 #' @noRd

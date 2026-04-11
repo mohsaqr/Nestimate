@@ -235,6 +235,18 @@ build_network <- function(data,
     return(nets)
   }
 
+  # ---- Auto-match standard column names (case-insensitive) ----
+  if (is.data.frame(data)) {
+    col_lower <- tolower(names(data))
+    .match1 <- function(name) {
+      hit <- which(col_lower == name)
+      if (length(hit) == 1L) names(data)[hit] else NULL
+    }
+    if (is.null(action))  action  <- .match1("action")
+    if (is.null(time))    time    <- .match1("time")
+    if (is.null(session)) session <- .match1("session") %||% .match1("session_id")
+  }
+
   # ---- Auto-detect input format ----
   is_onehot <- FALSE
   if (format == "auto" && is.data.frame(data)) {

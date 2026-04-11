@@ -153,6 +153,7 @@ association_rules <- function(x,
   if (max_length >= 3) {
     k <- 3L
     while (k <= max_length) {
+      if (length(frequent_itemsets) < k - 1L) break
       prev <- frequent_itemsets[[k - 1L]]
       if (is.null(prev) || length(prev) < 2L) break
 
@@ -191,12 +192,54 @@ association_rules <- function(x,
   rules <- .ar_generate_rules(frequent_itemsets, item_counts, items,
                                n_trans, min_confidence, min_lift)
 
+  # ---- Build tidy rules data frame ----
+  if (nrow(rules) > 0) {
+    tidy_rules <- data.frame(
+      antecedent = vapply(rules$antecedent, paste, character(1), collapse = ", "),
+      consequent = vapply(rules$consequent, paste, character(1), collapse = ", "),
+      support    = rules$support,
+      confidence = rules$confidence,
+      lift       = rules$lift,
+      conviction = rules$conviction,
+      count      = rules$count,
+      n_transactions = rules$n_transactions,
+      stringsAsFactors = FALSE
+    )
+  } else {
+    tidy_rules <- data.frame(
+      antecedent = character(0), consequent = character(0),
+      support = numeric(0), confidence = numeric(0),
+      lift = numeric(0), conviction = numeric(0),
+      count = integer(0), n_transactions = integer(0),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  # ---- Build tidy frequent itemsets data frame ----
+  fi_rows <- lapply(seq_along(frequent_itemsets), function(k) {
+    level <- frequent_itemsets[[k]]
+    data.frame(
+      itemset = vapply(level, function(fi) paste(fi$items, collapse = ", "), character(1)),
+      size    = k,
+      support = vapply(level, `[[`, numeric(1), "support"),
+      count   = vapply(level, `[[`, numeric(1), "count"),
+      stringsAsFactors = FALSE
+    )
+  })
+  frequent <- do.call(rbind, fi_rows)
+  if (is.null(frequent)) {
+    frequent <- data.frame(itemset = character(0), size = integer(0),
+                           support = numeric(0), count = numeric(0),
+                           stringsAsFactors = FALSE)
+  }
+
   structure(list(
-    rules              = rules,
+    rules              = tidy_rules,
+    frequent           = frequent,
     frequent_itemsets   = frequent_itemsets,
     items              = items,
     n_transactions     = n_trans,
-    n_rules            = nrow(rules),
+    n_rules            = nrow(tidy_rules),
     params             = list(min_support = min_support,
                               min_confidence = min_confidence,
                               min_lift = min_lift,
@@ -262,7 +305,8 @@ association_rules <- function(x,
   if (is.matrix(x)) {
     items <- colnames(x) %||% paste0("I", seq_len(ncol(x)))
     colnames(x) <- items
-    return(list(matrix = x > 0, items = items))
+    ord <- order(items)
+    return(list(matrix = (x > 0)[, ord, drop = FALSE], items = items[ord]))
   }
 
   # Data frame
@@ -271,9 +315,11 @@ association_rules <- function(x,
     all_numeric <- all(vapply(x, is.numeric, logical(1)))
     if (all_numeric && all(unlist(x) %in% c(0, 1, NA))) {
       items <- colnames(x)
-      return(list(matrix = as.matrix(x) > 0, items = items))
+      ord <- order(items)
+      mat <- as.matrix(x) > 0
+      return(list(matrix = mat[, ord, drop = FALSE], items = items[ord]))
     }
-    # Character columns: each row is a transaction
+    # Wide character data: each row is a transaction
     transactions <- lapply(seq_len(nrow(x)), function(i) {
       vals <- unlist(x[i, ], use.names = FALSE)
       vals <- as.character(vals)
@@ -345,6 +391,15 @@ association_rules <- function(x,
   rules_list <- list()
 
   # Generate rules from itemsets of size >= 2
+  if (length(frequent_itemsets) < 2L) {
+    return(data.frame(
+      antecedent = I(list()), consequent = I(list()),
+      support = numeric(0), confidence = numeric(0),
+      lift = numeric(0), conviction = numeric(0),
+      count = integer(0), n_transactions = integer(0),
+      stringsAsFactors = FALSE
+    ))
+  }
   for (k in seq(2L, length(frequent_itemsets))) {
     level <- frequent_itemsets[[k]]
     if (is.null(level)) next
@@ -426,14 +481,21 @@ association_rules <- function(x,
 #' @noRd
 .ar_empty_result <- function(items, n_trans, min_support, min_confidence,
                               min_lift, max_length) {
+  empty_rules <- data.frame(
+    antecedent = character(0), consequent = character(0),
+    support = numeric(0), confidence = numeric(0),
+    lift = numeric(0), conviction = numeric(0),
+    count = integer(0), n_transactions = integer(0),
+    stringsAsFactors = FALSE
+  )
+  empty_freq <- data.frame(
+    itemset = character(0), size = integer(0),
+    support = numeric(0), count = numeric(0),
+    stringsAsFactors = FALSE
+  )
   structure(list(
-    rules = data.frame(
-      antecedent = I(list()), consequent = I(list()),
-      support = numeric(0), confidence = numeric(0),
-      lift = numeric(0), conviction = numeric(0),
-      count = integer(0), n_transactions = integer(0),
-      stringsAsFactors = FALSE
-    ),
+    rules = empty_rules,
+    frequent = empty_freq,
     frequent_itemsets = list(),
     items = items,
     n_transactions = n_trans,
@@ -470,10 +532,8 @@ print.net_association_rules <- function(x, ...) {
     cat("\n  Top rules (by lift):\n")
     for (i in seq_len(nrow(top))) {
       r <- top[i, ]
-      ante <- paste(r$antecedent[[1]], collapse = ", ")
-      cons <- paste(r$consequent[[1]], collapse = ", ")
       cat(sprintf("    %d. %s -> %s  (sup=%.3f conf=%.3f lift=%.2f)\n",
-                  i, ante, cons, r$support, r$confidence, r$lift))
+                  i, r$antecedent, r$consequent, r$support, r$confidence, r$lift))
     }
     if (x$n_rules > 10) {
       cat(sprintf("    ... and %d more rules\n", x$n_rules - 10))
@@ -503,19 +563,8 @@ summary.net_association_rules <- function(object, ...) {
     return(invisible(data.frame()))
   }
 
-  # Format for display
-  display <- data.frame(
-    antecedent = vapply(r$antecedent, paste, character(1), collapse = ","),
-    consequent = vapply(r$consequent, paste, character(1), collapse = ","),
-    support    = round(r$support, 4),
-    confidence = round(r$confidence, 4),
-    lift       = round(r$lift, 4),
-    conviction = round(r$conviction, 4),
-    count      = r$count,
-    stringsAsFactors = FALSE
-  )
-  print(display, row.names = FALSE)
-  invisible(display)
+  print(r, row.names = FALSE)
+  invisible(r)
 }
 
 
@@ -549,10 +598,7 @@ plot.net_association_rules <- function(x, ...) {
     support    = r$support,
     confidence = r$confidence,
     lift       = r$lift,
-    rule       = vapply(seq_len(nrow(r)), function(i) {
-      paste0("{", paste(r$antecedent[[i]], collapse = ","), "} => {",
-             paste(r$consequent[[i]], collapse = ","), "}")
-    }, character(1)),
+    rule       = paste0("{", r$antecedent, "} => {", r$consequent, "}"),
     stringsAsFactors = FALSE
   )
 

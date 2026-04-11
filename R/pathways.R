@@ -176,13 +176,26 @@ pathways.net_association_rules <- function(x, top = NULL, min_lift = NULL,
 
   rules <- rules[order(-rules$lift, -rules$confidence), , drop = FALSE]
 
+  # Deduplicate: each rule's antecedent + consequent is a simplex (unordered).
+  # {A,B} => {C} and {A,C} => {B} are the same simplex {A,B,C}.
+  # Keep the highest-lift version of each unique itemset.
+  itemsets <- vapply(seq_len(nrow(rules)), function(i) {
+    items <- sort(unique(c(
+      strsplit(rules$antecedent[i], ", ", fixed = TRUE)[[1]],
+      strsplit(rules$consequent[i], ", ", fixed = TRUE)[[1]]
+    )))
+    paste(items, collapse = "\t")
+  }, character(1))
+  keep <- !duplicated(itemsets)
+  rules <- rules[keep, , drop = FALSE]
+
   if (!is.null(top) && nrow(rules) > top) {
     rules <- rules[seq_len(top), , drop = FALSE]
   }
 
   vapply(seq_len(nrow(rules)), function(i) {
-    ante <- paste(rules$antecedent[[i]], collapse = " ")
-    cons <- paste(rules$consequent[[i]], collapse = " ")
+    ante <- gsub(", ", " ", rules$antecedent[i])
+    cons <- gsub(", ", " ", rules$consequent[i])
     paste(ante, "->", cons)
   }, character(1), USE.NAMES = FALSE)
 }

@@ -197,14 +197,13 @@ test_that("no rules found returns empty result gracefully", {
 
 # ---- 14. Itemsets stored as lists, not strings ----
 
-test_that("antecedent and consequent are list columns", {
+test_that("antecedent and consequent are character columns", {
   rules <- association_rules(.make_ar_trans(), min_support = 0.3,
                              min_confidence = 0.5, min_lift = 0)
-  expect_true(is.list(rules$rules$antecedent))
-  expect_true(is.list(rules$rules$consequent))
-  # Each element is a character vector
-  expect_true(all(vapply(rules$rules$antecedent, is.character, logical(1))))
-  expect_true(all(vapply(rules$rules$consequent, is.character, logical(1))))
+  expect_type(rules$rules$antecedent, "character")
+  expect_type(rules$rules$consequent, "character")
+  expect_true(all(nchar(rules$rules$antecedent) > 0))
+  expect_true(all(nchar(rules$rules$consequent) > 0))
 })
 
 
@@ -231,10 +230,10 @@ test_that("3-itemset rules exist when data supports them", {
   )
   rules <- association_rules(trans, min_support = 0.3,
                              min_confidence = 0, min_lift = 0, max_length = 4)
-  # Should have rules from 3- and 4-itemsets
-  sizes <- vapply(rules$rules$antecedent, length, integer(1)) +
-           vapply(rules$rules$consequent, length, integer(1))
-  expect_true(any(sizes >= 3))
+  # Should have rules from 3- and 4-itemsets (count items by splitting on ", ")
+  n_ante <- lengths(strsplit(rules$rules$antecedent, ", ", fixed = TRUE))
+  n_cons <- lengths(strsplit(rules$rules$consequent, ", ", fixed = TRUE))
+  expect_true(any(n_ante + n_cons >= 3))
 })
 
 
