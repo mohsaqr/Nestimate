@@ -385,6 +385,20 @@ coefs.default <- function(x, ...) {
       lme4::lmer(stats::as.formula(fm_str), data = augData, REML = FALSE)
     ))
 
+    # Convergence diagnostics — warn but don't stop (matches mlVAR behaviour)
+    if (lme4::isSingular(fit)) {
+      warning(sprintf(
+        "Model for '%s': singular fit (random-effects variance near zero).",
+        outcome
+      ), call. = FALSE)
+    }
+    conv_msgs <- fit@optinfo$conv$lme4$messages
+    if (length(conv_msgs) > 0L) {
+      warning(sprintf(
+        "Model for '%s': %s", outcome, paste(conv_msgs, collapse = "; ")
+      ), call. = FALSE)
+    }
+
     fe <- lme4::fixef(fit)
     B[k, ]        <- fe[var_to_within[vars]]
     Gamma[k, -k]  <- fe[var_to_between[vars[-k]]]

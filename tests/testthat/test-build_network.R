@@ -191,6 +191,39 @@ test_that("pcor errors on singular matrix", {
   )
 })
 
+test_that("pcor warns on near-singular matrix", {
+  # Create a near-singular correlation matrix
+  set.seed(123)
+  n <- 30; p <- 5
+  mat <- matrix(rnorm(n * p), n, p)
+  # Make two columns nearly collinear
+  mat[, 5] <- mat[, 1] + rnorm(n, sd = 1e-7)
+  colnames(mat) <- paste0("V", seq_len(p))
+  S <- cor(mat)
+  # rcond should be very small, triggering the warning
+  expect_warning(
+    build_network(S, method = "pcor", params = list(n = n)),
+    "near-singular"
+  )
+})
+
+test_that("pcor output unchanged for well-conditioned data", {
+  # Verify the rcond check doesn't alter numerical output
+  set.seed(456)
+  df <- data.frame(
+    V1 = rnorm(100), V2 = rnorm(100), V3 = rnorm(100), V4 = rnorm(100)
+  )
+  net <- build_network(df, method = "pcor")
+  # Manual reference: solve(cor) -> precision -> pcor
+  S <- cor(as.matrix(df))
+  Wi <- solve(S)
+  D <- diag(1 / sqrt(diag(Wi)))
+  pcor_ref <- -D %*% Wi %*% D
+  diag(pcor_ref) <- 0
+  dimnames(pcor_ref) <- dimnames(S)
+  expect_equal(unname(net$weights), unname(pcor_ref), tolerance = 1e-14)
+})
+
 
 # ---- Method: cor (correlation network) ----
 

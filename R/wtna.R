@@ -148,13 +148,10 @@ wtna <- function(data,
     for (i in seq_len(q)) {
       j_idx <- seq((i - 1L) * window_size + 1L, i * window_size)
       k_idx <- seq(i * window_size + 1L, min(n, (i + 1L) * window_size))
-      # Loop over all from-to position pairs (blocks may differ in size)
-      for (j in j_idx) {
-        for (ki in k_idx) {
-          # Outer product of two binary row vectors: k x k matrix
-          weights <- weights + tcrossprod(X[j, ], X[ki, ])
-        }
-      }
+      # sum_j sum_ki tcrossprod(X[j,], X[ki,]) = tcrossprod(colSums, colSums)
+      s_curr <- colSums(X[j_idx, , drop = FALSE])
+      s_next <- colSums(X[k_idx, , drop = FALSE])
+      weights <- weights + tcrossprod(s_curr, s_next)
     }
   } else {
     # Overlapping: consecutive windows shifted by 1
@@ -163,11 +160,9 @@ wtna <- function(data,
     for (i in seq_len(n_windows - 1L)) {
       j_idx <- seq(i, i + window_size - 1L)
       k_idx <- seq(i + 1L, i + window_size)
-      for (j in j_idx) {
-        for (ki in k_idx) {
-          weights <- weights + tcrossprod(X[j, ], X[ki, ])
-        }
-      }
+      s_curr <- colSums(X[j_idx, , drop = FALSE])
+      s_next <- colSums(X[k_idx, , drop = FALSE])
+      weights <- weights + tcrossprod(s_curr, s_next)
     }
   }
   weights
@@ -195,22 +190,16 @@ wtna <- function(data,
     n_windows <- ceiling(n / window_size)
     for (i in seq_len(n_windows)) {
       idx <- seq((i - 1L) * window_size + 1L, min(n, i * window_size))
-      for (j in idx) {
-        for (ki in idx) {
-          weights <- weights + tcrossprod(X[j, ], X[ki, ])
-        }
-      }
+      s <- colSums(X[idx, , drop = FALSE])
+      weights <- weights + tcrossprod(s)
     }
   } else {
     n_windows <- n - window_size + 1L # nocov start
     if (n_windows < 1L) return(weights)
     for (i in seq_len(n_windows)) {
       idx <- seq(i, i + window_size - 1L)
-      for (j in idx) {
-        for (ki in idx) {
-          weights <- weights + tcrossprod(X[j, ], X[ki, ]) # nocov end
-        }
-      }
+      s <- colSums(X[idx, , drop = FALSE])
+      weights <- weights + tcrossprod(s) # nocov end
     }
   }
   weights

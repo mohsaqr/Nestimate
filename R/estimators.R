@@ -1016,16 +1016,23 @@
   S <- prepared$S
   n_obs <- prepared$n
 
-  Wi <- tryCatch(
-    solve(S),
-    error = function(e) {
-      stop(
-        "Correlation matrix is singular (p >= n or collinear variables). ",
-        "Use method = 'glasso' for regularised estimation.",
-        call. = FALSE
-      )
-    }
-  )
+  rc <- rcond(S)
+  if (rc < .Machine$double.eps) {
+    stop(
+      "Correlation matrix is singular (p >= n or collinear variables). ",
+      "Use method = 'glasso' for regularised estimation.",
+      call. = FALSE
+    )
+  }
+  if (rc < 1e-12) {
+    warning(sprintf(
+      "Correlation matrix is near-singular (rcond = %.2e). ",
+      rc
+    ), "Results may be numerically unstable. Consider method = 'glasso'.",
+    call. = FALSE)
+  }
+
+  Wi <- solve(S)
   colnames(Wi) <- rownames(Wi) <- colnames(S)
 
   pcor <- .precision_to_pcor(Wi, threshold)

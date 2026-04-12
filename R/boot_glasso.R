@@ -685,14 +685,13 @@ boot_glasso <- function(x,
   if (n_valid < 2) return(p_mat)
 
   for (i in seq_len(n_edges - 1L)) {
-    for (j in seq(i + 1L, n_edges)) {
-      diff_ij <- bm[, i] - bm[, j]
-      p_greater <- mean(diff_ij > 0)
-      p_less <- mean(diff_ij < 0)
-      p_val <- 2 * min(p_greater, p_less)
-      p_mat[i, j] <- p_val
-      p_mat[j, i] <- p_val
-    }
+    js <- seq(i + 1L, n_edges)
+    diffs <- bm[, i] - bm[, js, drop = FALSE]
+    p_greater <- colMeans(diffs > 0)
+    p_less    <- colMeans(diffs < 0)
+    p_vals    <- 2 * pmin(p_greater, p_less)
+    p_mat[i, js] <- p_vals
+    p_mat[js, i] <- p_vals
   }
 
   diag(p_mat) <- 0
@@ -716,14 +715,13 @@ boot_glasso <- function(x,
   if (n_valid < 2) return(p_mat)
 
   for (i in seq_len(p_nodes - 1L)) {
-    for (j in seq(i + 1L, p_nodes)) {
-      diff_ij <- bm[, i] - bm[, j]
-      p_greater <- mean(diff_ij > 0)
-      p_less <- mean(diff_ij < 0)
-      p_val <- 2 * min(p_greater, p_less)
-      p_mat[i, j] <- p_val
-      p_mat[j, i] <- p_val
-    }
+    js <- seq(i + 1L, p_nodes)
+    diffs <- bm[, i] - bm[, js, drop = FALSE]
+    p_greater <- colMeans(diffs > 0)
+    p_less    <- colMeans(diffs < 0)
+    p_vals    <- 2 * pmin(p_greater, p_less)
+    p_mat[i, js] <- p_vals
+    p_mat[js, i] <- p_vals
   }
 
   diag(p_mat) <- 0

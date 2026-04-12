@@ -1463,3 +1463,66 @@ test_that("edge_diff plot handles diff_max == 0 gracefully (L1080)", {
   p <- plot(result, type = "edge_diff")
   expect_true(inherits(p, "gg"))
 })
+
+
+# ---- Vectorized diff test equivalence ----
+
+# Reference (naive) implementation: double nested loop
+.ref_diff_test <- function(bm) {
+  n_edges <- ncol(bm)
+  p_mat <- matrix(1, n_edges, n_edges,
+                  dimnames = list(colnames(bm), colnames(bm)))
+  for (i in seq_len(n_edges - 1L)) {
+    for (j in seq(i + 1L, n_edges)) {
+      diff_ij <- bm[, i] - bm[, j]
+      p_greater <- mean(diff_ij > 0)
+      p_less <- mean(diff_ij < 0)
+      p_val <- 2 * min(p_greater, p_less)
+      p_mat[i, j] <- p_val
+      p_mat[j, i] <- p_val
+    }
+  }
+  diag(p_mat) <- 0
+  p_mat
+}
+
+test_that("vectorized edge diff test matches naive loop exactly", {
+  set.seed(77)
+  configs <- list(
+    list(n_boot = 100, n_edges = 5),
+    list(n_boot = 100, n_edges = 10),
+    list(n_boot = 200, n_edges = 20),
+    list(n_boot = 50,  n_edges = 3),
+    list(n_boot = 500, n_edges = 15)
+  )
+  for (cfg in configs) {
+    bm <- matrix(rnorm(cfg$n_boot * cfg$n_edges), cfg$n_boot, cfg$n_edges)
+    colnames(bm) <- paste0("e", seq_len(cfg$n_edges))
+    ref <- .ref_diff_test(bm)
+    vec <- Nestimate:::.bg_edge_diff_test(bm)
+    expect_identical(
+      vec, ref,
+      info = sprintf("n_boot=%d n_edges=%d", cfg$n_boot, cfg$n_edges)
+    )
+  }
+})
+
+test_that("vectorized centrality diff test matches naive loop exactly", {
+  set.seed(78)
+  configs <- list(
+    list(n_boot = 100, n_nodes = 5),
+    list(n_boot = 100, n_nodes = 10),
+    list(n_boot = 200, n_nodes = 8),
+    list(n_boot = 50,  n_nodes = 3)
+  )
+  for (cfg in configs) {
+    bm <- matrix(rnorm(cfg$n_boot * cfg$n_nodes), cfg$n_boot, cfg$n_nodes)
+    colnames(bm) <- paste0("V", seq_len(cfg$n_nodes))
+    ref <- .ref_diff_test(bm)
+    vec <- Nestimate:::.bg_centrality_diff_test(bm)
+    expect_identical(
+      vec, ref,
+      info = sprintf("n_boot=%d n_nodes=%d", cfg$n_boot, cfg$n_nodes)
+    )
+  }
+})

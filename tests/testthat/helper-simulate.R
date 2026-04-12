@@ -85,3 +85,83 @@ simulate_data <- function(type = "mlvar", seed = NULL, n_subjects = 20,
   }
   stop(sprintf("simulate_data type '%s' not supported in Nestimate test helper", type))
 }
+
+
+# ---- Equivalence test infrastructure ----
+
+#' Skip equivalence tests unless explicitly enabled
+#' @noRd
+skip_equiv_tests <- function() {
+  run <- Sys.getenv("NESTIMATE_EQUIV_TESTS", unset = "false")
+  if (!identical(run, "true")) {
+    skip("Equivalence tests skipped (set NESTIMATE_EQUIV_TESTS=true)")
+  }
+}
+
+#' Generate random sequence data for equivalence testing
+#' @noRd
+simulate_sequences <- function(n_actors = 10, n_states = 5,
+                               seq_length = 20, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  states <- LETTERS[seq_len(n_states)]
+  rows <- lapply(seq_len(n_actors), function(i) {
+    sample(states, seq_length, replace = TRUE)
+  })
+  df <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE)
+  colnames(df) <- paste0("T", seq_len(seq_length))
+  df
+}
+
+#' Generate random continuous data for association method equivalence testing
+#' @noRd
+simulate_continuous <- function(n = 100, p = 5, rho = 0.3, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  Sigma <- diag(p)
+  for (i in seq_len(p - 1L)) {
+    Sigma[i, i + 1L] <- rho
+    Sigma[i + 1L, i] <- rho
+  }
+  L <- chol(Sigma)
+  mat <- matrix(rnorm(n * p), n, p) %*% L
+  df <- as.data.frame(mat)
+  colnames(df) <- paste0("V", seq_len(p))
+  df
+}
+
+#' Equivalence report logger
+#' @noRd
+equiv_report <- function() {
+  env <- new.env(parent = emptyenv())
+  env$rows <- list()
+
+  env$log <- function(func, config, n_checked, n_failed,
+                      max_abs_err, mean_abs_err, median_abs_err,
+                      p95_abs_err, reference, notes = "") {
+    env$rows[[length(env$rows) + 1L]] <- data.frame(
+      func = func, config = config,
+      n_checked = n_checked, n_failed = n_failed,
+      max_abs_err = max_abs_err, mean_abs_err = mean_abs_err,
+      median_abs_err = median_abs_err, p95_abs_err = p95_abs_err,
+      reference = reference, notes = notes,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  env$write_csv <- function(module) {
+    if (length(env$rows) == 0L) return(invisible(NULL))
+    df <- do.call(rbind, env$rows)
+    dir.create("../../tmp", showWarnings = FALSE, recursive = TRUE)
+    path <- sprintf("../../tmp/%s_equivalence_report.csv", module)
+    write.csv(df, path, row.names = FALSE)
+    message(sprintf("Equivalence report: %s (%d checks)", path, sum(df$n_checked)))
+  }
+
+  env$summary <- function() {
+    if (length(env$rows) == 0L) return("No results logged.")
+    df <- do.call(rbind, env$rows)
+    sprintf("Total: %d values checked, %d failed, max delta %.2e",
+            sum(df$n_checked), sum(df$n_failed), max(df$max_abs_err))
+  }
+
+  env
+}
