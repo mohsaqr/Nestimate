@@ -14,6 +14,7 @@ make_cograph_net <- function() {
 # ---- .as_netobject converter ----
 
 test_that(".as_netobject passes through netobject unchanged", {
+  skip_if_pkg_broken("tna")
   net <- build_network(tna::group_regulation, method = "relative")
   result <- Nestimate:::.as_netobject(net)
   expect_identical(result, net)
@@ -160,6 +161,7 @@ test_that("cluster_summary works with cograph_network", {
 
 test_that("boot_glasso works with cograph_network wrapping glasso netobject", {
   skip_if_not_installed("cograph")
+  skip_if_pkg_broken("tna")
 
   # Build a glasso network, convert to cograph, then feed to boot_glasso
   freq <- convert_sequence_format(tna::group_regulation, format = "frequency")

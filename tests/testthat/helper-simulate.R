@@ -87,6 +87,17 @@ simulate_data <- function(type = "mlvar", seed = NULL, n_subjects = 20,
 }
 
 
+# ---- Safe package-load skip ----
+
+#' Skip if a package cannot actually be loaded (catches ABI/linker failures,
+#' not just missing installations).
+#' @noRd
+skip_if_pkg_broken <- function(pkg) {
+  ok <- isTRUE(tryCatch(requireNamespace(pkg, quietly = TRUE),
+                        error = function(e) FALSE))
+  if (!ok) skip(paste0(pkg, " cannot be loaded"))
+}
+
 # ---- Equivalence test infrastructure ----
 
 #' Skip equivalence tests unless explicitly enabled
