@@ -16,7 +16,7 @@ A data frame with 1,000 rows and 5 columns:
 }
 \source{
 Vogelsmeier, L.V.D.E., Oliveira, E., Misiejuk, K.,
-López-Pernas, S., & Saqr, M. (2025). Delving into the psychology of
+Lopez-Pernas, S., & Saqr, M. (2025). Delving into the psychology of
 Machines: Exploring the structure of self-regulated learning via
 LLM-generated survey responses. \emph{Computers in Human Behavior},
 173, 108769. \doi{10.1016/j.chb.2025.108769}

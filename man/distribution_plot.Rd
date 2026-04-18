@@ -104,8 +104,7 @@ Accepts the same inputs as \code{\link{sequence_plot}}.
 }
 \examples{
 \donttest{
-data(human_wide, package = "Nestimate")
-distribution_plot(human_wide[1:200, ])
+distribution_plot(as.data.frame(trajectories))
 }
 }
 \seealso{

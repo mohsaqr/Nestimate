@@ -3,31 +3,28 @@
 \docType{data}
 \name{long-data}
 \alias{long-data}
-\alias{human_long}
 \alias{ai_long}
-\alias{human_ai_long}
+\alias{human_long}
 \title{Human-AI Vibe Coding Interaction Data (Long Format)}
 \format{
-Data frames in long format with columns:
+Data frames in long format with 9 columns:
 \describe{
 \item{message_id}{Integer. Turn index.}
 \item{project}{Character. Project identifier (Project_1 .. Project_34).}
 \item{session_id}{Character. Unique session hash.}
 \item{timestamp}{Integer. Unix timestamp for ordering.}
 \item{session_date}{Character. Date of the session (YYYY-MM-DD).}
-\item{code}{Character. Interaction code (action label).}
-\item{cluster}{Character. High-level cluster (Directive, Action, etc.).}
+\item{code}{Character. Interaction code (17 action labels).}
+\item{cluster}{Character. High-level cluster: Action, Communication,
+Directive, Evaluative, Metacognitive, or Repair.}
 \item{code_order}{Integer. Order of the code within the session.}
 \item{order_in_session}{Integer. Absolute turn order within the session.}
 }
 
 \tabular{ll}{
-\code{human_ai_long} \tab All turns (human + AI), 19,347 rows \cr
-\code{human_long}    \tab Human turns only, 10,796 rows \cr
-\code{ai_long}       \tab AI turns only, 8,551 rows \cr
+\code{human_long} \tab Human turns only, 10,796 rows \cr
+\code{ai_long}    \tab AI turns only, 8,551 rows \cr
 }
-
-An object of class \code{data.frame} with 19347 rows and 9 columns.
 
 An object of class \code{data.frame} with 10796 rows and 9 columns.
 
@@ -38,19 +35,16 @@ Saqr, M. (2026). Human-AI vibe coding interaction study.
 \url{https://saqr.me/blog/2026/human-ai-interaction-cograph/}
 }
 \usage{
-human_ai_long
-
 human_long
 
 ai_long
 }
 \description{
 Coded interaction sequences from 429 human-AI pair programming sessions
-across 34 projects, in long format. Three datasets are provided, split by
-actor type.
+across 34 projects, in long format.
 }
 \examples{
-net <- build_network(human_ai_long, method = "tna",
+net <- build_network(human_long, method = "tna",
                      action = "code", actor = "session_id",
                      time = "timestamp")
 net

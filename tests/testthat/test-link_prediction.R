@@ -336,10 +336,10 @@ test_that("predictions are ranked by descending score", {
 
 # ---- 23. Bundled dataset ----
 
-test_that("predict_links works on human_cat data", {
-  data(human_cat)
-  net <- build_network(human_cat, method = "relative",
-                       actor = "session_id", action = "category",
+test_that("predict_links works on human_long data", {
+  data(human_long)
+  net <- build_network(human_long, method = "relative",
+                       actor = "session_id", action = "cluster",
                        time = "timestamp")
   # Dense network: test with exclude_existing = FALSE to get predictions
   pred <- predict_links(net, methods = c("katz", "resource_allocation"),

@@ -56,15 +56,15 @@ For a comprehensive introduction to TNA in learning analytics, see Saqr et al. (
 
 ## Data
 
-The `human_ai_long` dataset contains 19,347 coded interaction turns from 429 human-AI pair programming sessions across 34 projects. Each row is a single turn, with `code` recording the interaction type, `session_id` identifying the session, and `timestamp` providing temporal ordering. For a detailed description of the dataset and coding scheme, see [Saqr (2026)](https://saqr.me/blog/2026/human-ai-interaction-cograph/).
+The `human_long` dataset contains 10,796 coded human interaction turns from 429 human-AI pair programming sessions across 34 projects. Each row is a single turn, with `code` recording the interaction type, `session_id` identifying the session, and `timestamp` providing temporal ordering. For a detailed description of the dataset and coding scheme, see [Saqr (2026)](https://saqr.me/blog/2026/human-ai-interaction-cograph/).
 
 ```{r data}
 library(Nestimate)
 
 # Subsample for vignette speed (CRAN build-time limit)
 set.seed(1)
-keep <- sample(unique(human_ai_long$session_id), 100)
-human_sub <- human_ai_long[human_ai_long$session_id %in% keep, ]
+keep <- sample(unique(human_long$session_id), 100)
+human_sub <- human_long[human_long$session_id %in% keep, ]
 
 head(human_sub)
 ```

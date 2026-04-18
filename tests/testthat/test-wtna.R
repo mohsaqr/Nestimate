@@ -645,10 +645,9 @@ test_that("vectorized cooccurrence matches naive loops across 20 random configs"
 
 test_that("vectorized wtna end-to-end matches on bundled data", {
   # Use bundled dataset for realistic equivalence
-  skip_if_not(exists("human_wide", where = asNamespace("Nestimate")))
-  hw <- head(Nestimate::human_wide, 30)
-  codes <- setdiff(names(hw), c("session", "project"))
-  codes <- codes[vapply(hw[codes], function(x) all(x %in% c(0, 1, NA)), logical(1))]
+  hw <- head(learning_activities, 30)
+  codes <- setdiff(names(hw), "student")
+  codes <- codes[vapply(hw[codes], function(x) all(x %in% c(0L, 1L, NA)), logical(1))]
   if (length(codes) < 2) skip("Not enough binary columns")
   X <- as.matrix(hw[, codes, drop = FALSE])
   storage.mode(X) <- "double"

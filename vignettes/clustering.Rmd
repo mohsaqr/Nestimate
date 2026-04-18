@@ -1,0 +1,229 @@
+---
+title: "Sequence Clustering"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sequence Clustering}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.alt = "Visualization"
+)
+```
+
+## Introduction
+
+Clusters represent subgroups within the data that share similar patterns. Such patterns may reflect similar temporal dynamics (when we are analyzing sequence data, for example) or relationships between variables (as is the case in psychological networks). Units within the same cluster are more similar to each other, while units in different clusters differ more substantially. In this vignette, we demonstrate how to perform clustering on sequence data using `Nestimate`.
+
+## Data
+
+To illustrate clustering, we will use the `human_long` dataset, which contains 10,796 coded human interactions from 429 human-AI pair programming sessions across 34 projects. Each row represents a single interaction event with a timestamp, session identifier, and action label.
+
+```{r data}
+library(Nestimate)
+data("human_long")
+
+# Subsample for vignette speed (CRAN build-time limit)
+set.seed(1)
+keep <- sample(unique(human_long$session_id), 80)
+human_sub <- human_long[human_long$session_id %in% keep, ]
+
+head(human_sub)
+```
+
+We can build a transition network using this dataset using `build_network`. We need to determine the `actor` (`session_id`), the `action` (`cluster`), and the `time` (`timestamp`). We will use the overall network object as the starting point to find subgroups since it structures the raw data into the appropriate units of analysis to perform clustering.
+
+```{r}
+net <- build_network(human_sub,
+                     method = "tna",
+                     action = "cluster",
+                     actor  = "session_id",
+                     time   = "timestamp")
+```
+
+## Dissimilarity-based Clustering
+
+Dissimilarity-based clustering groups units of analysis (in our case, sessions, since that is what we provided as `actor`) by directly comparing their observed sequences. In our case, each session is represented by its sequence of actions, and similarity between sessions is defined using a distance metric that quantifies how different two sequences are.
+
+To implement this method using `Nestimate`, we can use the `cluster_data()` function, which takes either  raw sequence data or a network object such as the `net` object that we estimated (which also contains the original sequences in `$data`):
+
+```{r cluster-basic}
+clust <- cluster_data(net, k = 3)
+
+clust
+```
+The default clustering mechanism uses **Hamming distance** (number of positions where sequences differ) with **PAM** (Partitioning Around Medoids).
+
+The result contains the cluster `assignments` (which cluster each session belongs to), the cluster `sizes`, and a `silhouette` score that reflects the quality of the clustering (higher values indicate better separation between clusters), among other useful information.
+```{r cluster-components}
+# Cluster assignments (first 20 sessions)
+head(clust$assignments, 20)
+
+# Cluster sizes
+clust$sizes
+
+# Silhouette score (clustering quality: higher is better)
+clust$silhouette
+```
+
+### Visualizing Clusters
+
+The silhouette plot shows how well each sequence fits its assigned cluster. Values near 1 indicate good fit; values near 0 suggest the sequence is between clusters; negative values indicate possible misclassification.
+
+```{r cluster-plot, fig.alt = "Silhouette plot showing cluster quality"}
+plot(clust, type = "silhouette")
+```
+The MDS (multidimensional scaling) plot projects the distance matrix to 2D, showing cluster separation.
+
+
+```{r cluster-mds, fig.alt = "MDS plot showing cluster separation"}
+plot(clust, type = "mds")
+```
+
+### Distance Metrics
+
+A distance metric defines how (dis)similarity between sequences is measured. In other words, it quantifies how different two sequences are from each other. `Nestimate` currently supports 9 distance metrics for comparing sequences:
+
+| Metric | Description | Best for |
+|--------|-------------|----------|
+| `hamming` | Positions where sequences differ | Equal-length sequences |
+| `lv` | Levenshtein (edit distance) | Variable-length, insertions/deletions |
+| `osa` | Optimal string alignment | Edit distance + transpositions |
+| `dl` | Damerau-Levenshtein | Full edit + adjacent transpositions |
+| `lcs` | Longest common subsequence | Preserving order, ignoring gaps |
+| `qgram` | Q-gram frequency difference | Pattern-based similarity |
+| `cosine` | Cosine of q-gram vectors | Normalized pattern similarity |
+| `jaccard` | Jaccard index of q-grams | Set-based pattern overlap |
+| `jw` | Jaro-Winkler | Short strings, typo detection |
+
+Different metrics may produce different clustering results. You need to choose this based on your research question:
+
+- **Hamming**: compares sequences position by position (best for aligned sequences of equal length).
+- **Edit distances** (lv, osa, dl): allow insertions and deletions (best when sequences may be shifted or vary in length).
+- **LCS**: captures shared subsequences (best when overall patterns matter more than exact alignment).
+
+We can specify which distance metric we want to use through the `dissimilarity` argument:
+
+```{r cluster-metrics}
+# Levenshtein distance (allows insertions/deletions)
+clust_lv <- cluster_data(net, k = 3, dissimilarity = "lv")
+clust_lv$silhouette
+
+# Longest common subsequence
+clust_lcs <- cluster_data(net, k = 3, dissimilarity = "lcs")
+clust_lcs$silhouette
+```
+
+Some distance metrics may take additional arguments. For example, the Hamming distance accepts **temporal weighting** to emphasize earlier or later positions:
+
+```{r cluster-weighted}
+# Emphasize earlier positions (higher lambda = faster decay)
+clust_weighted <- cluster_data(net, 
+                               k = 3,
+                               dissimilarity = "hamming",
+                               weighted = TRUE,
+                               lambda = 0.5)
+clust_weighted$silhouette
+```
+
+
+### Clustering Methods
+By default, Nestimate uses PAM (Partitioning Around Medoids) to form clusters, which assigns each sequence to the cluster represented by the most central sequence (the medoid). Besides PAM, `Nestimate` supports hierarchical clustering methods, which build clusters step by step by progressively merging similar units into a tree-like structure (a dendrogram):
+
+- `ward.D2` (“Ward’s Method, Squared Distances”): Minimizes the increase in within-cluster variance using squared distances. Typically produces compact, well-separated clusters.
+- `ward.D` (“Ward’s Method”): An alternative implementation of Ward’s approach using a different distance formulation. Similar behavior, but results may vary slightly.
+- `complete` (“Complete Linkage”): Defines the distance between clusters as the maximum distance between their members. Produces tight, compact clusters.
+- `average` (“Average Linkage”): Uses the average distance between all pairs of points across clusters. Provides a balance between compactness and flexibility.
+- `single` (“Single Linkage”): Uses the minimum distance between points in two clusters. Can capture chain-like structures but may lead to - loosely connected clusters.
+- `mcquitty` (“McQuitty’s Method” / “WPGMA”): A weighted version of average linkage that gives equal weight to clusters regardless of size.
+- `centroid` (“Centroid Linkage”): Defines cluster distance based on the distance between cluster centroids (means). Can produce intuitive groupings but may introduce inconsistencies in the hierarchy.
+
+To use any of these methods instead of PAM, we need to provide the `method` argument to `cluster_data`.
+```{r cluster-methods}
+# Ward's method (minimizes within-cluster variance)
+clust_ward <- cluster_data(net, k = 3, method = "ward.D2")
+clust_ward$silhouette
+
+# Complete linkage
+clust_complete <- cluster_data(net, k = 3, method = "complete")
+clust_complete$silhouette
+```
+
+
+### Choosing k (Number of Clusters)
+
+To choose the right clustering solution and method, we need to compare the silhouette scores across different k values and clustering methods (and also distance metrics if we want):
+
+```{r choose-k}
+methods <- c("pam", "ward.D2", "complete", "average")
+
+silhouettes <- lapply(methods, function(m) {
+  sapply(2:4, function(k) {
+    cluster_data(net, k = k, method = m, seed = 42)$silhouette
+  })
+})
+
+names(silhouettes) <- methods
+
+silhouettes
+```
+
+```{r choose-k-plot, fig.alt = "Silhouette scores across different k values"}
+methods <- names(silhouettes)
+colors <- rainbow(length(methods))
+
+plot(2:4, silhouettes[[1]], type = "b", pch = 19, col = colors[1],
+     xlab = "Number of clusters (k)",
+     ylab = "Average silhouette width",
+     ylim = c(0, 1),
+     main = "Choosing k")
+
+for (i in 2:length(methods)) {
+  lines(2:4, silhouettes[[i]], type = "b", pch = 19, col = colors[i])
+}
+
+legend("topright", legend = methods, col = colors, lty = 1, pch = 19)
+```
+
+Higher silhouette scores indicate better-defined clusters. Look for an "elbow" or maximum. Here we select `ward.D2` with 2 clusters, which yields a reasonable silhouette width.
+```{r}
+clust <- cluster_data(net, k = 2, method = "ward.D2", seed = 42)
+
+summary(clust)
+```
+
+
+
+
+## Mixture Markov Models
+
+Instead of clustering sequences based on how similar they are to one another, we can cluster them together based on their transition dynamics. Mixture Markov models (MMM) fit separate Markov models, and sequences are assigned to the cluster whose transition structure best matches their observed behavior.
+
+To implement MMM, we can use the `build_mmm` provided by `Nestimate`, and we pass the sequence data or network estimated and the number of clusters (`k`, by default 2)
+```{r}
+mmm_default <- build_mmm(net)
+```
+We can inspect the results using `summary` and obtain the cluster assignment from the results using `mmm_default$assignments`.
+```{r}
+summary(mmm_default)
+head(mmm_default$assignments,10)
+```
+## Building Networks per Cluster
+
+Once sequences are clustered, we can create separate networks by cluster. We need to pass the clustering result to `build_network` and use the `group` argument to indicate that we want to group by cluster assignment. 
+
+```{r cluster-networks}
+cluster_net <- build_network(clust)
+```
+
+
+We may also compare which transition probabilities differ significantly among clusters using permutation testing:
+```{r}
+comparison <- permutation_test(cluster_net, iter = 100)
+```

@@ -403,11 +403,11 @@ test_that("2-item transactions: exact match", {
   expect_equal(res$n_single, res$n_arules)
 })
 
-test_that("human_cat bundled data: single-cons match", {
+test_that("human_long bundled data: single-cons match", {
   skip_if_not_installed("arules")
-  data(human_cat)
-  net <- build_network(human_cat, method = "relative",
-                       actor = "session_id", action = "category", time = "timestamp")
+  data(human_long)
+  net <- build_network(human_long, method = "relative",
+                       actor = "session_id", action = "cluster", time = "timestamp")
   ours <- association_rules(net, min_support = 0.3, min_confidence = 0.5, min_lift = 1.0)
   our_single <- .ar_filter_single(ours)
   seqs_df <- as.data.frame(net$data, stringsAsFactors = FALSE)

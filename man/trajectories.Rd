@@ -18,25 +18,10 @@ observations. Each row is one student; columns \code{1}..\code{15}
 hold the engagement state for that week. States: \code{"Active"},
 \code{"Average"}, \code{"Disengaged"}. Missing weeks are \code{NA}.
 }
-\details{
-Derived from a teaching-dataset of 106 sequences. Cleaning applied:
-\enumerate{
-\item The rare \code{"Withdraw"} state was absorbed into its
-temporally nearest non-\code{Withdraw} neighbour in the same row,
-so the state alphabet collapses to three interpretable engagement
-levels.
-\item State label \code{"Dis-engaged"} was renamed to
-\code{"Disengaged"}.
-\item 32 random complete (no-NA) sequences were sampled with
-replacement and appended, yielding 138 rows. The deliberate
-duplication gives hierarchical clustering a clearer near-duplicate
-structure to latch onto in teaching examples.
-}
-}
 \examples{
 \donttest{
 sequence_plot(trajectories, main = "Engagement trajectories")
-sequence_plot(trajectories, k = 3)                      # cluster cuts
+sequence_plot(trajectories, k = 3)
 sequence_plot(trajectories, type = "distribution")
 }
 

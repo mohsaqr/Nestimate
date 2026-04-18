@@ -141,10 +141,9 @@ thin gaps (no dendrogram). Supports grouping via \code{group} or a
 }
 \examples{
 \donttest{
-data(human_wide, package = "Nestimate")
-sequence_plot(human_wide[1:80, 1:40])                       # heatmap
-sequence_plot(human_wide[1:80, 1:40], type = "index")       # gapped
-sequence_plot(human_wide[1:80, 1:40], type = "distribution")
+sequence_plot(trajectories)
+sequence_plot(trajectories, type = "index")
+sequence_plot(trajectories, type = "distribution")
 }
 }
 \seealso{

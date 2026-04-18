@@ -1,0 +1,225 @@
+---
+title: "Markov Stability Analysis"
+output:
+  rmarkdown::html_vignette:
+    df_print: paged
+vignette: >
+  %\VignetteIndexEntry{Markov Stability Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  out.width = "100%",
+  fig.width = 7,
+  fig.height = 5,
+  dpi       = 150,
+  warning   = FALSE,
+  message   = FALSE
+)
+```
+
+```{r}
+library(Nestimate)
+```
+
+Nestimate provides two functions for Markov-chain stability analysis of
+transition networks:
+
+- **`passage_time()`** -- computes the full matrix of mean first passage times
+  (MFPT). Entry M[i, j] is the expected number of steps to travel from state
+  *i* to state *j* for the first time. The diagonal equals the mean recurrence
+  time 1/pi.
+- **`markov_stability()`** -- computes per-state stability metrics: persistence,
+  stationary probability, return time, sojourn time, and mean accessibility.
+
+Both functions accept a `netobject`, `cograph_network`, `tna` object,
+row-stochastic matrix, or a raw wide sequence data frame.
+
+---
+
+## Data
+
+`trajectories` contains 138 learners recorded at 15 time-steps each with three
+engagement states: Active, Average, and Disengaged.
+
+```{r}
+dim(trajectories)
+table(as.vector(trajectories), useNA = "always")
+```
+
+---
+
+## Selecting mostly-active learners
+
+We keep learners who were Active **more than half the time** (> 7 of 15 steps).
+
+```{r}
+df <- as.data.frame(trajectories)
+active_count  <- rowSums(df == "Active", na.rm = TRUE)
+mostly_active <- active_count > ncol(df) / 2
+cat(sum(mostly_active), "of", nrow(df), "learners qualify\n")
+sub <- df[mostly_active, ]
+```
+
+---
+
+## Sequence plots
+
+```{r fig.height=7}
+state_pal <- c(Active = "#1a7a1a", Average = "#E69F00", Disengaged = "#CC79A7")
+
+sequence_plot(
+  df,
+  type         = "heatmap",
+  sort         = "lcs",
+  k            = 3,
+  k_color      = "white",
+  k_line_width = 2,
+  state_colors = state_pal,
+  na_color     = "grey88",
+  main         = "Full sample - all 138 learners",
+  time_label   = "Time-step",
+  y_label      = "Learner",
+  legend       = "bottom"
+)
+```
+
+```{r fig.height=5}
+sequence_plot(
+  sub,
+  type         = "heatmap",
+  sort         = "lcs",
+  k            = 2,
+  k_color      = "white",
+  k_line_width = 2,
+  state_colors = state_pal,
+  na_color     = "grey88",
+  main         = "Mostly-active learners - Active > 7 of 15 steps (n = 42)",
+  time_label   = "Time-step",
+  y_label      = "Learner",
+  legend       = "bottom"
+)
+```
+
+---
+
+## Transition networks
+
+```{r}
+net_all <- build_network(df,  method = "relative")
+net_sub <- build_network(sub, method = "relative")
+
+round(net_all$weights, 3)
+round(net_sub$weights, 3)
+```
+
+In the mostly-active group nearly every state transitions predominantly back
+to Active, and the probability of entering Disengaged is almost zero.
+
+---
+
+## Mean First Passage Times
+
+```{r}
+pt_all <- passage_time(net_all)
+pt_sub <- passage_time(net_sub)
+```
+
+```{r}
+print(pt_all, digits = 2)
+```
+
+```{r}
+print(pt_sub, digits = 2)
+```
+
+**Active to Disengaged** rises from 10.4 to ~40 steps -- mostly-active learners
+are nearly four times harder to disengage. The diagonal equals the mean
+recurrence time (how many steps between consecutive visits to the same state).
+
+```{r fig.height=4}
+plot(pt_all, title = "Full sample (n = 138)")
+```
+
+```{r fig.height=4}
+plot(pt_sub, title = "Mostly-active learners (n = 42)")
+```
+
+In the mostly-active heatmap the Active column is uniformly dark (quickly
+reachable from any state) and the Disengaged column is uniformly pale
+(nearly unreachable).
+
+---
+
+## Stationary distribution
+
+```{r echo=FALSE}
+data.frame(
+  State           = names(pt_all$stationary),
+  `Full sample`   = paste0(round(pt_all$stationary * 100, 1), "%"),
+  `Mostly active` = paste0(round(pt_sub$stationary * 100, 1), "%"),
+  check.names     = FALSE
+)
+```
+
+In the mostly-active group ~79% of long-run time is spent Active (vs 37% in
+the full sample).
+
+---
+
+## Markov Stability
+
+```{r}
+ms_all <- markov_stability(net_all)
+ms_sub <- markov_stability(net_sub)
+
+print(ms_all)
+print(ms_sub)
+```
+
+The `stability` data frame contains:
+
+| Column | Meaning |
+|--------|---------|
+| `persistence` | P[i,i] -- probability of staying at the next step |
+| `stationary_prob` | Long-run proportion of time in this state |
+| `return_time` | Expected steps between consecutive visits (1/pi) |
+| `sojourn_time` | Expected consecutive steps before leaving (1/(1-P[i,i])) |
+| `avg_time_to_others` | Mean MFPT leaving this state to all others |
+| `avg_time_from_others` | Mean MFPT from all other states arriving here |
+
+```{r fig.height=6}
+plot(ms_all, title = "Full sample")
+```
+
+```{r fig.height=6}
+plot(ms_sub, title = "Mostly-active learners")
+```
+
+Active leads on persistence (0.81) and sojourn time (5.3 steps) -- once a
+learner is active they stay active. Average has the lowest
+`avg_time_from_others` (1.6 steps) -- the most accessible hub state.
+Disengaged has `avg_time_from_others` of ~39 steps -- effectively unreachable.
+
+---
+
+## Summary
+
+```{r echo=FALSE}
+data.frame(
+  Metric            = c("Dominant state", "Active persistence",
+                        "Active sojourn time",
+                        "Active to Disengaged MFPT",
+                        "Disengaged to Active MFPT",
+                        "Disengaged accessibility (avg)"),
+  `Full sample`     = c("Average (44%)", "0.70", "3.3 steps",
+                        "10.4", "6.2", "9.2 avg"),
+  `Mostly active`   = c("Active (79%)", "0.81", "5.3 steps",
+                        "~40", "~2.0", "~39 avg"),
+  check.names       = FALSE
+)
+```

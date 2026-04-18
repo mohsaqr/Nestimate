@@ -1,0 +1,135 @@
+---
+title: "Sequence Pattern Comparison: Early vs Late Human-AI Interactions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sequence Pattern Comparison: Early vs Late Human-AI Interactions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 9,
+  fig.height = 6,
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE
+)
+library(Nestimate)
+set.seed(20260413)
+```
+
+## 1. The dataset
+
+`human_ai_long` is a bundled dataset in `Nestimate` containing coded action sequences from **429 human-AI coding sessions across 34 projects**. Every row is a single action taken during a session with a `cluster` label grouping actions into six broad types: `Action`, `Communication`, `Directive`, `Evaluative`, `Metacognitive`, `Repair`.
+
+```{r load}
+data(human_long, package = "Nestimate")
+dat <- as.data.frame(human_long)
+cat("rows:", nrow(dat),
+    "| sessions:", length(unique(dat$session_id)),
+    "| projects:", length(unique(dat$project)), "\n\n")
+print(table(dat$cluster))
+```
+
+## 2. Split by time — early vs late interactions
+
+For each session, the first half of its actions is labeled `"early"` and the second half `"late"`. Base R `ave()` does both jobs — per-session count and per-session position — and then a single `ifelse()` writes the label.
+
+```{r split}
+dat <- dat[order(dat$session_id, dat$order_in_session), ]
+n_per <- ave(dat$order_in_session, dat$session_id, FUN = length)
+pos   <- ave(dat$order_in_session, dat$session_id, FUN = seq_along)
+dat$half <- ifelse(pos <= n_per %/% 2, "early", "late")
+print(table(dat$half))
+```
+
+## 3. Build the grouped network
+
+`build_network()` is the canonical entry point. Passing `group = "half"` produces a `netobject_group` with one netobject per half. Each netobject's `$data` field holds the session-half sequences.
+
+```{r build}
+net <- build_network(
+  data   = dat,
+  actor  = "session_id",
+  action = "cluster",
+  group  = "half",
+  method = "relative"
+)
+net
+```
+
+## 4. Compare patterns between early and late
+
+`sequence_compare()` accepts a `netobject_group` directly — group labels are read from the list names, no separate `group` argument needed. Pattern lengths 3–5, minimum frequency 25, chi-square test with FDR correction.
+
+```{r compare}
+res <- sequence_compare(
+  net,
+  sub      = 3:5,
+  min_freq = 25L,
+  test     = "chisq",
+  adjust   = "fdr"
+)
+res
+```
+
+```{r top-table}
+head(res$patterns, 10)
+```
+
+### How to read the residuals
+
+For every pattern, the standardized residual is computed from a 2x2 contingency table `(this pattern vs. everything else)`:
+
+$$\text{stdres}_{ij} = \frac{O_{ij} - E_{ij}}{\sqrt{E_{ij} \cdot (1 - r_i/N) \cdot (1 - c_j/N)}}$$
+
+- **Positive on `early`** → over-represented in the first half of sessions
+- **Positive on `late`** → over-represented in the second half
+- `|z| > 1.96` corresponds to `p < 0.05`; `|z| > 3` is very strong evidence
+
+## 5. Pyramid plot
+
+Back-to-back bars with residual labels inside each segment. Both sides use the same standardized-residual color scale.
+
+```{r pyramid, fig.height=8}
+plot(res, style = "pyramid", show_residuals = TRUE)
+```
+
+## 6. Heatmap
+
+Same top patterns, same color scale, alternative layout. Works for any number of groups (pyramid requires exactly 2).
+
+```{r heatmap, fig.width=10, fig.height=8}
+plot(res, style = "heatmap")
+```
+
+## 7. Sensitivity to `min_freq`
+
+Raising `min_freq` cleans up the signal by dropping rare patterns; lowering it digs deeper into the tail.
+
+### Stricter: `min_freq = 50`
+
+```{r min50, fig.height=7}
+res50 <- sequence_compare(net, sub = 3:5, min_freq = 50L,
+                           test = "chisq", adjust = "fdr")
+cat(sprintf("patterns: %d\n", res50$n_patterns))
+plot(res50, style = "heatmap", top_n = 10)
+```
+
+### Looser: `min_freq = 10`
+
+```{r min10, fig.height=9}
+res10 <- sequence_compare(net, sub = 3:5, min_freq = 10L,
+                           test = "chisq", adjust = "fdr")
+cat(sprintf("patterns: %d\n", res10$n_patterns))
+plot(res10, style = "heatmap", top_n = 15)
+```
+
+## 8. Note on the test choice
+
+This vignette uses `test = "chisq"` because the split-within-session design makes the two halves from the same session non-independent (same human, same AI, same project). The chi-square answers the k-gram-level question "do the rates differ between halves?" and is the right tool for this design.
+
+`test = "permutation"` shuffles group labels at the sequence level and assumes exchangeability across sequences — it's the right choice when the groups are independent cohorts (e.g., `Project_A` vs `Project_B`), not when each session contributes to both groups.

@@ -344,12 +344,12 @@ test_that("runs in reasonable time on 1000 transactions", {
 })
 
 
-# ---- 24. Bundled data: human_cat ----
+# ---- 24. Bundled data: human_long ----
 
-test_that("association_rules works on human_cat data", {
-  data(human_cat)
-  net <- build_network(human_cat, method = "relative",
-                       actor = "session_id", action = "category",
+test_that("association_rules works on human_long data", {
+  data(human_long)
+  net <- build_network(human_long, method = "relative",
+                       actor = "session_id", action = "cluster",
                        time = "timestamp")
   rules <- association_rules(net, min_support = 0.3,
                              min_confidence = 0.5, min_lift = 1)

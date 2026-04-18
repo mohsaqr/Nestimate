@@ -26,3 +26,6 @@
 ^local_testing_and_equivalence$
 ^AGENT-NOTE-EQUIV-TESTING\.md$
 ^.*\.tar\.gz$
+^vignettes/Good$
+^temp_docs$
+^vignettes/knitted$
