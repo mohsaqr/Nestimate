@@ -327,8 +327,10 @@ print.net_hypa <- function(x, ...) {
 #' Summary Method for net_hypa
 #'
 #' @param object A \code{net_hypa} object.
-#' @param n Integer. Maximum number of over/under-represented paths to
-#'   display (default: 10).
+#' @param n Integer. Maximum number of paths to display per category
+#'   (default: 10).
+#' @param type Character. Which anomalies to show: \code{"all"} (default),
+#'   \code{"over"}, or \code{"under"}.
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
@@ -347,10 +349,13 @@ print.net_hypa <- function(x, ...) {
 #' )
 #' hypa <- build_hypa(seqs, k = 2L)
 #' summary(hypa)
+#' summary(hypa, type = "over", n = 5)
 #' }
 #'
 #' @export
-summary.net_hypa <- function(object, n = 10L, ...) {
+summary.net_hypa <- function(object, n = 10L,
+                             type = c("all", "over", "under"), ...) {
+  type <- match.arg(type)
   cat("HYPA Summary\n\n")
   cat(sprintf("  Order: %d | Nodes: %d | Edges: %d\n",
               object$k, nrow(object$nodes), object$n_edges))
@@ -361,14 +366,14 @@ summary.net_hypa <- function(object, n = 10L, ...) {
 
   show_cols <- c("path", "observed", "expected", "ratio", "p_value")
 
-  if (object$n_over > 0L) {
+  if (type %in% c("all", "over") && object$n_over > 0L) {
     cat("  Over-represented (top", min(n, object$n_over), "):\n")
     top_over <- utils::head(object$over[, show_cols, drop = FALSE], n)
     print(top_over, row.names = FALSE)
     cat("\n")
   }
 
-  if (object$n_under > 0L) {
+  if (type %in% c("all", "under") && object$n_under > 0L) {
     cat("  Under-represented (top", min(n, object$n_under), "):\n")
     top_under <- utils::head(object$under[, show_cols, drop = FALSE], n)
     print(top_under, row.names = FALSE)

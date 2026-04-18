@@ -166,6 +166,9 @@ remove_estimator <- function(name) {
   register_estimator("ising", .estimator_ising,
                      "Ising model (L1-penalized logistic regression)",
                      directed = FALSE)
+  register_estimator("mgm", .estimator_mgm,
+                     "Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)",
+                     directed = FALSE)
   register_estimator("attention", .estimator_attention,
                      "Decay-weighted attention transitions", directed = TRUE)
   register_estimator("wtna", .estimator_wtna,

@@ -18,12 +18,12 @@
 #' @export
 #' @examples
 #' w <- c(0.5, 0.8, 0.3, 0.9)
-#' aggregate_weights(w, "sum")   # 2.5
-#' aggregate_weights(w, "mean")  # 0.625
-#' aggregate_weights(w, "max")   # 0.9
+#' net_aggregate_weights(w, "sum")   # 2.5
+#' net_aggregate_weights(w, "mean")  # 0.625
+#' net_aggregate_weights(w, "max")   # 0.9
 #' mat <- matrix(c(0, 0.5, 0.5, 0.3, 0, 0.7, 0.4, 0.6, 0), 3, 3, byrow = TRUE)
-#' aggregate_weights(mat)
-aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
+#' net_aggregate_weights(mat)
+net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
   # Remove NA and zero weights
   w <- w[!is.na(w) & w != 0]
   if (length(w) == 0) return(0)
@@ -48,9 +48,6 @@ aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
   )
 }
 
-#' @rdname aggregate_weights
-#' @export
-wagg <- aggregate_weights
 
 # ==============================================================================
 # 2. Cluster Summary (Between/Within Aggregates)
@@ -372,7 +369,7 @@ cluster_summary <- function(x,
       # Both diagonal (within-cluster) and off-diagonal (between-cluster)
       w_ij <- mat[idx_i, idx_j]
       n_possible <- n_i * n_j
-      between_raw[i, j] <- aggregate_weights(as.vector(w_ij), method, n_possible)
+      between_raw[i, j] <- net_aggregate_weights(as.vector(w_ij), method, n_possible)
     }
   }
 
@@ -467,14 +464,6 @@ cluster_summary <- function(x,
   result
 }
 
-#' @rdname cluster_summary
-#' @return See \code{\link{cluster_summary}}.
-#' @export
-#' @examples
-#' mat <- matrix(runif(16), 4, 4)
-#' rownames(mat) <- colnames(mat) <- LETTERS[1:4]
-#' csum(mat, c(1, 1, 2, 2))
-csum <- cluster_summary
 
 # ==============================================================================
 # 2b. Build MCML from Raw Transition Data
@@ -536,7 +525,7 @@ csum <- cluster_summary
 #'
 #' @export
 #' @seealso \code{\link{cluster_summary}} for matrix-based aggregation,
-#'   \code{as_tna()} to convert to tna objects,
+#'   \code{net_as_tna()} to convert to tna objects,
 #'   \code{plot()} for visualization
 #'
 #' @examples
@@ -771,7 +760,7 @@ build_mcml <- function(x,
         n_j <- length(cluster_list[[parts[2]]])
         n_possible <- n_i * n_j
       }
-      aggregate_weights(w, method, n_possible)
+      net_aggregate_weights(w, method, n_possible)
     })
 
     for (key in names(agg_vals)) {
@@ -848,7 +837,7 @@ build_mcml <- function(x,
         # Single node: count self-loops
         keep_self <- w_from %in% cl_nodes & w_to %in% cl_nodes
         self_weight <- if (any(keep_self)) {
-          aggregate_weights(w_w[keep_self], method)
+          net_aggregate_weights(w_w[keep_self], method)
         } else { 0 }
         within_weights_i <- matrix(self_weight, 1, 1,
                                     dimnames = list(cl_nodes, cl_nodes))
@@ -866,7 +855,7 @@ build_mcml <- function(x,
         if (length(cf) > 0) {
           pair_keys <- paste(cf, ct, sep = "\t")
           agg_vals <- tapply(cw, pair_keys, function(w) {
-            aggregate_weights(w, method)
+            net_aggregate_weights(w, method)
           })
           for (key in names(agg_vals)) {
             parts <- strsplit(key, "\t")[[1]]

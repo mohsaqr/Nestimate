@@ -33,3 +33,17 @@ The between-subjects effects that go into \code{fit$between} are handled
 via the \code{D (I - Gamma)} transformation and are not exposed as a
 separate tidy table.
 }
+\examples{
+\dontrun{
+d <- simulate_data("mlvar", seed = 1)
+fit <- build_mlvar(d, vars = attr(d, "vars"),
+                   id = "id", day = "day", beep = "beep")
+print(fit)
+summary(fit)
+
+# Short-cut alias
+fit2 <- mlvar(d, vars = attr(d, "vars"),
+              id = "id", day = "day", beep = "beep")
+}
+
+}

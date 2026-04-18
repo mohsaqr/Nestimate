@@ -207,7 +207,7 @@ test_that("build_mlvar warns on singular fit", {
     withCallingHandlers(
       build_mlvar(d, vars = c("V1", "V2"), id = "id", day = "day", beep = "beep"),
       warning = function(w) {
-        if (grepl("singular fit", w$message)) {
+        if (grepl("singular", w$message)) {
           invokeRestart("muffleWarning")
         }
       }

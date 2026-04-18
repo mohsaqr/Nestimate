@@ -99,7 +99,8 @@ build_atna <- function(data, ...) {
 #' @inheritParams build_network
 #' @param ... Additional arguments passed to \code{\link{build_network}}.
 #' @return A \code{netobject} (see \code{\link{build_network}}).
-#' @seealso \code{\link{build_network}}
+#' @seealso \code{\link{build_network}}, \code{\link{co_occurrence}} for
+#'   delimited-field, bipartite, and other non-sequence co-occurrence formats.
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 #' net <- build_cna(seqs)
@@ -203,7 +204,9 @@ build_ising <- function(data, ...) {
     wtna_transition   = "wtna",
     wtna_cooccurrence = "wtna_cooccurrence",
     isingfit          = "ising",
-    atna              = "attention"
+    atna              = "attention",
+    mixed_graphical   = "mgm",
+    mixed             = "mgm"
   )
   if (method %in% names(aliases)) {
     aliases[[method]]

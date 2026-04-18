@@ -156,6 +156,66 @@ equiv_report <- function() {
     message(sprintf("Equivalence report: %s (%d checks)", path, sum(df$n_checked)))
   }
 
+  env$write_cvs <- function(module, test_file = NULL) {
+    if (length(env$rows) == 0L) return(invisible(NULL))
+    df <- do.call(rbind, env$rows)
+
+    # Build vitest-compatible assertion results
+    assertions <- lapply(seq_len(nrow(df)), function(i) {
+      r <- df[i, ]
+      passed <- r$n_failed == 0
+      title <- sprintf("%s: %s delta=%.2e", r$func, r$config, r$max_abs_err)
+      list(
+        ancestorTitles = list(paste0(module, " equivalence")),
+        title = title,
+        fullName = sprintf("%s equivalence > %s", module, title),
+        status = if (passed) "passed" else "failed",
+        duration = 0,
+        failureMessages = if (passed) list() else list(
+          sprintf("max delta %.2e >= tolerance, %d/%d values failed",
+                  r$max_abs_err, r$n_failed, r$n_checked)
+        ),
+        `_cvs` = list(
+          delta = r$max_abs_err,
+          tolerance = 1e-10,
+          rFunction = r$func,
+          rPackage = r$reference,
+          module = module,
+          target = "nestimate"
+        )
+      )
+    })
+
+    n_passed <- sum(df$n_failed == 0)
+    n_failed <- sum(df$n_failed > 0)
+    result <- list(
+      numTotalTestSuites = 1L,
+      numPassedTestSuites = if (n_failed == 0) 1L else 0L,
+      numFailedTestSuites = if (n_failed > 0) 1L else 0L,
+      numTotalTests = nrow(df),
+      numPassedTests = n_passed,
+      numFailedTests = n_failed,
+      testResults = list(list(
+        name = if (!is.null(test_file)) test_file
+               else sprintf("tests/testthat/test-equiv-%s.R", module),
+        assertionResults = assertions
+      ))
+    )
+
+    inbox <- file.path("..", "..", "..", "validation", "data", "inbox")
+    if (!dir.exists(inbox)) inbox <- "../../validation/data/inbox"
+    if (!dir.exists(inbox)) {
+      # Try absolute path
+      inbox <- "/Users/mohammedsaqr/Documents/Github/validation/data/inbox"
+    }
+    if (dir.exists(inbox)) {
+      ts <- format(Sys.time(), "%Y%m%dT%H%M%S")
+      path <- file.path(inbox, sprintf("nestimate-%s-%s.json", module, ts))
+      writeLines(jsonlite::toJSON(result, auto_unbox = TRUE, pretty = TRUE), path)
+      message(sprintf("CVS report: %s", path))
+    }
+  }
+
   env$summary <- function() {
     if (length(env$rows) == 0L) return("No results logged.")
     df <- do.call(rbind, env$rows)

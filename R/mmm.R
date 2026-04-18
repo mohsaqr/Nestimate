@@ -530,6 +530,19 @@ build_mmm <- function(data,
     if (run$ll > best$ll) best <- run
   }
 
+  # Fallback: if all parallel screen runs returned NULL (e.g. macOS arm64 fork
+  # failures), run one guaranteed sequential EM before touching best$P_all.
+  if (is.null(best$P_all)) {
+    run <- .mmm_em(counts, init_state, k, max_iter, tol, smooth, n_states,
+                   init_posterior = inits[[1L]], from_ind = from_ind,
+                   cov_df = cov_df)
+    if (!is.null(run)) best <- run
+  }
+  if (is.null(best$P_all)) {
+    stop("EM algorithm failed to produce a valid result in all starting configurations.",
+         call. = FALSE)
+  }
+
   # ---- Build netobjects for each component ----
   models <- lapply(seq_len(k), function(m) {
     P_vec <- best$P_all[, m]

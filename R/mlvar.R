@@ -55,7 +55,7 @@
 #'   standard `c("netobject", "cograph_network")`, so
 #'   `cograph::splot(fit$temporal)` plots directly through the standard
 #'   cograph dispatch and existing `netobject_group` dispatch (e.g.
-#'   [centrality()], [bootstrap_network()]) iterates over all three
+#'   \code{centrality()}, [bootstrap_network()]) iterates over all three
 #'   networks automatically. Structure:
 #'   \describe{
 #'     \item{`fit$temporal`}{Directed netobject for the `d x d` matrix of
@@ -189,6 +189,7 @@ mlvar <- build_mlvar
 #' @param x A fitted model object — currently only `net_mlvar` is supported.
 #' @param ... Unused.
 #' @return A tidy `data.frame` of coefficient estimates.
+#' @inherit build_mlvar examples
 #' @export
 coefs <- function(x, ...) {
   UseMethod("coefs")
@@ -534,6 +535,7 @@ coefs.default <- function(x, ...) {
 #' @param x A `net_mlvar` object returned by [build_mlvar()].
 #' @param ... Unused; present for S3 consistency.
 #' @return Invisibly returns `x`.
+#' @inherit build_mlvar examples
 #' @export
 print.net_mlvar <- function(x, ...) {
   coef_df <- attr(x, "coefs")
@@ -560,6 +562,7 @@ print.net_mlvar <- function(x, ...) {
 #' @param object A `net_mlvar` object returned by [build_mlvar()].
 #' @param ... Unused; present for S3 consistency.
 #' @return Invisibly returns `object`.
+#' @inherit build_mlvar examples
 #' @export
 summary.net_mlvar <- function(object, ...) {
   coef_df <- attr(object, "coefs")

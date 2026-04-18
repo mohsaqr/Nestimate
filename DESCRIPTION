@@ -28,7 +28,8 @@ Imports:
     ggplot2,
     glasso,
     data.table,
-    cluster
+    cluster,
+    scales
 Suggests:
     testthat (>= 3.0.0),
     tna,
@@ -47,6 +48,11 @@ Suggests:
     lme4,
     corpcor,
     mlVAR,
+    mgm,
+    Matrix,
+    NetworkComparisonTest,
+    arules,
+    jsonlite,
     knitr,
     rmarkdown,
     pkgdown

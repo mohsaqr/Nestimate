@@ -44,7 +44,7 @@ model-level metadata stored as attributes. Each element is a
 standard \code{c("netobject", "cograph_network")}, so
 \code{cograph::splot(fit$temporal)} plots directly through the standard
 cograph dispatch and existing \code{netobject_group} dispatch (e.g.
-\code{\link[=centrality]{centrality()}}, \code{\link[=bootstrap_network]{bootstrap_network()}}) iterates over all three
+\code{centrality()}, \code{\link[=bootstrap_network]{bootstrap_network()}}) iterates over all three
 networks automatically. Structure:
 \describe{
 \item{\code{fit$temporal}}{Directed netobject for the \verb{d x d} matrix of

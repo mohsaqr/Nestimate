@@ -4,13 +4,16 @@
 \alias{summary.net_hypa}
 \title{Summary Method for net_hypa}
 \usage{
-\method{summary}{net_hypa}(object, n = 10L, ...)
+\method{summary}{net_hypa}(object, n = 10L, type = c("all", "over", "under"), ...)
 }
 \arguments{
 \item{object}{A \code{net_hypa} object.}
 
-\item{n}{Integer. Maximum number of over/under-represented paths to
-display (default: 10).}
+\item{n}{Integer. Maximum number of paths to display per category
+(default: 10).}
+
+\item{type}{Character. Which anomalies to show: \code{"all"} (default),
+\code{"over"}, or \code{"under"}.}
 
 \item{...}{Additional arguments (ignored).}
 }
@@ -34,6 +37,7 @@ seqs <- data.frame(
 )
 hypa <- build_hypa(seqs, k = 2L)
 summary(hypa)
+summary(hypa, type = "over", n = 5)
 }
 
 }

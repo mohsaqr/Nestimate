@@ -186,11 +186,11 @@ test_that("boot_glasso works with cograph_network wrapping glasso netobject", {
 })
 
 
-# ---- centrality() with cograph_network ----
+# ---- net_centrality() with cograph_network ----
 
-test_that("centrality() works on cograph_network", {
+test_that("net_centrality() works on cograph_network", {
   cg <- make_cograph_net()
-  cent <- centrality(cg)
+  cent <- net_centrality(cg)
   expect_true(is.data.frame(cent))
   expect_true(nrow(cent) > 0)
 })

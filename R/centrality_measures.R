@@ -117,16 +117,25 @@
 }
 
 
-# ---- Exported centrality() generic ----
+# ---- Internal centrality() generic (S3 dispatch) ----
+
+#' @noRd
+centrality <- function(x, ...) {
+  UseMethod("centrality")
+}
+
+
+# ---- Exported net_centrality() ----
 
 #' Compute Centrality Measures for a Network
 #'
-#' Computes centrality measures from a \code{netobject} or
-#' \code{netobject_group}. For directed networks the default measures are
-#' InStrength, OutStrength, and Betweenness. For undirected networks the
-#' defaults are Strength (column sums) and Betweenness.
+#' Computes centrality measures from a \code{netobject},
+#' \code{netobject_group}, or \code{cograph_network}. For directed networks
+#' the default measures are InStrength, OutStrength, and Betweenness. For
+#' undirected networks the defaults are Closeness and Betweenness.
 #'
-#' @param x A \code{netobject} or \code{netobject_group}.
+#' @param x A \code{netobject}, \code{netobject_group}, or
+#'   \code{cograph_network}.
 #' @param measures Character vector. Centrality measures to compute.
 #'   Built-in: \code{"InStrength"}, \code{"OutStrength"},
 #'   \code{"Betweenness"}, \code{"InCloseness"}, \code{"OutCloseness"},
@@ -146,16 +155,17 @@
 #'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
 #'   V3 = c("C","A","C","B"))
 #' net <- build_network(seqs, method = "relative")
-#' centrality(net)
+#' net_centrality(net)
 #'
 #' @export
-centrality <- function(x, ...) {
-  UseMethod("centrality")
+net_centrality <- function(x, measures = NULL, loops = FALSE,
+                            centrality_fn = NULL, ...) {
+  centrality(x, measures = measures, loops = loops,
+             centrality_fn = centrality_fn, ...)
 }
 
 
-#' @rdname centrality
-#' @export
+#' @noRd
 centrality.netobject <- function(x, measures = NULL, loops = FALSE,
                                   centrality_fn = NULL, ...) {
   mat      <- x$weights
@@ -176,8 +186,7 @@ centrality.netobject <- function(x, measures = NULL, loops = FALSE,
 }
 
 
-#' @rdname centrality
-#' @export
+#' @noRd
 centrality.netobject_group <- function(x, measures = NULL, loops = FALSE,
                                         centrality_fn = NULL, ...) {
   lapply(x, function(net) {
@@ -187,8 +196,7 @@ centrality.netobject_group <- function(x, measures = NULL, loops = FALSE,
 }
 
 
-#' @rdname centrality
-#' @export
+#' @noRd
 centrality.cograph_network <- function(x, measures = NULL, loops = FALSE,
                                         centrality_fn = NULL, ...) {
   centrality.netobject(.as_netobject(x), measures = measures, loops = loops,
@@ -196,8 +204,7 @@ centrality.cograph_network <- function(x, measures = NULL, loops = FALSE,
 }
 
 
-#' @rdname centrality
-#' @export
+#' @noRd
 centrality.mcml <- function(x, measures = NULL, loops = FALSE,
                              centrality_fn = NULL, ...) {
   centrality.netobject_group(as_tna(x), measures = measures, loops = loops,
