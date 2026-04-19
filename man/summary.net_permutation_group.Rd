@@ -24,7 +24,7 @@ s2 <- data.frame(V1 = c("C","A","C","B"), V2 = c("A","B","A","C"),
   V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
 nets1 <- build_network(s1, method = "relative", group = "grp")
 nets2 <- build_network(s2, method = "relative", group = "grp")
-perm  <- permutation_test(nets1, nets2, iter = 10)
+perm  <- permutation(nets1, nets2, iter = 10)
 summary(perm)
 \donttest{
 set.seed(1)
@@ -34,7 +34,7 @@ s2 <- data.frame(V1 = c("C","A","C","B"), V2 = c("A","B","A","C"),
                  V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
 nets1 <- build_network(s1, method = "relative", group = "grp")
 nets2 <- build_network(s2, method = "relative", group = "grp")
-perm  <- permutation_test(nets1, nets2, iter = 20, seed = 1)
+perm  <- permutation(nets1, nets2, iter = 20, seed = 1)
 summary(perm)
 }
 }

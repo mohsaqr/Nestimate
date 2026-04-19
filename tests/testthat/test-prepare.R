@@ -17,7 +17,7 @@ make_events <- function() {
 
 test_that("basic actor + action returns nestimate_data with correct structure", {
   ev <- make_events()
-  res <- prepare_data(ev, actor = "student", action = "code")
+  res <- prepare(ev, actor = "student", action = "code")
   expect_s3_class(res, "nestimate_data")
   expect_named(res, c("sequence_data", "long_data", "meta_data",
                        "time_data", "statistics"))
@@ -32,7 +32,7 @@ test_that("basic actor + action returns nestimate_data with correct structure", 
 
 test_that("sequence order follows row order when no time given", {
   ev <- make_events()
-  res <- prepare_data(ev, actor = "student", action = "code")
+  res <- prepare(ev, actor = "student", action = "code")
   s1_row <- which(res$meta_data[[grep("student|actor", names(res$meta_data),
                                        value = TRUE)[1]]] == "s1")
   expect_equal(as.character(res$sequence_data[s1_row, 1:3]), c("A", "B", "C"))
@@ -42,7 +42,7 @@ test_that("sequence order follows row order when no time given", {
 
 test_that("time column is parsed and time_data is returned", {
   ev <- make_events()
-  res <- prepare_data(ev, actor = "student", action = "code",
+  res <- prepare(ev, actor = "student", action = "code",
                       time = "timestamp")
   expect_false(is.null(res$time_data))
   expect_equal(ncol(res$time_data), res$statistics$max_sequence_length)
@@ -62,7 +62,7 @@ test_that("time_threshold splits sessions within same actor", {
     )),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code",
+  res <- prepare(ev, actor = "student", action = "code",
                       time = "timestamp", time_threshold = 900)
   expect_equal(res$statistics$total_sessions, 2L)
   expect_equal(nrow(res$sequence_data), 2L)
@@ -73,7 +73,7 @@ test_that("time_threshold splits sessions within same actor", {
 
 test_that("large time_threshold keeps everything in one session", {
   ev <- make_events()
-  res <- prepare_data(ev, actor = "student", action = "code",
+  res <- prepare(ev, actor = "student", action = "code",
                       time = "timestamp", time_threshold = 1e6)
   expect_equal(res$statistics$total_sessions, 2L)
 })
@@ -82,7 +82,7 @@ test_that("large time_threshold keeps everything in one session", {
 
 test_that("missing actor treats all data as one actor", {
   ev <- data.frame(code = c("A", "B", "C"), stringsAsFactors = FALSE)
-  res <- prepare_data(ev, action = "code")
+  res <- prepare(ev, action = "code")
   expect_equal(res$statistics$total_sessions, 1L)
   expect_null(res$statistics$unique_actors)
   expect_equal(as.character(res$sequence_data[1, ]), c("A", "B", "C"))
@@ -97,7 +97,7 @@ test_that("multiple actor columns create interaction grouping", {
     code = c("A", "B", "C", "D"),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = c("student", "group"), action = "code")
+  res <- prepare(ev, actor = c("student", "group"), action = "code")
   expect_equal(res$statistics$unique_actors, 3L)
   expect_equal(res$statistics$total_sessions, 3L)
 })
@@ -111,7 +111,7 @@ test_that("session column creates separate sessions per actor-session combo", {
     code = c("A", "B", "C", "D"),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code",
+  res <- prepare(ev, actor = "student", action = "code",
                       session = "course")
   expect_equal(res$statistics$total_sessions, 2L)
 })
@@ -124,7 +124,7 @@ test_that("multiple session columns create interaction sessions", {
     code = c("A", "B", "C", "D"),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code",
+  res <- prepare(ev, actor = "student", action = "code",
                       session = c("course", "semester"))
   expect_equal(res$statistics$total_sessions, 3L)
 })
@@ -139,7 +139,7 @@ test_that("order column controls sequence within tied timestamps", {
     priority = c(3, 1, 2),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code",
+  res <- prepare(ev, actor = "student", action = "code",
                       time = "timestamp", order = "priority")
   expect_equal(as.character(res$sequence_data[1, 1:3]), c("A", "B", "C"))
 })
@@ -153,7 +153,7 @@ test_that("ISO8601 T-separator timestamps are parsed", {
     ts = c("2024-01-01T10:00:00", "2024-01-01T10:05:00"),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code", time = "ts")
+  res <- prepare(ev, actor = "student", action = "code", time = "ts")
   expect_false(is.null(res$time_data))
   expect_equal(nrow(res$sequence_data), 1L)
 })
@@ -167,7 +167,7 @@ test_that("numeric time column auto-detected as unix timestamps", {
     ts = c(1704100000, 1704100300, 1704100600),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code", time = "ts")
+  res <- prepare(ev, actor = "student", action = "code", time = "ts")
   expect_false(is.null(res$time_data))
   expect_s3_class(res$time_data[[1]], "POSIXct")
 })
@@ -181,7 +181,7 @@ test_that("unix milliseconds are correctly converted", {
     ts = c(1704100000000, 1704100300000),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code", time = "ts",
+  res <- prepare(ev, actor = "student", action = "code", time = "ts",
                       is_unix_time = TRUE, unix_time_unit = "milliseconds")
   t1 <- res$time_data[[1]][1]
   expect_equal(as.numeric(t1), 1704100000, tolerance = 1)
@@ -196,7 +196,7 @@ test_that("custom_format parses non-standard timestamps", {
     ts = c("01-Jan-2024 10:00", "01-Jan-2024 10:05"),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code", time = "ts",
+  res <- prepare(ev, actor = "student", action = "code", time = "ts",
                       custom_format = "%d-%b-%Y %H:%M")
   expect_false(is.null(res$time_data))
 })
@@ -210,7 +210,7 @@ test_that("numeric extra columns are aggregated as mean", {
     score = c(10, 20, 30),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code")
+  res <- prepare(ev, actor = "student", action = "code")
   expect_true("score" %in% names(res$meta_data))
   expect_equal(res$meta_data$score, 20)
 })
@@ -222,7 +222,7 @@ test_that("character extra columns are aggregated as mode", {
     level = c("high", "high", "low"),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code")
+  res <- prepare(ev, actor = "student", action = "code")
   expect_equal(res$meta_data$level, "high")
 })
 
@@ -230,7 +230,7 @@ test_that("character extra columns are aggregated as mode", {
 
 test_that("print.nestimate_data produces expected output", {
   ev <- make_events()
-  res <- prepare_data(ev, actor = "student", action = "code",
+  res <- prepare(ev, actor = "student", action = "code",
                       time = "timestamp")
   out <- capture.output(print(res))
   expect_true(any(grepl("Prepared Data", out)))
@@ -241,7 +241,7 @@ test_that("print.nestimate_data produces expected output", {
 
 test_that("print without actors omits Actors line", {
   ev <- data.frame(code = c("A", "B"), stringsAsFactors = FALSE)
-  res <- prepare_data(ev, action = "code")
+  res <- prepare(ev, action = "code")
   out <- capture.output(print(res))
   expect_false(any(grepl("Actors:", out)))
 })
@@ -249,40 +249,40 @@ test_that("print without actors omits Actors line", {
 # ---- Error conditions ----
 
 test_that("non-data.frame input errors", {
-  expect_error(prepare_data("not_a_df", actor = "a", action = "b"))
+  expect_error(prepare("not_a_df", actor = "a", action = "b"))
 })
 
 test_that("missing action column errors", {
   ev <- make_events()
-  expect_error(prepare_data(ev, actor = "student", action = "nonexistent"))
+  expect_error(prepare(ev, actor = "student", action = "nonexistent"))
 })
 
 test_that("missing actor column errors", {
   ev <- make_events()
-  expect_error(prepare_data(ev, actor = "nonexistent", action = "code"))
+  expect_error(prepare(ev, actor = "nonexistent", action = "code"))
 })
 
 test_that("missing time column errors", {
   ev <- make_events()
-  expect_error(prepare_data(ev, actor = "student", action = "code",
+  expect_error(prepare(ev, actor = "student", action = "code",
                             time = "nonexistent"))
 })
 
 test_that("invalid time_threshold errors", {
   ev <- make_events()
-  expect_error(prepare_data(ev, actor = "student", action = "code",
+  expect_error(prepare(ev, actor = "student", action = "code",
                             time_threshold = -1))
 })
 
 test_that("missing session column errors", {
   ev <- make_events()
-  expect_error(prepare_data(ev, actor = "student", action = "code",
+  expect_error(prepare(ev, actor = "student", action = "code",
                             session = "nonexistent"))
 })
 
 test_that("missing order column errors", {
   ev <- make_events()
-  expect_error(prepare_data(ev, actor = "student", action = "code",
+  expect_error(prepare(ev, actor = "student", action = "code",
                             order = "nonexistent"))
 })
 
@@ -294,7 +294,7 @@ test_that("shorter sessions are NA-padded in wide format", {
     code = c("A", "B", "C", "X"),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code")
+  res <- prepare(ev, actor = "student", action = "code")
   expect_equal(res$statistics$max_sequence_length, 3L)
   s2_row <- which(res$meta_data$student == "s2")
   expect_true(is.na(res$sequence_data[s2_row, 2]))
@@ -305,14 +305,14 @@ test_that("shorter sessions are NA-padded in wide format", {
 # ---- Unix timestamp numeric path (L333-338) ----
 
 test_that(".parse_time numeric unix path with milliseconds divisor", {
-  # Call .parse_time directly via prepare_data with is_unix_time + milliseconds
+  # Call .parse_time directly via prepare with is_unix_time + milliseconds
   ev <- data.frame(
     student = rep("s1", 2),
     code = c("A", "B"),
     ts = c(1704100000000, 1704100300000),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code", time = "ts",
+  res <- prepare(ev, actor = "student", action = "code", time = "ts",
                       is_unix_time = TRUE, unix_time_unit = "milliseconds")
   expect_false(is.null(res$time_data))
   # Should be about 2024 timestamps
@@ -326,7 +326,7 @@ test_that(".parse_time numeric unix path with microseconds divisor", {
     ts = c(1704100000000000, 1704100300000000),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code", time = "ts",
+  res <- prepare(ev, actor = "student", action = "code", time = "ts",
                       is_unix_time = TRUE, unix_time_unit = "microseconds")
   expect_false(is.null(res$time_data))
   expect_s3_class(res$time_data[[1]], "POSIXct")
@@ -341,7 +341,7 @@ test_that(".parse_time errors on unparseable string timestamps (L341-343)", {
     stringsAsFactors = FALSE
   )
   expect_error(
-    prepare_data(ev, actor = "student", action = "code", time = "ts"),
+    prepare(ev, actor = "student", action = "code", time = "ts"),
     "Could not parse"
   )
 })
@@ -355,7 +355,7 @@ test_that("extra column all-NA returns NA in meta_data", {
     level = c(NA_character_, NA_character_),
     stringsAsFactors = FALSE
   )
-  res <- prepare_data(ev, actor = "student", action = "code")
+  res <- prepare(ev, actor = "student", action = "code")
   # level is extra column; all NA -> aggregated to NA
   expect_true("level" %in% names(res$meta_data))
   expect_true(is.na(res$meta_data$level))
@@ -380,7 +380,7 @@ test_that("tied-mode character extra column emits message and returns first valu
     stringsAsFactors = FALSE
   )
   expect_message(
-    res <- prepare_data(ev2, actor = "student", action = "code"),
+    res <- prepare(ev2, actor = "student", action = "code"),
     "ties resolved by first occurrence"
   )
   expect_true(res$meta_data$level %in% c("high", "low"))

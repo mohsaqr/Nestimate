@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ---- bootstrap_network() Tests ----
 
 # Helper: generate wide sequence data
@@ -579,5 +581,3 @@ test_that("bootstrap_network works with mcml objects", {
     expect_s3_class(boot[[nm]], "net_bootstrap")
   }
 })
-
-

@@ -13,12 +13,16 @@ navbar:
       menu:
         - text: Transition Networks
           href: articles/transition-networks.html
-        - text: Co-occurrence & Ising Networks
-          href: articles/co-occurrence-networks.html
+        - text: Sequence Plots & Comparison
+          href: articles/sequence-plots.html
         - text: Psychological Networks
           href: articles/psychological-networks.html
         - text: Clustering & Multi-Level Analysis
           href: articles/clustering.html
+        - text: Markov Stability
+          href: articles/markov-stability.html
+        - text: Sequence Pattern Comparison
+          href: articles/sequence-comparison.html
 
 reference:
   - title: Network Estimation
@@ -31,6 +35,9 @@ reference:
       - list_estimators
       - remove_estimator
       - wtna
+      - cooccurrence
+      - build_mlvar
+      - build_gimme
 
   - title: Higher-Order Networks
     desc: Methods for capturing higher-order dependencies
@@ -48,19 +55,19 @@ reference:
     contents:
       - bootstrap_network
       - boot_glasso
-      - permutation_test
+      - permutation
+      - nct
 
   - title: Reliability & Stability
     desc: Assess reliability and stability of network estimates
     contents:
-      - reliability
+      - network_reliability
       - centrality_stability
 
   - title: Clustering & Grouping
     desc: Cluster-based and multilevel network analysis
     contents:
-      - cluster_data
-      - cluster_sequences
+      - build_clusters
       - cluster_summary
       - cluster_mmm
       - cluster_network
@@ -83,7 +90,7 @@ reference:
   - title: Data Preparation
     desc: Convert and prepare data for network estimation
     contents:
-      - prepare_data
+      - prepare
       - prepare_for_tna
       - action_to_onehot
       - prepare_onehot
@@ -105,10 +112,21 @@ reference:
       - extract_initial_probs
       - extract_transition_matrix
 
-  - title: Other Methods
-    desc: Additional network estimation approaches
+  - title: Sequence Analysis
+    desc: Sequence visualization, pattern comparison, and association mining
     contents:
-      - build_gimme
+      - sequence_plot
+      - distribution_plot
+      - sequence_compare
+      - association_rules
+      - passage_time
+      - markov_stability
+
+  - title: Link Prediction
+    desc: Predict and evaluate missing connections
+    contents:
+      - predict_links
+      - evaluate_links
 
   - title: Data
     desc: Example datasets
@@ -118,6 +136,8 @@ reference:
       - srl_strategies
       - learning_activities
       - group_regulation_long
+      - chatgpt_srl
+      - trajectories
 
   - title: S3 Methods
     desc: Print, summary, and plot methods for package classes

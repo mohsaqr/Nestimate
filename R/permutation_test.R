@@ -55,7 +55,7 @@
 #' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
 #' n1 <- build_network(s1, method = "relative")
 #' n2 <- build_network(s2, method = "relative")
-#' perm <- permutation_test(n1, n2, iter = 10)
+#' perm <- permutation(n1, n2, iter = 10)
 #' \donttest{
 #' set.seed(1)
 #' d1 <- data.frame(V1 = sample(LETTERS[1:4], 20, TRUE),
@@ -66,7 +66,7 @@
 #'                  V3 = sample(LETTERS[1:4], 20, TRUE))
 #' net1 <- build_network(d1, method = "relative")
 #' net2 <- build_network(d2, method = "relative")
-#' perm <- permutation_test(net1, net2, iter = 100, seed = 42)
+#' perm <- permutation(net1, net2, iter = 100, seed = 42)
 #' print(perm)
 #' summary(perm)
 #' }
@@ -77,7 +77,7 @@
 #'
 #' @importFrom stats p.adjust sd
 #' @export
-permutation_test <- function(x, y = NULL,
+permutation <- function(x, y = NULL,
                              iter = 1000L,
                              alpha = 0.05,
                              paired = FALSE,
@@ -101,9 +101,9 @@ permutation_test <- function(x, y = NULL,
     results <- lapply(seq_len(ncol(pairs)), function(k) {
       i <- pairs[1L, k]
       j <- pairs[2L, k]
-      permutation_test(x[[i]], x[[j]], iter = iter, alpha = alpha,
-                       paired = paired, adjust = adjust,
-                       nlambda = nlambda, seed = seed)
+      permutation(x[[i]], x[[j]], iter = iter, alpha = alpha,
+                  paired = paired, adjust = adjust,
+                  nlambda = nlambda, seed = seed)
     })
     pair_labels <- vapply(seq_len(ncol(pairs)), function(k) {
       paste(grp_names[pairs[1L, k]], "vs", grp_names[pairs[2L, k]])
@@ -120,9 +120,9 @@ permutation_test <- function(x, y = NULL,
       stop("No matching group names between x and y.", call. = FALSE)
     }
     results <- lapply(common, function(nm) {
-      permutation_test(x[[nm]], y[[nm]], iter = iter, alpha = alpha,
-                       paired = paired, adjust = adjust, nlambda = nlambda,
-                       seed = seed)
+      permutation(x[[nm]], y[[nm]], iter = iter, alpha = alpha,
+                  paired = paired, adjust = adjust, nlambda = nlambda,
+                  seed = seed)
     })
     names(results) <- common
     class(results) <- c("net_permutation_group", "list")
@@ -561,7 +561,7 @@ permutation_test <- function(x, y = NULL,
 #' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
 #' n1 <- build_network(s1, method = "relative")
 #' n2 <- build_network(s2, method = "relative")
-#' perm <- permutation_test(n1, n2, iter = 10)
+#' perm <- permutation(n1, n2, iter = 10)
 #' print(perm)
 #' \donttest{
 #' set.seed(1)
@@ -571,7 +571,7 @@ permutation_test <- function(x, y = NULL,
 #'                  V3 = c("B","C","B"))
 #' net1 <- build_network(d1, method = "relative")
 #' net2 <- build_network(d2, method = "relative")
-#' perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+#' perm <- permutation(net1, net2, iter = 20, seed = 1)
 #' print(perm)
 #' }
 #'
@@ -623,7 +623,7 @@ print.net_permutation <- function(x, ...) {
 #' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
 #' n1 <- build_network(s1, method = "relative")
 #' n2 <- build_network(s2, method = "relative")
-#' perm <- permutation_test(n1, n2, iter = 10)
+#' perm <- permutation(n1, n2, iter = 10)
 #' summary(perm)
 #' \donttest{
 #' set.seed(1)
@@ -633,7 +633,7 @@ print.net_permutation <- function(x, ...) {
 #'                  V3 = c("B","C","B"))
 #' net1 <- build_network(d1, method = "relative")
 #' net2 <- build_network(d2, method = "relative")
-#' perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+#' perm <- permutation(net1, net2, iter = 20, seed = 1)
 #' summary(perm)
 #' }
 #'
@@ -655,7 +655,7 @@ summary.net_permutation <- function(object, ...) {
 #'   V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
 #' nets1 <- build_network(s1, method = "relative", group = "grp")
 #' nets2 <- build_network(s2, method = "relative", group = "grp")
-#' perm  <- permutation_test(nets1, nets2, iter = 10)
+#' perm  <- permutation(nets1, nets2, iter = 10)
 #' print(perm)
 #' \donttest{
 #' set.seed(1)
@@ -665,7 +665,7 @@ summary.net_permutation <- function(object, ...) {
 #'                  V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
 #' nets1 <- build_network(s1, method = "relative", group = "grp")
 #' nets2 <- build_network(s2, method = "relative", group = "grp")
-#' perm  <- permutation_test(nets1, nets2, iter = 20, seed = 1)
+#' perm  <- permutation(nets1, nets2, iter = 20, seed = 1)
 #' print(perm)
 #' }
 #' @export
@@ -690,7 +690,7 @@ print.net_permutation_group <- function(x, ...) {
 #'   V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
 #' nets1 <- build_network(s1, method = "relative", group = "grp")
 #' nets2 <- build_network(s2, method = "relative", group = "grp")
-#' perm  <- permutation_test(nets1, nets2, iter = 10)
+#' perm  <- permutation(nets1, nets2, iter = 10)
 #' summary(perm)
 #' \donttest{
 #' set.seed(1)
@@ -700,7 +700,7 @@ print.net_permutation_group <- function(x, ...) {
 #'                  V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
 #' nets1 <- build_network(s1, method = "relative", group = "grp")
 #' nets2 <- build_network(s2, method = "relative", group = "grp")
-#' perm  <- permutation_test(nets1, nets2, iter = 20, seed = 1)
+#' perm  <- permutation(nets1, nets2, iter = 20, seed = 1)
 #' summary(perm)
 #' }
 #' @export
@@ -711,5 +711,4 @@ summary.net_permutation_group <- function(object, ...) {
     df[c("group", setdiff(names(df), "group"))]
   }))
 }
-
 

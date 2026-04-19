@@ -349,7 +349,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
     out <- matrix("", nrow = n_pos, ncol = n)
     for (i in seq_len(n_pos)) {
       idx <- i:(i + k - 1L)
-      has_na <- .rowSums(mis[, idx, drop = FALSE], m = n, n = k) > 0L
+      has_na <- rowSums(mis[, idx, drop = FALSE]) > 0L
       cols <- m[, idx, drop = FALSE]
       pat <- do.call(paste, c(as.data.frame(cols, stringsAsFactors = FALSE),
                               list(sep = "->")))
@@ -368,10 +368,10 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   n <- sum(x)
   nr <- nrow(x)
   nc <- ncol(x)
-  rs <- .rowSums(x, m = nr, n = nc)
-  cs <- .colSums(x, m = nr, n = nc)
+  rs <- rowSums(x)
+  cs <- colSums(x)
   expected <- outer(rs, cs) / n
-  sqrt(.rowSums((x - expected)^2, m = nr, n = nc))
+  sqrt(rowSums((x - expected)^2))
 }
 
 
@@ -441,6 +441,9 @@ summary.net_sequence_comparison <- function(object, ...) {
 #' @param x A \code{net_sequence_comparison} object.
 #' @param top_n Integer. Show top N patterns. Default: 10.
 #' @param style Character. \code{"pyramid"} (default) or \code{"heatmap"}.
+#' @param sort Character. \code{"statistic"} (default) ranks patterns by test
+#'   statistic or residual magnitude. \code{"frequency"} ranks by total
+#'   occurrence count across all groups.
 #' @param alpha Numeric. Significance threshold for p-value display in the
 #'   pyramid. Default: 0.05.
 #' @param show_residuals Logical. If \code{TRUE}, print the standardized
@@ -453,9 +456,11 @@ summary.net_sequence_comparison <- function(object, ...) {
 #' @export
 plot.net_sequence_comparison <- function(x, top_n = 10L,
                                           style = c("pyramid", "heatmap"),
+                                          sort = c("statistic", "frequency"),
                                           alpha = 0.05,
                                           show_residuals = FALSE, ...) {
   style <- match.arg(style)
+  sort  <- match.arg(sort)
   pat <- x$patterns
   groups <- x$groups
   if (nrow(pat) == 0) {
@@ -464,15 +469,20 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
   }
 
   resid_cols <- paste0("resid_", groups)
+  freq_cols  <- paste0("freq_",  groups)
 
-  # Rank by significance if tested, otherwise by |max residual|
-  if ("effect_size" %in% names(pat)) {
-    pat <- pat[order(-abs(pat$effect_size)), ]
-  } else if ("statistic" %in% names(pat)) {
-    pat <- pat[order(-pat$statistic), ]
+  if (sort == "frequency") {
+    total_freq <- Reduce("+", lapply(freq_cols, function(cn) pat[[cn]]))
+    pat <- pat[order(-total_freq), ]
   } else {
-    max_r <- do.call(pmax, lapply(resid_cols, function(cn) abs(pat[[cn]])))
-    pat <- pat[order(-max_r), ]
+    if ("effect_size" %in% names(pat)) {
+      pat <- pat[order(-abs(pat$effect_size)), ]
+    } else if ("statistic" %in% names(pat)) {
+      pat <- pat[order(-pat$statistic), ]
+    } else {
+      max_r <- do.call(pmax, lapply(resid_cols, function(cn) abs(pat[[cn]])))
+      pat <- pat[order(-max_r), ]
+    }
   }
   pat <- utils::head(pat, top_n)
 
@@ -600,14 +610,14 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
 
 #' @noRd
 .sc_plot_heatmap <- function(pat, groups, resid_cols) {
-  long <- do.call(rbind, lapply(seq_along(groups), function(gi) {
+  long <- as.data.frame(data.table::rbindlist(lapply(seq_along(groups), function(gi) {
     data.frame(
       pattern = pat$pattern,
       group   = groups[gi],
       resid   = pat[[resid_cols[gi]]],
       stringsAsFactors = FALSE
     )
-  }))
+  })))
   long$pattern <- factor(long$pattern, levels = rev(pat$pattern))
   long$group   <- factor(long$group, levels = groups)
 
@@ -626,10 +636,10 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
                          oob = scales::squish,
                          name = "Standardized\nresidual") +
     labs(x = "Groups", y = NULL, title = "Sequence Pattern Comparison") +
-    theme_minimal(base_size = 14) +
+    theme_minimal(base_size = 11) +
     theme(
-      axis.text.y        = element_text(family = "mono", size = 12),
-      axis.text.x        = element_text(angle = 0, size = 13,
+      axis.text.y        = element_text(family = "mono", size = 10),
+      axis.text.x        = element_text(angle = 0, size = 11,
                                          face = "bold"),
       axis.title.x       = element_text(size = 14),
       panel.grid         = element_blank(),

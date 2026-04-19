@@ -1027,7 +1027,7 @@ build_mcml <- function(x,
     to_t <- as.character(df[[t + 1]])
     data.frame(from = from_t, to = to_t, stringsAsFactors = FALSE)
   })
-  pairs <- do.call(rbind, pairs)
+  pairs <- as.data.frame(data.table::rbindlist(pairs))
 
   # Remove NA pairs
   valid <- !is.na(pairs$from) & !is.na(pairs$to)

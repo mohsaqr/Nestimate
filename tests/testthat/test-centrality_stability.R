@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ---- Tests for centrality_stability() ----
 
 test_that("basic structure is correct", {

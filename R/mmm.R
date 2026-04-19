@@ -321,8 +321,8 @@
 #' @param covariates Optional. Covariates integrated into the EM algorithm
 #'   to model covariate-dependent mixing proportions. Accepts formula,
 #'   character vector, string, or data.frame (same forms as
-#'   \code{\link{cluster_data}}). Unlike the post-hoc analysis in
-#'   \code{cluster_data()}, these covariates directly influence cluster
+#'   \code{\link{build_clusters}}). Unlike the post-hoc analysis in
+#'   \code{build_clusters()}, these covariates directly influence cluster
 #'   membership during estimation. Requires the \pkg{nnet} package.
 #'
 #' @return An object of class \code{net_mmm} with components:
@@ -484,7 +484,8 @@ build_mmm <- function(data,
   # Screen: short EM runs (parallel on Unix)
   n_cores <- 1L
   if (.Platform$OS.type == "unix" && n_starts > 1L) {
-    n_cores <- min(parallel::detectCores(logical = FALSE) %||% 1L, n_starts)
+    detected <- parallel::detectCores(logical = FALSE)
+    n_cores <- min(if (is.finite(detected)) detected else 1L, n_starts)
     if (isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE")))) { # nocov start
       n_cores <- 1L
     } # nocov end

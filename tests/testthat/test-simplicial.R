@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ---- Simplicial Complex Tests ----
 
 # Helper: build a known network

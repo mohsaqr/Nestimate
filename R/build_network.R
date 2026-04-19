@@ -284,7 +284,7 @@ build_network <- function(data,
     if (!is.null(order)) prep_args$order <- order # nocov end
     prep_args$time_threshold <- time_threshold
 
-    prepared <- do.call(prepare_data, prep_args)
+    prepared <- do.call(prepare, prep_args)
     data <- prepared$sequence_data
     format <- "wide"
     params$format <- "wide"

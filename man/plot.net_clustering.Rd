@@ -25,7 +25,7 @@ Plot Sequence Clustering Results
 \examples{
 seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
                    V3 = c("C","A","B","C","B"))
-cl <- cluster_data(seqs, k = 2)
+cl <- build_clusters(seqs, k = 2)
 plot(cl, type = "silhouette")
 \donttest{
 set.seed(1)
@@ -34,7 +34,7 @@ seqs <- data.frame(
   V2 = sample(c("A","B","C"), 20, TRUE),
   V3 = sample(c("A","B","C"), 20, TRUE)
 )
-cl <- cluster_data(seqs, k = 2)
+cl <- build_clusters(seqs, k = 2)
 plot(cl, type = "silhouette")
 }
 

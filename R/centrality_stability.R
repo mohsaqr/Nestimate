@@ -71,7 +71,7 @@
 #' print(cs)
 #' }
 #'
-#' @seealso \code{\link{build_network}}, \code{\link{reliability}}
+#' @seealso \code{\link{build_network}}, \code{\link{network_reliability}}
 #'
 #' @importFrom stats cor sd
 #' @export

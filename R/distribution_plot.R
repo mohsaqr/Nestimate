@@ -49,7 +49,7 @@
 #'
 #' @return Invisibly, a list with \code{counts}, \code{proportions},
 #'   \code{levels}, \code{palette}, and \code{groups}.
-#' @seealso \code{\link{sequence_plot}}, \code{\link{cluster_data}}
+#' @seealso \code{\link{sequence_plot}}, \code{\link{build_clusters}}
 #' @examples
 #' \donttest{
 #' distribution_plot(as.data.frame(trajectories))
@@ -92,7 +92,7 @@ distribution_plot <- function(x,
     is.logical(frame), length(frame) == 1L
   )
 
-  if (!is.null(width) || !is.null(height)) {
+  if (interactive() && (!is.null(width) || !is.null(height))) {
     grDevices::dev.new(width  = if (!is.null(width))  width  else 7,
                        height = if (!is.null(height)) height else 7,
                        noRStudioGD = TRUE)

@@ -21,7 +21,7 @@ test_that("sequence_plot accepts a net_clustering directly", {
   set.seed(2L)
   seqs <- as.data.frame(matrix(sample(c("A", "B", "C", "D"), 25 * 12,
                                       replace = TRUE), 25, 12))
-  cl <- cluster_data(seqs, k = 3L, dissimilarity = "hamming",
+  cl <- build_clusters(seqs, k = 3L, dissimilarity = "hamming",
                      method = "ward.D2")
 
   pdf(NULL); on.exit(dev.off(), add = TRUE)
@@ -70,7 +70,7 @@ test_that("sequence_plot sort='end' sorts lexicographically backward", {
   expect_true(all(diff(last_col) >= 0))
 })
 
-test_that("sequence_plot routes distance sorts through cluster_data", {
+test_that("sequence_plot routes distance sorts through build_clusters", {
   set.seed(4L)
   seqs <- matrix(sample(c("A", "B", "C"), 20 * 8, replace = TRUE), 20, 8)
 
@@ -135,7 +135,7 @@ test_that("sequence_plot type='index' facets by net_clustering", {
   set.seed(11L)
   seqs <- as.data.frame(matrix(sample(c("A", "B", "C"), 30 * 10,
                                       replace = TRUE), 30, 10))
-  cl <- cluster_data(seqs, k = 3L, dissimilarity = "hamming",
+  cl <- build_clusters(seqs, k = 3L, dissimilarity = "hamming",
                      method = "ward.D2")
   pdf(NULL); on.exit(dev.off(), add = TRUE)
   res <- sequence_plot(cl, type = "index")
@@ -155,7 +155,7 @@ test_that("sequence_plot type='index' honours ncol/nrow", {
   set.seed(13L)
   seqs <- as.data.frame(matrix(sample(c("A", "B", "C", "D"), 40 * 8,
                                       replace = TRUE), 40, 8))
-  cl <- cluster_data(seqs, k = 4L, dissimilarity = "hamming",
+  cl <- build_clusters(seqs, k = 4L, dissimilarity = "hamming",
                      method = "ward.D2")
   pdf(NULL); on.exit(dev.off(), add = TRUE)
   # 4 clusters in 1x4

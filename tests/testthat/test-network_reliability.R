@@ -1,9 +1,11 @@
-# ---- Tests for reliability() ----
+testthat::skip_on_cran()
 
-test_that("single model reliability returns correct structure", {
+# ---- Tests for network_reliability() ----
+
+test_that("single model network_reliability returns correct structure", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 50, seed = 42)
+  rel <- network_reliability(net, iter = 50, seed = 42)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(rel$iter, 50L)
@@ -31,12 +33,12 @@ test_that("single model reliability returns correct structure", {
 })
 
 
-test_that("multi-model reliability stacks iterations correctly", {
+test_that("multi-model network_reliability stacks iterations correctly", {
   skip_if_not_installed("tna")
   net_r <- build_network(tna::group_regulation, method = "relative")
   net_f <- build_network(tna::group_regulation, method = "frequency")
 
-  rel <- reliability(net_r, net_f, iter = 30, scale = "minmax", seed = 123)
+  rel <- network_reliability(net_r, net_f, iter = 30, scale = "minmax", seed = 123)
 
   expect_equal(nrow(rel$iterations), 60)
   expect_equal(sort(unique(rel$iterations$model)), c("frequency", "relative"))
@@ -48,7 +50,7 @@ test_that("multi-model reliability stacks iterations correctly", {
 test_that("named models use provided names", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(my_model = net, iter = 20, seed = 1)
+  rel <- network_reliability(my_model = net, iter = 20, seed = 1)
 
   expect_true(all(rel$iterations$model == "my_model"))
   expect_true(all(rel$summary$model == "my_model"))
@@ -59,8 +61,8 @@ test_that("seed produces reproducible results", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
 
-  rel1 <- reliability(net, iter = 50, seed = 99)
-  rel2 <- reliability(net, iter = 50, seed = 99)
+  rel1 <- network_reliability(net, iter = 50, seed = 99)
+  rel2 <- network_reliability(net, iter = 50, seed = 99)
 
   expect_equal(rel1$iterations, rel2$iterations)
 })
@@ -69,7 +71,7 @@ test_that("seed produces reproducible results", {
 test_that("correlation values are between -1 and 1", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 50, seed = 42)
+  rel <- network_reliability(net, iter = 50, seed = 42)
 
   cors <- rel$iterations$cor
   cors <- cors[!is.na(cors)]
@@ -80,7 +82,7 @@ test_that("correlation values are between -1 and 1", {
 test_that("deviation metrics are non-negative", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 50, seed = 42)
+  rel <- network_reliability(net, iter = 50, seed = 42)
 
   expect_true(all(rel$iterations$mean_dev >= 0))
   expect_true(all(rel$iterations$median_dev >= 0))
@@ -91,7 +93,7 @@ test_that("deviation metrics are non-negative", {
 test_that("max_dev >= mean_dev >= median_dev in each iteration", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 100, seed = 42)
+  rel <- network_reliability(net, iter = 100, seed = 42)
 
   # max >= mean always holds for absolute values
 
@@ -105,7 +107,7 @@ test_that("warning issued when different methods without scaling", {
   net_f <- build_network(tna::group_regulation, method = "frequency")
 
   expect_warning(
-    reliability(net_r, net_f, iter = 10, seed = 1),
+    network_reliability(net_r, net_f, iter = 10, seed = 1),
     "Models use different methods"
   )
 })
@@ -117,7 +119,7 @@ test_that("no warning when different methods with scaling", {
   net_f <- build_network(tna::group_regulation, method = "frequency")
 
   expect_no_warning(
-    reliability(net_r, net_f, iter = 10, scale = "minmax", seed = 1)
+    network_reliability(net_r, net_f, iter = 10, scale = "minmax", seed = 1)
   )
 })
 
@@ -125,7 +127,7 @@ test_that("no warning when different methods with scaling", {
 test_that("frequency method works", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "frequency")
-  rel <- reliability(net, iter = 30, seed = 42)
+  rel <- network_reliability(net, iter = 30, seed = 42)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(nrow(rel$iterations), 30)
@@ -136,7 +138,7 @@ test_that("frequency method works", {
 test_that("co_occurrence method works", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "co_occurrence")
-  rel <- reliability(net, iter = 30, seed = 42)
+  rel <- network_reliability(net, iter = 30, seed = 42)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(nrow(rel$iterations), 30)
@@ -146,7 +148,7 @@ test_that("co_occurrence method works", {
 test_that("scale = 'standardize' works", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 30, scale = "standardize", seed = 42)
+  rel <- network_reliability(net, iter = 30, scale = "standardize", seed = 42)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(rel$scale, "standardize")
@@ -156,7 +158,7 @@ test_that("scale = 'standardize' works", {
 test_that("scale = 'proportion' works", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 30, scale = "proportion", seed = 42)
+  rel <- network_reliability(net, iter = 30, scale = "proportion", seed = 42)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(rel$scale, "proportion")
@@ -167,8 +169,8 @@ test_that("split parameter changes split ratio", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
 
-  rel_30 <- reliability(net, iter = 30, split = 0.3, seed = 42)
-  rel_70 <- reliability(net, iter = 30, split = 0.7, seed = 42)
+  rel_30 <- network_reliability(net, iter = 30, split = 0.3, seed = 42)
+  rel_70 <- network_reliability(net, iter = 30, split = 0.7, seed = 42)
 
   # Different splits should give different results
   expect_false(identical(rel_30$iterations, rel_70$iterations))
@@ -183,7 +185,7 @@ test_that("netobject_group is flattened", {
   df$grp <- rep(c("A", "B"), length.out = nrow(df))
   group_net <- build_network(df, method = "relative", group = "grp")
 
-  rel <- reliability(group_net, iter = 20, seed = 42)
+  rel <- network_reliability(group_net, iter = 20, seed = 42)
 
   expect_s3_class(rel, "net_reliability")
   expect_true(length(unique(rel$iterations$model)) > 1)
@@ -194,19 +196,19 @@ test_that("input validation catches bad arguments", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
 
-  expect_error(reliability(net, iter = 0), "iter >= 2")
-  expect_error(reliability(net, split = 0), "split > 0")
-  expect_error(reliability(net, split = 1), "split < 1")
-  expect_error(reliability(net, scale = "invalid"), "should be one of")
-  expect_error(reliability("not_a_netobject"), "must be netobject or netobject_group")
-  expect_error(reliability(), "At least one netobject")
+  expect_error(network_reliability(net, iter = 0), "iter >= 2")
+  expect_error(network_reliability(net, split = 0), "split > 0")
+  expect_error(network_reliability(net, split = 1), "split < 1")
+  expect_error(network_reliability(net, scale = "invalid"), "should be one of")
+  expect_error(network_reliability("not_a_netobject"), "must be netobject or netobject_group")
+  expect_error(network_reliability(), "At least one netobject")
 })
 
 
 test_that("print method works", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 20, seed = 42)
+  rel <- network_reliability(net, iter = 20, seed = 42)
 
   out <- capture.output(print(rel))
   expect_true(any(grepl("Split-Half Reliability", out)))
@@ -219,7 +221,7 @@ test_that("print method shows multi-model headers", {
   skip_if_not_installed("tna")
   net_r <- build_network(tna::group_regulation, method = "relative")
   net_f <- build_network(tna::group_regulation, method = "frequency")
-  rel <- reliability(net_r, net_f, iter = 20, scale = "minmax", seed = 42)
+  rel <- network_reliability(net_r, net_f, iter = 20, scale = "minmax", seed = 42)
 
   out <- capture.output(print(rel))
   expect_true(any(grepl("relative", out)))
@@ -231,7 +233,7 @@ test_that("print method shows multi-model headers", {
 test_that("plot method returns a ggplot", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 30, seed = 42)
+  rel <- network_reliability(net, iter = 30, seed = 42)
 
   p <- plot(rel)
   expect_s3_class(p, "ggplot")
@@ -242,7 +244,7 @@ test_that("plot method works for multi-model", {
   skip_if_not_installed("tna")
   net_r <- build_network(tna::group_regulation, method = "relative")
   net_f <- build_network(tna::group_regulation, method = "frequency")
-  rel <- reliability(net_r, net_f, iter = 20, scale = "minmax", seed = 42)
+  rel <- network_reliability(net_r, net_f, iter = 20, scale = "minmax", seed = 42)
 
   p <- plot(rel)
   expect_s3_class(p, "ggplot")
@@ -252,7 +254,7 @@ test_that("plot method works for multi-model", {
 test_that("summary mean matches manual computation", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
-  rel <- reliability(net, iter = 50, seed = 42)
+  rel <- network_reliability(net, iter = 50, seed = 42)
 
   manual_mean <- mean(rel$iterations$mean_dev)
   summary_mean <- rel$summary$mean[rel$summary$metric == "mean_dev"]
@@ -265,7 +267,7 @@ test_that("duplicate method names get deduplicated", {
   net1 <- build_network(tna::group_regulation, method = "relative")
   net2 <- build_network(tna::group_regulation, method = "relative")
 
-  rel <- reliability(net1, net2, iter = 20, seed = 42)
+  rel <- network_reliability(net1, net2, iter = 20, seed = 42)
   models <- unique(rel$iterations$model)
   expect_length(models, 2)
   expect_false(models[1] == models[2])
@@ -292,13 +294,13 @@ test_that(".scale_matrix handles edge cases", {
 
 # ---- netobject_group flattening (L206-207) ----
 
-test_that("reliability flattens netobject_group into models", {
+test_that("network_reliability flattens netobject_group into models", {
   skip_if_not_installed("tna")
   df <- tna::group_regulation
   df$grp <- rep(c("A", "B"), length.out = nrow(df))
   group_net <- build_network(df, method = "relative", group = "grp")
 
-  rel <- reliability(group_net, iter = 20L, seed = 1)
+  rel <- network_reliability(group_net, iter = 20L, seed = 1)
   expect_s3_class(rel, "net_reliability")
   expect_equal(length(rel$models), 2L)
   expect_true(all(c("A", "B") %in% unique(rel$iterations$model)))
@@ -307,23 +309,23 @@ test_that("reliability flattens netobject_group into models", {
 
 # ---- missing $data error (L127-129) ----
 
-test_that("reliability errors when a netobject has no $data", {
+test_that("network_reliability errors when a netobject has no $data", {
   skip_if_not_installed("tna")
   net <- build_network(tna::group_regulation, method = "relative")
   net$data <- NULL
-  expect_error(reliability(net, iter = 10L),
+  expect_error(network_reliability(net, iter = 10L),
                "does not contain \\$data")
 })
 
 
 # ---- association path: cor method (L244-305) ----
 
-test_that("reliability works for cor (association) method", {
+test_that("network_reliability works for cor (association) method", {
   set.seed(42)
   df <- as.data.frame(matrix(rpois(100 * 5, 10), nrow = 100))
   colnames(df) <- paste0("V", 1:5)
   net <- build_network(df, method = "cor")
-  rel <- reliability(net, iter = 30L, seed = 42)
+  rel <- network_reliability(net, iter = 30L, seed = 42)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(nrow(rel$iterations), 30L)
@@ -334,12 +336,12 @@ test_that("reliability works for cor (association) method", {
 
 # ---- association path: pcor method (L244-305) ----
 
-test_that("reliability works for pcor (association) method", {
+test_that("network_reliability works for pcor (association) method", {
   set.seed(7)
   df <- as.data.frame(matrix(rnorm(80 * 4), nrow = 80))
   colnames(df) <- paste0("V", 1:4)
   net <- build_network(df, method = "pcor")
-  rel <- reliability(net, iter = 20L, seed = 7)
+  rel <- network_reliability(net, iter = 20L, seed = 7)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(nrow(rel$iterations), 20L)
@@ -350,12 +352,12 @@ test_that("reliability works for pcor (association) method", {
 
 # ---- association path with scale (L293-294) ----
 
-test_that("reliability applies scale in association path", {
+test_that("network_reliability applies scale in association path", {
   set.seed(3)
   df <- as.data.frame(matrix(rpois(80 * 5, 10), nrow = 80))
   colnames(df) <- paste0("V", 1:5)
   net <- build_network(df, method = "cor")
-  rel <- reliability(net, iter = 20L, scale = "minmax", seed = 3)
+  rel <- network_reliability(net, iter = 20L, scale = "minmax", seed = 3)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(rel$scale, "minmax")
@@ -364,12 +366,12 @@ test_that("reliability applies scale in association path", {
 
 # ---- association path: summary values (L244-305) ----
 
-test_that("reliability summary mean_dev is non-negative for cor method", {
+test_that("network_reliability summary mean_dev is non-negative for cor method", {
   set.seed(10)
   df <- as.data.frame(matrix(rpois(100 * 4, 10), nrow = 100))
   colnames(df) <- paste0("V", 1:4)
   net <- build_network(df, method = "cor")
-  rel <- reliability(net, iter = 20L, seed = 10)
+  rel <- network_reliability(net, iter = 20L, seed = 10)
 
   expect_true(all(rel$iterations$mean_dev >= 0, na.rm = TRUE))
   expect_true(all(rel$iterations$max_dev >= 0, na.rm = TRUE))

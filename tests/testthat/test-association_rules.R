@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ---- Association Rules Tests ----
 
 # Helper: standard test transactions

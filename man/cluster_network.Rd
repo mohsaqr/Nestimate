@@ -8,12 +8,12 @@ cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 }
 \arguments{
 \item{data}{Sequence data. Accepts a data frame, matrix, or
-\code{netobject}. See \code{\link{cluster_data}} for supported formats.}
+\code{netobject}. See \code{\link{build_clusters}} for supported formats.}
 
 \item{k}{Integer. Number of clusters.}
 
 \item{cluster_by}{Character. Clustering algorithm passed to
-\code{\link{cluster_data}}'s \code{method} parameter (\code{"pam"},
+\code{\link{build_clusters}}'s \code{method} parameter (\code{"pam"},
 \code{"ward.D2"}, \code{"ward.D"}, \code{"complete"}, \code{"average"},
 \code{"single"}, \code{"mcquitty"}, \code{"median"}, \code{"centroid"}),
 or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.}
@@ -63,6 +63,6 @@ grp <- cluster_network(seqs, k = 2, cluster_by = "mmm")
 }
 }
 \seealso{
-\code{\link{cluster_data}}, \code{\link{cluster_mmm}},
+\code{\link{build_clusters}}, \code{\link{cluster_mmm}},
 \code{\link{build_network}}
 }

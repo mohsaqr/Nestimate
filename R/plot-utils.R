@@ -26,7 +26,7 @@
 
 
 # Compute only the dissimilarity matrix for a sequence of states using the
-# same dispatch as cluster_data(), but without running PAM / hclust /
+# same dispatch as build_clusters(), but without running PAM / hclust /
 # silhouette. Used by sequence_plot() when sort = any distance metric.
 .sequence_distance <- function(x, dissimilarity = "lcs") {
   enc <- .encode_sequences(x)

@@ -99,5 +99,5 @@ print(cs)
 
 }
 \seealso{
-\code{\link{build_network}}, \code{\link{reliability}}
+\code{\link{build_network}}, \code{\link{network_reliability}}
 }

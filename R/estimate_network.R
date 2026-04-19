@@ -99,7 +99,7 @@ build_atna <- function(data, ...) {
 #' @inheritParams build_network
 #' @param ... Additional arguments passed to \code{\link{build_network}}.
 #' @return A \code{netobject} (see \code{\link{build_network}}).
-#' @seealso \code{\link{build_network}}, \code{\link{co_occurrence}} for
+#' @seealso \code{\link{build_network}}, \code{\link{cooccurrence}} for
 #'   delimited-field, bipartite, and other non-sequence co-occurrence formats.
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))

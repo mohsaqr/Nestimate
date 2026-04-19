@@ -108,5 +108,5 @@ distribution_plot(as.data.frame(trajectories))
 }
 }
 \seealso{
-\code{\link{sequence_plot}}, \code{\link{cluster_data}}
+\code{\link{sequence_plot}}, \code{\link{build_clusters}}
 }

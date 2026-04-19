@@ -961,9 +961,9 @@ test_that("centrality_stability() works on mcml", {
   }
 })
 
-test_that("reliability() works on mcml", {
+test_that("network_reliability() works on mcml", {
   cs <- .make_mcml()
-  rel <- reliability(cs, iter = 20, seed = 1)
+  rel <- network_reliability(cs, iter = 20, seed = 1)
 
   expect_s3_class(rel, "net_reliability")
 })

@@ -463,7 +463,7 @@ build_gimme <- function(data,
 .gimme_select_path <- function(mi_list, elig_paths, prop_cutoff, n_subj,
                                 chisq_cutoff, hybrid) {
   # Remove NAs (non-converged subjects)
-  mi_valid <- mi_list[!vapply(mi_list, function(x) identical(x, NA), logical(1))]
+  mi_valid <- mi_list[!vapply(mi_list, function(x) is.atomic(x) && length(x) == 1L && is.na(x), logical(1))]
   n_converge <- length(mi_valid)
 
   if (n_converge <= (n_subj / 2)) return(NA_character_)
@@ -554,7 +554,7 @@ build_gimme <- function(data,
 #' @noRd
 .gimme_find_weakest <- function(z_list, elig_paths, prop_cutoff, n_subj,
                                  z_cutoff) {
-  z_valid <- z_list[!vapply(z_list, function(x) identical(x, NA), logical(1))]
+  z_valid <- z_list[!vapply(z_list, function(x) is.atomic(x) && length(x) == 1L && is.na(x), logical(1))]
   n_converge <- length(z_valid)
   if (n_converge == 0) return(NA_character_)
 
@@ -719,7 +719,7 @@ build_gimme <- function(data,
 
     # Get modification indices
     mi <- .gimme_fit_and_mi(current_syntax, data_k, elig_paths)
-    if (identical(mi, NA) || is.null(mi) || nrow(mi) == 0) { # nocov start
+    if (is.null(mi) || (is.atomic(mi) && length(mi) == 1L && is.na(mi)) || nrow(mi) == 0) { # nocov start
       search <- FALSE
       next # nocov end
     }

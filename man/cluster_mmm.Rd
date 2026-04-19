@@ -34,8 +34,8 @@ cluster_mmm(
 \item{covariates}{Optional. Covariates integrated into the EM algorithm
 to model covariate-dependent mixing proportions. Accepts formula,
 character vector, string, or data.frame (same forms as
-\code{\link{cluster_data}}). Unlike the post-hoc analysis in
-\code{cluster_data()}, these covariates directly influence cluster
+\code{\link{build_clusters}}). Unlike the post-hoc analysis in
+\code{build_clusters()}, these covariates directly influence cluster
 membership during estimation. Requires the \pkg{nnet} package.}
 }
 \value{

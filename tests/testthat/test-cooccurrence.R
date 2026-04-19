@@ -1,4 +1,4 @@
-# ---- co_occurrence() tests ----
+# ---- cooccurrence() tests ----
 
 # === Shared test data ===
 # Three transactions:  {A, B, C}, {B, C}, {A, C}
@@ -23,7 +23,7 @@
 # ========================================
 
 test_that("list input produces correct co-occurrence matrix", {
-  net <- co_occurrence(.co_test_list)
+  net <- cooccurrence(.co_test_list)
   expect_s3_class(net, "netobject")
   expect_equal(net$weights, .co_expected_raw)
   expect_false(net$directed)
@@ -36,7 +36,7 @@ test_that("delimited input produces correct co-occurrence matrix", {
     items = c("A; B; C", "B; C", "A; C"),
     stringsAsFactors = FALSE
   )
-  net <- co_occurrence(df, field = "items", sep = ";")
+  net <- cooccurrence(df, field = "items", sep = ";")
   expect_equal(net$weights, .co_expected_raw)
 })
 
@@ -46,7 +46,7 @@ test_that("multi-column delimited input pools across columns", {
     col2 = c("C", "C", "C"),
     stringsAsFactors = FALSE
   )
-  net <- co_occurrence(df, field = c("col1", "col2"), sep = ";")
+  net <- cooccurrence(df, field = c("col1", "col2"), sep = ";")
   expect_equal(net$weights, .co_expected_raw)
 })
 
@@ -56,7 +56,7 @@ test_that("long/bipartite input produces correct co-occurrence matrix", {
     item = c("A", "B", "C", "B", "C", "A", "C"),
     stringsAsFactors = FALSE
   )
-  net <- co_occurrence(df, field = "item", by = "doc")
+  net <- cooccurrence(df, field = "item", by = "doc")
   expect_equal(net$weights, .co_expected_raw)
 })
 
@@ -68,13 +68,13 @@ test_that("binary matrix input produces correct co-occurrence matrix", {
     nrow = 3, byrow = TRUE,
     dimnames = list(NULL, c("A", "B", "C"))
   )
-  net <- co_occurrence(bin)
+  net <- cooccurrence(bin)
   expect_equal(net$weights, .co_expected_raw)
 })
 
 test_that("binary data.frame input produces correct co-occurrence matrix", {
   df <- data.frame(A = c(1, 0, 1), B = c(1, 1, 0), C = c(1, 1, 1))
-  net <- co_occurrence(df)
+  net <- cooccurrence(df)
   expect_equal(net$weights, .co_expected_raw)
 })
 
@@ -85,7 +85,7 @@ test_that("wide sequence input produces correct co-occurrence matrix", {
     V3 = c("C", NA, NA),
     stringsAsFactors = FALSE
   )
-  net <- co_occurrence(df)
+  net <- cooccurrence(df)
   expect_equal(net$weights, .co_expected_raw)
 })
 
@@ -94,31 +94,31 @@ test_that("wide sequence input produces correct co-occurrence matrix", {
 # ========================================
 
 test_that("all 6 formats produce the same co-occurrence matrix", {
-  net_list <- co_occurrence(.co_test_list)
+  net_list <- cooccurrence(.co_test_list)
 
   df_del <- data.frame(items = c("A;B;C", "B;C", "A;C"),
                         stringsAsFactors = FALSE)
-  net_del <- co_occurrence(df_del, field = "items", sep = ";")
+  net_del <- cooccurrence(df_del, field = "items", sep = ";")
 
   df_multi <- data.frame(c1 = c("A;B", "B", "A"),
                           c2 = c("C", "C", "C"),
                           stringsAsFactors = FALSE)
-  net_multi <- co_occurrence(df_multi, field = c("c1", "c2"), sep = ";")
+  net_multi <- cooccurrence(df_multi, field = c("c1", "c2"), sep = ";")
 
   df_long <- data.frame(
     doc = c(1, 1, 1, 2, 2, 3, 3),
     item = c("A", "B", "C", "B", "C", "A", "C"),
     stringsAsFactors = FALSE
   )
-  net_long <- co_occurrence(df_long, field = "item", by = "doc")
+  net_long <- cooccurrence(df_long, field = "item", by = "doc")
 
   bin <- matrix(c(1, 1, 1, 0, 1, 1, 1, 0, 1), nrow = 3, byrow = TRUE,
                 dimnames = list(NULL, c("A", "B", "C")))
-  net_bin <- co_occurrence(bin)
+  net_bin <- cooccurrence(bin)
 
   df_wide <- data.frame(V1 = c("A", "B", "A"), V2 = c("B", "C", "C"),
                          V3 = c("C", NA, NA), stringsAsFactors = FALSE)
-  net_wide <- co_occurrence(df_wide)
+  net_wide <- cooccurrence(df_wide)
 
   expect_equal(net_del$weights, net_list$weights)
   expect_equal(net_multi$weights, net_list$weights)
@@ -132,12 +132,12 @@ test_that("all 6 formats produce the same co-occurrence matrix", {
 # ========================================
 
 test_that("similarity = 'none' returns raw counts", {
-  net <- co_occurrence(.co_test_list, similarity = "none")
+  net <- cooccurrence(.co_test_list, similarity = "none")
   expect_equal(net$weights, .co_expected_raw)
 })
 
 test_that("similarity = 'jaccard' is correct", {
-  net <- co_occurrence(.co_test_list, similarity = "jaccard")
+  net <- cooccurrence(.co_test_list, similarity = "jaccard")
   W <- net$weights
   # Jaccard(A,B) = C[A,B] / (freq_A + freq_B - C[A,B]) = 1 / (2+2-1) = 1/3
   expect_equal(W["A", "B"], 1 / 3)
@@ -152,7 +152,7 @@ test_that("similarity = 'jaccard' is correct", {
 })
 
 test_that("similarity = 'cosine' is correct", {
-  net <- co_occurrence(.co_test_list, similarity = "cosine")
+  net <- cooccurrence(.co_test_list, similarity = "cosine")
   W <- net$weights
   # Cosine(A,B) = 1 / sqrt(2*2) = 0.5
   expect_equal(W["A", "B"], 0.5)
@@ -163,7 +163,7 @@ test_that("similarity = 'cosine' is correct", {
 })
 
 test_that("similarity = 'inclusion' is correct", {
-  net <- co_occurrence(.co_test_list, similarity = "inclusion")
+  net <- cooccurrence(.co_test_list, similarity = "inclusion")
   W <- net$weights
   # Inclusion(A,B) = 1 / min(2,2) = 0.5
   expect_equal(W["A", "B"], 0.5)
@@ -174,7 +174,7 @@ test_that("similarity = 'inclusion' is correct", {
 })
 
 test_that("similarity = 'association' is correct", {
-  net <- co_occurrence(.co_test_list, similarity = "association")
+  net <- cooccurrence(.co_test_list, similarity = "association")
   W <- net$weights
   # Association(A,B) = 1 / (2*2) = 0.25
   expect_equal(W["A", "B"], 0.25)
@@ -185,7 +185,7 @@ test_that("similarity = 'association' is correct", {
 })
 
 test_that("similarity = 'dice' is correct", {
-  net <- co_occurrence(.co_test_list, similarity = "dice")
+  net <- cooccurrence(.co_test_list, similarity = "dice")
   W <- net$weights
   # Dice(A,B) = 2*1 / (2+2) = 0.5
   expect_equal(W["A", "B"], 0.5)
@@ -196,7 +196,7 @@ test_that("similarity = 'dice' is correct", {
 })
 
 test_that("similarity = 'equivalence' is correct", {
-  net <- co_occurrence(.co_test_list, similarity = "equivalence")
+  net <- cooccurrence(.co_test_list, similarity = "equivalence")
   W <- net$weights
   # Equivalence(A,B) = 1^2 / (2*2) = 0.25
   expect_equal(W["A", "B"], 0.25)
@@ -207,7 +207,7 @@ test_that("similarity = 'equivalence' is correct", {
 })
 
 test_that("similarity = 'relative' row-normalizes correctly", {
-  net <- co_occurrence(.co_test_list, similarity = "relative")
+  net <- cooccurrence(.co_test_list, similarity = "relative")
   W <- net$weights
   # Each row sums to 1
   expect_equal(rowSums(W), c(A = 1, B = 1, C = 1))
@@ -222,7 +222,7 @@ test_that("similarity = 'relative' row-normalizes correctly", {
 test_that("threshold filters low-weight edges after normalization", {
   # Raw counts: A-B = 1, A-C = 2, B-C = 2
   # With similarity = "none", threshold = 2 drops A-B
-  net <- co_occurrence(.co_test_list, threshold = 2)
+  net <- cooccurrence(.co_test_list, threshold = 2)
   W <- net$weights
   expect_equal(W["A", "B"], 0)
   expect_equal(W["B", "A"], 0)
@@ -232,7 +232,7 @@ test_that("threshold filters low-weight edges after normalization", {
 
 test_that("threshold applies after normalization", {
   # Jaccard: A-B = 1/3, A-C = 2/3, B-C = 2/3
-  net <- co_occurrence(.co_test_list, similarity = "jaccard", threshold = 0.5)
+  net <- cooccurrence(.co_test_list, similarity = "jaccard", threshold = 0.5)
   W <- net$weights
   # A-B = 1/3 < 0.5 → zeroed
   expect_equal(W["A", "B"], 0)
@@ -245,25 +245,25 @@ test_that("min_occur drops infrequent entities", {
   # min_occur = 3 keeps only C → but single-item transactions → error
   # min_occur = 2 keeps A, B, C (all >= 2)
   trans <- list(c("A", "B", "C"), c("B", "C"), c("A", "C"), c("D"))
-  net <- co_occurrence(trans, min_occur = 2L)
+  net <- cooccurrence(trans, min_occur = 2L)
   expect_false("D" %in% colnames(net$weights))
   expect_true(all(c("A", "B", "C") %in% colnames(net$weights)))
 })
 
 test_that("min_occur = 1 keeps all entities (default)", {
   trans <- list(c("A", "B"), c("B", "C"), c("D"))
-  net <- co_occurrence(trans, min_occur = 1L)
+  net <- cooccurrence(trans, min_occur = 1L)
   expect_true("D" %in% colnames(net$weights))
 })
 
 test_that("diagonal = FALSE zeros the diagonal", {
-  net <- co_occurrence(.co_test_list, diagonal = FALSE)
+  net <- cooccurrence(.co_test_list, diagonal = FALSE)
   expect_equal(diag(net$weights), c(A = 0, B = 0, C = 0))
   expect_equal(net$weights["A", "B"], 1)
 })
 
 test_that("diagonal = FALSE + similarity works", {
-  net <- co_occurrence(.co_test_list, diagonal = FALSE, similarity = "cosine")
+  net <- cooccurrence(.co_test_list, diagonal = FALSE, similarity = "cosine")
   expect_equal(diag(net$weights), c(A = 0, B = 0, C = 0))
   # freq still computed from column sums of B (not diagonal)
   expect_equal(net$weights["A", "B"], 0.5)
@@ -271,7 +271,7 @@ test_that("diagonal = FALSE + similarity works", {
 
 test_that("top_n keeps only top N edges", {
   # 3 unique off-diagonal pairs: A-B=1, A-C=2, B-C=2
-  net <- co_occurrence(.co_test_list, diagonal = FALSE, top_n = 2L)
+  net <- cooccurrence(.co_test_list, diagonal = FALSE, top_n = 2L)
   W <- net$weights
   # A-B (weight=1) should be zeroed; A-C and B-C (weight=2) kept
   expect_equal(W["A", "B"], 0)
@@ -284,7 +284,7 @@ test_that("top_n keeps only top N edges", {
 # ========================================
 
 test_that("co_occurrence returns valid netobject structure", {
-  net <- co_occurrence(.co_test_list)
+  net <- cooccurrence(.co_test_list)
   expect_s3_class(net, "netobject")
   expect_s3_class(net, "cograph_network")
   expect_false(net$directed)
@@ -296,7 +296,7 @@ test_that("co_occurrence returns valid netobject structure", {
 })
 
 test_that("co_occurrence params are stored correctly", {
-  net <- co_occurrence(.co_test_list, similarity = "jaccard", threshold = 0.1)
+  net <- cooccurrence(.co_test_list, similarity = "jaccard", threshold = 0.1)
   expect_equal(net$params$similarity, "jaccard")
   expect_equal(net$params$threshold, 0.1)
   expect_equal(net$params$n_transactions, 3L)
@@ -310,7 +310,7 @@ test_that("co_occurrence params are stored correctly", {
 
 test_that("single-item transactions produce zero off-diagonal", {
   trans <- list(c("A"), c("B"), c("C"))
-  net <- co_occurrence(trans)
+  net <- cooccurrence(trans)
   W <- net$weights
   expect_equal(W["A", "B"], 0)
   expect_equal(W["B", "C"], 0)
@@ -319,67 +319,67 @@ test_that("single-item transactions produce zero off-diagonal", {
 
 test_that("all-identical transactions give expected counts", {
   trans <- list(c("X", "Y"), c("X", "Y"), c("X", "Y"))
-  net <- co_occurrence(trans)
+  net <- cooccurrence(trans)
   expect_equal(net$weights["X", "Y"], 3)
   expect_equal(net$weights["X", "X"], 3)
 })
 
 test_that("duplicate items within a transaction are de-duplicated", {
   trans <- list(c("A", "A", "B"), c("B", "B", "C"))
-  net <- co_occurrence(trans)
+  net <- cooccurrence(trans)
   expect_equal(net$weights["A", "A"], 1)
   expect_equal(net$weights["A", "B"], 1)
 })
 
 test_that("empty strings and NAs are removed from transactions", {
   trans <- list(c("A", "", NA, "B"), c("B", "C"))
-  net <- co_occurrence(trans)
+  net <- cooccurrence(trans)
   expect_true("A" %in% colnames(net$weights))
   expect_true("B" %in% colnames(net$weights))
 })
 
 test_that("delimited with extra whitespace is handled", {
   df <- data.frame(kw = c("  A ; B  ;  C  ", " B;C "), stringsAsFactors = FALSE)
-  net <- co_occurrence(df, field = "kw", sep = ";")
+  net <- cooccurrence(df, field = "kw", sep = ";")
   expect_equal(sort(colnames(net$weights)), c("A", "B", "C"))
   expect_equal(net$weights["A", "B"], 1)
 })
 
 test_that("error on empty input", {
-  expect_error(co_occurrence(list()), "No non-empty transactions")
-  expect_error(co_occurrence(list(character(0), character(0))),
+  expect_error(cooccurrence(list()), "No non-empty transactions")
+  expect_error(cooccurrence(list(character(0), character(0))),
                "No non-empty transactions")
 })
 
 test_that("error on invalid format", {
-  expect_error(co_occurrence("not_a_valid_input"), "Cannot detect input format")
+  expect_error(cooccurrence("not_a_valid_input"), "Cannot detect input format")
 })
 
 test_that("large number of items works", {
   items <- paste0("item_", seq_len(50))
   trans <- lapply(seq_len(20), function(i) sample(items, 10))
-  net <- co_occurrence(trans)
+  net <- cooccurrence(trans)
   expect_equal(ncol(net$weights), length(unique(unlist(trans))))
   expect_true(isSymmetric(net$weights))
 })
 
 test_that("binary matrix without colnames gets auto-named", {
   bin <- matrix(c(1, 0, 1, 1), nrow = 2)
-  net <- co_occurrence(bin)
+  net <- cooccurrence(bin)
   expect_equal(colnames(net$weights), c("V1", "V2"))
 })
 
 test_that("wide sequence with void markers removes them", {
   df <- data.frame(V1 = c("A", "%"), V2 = c("B", "*"),
                    stringsAsFactors = FALSE)
-  net <- co_occurrence(df)
+  net <- cooccurrence(df)
   expect_equal(net$params$n_transactions, 1L)
 })
 
 test_that("min_occur filters before co-occurrence computation", {
   # D appears only once → dropped with min_occur = 2
   trans <- list(c("A", "B"), c("A", "B"), c("A", "D"))
-  net <- co_occurrence(trans, min_occur = 2L)
+  net <- cooccurrence(trans, min_occur = 2L)
   expect_false("D" %in% colnames(net$weights))
   expect_equal(net$weights["A", "B"], 2)
 })

@@ -52,7 +52,7 @@ time point.}
 
 \item{sort}{Row-ordering strategy for heatmap / within-panel for index.
 One of \code{"lcs"} (default), \code{"frequency"}, \code{"start"},
-\code{"end"}, or any \code{\link{cluster_data}} distance
+\code{"end"}, or any \code{\link{build_clusters}} distance
 (\code{"hamming"}, \code{"osa"}, \code{"lv"}, \code{"dl"},
 \code{"qgram"}, \code{"cosine"}, \code{"jaccard"}, \code{"jw"}).}
 
@@ -147,5 +147,5 @@ sequence_plot(trajectories, type = "distribution")
 }
 }
 \seealso{
-\code{\link{distribution_plot}}, \code{\link{cluster_data}}
+\code{\link{distribution_plot}}, \code{\link{build_clusters}}
 }

@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # Helper: generate reproducible frequency-like data
 .make_freq_data <- function(n = 100, p = 5, seed = 42) {
   set.seed(seed)
@@ -787,8 +789,8 @@ test_that("build_network auto-detects long format via action column", {
   expect_true(net$directed)
 })
 
-# L236-246: long format path through prepare_data
-test_that("build_network long format with actor/time/action passes through prepare_data", {
+# L236-246: long format path through prepare
+test_that("build_network long format with actor/time/action passes through prepare", {
   long_data <- data.frame(
     Actor  = c(1L, 1L, 1L, 2L, 2L, 2L),
     Time   = c(1L, 2L, 3L, 1L, 2L, 3L),
@@ -799,7 +801,7 @@ test_that("build_network long format with actor/time/action passes through prepa
                        actor = "Actor", action = "Action",
                        time = "Time")
   expect_s3_class(net, "netobject")
-  # After prepare_data the format should be reset to "wide"
+  # After prepare the format should be reset to "wide"
   expect_equal(net$params$format, "wide")
 })
 
@@ -1704,4 +1706,3 @@ test_that("predictability = FALSE is honoured in level = 'both'", {
   expect_null(net$between$predictability)
   expect_null(net$within$predictability)
 })
-

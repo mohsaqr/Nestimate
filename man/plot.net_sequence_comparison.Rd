@@ -8,6 +8,7 @@
   x,
   top_n = 10L,
   style = c("pyramid", "heatmap"),
+  sort = c("statistic", "frequency"),
   alpha = 0.05,
   show_residuals = FALSE,
   ...
@@ -19,6 +20,10 @@
 \item{top_n}{Integer. Show top N patterns. Default: 10.}
 
 \item{style}{Character. \code{"pyramid"} (default) or \code{"heatmap"}.}
+
+\item{sort}{Character. \code{"statistic"} (default) ranks patterns by test
+statistic or residual magnitude. \code{"frequency"} ranks by total
+occurrence count across all groups.}
 
 \item{alpha}{Numeric. Significance threshold for p-value display in the
 pyramid. Default: 0.05.}

@@ -7,13 +7,20 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<style>
+img { border: 0; }
+body, .main-container { max-width: 1200px; width: 100%; }
+</style>
+
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 9,
-  fig.height = 6,
+  fig.width = 12,
+  fig.height = 5,
   fig.align = "center",
+  out.width = "100%",
+  dpi = 96,
   message = FALSE,
   warning = FALSE
 )
@@ -94,7 +101,7 @@ $$\text{stdres}_{ij} = \frac{O_{ij} - E_{ij}}{\sqrt{E_{ij} \cdot (1 - r_i/N) \cd
 
 Back-to-back bars with residual labels inside each segment. Both sides use the same standardized-residual color scale.
 
-```{r pyramid, fig.height=8}
+```{r pyramid}
 plot(res, style = "pyramid", show_residuals = TRUE)
 ```
 
@@ -102,33 +109,20 @@ plot(res, style = "pyramid", show_residuals = TRUE)
 
 Same top patterns, same color scale, alternative layout. Works for any number of groups (pyramid requires exactly 2).
 
-```{r heatmap, fig.width=10, fig.height=8}
+```{r heatmap}
 plot(res, style = "heatmap")
 ```
 
-## 7. Sensitivity to `min_freq`
+## 7. Sort by frequency
 
-Raising `min_freq` cleans up the signal by dropping rare patterns; lowering it digs deeper into the tail.
+By default patterns are ranked by test statistic. Pass `sort = "frequency"` to rank by total occurrence count instead — useful for focusing on the most common patterns regardless of their group difference.
 
-### Stricter: `min_freq = 50`
-
-```{r min50, fig.height=7}
-res50 <- sequence_compare(net, sub = 3:5, min_freq = 50L,
-                           test = "chisq", adjust = "fdr")
-cat(sprintf("patterns: %d\n", res50$n_patterns))
-plot(res50, style = "heatmap", top_n = 10)
+```{r sort-freq}
+plot(res, style = "pyramid", sort = "frequency", show_residuals = TRUE)
 ```
 
-### Looser: `min_freq = 10`
 
-```{r min10, fig.height=9}
-res10 <- sequence_compare(net, sub = 3:5, min_freq = 10L,
-                           test = "chisq", adjust = "fdr")
-cat(sprintf("patterns: %d\n", res10$n_patterns))
-plot(res10, style = "heatmap", top_n = 15)
-```
-
-## 8. Note on the test choice
+## 9. Note on the test choice
 
 This vignette uses `test = "chisq"` because the split-within-session design makes the two halves from the same session non-independent (same human, same AI, same project). The chi-square answers the k-gram-level question "do the rates differ between halves?" and is the right tool for this design.
 

@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ---- build_mlvar() -------------------------------------------------------
 # Tests focus on:
 #   1. S3 interface (class = c("net_mlvar","netobject_group"), aliases,
@@ -92,15 +94,11 @@ test_that("coefs() errors cleanly on unsupported classes", {
   expect_error(coefs(data.frame()), "No coefs")
 })
 
-test_that("mlvar() is an alias for build_mlvar()", {
+test_that("build_mlvar() returns net_mlvar", {
   d <- simulate_data("mlvar", seed = 2)
   vars <- attr(d, "vars")
-
-  fit1 <- build_mlvar(d, vars = vars, id = "id", day = "day", beep = "beep")
-  fit2 <- mlvar(d,       vars = vars, id = "id", day = "day", beep = "beep")
-
-  expect_identical(fit1, fit2)
-  expect_identical(body(build_mlvar), body(mlvar))
+  fit <- build_mlvar(d, vars = vars, id = "id", day = "day", beep = "beep")
+  expect_s3_class(fit, "net_mlvar")
 })
 
 test_that("build_mlvar validates required arguments", {

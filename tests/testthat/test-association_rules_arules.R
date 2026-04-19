@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 test_that("arules is available for cross-validation", {
   skip_if_not_installed("arules")
   expect_true(requireNamespace("arules", quietly = TRUE))

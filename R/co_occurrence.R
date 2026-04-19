@@ -102,7 +102,7 @@
 #'   keywords = c("network; graph", "graph; matrix; network",
 #'                "matrix; algebra", "network; algebra; graph")
 #' )
-#' net <- co_occurrence(df, field = "keywords", sep = ";")
+#' net <- cooccurrence(df, field = "keywords", sep = ";")
 #'
 #' # Long/bipartite
 #' long_df <- data.frame(
@@ -110,19 +110,19 @@
 #'   keyword = c("network", "graph", "matrix", "graph", "algebra",
 #'               "network", "algebra")
 #' )
-#' net <- co_occurrence(long_df, field = "keyword", by = "paper")
+#' net <- cooccurrence(long_df, field = "keyword", by = "paper")
 #'
 #' # List of transactions
 #' transactions <- list(c("A", "B"), c("B", "C"), c("A", "B", "C"))
-#' net <- co_occurrence(transactions, similarity = "jaccard")
+#' net <- cooccurrence(transactions, similarity = "jaccard")
 #'
 #' # Binary matrix
 #' bin <- matrix(c(1,0,1, 1,1,0, 0,1,1), nrow = 3, byrow = TRUE,
 #'               dimnames = list(NULL, c("X", "Y", "Z")))
-#' net <- co_occurrence(bin)
+#' net <- cooccurrence(bin)
 #'
 #' @export
-co_occurrence <- function(data, field = NULL, by = NULL, sep = NULL,
+cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
                           similarity = c("none", "jaccard", "cosine",
                                          "inclusion", "association",
                                          "dice", "equivalence", "relative"),

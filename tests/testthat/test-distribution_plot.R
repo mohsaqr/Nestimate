@@ -29,7 +29,7 @@ test_that("distribution_plot accepts net_clustering and draws per-group panels",
   set.seed(2L)
   seqs <- as.data.frame(matrix(sample(c("A", "B", "C", "D"), 40 * 10,
                                       replace = TRUE), 40, 10))
-  cl <- cluster_data(seqs, k = 3L, dissimilarity = "hamming",
+  cl <- build_clusters(seqs, k = 3L, dissimilarity = "hamming",
                      method = "ward.D2")
 
   pdf(NULL); on.exit(dev.off(), add = TRUE)

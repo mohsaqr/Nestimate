@@ -24,6 +24,6 @@ seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 net <- build_cna(seqs)
 }
 \seealso{
-\code{\link{build_network}}, \code{\link{co_occurrence}} for
+\code{\link{build_network}}, \code{\link{cooccurrence}} for
 delimited-field, bipartite, and other non-sequence co-occurrence formats.
 }

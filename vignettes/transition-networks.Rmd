@@ -1,8 +1,6 @@
 ---
 title: "Network Estimation and Analysis with Nestimate"
-output:
-  rmarkdown::html_vignette:
-    df_print: paged
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Network Estimation and Analysis with Nestimate}
   %\VignetteEngine{knitr::rmarkdown}
@@ -16,8 +14,7 @@ knitr::opts_chunk$set(
   out.width = "100%",
   fig.width = 7,
   fig.height = 5,
-  fig.dpi = 90,
-  dpi = 300,
+  dpi = 96,
   warning = FALSE,
   message = FALSE,
   output.lines = 40
@@ -79,7 +76,7 @@ Building networks in Nestimate is a single step: `build_network()` is the univer
 - **`actor`**: the column identifying sequences (one sequence per actor)
 - **`time`**: the column providing temporal ordering
 
-Under the hood, `build_network()` calls `prepare_data()` to convert the long-format event log into wide-format sequences, automatically handling chronological ordering, session detection, and metadata preservation.
+Under the hood, `build_network()` automatically converts the long-format event log into wide-format sequences, handling chronological ordering, session detection, and metadata preservation. You can also call `prepare()` directly to inspect or reuse the processed data before passing it to `build_network()`.
 
 ### Transition Network (TNA)
 
@@ -165,8 +162,8 @@ Most research on networks or process mining uses descriptive methods. The valida
 
 Split-half reliability assesses whether the network structure is stable when the data is randomly divided into two halves. High reliability means the network structure is a consistent property of the data, not driven by a small number of idiosyncratic sequences.
 
-```{r reliability}
-reliability(net_tna)
+```{r network-reliability}
+network_reliability(net_tna)
 ```
 
 ### Bootstrap Analysis
@@ -190,10 +187,10 @@ centrality_stability(net_tna, iter = 100)
 
 ## Clustering
 
-Clusters represent typical transition networks that recur across different instances. Unlike communities, clusters involve the entire network where groups of sequences are similarly interconnected and each exhibits a distinct transition pattern with its own set of transition probabilities. Identifying clusters captures the dynamics, revealing typical behavioral strategies that learners frequently adopt. `cluster_data()` computes pairwise dissimilarities between sequences and partitions them into `k` groups, then builds a separate network for each cluster (López-Pernas et al., 2025).
+Clusters represent typical transition networks that recur across different instances. Unlike communities, clusters involve the entire network where groups of sequences are similarly interconnected and each exhibits a distinct transition pattern with its own set of transition probabilities. Identifying clusters captures the dynamics, revealing typical behavioral strategies that learners frequently adopt. `build_clusters()` computes pairwise dissimilarities between sequences and partitions them into `k` groups, then builds a separate network for each cluster (López-Pernas et al., 2025).
 
 ```{r clustering}
-Cls <- cluster_data(net_tna, k = 3)
+Cls <- build_clusters(net_tna, k = 3)
 Clusters <- build_network(Cls, method = "tna")
 Clusters
 ```
@@ -203,7 +200,7 @@ Clusters
 Permutation testing is particularly important for data-driven clusters: because clustering algorithms partition sequences to maximize between-group separation, some degree of apparent difference is guaranteed by construction. The permutation test provides the necessary corrective --- by randomly reassigning sequences to groups while preserving internal sequential structure, it constructs null distributions for edge-level differences. Only differences that exceed this null distribution constitute evidence of genuine structural divergence rather than algorithmic artifacts.
 
 ```{r perm-clusters}
-perm <- permutation_test(Clusters$`Cluster 1`, Clusters$`Cluster 2`,
+perm <- permutation(Clusters$`Cluster 1`, Clusters$`Cluster 2`,
                          iter = 100)
 perm
 ```
@@ -211,7 +208,7 @@ perm
 
 ## Post-hoc Covariate Analysis
 
-`cluster_data()` supports post-hoc covariate analysis: covariates do not influence the clustering but are analyzed after the fact to characterize who ends up in which cluster. This is the appropriate approach when the clustering should reflect behavioral patterns alone, and the researcher then asks whether those patterns are associated with external variables.
+`build_clusters()` supports post-hoc covariate analysis: covariates do not influence the clustering but are analyzed after the fact to characterize who ends up in which cluster. This is the appropriate approach when the clustering should reflect behavioral patterns alone, and the researcher then asks whether those patterns are associated with external variables.
 
 The `group_regulation_long` dataset contains self-regulated learning sequences annotated with an `Achiever` covariate distinguishing high and low achievers.
 
@@ -223,7 +220,7 @@ net_GR <- build_network(group_regulation_long, method = "tna",
 ```
 
 ```{r posthoc}
-Post <- cluster_data(net_GR, k = 2, covariates = c("Achiever"))
+Post <- build_clusters(net_GR, k = 2, covariates = c("Achiever"))
 summary(Post)
 ```
 

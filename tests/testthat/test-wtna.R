@@ -323,7 +323,7 @@ test_that("wtna permutation test works via wtna()", {
 
   net1 <- wtna(df1, method = "transition")
   net2 <- wtna(df2, method = "transition")
-  perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+  perm <- permutation(net1, net2, iter = 20, seed = 1)
 
   expect_s3_class(perm, "net_permutation")
   expect_true(is.matrix(perm$p_values))
@@ -337,9 +337,9 @@ test_that("wtna permutation via build_network falls back to association path", {
 
   # build_network(method="wtna") stores method as "wtna" (not co_occurrence),
   # so permutation dispatches via association path
-  perm <- permutation_test(build_network(df1, method = "wtna"),
-                           build_network(df2, method = "wtna"),
-                           iter = 5, seed = 1)
+  perm <- permutation(build_network(df1, method = "wtna"),
+                      build_network(df2, method = "wtna"),
+                      iter = 5, seed = 1)
   expect_s3_class(perm, "net_permutation")
 })
 
@@ -356,7 +356,7 @@ test_that("wcna permutation test works via wtna()", {
 
   net1 <- wtna(df1, method = "cooccurrence")
   net2 <- wtna(df2, method = "cooccurrence")
-  perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+  perm <- permutation(net1, net2, iter = 20, seed = 1)
 
   expect_s3_class(perm, "net_permutation")
   expect_equal(perm$method, "wtna_cooccurrence")
@@ -374,9 +374,9 @@ test_that("wcna permutation errors with build_network (no stored data)", {
   )
 
   expect_error(
-    permutation_test(build_network(df1, method = "cna"),
-                     build_network(df2, method = "cna"),
-                     iter = 20, seed = 1),
+    permutation(build_network(df1, method = "cna"),
+                build_network(df2, method = "cna"),
+                iter = 20, seed = 1),
     "requires the original data"
   )
 })

@@ -469,7 +469,7 @@
     seq_methods <- c("relative", "frequency", "co_occurrence", "attention")
     if (!is.null(data$method) && !(data$method %in% seq_methods)) {
       stop(sprintf(
-        "cluster_data() requires sequence data, but this netobject uses method '%s'. ",
+        "build_clusters() requires sequence data, but this netobject uses method '%s'. ",
         data$method
       ), "Pass the original sequence data frame instead.", call. = FALSE)
     }
@@ -596,21 +596,21 @@
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
 #'                    V3 = c("C","A","B","C","B"))
-#' cl <- cluster_data(seqs, k = 2)
+#' cl <- build_clusters(seqs, k = 2)
 #' cl
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 20, TRUE), V2 = sample(LETTERS[1:3], 20, TRUE),
 #'   V3 = sample(LETTERS[1:3], 20, TRUE), V4 = sample(LETTERS[1:3], 20, TRUE)
 #' )
-#' cl <- cluster_data(seqs, k = 2)
+#' cl <- build_clusters(seqs, k = 2)
 #' print(cl)
 #' summary(cl)
 #' }
 #'
 #' @importFrom utils combn
 #' @export
-cluster_data <- function(data, k, dissimilarity = "hamming", method = "pam",
+build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
                          na_syms = c("*", "%"), weighted = FALSE, lambda = 1,
                          seed = NULL, q = 2L, p = 0.1,
                          covariates = NULL, ...) {
@@ -707,9 +707,6 @@ cluster_data <- function(data, k, dissimilarity = "hamming", method = "pam",
   )
 }
 
-#' @rdname cluster_data
-#' @export
-cluster_sequences <- cluster_data
 
 # ==============================================================================
 # 6. S3 Methods
@@ -725,7 +722,7 @@ cluster_sequences <- cluster_data
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
 #'                    V3 = c("C","A","B","C","B"))
-#' cl <- cluster_data(seqs, k = 2)
+#' cl <- build_clusters(seqs, k = 2)
 #' print(cl)
 #' \donttest{
 #' set.seed(1)
@@ -734,7 +731,7 @@ cluster_sequences <- cluster_data
 #'   V2 = sample(c("A","B","C"), 20, TRUE),
 #'   V3 = sample(c("A","B","C"), 20, TRUE)
 #' )
-#' cl <- cluster_data(seqs, k = 2)
+#' cl <- build_clusters(seqs, k = 2)
 #' print(cl)
 #' }
 #'
@@ -772,7 +769,7 @@ print.net_clustering <- function(x, ...) {
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
 #'                    V3 = c("C","A","B","C","B"))
-#' cl <- cluster_data(seqs, k = 2)
+#' cl <- build_clusters(seqs, k = 2)
 #' summary(cl)
 #' \donttest{
 #' set.seed(1)
@@ -781,7 +778,7 @@ print.net_clustering <- function(x, ...) {
 #'   V2 = sample(c("A","B","C"), 20, TRUE),
 #'   V3 = sample(c("A","B","C"), 20, TRUE)
 #' )
-#' cl <- cluster_data(seqs, k = 2)
+#' cl <- build_clusters(seqs, k = 2)
 #' summary(cl)
 #' }
 #'
@@ -841,7 +838,7 @@ summary.net_clustering <- function(object, ...) {
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
 #'                    V3 = c("C","A","B","C","B"))
-#' cl <- cluster_data(seqs, k = 2)
+#' cl <- build_clusters(seqs, k = 2)
 #' plot(cl, type = "silhouette")
 #' \donttest{
 #' set.seed(1)
@@ -850,7 +847,7 @@ summary.net_clustering <- function(object, ...) {
 #'   V2 = sample(c("A","B","C"), 20, TRUE),
 #'   V3 = sample(c("A","B","C"), 20, TRUE)
 #' )
-#' cl <- cluster_data(seqs, k = 2)
+#' cl <- build_clusters(seqs, k = 2)
 #' plot(cl, type = "silhouette")
 #' }
 #'
@@ -862,7 +859,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 
   if (type == "predictors") {
     if (is.null(x$covariates)) {
-      stop("No covariate analysis found. Run cluster_data() with covariates.",
+      stop("No covariate analysis found. Run build_clusters() with covariates.",
            call. = FALSE)
     }
     return(.plot_covariate_forest(
@@ -945,7 +942,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' Handles five input forms: formula, character vector, string, data.frame,
 #' NULL. Looks up column names in metadata or raw data as needed.
 #' @param covariates User-supplied covariates argument
-#' @param raw_data Original input to cluster_data (before extraction)
+#' @param raw_data Original input to build_clusters (before extraction)
 #' @param n Number of sequences
 #' @return A list with \code{cov_df} (data.frame) and \code{formula} (formula),
 #'   or NULL if covariates is NULL.
@@ -1252,7 +1249,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   )
 }
 
-#' Print covariate profiles and coefficient table (shared by cluster_data/mmm)
+#' Print covariate profiles and coefficient table (shared by build_clusters/mmm)
 #' @noRd
 .print_covariate_profiles <- function(cov, header = "Post-hoc Covariate Analysis (does not influence cluster membership)") {
   cat(header, "\n\n")
@@ -1331,7 +1328,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
               cov$fit$aic, cov$fit$bic, cov$fit$mcfadden_r2))
 }
 
-#' Odds ratio forest plot (shared by cluster_data/mmm)
+#' Odds ratio forest plot (shared by build_clusters/mmm)
 #' @noRd
 .plot_covariate_forest <- function(coef_df, title) {
   coef_df <- coef_df[coef_df$variable != "(Intercept)", , drop = FALSE]
@@ -1411,10 +1408,10 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' per-cluster networks match the type of the input network.
 #'
 #' @param data Sequence data. Accepts a data frame, matrix, or
-#'   \code{netobject}. See \code{\link{cluster_data}} for supported formats.
+#'   \code{netobject}. See \code{\link{build_clusters}} for supported formats.
 #' @param k Integer. Number of clusters.
 #' @param cluster_by Character. Clustering algorithm passed to
-#'   \code{\link{cluster_data}}'s \code{method} parameter (\code{"pam"},
+#'   \code{\link{build_clusters}}'s \code{method} parameter (\code{"pam"},
 #'   \code{"ward.D2"}, \code{"ward.D"}, \code{"complete"}, \code{"average"},
 #'   \code{"single"}, \code{"mcquitty"}, \code{"median"}, \code{"centroid"}),
 #'   or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.
@@ -1425,7 +1422,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #'   \code{scaling}, and all other \code{build_network} arguments are
 #'   supported.
 #' @return A \code{netobject_group}.
-#' @seealso \code{\link{cluster_data}}, \code{\link{cluster_mmm}},
+#' @seealso \code{\link{build_clusters}}, \code{\link{cluster_mmm}},
 #'   \code{\link{build_network}}
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
@@ -1470,7 +1467,7 @@ cluster_network <- function(data, k, cluster_by = "pam",
     return(do.call(build_network, c(list(data = mmm_fit), dots)))
   }
 
-  cls <- cluster_data(data, k = k, method = cluster_by,
-                      dissimilarity = dissimilarity)
+  cls <- build_clusters(data, k = k, method = cluster_by,
+                        dissimilarity = dissimilarity)
   do.call(build_network, c(list(data = cls), dots))
 }

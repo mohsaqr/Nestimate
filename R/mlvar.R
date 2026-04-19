@@ -10,9 +10,7 @@
 #'   residuals, and (3) an undirected between-subjects network of partial
 #'   correlations derived from the person-mean fixed effects.
 #'
-#'   `mlvar()` is a short-cut alias for `build_mlvar()`.
-#'
-#' @details The algorithm follows mlVAR's lmer pipeline exactly:
+#' #' @details The algorithm follows mlVAR's lmer pipeline exactly:
 #' \enumerate{
 #'   \item Drop rows with NA in id/day/beep and optionally grand-mean
 #'         standardize each variable.
@@ -88,10 +86,6 @@
 #'                    id = "id", day = "day", beep = "beep")
 #' print(fit)
 #' summary(fit)
-#'
-#' # Short-cut alias
-#' fit2 <- mlvar(d, vars = attr(d, "vars"),
-#'               id = "id", day = "day", beep = "beep")
 #' }
 #'
 #' @seealso [build_network()]
@@ -168,10 +162,6 @@ build_mlvar <- function(data, vars, id,
   class(nets) <- c("net_mlvar", "netobject_group")
   nets
 }
-
-#' @rdname build_mlvar
-#' @export
-mlvar <- build_mlvar
 
 #' Tidy coefficients from a fitted mlvar model
 #'

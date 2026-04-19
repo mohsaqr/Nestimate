@@ -1,4 +1,7 @@
 ^.*\.Rproj$
+^.*\.Rcheck$
+^Nestimate\.Rcheck$
+^\.\.Rcheck$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^CHANGES\.md$
@@ -27,5 +30,10 @@
 ^AGENT-NOTE-EQUIV-TESTING\.md$
 ^.*\.tar\.gz$
 ^vignettes/Good$
+^vignettes/Good\.zip$
 ^temp_docs$
 ^vignettes/knitted$
+^tests/testthat/test-equiv-.*\.R$
+^tests/testthat/testthat-problems\.rds$
+^README\.html$
+^vignettes/.*\.html$

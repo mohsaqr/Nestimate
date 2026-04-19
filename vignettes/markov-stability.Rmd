@@ -1,8 +1,6 @@
 ---
 title: "Markov Stability Analysis"
-output:
-  rmarkdown::html_vignette:
-    df_print: paged
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Markov Stability Analysis}
   %\VignetteEngine{knitr::rmarkdown}
@@ -16,7 +14,7 @@ knitr::opts_chunk$set(
   out.width = "100%",
   fig.width = 7,
   fig.height = 5,
-  dpi       = 150,
+  dpi       = 96,
   warning   = FALSE,
   message   = FALSE
 )
@@ -206,20 +204,3 @@ learner is active they stay active. Average has the lowest
 Disengaged has `avg_time_from_others` of ~39 steps -- effectively unreachable.
 
 ---
-
-## Summary
-
-```{r echo=FALSE}
-data.frame(
-  Metric            = c("Dominant state", "Active persistence",
-                        "Active sojourn time",
-                        "Active to Disengaged MFPT",
-                        "Disengaged to Active MFPT",
-                        "Disengaged accessibility (avg)"),
-  `Full sample`     = c("Average (44%)", "0.70", "3.3 steps",
-                        "10.4", "6.2", "9.2 avg"),
-  `Mostly active`   = c("Active (79%)", "0.81", "5.3 steps",
-                        "~40", "~2.0", "~39 avg"),
-  check.names       = FALSE
-)
-```

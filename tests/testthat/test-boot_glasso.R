@@ -1,4 +1,5 @@
 # ---- Tests for boot_glasso() ----
+skip_on_cran()
 
 # ---- Helper: generate structured data with known edges ----
 .make_test_data <- function(n = 200, p = 5, seed = 42) {

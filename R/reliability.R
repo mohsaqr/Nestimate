@@ -43,14 +43,14 @@
 #' @examples
 #' net <- build_network(data.frame(V1 = c("A","B","C","A"),
 #'   V2 = c("B","C","A","B")), method = "relative")
-#' rel <- reliability(net, iter = 10)
+#' rel <- network_reliability(net, iter = 10)
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
 #'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
 #' )
 #' net <- build_network(seqs, method = "relative")
-#' rel <- reliability(net, iter = 100, seed = 42)
+#' rel <- network_reliability(net, iter = 100, seed = 42)
 #' print(rel)
 #' }
 #'
@@ -58,7 +58,7 @@
 #'
 #' @importFrom stats cor median sd
 #' @export
-reliability <- function(..., iter = 1000L, split = 0.5,
+network_reliability <- function(..., iter = 1000L, split = 0.5,
                         scale = "none", seed = NULL) {
 
   dots <- list(...)
@@ -362,7 +362,7 @@ reliability <- function(..., iter = 1000L, split = 0.5,
 #' @examples
 #' net <- build_network(data.frame(V1 = c("A","B","C","A"),
 #'   V2 = c("B","C","A","B")), method = "relative")
-#' rel <- reliability(net, iter = 10)
+#' rel <- network_reliability(net, iter = 10)
 #' print(rel)
 #' \donttest{
 #' set.seed(1)
@@ -372,7 +372,7 @@ reliability <- function(..., iter = 1000L, split = 0.5,
 #'   V3 = sample(c("A","B","C"), 30, TRUE)
 #' )
 #' net <- build_network(seqs, method = "relative")
-#' rel <- reliability(net, iter = 20, seed = 1)
+#' rel <- network_reliability(net, iter = 20, seed = 1)
 #' print(rel)
 #' }
 #'
@@ -422,7 +422,7 @@ print.net_reliability <- function(x, ...) {
 #' @examples
 #' net <- build_network(data.frame(V1 = c("A","B","C","A"),
 #'   V2 = c("B","C","A","B")), method = "relative")
-#' rel <- reliability(net, iter = 10)
+#' rel <- network_reliability(net, iter = 10)
 #' plot(rel)
 #' \donttest{
 #' set.seed(1)
@@ -432,7 +432,7 @@ print.net_reliability <- function(x, ...) {
 #'   V3 = sample(c("A","B","C"), 30, TRUE)
 #' )
 #' net <- build_network(seqs, method = "relative")
-#' rel <- reliability(net, iter = 20, seed = 1)
+#' rel <- network_reliability(net, iter = 20, seed = 1)
 #' plot(rel)
 #' }
 #'

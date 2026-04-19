@@ -49,14 +49,14 @@
 #'   code = sample(c("read", "write", "test"), 15, replace = TRUE),
 #'   timestamp = seq.POSIXt(as.POSIXct("2024-01-01"), by = "min", length.out = 15)
 #' )
-#' prepared <- prepare_data(df, actor = "student", action = "code",
-#'                          time = "timestamp")
+#' prepared <- prepare(df, actor = "student", action = "code",
+#'                     time = "timestamp")
 #' net <- build_network(prepared$sequence_data, method = "relative")
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{prepare_onehot}}
 #'
 #' @export
-prepare_data <- function(data,
+prepare <- function(data,
                          actor,
                          action,
                          time = NULL,
@@ -242,8 +242,8 @@ prepare_data <- function(data,
 #'   action = c("A","B","C","B","A","C"),
 #'   time   = c(1,2,3,1,2,3)
 #' )
-#' nd <- prepare_data(events, action = "action",
-#'                    actor = "actor", time = "time")
+#' nd <- prepare(events, action = "action",
+#'               actor = "actor", time = "time")
 #' print(nd)
 #' @export
 print.nestimate_data <- function(x, ...) {
@@ -359,7 +359,9 @@ print.nestimate_data <- function(x, ...) {
   agg_list <- lapply(extra_cols, function(col) {
     vals <- df[[col]]
     if (is.numeric(vals)) {
-      tapply(vals, df[[session_col]], mean, na.rm = TRUE)[sessions]
+      agg <- tapply(vals, df[[session_col]], mean, na.rm = TRUE)[sessions]
+      agg[is.nan(agg)] <- NA_real_
+      agg
     } else {
       n_ties <- 0L
       result <- tapply(vals, df[[session_col]], function(v) {

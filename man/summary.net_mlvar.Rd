@@ -24,10 +24,6 @@ fit <- build_mlvar(d, vars = attr(d, "vars"),
                    id = "id", day = "day", beep = "beep")
 print(fit)
 summary(fit)
-
-# Short-cut alias
-fit2 <- mlvar(d, vars = attr(d, "vars"),
-              id = "id", day = "day", beep = "beep")
 }
 
 }

@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # Tests for cograph_network → netobject coercion across Nestimate functions
 
 # ---- Helper: build a cograph_network from synthetic data ----
@@ -75,9 +77,9 @@ test_that("bootstrap_network works with cograph_network", {
   expect_true(is.matrix(boot$p_values))
 })
 
-# ---- permutation_test ----
+# ---- permutation ----
 
-test_that("permutation_test works with cograph_network inputs", {
+test_that("permutation works with cograph_network inputs", {
   skip_if_not_installed("cograph")
   skip_if_not_installed("tna")
 
@@ -91,20 +93,20 @@ test_that("permutation_test works with cograph_network inputs", {
   skip_if(is.null(cg1$weights), "cograph_network has no $weights")
 
   # Both netobject (baseline)
-  perm_base <- permutation_test(net1, net2, iter = 20, seed = 1)
+  perm_base <- permutation(net1, net2, iter = 20, seed = 1)
   expect_s3_class(perm_base, "net_permutation")
 
   # cograph_network as x
-  perm_cg <- permutation_test(cg1, net2, iter = 20, seed = 1)
+  perm_cg <- permutation(cg1, net2, iter = 20, seed = 1)
   expect_s3_class(perm_cg, "net_permutation")
 })
 
-# ---- reliability ----
+# ---- network_reliability ----
 
-test_that("reliability works with cograph_network", {
+test_that("network_reliability works with cograph_network", {
   cg <- make_cograph_net()
 
-  rel <- reliability(cg, iter = 20, seed = 1)
+  rel <- network_reliability(cg, iter = 20, seed = 1)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(rel$iter, 20L)

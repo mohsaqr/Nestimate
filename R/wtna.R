@@ -415,7 +415,7 @@ wtna <- function(data,
 
 # ---- Registry estimator wrappers ----
 # These allow wtna to be used via build_network() and gain
-# bootstrap_network() / permutation_test() support automatically.
+# bootstrap_network() / permutation() support automatically.
 
 #' Core wtna estimator for the registry
 #'

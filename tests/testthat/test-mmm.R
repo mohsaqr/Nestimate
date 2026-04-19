@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # Tests for mmm.R: Mixed Markov Model
 
 # ============================================

@@ -26,7 +26,7 @@
 #'   \code{"distribution"}.
 #' @param sort Row-ordering strategy for heatmap / within-panel for index.
 #'   One of \code{"lcs"} (default), \code{"frequency"}, \code{"start"},
-#'   \code{"end"}, or any \code{\link{cluster_data}} distance
+#'   \code{"end"}, or any \code{\link{build_clusters}} distance
 #'   (\code{"hamming"}, \code{"osa"}, \code{"lv"}, \code{"dl"},
 #'   \code{"qgram"}, \code{"cosine"}, \code{"jaccard"}, \code{"jw"}).
 #' @param tree Optional \code{hclust}/\code{dendrogram}/\code{agnes}
@@ -74,7 +74,7 @@
 #'
 #' @return Invisibly, a list describing the plot (shape depends on
 #'   \code{type}).
-#' @seealso \code{\link{distribution_plot}}, \code{\link{cluster_data}}
+#' @seealso \code{\link{distribution_plot}}, \code{\link{build_clusters}}
 #' @examples
 #' \donttest{
 #' sequence_plot(trajectories)
@@ -131,7 +131,7 @@ sequence_plot <- function(x,
   # Open a new device when width/height supplied (interactive use). In
   # knitr, set fig.width / fig.height in the chunk header instead - this
   # call would open a detached device the chunk won't capture.
-  if (!is.null(width) || !is.null(height)) {
+  if (interactive() && (!is.null(width) || !is.null(height))) {
     grDevices::dev.new(width  = if (!is.null(width))  width  else 7,
                        height = if (!is.null(height)) height else 7,
                        noRStudioGD = TRUE)

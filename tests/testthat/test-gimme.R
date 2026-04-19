@@ -2,6 +2,12 @@
 # Tests for build_gimme() — GIMME Network Analysis
 # ===========================================================================
 
+# gimme package fits a lavaan SEM per subject and is inherently slow
+# (~50s for the full suite locally, 2-3x on Windows). Under CRAN's 10-min
+# check budget that's half the budget on one file. Skip on CRAN; full suite
+# runs locally and in CI.
+testthat::skip_on_cran()
+
 # --- Helper: generate test data ---
 .make_gimme_data <- function(n_subjects = 10, n_time = 80, n_vars = 3,
                               seed = 42) {

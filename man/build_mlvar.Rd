@@ -2,7 +2,6 @@
 % Please edit documentation in R/mlvar.R
 \name{build_mlvar}
 \alias{build_mlvar}
-\alias{mlvar}
 \title{Build a Multilevel Vector Autoregression (mlVAR) network}
 \usage{
 build_mlvar(
@@ -14,8 +13,6 @@ build_mlvar(
   lag = 1L,
   standardize = FALSE
 )
-
-mlvar(data, vars, id, day = NULL, beep = NULL, lag = 1L, standardize = FALSE)
 }
 \arguments{
 \item{data}{A \code{data.frame} containing the panel data.}
@@ -78,10 +75,7 @@ an undirected contemporaneous network of partial correlations among
 residuals, and (3) an undirected between-subjects network of partial
 correlations derived from the person-mean fixed effects.
 
-\code{mlvar()} is a short-cut alias for \code{build_mlvar()}.
-}
-\details{
-The algorithm follows mlVAR's lmer pipeline exactly:
+#' @details The algorithm follows mlVAR's lmer pipeline exactly:
 \enumerate{
 \item Drop rows with NA in id/day/beep and optionally grand-mean
 standardize each variable.
@@ -112,10 +106,6 @@ fit <- build_mlvar(d, vars = attr(d, "vars"),
                    id = "id", day = "day", beep = "beep")
 print(fit)
 summary(fit)
-
-# Short-cut alias
-fit2 <- mlvar(d, vars = attr(d, "vars"),
-              id = "id", day = "day", beep = "beep")
 }
 
 }

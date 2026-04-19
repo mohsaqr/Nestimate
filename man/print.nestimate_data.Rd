@@ -23,7 +23,7 @@ events <- data.frame(
   action = c("A","B","C","B","A","C"),
   time   = c(1,2,3,1,2,3)
 )
-nd <- prepare_data(events, action = "action",
-                   actor = "actor", time = "time")
+nd <- prepare(events, action = "action",
+              actor = "actor", time = "time")
 print(nd)
 }
