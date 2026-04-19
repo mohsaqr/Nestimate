@@ -1133,6 +1133,11 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' Run multinomial logistic regression on cluster assignments
 #' @noRd
 .run_covariate_analysis <- function(assignments, cov_df, rhs, k) {
+  if (!requireNamespace("nnet", quietly = TRUE)) {
+    stop("Package 'nnet' is required for covariate analysis. ",
+         "Install with: install.packages('nnet')", call. = FALSE)
+  }
+
   # --- Prepare data ---
   fit_df <- cov_df
 

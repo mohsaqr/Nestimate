@@ -219,12 +219,12 @@ net_GR <- build_network(group_regulation_long, method = "tna",
                         time = "Time")
 ```
 
-```{r posthoc}
+```{r posthoc, eval = requireNamespace("nnet", quietly = TRUE)}
 Post <- build_clusters(net_GR, k = 2, covariates = c("Achiever"))
 summary(Post)
 ```
 
-```{r posthoc-networks}
+```{r posthoc-networks, eval = requireNamespace("nnet", quietly = TRUE)}
 Postgr <- build_network(Post)
 Postgr
 ```
