@@ -133,7 +133,7 @@ bootstrap_network <- function(x,
     warning(
       "Bootstrapping a network built from edgelist input (no per-actor ",
       "sequence data). Each transition is treated as an independent case, ",
-      "which may have limitations when transitions are correlated within ",
+      "which has limitations when transitions are correlated within ",
       "actors or sessions.\n",
       "Better alternatives:\n",
       "  * Rebuild as a sequence-based network: build_network(data, ",
