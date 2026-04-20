@@ -125,18 +125,26 @@ bootstrap_network <- function(x,
          call. = FALSE)
   }
 
-  # Honest warning: edgelist-derived data has no actor grouping, so
-  # row-resampling treats every transition as i.i.d. — anti-conservative CIs.
+  # Note: edgelist-derived data has no actor / session grouping, so
+  # row-resampling uses individual transitions as the unit — which may
+  # under-represent within-actor correlation. Case-dropping and actor-
+  # level sequence reconstruction are both more robust alternatives.
   if (identical(attr(x$data, "source"), "edgelist")) {
     warning(
       "Bootstrapping a network built from edgelist input (no per-actor ",
-      "sequence data). Each transition is resampled independently, ignoring ",
-      "correlation within actors/sessions, so confidence intervals may be ",
-      "anti-conservative.\n",
-      "Consider instead:\n",
-      "  * permutation_test(x, y)       - edge-level comparison between two networks\n",
-      "  * centrality_stability(x)      - case-dropping CS per centrality measure\n",
-      "  * casedrop_reliability(x)      - model-level edge-weight reliability under case-dropping",
+      "sequence data). Each transition is treated as an independent case, ",
+      "which may have limitations when transitions are correlated within ",
+      "actors or sessions.\n",
+      "Better alternatives:\n",
+      "  * Rebuild as a sequence-based network: build_network(data, ",
+      "method = \"tna\", actor = <...>, action = <...>, time = <...>) ",
+      "then feed the result to build_mcml(). This reconstructs per-actor ",
+      "sequences (via prepare()) so bootstrap and case-dropping operate at ",
+      "the actor level natively.\n",
+      "  * Use case-dropping rather than bootstrap:\n",
+      "      - casedrop_reliability(x)  - model-level edge-weight reliability\n",
+      "      - centrality_stability(x)  - per-centrality CS coefficient\n",
+      "  * permutation_test(x, y) for comparing two networks.",
       call. = FALSE
     )
   }
