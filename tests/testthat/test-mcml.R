@@ -1038,10 +1038,37 @@ test_that("edgelist input yields macro/per-cluster $data usable by bootstrap", {
   expect_true(all(mc$clusters$B$data[[1]] %in% c("b1", "b2")))
   expect_true(all(mc$clusters$B$data[[2]] %in% c("b1", "b2")))
 
-  # as_tna() then bootstrap_network() must run without the "$data is NULL" error
+  # Edgelist source is tagged so bootstrap can warn about it
+  expect_identical(attr(mc$macro$data, "source"), "edgelist")
+  expect_identical(attr(mc$clusters$A$data, "source"), "edgelist")
+
+  # as_tna() then bootstrap_network() must run without the "$data is NULL"
+  # error, but should emit the anti-conservative-CI warning pointing to
+  # permutation / case-dropping alternatives.
   tnas <- as_tna(mc)
-  expect_no_error(
-    boot <- bootstrap_network(tnas, iter = 20)
-  )
+  suppressWarnings(boot <- bootstrap_network(tnas, iter = 20))
   expect_s3_class(boot, "net_bootstrap_group")
+  expect_warning(
+    bootstrap_network(tnas$macro, iter = 10),
+    "edgelist"
+  )
+})
+
+test_that("sequence input does NOT emit the edgelist bootstrap warning", {
+  # Wide-format sequences: rows = actors, cols = time steps. Should have
+  # no "source = edgelist" tag, no warning from bootstrap_network().
+  seq_df <- data.frame(
+    t1 = c("a1", "a2", "b1", "b2"),
+    t2 = c("a2", "a1", "b2", "b1"),
+    t3 = c("a1", "a1", "b1", "b2"),
+    stringsAsFactors = FALSE
+  )
+  clusters <- list(A = c("a1", "a2"), B = c("b1", "b2"))
+  mc <- build_mcml(seq_df, clusters)
+
+  expect_null(attr(mc$macro$data, "source"))
+  tnas <- as_tna(mc)
+  expect_no_warning(
+    bootstrap_network(tnas$macro, iter = 10)
+  )
 })

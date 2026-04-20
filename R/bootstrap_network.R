@@ -125,6 +125,21 @@ bootstrap_network <- function(x,
          call. = FALSE)
   }
 
+  # Honest warning: edgelist-derived data has no actor grouping, so
+  # row-resampling treats every transition as i.i.d. — anti-conservative CIs.
+  if (identical(attr(x$data, "source"), "edgelist")) {
+    warning(
+      "Bootstrapping a network built from edgelist input (no per-actor ",
+      "sequence data). Each transition is resampled independently, ignoring ",
+      "correlation within actors/sessions, so confidence intervals may be ",
+      "anti-conservative.\n",
+      "Consider instead:\n",
+      "  * permutation_test(x, y)   - edge-level comparison between two networks\n",
+      "  * centrality_stability(x)  - CS-coefficient via case-dropping subsets",
+      call. = FALSE
+    )
+  }
+
   data <- x$data
   method <- x$method
   params <- x$params

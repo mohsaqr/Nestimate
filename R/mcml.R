@@ -823,19 +823,25 @@ build_mcml <- function(x,
     })
   } else if (length(from_nodes) > 0L) {
     # Edgelist branch: every transition -> one 2-column pseudo-sequence row.
+    # Tag with source = "edgelist" so bootstrap_network() can warn — edgelist
+    # bootstrap treats transitions as independent, ignoring within-actor
+    # correlation, so CIs are anti-conservative.
     between_seq_data <- data.frame(
       V1 = unname(from_clusters),
       V2 = unname(to_clusters),
       stringsAsFactors = FALSE
     )
+    attr(between_seq_data, "source") <- "edgelist"
 
     within_seq_data_list <- lapply(cluster_list, function(cl_nodes) {
       keep <- from_nodes %in% cl_nodes & to_nodes %in% cl_nodes
-      data.frame(
+      df <- data.frame(
         V1 = from_nodes[keep],
         V2 = to_nodes[keep],
         stringsAsFactors = FALSE
       )
+      attr(df, "source") <- "edgelist"
+      df
     })
   }
 
