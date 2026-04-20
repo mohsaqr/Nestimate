@@ -17,7 +17,7 @@ edge_stability(
   seed = NULL
 )
 
-\method{print}{net_edge_stability}(x, ...)
+\method{print}{net_edge_stability}(x, digits = 3, ...)
 
 \method{print}{net_edge_stability_group}(x, ...)
 }
@@ -45,6 +45,8 @@ magnitude and rank stability is the typical target.}
 edge vector. Default \code{FALSE}.}
 
 \item{seed}{Optional integer for reproducibility.}
+
+\item{digits}{Digits to display. Default \code{3}.}
 
 \item{...}{Additional arguments (ignored).}
 }

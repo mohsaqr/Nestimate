@@ -20,12 +20,43 @@ test_that("returns a net_edge_stability with required fields", {
   net <- build_network(.es_seq(), method = "relative")
   es <- edge_stability(net, iter = 30, drop_prop = c(0.1, 0.3, 0.5), seed = 1)
   expect_s3_class(es, "net_edge_stability")
-  expect_named(es, c("cs", "correlations", "drop_prop", "threshold",
-                     "certainty", "iter", "method", "include_diag",
-                     "n_cases", "n_edges"))
+  expect_true(all(c("cs", "summary", "metrics", "correlations",
+                    "drop_prop", "threshold", "certainty", "iter",
+                    "method", "include_diag", "n_cases", "n_edges")
+                  %in% names(es)))
   expect_equal(dim(es$correlations), c(30L, 3L))
   expect_equal(es$n_cases, nrow(.es_seq()))
   expect_true(es$cs >= 0 && es$cs < 1)
+})
+
+test_that("metrics contains four per-iteration matrices of correct shape", {
+  net <- build_network(.es_seq(), method = "relative")
+  es <- edge_stability(net, iter = 25, drop_prop = c(0.2, 0.5), seed = 1)
+  expect_named(es$metrics,
+               c("mean_abs_dev", "median_abs_dev", "correlation", "max_abs_dev"))
+  for (nm in names(es$metrics)) {
+    expect_equal(dim(es$metrics[[nm]]), c(25L, 2L))
+  }
+  # correlations field is an alias for metrics$correlation
+  expect_identical(es$correlations, es$metrics$correlation)
+})
+
+test_that("summary table has 4 metrics x n_prop rows with expected columns", {
+  net <- build_network(.es_seq(), method = "relative")
+  es <- edge_stability(net, iter = 20, drop_prop = c(0.2, 0.5, 0.7), seed = 1)
+  expect_s3_class(es$summary, "data.frame")
+  expect_equal(nrow(es$summary), 4L * 3L)  # 4 metrics x 3 drop_prop
+  expect_true(all(c("metric", "drop_prop", "mean", "sd", "median",
+                    "mad", "q025", "q975") %in% names(es$summary)))
+})
+
+test_that("mean_abs_dev and max_abs_dev are non-negative; correlation in [-1, 1]", {
+  net <- build_network(.es_seq(), method = "relative")
+  es <- edge_stability(net, iter = 30, drop_prop = 0.3, seed = 1)
+  expect_true(all(es$summary$mean[es$summary$metric == "mean_abs_dev"] >= 0))
+  expect_true(all(es$summary$mean[es$summary$metric == "max_abs_dev"] >= 0))
+  cor_means <- es$summary$mean[es$summary$metric == "correlation"]
+  expect_true(all(cor_means >= -1 & cor_means <= 1))
 })
 
 # Diagonal handling --------------------------------------------------------

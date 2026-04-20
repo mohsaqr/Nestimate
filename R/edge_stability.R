@@ -211,7 +211,14 @@ edge_stability <- function(x,
 
   # ---- Main case-dropping loop ----
   n_prop <- length(drop_prop)
-  corr_mat <- matrix(NA_real_, nrow = iter, ncol = n_prop)
+  # Per-iteration, per-drop_prop storage for the four model-level metrics
+  metric_names <- c("mean_abs_dev", "median_abs_dev", "correlation",
+                    "max_abs_dev")
+  metrics <- lapply(metric_names, function(nm) {
+    matrix(NA_real_, nrow = iter, ncol = n_prop,
+           dimnames = list(NULL, paste0("p", drop_prop)))
+  })
+  names(metrics) <- metric_names
 
   case_seq <- seq_len(n_cases)
   for (p_idx in seq_len(n_prop)) {
@@ -224,16 +231,40 @@ edge_stability <- function(x,
       mat <- build_matrix(idx)
       if (is.null(mat)) next
       sub_edges <- as.vector(mat[idx_mask])
-      if (stats::sd(sub_edges, na.rm = TRUE) > 0) {
-        corr_mat[it, p_idx] <- stats::cor(orig_edges, sub_edges,
-                                          method = method,
-                                          use = "complete.obs")
-      }
+      diffs <- abs(orig_edges - sub_edges)
+      r <- if (stats::sd(sub_edges, na.rm = TRUE) > 0) {
+        stats::cor(orig_edges, sub_edges, method = method,
+                   use = "complete.obs")
+      } else NA_real_
+      metrics$mean_abs_dev  [it, p_idx] <- mean(diffs,   na.rm = TRUE)
+      metrics$median_abs_dev[it, p_idx] <- stats::median(diffs, na.rm = TRUE)
+      metrics$correlation   [it, p_idx] <- r
+      metrics$max_abs_dev   [it, p_idx] <- max(diffs,    na.rm = TRUE)
     }
   }
 
-  # ---- CS-coefficient: max drop_prop where certainty-fraction >= threshold ----
-  prop_above <- apply(corr_mat, 2L, function(c) {
+  # ---- Per-drop-proportion summary across iterations ----
+  summary_rows <- lapply(metric_names, function(nm) {
+    m <- metrics[[nm]]
+    data.frame(
+      metric    = nm,
+      drop_prop = drop_prop,
+      mean      = colMeans(m, na.rm = TRUE),
+      sd        = apply(m, 2L, stats::sd,       na.rm = TRUE),
+      median    = apply(m, 2L, stats::median,   na.rm = TRUE),
+      mad       = apply(m, 2L, stats::mad,      na.rm = TRUE),
+      q025      = apply(m, 2L, stats::quantile,
+                        probs = 0.025, na.rm = TRUE),
+      q975      = apply(m, 2L, stats::quantile,
+                        probs = 0.975, na.rm = TRUE),
+      stringsAsFactors = FALSE,
+      row.names = NULL
+    )
+  })
+  summary_df <- do.call(rbind, summary_rows)
+
+  # ---- CS-coefficient: max drop_prop where corr certainty-fraction >= threshold ----
+  prop_above <- apply(metrics$correlation, 2L, function(c) {
     mean(c >= threshold, na.rm = TRUE)
   })
   qualifying <- which(prop_above >= certainty)
@@ -242,7 +273,9 @@ edge_stability <- function(x,
   structure(
     list(
       cs            = cs,
-      correlations  = corr_mat,
+      summary       = summary_df,
+      metrics       = metrics,
+      correlations  = metrics$correlation,
       drop_prop     = drop_prop,
       threshold     = threshold,
       certainty     = certainty,
@@ -257,22 +290,39 @@ edge_stability <- function(x,
 }
 
 #' @param x An edge-stability object.
+#' @param digits Digits to display. Default `3`.
 #' @param ... Additional arguments (ignored).
 #' @return The input `x` invisibly.
 #' @rdname edge_stability
 #' @export
-print.net_edge_stability <- function(x, ...) {
+print.net_edge_stability <- function(x, digits = 3, ...) {
   cat(sprintf("Edge-weight Case-dropping Stability\n"))
   cat(sprintf("  Cases (rows of $data) : %d\n", x$n_cases))
   cat(sprintf("  Edges assessed        : %d%s\n", x$n_edges,
               if (!x$include_diag) " (diagonal excluded)" else ""))
-  cat(sprintf("  Correlation method    : %s\n", x$method))
   cat(sprintf("  Iterations / prop     : %d\n", x$iter))
-  cat(sprintf("  Drop proportions      : %s\n",
-              paste(format(x$drop_prop, digits = 2), collapse = ", ")))
-  cat(sprintf("  CS-coefficient        : %.2f\n", x$cs))
-  cat(sprintf("  (threshold = %.2f, certainty = %.2f)\n",
-              x$threshold, x$certainty))
+  cat(sprintf("  Correlation method    : %s\n", x$method))
+  cat(sprintf("  CS-coefficient (r)    : %.2f  (threshold=%.2f, certainty=%.2f)\n",
+              x$cs, x$threshold, x$certainty))
+  cat("\nModel-level reliability across iterations (mean +/- sd per drop):\n")
+  # Pivot summary into a compact matrix for display
+  props  <- x$drop_prop
+  fmt <- function(v) formatC(v, digits = digits, format = "f", flag = " ")
+  show <- function(metric_name, display) {
+    rows <- x$summary[x$summary$metric == metric_name, ]
+    cat(sprintf("  %-14s ", display))
+    cat(paste(sprintf("%s+-%s",
+                      fmt(rows$mean), fmt(rows$sd)),
+              collapse = "  "))
+    cat("\n")
+  }
+  cat(sprintf("  %-14s %s\n", "drop_prop",
+              paste(sprintf("%-11s", sprintf("p=%.1f", props)),
+                    collapse = "  ")))
+  show("mean_abs_dev",   "mean|diff|")
+  show("median_abs_dev", "MAD")
+  show("correlation",    "cor")
+  show("max_abs_dev",    "max|diff|")
   invisible(x)
 }
 
