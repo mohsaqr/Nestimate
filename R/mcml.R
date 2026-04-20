@@ -782,7 +782,18 @@ build_mcml <- function(x,
   }
   names(between_inits) <- cluster_names
 
-  # ---- Build recoded sequence data if input is sequences ----
+  # ---- Build recoded sequence data for bootstrap compatibility ----
+  # The bootstrap fast path (.bootstrap_transition) needs a data.frame
+  # that it can resample row-wise. Two cases:
+  #
+  #   * Wide-format sequence input (rows = actors, cols = time-steps):
+  #     recode every cell to the cluster label (macro) or keep only
+  #     nodes of that cluster (per-cluster).
+  #
+  #   * Edgelist input (each row is a single from -> to transition):
+  #     build 2-column pseudo-sequences, each row representing one
+  #     transition. Resampling rows = resampling transitions, which
+  #     is the correct bootstrap at the edge level.
   between_seq_data <- NULL
   within_seq_data_list <- NULL
   is_seq <- is.data.frame(data) && !any(tolower(names(data)) %in%
@@ -807,6 +818,22 @@ build_mcml <- function(x,
           vals[!vals %in% cl_nodes] <- NA_character_
           vals
         }),
+        stringsAsFactors = FALSE
+      )
+    })
+  } else if (length(from_nodes) > 0L) {
+    # Edgelist branch: every transition -> one 2-column pseudo-sequence row.
+    between_seq_data <- data.frame(
+      V1 = unname(from_clusters),
+      V2 = unname(to_clusters),
+      stringsAsFactors = FALSE
+    )
+
+    within_seq_data_list <- lapply(cluster_list, function(cl_nodes) {
+      keep <- from_nodes %in% cl_nodes & to_nodes %in% cl_nodes
+      data.frame(
+        V1 = from_nodes[keep],
+        V2 = to_nodes[keep],
         stringsAsFactors = FALSE
       )
     })

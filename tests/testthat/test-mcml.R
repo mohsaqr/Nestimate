@@ -1008,3 +1008,40 @@ test_that("plot.mcml dispatches without error when cograph available", {
   cs <- .make_mcml()
   expect_invisible(plot(cs))
 })
+
+# ---- Edgelist input: $data propagated to macro + clusters so that
+#      as_tna() + bootstrap_network() work end-to-end (regression test) ----
+
+test_that("edgelist input yields macro/per-cluster $data usable by bootstrap", {
+  # Tiny edgelist with known cluster structure
+  edges <- data.frame(
+    from   = c("a1", "a1", "a2", "b1", "b2", "b1", "a1", "b2", "a2", "b1"),
+    to     = c("a2", "b1", "a1", "b2", "b1", "a2", "b2", "a1", "a1", "b1"),
+    weight = 1,
+    stringsAsFactors = FALSE
+  )
+  clusters <- list(A = c("a1", "a2"), B = c("b1", "b2"))
+  mc <- build_mcml(edges, clusters)
+
+  # Previous bug: $macro$data was NULL for edgelist input
+  expect_false(is.null(mc$macro$data))
+  expect_true(is.data.frame(mc$macro$data))
+  expect_equal(ncol(mc$macro$data), 2L)
+  expect_true(all(mc$macro$data[[1]] %in% c("A", "B")))
+  expect_true(all(mc$macro$data[[2]] %in% c("A", "B")))
+
+  # Each per-cluster data keeps only transitions fully within that cluster
+  expect_false(is.null(mc$clusters$A$data))
+  expect_true(all(mc$clusters$A$data[[1]] %in% c("a1", "a2")))
+  expect_true(all(mc$clusters$A$data[[2]] %in% c("a1", "a2")))
+  expect_false(is.null(mc$clusters$B$data))
+  expect_true(all(mc$clusters$B$data[[1]] %in% c("b1", "b2")))
+  expect_true(all(mc$clusters$B$data[[2]] %in% c("b1", "b2")))
+
+  # as_tna() then bootstrap_network() must run without the "$data is NULL" error
+  tnas <- as_tna(mc)
+  expect_no_error(
+    boot <- bootstrap_network(tnas, iter = 20)
+  )
+  expect_s3_class(boot, "net_bootstrap_group")
+})
