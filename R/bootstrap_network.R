@@ -134,8 +134,9 @@ bootstrap_network <- function(x,
       "correlation within actors/sessions, so confidence intervals may be ",
       "anti-conservative.\n",
       "Consider instead:\n",
-      "  * permutation_test(x, y)   - edge-level comparison between two networks\n",
-      "  * centrality_stability(x)  - CS-coefficient via case-dropping subsets",
+      "  * permutation_test(x, y)       - edge-level comparison between two networks\n",
+      "  * centrality_stability(x)      - case-dropping CS per centrality measure\n",
+      "  * casedrop_reliability(x)      - model-level edge-weight reliability under case-dropping",
       call. = FALSE
     )
   }

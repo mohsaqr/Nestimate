@@ -36,7 +36,7 @@
 #'   edge vector. Default `FALSE`.
 #' @param seed Optional integer for reproducibility.
 #'
-#' @return An object of class `net_edge_stability` with:
+#' @return An object of class `net_casedrop_reliability` with:
 #' \describe{
 #'   \item{`cs`}{Scalar CS-coefficient — the maximum drop proportion for
 #'     which the edge-vector correlation remains >= `threshold` in at
@@ -71,7 +71,7 @@
 #'   V3 = sample(LETTERS[1:4], 30, TRUE)
 #' )
 #' net <- build_network(seqs, method = "relative")
-#' es  <- edge_stability(net, iter = 50, drop_prop = c(0.1, 0.3, 0.5),
+#' es  <- casedrop_reliability(net, iter = 50, drop_prop = c(0.1, 0.3, 0.5),
 #'                       seed = 1)
 #' print(es)
 #'
@@ -82,7 +82,7 @@
 #' \doi{10.3758/s13428-017-0862-1}
 #'
 #' @export
-edge_stability <- function(x,
+casedrop_reliability <- function(x,
                            iter        = 1000L,
                            drop_prop   = seq(0.1, 0.9, by = 0.1),
                            threshold   = 0.7,
@@ -95,12 +95,12 @@ edge_stability <- function(x,
   if (inherits(x, "mcml")) x <- as_tna(x)
   if (inherits(x, "netobject_group")) {
     out <- lapply(x, function(net) {
-      edge_stability(net, iter = iter, drop_prop = drop_prop,
+      casedrop_reliability(net, iter = iter, drop_prop = drop_prop,
                      threshold = threshold, certainty = certainty,
                      method = method, include_diag = include_diag,
                      seed = seed)
     })
-    class(out) <- c("net_edge_stability_group", "list")
+    class(out) <- c("net_casedrop_reliability_group", "list")
     return(out)
   }
   if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
@@ -153,13 +153,23 @@ edge_stability <- function(x,
   if (stats::sd(orig_edges, na.rm = TRUE) == 0) {
     warning("Original edge vector has zero variance; CS undefined.",
             call. = FALSE)
+    empty <- matrix(NA_real_, iter, length(drop_prop))
     result <- list(
-      cs = 0,
-      correlations = matrix(NA_real_, iter, length(drop_prop)),
-      drop_prop = drop_prop, threshold = threshold,
-      certainty = certainty, iter = iter, method = method
+      cs            = 0,
+      summary       = data.frame(),
+      metrics       = list(mean_abs_dev = empty, median_abs_dev = empty,
+                           correlation = empty,  max_abs_dev = empty),
+      correlations  = empty,
+      drop_prop     = drop_prop,
+      threshold     = threshold,
+      certainty     = certainty,
+      iter          = iter,
+      method        = method,
+      include_diag  = include_diag,
+      n_cases       = nrow(x$data),
+      n_edges       = length(orig_edges)
     )
-    class(result) <- "net_edge_stability"
+    class(result) <- "net_casedrop_reliability"
     return(result)
   }
 
@@ -285,7 +295,7 @@ edge_stability <- function(x,
       n_cases       = n_cases,
       n_edges       = length(orig_edges)
     ),
-    class = "net_edge_stability"
+    class = "net_casedrop_reliability"
   )
 }
 
@@ -293,9 +303,9 @@ edge_stability <- function(x,
 #' @param digits Digits to display. Default `3`.
 #' @param ... Additional arguments (ignored).
 #' @return The input `x` invisibly.
-#' @rdname edge_stability
+#' @rdname casedrop_reliability
 #' @export
-print.net_edge_stability <- function(x, digits = 3, ...) {
+print.net_casedrop_reliability <- function(x, digits = 3, ...) {
   cat(sprintf("Edge-weight Case-dropping Stability\n"))
   cat(sprintf("  Cases (rows of $data) : %d\n", x$n_cases))
   cat(sprintf("  Edges assessed        : %d%s\n", x$n_edges,
@@ -326,13 +336,201 @@ print.net_edge_stability <- function(x, digits = 3, ...) {
   invisible(x)
 }
 
-#' @rdname edge_stability
+#' @rdname casedrop_reliability
 #' @export
-print.net_edge_stability_group <- function(x, ...) {
-  cat("Edge-weight Case-dropping Stability (grouped)\n")
-  cat(sprintf("  %-12s  %s\n", "Network", "CS-coefficient"))
-  for (nm in names(x)) {
-    cat(sprintf("  %-12s  %.2f\n", nm, x[[nm]]$cs))
-  }
+print.net_casedrop_reliability_group <- function(x, ...) {
+  cs        <- vapply(x, function(e) e$cs,       numeric(1))
+  n_edges   <- vapply(x, function(e) e$n_edges,  integer(1))
+  n_cases   <- vapply(x, function(e) e$n_cases,  integer(1))
+  out <- data.frame(
+    n_cases = n_cases,
+    n_edges = n_edges,
+    CS      = round(cs, 2),
+    row.names = names(x)
+  )
+  cat(sprintf("Edge-weight Case-dropping Stability (%d networks, threshold = %.2f)\n",
+              length(x), x[[1]]$threshold))
+  print(out)
   invisible(x)
+}
+
+#' Summary method for net_casedrop_reliability_group
+#'
+#' @param object A `net_casedrop_reliability_group`.
+#' @param drop_prop Drop proportion at which to report the four metrics
+#'   (mean +/- sd per network). Default `0.7`.
+#' @param ... Additional arguments (ignored).
+#' @return A data frame with one row per network containing
+#'   `cor`, `mean_abs_dev`, `median_abs_dev`, `max_abs_dev` formatted as
+#'   "mean +/- sd".
+#' @rdname casedrop_reliability
+#' @export
+summary.net_casedrop_reliability_group <- function(object, drop_prop = 0.7, ...) {
+  fmt <- function(m, s) sprintf("%.3f +/- %.3f", m, s)
+  one_row <- function(e) {
+    s <- e$summary
+    r <- s[abs(s$drop_prop - drop_prop) < 1e-9, , drop = FALSE]
+    stats::setNames(
+      list(fmt(r$mean[r$metric == "correlation"],    r$sd[r$metric == "correlation"]),
+           fmt(r$mean[r$metric == "mean_abs_dev"],   r$sd[r$metric == "mean_abs_dev"]),
+           fmt(r$mean[r$metric == "median_abs_dev"], r$sd[r$metric == "median_abs_dev"]),
+           fmt(r$mean[r$metric == "max_abs_dev"],    r$sd[r$metric == "max_abs_dev"])),
+      c("cor", "mean_abs_dev", "median_abs_dev", "max_abs_dev")
+    )
+  }
+  rows <- lapply(object, one_row)
+  out  <- do.call(rbind.data.frame, rows)
+  out  <- cbind(
+    n_edges = vapply(object, function(e) e$n_edges, integer(1)),
+    out
+  )
+  rownames(out) <- names(object)
+  structure(out, class = c("summary.net_casedrop_reliability_group", "data.frame"),
+            drop_prop = drop_prop)
+}
+
+#' @param x A `summary.net_casedrop_reliability_group` object.
+#' @param ... Additional arguments (ignored).
+#' @rdname casedrop_reliability
+#' @export
+print.summary.net_casedrop_reliability_group <- function(x, ...) {
+  cat(sprintf("Edge-weight reliability at drop = %.2f (mean +/- sd over iterations)\n",
+              attr(x, "drop_prop")))
+  print.data.frame(x)
+  invisible(x)
+}
+
+#' Plot method for edge-stability result
+#'
+#' Plots the four model-level reliability metrics across drop
+#' proportions: `correlation`, `mean_abs_dev`, `median_abs_dev`,
+#' `max_abs_dev`. Each panel shows the per-iteration mean with a ribbon
+#' at mean +/- sd. The `correlation` panel includes a dashed horizontal
+#' line at the user's `threshold` (default 0.7).
+#'
+#' @param x A `net_casedrop_reliability` object from [casedrop_reliability()].
+#' @param ... Additional arguments (ignored).
+#'
+#' @return A `ggplot` object.
+#' @rdname casedrop_reliability
+#' @export
+plot.net_casedrop_reliability <- function(x, ...) {
+  df <- x$summary
+  df$metric <- factor(df$metric,
+                      levels = c("correlation", "mean_abs_dev",
+                                 "median_abs_dev", "max_abs_dev"),
+                      labels = c("Correlation",
+                                 "Mean |diff|",
+                                 "Median |diff| (MAD)",
+                                 "Max |diff|"))
+
+  ggplot2::ggplot(df,
+                  ggplot2::aes(x = .data$drop_prop,
+                               y = .data$mean)) +
+    ggplot2::geom_ribbon(
+      ggplot2::aes(ymin = .data$mean - .data$sd,
+                   ymax = .data$mean + .data$sd),
+      fill = "#2196F3", alpha = 0.2
+    ) +
+    ggplot2::geom_line(color = "#0D47A1", linewidth = 0.8) +
+    ggplot2::geom_point(color = "#0D47A1", size = 1.5) +
+    ggplot2::geom_hline(
+      data = data.frame(metric = factor("Correlation",
+                                         levels = levels(df$metric)),
+                        yint = x$threshold),
+      ggplot2::aes(yintercept = .data$yint),
+      linetype = "dashed", color = "grey40"
+    ) +
+    ggplot2::facet_wrap(~ .data$metric, scales = "free_y") +
+    ggplot2::labs(
+      x = "Proportion of cases dropped",
+      y = "Mean \u00b1 SD across iterations",
+      title = sprintf("Edge-weight reliability (CS = %.2f, %d iter, %d edges)",
+                      x$cs, x$iter, x$n_edges),
+      subtitle = sprintf("Case-dropping on %d cases, %s correlation",
+                         x$n_cases, x$method)
+    ) +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(
+      plot.title    = ggplot2::element_text(face = "bold"),
+      plot.subtitle = ggplot2::element_text(color = "grey40"),
+      strip.text    = ggplot2::element_text(face = "bold")
+    )
+}
+
+#' Plot method for grouped edge-stability result
+#'
+#' Overlay of per-cluster correlation curves across drop proportions.
+#' One colour per sub-network; ribbons show mean +/- sd across
+#' iterations. Dashed horizontal line marks the stability threshold
+#' (default 0.7).
+#'
+#' @param x A `net_casedrop_reliability_group` object.
+#' @param metric Which metric to plot. One of `"correlation"`
+#'   (default), `"mean_abs_dev"`, `"median_abs_dev"`, `"max_abs_dev"`.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return A `ggplot` object.
+#' @rdname casedrop_reliability
+#' @export
+plot.net_casedrop_reliability_group <- function(x,
+                                          metric = c("correlation",
+                                                     "mean_abs_dev",
+                                                     "median_abs_dev",
+                                                     "max_abs_dev"),
+                                          ...) {
+  metric <- match.arg(metric)
+
+  rows <- lapply(names(x), function(nm) {
+    s <- x[[nm]]$summary
+    s <- s[s$metric == metric, , drop = FALSE]
+    s$network <- nm
+    s$cs <- x[[nm]]$cs
+    s
+  })
+  df <- do.call(rbind, rows)
+  df$network <- factor(df$network, levels = names(x))
+
+  # Use a discrete palette, recycling if there are many networks
+  palette <- grDevices::hcl.colors(length(levels(df$network)), "Dynamic")
+
+  p <- ggplot2::ggplot(df,
+                       ggplot2::aes(x = .data$drop_prop, y = .data$mean,
+                                    colour = .data$network,
+                                    fill   = .data$network)) +
+    ggplot2::geom_ribbon(
+      ggplot2::aes(ymin = .data$mean - .data$sd,
+                   ymax = .data$mean + .data$sd),
+      alpha = 0.15, colour = NA
+    ) +
+    ggplot2::geom_line(linewidth = 0.9) +
+    ggplot2::geom_point(size = 1.7) +
+    ggplot2::scale_colour_manual(values = palette, drop = FALSE) +
+    ggplot2::scale_fill_manual(values = palette, drop = FALSE) +
+    ggplot2::labs(
+      x = "Proportion of cases dropped",
+      y = switch(metric,
+                 correlation    = "Edge-vector correlation",
+                 mean_abs_dev   = "Mean |diff|",
+                 median_abs_dev = "Median |diff| (MAD)",
+                 max_abs_dev    = "Max |diff|"),
+      colour = "Network", fill = "Network",
+      title = "Edge-weight case-dropping reliability",
+      subtitle = sprintf("Metric: %s; mean \u00b1 sd across iterations",
+                         metric)
+    ) +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(
+      plot.title    = ggplot2::element_text(face = "bold"),
+      plot.subtitle = ggplot2::element_text(color = "grey40"),
+      legend.position = "right"
+    )
+
+  if (metric == "correlation") {
+    threshold <- x[[1]]$threshold
+    p <- p + ggplot2::geom_hline(yintercept = threshold,
+                                 linetype = "dashed", color = "grey40")
+  }
+
+  p
 }

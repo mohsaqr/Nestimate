@@ -91,13 +91,15 @@ centrality_stability <- function(x,
   if (inherits(x, "mcml")) x <- as_tna(x)
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
   if (inherits(x, "netobject_group")) {
-    return(lapply(x, function(net) {
+    out <- lapply(x, function(net) {
       centrality_stability(net, measures = measures, iter = iter,
                            drop_prop = drop_prop, threshold = threshold,
                            certainty = certainty, method = method,
                            centrality_fn = centrality_fn, loops = loops,
                            seed = seed)
-    }))
+    })
+    class(out) <- c("net_stability_group", "list")
+    return(out)
   }
   if (!inherits(x, "netobject")) {
     stop("'x' must be a netobject from build_network().", call. = FALSE)
@@ -404,6 +406,23 @@ print.net_stability <- function(x, ...) {
   for (m in names(x$cs)) {
     cat(sprintf("    %-15s  %.2f\n", m, x$cs[m]))
   }
+  invisible(x)
+}
+
+#' Print Method for net_stability_group
+#'
+#' @param x A `net_stability_group` (returned by `centrality_stability()`
+#'   when called on a `netobject_group` or an `mcml`).
+#' @param ... Additional arguments (ignored).
+#' @return The input `x` invisibly.
+#' @export
+print.net_stability_group <- function(x, ...) {
+  measures <- unique(unlist(lapply(x, function(e) names(e$cs))))
+  cs_mat <- sapply(x, function(e) e$cs[measures])
+  rownames(cs_mat) <- measures
+  cat(sprintf("Centrality Stability (%d networks, threshold = %.2f)\n",
+              length(x), x[[1]]$threshold))
+  print(round(t(cs_mat), 2))
   invisible(x)
 }
 
