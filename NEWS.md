@@ -1,3 +1,71 @@
+# Nestimate 0.4.4
+
+## Bug fixes
+* `passage_time()` and `markov_stability()` now raise an explicit error
+  naming the dead state when a transition-matrix row sums to zero,
+  instead of silently propagating `NaN` through `eigen`/`solve`. Zero
+  rows mean the chain is not ergodic; mean first passage times are
+  undefined. Shared helper `.mpt_normalize_rows()` factored out of both
+  entry points.
+* `.prepare_association_input()` no longer hard-rejects non-square
+  numeric matrices. For association methods (glasso, pcor, cor) the
+  netobject's `$data` slot is a numeric matrix (not a data.frame). Any
+  downstream caller that row-subsetted `$data` and re-invoked the
+  estimator (`centrality_stability()`, `bootstrap_network()`,
+  `reliability()`) was silently producing NULL centralities caught by
+  `tryCatch`, which surfaced as an "all centrality measures have zero
+  variance" warning or all-`NaN` correlations. The matrix branch now
+  recognises non-square input as raw observation data and recursively
+  re-enters through the data-frame branch. Square symmetric matrices
+  (pre-computed correlation / covariance) still go through the
+  symmetric-matrix path with the symmetry check intact.
+
+## New parameters
+* `build_network()` gains `state_cols` and `metadata_cols` parameters
+  (both default `NULL`). Explicit overrides for the state-vs-metadata
+  column classifier, which previously used a "values-in-nodes"
+  heuristic that silently misclassifies metadata columns whose values
+  coincide with node labels (e.g. a `condition` column with levels
+  `"A","B","C"` when nodes are `"A","B","C"`). Validation: error on
+  overlap between the two vectors, error on column names not present
+  in the input data. Forwarded through the `group = ...` recursive
+  dispatch so per-group calls honour the override.
+
+## Removed
+* `plot.net_link_prediction()` and `plot.mcml()` removed. Nestimate is
+  a computation engine — visualization is the user's concern.
+  Previously both methods called `cograph::` directly, violating the
+  stated dependency invariant (Nestimate -> cograph direction
+  forbidden). Users call `cograph::splot(net)` or
+  `cograph::plot_mcml(fit)` directly.
+
+## Documentation
+* `wtna()` `@param type` now flags that `type = "relative"` combined
+  with `method = "cooccurrence"` produces an asymmetric matrix
+  (conditional co-occurrence given row state), not a symmetric
+  undirected weight matrix. Use `type = "frequency"` if symmetric
+  counts are required.
+
+## Testing infrastructure
+* New numerical-equivalence tests (gated by `NESTIMATE_EQUIV_TESTS=true`):
+  `test-equiv-permutation.R` (vs. `stats::p.adjust` + hand-coded base-R
+  permutation loop), `test-equiv-mlvar.R` (vs. `mlVAR::mlVAR` at
+  machine precision), `test-equiv-association-rules.R` (vs.
+  `arules::apriori`), `test-equiv-link-prediction.R` (vs. clean-room
+  matrix algebra + `igraph::similarity`), `test-equiv-centrality-stability.R`
+  (vs. `bootnet::corStability`). Total ~162k per-value comparisons;
+  all within machine precision except centrality-stability which uses
+  a documented drop-grid tolerance because bootnet uses `igraph`
+  path-based centrality and Nestimate uses Floyd-Warshall.
+* New HON-family equivalence tests under `local_testing_and_equivalence/`
+  validating HON, HONEM, HYPA, MOGen, and hypergraph against pathpy
+  2.2.0 (via reticulate), `BiasedUrn`, `RSpectra`, and `HyperG`. Not
+  shipped in the R-package `tests/` directory; added to `.Rbuildignore`.
+* Branch-matrix coverage added for the four many-mode APIs (`wtna`,
+  `bootstrap_network`, `build_clusters`, `sequence_plot`) — systematic
+  cross-product tests over all combinations of mode parameters to
+  catch regressions where one branch silently diverges.
+
 # Nestimate 0.4.3
 
 ## CRAN resubmission (addresses incoming-check NOTEs on 0.4.2)
