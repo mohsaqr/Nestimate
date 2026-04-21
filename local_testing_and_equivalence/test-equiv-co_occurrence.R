@@ -1,6 +1,6 @@
-# ---- Equivalence tests: co_occurrence() vs citenets::conetwork() ----
+# ---- Equivalence tests: cooccurrence() vs citenets::conetwork() ----
 #
-# Validates that Nestimate's co_occurrence() produces identical co-occurrence
+# Validates that Nestimate's cooccurrence() produces identical co-occurrence
 # weights to citenets::conetwork() across all shared similarity measures
 # and multiple random configurations.
 #
@@ -41,7 +41,7 @@ TOL <- 1e-12
 # ---- Helper: run one comparison ----
 .compare_co_occurrence <- function(transactions, similarity, label) {
   # Nestimate: use uppercase to match citenets
-  net <- co_occurrence(transactions, similarity = similarity, diagonal = FALSE)
+  net <- cooccurrence(transactions, similarity = similarity, diagonal = FALSE)
   W_nest <- net$weights
 
   # citenets
@@ -158,7 +158,7 @@ test_that("min_occur matches citenets min_occur filtering", {
     })
     min_occ <- 3L
 
-    net <- co_occurrence(trans, similarity = "cosine",
+    net <- cooccurrence(trans, similarity = "cosine",
                          min_occur = min_occ, diagonal = FALSE)
 
     d <- .make_citenets_data(trans)
@@ -193,7 +193,7 @@ test_that("threshold matches citenets threshold filtering", {
     })
     thresh <- 0.3
 
-    net <- co_occurrence(trans, similarity = "jaccard",
+    net <- cooccurrence(trans, similarity = "jaccard",
                          threshold = thresh, diagonal = FALSE)
 
     d <- .make_citenets_data(trans)
@@ -234,7 +234,7 @@ test_that("delimited input matches citenets with sep splitting", {
       items = vapply(trans, paste, character(1), collapse = "; "),
       stringsAsFactors = FALSE
     )
-    net <- co_occurrence(df_nest, field = "items", sep = ";",
+    net <- cooccurrence(df_nest, field = "items", sep = ";",
                          similarity = "cosine", diagonal = FALSE)
 
     # citenets: list-column
@@ -274,7 +274,7 @@ test_that("long/bipartite input matches citenets", {
       item = unlist(trans),
       stringsAsFactors = FALSE
     )
-    net <- co_occurrence(df_long, field = "item", by = "doc",
+    net <- cooccurrence(df_long, field = "item", by = "doc",
                          similarity = "jaccard", diagonal = FALSE)
 
     # citenets: list-column
@@ -314,7 +314,7 @@ test_that("binary matrix input matches citenets", {
     bin <- matrix(0L, nrow = n_trans, ncol = length(all_items),
                   dimnames = list(NULL, all_items))
     for (j in seq_len(n_trans)) bin[j, trans[[j]]] <- 1L
-    net <- co_occurrence(bin, similarity = "inclusion", diagonal = FALSE)
+    net <- cooccurrence(bin, similarity = "inclusion", diagonal = FALSE)
 
     # citenets: list-column
     d <- .make_citenets_data(trans)

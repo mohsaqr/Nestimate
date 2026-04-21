@@ -254,7 +254,13 @@ test_that("plot method returns ggplot", {
                              measures = c("InStrength", "OutStrength"),
                              seed = 42)
 
-  p <- plot(cs)
+  # Dispatch Nestimate's method explicitly — cograph defines its own
+  # plot.net_stability which wins when loaded after Nestimate (known S3
+  # conflict, see CLAUDE.md). The test should validate Nestimate's method
+  # regardless of search-path state.
+  nest_plot <- getS3method("plot", "net_stability",
+                            envir = asNamespace("Nestimate"))
+  p <- nest_plot(cs)
   expect_s3_class(p, "ggplot")
 })
 
