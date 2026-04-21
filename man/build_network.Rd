@@ -22,6 +22,8 @@ build_network(
   level = NULL,
   time_threshold = 900,
   predictability = TRUE,
+  state_cols = NULL,
+  metadata_cols = NULL,
   params = list(),
   ...
 )
@@ -88,6 +90,20 @@ session splitting. Default: \code{900}.}
 node predictability (R-squared) for undirected association methods
 (glasso, pcor, cor). Stored in \code{$predictability} and auto-displayed
 as donuts by \code{cograph::splot()}.}
+
+\item{state_cols}{Character vector or \code{NULL}. Explicit names of columns
+to classify as state columns in the returned netobject's \code{$data}
+slot. When provided, all other columns of the cleaned input go to
+\code{$metadata}. Auto-detection (values-in-nodes heuristic) is bypassed.
+Use this when a metadata column happens to contain values that overlap
+with node names (e.g. condition labels \code{"A","B","C"} and nodes
+\code{"A","B","C"}) and auto-detection would misclassify it. Default:
+\code{NULL} (auto-detect).}
+
+\item{metadata_cols}{Character vector or \code{NULL}. Explicit names of
+columns to force into the \code{$metadata} slot. The remaining columns
+are auto-detected as state via the values-in-nodes rule. Cannot overlap
+with \code{state_cols}. Default: \code{NULL}.}
 
 \item{params}{Named list. Method-specific parameters passed to the estimator
 function (e.g. \code{list(gamma = 0.5)} for glasso, or

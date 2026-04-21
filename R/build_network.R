@@ -56,6 +56,18 @@
 #'   node predictability (R-squared) for undirected association methods
 #'   (glasso, pcor, cor). Stored in \code{$predictability} and auto-displayed
 #'   as donuts by \code{cograph::splot()}.
+#' @param state_cols Character vector or \code{NULL}. Explicit names of columns
+#'   to classify as state columns in the returned netobject's \code{$data}
+#'   slot. When provided, all other columns of the cleaned input go to
+#'   \code{$metadata}. Auto-detection (values-in-nodes heuristic) is bypassed.
+#'   Use this when a metadata column happens to contain values that overlap
+#'   with node names (e.g. condition labels \code{"A","B","C"} and nodes
+#'   \code{"A","B","C"}) and auto-detection would misclassify it. Default:
+#'   \code{NULL} (auto-detect).
+#' @param metadata_cols Character vector or \code{NULL}. Explicit names of
+#'   columns to force into the \code{$metadata} slot. The remaining columns
+#'   are auto-detected as state via the values-in-nodes rule. Cannot overlap
+#'   with \code{state_cols}. Default: \code{NULL}.
 #' @param ... Additional arguments passed to the estimator function.
 #'
 #' @return An object of class \code{c("netobject", "cograph_network")} containing:
@@ -147,6 +159,8 @@ build_network <- function(data,
                           level = NULL,
                           time_threshold = 900,
                           predictability = TRUE,
+                          state_cols = NULL,
+                          metadata_cols = NULL,
                           params = list(),
                           ...) {
   # --- Early dispatch for net_clustering objects ---
@@ -194,6 +208,36 @@ build_network <- function(data,
   stopifnot(is.numeric(threshold), length(threshold) == 1, threshold >= 0)
   mode <- match.arg(mode)
 
+  if (!is.null(state_cols)) {
+    stopifnot(is.character(state_cols))
+  }
+  if (!is.null(metadata_cols)) {
+    stopifnot(is.character(metadata_cols))
+  }
+  if (!is.null(state_cols) && !is.null(metadata_cols)) {
+    overlap <- intersect(state_cols, metadata_cols)
+    if (length(overlap)) {
+      stop(
+        "state_cols and metadata_cols overlap: ",
+        paste(overlap, collapse = ", "), ". A column must be either state ",
+        "or metadata, not both.",
+        call. = FALSE
+      )
+    }
+  }
+  if (is.data.frame(data)) {
+    missing_state <- setdiff(state_cols,    names(data))
+    missing_meta  <- setdiff(metadata_cols, names(data))
+    if (length(missing_state)) {
+      stop("state_cols not found in data: ",
+           paste(missing_state, collapse = ", "), call. = FALSE)
+    }
+    if (length(missing_meta)) {
+      stop("metadata_cols not found in data: ",
+           paste(missing_meta, collapse = ", "), call. = FALSE)
+    }
+  }
+
   # Merge ... into params (... takes precedence)
   dots <- list(...)
   if (length(dots) > 0) {
@@ -226,7 +270,9 @@ build_network <- function(data,
         group = NULL, format = format, window_size = window_size,
         mode = mode, scaling = scaling, threshold = threshold,
         level = level, time_threshold = time_threshold,
-        predictability = predictability, params = params, ...
+        predictability = predictability,
+        state_cols = state_cols, metadata_cols = metadata_cols,
+        params = params, ...
       )
     })
     names(nets) <- as.character(grp_levels)
@@ -442,16 +488,31 @@ build_network <- function(data,
     if (ncol(md) > 0L) metadata <- md
   }
   if (is.data.frame(raw_data)) {
-    is_state_col <- vapply(raw_data, function(col) {
-      vals <- .clean_states(as.character(col))
-      vals <- vals[!is.na(vals)]
-      length(vals) > 0L && all(vals %in% nodes)
-    }, logical(1))
-    state_cols <- names(raw_data)[is_state_col]
-    extra_cols <- names(raw_data)[!is_state_col]
-    if (length(extra_cols) > 0L) {
-      if (is.null(metadata)) metadata <- raw_data[, extra_cols, drop = FALSE]
-      raw_data <- raw_data[, state_cols, drop = FALSE]
+    # If the user passed explicit overrides that name columns present in
+    # raw_data, those take priority over the values-in-nodes heuristic.
+    user_state <- intersect(state_cols,    names(raw_data))
+    user_meta  <- intersect(metadata_cols, names(raw_data))
+
+    if (length(user_state) > 0L) {
+      # Explicit state_cols: those ARE state; rest of raw_data goes to metadata.
+      resolved_state <- user_state
+      resolved_extra <- setdiff(names(raw_data), user_state)
+    } else {
+      is_state_col <- vapply(raw_data, function(col) {
+        vals <- .clean_states(as.character(col))
+        vals <- vals[!is.na(vals)]
+        length(vals) > 0L && all(vals %in% nodes)
+      }, logical(1))
+      # Honor metadata_cols by forcing those FALSE in the auto-detection.
+      if (length(user_meta) > 0L) is_state_col[user_meta] <- FALSE
+      resolved_state <- names(raw_data)[is_state_col]
+      resolved_extra <- names(raw_data)[!is_state_col]
+    }
+
+    if (length(resolved_extra) > 0L) {
+      extra_df <- raw_data[, resolved_extra, drop = FALSE]
+      metadata <- if (is.null(metadata)) extra_df else cbind(metadata, extra_df)
+      raw_data <- raw_data[, resolved_state, drop = FALSE]
     }
     # Clean void/missing markers in character/factor state columns
     if (is.data.frame(raw_data)) {

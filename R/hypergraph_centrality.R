@@ -70,6 +70,13 @@
 #' \emph{SIAM Journal on Mathematics of Data Science} 1(2), 293-312.
 #' arXiv:1807.09644.
 #'
+#' @note The `"clique"` (CEC) variant is validated against
+#'   `igraph::eigen_centrality` (cosine ~ 1). The `"Z"` and `"H"` variants are
+#'   **(experimental)** — validated only against a clean-room list-based
+#'   tensor power iteration (same operator, different loop structure); no
+#'   R package exposes tensor eigenvectors as a primitive for independent
+#'   comparison.
+#'
 #' @export
 hypergraph_centrality <- function(hg,
                                    type     = c("clique", "Z", "H"),

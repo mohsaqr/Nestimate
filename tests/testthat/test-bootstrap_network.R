@@ -581,3 +581,72 @@ test_that("bootstrap_network works with mcml objects", {
     expect_s3_class(boot[[nm]], "net_bootstrap")
   }
 })
+
+# ---- Branch-matrix coverage (task #17) ----
+# Crosses inference x input-class x edge_threshold. Each cell asserts the
+# returned object has the expected class and no NA/NaN leaks into the edge
+# summary frame. Iter is kept tiny (15) so the full matrix runs in seconds.
+
+test_that("bootstrap_network branch matrix: all combinations produce valid output", {
+  set.seed(17)
+  wide <- .make_boot_wide(n = 40, t = 8)
+  net_tran <- build_network(wide, method = "relative")
+  net_freq <- build_network(wide, method = "frequency")
+  net_grp  <- {
+    wg <- wide
+    wg$grp <- rep(c("x", "y"), each = 20)
+    build_network(wg, method = "relative", group = "grp")
+  }
+
+  grid <- expand.grid(
+    inference      = c("stability", "threshold"),
+    input          = c("transition", "frequency", "group"),
+    edge_threshold = c(NA_real_, 0.05),
+    stringsAsFactors = FALSE
+  )
+
+  for (i in seq_len(nrow(grid))) {
+    cfg <- grid[i, ]
+    obj <- switch(cfg$input,
+                  transition = net_tran,
+                  frequency  = net_freq,
+                  group      = net_grp)
+    et  <- if (is.na(cfg$edge_threshold)) NULL else cfg$edge_threshold
+    info <- sprintf("inference=%s input=%s edge_threshold=%s",
+                    cfg$inference, cfg$input,
+                    if (is.null(et)) "NULL" else sprintf("%.2f", et))
+
+    boot <- bootstrap_network(
+      obj, iter = 15L, inference = cfg$inference,
+      edge_threshold = et, seed = 17L
+    )
+
+    if (cfg$input == "group") {
+      expect_true(inherits(boot, "net_bootstrap_group"), info = info)
+      for (sub in boot) {
+        expect_true(inherits(sub, "net_bootstrap"), info = info)
+      }
+    } else {
+      expect_true(inherits(boot, "net_bootstrap"), info = info)
+      # Structural guarantees on summary frame + stat matrices
+      expect_true(is.data.frame(boot$summary), info = info)
+      expect_true(is.matrix(boot$mean),       info = info)
+      expect_false(any(is.nan(boot$mean)),    info = paste0(info, " [mean NaN]"))
+      expect_false(any(is.nan(boot$sd)),      info = paste0(info, " [sd NaN]"))
+      # CI bounds must be ordered lower <= upper elementwise
+      expect_true(all(boot$ci_lower <= boot$ci_upper),
+                  info = paste0(info, " [ci order]"))
+    }
+  }
+})
+
+test_that("bootstrap_network reproducibility: same seed -> identical stats", {
+  set.seed(1)
+  net  <- build_network(.make_boot_wide(n = 30, t = 6), method = "relative")
+  b1   <- bootstrap_network(net, iter = 20L, inference = "stability", seed = 42L)
+  b2   <- bootstrap_network(net, iter = 20L, inference = "stability", seed = 42L)
+  # Summary frames + mean matrices must match bit-for-bit under identical seeds
+  expect_equal(b1$summary, b2$summary)
+  expect_equal(b1$mean,    b2$mean)
+  expect_equal(b1$sd,      b2$sd)
+})

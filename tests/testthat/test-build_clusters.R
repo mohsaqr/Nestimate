@@ -1203,3 +1203,67 @@ test_that("cluster_network from netobject inherits build_args (L1438-1443)", {
   grp <- cluster_network(net, k = 2)
   expect_true(inherits(grp, "netobject_group"))
 })
+
+# ---- Branch-matrix coverage (task #17) ----
+# Crosses dissimilarity x method. All 9 dissimilarities x 5 representative
+# methods = 45 cells. Each must produce a valid net_clustering with k
+# non-empty clusters. Detects regressions where one dissimilarity silently
+# returns NA-filled distance or a clustering backend drops support for a
+# particular metric. weighted=FALSE here; weighted-path error is tested
+# separately because it only applies to hamming.
+
+test_that("build_clusters branch matrix: dissimilarity x method all succeed", {
+  set.seed(17)
+  data <- make_test_data(n = 30, k = 8, n_states = 3)
+  k_target <- 3L
+
+  # Keep the method list small and representative: one partitional (pam),
+  # one agglomerative per linkage family (ward.D2 minvar, complete, average,
+  # single). Skipping centroid/median/mcquitty — they exercise the same
+  # hclust branch as the ones already covered.
+  methods_subset <- c("pam", "ward.D2", "complete", "average", "single")
+
+  grid <- expand.grid(
+    dissimilarity = Nestimate:::.clustering_metrics,
+    method        = methods_subset,
+    stringsAsFactors = FALSE
+  )
+
+  for (i in seq_len(nrow(grid))) {
+    cfg <- grid[i, ]
+    info <- sprintf("dissim=%s method=%s", cfg$dissimilarity, cfg$method)
+    fit <- tryCatch(
+      build_clusters(
+        data, k = k_target,
+        dissimilarity = cfg$dissimilarity,
+        method        = cfg$method,
+        seed          = 17L
+      ),
+      error = function(e) e
+    )
+    if (inherits(fit, "error")) {
+      fail(sprintf("%s -> %s", info, conditionMessage(fit)))
+      next
+    }
+    expect_true(inherits(fit, "net_clustering"), info = info)
+    # The fit must produce exactly k_target clusters and every cluster
+    # must have at least one assigned sequence.
+    clust <- fit$clusters %||% fit$assignments %||% fit$cluster
+    if (is.null(clust)) clust <- fit[[which(vapply(fit, function(el)
+      is.integer(el) && length(el) == nrow(data), logical(1)))[1]]]
+    expect_equal(length(unique(clust)), k_target, info = info)
+    expect_true(all(tabulate(clust, nbins = k_target) > 0), info = info)
+  }
+})
+
+test_that("build_clusters weighted=TRUE errors on non-hamming dissimilarity", {
+  data <- make_test_data(n = 20, k = 6, n_states = 3)
+  # Only hamming supports weighted=TRUE — every other metric must error.
+  for (d in setdiff(Nestimate:::.clustering_metrics, "hamming")) {
+    expect_error(
+      build_clusters(data, k = 2, dissimilarity = d, weighted = TRUE),
+      "Weighting is only supported for Hamming",
+      info = sprintf("dissim=%s", d)
+    )
+  }
+})

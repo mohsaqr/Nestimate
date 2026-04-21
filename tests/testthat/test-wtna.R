@@ -663,3 +663,93 @@ test_that("vectorized wtna end-to-end matches on bundled data", {
   vec_co <- Nestimate:::.wtna_cooccurrence(X, 2L, "non-overlapping")
   expect_identical(vec_co, ref_co, info = "bundled data cooccurrence ws=2")
 })
+
+# ---- Branch-matrix coverage (task #17) ----
+# Crosses method x type x mode x window_size x (actor|NULL). Each combination
+# must run without error and produce structurally-valid output. Exists to
+# catch regressions where one branch silently starts returning NaN, losing
+# dimnames, or producing asymmetric co-occurrence matrices.
+
+test_that("wtna branch matrix: all combinations produce valid output", {
+  set.seed(17)
+  n_rows <- 30L
+  k      <- 4L
+  # Small random one-hot-ish matrix (rows pick exactly one code)
+  pick <- sample.int(k, n_rows, replace = TRUE)
+  X <- matrix(0L, n_rows, k)
+  X[cbind(seq_len(n_rows), pick)] <- 1L
+  code_names <- paste0("c", seq_len(k))
+  colnames(X) <- code_names
+  df_single <- as.data.frame(X)
+
+  # Same data with an actor column (two actors, roughly balanced)
+  df_multi         <- df_single
+  df_multi$actor   <- rep(c("A", "B"), each = n_rows / 2)
+
+  grid <- expand.grid(
+    method = c("transition", "cooccurrence", "both"),
+    type   = c("frequency", "relative"),
+    mode   = c("non-overlapping", "overlapping"),
+    ws     = c(1L, 2L, 3L),
+    actor  = c(FALSE, TRUE),
+    stringsAsFactors = FALSE
+  )
+
+  check_one_net <- function(net, expect_symmetric, info) {
+    expect_true(is.matrix(net$weights), info = info)
+    expect_equal(dim(net$weights), c(k, k), info = info)
+    expect_false(any(is.na(net$weights)),  info = paste0(info, " [NA]"))
+    expect_false(any(is.nan(net$weights)), info = paste0(info, " [NaN]"))
+    expect_false(any(is.infinite(net$weights)), info = paste0(info, " [Inf]"))
+    if (expect_symmetric) {
+      expect_true(isSymmetric(net$weights), info = paste0(info, " [sym]"))
+    }
+  }
+
+  for (i in seq_len(nrow(grid))) {
+    cfg <- grid[i, ]
+    df  <- if (cfg$actor) df_multi else df_single
+    info <- sprintf("method=%s type=%s mode=%s ws=%d actor=%s",
+                    cfg$method, cfg$type, cfg$mode, cfg$ws, cfg$actor)
+
+    fit <- wtna(
+      df,
+      method      = cfg$method,
+      type        = cfg$type,
+      codes       = code_names,
+      window_size = cfg$ws,
+      mode        = cfg$mode,
+      actor       = if (cfg$actor) "actor" else NULL
+    )
+
+    # Cooccurrence is only guaranteed symmetric for type="frequency" — the
+    # row-normalization in .wtna_finalize (type="relative") deliberately
+    # breaks symmetry to produce conditional co-occurrence.
+    sym_coocc <- (cfg$type == "frequency")
+
+    if (cfg$method == "both") {
+      expect_s3_class(fit, "wtna_mixed")
+      check_one_net(fit$transition,   expect_symmetric = FALSE,     info = paste0(info, " [T]"))
+      check_one_net(fit$cooccurrence, expect_symmetric = sym_coocc, info = paste0(info, " [C]"))
+    } else {
+      expect_s3_class(fit, "netobject")
+      check_one_net(fit, expect_symmetric = (cfg$method == "cooccurrence" && sym_coocc), info = info)
+
+      # Type-specific invariants
+      if (cfg$type == "frequency") {
+        expect_true(all(fit$weights >= 0), info = paste0(info, " [nonneg]"))
+      } else {
+        # Relative: each non-zero row of transitions sums to 1; cooccurrence
+        # row-normalizes the same way in .wtna_finalize
+        row_sums <- rowSums(fit$weights)
+        nz       <- row_sums > 0
+        if (any(nz)) {
+          expect_equal(
+            unname(row_sums[nz]), rep(1, sum(nz)),
+            tolerance = 1e-10, info = paste0(info, " [rowsum=1]")
+          )
+        }
+      }
+    }
+  }
+})

@@ -55,6 +55,10 @@
 #' Tian, Y., & Zafarani, R. (2024). Higher-order network analysis methods.
 #' \emph{SIGKDD Explorations} 26(1), Section 5.1.5.
 #'
+#' @note (experimental) Validated against `tcrossprod(incidence)` with zero
+#'   diagonal. No external R package exposes clique expansion as a primitive;
+#'   the implementation is a direct one-line restatement of the definition.
+#'
 #' @export
 clique_expansion <- function(hg, weighted = TRUE) {
   stopifnot(

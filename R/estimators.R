@@ -933,8 +933,15 @@
     n <- nrow(mat)
     S <- cor(mat, method = cor_method)
 
-  } else if (is.matrix(data)) {
-    stopifnot(nrow(data) == ncol(data))
+  } else if (is.matrix(data) && is.numeric(data)) {
+    # Non-square numeric matrix is raw data (rows = observations,
+    # cols = variables) — treat it like a data.frame. This path is hit by
+    # resampling callers (centrality_stability, bootstrap_network) that
+    # re-invoke estimators on row-subsetted copies of netobject$data.
+    if (nrow(data) != ncol(data)) {
+      return(Recall(as.data.frame(data), id_col = id_col, n = n,
+                    cor_method = cor_method, input_type = input_type))
+    }
     if (!isSymmetric(unname(data), tol = 1e-8)) {
       stop("Matrix input must be symmetric.")
     }

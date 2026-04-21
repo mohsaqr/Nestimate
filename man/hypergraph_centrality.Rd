@@ -62,6 +62,14 @@ exponent \eqn{1/(k-1)}. For mixed sizes, the effective exponent is
 taken from the largest hyperedge; expect slightly different rankings
 from ZEC in the mixed case.
 }
+\note{
+The \code{"clique"} (CEC) variant is validated against
+\code{igraph::eigen_centrality} (cosine ~ 1). The \code{"Z"} and \code{"H"} variants are
+\strong{(experimental)} — validated only against a clean-room list-based
+tensor power iteration (same operator, different loop structure); no
+R package exposes tensor eigenvectors as a primitive for independent
+comparison.
+}
 \examples{
 df <- data.frame(
   player  = c("A", "B", "C", "A", "B", "D", "C", "D", "E"),

@@ -163,3 +163,59 @@ test_that("sequence_plot type='index' honours ncol/nrow", {
   # 4 clusters in 2x2
   expect_silent(sequence_plot(cl, type = "index", ncol = 2, nrow = 2))
 })
+
+# ---- Branch-matrix coverage (task #17) ----
+# Crosses type x sort for heatmap/index (sort is ignored for distribution).
+# Existing tests hit each axis individually; this test guards against
+# specific combinations regressing — e.g. a new sort branch that only ever
+# ran with type="heatmap" silently erroring under type="index".
+
+test_that("sequence_plot branch matrix: type x sort combinations render", {
+  set.seed(17)
+  seqs <- matrix(sample(c("A", "B", "C"), 20 * 6, replace = TRUE), 20, 6)
+  # Mix of category-based and distance-based sorts. Distance sorts funnel
+  # through build_clusters, so they cover a different backend.
+  sorts <- c("lcs", "frequency", "start", "end", "hamming", "lv", "jaccard")
+
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+
+  for (tp in c("heatmap", "index")) {
+    for (s in sorts) {
+      info <- sprintf("type=%s sort=%s", tp, s)
+      res <- tryCatch(
+        sequence_plot(seqs, type = tp, sort = s, legend = "none"),
+        error = function(e) e
+      )
+      if (inherits(res, "error")) {
+        fail(sprintf("%s -> %s", info, conditionMessage(res)))
+        next
+      }
+      expect_type(res, "list")
+      # Every valid sort must yield an ordering covering all rows exactly once
+      ord <- if (tp == "heatmap") res$ord else unlist(res$orders)
+      expect_setequal(ord, seq_len(nrow(seqs)))
+    }
+  }
+})
+
+test_that("sequence_plot distribution branch matrix: scale x geom combinations", {
+  set.seed(17)
+  seqs <- matrix(sample(c("A", "B", "C"), 24 * 6, replace = TRUE), 24, 6)
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+
+  for (scale in c("proportion", "count")) {
+    for (geom in c("area", "bar")) {
+      info <- sprintf("scale=%s geom=%s", scale, geom)
+      res <- tryCatch(
+        sequence_plot(seqs, type = "distribution", scale = scale, geom = geom),
+        error = function(e) e
+      )
+      if (inherits(res, "error")) {
+        fail(sprintf("%s -> %s", info, conditionMessage(res)))
+        next
+      }
+      expect_type(res, "list")
+      expect_true(!is.null(res$counts) || !is.null(res$proportions), info = info)
+    }
+  }
+})

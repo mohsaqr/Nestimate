@@ -53,6 +53,13 @@ observed and triadic structure must be inferred from triangles.
 Rows with \code{NA} in either the \code{player} or \code{group} column (or, when
 supplied, the \code{weight} column) are dropped silently.
 }
+\note{
+(experimental) Validated against a hand-computed \code{table()} incidence
+reference only; no independent R package exposes the
+long-format-to-binary-incidence primitive, because the operation is
+definitionally \code{table()}. The code path is a direct one-to-one
+restatement of its definition.
+}
 \examples{
 df <- data.frame(
   player = c("Alice", "Bob", "Carol", "Alice", "Bob",

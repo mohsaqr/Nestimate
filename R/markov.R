@@ -22,6 +22,33 @@
 }
 
 #' @noRd
+.mpt_normalize_rows <- function(P, state_names, normalize = TRUE) {
+  row_sums <- rowSums(P)
+
+  zero_rows <- which(row_sums <= 0)
+  if (length(zero_rows)) {
+    bad <- state_names[zero_rows]
+    stop(
+      "Transition matrix has zero-sum row(s) for state(s): ",
+      paste(bad, collapse = ", "),
+      ". These states have no outgoing transitions, so the chain is not ",
+      "ergodic and mean first passage times are undefined. Remove the ",
+      "state(s) or supply a different transition matrix.",
+      call. = FALSE
+    )
+  }
+
+  if (any(abs(row_sums - 1) > 1e-6)) {
+    if (!normalize)
+      stop("Transition matrix rows must sum to 1.", call. = FALSE)
+    warning("Rows do not sum to 1; normalizing.", call. = FALSE)
+    P <- P / row_sums
+  }
+
+  P
+}
+
+#' @noRd
 .mpt_stationary <- function(P) {
   ev  <- eigen(t(P))
   idx <- which.min(abs(Re(ev$values) - 1))
@@ -103,13 +130,7 @@ passage_time <- function(x, states = NULL, normalize = TRUE) {
     colnames(P)     <- rownames(P) <- state_names
   }
 
-  row_sums <- rowSums(P)
-  if (any(abs(row_sums - 1) > 1e-6)) {
-    if (!normalize)
-      stop("Transition matrix rows must sum to 1.", call. = FALSE)
-    warning("Rows do not sum to 1; normalizing.", call. = FALSE)
-    P <- P / row_sums
-  }
+  P <- .mpt_normalize_rows(P, state_names, normalize = normalize)
 
   pi <- .mpt_stationary(P)
   names(pi) <- state_names
@@ -296,13 +317,7 @@ markov_stability <- function(x, normalize = TRUE) {
     colnames(P)     <- rownames(P) <- state_names
   }
 
-  row_sums <- rowSums(P)
-  if (any(abs(row_sums - 1) > 1e-6)) {
-    if (!normalize)
-      stop("Transition matrix rows must sum to 1.", call. = FALSE)
-    warning("Rows do not sum to 1; normalizing.", call. = FALSE)
-    P <- P / row_sums
-  }
+  P <- .mpt_normalize_rows(P, state_names, normalize = normalize)
 
   mpt  <- passage_time(P, normalize = FALSE)
   M    <- mpt$matrix

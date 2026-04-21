@@ -87,6 +87,46 @@ test_that("passage_time errors on unsupported input", {
   expect_error(passage_time("not_a_matrix"), "numeric matrix")
 })
 
+# ---- zero-row guard (regression: silent NaN from row_sums == 0) ----
+
+test_that("passage_time errors on zero-sum row and names the dead state", {
+  P_dead <- .P3
+  P_dead["B", ] <- 0  # B has no outgoing transitions
+  expect_error(
+    passage_time(P_dead),
+    "zero-sum row.*B.*not.*ergodic"
+  )
+})
+
+test_that("markov_stability errors on zero-sum row and names the dead state", {
+  P_dead <- .P3
+  P_dead["C", ] <- 0
+  expect_error(
+    markov_stability(P_dead),
+    "zero-sum row.*C.*not.*ergodic"
+  )
+})
+
+test_that("passage_time zero-row error lists multiple dead states", {
+  P_dead <- .P3
+  P_dead[c("A", "C"), ] <- 0
+  expect_error(
+    passage_time(P_dead),
+    "zero-sum row.*A, C"
+  )
+})
+
+test_that("passage_time zero-row guard fires before normalize=FALSE check", {
+  P_dead <- .P3
+  P_dead["B", ] <- 0
+  # Even with normalize=FALSE, the zero-row diagnostic takes priority over
+  # the generic "must sum to 1" error — the message must point at B.
+  expect_error(
+    passage_time(P_dead, normalize = FALSE),
+    "zero-sum row.*B"
+  )
+})
+
 # ---- Numerical equivalence vs linear-system solve ----
 
 test_that("passage_time matches column-by-column linear solve", {

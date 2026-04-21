@@ -453,3 +453,37 @@ test_that(".compute_centralities errors when external measure lacks centrality_f
     "centrality_fn is required"
   )
 })
+
+# ---- Regression: non-square matrix $data (pre-2026-04-21 bug) ----
+
+test_that("centrality_stability works when $data is a raw numeric matrix", {
+  # For association methods (glasso/pcor/cor), build_network() stores $data
+  # as a numeric matrix (not data.frame). When centrality_stability resamples
+  # rows and re-invokes the estimator, .prepare_association_input was
+  # failing the nrow==ncol check and silently producing NULL, which showed
+  # up as all-NaN correlations or a zero-variance warning. Fixed by making
+  # the matrix branch coerce non-square inputs to data.frame.
+  skip_if_not_installed("glasso")
+  set.seed(1)
+  n <- 150; p <- 6
+  Sigma <- diag(p)
+  for (i in seq_len(p - 1L)) for (j in (i + 1L):p) {
+    Sigma[i, j] <- Sigma[j, i] <- 0.4 ^ (j - i)
+  }
+  L   <- chol(Sigma)
+  df  <- as.data.frame(matrix(rnorm(n * p), n, p) %*% L)
+  colnames(df) <- paste0("V", seq_len(p))
+  net <- build_network(df, method = "glasso", params = list(nlambda = 20))
+  # Critical invariant: $data IS a matrix for association methods
+  expect_true(is.matrix(net$data))
+  # Fix should allow the re-estimation loop to run without all-NaN fallout
+  cs <- suppressWarnings(suppressMessages(
+    centrality_stability(net, iter = 5L)
+  ))
+  expect_true(inherits(cs, "net_stability"))
+  # At least one correlation must be finite — if the bug regressed, every
+  # re-estimation returns NULL and all correlations are NaN.
+  corrs <- cs$correlations
+  if (is.data.frame(corrs)) corrs <- corrs$correlation
+  expect_true(any(is.finite(unlist(corrs))))
+})

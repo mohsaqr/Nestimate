@@ -65,6 +65,12 @@
 #' populations: a review. \emph{Journal of the Royal Society Interface}
 #' 10(80), 20120997. \doi{10.1098/rsif.2012.0997}
 #'
+#' @note (experimental) Validated against a hand-computed `table()` incidence
+#'   reference only; no independent R package exposes the
+#'   long-format-to-binary-incidence primitive, because the operation is
+#'   definitionally `table()`. The code path is a direct one-to-one
+#'   restatement of its definition.
+#'
 #' @export
 bipartite_groups <- function(data, player, group, weight = NULL) {
   stopifnot(

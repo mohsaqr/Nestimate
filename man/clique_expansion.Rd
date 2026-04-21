@@ -44,6 +44,11 @@ Closes the I/O cycle: event data -> \code{\link[=bipartite_groups]{bipartite_gro
 \code{clique_expansion()} -> any function that accepts a \code{netobject}
 (centrality, bootstrap, clustering, plotting via cograph).
 }
+\note{
+(experimental) Validated against \code{tcrossprod(incidence)} with zero
+diagonal. No external R package exposes clique expansion as a primitive;
+the implementation is a direct one-line restatement of the definition.
+}
 \examples{
 df <- data.frame(
   player  = c("A", "B", "C", "A", "B", "D", "C", "D", "E"),

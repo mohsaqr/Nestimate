@@ -139,6 +139,52 @@ simulate_continuous <- function(n = 100, p = 5, rho = 0.3, seed = NULL) {
   df
 }
 
+#' Generate a random binary incidence matrix for hypergraph equivalence tests.
+#'
+#' Columns are hyperedges, rows are nodes. Each hyperedge's size is drawn
+#' uniformly from `edge_size_range`, members are sampled without replacement
+#' from the node set. `density` adds per-edge jitter: with probability
+#' (1 - density) an edge is skipped (returned as a degenerate size-1 edge, or
+#' dropped if too small), ensuring size variability across runs.
+#'
+#' @param n_nodes Integer >= 3. Number of nodes.
+#' @param n_edges Integer >= 1. Number of hyperedges.
+#' @param edge_size_range Integer vector length 2. Min/max hyperedge size.
+#'   Must satisfy 2 <= min <= max <= n_nodes.
+#' @param density Numeric in (0, 1]. Probability that a given edge is kept.
+#' @param seed Integer or NULL. Random seed.
+#' @return list(incidence = matrix(n_nodes, n_edges_kept),
+#'              hyperedges = list of integer node indices,
+#'              nodes = character vector of node names)
+#' @noRd
+simulate_hypergraph_incidence <- function(n_nodes = 15, n_edges = 20,
+                                          edge_size_range = c(2L, 4L),
+                                          density = 0.8,
+                                          seed = NULL) {
+  stopifnot(n_nodes >= 3L, n_edges >= 1L,
+            length(edge_size_range) == 2L,
+            edge_size_range[1] >= 2L,
+            edge_size_range[2] >= edge_size_range[1],
+            edge_size_range[2] <= n_nodes,
+            density > 0, density <= 1)
+  if (!is.null(seed)) set.seed(seed)
+  nodes <- paste0("n", seq_len(n_nodes))
+  sizes <- sample(edge_size_range[1]:edge_size_range[2], n_edges, replace = TRUE)
+  keep <- stats::runif(n_edges) < density
+  edges <- mapply(function(sz, k) {
+    if (!k) return(integer(0))
+    sort(sample.int(n_nodes, sz))
+  }, sizes, keep, SIMPLIFY = FALSE)
+  edges <- edges[vapply(edges, length, integer(1)) >= 2L]
+  if (length(edges) == 0L) {
+    edges <- list(sort(sample.int(n_nodes, edge_size_range[1])))
+  }
+  inc <- matrix(0L, nrow = n_nodes, ncol = length(edges),
+                dimnames = list(nodes, paste0("e", seq_along(edges))))
+  for (j in seq_along(edges)) inc[edges[[j]], j] <- 1L
+  list(incidence = inc, hyperedges = edges, nodes = nodes)
+}
+
 #' Equivalence report logger
 #' @noRd
 equiv_report <- function() {

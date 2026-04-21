@@ -1390,43 +1390,6 @@ print.mcml <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot Method for mcml
-#'
-#' Plots an MCML network. When \pkg{cograph} is available, delegates to
-#' \code{cograph::plot_mcml()} which renders a two-layer visualization
-#' (macro summary on top, within-cluster detail on bottom). Otherwise,
-#' converts to a \code{netobject_group} and plots each layer as a
-#' separate panel.
-#'
-#' @param x An \code{mcml} object.
-#' @param ... Additional arguments passed to \code{cograph::plot_mcml()}
-#'   (e.g., \code{colors}, \code{edge_labels}, \code{mode}).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' \dontrun{
-#' seqs <- data.frame(
-#'   T1 = sample(LETTERS[1:6], 30, TRUE),
-#'   T2 = sample(LETTERS[1:6], 30, TRUE),
-#'   T3 = sample(LETTERS[1:6], 30, TRUE)
-#' )
-#' clusters <- list(G1 = c("A", "B", "C"), G2 = c("D", "E", "F"))
-#' cs <- build_mcml(seqs, clusters)
-#' plot(cs)
-#' }
-#'
-#' @export
-plot.mcml <- function(x, ...) {
-  if (!requireNamespace("cograph", quietly = TRUE)) {
-    stop("Package 'cograph' is required for plotting. ",
-         "Install with: install.packages('cograph')", call. = FALSE)
-  }
-  cograph::plot_mcml(x, ...)
-  invisible(x)
-}
-
-
 #' Summary Method for mcml
 #'
 #' @param object An \code{mcml} object.

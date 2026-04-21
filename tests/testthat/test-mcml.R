@@ -1003,12 +1003,6 @@ test_that("extract_edges() works on mcml", {
   expect_true(all(c("from", "to", "weight") %in% names(edges$macro)))
 })
 
-test_that("plot.mcml dispatches without error when cograph available", {
-  skip_if_not_installed("cograph")
-  cs <- .make_mcml()
-  expect_invisible(plot(cs))
-})
-
 # ---- Edgelist input: $data propagated to macro + clusters so that
 #      as_tna() + bootstrap_network() work end-to-end (regression test) ----
 
