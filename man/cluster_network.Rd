@@ -41,6 +41,7 @@ per-cluster networks match the type of the input network.
 }
 \examples{
 \donttest{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 50, TRUE), V2 = sample(LETTERS[1:4], 50, TRUE),
   V3 = sample(LETTERS[1:4], 50, TRUE), V4 = sample(LETTERS[1:4], 50, TRUE)
@@ -49,10 +50,8 @@ seqs <- data.frame(
 grp <- cluster_network(seqs, k = 3)
 
 # Specify network method (cor requires numeric panel data)
-\donttest{
-panel <- as.data.frame(matrix(rnorm(500), nrow = 100, ncol = 5))
+panel <- as.data.frame(matrix(sample(1:4, 500, TRUE), nrow = 100, ncol = 5))
 grp <- cluster_network(panel, k = 3, method = "cor")
-}
 
 # MMM-based clustering
 grp <- cluster_network(seqs, k = 2, cluster_by = "mmm")

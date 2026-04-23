@@ -5,7 +5,7 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, articles]
+    left: [intro, reference, articles, tutorials]
     right: [search, github]
   components:
     articles:
@@ -19,6 +19,15 @@ navbar:
           href: articles/psychological-networks.html
         - text: Clustering & Multi-Level Analysis
           href: articles/clustering.html
+    tutorials:
+      text: Tutorials
+      menu:
+        - text: Network Estimation & Visualization
+          href: articles/cograph-tutorial-nestimate.html
+        - text: Higher-Order & Simplicial Complexes
+          href: articles/cograph-tutorial-simplicial.html
+        - text: Multi-Cluster Multi-Level (MCML)
+          href: articles/cograph-tutorial-mcml.html
 
 reference:
   - title: Network Estimation
