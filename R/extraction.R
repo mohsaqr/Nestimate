@@ -30,12 +30,10 @@ NULL
 #' probabilities. This is useful when the original weights don't sum to 1.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 #' net <- build_network(seqs, method = "relative")
 #' trans_mat <- extract_transition_matrix(net)
 #' print(trans_mat)
-#' }
 #'
 #' @seealso \code{\link{extract_initial_probs}} for extracting initial probabilities,
 #'   \code{\link{extract_edges}} for extracting an edge list.
@@ -43,6 +41,17 @@ NULL
 #' @export
 extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
   type <- match.arg(type)
+
+  # mcml dispatch: return named list of matrices per layer
+  if (inherits(model, "mcml")) {
+    result <- list(macro = extract_transition_matrix(model$macro, type = type))
+    if (!is.null(model$clusters)) {
+      for (nm in names(model$clusters)) {
+        result[[nm]] <- extract_transition_matrix(model$clusters[[nm]], type = type)
+      }
+    }
+    return(result)
+  }
 
   # Extract weights matrix
   weights <- NULL
@@ -106,18 +115,27 @@ extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
 #' probabilities.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 #' net <- build_network(seqs, method = "relative")
 #' init_probs <- extract_initial_probs(net)
 #' print(init_probs)
-#' }
 #'
 #' @seealso \code{\link{extract_transition_matrix}} for extracting the transition matrix,
 #'   \code{\link{extract_edges}} for extracting an edge list.
 #'
 #' @export
 extract_initial_probs <- function(model) {
+  # mcml dispatch: return named list of init vectors per layer
+  if (inherits(model, "mcml")) {
+    result <- list(macro = model$macro$inits)
+    if (!is.null(model$clusters)) {
+      for (nm in names(model$clusters)) {
+        result[[nm]] <- model$clusters[[nm]]$inits
+      }
+    }
+    return(result)
+  }
+
   initial <- NULL
 
   # Try different possible locations
@@ -196,12 +214,10 @@ extract_initial_probs <- function(model) {
 #' other network tools.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 #' net <- build_network(seqs, method = "relative")
 #' edges <- extract_edges(net, threshold = 0.05)
 #' head(edges)
-#' }
 #'
 #' @seealso \code{\link{extract_transition_matrix}} for the full matrix,
 #'   \code{\link{build_network}} for network estimation.
@@ -211,6 +227,22 @@ extract_edges <- function(model,
                           threshold = 0,
                           include_self = FALSE,
                           sort_by = "weight") {
+  # mcml dispatch: return named list of edge data frames per layer
+  if (inherits(model, "mcml")) {
+    result <- list(macro = extract_edges(model$macro, threshold = threshold,
+                                         include_self = include_self,
+                                         sort_by = sort_by))
+    if (!is.null(model$clusters)) {
+      for (nm in names(model$clusters)) {
+        result[[nm]] <- extract_edges(model$clusters[[nm]],
+                                       threshold = threshold,
+                                       include_self = include_self,
+                                       sort_by = sort_by)
+      }
+    }
+    return(result)
+  }
+
   # Extract transition matrix
   weights <- extract_transition_matrix(model)
 

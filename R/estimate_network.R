@@ -11,10 +11,8 @@
 #' @return A \code{netobject} (see \code{\link{build_network}}).
 #'
 #' @examples
-#' \donttest{
 #' data <- data.frame(A = c("x","y","z","x"), B = c("y","x","z","y"))
 #' net <- estimate_network(data, method = "relative")
-#' }
 #'
 #' @seealso \code{\link{build_network}}
 #'
@@ -37,6 +35,148 @@ estimate_network <- function(data,
     level = level,
     ...
   )
+}
+
+
+# ---- Convenience wrappers for build_network ----
+
+#' Build a Transition Network (TNA)
+#'
+#' Convenience wrapper for \code{build_network(method = "relative")}.
+#' Computes row-normalized transition probabilities from sequence data.
+#'
+#' @inheritParams build_network
+#' @param ... Additional arguments passed to \code{\link{build_network}}.
+#' @return A \code{netobject} (see \code{\link{build_network}}).
+#' @seealso \code{\link{build_network}}
+#' @examples
+#' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+#' net <- build_tna(seqs)
+#' @export
+build_tna <- function(data, ...) {
+  build_network(data, method = "relative", ...)
+}
+
+#' Build a Frequency Transition Network (FTNA)
+#'
+#' Convenience wrapper for \code{build_network(method = "frequency")}.
+#' Computes raw transition counts from sequence data.
+#'
+#' @inheritParams build_network
+#' @param ... Additional arguments passed to \code{\link{build_network}}.
+#' @return A \code{netobject} (see \code{\link{build_network}}).
+#' @seealso \code{\link{build_network}}
+#' @examples
+#' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+#' net <- build_ftna(seqs)
+#' @export
+build_ftna <- function(data, ...) {
+  build_network(data, method = "frequency", ...)
+}
+
+#' Build an Attention-Weighted Transition Network (ATNA)
+#'
+#' Convenience wrapper for \code{build_network(method = "attention")}.
+#' Computes decay-weighted transitions from sequence data.
+#'
+#' @inheritParams build_network
+#' @param ... Additional arguments passed to \code{\link{build_network}}.
+#' @return A \code{netobject} (see \code{\link{build_network}}).
+#' @seealso \code{\link{build_network}}
+#' @examples
+#' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+#' net <- build_atna(seqs)
+#' @export
+build_atna <- function(data, ...) {
+  build_network(data, method = "attention", ...)
+}
+
+#' Build a Co-occurrence Network (CNA)
+#'
+#' Convenience wrapper for \code{build_network(method = "co_occurrence")}.
+#' Computes co-occurrence counts from binary or sequence data.
+#'
+#' @inheritParams build_network
+#' @param ... Additional arguments passed to \code{\link{build_network}}.
+#' @return A \code{netobject} (see \code{\link{build_network}}).
+#' @seealso \code{\link{build_network}}, \code{\link{cooccurrence}} for
+#'   delimited-field, bipartite, and other non-sequence co-occurrence formats.
+#' @examples
+#' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+#' net <- build_cna(seqs)
+#' @export
+build_cna <- function(data, ...) {
+  build_network(data, method = "co_occurrence", ...)
+}
+
+#' Build a Correlation Network
+#'
+#' Convenience wrapper for \code{build_network(method = "cor")}.
+#' Computes Pearson correlations from numeric data.
+#'
+#' @inheritParams build_network
+#' @param ... Additional arguments passed to \code{\link{build_network}}.
+#' @return A \code{netobject} (see \code{\link{build_network}}).
+#' @seealso \code{\link{build_network}}
+#' @examples
+#' data(srl_strategies)
+#' net <- build_cor(srl_strategies)
+#' @export
+build_cor <- function(data, ...) {
+  build_network(data, method = "cor", ...)
+}
+
+#' Build a Partial Correlation Network
+#'
+#' Convenience wrapper for \code{build_network(method = "pcor")}.
+#' Computes partial correlations from numeric data.
+#'
+#' @inheritParams build_network
+#' @param ... Additional arguments passed to \code{\link{build_network}}.
+#' @return A \code{netobject} (see \code{\link{build_network}}).
+#' @seealso \code{\link{build_network}}
+#' @examples
+#' data(srl_strategies)
+#' net <- build_pcor(srl_strategies)
+#' @export
+build_pcor <- function(data, ...) {
+  build_network(data, method = "pcor", ...)
+}
+
+#' Build a Graphical Lasso Network (EBICglasso)
+#'
+#' Convenience wrapper for \code{build_network(method = "glasso")}.
+#' Computes L1-regularized partial correlations with EBIC model selection.
+#'
+#' @inheritParams build_network
+#' @param ... Additional arguments passed to \code{\link{build_network}}.
+#' @return A \code{netobject} (see \code{\link{build_network}}).
+#' @seealso \code{\link{build_network}}
+#' @examples
+#' data(srl_strategies)
+#' net <- build_glasso(srl_strategies)
+#' @export
+build_glasso <- function(data, ...) {
+  build_network(data, method = "glasso", ...)
+}
+
+#' Build an Ising Network
+#'
+#' Convenience wrapper for \code{build_network(method = "ising")}.
+#' Computes L1-regularized logistic regression network for binary data.
+#'
+#' @inheritParams build_network
+#' @param ... Additional arguments passed to \code{\link{build_network}}.
+#' @return A \code{netobject} (see \code{\link{build_network}}).
+#' @seealso \code{\link{build_network}}
+#' @examples
+#' \donttest{
+#' bin_data <- data.frame(matrix(rbinom(200, 1, 0.5), ncol = 5))
+#' net <- build_ising(bin_data)
+#' }
+#' @export
+build_ising <- function(data, ...) {
+  build_network(data, method = "ising", ...)
 }
 
 
@@ -64,7 +204,9 @@ estimate_network <- function(data,
     wtna_transition   = "wtna",
     wtna_cooccurrence = "wtna_cooccurrence",
     isingfit          = "ising",
-    atna              = "attention"
+    atna              = "attention",
+    mixed_graphical   = "mgm",
+    mixed             = "mgm"
   )
   if (method %in% names(aliases)) {
     aliases[[method]]

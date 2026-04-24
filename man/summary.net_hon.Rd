@@ -18,6 +18,10 @@ The input object, invisibly.
 Summary Method for net_hon
 }
 \examples{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hon <- build_hon(seqs, max_order = 2)
+summary(hon)
+
 \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),

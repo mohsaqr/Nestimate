@@ -82,6 +82,10 @@
 #' }
 #'
 #' @examples
+#' set.seed(1)
+#' dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+#' net <- build_network(dat, method = "glasso")
+#' bg <- boot_glasso(net, iter = 10, cs_iter = 5, centrality = "strength")
 #' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)
@@ -681,14 +685,13 @@ boot_glasso <- function(x,
   if (n_valid < 2) return(p_mat)
 
   for (i in seq_len(n_edges - 1L)) {
-    for (j in seq(i + 1L, n_edges)) {
-      diff_ij <- bm[, i] - bm[, j]
-      p_greater <- mean(diff_ij > 0)
-      p_less <- mean(diff_ij < 0)
-      p_val <- 2 * min(p_greater, p_less)
-      p_mat[i, j] <- p_val
-      p_mat[j, i] <- p_val
-    }
+    js <- seq(i + 1L, n_edges)
+    diffs <- bm[, i] - bm[, js, drop = FALSE]
+    p_greater <- colMeans(diffs > 0)
+    p_less    <- colMeans(diffs < 0)
+    p_vals    <- 2 * pmin(p_greater, p_less)
+    p_mat[i, js] <- p_vals
+    p_mat[js, i] <- p_vals
   }
 
   diag(p_mat) <- 0
@@ -712,14 +715,13 @@ boot_glasso <- function(x,
   if (n_valid < 2) return(p_mat)
 
   for (i in seq_len(p_nodes - 1L)) {
-    for (j in seq(i + 1L, p_nodes)) {
-      diff_ij <- bm[, i] - bm[, j]
-      p_greater <- mean(diff_ij > 0)
-      p_less <- mean(diff_ij < 0)
-      p_val <- 2 * min(p_greater, p_less)
-      p_mat[i, j] <- p_val
-      p_mat[j, i] <- p_val
-    }
+    js <- seq(i + 1L, p_nodes)
+    diffs <- bm[, i] - bm[, js, drop = FALSE]
+    p_greater <- colMeans(diffs > 0)
+    p_less    <- colMeans(diffs < 0)
+    p_vals    <- 2 * pmin(p_greater, p_less)
+    p_mat[i, js] <- p_vals
+    p_mat[js, i] <- p_vals
   }
 
   diag(p_mat) <- 0
@@ -781,6 +783,10 @@ boot_glasso <- function(x,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' set.seed(1)
+#' dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+#' bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+#' print(bg)
 #' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)
@@ -841,6 +847,10 @@ print.boot_glasso <- function(x, ...) {
 #' @return A data frame or list of data frames depending on \code{type}.
 #'
 #' @examples
+#' set.seed(1)
+#' dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+#' bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+#' summary(bg, type = "edges")
 #' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)
@@ -903,6 +913,10 @@ summary.boot_glasso <- function(object, type = "edges", ...) {
 #' @return A \code{ggplot} object, invisibly.
 #'
 #' @examples
+#' set.seed(1)
+#' dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+#' bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+#' plot(bg, type = "edges")
 #' \donttest{
 #' set.seed(42)
 #' mat <- matrix(rnorm(60), ncol = 4)

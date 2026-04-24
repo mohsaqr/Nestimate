@@ -17,10 +17,9 @@ Computes Betti numbers: \eqn{\beta_0} (components), \eqn{\beta_1}
 (loops), \eqn{\beta_2} (voids), etc.
 }
 \examples{
-\donttest{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")
 sc <- build_simplicial(mat, threshold = 0.3)
 betti_numbers(sc)
-}
+
 }

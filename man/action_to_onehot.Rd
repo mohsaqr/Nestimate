@@ -34,7 +34,6 @@ Data frame with one-hot encoded columns (0/1 integers).
 Convert a categorical Action column to one-hot (binary indicator) columns.
 }
 \examples{
-\donttest{
 long_data <- data.frame(
   Actor = rep(1:3, each = 4),
   Time = rep(1:4, 3),
@@ -42,6 +41,5 @@ long_data <- data.frame(
 )
 onehot_data <- action_to_onehot(long_data)
 head(onehot_data)
-}
 
 }

@@ -38,13 +38,11 @@ NULL
 #' to the long format used by many TNA functions and analyses.
 #'
 #' @examples
-#' \donttest{
 #' wide_data <- data.frame(
 #'   V1 = c("A", "B", "C"), V2 = c("B", "C", "A"), V3 = c("C", "A", "B")
 #' )
 #' long_data <- wide_to_long(wide_data)
 #' head(long_data)
-#' }
 #'
 #' @seealso \code{\link{long_to_wide}} for the reverse conversion,
 #'   \code{\link{prepare_for_tna}} for preparing data for TNA analysis.
@@ -136,7 +134,6 @@ wide_to_long <- function(data,
 #' will use the ordering within each sequence to create time indices.
 #'
 #' @examples
-#' \donttest{
 #' long_data <- data.frame(
 #'   Actor = rep(1:3, each = 4),
 #'   Time = rep(1:4, 3),
@@ -144,7 +141,6 @@ wide_to_long <- function(data,
 #' )
 #' wide_data <- long_to_wide(long_data, id_col = "Actor")
 #' head(wide_data)
-#' }
 #'
 #' @seealso \code{\link{wide_to_long}} for the reverse conversion,
 #'   \code{\link{prepare_for_tna}} for preparing data for TNA analysis.
@@ -261,14 +257,12 @@ long_to_wide <- function(data,
 #' }
 #'
 #' @examples
-#' \donttest{
 #' # From wide format sequences
 #' sequences <- data.frame(
 #'   V1 = c("A","B","C","A"), V2 = c("B","C","A","B"),
 #'   V3 = c("C","A","B","C"), V4 = c("A","B","A","B")
 #' )
 #' tna_data <- prepare_for_tna(sequences, type = "sequences")
-#' }
 #'
 #' @seealso \code{\link{wide_to_long}}, \code{\link{long_to_wide}} for
 #'   format conversions.
@@ -382,7 +376,6 @@ prepare_for_tna <- function(data,
 #' @return Data frame with one-hot encoded columns (0/1 integers).
 #'
 #' @examples
-#' \donttest{
 #' long_data <- data.frame(
 #'   Actor = rep(1:3, each = 4),
 #'   Time = rep(1:4, 3),
@@ -390,7 +383,6 @@ prepare_for_tna <- function(data,
 #' )
 #' onehot_data <- action_to_onehot(long_data)
 #' head(onehot_data)
-#' }
 #'
 #' @export
 action_to_onehot <- function(data, action_col = "Action", states = NULL,
@@ -452,7 +444,6 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
 #'   are set on the result.
 #'
 #' @examples
-#' \donttest{
 #' # Simple binary data
 #' df <- data.frame(
 #'   A = c(1, 0, 1, 0, 1),
@@ -468,7 +459,6 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
 #' # With windowing
 #' seq_data <- prepare_onehot(df, cols = c("A", "B", "C"),
 #'                           window_size = 2, window_type = "non-overlapping")
-#' }
 #'
 #' @seealso \code{\link{action_to_onehot}} for the reverse conversion.
 #'

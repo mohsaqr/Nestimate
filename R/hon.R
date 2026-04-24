@@ -988,11 +988,16 @@
   # Unique first-order states
   first_order_states <- sort(unique(unlist(trajectories, use.names = FALSE)))
 
+  # cograph-compatible fields
+  cg <- .ho_cograph_fields(mat, nodes, method = "hon")
+
   result <- structure(
-    list(
+    c(list(
+      weights = mat,
       matrix = mat,
-      edges = edges,
-      nodes = nodes,
+      ho_edges = edges,
+      edges = cg$edges,
+      nodes = cg$nodes,
       n_nodes = n,
       n_edges = nrow(edges),
       first_order_states = first_order_states,
@@ -1001,8 +1006,8 @@
       min_freq = min_freq,
       n_trajectories = length(trajectories),
       directed = TRUE
-    ),
-    class = "net_hon"
+    ), cg[c("meta", "node_groups")]),
+    class = c("net_hon", "cograph_network")
   )
 
   result
@@ -1094,6 +1099,9 @@
 #' to application for anomaly detection. \emph{EPJ Data Science}, 9(1), 15.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hon <- build_hon(seqs, max_order = 2)
+#'
 #' \donttest{
 #' # From list of trajectories
 #' trajs <- list(
@@ -1168,6 +1176,10 @@ build_hon <- function(data, max_order = 5L, min_freq = 1L,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hon <- build_hon(seqs, max_order = 2)
+#' print(hon)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
@@ -1199,6 +1211,10 @@ print.net_hon <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' hon <- build_hon(seqs, max_order = 2)
+#' summary(hon)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
@@ -1222,7 +1238,7 @@ summary.net_hon <- function(object, ...) {
 
   if (object$n_nodes > 0L) {
     # Order distribution: count arrows to determine order
-    node_orders <- vapply(object$nodes, function(nd) {
+    node_orders <- vapply(object$nodes$label, function(nd) {
       length(strsplit(nd, " -> ", fixed = TRUE)[[1L]])
     }, integer(1L))
     order_tab <- table(node_orders)

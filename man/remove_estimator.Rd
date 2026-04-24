@@ -16,11 +16,9 @@ Invisible \code{NULL}.
 Remove a network estimator from the registry.
 }
 \examples{
-\donttest{
 register_estimator("test_est", function(data, ...) diag(3),
   description = "test", directed = FALSE)
 remove_estimator("test_est")
-}
 
 }
 \seealso{

@@ -18,6 +18,10 @@ The input object, invisibly.
 Print Method for wtna_boot_mixed
 }
 \examples{
+oh <- data.frame(A = c(1,0,1,0), B = c(0,1,0,1), C = c(1,1,0,0))
+mixed <- wtna(oh, method = "both")
+boot  <- bootstrap_network(mixed, iter = 10)
+print(boot)
 \donttest{
 set.seed(1)
 oh <- data.frame(

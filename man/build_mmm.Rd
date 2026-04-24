@@ -34,8 +34,8 @@ build_mmm(
 \item{covariates}{Optional. Covariates integrated into the EM algorithm
 to model covariate-dependent mixing proportions. Accepts formula,
 character vector, string, or data.frame (same forms as
-\code{\link{cluster_data}}). Unlike the post-hoc analysis in
-\code{cluster_data()}, these covariates directly influence cluster
+\code{\link{build_clusters}}). Unlike the post-hoc analysis in
+\code{build_clusters()}, these covariates directly influence cluster
 membership during estimation. Requires the \pkg{nnet} package.}
 }
 \value{
@@ -59,6 +59,10 @@ Expectation-Maximization. Each mixture component has its own transition
 matrix. Sequences are probabilistically assigned to components.
 }
 \examples{
+seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+                   V2 = sample(c("A","B","C"), 30, TRUE))
+mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+mmm
 \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),

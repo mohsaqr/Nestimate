@@ -34,12 +34,10 @@ which is useful for visualization, analysis with igraph, or export to
 other network tools.
 }
 \examples{
-\donttest{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 net <- build_network(seqs, method = "relative")
 edges <- extract_edges(net, threshold = 0.05)
 head(edges)
-}
 
 }
 \seealso{

@@ -20,11 +20,9 @@ Effort_Reg). Within-cluster correlations are moderate (0.3--0.6),
 cross-cluster correlations are weaker.
 }
 \examples{
-\donttest{
 net <- build_network(srl_strategies, method = "glasso",
                      params = list(gamma = 0.5))
 net
-}
 
 }
 \keyword{datasets}

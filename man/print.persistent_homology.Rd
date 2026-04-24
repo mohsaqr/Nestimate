@@ -18,14 +18,9 @@ The input object, invisibly.
 Print persistent homology results
 }
 \examples{
-\donttest{
-seqs <- data.frame(
-  V1 = c("A","B","C","A","B"),
-  V2 = c("B","C","A","B","C"),
-  V3 = c("C","A","B","C","A")
-)
-net <- build_network(seqs, method = "relative")
-ph  <- persistent_homology(net)
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+ph <- persistent_homology(mat, n_steps = 10)
 print(ph)
-}
+
 }

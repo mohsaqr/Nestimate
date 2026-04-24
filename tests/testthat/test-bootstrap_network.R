@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ---- bootstrap_network() Tests ----
 
 # Helper: generate wide sequence data
@@ -551,3 +553,31 @@ test_that("print.net_bootstrap shows '...and N more' for >5 sig edges (L597)", {
 })
 
 
+# ---- mcml dispatch ----
+
+test_that("bootstrap_network works with mcml objects", {
+  set.seed(42)
+  seqs <- data.frame(
+    T1 = sample(LETTERS[1:6], 30, TRUE),
+    T2 = sample(LETTERS[1:6], 30, TRUE),
+    T3 = sample(LETTERS[1:6], 30, TRUE),
+    T4 = sample(LETTERS[1:6], 30, TRUE),
+    stringsAsFactors = FALSE
+  )
+  clusters <- list(G1 = c("A", "B", "C"), G2 = c("D", "E", "F"))
+  cs <- build_mcml(seqs, clusters, type = "tna")
+
+  boot <- bootstrap_network(cs, iter = 20, seed = 1)
+
+  expect_s3_class(boot, "net_bootstrap_group")
+  expect_true("macro" %in% names(boot))
+  expect_s3_class(boot$macro, "net_bootstrap")
+  expect_equal(boot$macro$iter, 20L)
+
+  # Within-cluster bootstraps present
+  cluster_boots <- setdiff(names(boot), "macro")
+  expect_true(length(cluster_boots) > 0)
+  for (nm in cluster_boots) {
+    expect_s3_class(boot[[nm]], "net_bootstrap")
+  }
+})

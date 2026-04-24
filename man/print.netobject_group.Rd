@@ -18,6 +18,10 @@ The input object, invisibly.
 Print Method for Group Network Object
 }
 \examples{
+seqs <- data.frame(V1 = c("A","B","A","B"), V2 = c("B","A","B","A"),
+                   grp = c("X","X","Y","Y"))
+nets <- build_network(seqs, method = "relative", group = "grp")
+print(nets)
 \donttest{
 seqs <- data.frame(
   V1 = c("A","B","A","C","B","A"),

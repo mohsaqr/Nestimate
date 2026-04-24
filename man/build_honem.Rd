@@ -37,6 +37,9 @@ HONEM is parameter-free and scalable — no random walks, skip-gram, or
 hyperparameter tuning required.
 }
 \examples{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+
 \donttest{
 trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
               c("B","C","D","A"), c("C","D","A","B"))

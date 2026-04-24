@@ -230,6 +230,9 @@
 #' Network Science}, 8, 62.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' mg <- build_mogen(seqs, max_order = 2)
+#'
 #' \donttest{
 #' trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
 #'               c("B","C","D","A"), c("C","D","A","B"))
@@ -334,6 +337,16 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
     }
   }
 
+  # Extract optimal-order transition matrix for cograph compatibility
+  opt_mat <- trans_mats[[optimal_order + 1L]]
+  if (is.null(dim(opt_mat))) {
+    # Order 0: marginal vector → 1×n matrix
+    opt_mat <- matrix(opt_mat, nrow = 1,
+                      dimnames = list("marginal", names(opt_mat)))
+  }
+  opt_nodes <- rownames(opt_mat) %||% names(marginal)
+  cg <- .ho_cograph_fields(opt_mat, opt_nodes, method = "mogen")
+
   result <- list(
     optimal_order = as.integer(optimal_order),
     criterion = criterion,
@@ -347,10 +360,18 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
     count_matrices = count_mats,
     states = names(marginal),
     n_paths = length(trajectories),
-    n_observations = n_obs
+    n_observations = n_obs,
+    weights = cg$weights,
+    nodes = cg$nodes,
+    edges = cg$edges,
+    directed = TRUE,
+    n_nodes = cg$n_nodes,
+    n_edges = cg$n_edges,
+    meta = cg$meta,
+    node_groups = NULL
   )
 
-  class(result) <- "net_mogen"
+  class(result) <- c("net_mogen", "cograph_network")
   result
 }
 
@@ -384,6 +405,10 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
 #'   }
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' mg <- build_mogen(seqs, max_order = 2)
+#' mogen_transitions(mg, order = 1)
+#'
 #' \donttest{
 #' trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
 #'               c("B","C","D","A"), c("C","D","A","B"))
@@ -462,10 +487,11 @@ mogen_transitions <- function(x, order = NULL, min_count = 1L) {
 #'   \code{proportion}.
 #'
 #' @examples
-#' \donttest{
 #' trajs <- list(c("A","B","C","D"), c("A","B","D","C"))
-#' path_counts(trajs, k = 2)        # transition counts
-#' path_counts(trajs, k = 3, top = 10)  # top 10 three-step paths
+#' path_counts(trajs, k = 2)
+#'
+#' \donttest{
+#' path_counts(trajs, k = 3, top = 10)
 #' }
 #'
 #' @export
@@ -484,6 +510,7 @@ path_counts <- function(data, k = 2L, top = NULL) {
   }
 
   all_grams <- unlist(lapply(trajectories, function(traj) {
+    traj <- traj[!is.na(traj)]
     n <- length(traj)
     if (n < k) return(character(0L))
     vapply(seq_len(n - k + 1L), function(i) {
@@ -518,10 +545,8 @@ path_counts <- function(data, k = 2L, top = NULL) {
 #'   \code{proportion}.
 #'
 #' @examples
-#' \donttest{
 #' trajs <- list(c("A","B","C"), c("A","B","A"))
 #' state_frequencies(trajs)
-#' }
 #'
 #' @export
 state_frequencies <- function(data) {
@@ -553,6 +578,10 @@ state_frequencies <- function(data) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' mg <- build_mogen(seqs, max_order = 2)
+#' print(mg)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
@@ -591,6 +620,10 @@ print.net_mogen <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' mg <- build_mogen(seqs, max_order = 2)
+#' summary(mg)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
@@ -637,6 +670,10 @@ summary.net_mogen <- function(object, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+#' mg <- build_mogen(seqs, max_order = 2)
+#' plot(mg)
+#'
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),

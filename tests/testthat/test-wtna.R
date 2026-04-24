@@ -323,7 +323,7 @@ test_that("wtna permutation test works via wtna()", {
 
   net1 <- wtna(df1, method = "transition")
   net2 <- wtna(df2, method = "transition")
-  perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+  perm <- permutation(net1, net2, iter = 20, seed = 1)
 
   expect_s3_class(perm, "net_permutation")
   expect_true(is.matrix(perm$p_values))
@@ -337,9 +337,9 @@ test_that("wtna permutation via build_network falls back to association path", {
 
   # build_network(method="wtna") stores method as "wtna" (not co_occurrence),
   # so permutation dispatches via association path
-  perm <- permutation_test(build_network(df1, method = "wtna"),
-                           build_network(df2, method = "wtna"),
-                           iter = 5, seed = 1)
+  perm <- permutation(build_network(df1, method = "wtna"),
+                      build_network(df2, method = "wtna"),
+                      iter = 5, seed = 1)
   expect_s3_class(perm, "net_permutation")
 })
 
@@ -356,7 +356,7 @@ test_that("wcna permutation test works via wtna()", {
 
   net1 <- wtna(df1, method = "cooccurrence")
   net2 <- wtna(df2, method = "cooccurrence")
-  perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+  perm <- permutation(net1, net2, iter = 20, seed = 1)
 
   expect_s3_class(perm, "net_permutation")
   expect_equal(perm$method, "wtna_cooccurrence")
@@ -374,9 +374,9 @@ test_that("wcna permutation errors with build_network (no stored data)", {
   )
 
   expect_error(
-    permutation_test(build_network(df1, method = "cna"),
-                     build_network(df2, method = "cna"),
-                     iter = 20, seed = 1),
+    permutation(build_network(df1, method = "cna"),
+                build_network(df2, method = "cna"),
+                iter = 20, seed = 1),
     "requires the original data"
   )
 })
@@ -520,4 +520,146 @@ test_that("print.wtna_mixed shows both components (L544-551)", {
   expect_true(any(grepl("Mixed Window TNA", out)))
   expect_true(any(grepl("Transition", out)))
   expect_true(any(grepl("Co-occurrence", out)))
+})
+
+
+# ---- Vectorization equivalence tests ----
+# Prove colSums+tcrossprod matches naive nested loops exactly.
+
+# Reference (naive) implementations for comparison
+.ref_transitions <- function(X, window_size, mode) {
+  n <- nrow(X); k <- ncol(X)
+  if (n < 2L) return(matrix(0, k, k))
+  if (window_size <= 1L) return(crossprod(X[-n, , drop = FALSE], X[-1, , drop = FALSE]))
+  weights <- matrix(0, k, k)
+  if (mode == "non-overlapping") {
+    divides <- n %% window_size == 0L
+    q <- n %/% window_size - 1L * divides
+    for (i in seq_len(q)) {
+      j_idx <- seq((i - 1L) * window_size + 1L, i * window_size)
+      k_idx <- seq(i * window_size + 1L, min(n, (i + 1L) * window_size))
+      for (j in j_idx) for (ki in k_idx) weights <- weights + tcrossprod(X[j, ], X[ki, ])
+    }
+  } else {
+    n_windows <- n - window_size + 1L
+    if (n_windows < 2L) return(weights)
+    for (i in seq_len(n_windows - 1L)) {
+      j_idx <- seq(i, i + window_size - 1L)
+      k_idx <- seq(i + 1L, i + window_size)
+      for (j in j_idx) for (ki in k_idx) weights <- weights + tcrossprod(X[j, ], X[ki, ])
+    }
+  }
+  weights
+}
+
+.ref_cooccurrence <- function(X, window_size, mode) {
+  n <- nrow(X); k <- ncol(X)
+  if (window_size <= 1L) return(crossprod(X))
+  weights <- matrix(0, k, k)
+  if (mode == "non-overlapping") {
+    n_windows <- ceiling(n / window_size)
+    for (i in seq_len(n_windows)) {
+      idx <- seq((i - 1L) * window_size + 1L, min(n, i * window_size))
+      for (j in idx) for (ki in idx) weights <- weights + tcrossprod(X[j, ], X[ki, ])
+    }
+  } else {
+    n_windows <- n - window_size + 1L
+    if (n_windows < 1L) return(weights)
+    for (i in seq_len(n_windows)) {
+      idx <- seq(i, i + window_size - 1L)
+      for (j in idx) for (ki in idx) weights <- weights + tcrossprod(X[j, ], X[ki, ])
+    }
+  }
+  weights
+}
+
+test_that("vectorized transitions match naive loops across 20 random configs", {
+  set.seed(999)
+  configs <- list(
+    list(n = 6, k = 3, ws = 2, mode = "non-overlapping"),
+    list(n = 6, k = 3, ws = 2, mode = "overlapping"),
+    list(n = 6, k = 3, ws = 3, mode = "non-overlapping"),
+    list(n = 6, k = 3, ws = 3, mode = "overlapping"),
+    list(n = 10, k = 4, ws = 2, mode = "non-overlapping"),
+    list(n = 10, k = 4, ws = 2, mode = "overlapping"),
+    list(n = 10, k = 4, ws = 3, mode = "non-overlapping"),
+    list(n = 10, k = 4, ws = 3, mode = "overlapping"),
+    list(n = 10, k = 4, ws = 5, mode = "non-overlapping"),
+    list(n = 10, k = 4, ws = 5, mode = "overlapping"),
+    list(n = 15, k = 5, ws = 2, mode = "non-overlapping"),
+    list(n = 15, k = 5, ws = 2, mode = "overlapping"),
+    list(n = 15, k = 5, ws = 4, mode = "non-overlapping"),
+    list(n = 15, k = 5, ws = 4, mode = "overlapping"),
+    list(n = 20, k = 3, ws = 3, mode = "non-overlapping"),
+    list(n = 20, k = 3, ws = 3, mode = "overlapping"),
+    list(n = 7, k = 3, ws = 2, mode = "non-overlapping"),
+    list(n = 7, k = 3, ws = 3, mode = "non-overlapping"),
+    list(n = 9, k = 4, ws = 4, mode = "overlapping"),
+    list(n = 50, k = 6, ws = 5, mode = "non-overlapping")
+  )
+  for (cfg in configs) {
+    X <- matrix(sample(0:1, cfg$n * cfg$k, replace = TRUE), cfg$n, cfg$k)
+    ref <- .ref_transitions(X, cfg$ws, cfg$mode)
+    vec <- Nestimate:::.wtna_transitions(X, cfg$ws, cfg$mode)
+    expect_identical(
+      vec, ref,
+      info = sprintf("n=%d k=%d ws=%d mode=%s", cfg$n, cfg$k, cfg$ws, cfg$mode)
+    )
+  }
+})
+
+test_that("vectorized cooccurrence matches naive loops across 20 random configs", {
+  set.seed(888)
+  configs <- list(
+    list(n = 6, k = 3, ws = 2, mode = "non-overlapping"),
+    list(n = 6, k = 3, ws = 2, mode = "overlapping"),
+    list(n = 6, k = 3, ws = 3, mode = "non-overlapping"),
+    list(n = 6, k = 3, ws = 3, mode = "overlapping"),
+    list(n = 10, k = 4, ws = 2, mode = "non-overlapping"),
+    list(n = 10, k = 4, ws = 2, mode = "overlapping"),
+    list(n = 10, k = 4, ws = 3, mode = "non-overlapping"),
+    list(n = 10, k = 4, ws = 3, mode = "overlapping"),
+    list(n = 10, k = 4, ws = 5, mode = "non-overlapping"),
+    list(n = 10, k = 4, ws = 5, mode = "overlapping"),
+    list(n = 15, k = 5, ws = 2, mode = "non-overlapping"),
+    list(n = 15, k = 5, ws = 2, mode = "overlapping"),
+    list(n = 15, k = 5, ws = 4, mode = "non-overlapping"),
+    list(n = 15, k = 5, ws = 4, mode = "overlapping"),
+    list(n = 20, k = 3, ws = 3, mode = "non-overlapping"),
+    list(n = 20, k = 3, ws = 3, mode = "overlapping"),
+    list(n = 7, k = 3, ws = 2, mode = "non-overlapping"),
+    list(n = 7, k = 3, ws = 3, mode = "non-overlapping"),
+    list(n = 9, k = 4, ws = 4, mode = "overlapping"),
+    list(n = 50, k = 6, ws = 5, mode = "non-overlapping")
+  )
+  for (cfg in configs) {
+    X <- matrix(sample(0:1, cfg$n * cfg$k, replace = TRUE), cfg$n, cfg$k)
+    ref <- .ref_cooccurrence(X, cfg$ws, cfg$mode)
+    vec <- Nestimate:::.wtna_cooccurrence(X, cfg$ws, cfg$mode)
+    expect_identical(
+      vec, ref,
+      info = sprintf("n=%d k=%d ws=%d mode=%s", cfg$n, cfg$k, cfg$ws, cfg$mode)
+    )
+  }
+})
+
+test_that("vectorized wtna end-to-end matches on bundled data", {
+  # Use bundled dataset for realistic equivalence
+  hw <- head(learning_activities, 30)
+  codes <- setdiff(names(hw), "student")
+  codes <- codes[vapply(hw[codes], function(x) all(x %in% c(0L, 1L, NA)), logical(1))]
+  if (length(codes) < 2) skip("Not enough binary columns")
+  X <- as.matrix(hw[, codes, drop = FALSE])
+  storage.mode(X) <- "double"
+  X[is.na(X)] <- 0
+
+  # Transition ws=3 non-overlapping
+  ref <- .ref_transitions(X, 3L, "non-overlapping")
+  vec <- Nestimate:::.wtna_transitions(X, 3L, "non-overlapping")
+  expect_identical(vec, ref, info = "bundled data transition ws=3")
+
+  # Co-occurrence ws=2 non-overlapping
+  ref_co <- .ref_cooccurrence(X, 2L, "non-overlapping")
+  vec_co <- Nestimate:::.wtna_cooccurrence(X, 2L, "non-overlapping")
+  expect_identical(vec_co, ref_co, info = "bundled data cooccurrence ws=2")
 })

@@ -57,6 +57,9 @@
 #' }
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -68,7 +71,7 @@
 #' print(cs)
 #' }
 #'
-#' @seealso \code{\link{build_network}}, \code{\link{reliability}}
+#' @seealso \code{\link{build_network}}, \code{\link{network_reliability}}
 #'
 #' @importFrom stats cor sd
 #' @export
@@ -85,7 +88,17 @@ centrality_stability <- function(x,
                                  seed = NULL) {
 
   # ---- Input validation ----
+  if (inherits(x, "mcml")) x <- as_tna(x)
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
+  if (inherits(x, "netobject_group")) {
+    return(lapply(x, function(net) {
+      centrality_stability(net, measures = measures, iter = iter,
+                           drop_prop = drop_prop, threshold = threshold,
+                           certainty = certainty, method = method,
+                           centrality_fn = centrality_fn, loops = loops,
+                           seed = seed)
+    }))
+  }
   if (!inherits(x, "netobject")) {
     stop("'x' must be a netobject from build_network().", call. = FALSE)
   }
@@ -364,6 +377,10 @@ centrality_stability <- function(x,
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+#' print(cs)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -403,6 +420,10 @@ print.net_stability <- function(x, ...) {
 #'   \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+#' summary(cs)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -450,6 +471,10 @@ summary.net_stability <- function(object, ...) {
 #' @return A \code{ggplot} object (invisibly).
 #'
 #' @examples
+#' net <- build_network(data.frame(V1 = c("A","B","C","A"),
+#'   V2 = c("B","C","A","B")), method = "relative")
+#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+#' plot(cs)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(

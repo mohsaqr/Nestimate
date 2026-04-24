@@ -97,6 +97,7 @@ safe_sd <- function(x) {
 #' allows \code{build_hon()}, \code{build_hypa()}, and other pathway
 #' functions to accept model objects directly.
 #'
+
 #' @param data Input: data.frame, list, tna, or netobject.
 #' @return A data.frame or list suitable for \code{.hon_parse_input()}.
 #' @noRd
@@ -118,6 +119,9 @@ safe_sd <- function(x) {
       })
     }
     return(df) # nocov end
+  }
+  if (inherits(data, "cograph_network") && !inherits(data, "netobject")) {
+    data <- .as_netobject(data)
   }
   if (inherits(data, "netobject")) {
     if (is.null(data$data)) { # nocov start
@@ -157,6 +161,9 @@ safe_sd <- function(x) {
   }
 
   mat <- x$weights
+  if (is.null(mat)) {
+    stop("cograph_network has no $weights matrix.", call. = FALSE)
+  }
   if (!is.matrix(mat)) mat <- as.matrix(mat)
   if (!is.numeric(mat)) storage.mode(mat) <- "double"
   nodes_df <- x$nodes
@@ -204,6 +211,43 @@ safe_sd <- function(x) {
                             tna = list(method = method)),
     node_groups = x$node_groups
   ), class = c("netobject", "cograph_network"))
+}
+
+
+# ---------------------------------------------------------------------------
+# Higher-order → cograph_network bridge
+# ---------------------------------------------------------------------------
+
+#' Add cograph_network fields to a higher-order network object
+#'
+#' @param mat Square weight matrix with named rows/columns.
+#' @param node_names Character vector of node names.
+#' @param method Character. Method label for metadata.
+#' @return Named list with \code{weights}, \code{nodes} (data.frame),
+#'   \code{edges}, \code{directed}, \code{meta} fields.
+#' @noRd
+.ho_cograph_fields <- function(mat, node_names, method = "hon") {
+  nodes_df <- data.frame(
+    id = seq_along(node_names),
+    label = node_names,
+    name = node_names,
+    stringsAsFactors = FALSE
+  )
+  edges <- .extract_edges_from_matrix(mat, directed = TRUE)
+  list(
+    weights = mat,
+    nodes = nodes_df,
+    edges = edges,
+    directed = TRUE,
+    n_nodes = length(node_names),
+    n_edges = nrow(edges),
+    meta = list(
+      source = "nestimate",
+      layout = NULL,
+      tna = list(method = method)
+    ),
+    node_groups = NULL
+  )
 }
 
 

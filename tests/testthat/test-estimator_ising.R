@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ---- Tests for Ising Model Estimator ----
 
 # ---- Synthetic data generators ----
@@ -506,7 +508,7 @@ test_that("Ising: exact match with IsingFit across 20 random configs", {
 })
 
 
-test_that("Ising: permutation_test runs without error", {
+test_that("Ising: permutation runs without error", {
   skip_if_not_installed("glmnet")
   df1 <- .make_ising_data(80, 3, seed = 1)
   df2 <- .make_ising_data(80, 3, seed = 2)
@@ -514,7 +516,7 @@ test_that("Ising: permutation_test runs without error", {
   net1 <- build_network(df1, method = "ising")
   net2 <- build_network(df2, method = "ising")
 
-  perm <- permutation_test(net1, net2, iter = 10)
+  perm <- permutation(net1, net2, iter = 10)
   expect_s3_class(perm, "net_permutation")
 })
 

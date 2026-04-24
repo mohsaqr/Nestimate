@@ -23,7 +23,6 @@
 #' @return Invisible \code{NULL}.
 #'
 #' @examples
-#' \donttest{
 #' my_fn <- function(data, ...) {
 #'   m <- cor(data)
 #'   diag(m) <- 0
@@ -33,7 +32,6 @@
 #' df <- data.frame(A = rnorm(20), B = rnorm(20), C = rnorm(20))
 #' net <- build_network(df, method = "my_cor")
 #' remove_estimator("my_cor")
-#' }
 #'
 #' @seealso \code{\link{get_estimator}}, \code{\link{list_estimators}},
 #'   \code{\link{remove_estimator}}, \code{\link{estimate_network}}
@@ -129,11 +127,9 @@ list_estimators <- function() {
 #' @return Invisible \code{NULL}.
 #'
 #' @examples
-#' \donttest{
 #' register_estimator("test_est", function(data, ...) diag(3),
 #'   description = "test", directed = FALSE)
 #' remove_estimator("test_est")
-#' }
 #'
 #' @seealso \code{\link{register_estimator}}, \code{\link{list_estimators}}
 #'
@@ -169,6 +165,9 @@ remove_estimator <- function(name) {
                      directed = FALSE)
   register_estimator("ising", .estimator_ising,
                      "Ising model (L1-penalized logistic regression)",
+                     directed = FALSE)
+  register_estimator("mgm", .estimator_mgm,
+                     "Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)",
                      directed = FALSE)
   register_estimator("attention", .estimator_attention,
                      "Decay-weighted attention transitions", directed = TRUE)

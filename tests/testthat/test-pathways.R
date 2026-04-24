@@ -164,9 +164,39 @@ test_that("HYPA $edges is set and matches $scores", {
   seqs <- .make_ho_seqs()
   hypa <- build_hypa(seqs, k = 2)
 
-  expect_false(is.null(hypa$edges))
-  expect_equal(hypa$edges, hypa$scores)
-  expect_true(all(c("path", "from", "to") %in% names(hypa$edges)))
+  expect_false(is.null(hypa$ho_edges))
+  expect_equal(hypa$ho_edges, hypa$scores)
+  expect_true(all(c("path", "from", "to") %in% names(hypa$ho_edges)))
+})
+
+
+# ---- pathways.netobject ----
+
+test_that("pathways.netobject with hon returns character vector", {
+  seqs <- .make_ho_seqs()
+  net <- build_network(as.data.frame(do.call(rbind, seqs)),
+                       method = "relative")
+  pw <- pathways(net, ho_method = "hon")
+  expect_type(pw, "character")
+  if (length(pw) > 0) {
+    expect_true(all(grepl("->", pw, fixed = TRUE)))
+  }
+})
+
+test_that("pathways.netobject with hypa returns character vector", {
+  seqs <- .make_ho_seqs()
+  net <- build_network(as.data.frame(do.call(rbind, seqs)),
+                       method = "relative")
+  pw <- pathways(net, ho_method = "hypa")
+  expect_type(pw, "character")
+})
+
+test_that("pathways.netobject defaults to hon", {
+  seqs <- .make_ho_seqs()
+  net <- build_network(as.data.frame(do.call(rbind, seqs)),
+                       method = "relative")
+  pw <- pathways(net)
+  expect_type(pw, "character")
 })
 
 

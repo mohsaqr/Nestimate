@@ -18,6 +18,10 @@ The input object, invisibly.
 Summary Method for mcml
 }
 \examples{
+seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+clusters <- list(G1 = c("A","B"), G2 = c("C"))
+cs <- build_mcml(seqs, clusters)
+summary(cs)
 \donttest{
 seqs <- data.frame(
   T1 = c("A","B","A"), T2 = c("B","C","B"),

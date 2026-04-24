@@ -321,8 +321,8 @@
 #' @param covariates Optional. Covariates integrated into the EM algorithm
 #'   to model covariate-dependent mixing proportions. Accepts formula,
 #'   character vector, string, or data.frame (same forms as
-#'   \code{\link{cluster_data}}). Unlike the post-hoc analysis in
-#'   \code{cluster_data()}, these covariates directly influence cluster
+#'   \code{\link{build_clusters}}). Unlike the post-hoc analysis in
+#'   \code{build_clusters()}, these covariates directly influence cluster
 #'   membership during estimation. Requires the \pkg{nnet} package.
 #'
 #' @return An object of class \code{net_mmm} with components:
@@ -340,6 +340,10 @@
 #'   }
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' mmm
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
@@ -480,7 +484,8 @@ build_mmm <- function(data,
   # Screen: short EM runs (parallel on Unix)
   n_cores <- 1L
   if (.Platform$OS.type == "unix" && n_starts > 1L) {
-    n_cores <- min(parallel::detectCores(logical = FALSE) %||% 1L, n_starts)
+    detected <- parallel::detectCores(logical = FALSE)
+    n_cores <- min(if (is.finite(detected)) detected else 1L, n_starts)
     if (isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE")))) { # nocov start
       n_cores <- 1L
     } # nocov end
@@ -524,6 +529,19 @@ build_mmm <- function(data,
                      from_ind = from_ind, cov_df = cov_df)
     }
     if (run$ll > best$ll) best <- run
+  }
+
+  # Fallback: if all parallel screen runs returned NULL (e.g. macOS arm64 fork
+  # failures), run one guaranteed sequential EM before touching best$P_all.
+  if (is.null(best$P_all)) {
+    run <- .mmm_em(counts, init_state, k, max_iter, tol, smooth, n_states,
+                   init_posterior = inits[[1L]], from_ind = from_ind,
+                   cov_df = cov_df)
+    if (!is.null(run)) best <- run
+  }
+  if (is.null(best$P_all)) {
+    stop("EM algorithm failed to produce a valid result in all starting configurations.",
+         call. = FALSE)
   }
 
   # ---- Build netobjects for each component ----
@@ -623,6 +641,10 @@ build_mmm <- function(data,
 #'   entropy per k.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' comp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
+#' comp
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
@@ -666,6 +688,10 @@ compare_mmm <- function(data, k = 2:5, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' print(mmm)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -714,6 +740,10 @@ print.net_mmm <- function(x, ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' summary(mmm)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -757,6 +787,10 @@ summary.net_mmm <- function(object, ...) {
 #' @return A \code{ggplot} object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' plot(mmm, type = "posterior")
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -821,6 +855,10 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"), ...) {
 #' @return The input object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
+#' print(cmp)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -852,6 +890,10 @@ print.mmm_compare <- function(x, ...) {
 #' @return A \code{ggplot} object, invisibly.
 #'
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
+#' plot(cmp)
 #' \donttest{
 #' set.seed(1)
 #' seqs <- data.frame(
@@ -907,6 +949,10 @@ plot.mmm_compare <- function(x, ...) {
 #' @return A \code{net_mmm} object. See \code{\link{build_mmm}} for details.
 #' @seealso \code{\link{build_mmm}}, \code{\link{cluster_network}}
 #' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' mmm <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' mmm
 #' \donttest{
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 40, TRUE),

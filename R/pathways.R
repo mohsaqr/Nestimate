@@ -54,7 +54,7 @@ pathways <- function(x, ...) {
 #' @export
 pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
                              top = NULL, order = NULL, ...) {
-  edges <- x$edges
+  edges <- x$ho_edges
   if (is.null(edges) || nrow(edges) == 0L) return(character(0)) # nocov
 
   # Higher-order edges: from_order > 1
@@ -100,9 +100,11 @@ pathways.net_hypa <- function(x, type = "all", ...) {
   if (is.null(scores) || nrow(scores) == 0L) return(character(0)) # nocov
 
   if (type == "all") {
-    anom <- scores[scores$anomaly != "normal", , drop = FALSE]
+    anom <- rbind(x$over, x$under)
+  } else if (type == "over") {
+    anom <- x$over
   } else {
-    anom <- scores[scores$anomaly == type, , drop = FALSE]
+    anom <- x$under
   }
   if (nrow(anom) == 0L) return(character(0))
 
@@ -111,6 +113,165 @@ pathways.net_hypa <- function(x, type = "all", ...) {
     if (length(parts) < 2L) return(p) # nocov
     sources <- paste(parts[-length(parts)], collapse = " ")
     paste(sources, "->", parts[length(parts)])
+  }, character(1), USE.NAMES = FALSE)
+}
+
+
+#' @describeIn pathways Extract pathways from a netobject
+#'
+#' Builds a Higher-Order Network (HON) from the netobject's sequence data
+#' and returns the higher-order pathways. Requires that the netobject was
+#' built from sequence data (has \code{$data}).
+#'
+#' @param ho_method Character. Higher-order method: \code{"hon"} (default) or
+#'   \code{"hypa"}.
+#'
+#' @return A character vector of pathway strings.
+#'
+#' @export
+pathways.netobject <- function(x, ho_method = c("hon", "hypa"), ...) {
+  ho_method <- match.arg(ho_method)
+  if (ho_method == "hon") {
+    pathways(build_hon(x), ...)
+  } else {
+    pathways(build_hypa(x), ...)
+  }
+}
+
+
+#' @describeIn pathways Extract pathways from association rules
+#'
+#' Converts association rules \code{{A, B} => {C}} into pathway strings
+#' \code{"A B -> C"} suitable for \code{cograph::plot_simplicial()}.
+#' Antecedent items become source nodes; consequent items become the target.
+#'
+#' @param top Integer or NULL. Return only the top N rules ranked by lift
+#'   (default: NULL = all).
+#' @param min_lift Numeric or NULL. Additional lift filter applied on top of
+#'   the object's original threshold (default: NULL).
+#' @param min_confidence Numeric or NULL. Additional confidence filter
+#'   (default: NULL).
+#'
+#' @return A character vector of pathway strings.
+#'
+#' @examples
+#' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
+#' rules <- association_rules(trans, min_support = 0.3, min_confidence = 0.3,
+#'                            min_lift = 0)
+#' pathways(rules)
+#'
+#' @export
+pathways.net_association_rules <- function(x, top = NULL, min_lift = NULL,
+                                           min_confidence = NULL, ...) {
+  rules <- x$rules
+  if (nrow(rules) == 0L) return(character(0))
+
+  if (!is.null(min_lift)) {
+    rules <- rules[rules$lift >= min_lift, , drop = FALSE]
+  }
+  if (!is.null(min_confidence)) {
+    rules <- rules[rules$confidence >= min_confidence, , drop = FALSE]
+  }
+  if (nrow(rules) == 0L) return(character(0))
+
+  rules <- rules[order(-rules$lift, -rules$confidence), , drop = FALSE]
+
+  # Deduplicate: each rule's antecedent + consequent is a simplex (unordered).
+  # {A,B} => {C} and {A,C} => {B} are the same simplex {A,B,C}.
+  # Keep the highest-lift version of each unique itemset.
+  itemsets <- vapply(seq_len(nrow(rules)), function(i) {
+    items <- sort(unique(c(
+      strsplit(rules$antecedent[i], ", ", fixed = TRUE)[[1]],
+      strsplit(rules$consequent[i], ", ", fixed = TRUE)[[1]]
+    )))
+    paste(items, collapse = "\t")
+  }, character(1))
+  keep <- !duplicated(itemsets)
+  rules <- rules[keep, , drop = FALSE]
+
+  if (!is.null(top) && nrow(rules) > top) {
+    rules <- rules[seq_len(top), , drop = FALSE]
+  }
+
+  vapply(seq_len(nrow(rules)), function(i) {
+    ante <- gsub(", ", " ", rules$antecedent[i])
+    cons <- gsub(", ", " ", rules$consequent[i])
+    paste(ante, "->", cons)
+  }, character(1), USE.NAMES = FALSE)
+}
+
+
+#' @describeIn pathways Extract pathways from link predictions
+#'
+#' Converts predicted links into pathway strings for
+#' \code{cograph::plot_simplicial()}. When \code{evidence = TRUE}
+#' (default), each predicted edge \code{A -> B} is enriched with common
+#' neighbors that structurally support the prediction, producing
+#' \code{"A cn1 cn2 -> B"}.
+#'
+#' @param method Character or NULL. Which prediction method to use.
+#'   Default: first method in the object.
+#' @param top Integer. Number of top predictions to include (default: 10).
+#' @param evidence Logical. If TRUE, include common neighbor evidence
+#'   nodes in each pathway. Default: TRUE.
+#' @param max_evidence Integer. Maximum number of evidence nodes per
+#'   pathway (default: 3).
+#'
+#' @return A character vector of pathway strings.
+#'
+#' @examples
+#' seqs <- data.frame(
+#'   V1 = sample(LETTERS[1:5], 50, TRUE),
+#'   V2 = sample(LETTERS[1:5], 50, TRUE),
+#'   V3 = sample(LETTERS[1:5], 50, TRUE)
+#' )
+#' net <- build_network(seqs, method = "relative")
+#' pred <- predict_links(net, methods = "common_neighbors")
+#' pathways(pred)
+#'
+#' @export
+pathways.net_link_prediction <- function(x, method = NULL, top = 10L,
+                                          evidence = TRUE, max_evidence = 3L,
+                                          ...) {
+  if (is.null(method)) method <- x$methods[1]
+  df <- x$predictions[x$predictions$method == method, , drop = FALSE]
+  df <- df[order(-df$score), , drop = FALSE]
+
+  if (!is.null(top) && nrow(df) > top) {
+    df <- df[seq_len(top), , drop = FALSE]
+  }
+  if (nrow(df) == 0L) return(character(0))
+
+  # Simple mode: just "from -> to"
+  if (!isTRUE(evidence) || is.null(x$adjacency)) {
+    return(paste(df$from, "->", df$to))
+  }
+
+  # Evidence mode: include common neighbors as structural bridge
+  A <- x$adjacency
+  nodes <- x$nodes
+
+  vapply(seq_len(nrow(df)), function(i) {
+    from_idx <- match(df$from[i], nodes)
+    to_idx <- match(df$to[i], nodes)
+
+    # Common neighbors: reachable from source AND reaching target
+    from_out <- A[from_idx, ] > 0
+    to_in <- A[, to_idx] > 0
+    cn_mask <- from_out & to_in
+    cn_mask[from_idx] <- FALSE
+    cn_mask[to_idx] <- FALSE
+    cn_indices <- which(cn_mask)
+    cn_nodes <- nodes[cn_indices]
+
+    if (length(cn_nodes) > max_evidence) {
+      # Rank by combined weight to source and target
+      cn_weights <- A[from_idx, cn_indices] + A[cn_indices, to_idx]
+      cn_nodes <- cn_nodes[order(-cn_weights)][seq_len(max_evidence)]
+    }
+
+    sources <- c(df$from[i], cn_nodes)
+    paste(paste(sources, collapse = " "), "->", df$to[i])
   }, character(1), USE.NAMES = FALSE)
 }
 

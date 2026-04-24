@@ -94,6 +94,6 @@ cs$macro$weights
 }
 \seealso{
 \code{\link{cluster_summary}} for matrix-based aggregation,
-\code{as_tna()} to convert to tna objects,
+\code{net_as_tna()} to convert to tna objects,
 \code{plot()} for visualization
 }

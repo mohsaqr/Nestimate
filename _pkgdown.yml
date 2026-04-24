@@ -5,30 +5,8 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, articles, tutorials]
+    left: [intro, reference, articles, news]
     right: [search, github]
-  components:
-    articles:
-      text: Articles
-      menu:
-        - text: Transition Networks
-          href: articles/transition-networks.html
-        - text: Co-occurrence & Ising Networks
-          href: articles/co-occurrence-networks.html
-        - text: Psychological Networks
-          href: articles/psychological-networks.html
-        - text: Clustering & Multi-Level Analysis
-          href: articles/clustering.html
-    tutorials:
-      text: Tutorials
-      menu:
-        - text: Network Estimation & Visualization
-          href: articles/cograph-tutorial-nestimate.html
-        - text: Higher-Order & Simplicial Complexes
-          href: articles/cograph-tutorial-simplicial.html
-        - text: Multi-Cluster Multi-Level (MCML)
-          href: articles/cograph-tutorial-mcml.html
-
 reference:
   - title: Network Estimation
     desc: Core functions for building networks from data
@@ -39,7 +17,18 @@ reference:
       - get_estimator
       - list_estimators
       - remove_estimator
+      - build_tna
+      - build_atna
+      - build_ftna
+      - build_cna
+      - build_cor
+      - build_pcor
+      - build_glasso
+      - build_ising
       - wtna
+      - cooccurrence
+      - build_mlvar
+      - build_gimme
 
   - title: Higher-Order Networks
     desc: Methods for capturing higher-order dependencies
@@ -57,23 +46,22 @@ reference:
     contents:
       - bootstrap_network
       - boot_glasso
-      - permutation_test
+      - permutation
+      - nct
 
   - title: Reliability & Stability
     desc: Assess reliability and stability of network estimates
     contents:
-      - reliability
+      - network_reliability
       - centrality_stability
 
   - title: Clustering & Grouping
     desc: Cluster-based and multilevel network analysis
     contents:
-      - cluster_data
-      - cluster_sequences
+      - build_clusters
       - cluster_summary
       - cluster_mmm
       - cluster_network
-      - csum
       - build_mcml
       - build_mmm
       - compare_mmm
@@ -92,7 +80,7 @@ reference:
   - title: Data Preparation
     desc: Convert and prepare data for network estimation
     contents:
-      - prepare_data
+      - prepare
       - prepare_for_tna
       - action_to_onehot
       - prepare_onehot
@@ -106,27 +94,40 @@ reference:
       - predictability
       - frequencies
       - state_frequencies
-      - aggregate_weights
-      - wagg
-      - centrality
+      - net_aggregate_weights
+      - net_centrality
+      - coefs
       - as_tna
       - extract_edges
       - extract_initial_probs
       - extract_transition_matrix
 
-  - title: Other Methods
-    desc: Additional network estimation approaches
+  - title: Sequence Analysis
+    desc: Sequence visualization, pattern comparison, and association mining
     contents:
-      - build_gimme
+      - sequence_plot
+      - distribution_plot
+      - sequence_compare
+      - association_rules
+      - passage_time
+      - markov_stability
+
+  - title: Link Prediction
+    desc: Predict and evaluate missing connections
+    contents:
+      - predict_links
+      - evaluate_links
 
   - title: Data
     desc: Example datasets
     contents:
-      - vibcoding-data
-      - human_ai_edges
+      - ai_long
+      - human_long
       - srl_strategies
       - learning_activities
       - group_regulation_long
+      - chatgpt_srl
+      - trajectories
 
   - title: S3 Methods
     desc: Print, summary, and plot methods for package classes
@@ -140,3 +141,19 @@ authors:
     href: https://saqr.me
   Sonsoles López-Pernas:
     href: https://sonsoles.me
+
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - starts_with("transition")
+  - starts_with("sequence")
+  - starts_with("clustering")
+  - starts_with("markov")
+
+- title: Tutorials
+  desc: Full tutorials
+  contents:
+  - starts_with("articles/cograph-tutorial-nestimate")
+  - starts_with("articles/cograph-tutorial-simplicial")
+  - starts_with("articles/cograph-tutorial-mcml")

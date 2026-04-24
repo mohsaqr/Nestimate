@@ -54,12 +54,10 @@ Convert wide or long sequence data into frequency counts, one-hot encoding,
 edge lists, or follows format.
 }
 \examples{
-\donttest{
 # Wide format input
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 convert_sequence_format(seqs, format = "frequency")
 convert_sequence_format(seqs, format = "edgelist")
-}
 
 }
 \seealso{

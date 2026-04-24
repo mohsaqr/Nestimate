@@ -29,14 +29,9 @@ decreasing weight thresholds and tracking the birth/death of
 topological features.
 }
 \examples{
-\donttest{
-seqs <- data.frame(
-  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
-  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
-)
-net <- build_network(seqs, method = "relative")
-ph <- persistent_homology(net, n_steps = 15)
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+ph <- persistent_homology(mat, n_steps = 10)
 print(ph)
-}
 
 }

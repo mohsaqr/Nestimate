@@ -28,7 +28,7 @@
 #' }
 #'
 #' @param x A square matrix, \code{tna}, \code{netobject},
-#'   \code{net_hon}, or \code{net_hypa}.
+#'   \code{net_hon}, \code{net_hypa}, or \code{net_mogen}.
 #' @param type Construction type: \code{"clique"} (default),
 #'   \code{"pathway"}, or \code{"vr"}.
 #' @param threshold Minimum absolute edge weight to include an edge
@@ -44,16 +44,11 @@
 #' @return A \code{simplicial_complex} object.
 #'
 #' @examples
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
-#'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' sc <- build_simplicial(net, threshold = 0.05)
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' sc <- build_simplicial(mat, threshold = 0.3)
 #' print(sc)
 #' betti_numbers(sc)
-#' }
 #'
 #' @seealso \code{\link{betti_numbers}}, \code{\link{persistent_homology}},
 #'   \code{\link{simplicial_degree}}, \code{\link{q_analysis}}
@@ -142,7 +137,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 .build_simplicial_pathway <- function(x, max_dim = 10L,
                                        max_pathways = NULL, ...) {
   if (inherits(x, "net_hon")) {
-    edges <- x$edges
+    edges <- x$ho_edges
     ho <- edges[edges$from_order > 1L, , drop = FALSE]
     ho <- ho[order(-ho$count), , drop = FALSE]
     if (!is.null(max_pathways) && nrow(ho) > max_pathways) {
@@ -160,16 +155,34 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
       anom <- anom[seq_len(max_pathways), , drop = FALSE] # nocov
     }
     parts <- strsplit(
-      gsub("\x01", " -> ", x$nodes, fixed = TRUE), " -> ", fixed = TRUE
+      gsub("\x01", " -> ", x$nodes$label, fixed = TRUE), " -> ", fixed = TRUE
     )
     nodes <- sort(unique(unlist(parts)))
     raw_paths <- anom$path
+  } else if (inherits(x, "net_mogen")) {
+    # Use mogen_transitions() at optimal (or highest available) order
+    # Its $path column is already in "A -> B -> C" format
+    order_used <- x$optimal_order
+    if (order_used < 1L) order_used <- max(x$orders[x$orders >= 1L], 0L)
+    if (order_used < 1L) {
+      stop("MOGen model has no higher-order transitions (optimal_order = 0)",
+           call. = FALSE)
+    }
+    trans <- mogen_transitions(x, order = order_used)
+    if (nrow(trans) == 0L) {
+      return(.make_simplicial_complex(list(), x$states, "pathway"))
+    }
+    if (!is.null(max_pathways) && nrow(trans) > max_pathways) {
+      trans <- trans[seq_len(max_pathways), , drop = FALSE]
+    }
+    nodes <- x$states
+    raw_paths <- trans$path
   } else if (inherits(x, c("tna", "netobject"))) {
     hon_obj <- build_hon(.coerce_sequence_input(x), ...)
     return(.build_simplicial_pathway(hon_obj, max_dim, max_pathways))
   } else {
-    stop("For type='pathway', x must be a net_hon, net_hypa, tna, ",
-         "or netobject.", call. = FALSE)
+    stop("For type='pathway', x must be a net_hon, net_hypa, net_mogen, ",
+         "tna, or netobject.", call. = FALSE)
   }
 
   if (length(raw_paths) == 0L) {
@@ -323,12 +336,11 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #' @param sc A \code{simplicial_complex} object.
 #' @return Named integer vector \code{c(b0 = ..., b1 = ..., ...)}.
 #' @examples
-#' \donttest{
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
 #' sc <- build_simplicial(mat, threshold = 0.3)
 #' betti_numbers(sc)
-#' }
+#'
 #' @export
 betti_numbers <- function(sc) {
   stopifnot(inherits(sc, "simplicial_complex"))
@@ -396,12 +408,11 @@ betti_numbers <- function(sc) {
 #' @param sc A \code{simplicial_complex} object.
 #' @return Integer.
 #' @examples
-#' \donttest{
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
 #' sc <- build_simplicial(mat, threshold = 0.3)
 #' euler_characteristic(sc)
-#' }
+#'
 #' @export
 euler_characteristic <- function(sc) {
   stopifnot(inherits(sc, "simplicial_complex"))
@@ -434,15 +445,10 @@ euler_characteristic <- function(sc) {
 #' }
 #'
 #' @examples
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
-#'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' ph <- persistent_homology(net, n_steps = 15)
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' ph <- persistent_homology(mat, n_steps = 10)
 #' print(ph)
-#' }
 #'
 #' @export
 persistent_homology <- function(x, n_steps = 20L, max_dim = 3L) {
@@ -547,12 +553,11 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L) {
 #' @return Data frame with \code{node}, columns \code{d0} through
 #'   \code{d_k}, and \code{total} (sum of d1+). Sorted by total descending.
 #' @examples
-#' \donttest{
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
 #' sc <- build_simplicial(mat, threshold = 0.3)
 #' simplicial_degree(sc)
-#' }
+#'
 #' @export
 simplicial_degree <- function(sc, normalized = FALSE) {
   stopifnot(inherits(sc, "simplicial_complex"))
@@ -605,12 +610,11 @@ simplicial_degree <- function(sc, normalized = FALSE) {
 #' @references
 #' Atkin, R. H. (1974). \emph{Mathematical Structure in Human Affairs}.
 #' @examples
-#' \donttest{
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
 #' sc <- build_simplicial(mat, threshold = 0.3)
 #' q_analysis(sc)
-#' }
+#'
 #' @export
 q_analysis <- function(sc) {
   stopifnot(inherits(sc, "simplicial_complex"))
@@ -773,16 +777,11 @@ verify_simplicial <- function(mat, threshold = 0) {
 #' @param ... Additional arguments (unused).
 #' @return The input object, invisibly.
 #' @examples
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' sc  <- build_simplicial(net, type = "clique")
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' sc <- build_simplicial(mat, threshold = 0.3)
 #' print(sc)
-#' }
+#'
 #' @export
 print.simplicial_complex <- function(x, ...) {
   labels <- c("clique" = "Clique Complex",
@@ -824,16 +823,11 @@ print.simplicial_complex <- function(x, ...) {
 #' @param ... Additional arguments (unused).
 #' @return The input object, invisibly.
 #' @examples
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' ph  <- persistent_homology(net)
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' ph <- persistent_homology(mat, n_steps = 10)
 #' print(ph)
-#' }
+#'
 #' @export
 print.persistent_homology <- function(x, ...) {
   cat("Persistent Homology\n")
@@ -869,17 +863,12 @@ print.persistent_homology <- function(x, ...) {
 #' @param ... Additional arguments (unused).
 #' @return The input object, invisibly.
 #' @examples
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' sc  <- build_simplicial(net, type = "clique")
-#' qa  <- q_analysis(sc)
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' sc <- build_simplicial(mat, threshold = 0.3)
+#' qa <- q_analysis(sc)
 #' print(qa)
-#' }
+#'
 #' @export
 print.q_analysis <- function(x, ...) {
   cat(sprintf("Q-Analysis (max q = %d)\n", x$max_q))
@@ -936,14 +925,10 @@ print.q_analysis <- function(x, ...) {
 #'
 #' @examples
 #' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' sc  <- build_simplicial(net, type = "clique")
-#' plot(sc)
+#' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+#' colnames(mat) <- rownames(mat) <- c("A","B","C")
+#' sc <- build_simplicial(mat, threshold = 0.3)
+#' if (requireNamespace("gridExtra", quietly = TRUE)) plot(sc)
 #' }
 #'
 #' @export

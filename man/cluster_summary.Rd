@@ -2,19 +2,9 @@
 % Please edit documentation in R/mcml.R
 \name{cluster_summary}
 \alias{cluster_summary}
-\alias{csum}
 \title{Cluster Summary Statistics}
 \usage{
 cluster_summary(
-  x,
-  clusters = NULL,
-  method = c("sum", "mean", "median", "max", "min", "density", "geomean"),
-  type = c("tna", "cooccurrence", "semi_markov", "raw"),
-  directed = TRUE,
-  compute_within = TRUE
-)
-
-csum(
   x,
   clusters = NULL,
   method = c("sum", "mean", "median", "max", "min", "density", "geomean"),
@@ -135,8 +125,6 @@ Example: \code{list(A = c("n1", "n2"), B = c("n3", "n4", "n5"))}}
 }
 }
 }
-
-See \code{\link{cluster_summary}}.
 }
 \description{
 Aggregates node-level network weights to cluster-level summaries. Computes
@@ -259,11 +247,6 @@ cs <- cluster_summary(mat, clusters, type = "tna")
 tna_models <- as_tna(cs)
 # tna_models$macro      # tna object
 # tna_models$clusters$Alpha # tna object
-\donttest{
-mat <- matrix(runif(16), 4, 4)
-rownames(mat) <- colnames(mat) <- LETTERS[1:4]
-csum(mat, c(1, 1, 2, 2))
-}
 }
 \seealso{
 \code{as_tna()} to convert results to tna objects,

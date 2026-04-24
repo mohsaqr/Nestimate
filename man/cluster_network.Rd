@@ -8,12 +8,12 @@ cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 }
 \arguments{
 \item{data}{Sequence data. Accepts a data frame, matrix, or
-\code{netobject}. See \code{\link{cluster_data}} for supported formats.}
+\code{netobject}. See \code{\link{build_clusters}} for supported formats.}
 
 \item{k}{Integer. Number of clusters.}
 
 \item{cluster_by}{Character. Clustering algorithm passed to
-\code{\link{cluster_data}}'s \code{method} parameter (\code{"pam"},
+\code{\link{build_clusters}}'s \code{method} parameter (\code{"pam"},
 \code{"ward.D2"}, \code{"ward.D"}, \code{"complete"}, \code{"average"},
 \code{"single"}, \code{"mcquitty"}, \code{"median"}, \code{"centroid"}),
 or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.}
@@ -40,6 +40,10 @@ If \code{data} is a \code{netobject} and \code{method} is not provided in
 per-cluster networks match the type of the input network.
 }
 \examples{
+seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+                   V3 = c("C","A","B","C","B"))
+grp <- cluster_network(seqs, k = 2)
+grp
 \donttest{
 set.seed(1)
 seqs <- data.frame(
@@ -50,14 +54,16 @@ seqs <- data.frame(
 grp <- cluster_network(seqs, k = 3)
 
 # Specify network method (cor requires numeric panel data)
-panel <- as.data.frame(matrix(sample(1:4, 500, TRUE), nrow = 100, ncol = 5))
-grp <- cluster_network(panel, k = 3, method = "cor")
+\dontrun{
+panel <- as.data.frame(matrix(rnorm(1500), nrow = 300, ncol = 5))
+grp <- cluster_network(panel, k = 2, method = "cor")
+}
 
 # MMM-based clustering
 grp <- cluster_network(seqs, k = 2, cluster_by = "mmm")
 }
 }
 \seealso{
-\code{\link{cluster_data}}, \code{\link{cluster_mmm}},
+\code{\link{build_clusters}}, \code{\link{cluster_mmm}},
 \code{\link{build_network}}
 }

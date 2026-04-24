@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # Tests for cograph_network → netobject coercion across Nestimate functions
 
 # ---- Helper: build a cograph_network from synthetic data ----
@@ -6,12 +8,15 @@ make_cograph_net <- function() {
   skip_if_not_installed("tna")
 
   model <- tna::tna(tna::group_regulation)
-  cograph::as_cograph(model)
+  cg <- cograph::as_cograph(model)
+  skip_if(is.null(cg$weights), "cograph_network has no $weights")
+  cg
 }
 
 # ---- .as_netobject converter ----
 
 test_that(".as_netobject passes through netobject unchanged", {
+  skip_if_pkg_broken("tna")
   net <- build_network(tna::group_regulation, method = "relative")
   result <- Nestimate:::.as_netobject(net)
   expect_identical(result, net)
@@ -72,9 +77,9 @@ test_that("bootstrap_network works with cograph_network", {
   expect_true(is.matrix(boot$p_values))
 })
 
-# ---- permutation_test ----
+# ---- permutation ----
 
-test_that("permutation_test works with cograph_network inputs", {
+test_that("permutation works with cograph_network inputs", {
   skip_if_not_installed("cograph")
   skip_if_not_installed("tna")
 
@@ -85,22 +90,23 @@ test_that("permutation_test works with cograph_network inputs", {
 
   # Convert one to cograph_network
   cg1 <- cograph::as_cograph(tna::tna(d1))
+  skip_if(is.null(cg1$weights), "cograph_network has no $weights")
 
   # Both netobject (baseline)
-  perm_base <- permutation_test(net1, net2, iter = 20, seed = 1)
+  perm_base <- permutation(net1, net2, iter = 20, seed = 1)
   expect_s3_class(perm_base, "net_permutation")
 
   # cograph_network as x
-  perm_cg <- permutation_test(cg1, net2, iter = 20, seed = 1)
+  perm_cg <- permutation(cg1, net2, iter = 20, seed = 1)
   expect_s3_class(perm_cg, "net_permutation")
 })
 
-# ---- reliability ----
+# ---- network_reliability ----
 
-test_that("reliability works with cograph_network", {
+test_that("network_reliability works with cograph_network", {
   cg <- make_cograph_net()
 
-  rel <- reliability(cg, iter = 20, seed = 1)
+  rel <- network_reliability(cg, iter = 20, seed = 1)
 
   expect_s3_class(rel, "net_reliability")
   expect_equal(rel$iter, 20L)
@@ -141,6 +147,7 @@ test_that("cluster_summary works with cograph_network", {
 
   model <- tna::tna(tna::group_regulation)
   cg <- cograph::as_cograph(model)
+  skip_if(is.null(cg$weights), "cograph_network has no $weights")
 
   states <- cg$nodes$label
   clusters <- list(
@@ -156,6 +163,7 @@ test_that("cluster_summary works with cograph_network", {
 
 test_that("boot_glasso works with cograph_network wrapping glasso netobject", {
   skip_if_not_installed("cograph")
+  skip_if_pkg_broken("tna")
 
   # Build a glasso network, convert to cograph, then feed to boot_glasso
   freq <- convert_sequence_format(tna::group_regulation, format = "frequency")
@@ -179,4 +187,65 @@ test_that("boot_glasso works with cograph_network wrapping glasso netobject", {
                       centrality = c("strength", "expected_influence"))
   expect_s3_class(boot, "boot_glasso")
   expect_equal(boot$iter, 20L)
+})
+
+
+# ---- net_centrality() with cograph_network ----
+
+test_that("net_centrality() works on cograph_network", {
+  cg <- make_cograph_net()
+  cent <- net_centrality(cg)
+  expect_true(is.data.frame(cent))
+  expect_true(nrow(cent) > 0)
+})
+
+
+# ---- cluster_network() with cograph_network ----
+
+test_that("cluster_network() works on cograph_network", {
+  skip_if_not_installed("cograph")
+  seqs <- data.frame(
+    V1 = sample(LETTERS[1:4], 30, TRUE),
+    V2 = sample(LETTERS[1:4], 30, TRUE),
+    V3 = sample(LETTERS[1:4], 30, TRUE),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(seqs, method = "relative")
+  cg <- structure(list(
+    weights = net$weights,
+    nodes = net$nodes,
+    edges = net$edges,
+    directed = net$directed,
+    data = net$data,
+    meta = list(source = "test", tna = list(method = "relative"))
+  ), class = c("cograph_network", "list"))
+
+  grp <- cluster_network(cg, k = 2, method = "relative")
+  expect_s3_class(grp, "netobject_group")
+})
+
+
+# ---- .coerce_sequence_input() with cograph_network ----
+
+test_that(".coerce_sequence_input handles cograph_network", {
+  skip_if_not_installed("cograph")
+  seqs <- data.frame(
+    V1 = sample(LETTERS[1:4], 20, TRUE),
+    V2 = sample(LETTERS[1:4], 20, TRUE),
+    V3 = sample(LETTERS[1:4], 20, TRUE),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(seqs, method = "relative")
+  cg <- structure(list(
+    weights = net$weights,
+    nodes = net$nodes,
+    edges = net$edges,
+    directed = net$directed,
+    data = net$data,
+    meta = list(source = "test", tna = list(method = "relative"))
+  ), class = c("cograph_network", "list"))
+
+  df <- Nestimate:::.coerce_sequence_input(cg)
+  expect_true(is.data.frame(df))
+  expect_equal(ncol(df), 3)
 })

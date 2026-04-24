@@ -89,6 +89,9 @@ higher-order nodes are properly connected.
 }
 }
 \examples{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hon <- build_hon(seqs, max_order = 2)
+
 \donttest{
 # From list of trajectories
 trajs <- list(

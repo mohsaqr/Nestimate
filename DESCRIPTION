@@ -1,22 +1,22 @@
 Package: Nestimate
 Title: Network Estimation, Bootstrap, and Higher-Order Analysis
-Version: 0.2.15
+Version: 0.4.3
 Authors@R: c(
     person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
     person("Sonsoles", "López-Pernas", email = "sonsoles.lopez@uef.fi", role = "aut")
     )
-Description: Estimate, compare, and analyze dynamic and probabilistic networks
-    using a unified interface. Provides transition network analysis (TNA)
-    estimation (transition, frequency, co-occurrence, attention-weighted) as
-    described in Saqr, López-Pernas, Törmänen, Kaliisa, Misiejuk, and Tikka
-    (2025) <doi:10.1145/3706468.3706513>, probabilistic network methods
-    (correlation, partial correlation, 'graphical lasso', 'Ising') as described in
-    Saqr, Beck, and López-Pernas (2024) <doi:10.1007/978-3-031-54464-4_19>,
-    and higher-order network methods including Higher-Order Network (HON),
-    Higher-Order Network Embedding, Hyper-Path Anomaly (HyPa), and Multi-Order
-    Generative model. Supports bootstrap inference, permutation testing,
+Description: Estimate, compare, and analyze dynamic and psychological networks
+    using a unified interface. Provides transition network analysis
+    estimation (transition, frequency, co-occurrence, attention-weighted)
+    Saqr et al. (2025) <doi:10.1145/3706468.3706513>, psychological
+    network methods (correlation, partial correlation, 'graphical lasso',
+    'Ising') Saqr, Beck, and Lopez-Pernas (2024)
+    <doi:10.1007/978-3-031-54464-4_19>,
+    and higher-order network methods including higher-order networks,
+    higher-order network embedding, hyper-path anomaly, and multi-order
+    generative model. Supports bootstrap inference, permutation testing,
     split-half reliability, centrality stability analysis, mixed Markov
-    models, multi-cluster multi-layer (MCML) decomposition and clustering.
+    models, multi-cluster multi-layer networks and clustering.
 License: MIT + file LICENSE
 URL: https://github.com/mohsaqr/Nestimate
 BugReports: https://github.com/mohsaqr/Nestimate/issues
@@ -28,9 +28,11 @@ Imports:
     ggplot2,
     glasso,
     data.table,
-    cluster
+    cluster,
+    scales
 Suggests:
     testthat (>= 3.0.0),
+    markovchain,
     tna,
     cograph,
     igraph,
@@ -44,11 +46,19 @@ Suggests:
     qgraph,
     reticulate,
     gridExtra,
+    lme4,
+    corpcor,
+    mlVAR,
+    mgm,
+    Matrix,
+    NetworkComparisonTest,
+    arules,
+    jsonlite,
     knitr,
     rmarkdown,
     pkgdown
 Config/testthat/edition: 3
 Depends: 
-    R (>= 3.5)
+    R (>= 4.1.0)
 LazyData: true
 VignetteBuilder: knitr

@@ -19,6 +19,10 @@ Density plots of split-half metrics faceted by metric type.
 Multi-model comparisons show overlaid densities colored by model.
 }
 \examples{
+net <- build_network(data.frame(V1 = c("A","B","C","A"),
+  V2 = c("B","C","A","B")), method = "relative")
+rel <- network_reliability(net, iter = 10)
+plot(rel)
 \donttest{
 set.seed(1)
 seqs <- data.frame(
@@ -27,7 +31,7 @@ seqs <- data.frame(
   V3 = sample(c("A","B","C"), 30, TRUE)
 )
 net <- build_network(seqs, method = "relative")
-rel <- reliability(net, iter = 20, seed = 1)
+rel <- network_reliability(net, iter = 20, seed = 1)
 plot(rel)
 }
 

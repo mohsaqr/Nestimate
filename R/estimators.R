@@ -1016,16 +1016,23 @@
   S <- prepared$S
   n_obs <- prepared$n
 
-  Wi <- tryCatch(
-    solve(S),
-    error = function(e) {
-      stop(
-        "Correlation matrix is singular (p >= n or collinear variables). ",
-        "Use method = 'glasso' for regularised estimation.",
-        call. = FALSE
-      )
-    }
-  )
+  rc <- rcond(S)
+  if (rc < .Machine$double.eps) {
+    stop(
+      "Correlation matrix is singular (p >= n or collinear variables). ",
+      "Use method = 'glasso' for regularised estimation.",
+      call. = FALSE
+    )
+  }
+  if (rc < 1e-12) {
+    warning(sprintf(
+      "Correlation matrix is near-singular (rcond = %.2e). ",
+      rc
+    ), "Results may be numerically unstable. Consider method = 'glasso'.",
+    call. = FALSE)
+  }
+
+  Wi <- solve(S)
   colnames(Wi) <- rownames(Wi) <- colnames(S)
 
   pcor <- .precision_to_pcor(Wi, threshold)
@@ -1160,6 +1167,7 @@
                               nlambda = 100L,
                               lambda.min.ratio = 0.01,
                               penalize.diagonal = FALSE,
+                              refit = FALSE,
                               cor_method = "pearson",
                               input_type = "auto",
                               threshold = 0,
@@ -1181,23 +1189,23 @@
   lambda_path <- .compute_lambda_path(S, nlambda, lambda.min.ratio)
   selected <- .select_ebic(S, lambda_path, n_obs, gamma, penalize.diagonal)
 
-  # Refit with zero-constrained unregularized glasso (matches qgraph behavior):
-  # 1. Get sparsity pattern via wi2net (cov2cor + symmetrize)
-  # 2. Refit glasso with lambda=0 and zero constraints
-  # 3. Convert refitted precision to pcor via same wi2net
   wi <- selected$wi
-  net <- -.wi2net(wi)
-  zero_idx <- which(net == 0 & upper.tri(net), arr.ind = TRUE)
-  if (nrow(zero_idx) > 0L) {
-    refit <- suppressWarnings(glasso::glasso(
-      S, rho = 0, zero = zero_idx, trace = 0,
-      penalize.diagonal = penalize.diagonal))
-  } else {
-    refit <- suppressWarnings(glasso::glasso( # nocov start
-      S, rho = 0, trace = 0,
-      penalize.diagonal = penalize.diagonal)) # nocov end
+
+  if (isTRUE(refit)) {
+    # Refit with zero-constrained unregularized glasso for unbiased estimates
+    net_pattern <- -.wi2net(wi)
+    zero_idx <- which(net_pattern == 0 & upper.tri(net_pattern), arr.ind = TRUE)
+    if (nrow(zero_idx) > 0L) {
+      refit_result <- suppressWarnings(glasso::glasso(
+        S, rho = 0, zero = zero_idx, trace = 0,
+        penalize.diagonal = penalize.diagonal))
+    } else {
+      refit_result <- suppressWarnings(glasso::glasso( # nocov start
+        S, rho = 0, trace = 0,
+        penalize.diagonal = penalize.diagonal)) # nocov end
+    }
+    wi <- refit_result$wi
   }
-  wi <- refit$wi
 
   pcor <- .wi2net(wi)
   pcor[abs(pcor) < threshold] <- 0

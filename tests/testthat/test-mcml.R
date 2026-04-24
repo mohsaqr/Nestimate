@@ -1,60 +1,60 @@
-# Tests for mcml.R: aggregate_weights, cluster_summary, build_mcml
+# Tests for mcml.R: net_aggregate_weights, cluster_summary, build_mcml
 
 # ============================================
-# aggregate_weights / wagg
+# net_aggregate_weights / wagg
 # ============================================
 
-test_that("aggregate_weights sum method", {
-  expect_equal(aggregate_weights(c(0.5, 0.8, 0.3), "sum"), 1.6)
+test_that("net_aggregate_weights sum method", {
+  expect_equal(net_aggregate_weights(c(0.5, 0.8, 0.3), "sum"), 1.6)
 })
 
-test_that("aggregate_weights mean method", {
-  expect_equal(aggregate_weights(c(2, 4, 6), "mean"), 4)
+test_that("net_aggregate_weights mean method", {
+  expect_equal(net_aggregate_weights(c(2, 4, 6), "mean"), 4)
 })
 
-test_that("aggregate_weights median method", {
-  expect_equal(aggregate_weights(c(1, 3, 5), "median"), 3)
+test_that("net_aggregate_weights median method", {
+  expect_equal(net_aggregate_weights(c(1, 3, 5), "median"), 3)
 })
 
-test_that("aggregate_weights max method", {
-  expect_equal(aggregate_weights(c(1, 5, 3), "max"), 5)
+test_that("net_aggregate_weights max method", {
+  expect_equal(net_aggregate_weights(c(1, 5, 3), "max"), 5)
 })
 
-test_that("aggregate_weights min method", {
-  expect_equal(aggregate_weights(c(1, 5, 3), "min"), 1)
+test_that("net_aggregate_weights min method", {
+  expect_equal(net_aggregate_weights(c(1, 5, 3), "min"), 1)
 })
 
-test_that("aggregate_weights prod method", {
-  expect_equal(aggregate_weights(c(2, 3, 4), "prod"), 24)
+test_that("net_aggregate_weights prod method", {
+  expect_equal(net_aggregate_weights(c(2, 3, 4), "prod"), 24)
 })
 
-test_that("aggregate_weights density with n_possible", {
-  expect_equal(aggregate_weights(c(1, 2, 3), "density", n_possible = 10), 0.6)
+test_that("net_aggregate_weights density with n_possible", {
+  expect_equal(net_aggregate_weights(c(1, 2, 3), "density", n_possible = 10), 0.6)
 })
 
-test_that("aggregate_weights density without n_possible", {
-  expect_equal(aggregate_weights(c(1, 2, 3), "density"), 2)
+test_that("net_aggregate_weights density without n_possible", {
+  expect_equal(net_aggregate_weights(c(1, 2, 3), "density"), 2)
 })
 
-test_that("aggregate_weights geomean method", {
-  expect_equal(aggregate_weights(c(4, 9), "geomean"), 6, tolerance = 0.01)
+test_that("net_aggregate_weights geomean method", {
+  expect_equal(net_aggregate_weights(c(4, 9), "geomean"), 6, tolerance = 0.01)
 })
 
-test_that("aggregate_weights removes NA and zero", {
-  expect_equal(aggregate_weights(c(1, NA, 0, 2), "sum"), 3)
+test_that("net_aggregate_weights removes NA and zero", {
+  expect_equal(net_aggregate_weights(c(1, NA, 0, 2), "sum"), 3)
 })
 
-test_that("aggregate_weights returns 0 for empty/all-zero input", {
-  expect_equal(aggregate_weights(c(0, 0, NA), "sum"), 0)
-  expect_equal(aggregate_weights(numeric(0), "mean"), 0)
+test_that("net_aggregate_weights returns 0 for empty/all-zero input", {
+  expect_equal(net_aggregate_weights(c(0, 0, NA), "sum"), 0)
+  expect_equal(net_aggregate_weights(numeric(0), "mean"), 0)
 })
 
-test_that("aggregate_weights errors on unknown method", {
-  expect_error(aggregate_weights(c(1, 2), "bogus"), "Unknown method")
+test_that("net_aggregate_weights errors on unknown method", {
+  expect_error(net_aggregate_weights(c(1, 2), "bogus"), "Unknown method")
 })
 
-test_that("wagg is identical to aggregate_weights", {
-  expect_identical(wagg, aggregate_weights)
+test_that("net_aggregate_weights is a function", {
+  expect_true(is.function(net_aggregate_weights))
 })
 
 # ============================================
@@ -141,8 +141,8 @@ test_that("cluster_summary print method works", {
   expect_output(print(cs))
 })
 
-test_that("csum is identical to cluster_summary", {
-  expect_identical(csum, cluster_summary)
+test_that("cluster_summary is a function", {
+  expect_true(is.function(cluster_summary))
 })
 
 test_that("cluster_summary with different methods", {
@@ -241,11 +241,11 @@ test_that("build_mcml tna type normalizes rows", {
 # Coverage gap tests — mcml.R
 # ============================================================
 
-# ---- aggregate_weights / wagg: geomean zero path (L43) ----
+# ---- net_aggregate_weights / wagg: geomean zero path (L43) ----
 
-test_that("aggregate_weights geomean returns 0 when all non-positive", {
+test_that("net_aggregate_weights geomean returns 0 when all non-positive", {
   # All negative: pos_w is empty → returns 0
-  expect_equal(aggregate_weights(c(-1, -2, -3), "geomean"), 0)
+  expect_equal(net_aggregate_weights(c(-1, -2, -3), "geomean"), 0)
 })
 
 # ---- cluster_summary: various input types ----
@@ -929,4 +929,82 @@ test_that("summary.mcml on build_mcml result also works (L1404)", {
   )
   cs <- build_mcml(seqs, list(G1 = "A", G2 = "B"))
   expect_output(summary(cs))
+})
+
+
+# ============================================
+# mcml seamless dispatch to downstream functions
+# ============================================
+
+.make_mcml <- function(seed = 42) {
+  set.seed(seed)
+  seqs <- data.frame(
+    T1 = sample(LETTERS[1:6], 40, TRUE),
+    T2 = sample(LETTERS[1:6], 40, TRUE),
+    T3 = sample(LETTERS[1:6], 40, TRUE),
+    T4 = sample(LETTERS[1:6], 40, TRUE),
+    stringsAsFactors = FALSE
+  )
+  clusters <- list(G1 = c("A", "B", "C"), G2 = c("D", "E", "F"))
+  build_mcml(seqs, clusters, type = "tna")
+}
+
+
+test_that("centrality_stability() works on mcml", {
+  cs <- .make_mcml()
+  stab <- centrality_stability(cs, iter = 20, seed = 1)
+
+  expect_true(is.list(stab))
+  expect_true("macro" %in% names(stab))
+  for (nm in names(stab)) {
+    expect_s3_class(stab[[nm]], "net_stability")
+  }
+})
+
+test_that("network_reliability() works on mcml", {
+  cs <- .make_mcml()
+  rel <- network_reliability(cs, iter = 20, seed = 1)
+
+  expect_s3_class(rel, "net_reliability")
+})
+
+test_that("extract_transition_matrix() works on mcml", {
+  cs <- .make_mcml()
+  mats <- extract_transition_matrix(cs)
+
+  expect_true(is.list(mats))
+  expect_true("macro" %in% names(mats))
+  expect_true(is.matrix(mats$macro))
+  # Within-cluster matrices
+  cluster_names <- setdiff(names(mats), "macro")
+  expect_true(length(cluster_names) > 0)
+  for (nm in cluster_names) {
+    expect_true(is.matrix(mats[[nm]]))
+  }
+})
+
+test_that("extract_initial_probs() works on mcml", {
+  cs <- .make_mcml()
+  inits <- extract_initial_probs(cs)
+
+  expect_true(is.list(inits))
+  expect_true("macro" %in% names(inits))
+  expect_true(is.numeric(inits$macro))
+  expect_equal(sum(inits$macro), 1, tolerance = 1e-6)
+})
+
+test_that("extract_edges() works on mcml", {
+  cs <- .make_mcml()
+  edges <- extract_edges(cs)
+
+  expect_true(is.list(edges))
+  expect_true("macro" %in% names(edges))
+  expect_true(is.data.frame(edges$macro))
+  expect_true(all(c("from", "to", "weight") %in% names(edges$macro)))
+})
+
+test_that("plot.mcml dispatches without error when cograph available", {
+  skip_if_not_installed("cograph")
+  cs <- .make_mcml()
+  expect_invisible(plot(cs))
 })

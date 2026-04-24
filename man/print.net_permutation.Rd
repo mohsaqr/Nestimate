@@ -18,6 +18,12 @@ The input object, invisibly.
 Print Method for net_permutation
 }
 \examples{
+s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
+n1 <- build_network(s1, method = "relative")
+n2 <- build_network(s2, method = "relative")
+perm <- permutation(n1, n2, iter = 10)
+print(perm)
 \donttest{
 set.seed(1)
 d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),
@@ -26,7 +32,7 @@ d2 <- data.frame(V1 = c("C","A","C"), V2 = c("A","B","A"),
                  V3 = c("B","C","B"))
 net1 <- build_network(d1, method = "relative")
 net2 <- build_network(d2, method = "relative")
-perm <- permutation_test(net1, net2, iter = 20, seed = 1)
+perm <- permutation(net1, net2, iter = 20, seed = 1)
 print(perm)
 }
 

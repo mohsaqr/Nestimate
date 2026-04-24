@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ===========================================================================
 # Section 1: Internal — .mogen_count_kgrams
 # ===========================================================================
@@ -431,6 +433,18 @@ test_that("path_counts rejects k < 2", {
   expect_error(path_counts(trajs, k = 1L), "k.*must be >= 2")
 })
 
+# --- path_counts: NA handling ---
+test_that("path_counts handles NAs in trajectories", {
+  trajs <- list(c("A", "B", NA, "C", "D"), c("A", NA, "B"))
+  result <- path_counts(trajs, k = 2L)
+  expect_true(is.data.frame(result))
+  # NAs stripped: first traj becomes c("A","B","C","D") → 3 bigrams
+  # second becomes c("A","B") → 1 bigram
+  expect_true(nrow(result) > 0L)
+  # No NA in path column
+  expect_false(any(grepl("NA", result$path, fixed = TRUE)))
+})
+
 # --- state_frequencies: data.frame input branch ---
 test_that("state_frequencies works with data.frame input", {
   df <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"),
@@ -504,4 +518,351 @@ test_that("pathways.net_mogen min_prob filters by probability", {
   pw_all  <- pathways(m, min_prob = 0)
   pw_filt <- pathways(m, min_prob = 0.99)
   expect_true(length(pw_all) >= length(pw_filt))
+})
+
+# ===========================================================================
+# Section 11: pyMOGen cross-validation (reticulate)
+# ===========================================================================
+
+# --- Helper: run Python MOGen reference and return results ---
+.run_pymogen <- function(trajectories, max_order) {
+  skip_if_not_installed("reticulate")
+  Sys.setenv(RETICULATE_PYTHON = "/opt/homebrew/bin/python3")
+  skip_if(!reticulate::py_available(initialize = TRUE),
+          "Python not available")
+  skip_if(!reticulate::py_module_available("scipy"),
+          "scipy not available")
+
+  reticulate::py_run_string("
+import math
+import sys
+from collections import Counter, defaultdict
+from scipy.stats import chi2
+
+def build_mogen_ref(trajectories, max_order):
+    '''Reference MOGen following Scholtes 2017 / Nestimate R implementation.
+
+    Computes hierarchical log-likelihoods, DOF, AIC, BIC, LRT, and
+    selects optimal order.
+    '''
+
+    # --- Step 0: unique first-order states ---
+    all_states = sorted(set(s for traj in trajectories for s in traj))
+    n_states = len(all_states)
+
+    # --- Step 1: order-0 marginal distribution ---
+    state_counts = Counter(s for traj in trajectories for s in traj)
+    total = sum(state_counts.values())
+    marginal = {s: state_counts[s] / total for s in all_states}
+
+    # --- Step 2: build k-gram transition matrices for orders 1..max_order ---
+    # Returns dict-of-dict: trans[src_tuple][tgt_tuple] = probability
+    # Also count matrices for DOF computation
+    def count_kgrams(trajs, k):
+        '''Count transitions between consecutive k-grams.'''
+        counts = defaultdict(Counter)
+        for traj in trajs:
+            n = len(traj)
+            if n < k:
+                continue
+            # k-grams
+            kgrams = [tuple(traj[i:i+k]) for i in range(n - k + 1)]
+            # transitions between consecutive k-grams
+            for i in range(len(kgrams) - 1):
+                counts[kgrams[i]][kgrams[i+1]] += 1
+        return counts
+
+    def normalize(counts):
+        '''Row-normalize count dict to transition probabilities.'''
+        trans = {}
+        for src, targets in counts.items():
+            row_total = sum(targets.values())
+            if row_total > 0:
+                trans[src] = {t: c / row_total for t, c in targets.items()}
+        return trans
+
+    trans_mats = [marginal]  # index 0 = order 0 (marginal)
+    count_mats = [None]       # placeholder for order 0
+    for k in range(1, max_order + 1):
+        cm = count_kgrams(trajectories, k)
+        tm = normalize(cm)
+        trans_mats.append(tm)
+        count_mats.append(cm)
+
+    # --- Step 3: DOF computation matching R's .mogen_layer_dof() ---
+    # Order 0: n_states - 1
+    # Order k >= 1: for each source context (row), count non-zero targets,
+    #   DOF = max(n_nonzero - 1, 0), sum over all rows
+    # But we need to count based on the TRANSITION MATRIX, not the raw counts.
+    # In R, rows with zero row-sum have 0 DOF. Rows with row-sum > 0 are
+    # normalized, and DOF = number of non-zero entries - 1.
+    # Since we normalize (only keep rows with total > 0), every row in our
+    # trans dict has at least 1 target. So DOF = sum(len(targets) - 1).
+    # But R also includes rows that exist as nodes but have no outgoing edges
+    # (row-sum = 0 => 0 DOF). Those rows don't appear in our dict, so they
+    # contribute 0 automatically.
+    layer_dofs = [n_states - 1]  # order 0
+    for k in range(1, max_order + 1):
+        tm = trans_mats[k]
+        dof_k = sum(max(len(targets) - 1, 0) for targets in tm.values())
+        layer_dofs.append(dof_k)
+
+    cum_dofs = []
+    running = 0
+    for d in layer_dofs:
+        running += d
+        cum_dofs.append(running)
+
+    # --- Step 4: log-likelihood (matching R's .mogen_log_likelihood) ---
+    LOG_EPS = math.log(sys.float_info.epsilon)
+
+    def log_likelihood(trajs, k, trans_mats_up_to_k):
+        '''Compute LL of model order k.
+
+        For each trajectory of length n:
+          Step 1: log(marginal[state])
+          Step i (i >= 2): order_used = min(i-1, k)
+            if order_used == 0: log(marginal[state])
+            else: look up trans_mats[order_used][src_kgram][tgt_kgram]
+
+        This matches R's .mogen_log_likelihood exactly.
+        '''
+        p0 = trans_mats_up_to_k[0]  # marginal dict
+        ll = 0.0
+        for traj in trajs:
+            n = len(traj)
+            if n == 0:
+                continue
+
+            # Step 1: initial state
+            prob = p0.get(traj[0], 0)
+            ll += math.log(prob) if prob > 0 else LOG_EPS
+
+            # Steps 2..n (1-indexed step i corresponds to 0-indexed position i-1)
+            for pos in range(1, n):
+                step = pos + 1  # 1-indexed step number
+                order_used = min(step - 1, k)
+
+                if order_used == 0:
+                    prob = p0.get(traj[pos], 0)
+                    ll += math.log(prob) if prob > 0 else LOG_EPS
+                else:
+                    # src_key: traj[pos - order_used : pos] (length = order_used)
+                    # tgt_key: traj[pos - order_used + 1 : pos + 1] (length = order_used)
+                    src_key = tuple(traj[pos - order_used : pos])
+                    tgt_key = tuple(traj[pos - order_used + 1 : pos + 1])
+
+                    tm = trans_mats_up_to_k[order_used]
+                    prob = tm.get(src_key, {}).get(tgt_key, 0)
+                    ll += math.log(prob) if prob > 0 else LOG_EPS
+        return ll
+
+    logliks = []
+    for k in range(0, max_order + 1):
+        ll = log_likelihood(trajectories, k, trans_mats[:k+1])
+        logliks.append(ll)
+
+    # --- Step 5: AIC, BIC ---
+    n_obs = sum(len(t) for t in trajectories)
+    aics = [2 * cum_dofs[k] - 2 * logliks[k] for k in range(max_order + 1)]
+    bics = [math.log(n_obs) * cum_dofs[k] - 2 * logliks[k]
+            for k in range(max_order + 1)]
+
+    # --- Step 6: LRT (matching R's sequential test) ---
+    # R uses layer_dof (not cumulative diff) as df_diff
+    lrt_results = []
+    for k in range(1, max_order + 1):
+        x = -2 * (logliks[k-1] - logliks[k])
+        df_diff = layer_dofs[k]
+        if df_diff > 0 and x > 0:
+            p_value = 1 - chi2.cdf(x, df_diff)
+        else:
+            p_value = 1.0
+        lrt_results.append({
+            'order': k, 'x': float(x),
+            'delta_dof': df_diff, 'p': float(p_value)
+        })
+
+    # --- Step 7: Optimal order (AIC, BIC, LRT) ---
+    opt_aic = int(aics.index(min(aics)))
+    opt_bic = int(bics.index(min(bics)))
+
+    opt_lrt = 0
+    for res in lrt_results:
+        if res['p'] < 0.01:
+            opt_lrt = res['order']
+        else:
+            break
+
+    return {
+        'logliks': logliks,
+        'layer_dofs': layer_dofs,
+        'cum_dofs': cum_dofs,
+        'aics': aics,
+        'bics': bics,
+        'lrt': lrt_results,
+        'optimal_aic': opt_aic,
+        'optimal_bic': opt_bic,
+        'optimal_lrt': opt_lrt,
+        'n_states': n_states,
+        'n_obs': n_obs,
+        'n_paths': len(trajectories)
+    }
+  ")
+
+  py_trajs <- reticulate::r_to_py(trajectories)
+  reticulate::py$build_mogen_ref(
+    py_trajs,
+    max_order = reticulate::r_to_py(as.integer(max_order))
+  )
+}
+
+# --- Test helper: compare R and Python MOGen results ---
+.compare_mogen <- function(trajs, max_order, test_label) {
+  py <- .run_pymogen(trajs, max_order)
+  r  <- build_mogen(trajs, max_order = max_order, criterion = "aic")
+
+  n_orders <- max_order + 1L
+
+  # 1. Log-likelihoods per order
+  r_ll <- unname(r$log_likelihood)
+  py_ll <- unlist(py$logliks)
+  expect_equal(length(r_ll), n_orders,
+    info = sprintf("[%s] R LL length", test_label))
+  expect_equal(length(py_ll), n_orders,
+    info = sprintf("[%s] Python LL length", test_label))
+  expect_equal(r_ll, py_ll, tolerance = 1e-10,
+    info = sprintf("[%s] Log-likelihoods", test_label))
+
+  # 2. Layer DOF per order
+  r_ldof <- unname(as.integer(r$layer_dof))
+  py_ldof <- as.integer(unlist(py$layer_dofs))
+  expect_equal(r_ldof, py_ldof,
+    info = sprintf("[%s] Layer DOF", test_label))
+
+  # 3. Cumulative DOF per order
+  r_cdof <- unname(as.integer(r$dof))
+  py_cdof <- as.integer(unlist(py$cum_dofs))
+  expect_equal(r_cdof, py_cdof,
+    info = sprintf("[%s] Cumulative DOF", test_label))
+
+  # 4. AIC per order
+  r_aic <- unname(r$aic)
+  py_aic <- unlist(py$aics)
+  expect_equal(r_aic, py_aic, tolerance = 1e-10,
+    info = sprintf("[%s] AIC", test_label))
+
+  # 5. BIC per order
+  r_bic <- unname(r$bic)
+  py_bic <- unlist(py$bics)
+  expect_equal(r_bic, py_bic, tolerance = 1e-10,
+    info = sprintf("[%s] BIC", test_label))
+
+  # 6. LRT p-values
+  if (max_order >= 1L) {
+    py_lrt <- py$lrt
+    for (i in seq_along(py_lrt)) {
+      lrt_entry <- py_lrt[[i]]
+      # Reconstruct R's LRT for this order
+      k <- as.integer(lrt_entry$order)
+      r_x <- -2 * (r$log_likelihood[k] - r$log_likelihood[k + 1L])
+      r_df <- r$layer_dof[k + 1L]
+      py_x <- lrt_entry$x
+      py_df <- as.integer(lrt_entry$delta_dof)
+
+      expect_equal(unname(r_x), py_x, tolerance = 1e-10,
+        info = sprintf("[%s] LRT chi2 at order %d", test_label, k))
+      expect_equal(unname(r_df), py_df,
+        info = sprintf("[%s] LRT delta_dof at order %d", test_label, k))
+
+      if (py_df > 0L && py_x > 0) {
+        r_p <- stats::pchisq(r_x, df = r_df, lower.tail = FALSE)
+        py_p <- lrt_entry$p
+        # Tolerance 1e-6: chi2 CDF differs slightly between R and scipy
+        expect_equal(unname(r_p), py_p, tolerance = 1e-6,
+          info = sprintf("[%s] LRT p-value at order %d", test_label, k))
+      }
+    }
+  }
+
+  # 7. Optimal order (AIC)
+  r_opt_aic <- r$optimal_order
+  py_opt_aic <- as.integer(py$optimal_aic)
+  expect_equal(r_opt_aic, py_opt_aic,
+    info = sprintf("[%s] Optimal order (AIC)", test_label))
+
+  # 8. Optimal order (BIC)
+  r_bic_model <- build_mogen(trajs, max_order = max_order, criterion = "bic")
+  py_opt_bic <- as.integer(py$optimal_bic)
+  expect_equal(r_bic_model$optimal_order, py_opt_bic,
+    info = sprintf("[%s] Optimal order (BIC)", test_label))
+
+  invisible(TRUE)
+}
+
+test_that("pyMOGen equivalence: simple 3-state trajectories", {
+  trajs <- list(
+    c("A", "B", "C", "A", "B", "C"),
+    c("B", "C", "A", "B", "C", "A"),
+    c("C", "A", "B", "C", "A", "B"),
+    c("A", "B", "C", "A", "B", "C"),
+    c("A", "C", "B", "A", "C", "B")
+  )
+  .compare_mogen(trajs, max_order = 3L, test_label = "simple-3state")
+})
+
+test_that("pyMOGen equivalence: biased transitions (strong first-order)", {
+  # Data with strong first-order structure:
+  # A almost always goes to B, B to C, C to A
+  set.seed(101)
+  states <- c("A", "B", "C")
+  tm <- matrix(c(0.05, 0.9, 0.05,
+                 0.05, 0.05, 0.9,
+                 0.9, 0.05, 0.05), 3, 3, byrow = TRUE)
+  trajs <- lapply(seq_len(50L), function(i) {
+    path <- character(10L)
+    path[1L] <- sample(states, 1)
+    vapply(2L:10L, function(t) {
+      path[t] <<- sample(states, 1, prob = tm[match(path[t - 1L], states), ])
+      ""
+    }, character(1L))
+    path
+  })
+  .compare_mogen(trajs, max_order = 3L, test_label = "biased-1st-order")
+})
+
+test_that("pyMOGen equivalence: 5-state diverse paths", {
+  trajs <- list(
+    c("E", "A", "B", "C", "D", "E", "A"),
+    c("B", "C", "D", "A", "E", "B", "C"),
+    c("A", "B", "C", "E", "D", "A", "B"),
+    c("D", "E", "A", "B", "C", "D", "E"),
+    c("C", "D", "A", "B", "E", "C", "D"),
+    c("A", "B", "C", "D", "E", "A", "B"),
+    c("E", "D", "C", "B", "A", "E", "D"),
+    c("B", "A", "E", "D", "C", "B", "A")
+  )
+  .compare_mogen(trajs, max_order = 4L, test_label = "diverse-5state")
+})
+
+test_that("pyMOGen equivalence: second-order dependency", {
+  # After A->B always C; after C->B always A; otherwise random
+  set.seed(202)
+  trajs <- lapply(seq_len(80L), function(i) {
+    path <- character(12L)
+    path[1L] <- sample(c("A", "B", "C"), 1)
+    path[2L] <- sample(c("A", "B", "C"), 1)
+    vapply(3L:12L, function(t) {
+      if (path[t - 2L] == "A" && path[t - 1L] == "B") {
+        path[t] <<- "C"
+      } else if (path[t - 2L] == "C" && path[t - 1L] == "B") {
+        path[t] <<- "A"
+      } else {
+        path[t] <<- sample(c("A", "B", "C"), 1)
+      }
+      ""
+    }, character(1L))
+    path
+  })
+  .compare_mogen(trajs, max_order = 4L, test_label = "2nd-order-dep")
 })

@@ -53,7 +53,6 @@ column represents a state; rows where the value is 1 are marked with the
 column name. Supports optional windowed aggregation.
 }
 \examples{
-\donttest{
 # Simple binary data
 df <- data.frame(
   A = c(1, 0, 1, 0, 1),
@@ -69,7 +68,6 @@ seq_data <- prepare_onehot(df, cols = c("A", "B", "C"), actor = "actor")
 # With windowing
 seq_data <- prepare_onehot(df, cols = c("A", "B", "C"),
                           window_size = 2, window_type = "non-overlapping")
-}
 
 }
 \seealso{

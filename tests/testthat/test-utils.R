@@ -68,6 +68,7 @@ test_that("safe_sd returns NA_real_ for single or empty vector", {
 # ---- .as_netobject() coverage ----
 
 test_that(".as_netobject returns netobject unchanged (L120 short-circuit)", {
+  skip_if_pkg_broken("tna")
   net <- build_network(tna::group_regulation, method = "relative")
   result <- Nestimate:::.as_netobject(net)
   expect_identical(result, net)

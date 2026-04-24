@@ -4,6 +4,7 @@
 \alias{predictability}
 \alias{predictability.netobject}
 \alias{predictability.netobject_ml}
+\alias{predictability.netobject_group}
 \title{Compute Node Predictability}
 \usage{
 predictability(object, ...)
@@ -11,6 +12,8 @@ predictability(object, ...)
 \method{predictability}{netobject}(object, ...)
 
 \method{predictability}{netobject_ml}(object, ...)
+
+\method{predictability}{netobject_group}(object, ...)
 }
 \arguments{
 \item{object}{A \code{netobject} or \code{netobject_ml} object.}
@@ -27,6 +30,8 @@ For \code{netobject_ml}: a list with elements \code{$between} and
 A named numeric vector of predictability values per node.
 
 A list with \code{within} and \code{between} predictability vectors.
+
+A named list of per-group predictability vectors.
 }
 \description{
 Computes the proportion of variance explained (R\eqn{^2}) for each node in
@@ -41,13 +46,11 @@ For \code{method = "cor"}, predictability is the multiple R\eqn{^2} from
 regressing each node on its network neighbors (nodes with non-zero edges).
 }
 \examples{
-\donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
 colnames(mat) <- LETTERS[1:4]
 net <- build_network(as.data.frame(mat), method = "glasso")
 predictability(net)
-}
 
 }
 \references{

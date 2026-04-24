@@ -20,14 +20,10 @@ and degree-by-dimension heatmap.
 }
 \examples{
 \donttest{
-seqs <- data.frame(
-  V1 = c("A","B","C","A","B"),
-  V2 = c("B","C","A","B","C"),
-  V3 = c("C","A","B","C","A")
-)
-net <- build_network(seqs, method = "relative")
-sc  <- build_simplicial(net, type = "clique")
-plot(sc)
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+sc <- build_simplicial(mat, threshold = 0.3)
+if (requireNamespace("gridExtra", quietly = TRUE)) plot(sc)
 }
 
 }

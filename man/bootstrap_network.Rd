@@ -74,6 +74,9 @@ and custom estimators), the full estimator is called on resampled rows
 each iteration.
 }
 \examples{
+net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
+  method = "relative")
+boot <- bootstrap_network(net, iter = 10)
 \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),

@@ -18,14 +18,12 @@ The input object, invisibly.
 Print Method for nestimate_data
 }
 \examples{
-\donttest{
 events <- data.frame(
   actor  = c("u1","u1","u1","u2","u2","u2"),
   action = c("A","B","C","B","A","C"),
   time   = c(1,2,3,1,2,3)
 )
-nd <- prepare_data(events, action = "action",
-                   actor = "actor", time = "time")
+nd <- prepare(events, action = "action",
+              actor = "actor", time = "time")
 print(nd)
-}
 }

@@ -20,6 +20,10 @@ The input object, invisibly.
 Plot Method for net_mogen
 }
 \examples{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+mg <- build_mogen(seqs, max_order = 2)
+plot(mg)
+
 \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),

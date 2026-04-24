@@ -25,4 +25,6 @@ tutorials/
 Rplots.pdf
 tests/testthat/Rplots.pdf
 tests/testthat/testthat-problems.rds
-tests/testthat/_problems/
+tests/testthat/_problems/*.tar.gz
+temp_docs/
+vignettes/.quarto/

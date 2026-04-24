@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # ---- Simplicial Complex Tests ----
 
 # Helper: build a known network
@@ -723,7 +725,7 @@ test_that("build_simplicial pathway HON with max_pathways truncates", {
     c("A", "B", "C", "B", "D")
   )
   hon <- build_hon(trajs, max_order = 2, min_freq = 2)
-  ho <- hon$edges[hon$edges$from_order > 1L, ]
+  ho <- hon$ho_edges[hon$ho_edges$from_order > 1L, ]
   # Ensure we have >1 higher-order edges to test truncation
   expect_gt(nrow(ho), 1L)
   sc <- build_simplicial(hon, type = "pathway", max_pathways = 1)
@@ -802,4 +804,97 @@ test_that("build_simplicial pathway with max_dim truncation", {
   sc <- build_simplicial(hon, type = "pathway", max_dim = 1L)
   expect_s3_class(sc, "simplicial_complex")
   expect_lte(sc$dimension, 1L)
+})
+
+
+# =========================================================================
+# build_simplicial — pathway type from net_mogen
+# =========================================================================
+
+test_that("build_simplicial pathway from mogen works", {
+  set.seed(42)
+  # Create data with deterministic higher-order patterns
+  seqs <- lapply(1:80, function(i) {
+    s <- character(10)
+    s[1] <- sample(LETTERS[1:4], 1)
+    for (j in 2:10) {
+      if (s[j - 1] == "A") s[j] <- sample(c("B", "C"), 1, prob = c(0.9, 0.1))
+      else if (s[j - 1] == "B") s[j] <- "C"
+      else if (s[j - 1] == "C") s[j] <- sample(c("D", "A"), 1, prob = c(0.8, 0.2))
+      else s[j] <- "A"
+    }
+    s
+  })
+  mog <- build_mogen(seqs, max_order = 3)
+
+  # Use order 2 explicitly (guaranteed to have transitions)
+  if (max(mog$orders) >= 2L) {
+    trans <- mogen_transitions(mog, order = 2)
+    if (nrow(trans) > 0L) {
+      # Force optimal_order to 2 so simplicial code picks it up
+      mog$optimal_order <- 2L
+      sc <- build_simplicial(mog, type = "pathway")
+      expect_s3_class(sc, "simplicial_complex")
+      expect_equal(sc$type, "pathway")
+      expect_true(sc$n_nodes > 0L)
+    }
+  }
+})
+
+test_that("build_simplicial pathway from mogen with max_pathways limits", {
+  set.seed(99)
+  seqs <- lapply(1:80, function(i) {
+    s <- character(10)
+    s[1] <- sample(LETTERS[1:4], 1)
+    for (j in 2:10) {
+      if (s[j - 1] == "A") s[j] <- "B"
+      else if (s[j - 1] == "B") s[j] <- "C"
+      else if (s[j - 1] == "C") s[j] <- "D"
+      else s[j] <- "A"
+    }
+    s
+  })
+  mog <- build_mogen(seqs, max_order = 2)
+  mog$optimal_order <- max(mog$orders[mog$orders >= 1L])
+
+  trans <- mogen_transitions(mog, order = mog$optimal_order)
+  if (nrow(trans) > 2L) {
+    sc_full <- build_simplicial(mog, type = "pathway")
+    sc_lim <- build_simplicial(mog, type = "pathway", max_pathways = 2)
+    expect_s3_class(sc_lim, "simplicial_complex")
+    expect_lte(sc_lim$n_simplices, sc_full$n_simplices)
+  }
+})
+
+test_that("build_simplicial pathway from mogen errors when optimal_order = 0", {
+  seqs <- list(c("A", "B", "C"), c("B", "C", "A"), c("C", "A", "B"))
+  mog <- build_mogen(seqs, max_order = 2)
+  # Force order 0
+
+  mog$optimal_order <- 0L
+  mog$orders <- 0L
+  expect_error(
+    build_simplicial(mog, type = "pathway"),
+    "no higher-order transitions"
+  )
+})
+
+test_that("build_simplicial pathway from mogen with empty transitions returns empty", {
+  seqs <- list(c("A", "B", "C"), c("B", "C", "A"), c("C", "A", "B"))
+  mog <- build_mogen(seqs, max_order = 2)
+  mog$optimal_order <- 1L
+  # Wipe transition matrix to produce 0 rows from mogen_transitions
+  n <- nrow(mog$transition_matrices[[2]])
+  mog$count_matrices[[2]] <- matrix(0L, n, n,
+    dimnames = dimnames(mog$transition_matrices[[2]]))
+  sc <- build_simplicial(mog, type = "pathway")
+  expect_s3_class(sc, "simplicial_complex")
+  expect_equal(sc$type, "pathway")
+})
+
+test_that("build_simplicial pathway error message includes net_mogen", {
+  expect_error(
+    build_simplicial(list(a = 1), type = "pathway"),
+    "net_mogen"
+  )
 })

@@ -18,6 +18,10 @@ The input object, invisibly.
 Print Method for net_hypa
 }
 \examples{
+seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
+hyp <- build_hypa(seqs, k = 2)
+print(hyp)
+
 \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B","C","A","B","C","A"),

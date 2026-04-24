@@ -19,17 +19,20 @@ NULL
 
 # Global variable declarations for R CMD check
 utils::globalVariables(c(
+  ".data",
   "from", "to", "weight", "value", "name", "variable",
   "edge", "node", "state", "time", "onset", "terminus",
   "lower", "upper", "significant", "p_value", "ci_lower", "ci_upper",
   "metric", "centrality", "vertex", "group",
   # data.table NSE column names
   ".orig_row", ".seq_grp", ".grp_key",
-  # permutation_test data.table columns
+  # permutation() data.table columns
   "weight_x", "weight_y",
   # mmm ggplot2 aes variables
   "max_posterior", "cluster", "k", "criterion",
   # simplicial plot aes variables
   "threshold", "betti", "dim_label", "birth", "death",
-  "persistence", "components", "count", "total"
+  "persistence", "components", "count", "total",
+  # association_rules plot aes variables
+  "support", "confidence", "lift"
 ))

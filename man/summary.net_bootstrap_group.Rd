@@ -18,6 +18,11 @@ A data frame with group, edge, and bootstrap statistics columns.
 Summary Method for net_bootstrap_group
 }
 \examples{
+seqs <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","C","A"),
+  V3 = c("C","A","B","B"), grp = c("X","X","Y","Y"))
+nets <- build_network(seqs, method = "relative", group = "grp")
+boot <- bootstrap_network(nets, iter = 10)
+summary(boot)
 \donttest{
 set.seed(1)
 seqs <- data.frame(

@@ -18,6 +18,10 @@ The input object, invisibly.
 Summary Method for net_honem
 }
 \examples{
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+summary(hem)
+
 \donttest{
 seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
 hon <- build_hon(seqs, max_order = 3)

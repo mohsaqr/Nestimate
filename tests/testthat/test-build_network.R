@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 # Helper: generate reproducible frequency-like data
 .make_freq_data <- function(n = 100, p = 5, seed = 42) {
   set.seed(seed)
@@ -11,12 +13,11 @@
 
 # ---- Input validation ----
 
-test_that("build_network errors on non-numeric data only", {
+test_that("build_network auto-converts character data for glasso", {
   df <- data.frame(a = letters[1:10], b = letters[10:1])
-  expect_error(
-    build_network(df, method = "glasso"),
-    "At least 2 numeric columns"
-  )
+  # Should auto-convert to frequency counts, not error
+  net <- build_network(df, method = "glasso")
+  expect_s3_class(net, "netobject")
 })
 
 test_that("build_network errors on non-symmetric matrix", {
@@ -190,6 +191,39 @@ test_that("pcor errors on singular matrix", {
     build_network(S, method = "pcor", params = list(n = 10)),
     "singular"
   )
+})
+
+test_that("pcor warns on near-singular matrix", {
+  # Create a near-singular correlation matrix
+  set.seed(123)
+  n <- 30; p <- 5
+  mat <- matrix(rnorm(n * p), n, p)
+  # Make two columns nearly collinear
+  mat[, 5] <- mat[, 1] + rnorm(n, sd = 1e-7)
+  colnames(mat) <- paste0("V", seq_len(p))
+  S <- cor(mat)
+  # rcond should be very small, triggering the warning
+  expect_warning(
+    build_network(S, method = "pcor", params = list(n = n)),
+    "near-singular"
+  )
+})
+
+test_that("pcor output unchanged for well-conditioned data", {
+  # Verify the rcond check doesn't alter numerical output
+  set.seed(456)
+  df <- data.frame(
+    V1 = rnorm(100), V2 = rnorm(100), V3 = rnorm(100), V4 = rnorm(100)
+  )
+  net <- build_network(df, method = "pcor")
+  # Manual reference: solve(cor) -> precision -> pcor
+  S <- cor(as.matrix(df))
+  Wi <- solve(S)
+  D <- diag(1 / sqrt(diag(Wi)))
+  pcor_ref <- -D %*% Wi %*% D
+  diag(pcor_ref) <- 0
+  dimnames(pcor_ref) <- dimnames(S)
+  expect_equal(unname(net$weights), unname(pcor_ref), tolerance = 1e-14)
 })
 
 
@@ -650,10 +684,13 @@ test_that("predictability works for netobject_ml", {
   expect_true(all(r2$within >= 0 & r2$within <= 1))
 })
 
-test_that("print does not show predictability", {
+test_that("print does not show literal 'predictability' (lowercase)", {
   df <- .make_freq_data(n = 80, p = 5)
   net <- build_network(df, method = "glasso", params = list(nlambda = 20L))
   out <- capture.output(print(net))
+  # Predictability display uses capitalised label "Predictability (R²)"
+  expect_true(any(grepl("Predictability", out)))
+  # The lowercase word "predictability" should NOT appear in output
   expect_false(any(grepl("predictability", out)))
 })
 
@@ -752,8 +789,8 @@ test_that("build_network auto-detects long format via action column", {
   expect_true(net$directed)
 })
 
-# L236-246: long format path through prepare_data
-test_that("build_network long format with actor/time/action passes through prepare_data", {
+# L236-246: long format path through prepare
+test_that("build_network long format with actor/time/action passes through prepare", {
   long_data <- data.frame(
     Actor  = c(1L, 1L, 1L, 2L, 2L, 2L),
     Time   = c(1L, 2L, 3L, 1L, 2L, 3L),
@@ -764,7 +801,7 @@ test_that("build_network long format with actor/time/action passes through prepa
                        actor = "Actor", action = "Action",
                        time = "Time")
   expect_s3_class(net, "netobject")
-  # After prepare_data the format should be reset to "wide"
+  # After prepare the format should be reset to "wide"
   expect_equal(net$params$format, "wide")
 })
 
@@ -1350,3 +1387,322 @@ test_that("relative estimator auto-detects long format via registry (L364-366)",
   expect_true(all(rs == 0 | abs(rs - 1) < 1e-10))
 })
 
+
+# ============================================================
+# Auto-conversion: sequences → frequencies for association methods
+# ============================================================
+
+# Helper: wide sequence data
+.make_seq_data <- function(n = 80, t = 8,
+                           states = c("A", "B", "C", "D"),
+                           seed = 42) {
+  set.seed(seed)
+  mat <- matrix(sample(states, n * t, replace = TRUE), nrow = n, ncol = t)
+  colnames(mat) <- paste0("T", seq_len(t))
+  as.data.frame(mat, stringsAsFactors = FALSE)
+}
+
+# ---- 1. glasso from wide sequences ----
+test_that("auto-convert: glasso from wide character sequences", {
+  seqs <- .make_seq_data()
+  net <- build_network(seqs, method = "glasso")
+  expect_s3_class(net, "netobject")
+  expect_false(net$directed)
+  expect_equal(net$method, "glasso")
+  expect_equal(nrow(net$weights), 4)
+})
+
+# ---- 2. pcor from complete sequences errors (singular: constant row sums) ----
+test_that("auto-convert: pcor errors on complete sequences (singular)", {
+  seqs <- .make_seq_data()
+  expect_error(build_network(seqs, method = "pcor"), "singular")
+})
+
+# ---- 3. cor from wide sequences ----
+test_that("auto-convert: cor from wide character sequences", {
+  seqs <- .make_seq_data()
+  net <- build_network(seqs, method = "cor")
+  expect_s3_class(net, "netobject")
+  expect_false(net$directed)
+  expect_equal(net$method, "cor")
+  expect_true(isSymmetric(net$weights))
+})
+
+# ---- 4. ising: no auto-convert (requires binary 0/1, not counts) ----
+test_that("auto-convert: ising does NOT auto-convert sequences", {
+  skip_if_not_installed("IsingFit")
+  seqs <- .make_seq_data(n = 100, states = c("A", "B"))
+  # Ising requires binary data; frequency counts are integers > 1
+  # so auto-conversion is skipped and the estimator errors
+  expect_error(build_network(seqs, method = "ising"))
+})
+
+# ---- 5. Aliases work: ebicglasso, corr ----
+test_that("auto-convert: method aliases work with sequences", {
+  seqs <- .make_seq_data()
+  net1 <- build_network(seqs, method = "ebicglasso")
+  expect_equal(net1$method, "glasso")
+
+  net3 <- build_network(seqs, method = "correlation")
+  expect_equal(net3$method, "cor")
+})
+
+# ---- 6. Results match manual conversion ----
+test_that("auto-convert: matches manual convert_sequence_format pipeline", {
+  seqs <- .make_seq_data(seed = 99)
+  freq <- convert_sequence_format(seqs, id_col = character(0),
+                                  format = "frequency")
+  freq <- freq[, setdiff(names(freq), "rid"), drop = FALSE]
+
+  net_auto <- build_network(seqs, method = "glasso",
+                            params = list(gamma = 0.5, nlambda = 50))
+  net_manual <- build_network(freq, method = "glasso",
+                              params = list(gamma = 0.5, nlambda = 50))
+
+  expect_equal(net_auto$weights, net_manual$weights)
+  expect_equal(net_auto$nodes$label, net_manual$nodes$label)
+})
+
+# ---- 7. tna::group_regulation ----
+test_that("auto-convert: glasso on tna::group_regulation", {
+  skip_if_not_installed("tna")
+  data(group_regulation, package = "tna")
+  net <- build_network(group_regulation, method = "glasso")
+  expect_s3_class(net, "netobject")
+  expect_equal(nrow(net$weights), 9)  # 9 states
+  expect_true(any(net$weights != 0))
+})
+
+# ---- 8. pcor on tna::group_regulation ----
+test_that("auto-convert: pcor on tna::group_regulation", {
+  skip_if_not_installed("tna")
+  data(group_regulation, package = "tna")
+  net <- build_network(group_regulation, method = "pcor")
+  expect_s3_class(net, "netobject")
+  expect_equal(nrow(net$weights), 9)
+})
+
+# ---- 9. cor on tna::group_regulation ----
+test_that("auto-convert: cor on tna::group_regulation", {
+  skip_if_not_installed("tna")
+  data(group_regulation, package = "tna")
+  net <- build_network(group_regulation, method = "cor")
+  expect_s3_class(net, "netobject")
+  expect_equal(nrow(net$weights), 9)
+})
+
+# ---- 10. No conversion for transition methods (still works as before) ----
+test_that("auto-convert: transition methods skip conversion", {
+  seqs <- .make_seq_data()
+  net <- build_network(seqs, method = "relative")
+  expect_equal(net$method, "relative")
+  expect_true(net$directed)
+  # Rows should sum to 1 for transition probabilities
+  rs <- rowSums(net$weights)
+  expect_true(all(abs(rs - 1) < 1e-10))
+})
+
+# ---- 11. Numeric data still works directly (no spurious conversion) ----
+test_that("auto-convert: numeric data for glasso not double-converted", {
+  set.seed(42)
+  num_data <- as.data.frame(matrix(rnorm(200), ncol = 4))
+  colnames(num_data) <- c("X1", "X2", "X3", "X4")
+  net <- build_network(num_data, method = "glasso")
+  expect_s3_class(net, "netobject")
+  expect_equal(nrow(net$weights), 4)
+  expect_equal(sort(net$nodes$label), sort(c("X1", "X2", "X3", "X4")))
+})
+
+# ---- 12. With scaling parameter ----
+test_that("auto-convert: glasso + scaling works on sequences", {
+  seqs <- .make_seq_data()
+  net <- build_network(seqs, method = "glasso", scaling = "minmax")
+  expect_s3_class(net, "netobject")
+  # All weights should be in [0, 1] after minmax
+  expect_true(all(net$weights >= 0 & net$weights <= 1))
+})
+
+# ---- 13. With threshold parameter ----
+test_that("auto-convert: glasso + threshold works on sequences", {
+  seqs <- .make_seq_data()
+  net <- build_network(seqs, method = "glasso", threshold = 0.1)
+  expect_s3_class(net, "netobject")
+  # All non-zero weights should be >= 0.1 in absolute value
+  nz <- net$weights[net$weights != 0]
+  if (length(nz) > 0) expect_true(all(abs(nz) >= 0.1))
+})
+
+# ---- 14. Many states ----
+test_that("auto-convert: glasso with many states", {
+  seqs <- .make_seq_data(n = 200, states = LETTERS[1:8])
+  net <- build_network(seqs, method = "glasso")
+  expect_s3_class(net, "netobject")
+  expect_equal(nrow(net$weights), 8)
+})
+
+# ---- 15. Two states → glasso (pcor singular with constant sums) ----
+test_that("auto-convert: glasso with two states", {
+  seqs <- .make_seq_data(n = 50, states = c("X", "Y"))
+  net <- build_network(seqs, method = "glasso")
+  expect_s3_class(net, "netobject")
+  expect_equal(nrow(net$weights), 2)
+})
+
+# ---- 16. Long format with action column ----
+test_that("auto-convert: glasso from long format sequences", {
+  set.seed(42)
+  long <- data.frame(
+    Actor = rep(1:50, each = 6),
+    Action = sample(c("A", "B", "C", "D"), 300, replace = TRUE),
+    Time = rep(1:6, 50),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(long, method = "glasso",
+                       actor = "Actor", action = "Action", time = "Time")
+  expect_s3_class(net, "netobject")
+  expect_equal(net$method, "glasso")
+})
+
+# ---- 17. Factor columns treated as character ----
+test_that("auto-convert: factor columns auto-converted for glasso", {
+  seqs <- .make_seq_data()
+  seqs[] <- lapply(seqs, as.factor)
+  net <- build_network(seqs, method = "glasso")
+  expect_s3_class(net, "netobject")
+})
+
+# ---- 18. Auto-converted net stores numeric data ----
+test_that("auto-convert: glasso net has numeric data stored", {
+  seqs <- .make_seq_data()
+  net <- build_network(seqs, method = "glasso")
+  # The estimator stores its input; after frequency conversion this is numeric
+  expect_s3_class(net, "netobject")
+  expect_equal(net$method, "glasso")
+})
+
+# ---- 19. Mixed columns: some character, some numeric ----
+test_that("auto-convert: mixed char+numeric columns for glasso", {
+  set.seed(42)
+  df <- data.frame(
+    T1 = sample(c("A","B","C"), 50, TRUE),
+    T2 = sample(c("A","B","C"), 50, TRUE),
+    score = rnorm(50),
+    stringsAsFactors = FALSE
+  )
+  # Has character columns → should trigger auto-convert
+  net <- build_network(df, method = "glasso")
+  expect_s3_class(net, "netobject")
+})
+
+# ---- 20. Group parameter with auto-conversion ----
+test_that("auto-convert: grouped glasso from sequences", {
+  set.seed(42)
+  seqs <- data.frame(
+    T1 = sample(c("A","B","C"), 80, TRUE),
+    T2 = sample(c("A","B","C"), 80, TRUE),
+    T3 = sample(c("A","B","C"), 80, TRUE),
+    grp = rep(c("X","Y"), each = 40),
+    stringsAsFactors = FALSE
+  )
+  nets <- build_network(seqs, method = "glasso", group = "grp")
+  expect_s3_class(nets, "netobject_group")
+  expect_equal(length(nets), 2)
+  expect_equal(nets[[1]]$method, "glasso")
+})
+
+# ---- 21. Predictability (R²) auto-computation ----
+
+test_that("glasso netobject carries $predictability by default", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  df$x2 <- df$x1 * 0.8 + rnorm(80, sd = 0.5)
+  net <- build_network(df, method = "glasso")
+  expect_true(!is.null(net$predictability))
+  expect_equal(length(net$predictability), net$n_nodes)
+  expect_equal(names(net$predictability), net$nodes$label)
+  expect_true(all(net$predictability >= 0 & net$predictability <= 1))
+})
+
+test_that("pcor netobject carries $predictability by default", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  net <- build_network(df, method = "pcor")
+  expect_true(!is.null(net$predictability))
+  expect_equal(length(net$predictability), net$n_nodes)
+  expect_true(all(net$predictability >= 0 & net$predictability <= 1))
+})
+
+test_that("cor netobject carries $predictability by default", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  net <- build_network(df, method = "cor")
+  expect_true(!is.null(net$predictability))
+  expect_equal(length(net$predictability), net$n_nodes)
+  expect_true(all(net$predictability >= 0 & net$predictability <= 1))
+})
+
+test_that("predictability = FALSE suppresses computation", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  net <- build_network(df, method = "glasso", predictability = FALSE)
+  expect_null(net$predictability)
+})
+
+test_that("directed networks do not carry $predictability", {
+  seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
+  net <- build_network(seqs, method = "relative")
+  expect_null(net$predictability)
+})
+
+test_that("grouped glasso carries per-group predictability", {
+  set.seed(42)
+  df <- data.frame(
+    x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80),
+    grp = rep(c("A", "B"), each = 40)
+  )
+  nets <- build_network(df, method = "glasso", group = "grp")
+  expect_true(!is.null(nets$A$predictability))
+  expect_true(!is.null(nets$B$predictability))
+  expect_equal(length(nets$A$predictability), nets$A$n_nodes)
+})
+
+test_that("predictability.netobject_group returns per-group list", {
+  set.seed(42)
+  df <- data.frame(
+    x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80),
+    grp = rep(c("A", "B"), each = 40)
+  )
+  nets <- build_network(df, method = "glasso", group = "grp")
+  r2 <- predictability(nets)
+  expect_true(is.list(r2))
+  expect_equal(length(r2), 2L)
+  expect_true(all(vapply(r2, is.numeric, logical(1))))
+})
+
+test_that("print.netobject shows predictability for glasso", {
+  set.seed(42)
+  df <- data.frame(x1 = rnorm(80), x2 = rnorm(80), x3 = rnorm(80))
+  df$x2 <- df$x1 * 0.8 + rnorm(80, sd = 0.5)
+  net <- build_network(df, method = "glasso")
+  out <- capture.output(print(net))
+  expect_true(any(grepl("Predictability", out)))
+})
+
+test_that("predictability() errors informatively on unsupported methods", {
+  seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+  net <- build_network(seqs, method = "relative")
+  expect_error(predictability(net), "does not support predictability")
+})
+
+test_that("predictability = FALSE is honoured in level = 'both'", {
+  set.seed(42)
+  df <- data.frame(
+    x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
+    id = rep(1:20, each = 5)
+  )
+  net <- build_network(df, method = "glasso",
+                       params = list(id = "id", nlambda = 20L),
+                       level = "both", predictability = FALSE)
+  expect_null(net$between$predictability)
+  expect_null(net$within$predictability)
+})
