@@ -754,10 +754,9 @@ test_that("summary shows covariate analysis", {
   expect_true(any(grepl("Predictors of Membership", out)))
   expect_true(any(grepl("McFadden", out)))
   expect_true(any(grepl("does not influence", out)))
-  # Return value is a list with cluster_stats and covariates
-  expect_true(is.list(res))
-  expect_true(!is.null(res$cluster_stats))
-  expect_true(!is.null(res$covariates))
+  # Return value is the cluster-stats data.frame; covariate block is an attribute.
+  expect_s3_class(res, "data.frame")
+  expect_true(!is.null(attr(res, "covariates")))
 })
 
 test_that("summary without covariates returns data.frame (backwards compat)", {

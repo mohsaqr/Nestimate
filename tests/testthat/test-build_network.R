@@ -623,35 +623,36 @@ test_that("print.netobject_ml returns invisible(x)", {
 
 # ---- Predictability ----
 
-test_that("predictability returns named numeric vector for glasso", {
+test_that("predictability returns tidy df for glasso", {
   df <- .make_freq_data(n = 80, p = 5)
   net <- build_network(df, method = "glasso", params = list(nlambda = 20L))
   r2 <- predictability(net)
 
-  expect_true(is.numeric(r2))
-  expect_equal(length(r2), 5)
-  expect_equal(names(r2), colnames(net$weights))
-  expect_true(all(r2 >= 0 & r2 <= 1))
+  expect_s3_class(r2, "data.frame")
+  expect_equal(nrow(r2), 5)
+  expect_setequal(names(r2), c("node", "R2", "RMSE"))
+  expect_equal(r2$node, colnames(net$weights))
+  expect_true(all(r2$R2 >= 0 & r2$R2 <= 1))
 })
 
-test_that("predictability returns named numeric vector for pcor", {
+test_that("predictability returns tidy df for pcor", {
   df <- .make_freq_data(n = 80, p = 5)
   net <- build_network(df, method = "pcor")
   r2 <- predictability(net)
 
-  expect_true(is.numeric(r2))
-  expect_equal(length(r2), 5)
-  expect_true(all(r2 >= 0 & r2 <= 1))
+  expect_s3_class(r2, "data.frame")
+  expect_equal(nrow(r2), 5)
+  expect_true(all(r2$R2 >= 0 & r2$R2 <= 1))
 })
 
-test_that("predictability returns named numeric vector for cor", {
+test_that("predictability returns tidy df for cor", {
   df <- .make_freq_data(n = 80, p = 5)
   net <- build_network(df, method = "cor", threshold = 0.1)
   r2 <- predictability(net)
 
-  expect_true(is.numeric(r2))
-  expect_equal(length(r2), 5)
-  expect_true(all(r2 >= 0 & r2 <= 1))
+  expect_s3_class(r2, "data.frame")
+  expect_equal(nrow(r2), 5)
+  expect_true(all(r2$R2 >= 0 & r2$R2 <= 1))
 })
 
 test_that("predictability.cor returns 0 for isolated nodes", {
@@ -665,7 +666,7 @@ test_that("predictability.cor returns 0 for isolated nodes", {
     all(net$weights[j, ] == 0)
   }, logical(1))
   if (any(isolated)) {
-    expect_true(all(r2[isolated] == 0))
+    expect_true(all(r2$R2[isolated] == 0))
   }
 })
 
@@ -678,10 +679,12 @@ test_that("predictability works for netobject_ml", {
   expect_true(is.list(r2))
   expect_true("between" %in% names(r2))
   expect_true("within" %in% names(r2))
-  expect_equal(length(r2$between), 5)
-  expect_equal(length(r2$within), 5)
-  expect_true(all(r2$between >= 0 & r2$between <= 1))
-  expect_true(all(r2$within >= 0 & r2$within <= 1))
+  expect_s3_class(r2$between, "data.frame")
+  expect_s3_class(r2$within, "data.frame")
+  expect_equal(nrow(r2$between), 5)
+  expect_equal(nrow(r2$within), 5)
+  expect_true(all(r2$between$R2 >= 0 & r2$between$R2 <= 1))
+  expect_true(all(r2$within$R2 >= 0 & r2$within$R2 <= 1))
 })
 
 test_that("print does not show literal 'predictability' (lowercase)", {
@@ -935,9 +938,9 @@ test_that("predictability.netobject for cor with single-neighbor node", {
   net <- build_network(df, method = "cor", threshold = 0)
 
   r2 <- predictability(net)
-  expect_true(is.numeric(r2))
-  expect_equal(length(r2), 3L)
-  expect_true(all(r2 >= 0 & r2 <= 1))
+  expect_s3_class(r2, "data.frame")
+  expect_equal(nrow(r2), 3L)
+  expect_true(all(r2$R2 >= 0 & r2$R2 <= 1))
 })
 
 # print.netobject with ising shows thresholds range
@@ -1676,7 +1679,7 @@ test_that("predictability.netobject_group returns per-group list", {
   r2 <- predictability(nets)
   expect_true(is.list(r2))
   expect_equal(length(r2), 2L)
-  expect_true(all(vapply(r2, is.numeric, logical(1))))
+  expect_true(all(vapply(r2, is.data.frame, logical(1))))
 })
 
 test_that("print.netobject shows predictability for glasso", {

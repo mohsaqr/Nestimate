@@ -212,8 +212,8 @@ test_that("print method works", {
 
   out <- capture.output(print(rel))
   expect_true(any(grepl("Split-Half Reliability", out)))
-  expect_true(any(grepl("Mean Abs. Dev.", out)))
-  expect_true(any(grepl("Correlation", out)))
+  expect_true(any(grepl("Mean Abs. Diff.", out)))
+  expect_true(any(grepl("Pearson", out)))
 })
 
 

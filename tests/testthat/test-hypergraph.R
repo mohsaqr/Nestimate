@@ -186,12 +186,15 @@ test_that("rejects bad input type", {
 test_that("print and summary methods run without error", {
   hg <- build_hypergraph(.hg_two_triangles_adj(), p = 1)
   expect_invisible(print(hg))
-  expect_invisible(summary(hg))
+  s <- summary(hg)
+  expect_s3_class(s, "data.frame")
+  expect_setequal(names(s), c("node", "degree"))
 })
 
 test_that("print/summary handle empty hypergraph", {
   hg <- build_hypergraph(.hg_chain_adj(), p = 1,
                          include_pairwise = FALSE)
   expect_invisible(print(hg))
-  expect_invisible(summary(hg))
+  s <- summary(hg)
+  expect_s3_class(s, "data.frame")
 })

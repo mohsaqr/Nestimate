@@ -86,22 +86,12 @@ test_that("cluster_summary with named list clusters", {
   expect_equal(nrow(cs$clusters$G1$weights), 2)
 })
 
-test_that("cluster_summary type=tna normalizes rows to 1", {
-  mat <- matrix(c(10, 2, 3, 1, 8, 4, 5, 6, 12), 3, 3,
-                dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  clusters <- list(G1 = c("A", "B"), G2 = "C")
-
-  cs <- cluster_summary(mat, clusters, type = "tna")
-  row_sums <- rowSums(cs$macro$weights)
-  expect_equal(unname(row_sums), c(1, 1), tolerance = 1e-10)
-})
-
-test_that("cluster_summary type=raw keeps raw values", {
+test_that("cluster_summary matrix path returns raw aggregated values (no normalization)", {
   mat <- matrix(c(10, 2, 3, 8), 2, 2,
                 dimnames = list(c("A", "B"), c("A", "B")))
   clusters <- list(G1 = "A", G2 = "B")
 
-  cs <- cluster_summary(mat, clusters, type = "raw", method = "sum")
+  cs <- cluster_summary(mat, clusters, method = "sum")
   expect_equal(cs$macro$weights["G1", "G1"], 10)
   expect_equal(cs$macro$weights["G1", "G2"], 3)
 })
@@ -150,9 +140,9 @@ test_that("cluster_summary with different methods", {
                 dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
   clusters <- list(G1 = c("A", "B"), G2 = "C")
 
-  cs_sum <- cluster_summary(mat, clusters, method = "sum", type = "raw")
-  cs_mean <- cluster_summary(mat, clusters, method = "mean", type = "raw")
-  cs_max <- cluster_summary(mat, clusters, method = "max", type = "raw")
+  cs_sum <- cluster_summary(mat, clusters, method = "sum")
+  cs_mean <- cluster_summary(mat, clusters, method = "mean")
+  cs_max <- cluster_summary(mat, clusters, method = "max")
 
   # Sum should be larger than mean for multi-node clusters
   expect_true(cs_sum$macro$weights["G1", "G1"] >= cs_mean$macro$weights["G1", "G1"])
@@ -271,25 +261,16 @@ test_that("cluster_summary assigns sequential node names when matrix has no rown
 test_that("cluster_summary between_inits fallback when zero matrix (L380)", {
   # All-zero matrix → colSums all zero → uniform inits
   mat <- matrix(0, 2, 2, dimnames = list(c("A", "B"), c("A", "B")))
-  cs <- cluster_summary(mat, list(G1 = "A", G2 = "B"), type = "raw")
+  cs <- cluster_summary(mat, list(G1 = "A", G2 = "B"))
   expect_equal(unname(cs$macro$inits), c(0.5, 0.5), tolerance = 1e-10)
 })
 
 test_that("cluster_summary within-cluster zero total produces uniform inits (L423)", {
   # All-zero within-cluster block
   mat <- matrix(0, 3, 3, dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"), type = "raw")
+  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"))
   # G1 has 2 nodes, zero total → rep(0.5, 2)
   expect_equal(unname(cs$clusters$G1$inits), c(0.5, 0.5), tolerance = 1e-10)
-})
-
-test_that("cluster_summary type=cooccurrence symmetrizes (L326,L334)", {
-  mat <- matrix(c(0, 3, 1, 5, 0, 2, 4, 6, 0), 3, 3,
-                dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"),
-                        type = "cooccurrence", compute_within = FALSE)
-  # Symmetrized: should be symmetric
-  expect_true(isSymmetric(cs$macro$weights))
 })
 
 # ---- build_mcml: cograph_network input (L572) ----
@@ -754,25 +735,25 @@ test_that(".process_weights returns symmetrized matrix for cooccurrence type (L1
 test_that("as_tna dispatches correctly for mcml objects (L1226)", {
   mat <- matrix(runif(9), 3, 3,
                 dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"), type = "tna")
+  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"))
   result <- as_tna(cs)
   expect_s3_class(result, "netobject_group")
 })
 
-test_that("as_tna.mcml with raw type uses frequency method (L1234-1240)", {
+test_that("as_tna.mcml on matrix path uses frequency method (matrix is aggregation-only)", {
   mat <- matrix(c(10, 2, 3, 1, 8, 4, 5, 6, 12), 3, 3,
                 dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"), type = "raw")
+  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"))
   result <- as_tna(cs)
   expect_s3_class(result, "netobject_group")
-  # macro network should use frequency method
+  # Matrix-derived mcml carries no $meta$type, as_tna defaults to "frequency".
   expect_equal(result$macro$method, "frequency")
 })
 
 test_that("as_tna.mcml creates macro netobject (L1243-1244)", {
   mat <- matrix(runif(9), 3, 3,
                 dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"), type = "tna")
+  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"))
   result <- as_tna(cs)
   expect_s3_class(result$macro, "netobject")
   expect_true(is.matrix(result$macro$weights))
@@ -783,7 +764,7 @@ test_that("as_tna.mcml skips clusters with zero-row sums (L1247-1262)", {
   mat <- matrix(0, 3, 3,
                 dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
   mat["A", "B"] <- 0.5; mat["A", "C"] <- 0.5  # only A has outgoing
-  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"), type = "tna")
+  cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"))
   result <- as_tna(cs)
   expect_s3_class(result, "netobject_group")
   # macro always present
@@ -794,7 +775,7 @@ test_that("as_tna.mcml with compute_within=FALSE returns empty cluster list (L12
   mat <- matrix(runif(9), 3, 3,
                 dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
   cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"),
-                        type = "tna", compute_within = FALSE)
+                        compute_within = FALSE)
   result <- as_tna(cs)
   expect_s3_class(result, "netobject_group")
   expect_true("macro" %in% names(result))

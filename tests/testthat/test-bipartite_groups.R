@@ -147,7 +147,10 @@ test_that("non-data.frame input rejected", {
 test_that("print and summary work via shared net_hypergraph methods", {
   hg <- bipartite_groups(.bg_sample_data(), player = "player", group = "session")
   expect_invisible(print(hg))
-  expect_invisible(summary(hg))
+  # summary now returns a tidy node-degree data.frame (visible)
+  s <- summary(hg)
+  expect_s3_class(s, "data.frame")
+  expect_setequal(names(s), c("node", "degree"))
 })
 
 # Integration with bundled dataset ----------------------------------------

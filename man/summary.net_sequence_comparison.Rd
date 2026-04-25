@@ -12,7 +12,9 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-The patterns data.frame, invisibly.
+The patterns data.frame (tidy: one row per k-gram pattern, per
+group, with frequency and proportion columns; includes p-values when a
+permutation test was run).
 }
 \description{
 Summary Method for net_sequence_comparison

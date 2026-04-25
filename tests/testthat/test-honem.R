@@ -412,12 +412,14 @@ test_that("summary.net_honem output contains variance and singular values info",
   expect_true(any(grepl("Embedding range:", out)))
 })
 
-test_that("summary.net_honem returns invisibly", {
+test_that("summary.net_honem returns tidy embedding data.frame", {
   mat <- matrix(c(0, 1, 1, 0), 2, 2,
                 dimnames = list(c("A", "B"), c("A", "B")))
   emb <- build_honem(mat, dim = 1L)
   out <- capture.output(result <- summary(emb))
-  expect_identical(result, emb)
+  expect_s3_class(result, "data.frame")
+  expect_equal(result$node, c("A", "B"))
+  expect_true("dim1" %in% names(result))
 })
 
 test_that("plot.net_honem works with dim >= 2 and labels <= 50 nodes", {
