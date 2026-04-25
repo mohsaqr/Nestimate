@@ -594,6 +594,6 @@ summary.net_mlvar <- function(object, ...) {
   print(round(object$between$weights, 4))
   cat("\n")
 
-  invisible(object)
+  coef_df
 }
 

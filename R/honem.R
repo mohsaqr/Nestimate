@@ -250,7 +250,14 @@ summary.net_honem <- function(object, ...) {
                           3), collapse = ", ")))
   cat(sprintf("  Embedding range: [%.3f, %.3f]\n",
               min(object$embeddings), max(object$embeddings)))
-  invisible(object)
+
+  emb <- object$embeddings
+  node_labels <- rownames(emb)
+  if (is.null(node_labels)) node_labels <- paste0("n", seq_len(nrow(emb)))
+  dim_cols <- as.data.frame(emb)
+  colnames(dim_cols) <- paste0("dim", seq_len(ncol(emb)))
+  data.frame(node = node_labels, dim_cols,
+             stringsAsFactors = FALSE, row.names = NULL)
 }
 
 #' Plot Method for net_honem

@@ -427,6 +427,26 @@ print.net_stability_group <- function(x, ...) {
 }
 
 
+#' Summary Method for net_stability_group
+#'
+#' @description
+#' Per-network stability as a tidy data frame. Stacks \code{summary()}
+#' results for each network with a \code{group} column.
+#'
+#' @param object A \code{net_stability_group} object.
+#' @param ... Additional arguments (ignored).
+#' @return A data frame with columns \code{group}, \code{measure},
+#'   \code{drop_prop}, \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
+#' @export
+summary.net_stability_group <- function(object, ...) {
+  do.call(rbind, lapply(names(object), function(nm) {
+    df <- summary(object[[nm]])
+    df$group <- nm
+    df[c("group", setdiff(names(df), "group"))]
+  }))
+}
+
+
 #' Summary Method for net_stability
 #'
 #' @description

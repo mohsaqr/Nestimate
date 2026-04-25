@@ -27,6 +27,7 @@
 ^doc$
 ^Meta$
 ^local_testing_and_equivalence$
+^apps$
 ^AGENT-NOTE-EQUIV-TESTING\.md$
 ^.*\.tar\.gz$
 ^vignettes/Good$

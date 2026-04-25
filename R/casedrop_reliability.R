@@ -336,6 +336,19 @@ print.net_casedrop_reliability <- function(x, digits = 3, ...) {
   invisible(x)
 }
 
+#' Summary method for net_casedrop_reliability
+#'
+#' @param object A `net_casedrop_reliability`.
+#' @param ... Additional arguments (ignored).
+#' @return A tidy data frame with columns \code{metric}, \code{drop_prop},
+#'   \code{mean}, \code{sd} summarising edge-weight stability across
+#'   case-dropping iterations.
+#' @rdname casedrop_reliability
+#' @export
+summary.net_casedrop_reliability <- function(object, ...) {
+  object$summary
+}
+
 #' @rdname casedrop_reliability
 #' @export
 print.net_casedrop_reliability_group <- function(x, ...) {

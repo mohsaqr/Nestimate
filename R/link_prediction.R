@@ -571,18 +571,17 @@ print.net_link_prediction <- function(x, ...) {
 #' @export
 summary.net_link_prediction <- function(object, ...) {
   df <- object$predictions
-  res <- do.call(rbind, lapply(object$methods, function(m) {
+  do.call(rbind, lapply(object$methods, function(m) {
     sub <- df[df$method == m, , drop = FALSE]
     data.frame(
-      method       = m,
+      method        = m,
       n_predictions = nrow(sub),
-      score_mean   = mean(sub$score, na.rm = TRUE),
-      score_sd     = sd(sub$score, na.rm = TRUE),
-      score_max    = max(sub$score, na.rm = TRUE),
-      score_min    = min(sub$score, na.rm = TRUE),
-      stringsAsFactors = FALSE
+      score_mean    = mean(sub$score, na.rm = TRUE),
+      score_sd      = sd(sub$score, na.rm = TRUE),
+      score_max     = max(sub$score, na.rm = TRUE),
+      score_min     = min(sub$score, na.rm = TRUE),
+      stringsAsFactors = FALSE,
+      row.names     = NULL
     )
   }))
-  print(res, row.names = FALSE)
-  invisible(res)
 }

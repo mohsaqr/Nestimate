@@ -12,7 +12,9 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-The input object, invisibly.
+A tidy data frame with one row per cluster and columns
+\code{cluster}, \code{size}, \code{within_total}, \code{between_out},
+\code{between_in}. Prints the full object to the console as a side effect.
 }
 \description{
 Summary Method for mcml

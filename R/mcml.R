@@ -113,24 +113,6 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #'       multiplicative processes.}
 #'   }
 #'
-#' @param type Post-processing applied to aggregated weights. Determines the
-#'   interpretation of the resulting matrices:
-#'   \describe{
-#'     \item{"tna"}{(default) Row-normalize so each row sums to 1. Creates
-#'       transition probabilities suitable for Markov chain analysis.
-#'       Interpretation: "Given I'm in cluster A, what's the probability
-#'       of transitioning to cluster B?"
-#'       Required for use with tna package functions.
-#'       Diagonal represents within-cluster transition probability.}
-#'     \item{"raw"}{No normalization. Returns aggregated counts/weights as-is.
-#'       Use for frequency analysis or when you need raw counts.
-#'       Compatible with igraph's contract + simplify output.}
-#'     \item{"cooccurrence"}{Symmetrize the matrix: (A + t(A)) / 2.
-#'       For undirected co-occurrence analysis.}
-#'     \item{"semi_markov"}{Row-normalize with duration weighting.
-#'       For semi-Markov process analysis.}
-#'   }
-#'
 #' @param directed Logical. If \code{TRUE} (default), treat network as directed.
 #'   A->B and B->A are separate edges. If \code{FALSE}, edges are undirected
 #'   and the matrix is symmetrized before processing.
@@ -146,9 +128,10 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #'     \item{between}{List with two elements:
 #'       \describe{
 #'         \item{weights}{k x k matrix of cluster-to-cluster weights, where k is
-#'           the number of clusters. Row i, column j contains the aggregated
-#'           weight from cluster i to cluster j. Diagonal contains within-cluster
-#'           totals. Processing depends on \code{type}.}
+#'           the number of clusters. Row i, column j contains the elementwise
+#'           aggregation (per \code{method}) of all edges from nodes in cluster
+#'           i to nodes in cluster j. Diagonal contains within-cluster totals.
+#'           Pure arithmetic — no row normalization.}
 #'         \item{inits}{Numeric vector of length k. Initial state distribution
 #'           across clusters, computed from column sums of the original matrix.
 #'           Represents the proportion of incoming edges to each cluster.}
@@ -165,7 +148,6 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #'       Example: \code{list(A = c("n1", "n2"), B = c("n3", "n4", "n5"))}}
 #'     \item{meta}{List of metadata:
 #'       \describe{
-#'         \item{type}{The \code{type} argument used ("tna", "raw", etc.)}
 #'         \item{method}{The \code{method} argument used ("sum", "mean", etc.)}
 #'         \item{directed}{Logical, whether network was treated as directed}
 #'         \item{n_nodes}{Total number of nodes in original network}
@@ -184,10 +166,10 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #' net <- build_network(data, method = "relative")
 #' net$nodes$clusters <- group_assignments
 #'
-#' # 2. Compute cluster summary
-#' cs <- cluster_summary(net, type = "tna")
+#' # 2. Compute cluster summary (arithmetic aggregation over edges)
+#' cs <- cluster_summary(net, method = "sum")
 #'
-#' # 3. Convert to tna models
+#' # 3. Convert to tna models (normalization happens in as_tna)
 #' tna_models <- as_tna(cs)
 #'
 #' # 4. Analyze/visualize
@@ -200,20 +182,28 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #' The \code{macro$weights} matrix has clusters as both rows and columns:
 #' \itemize{
 #'   \item Off-diagonal (row i, col j): Aggregated weight from cluster i to cluster j
-#'   \item Diagonal (row i, col i): Within-cluster total (sum of internal edges in cluster i)
+#'   \item Diagonal (row i, col i): Within-cluster total (aggregation of internal edges)
 #' }
 #'
-#' When \code{type = "tna"}, rows sum to 1 and diagonal values represent
-#' "retention rate" - the probability of staying within the same cluster.
+#' Rows are NOT normalized. Entries are elementwise aggregates produced by
+#' \code{method}. If the caller wants probabilities, they should normalize
+#' downstream (e.g. via \code{as_tna()}). Mixing an arithmetic aggregation
+#' with row-normalization here (the old \code{type = "tna"} combined with
+#' \code{method = "min"} / \code{"mean"} etc.) produces numbers that sum to 1
+#' per row but are not a probability distribution over any process; that
+#' silently-wrong combination is why \code{type} was removed from the matrix
+#' path. The sequence and edgelist paths of \code{build_mcml()} keep
+#' \code{type}, where the aggregation is always counts and the post-processing
+#' chooses between well-defined network constructions.
 #'
-#' ## Choosing method and type
+#' ## Choosing method
 #'
 #' \tabular{lll}{
-#'   \strong{Input data} \tab \strong{Recommended} \tab \strong{Reason} \cr
-#'   Edge counts \tab method="sum", type="tna" \tab Preserves total flow, normalizes to probabilities \cr
-#'   Transition matrix \tab method="mean", type="tna" \tab Avoids cluster size bias \cr
-#'   Frequencies \tab method="sum", type="raw" \tab Keep raw counts for analysis \cr
-#'   Correlation matrix \tab method="mean", type="raw" \tab Average correlations \cr
+#'   \strong{Input data} \tab \strong{Recommended method} \tab \strong{Reason} \cr
+#'   Edge counts \tab \code{"sum"} \tab Preserves total flow between clusters \cr
+#'   Transition matrix \tab \code{"mean"} \tab Avoids cluster size bias \cr
+#'   Correlation matrix \tab \code{"mean"} \tab Average correlations \cr
+#'   Dense weighted \tab \code{"max"} / \code{"median"} \tab Robust summary \cr
 #' }
 #'
 #' @export
@@ -246,7 +236,7 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #'   Beta = c("D", "E", "F"),
 #'   Gamma = c("G", "H", "I", "J")
 #' )
-#' cs <- cluster_summary(mat, clusters, type = "tna")
+#' cs <- cluster_summary(mat, clusters)
 #' cs$macro$weights    # Rows/cols named Alpha, Beta, Gamma
 #' cs$clusters$Alpha       # Within Alpha cluster
 #'
@@ -270,15 +260,6 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #' cs_max <- cluster_summary(mat, clusters, method = "max")   # Strongest
 #'
 #' # -----------------------------------------------------
-#' # Raw counts vs TNA probabilities
-#' # -----------------------------------------------------
-#' cs_raw <- cluster_summary(mat, clusters, type = "raw")
-#' cs_tna <- cluster_summary(mat, clusters, type = "tna")
-#'
-#' rowSums(cs_raw$macro$weights)  # Various sums
-#' rowSums(cs_tna$macro$weights)  # All equal to 1
-#'
-#' # -----------------------------------------------------
 #' # Skip within-cluster computation for speed
 #' # -----------------------------------------------------
 #' cs_fast <- cluster_summary(mat, clusters, compute_within = FALSE)
@@ -286,8 +267,9 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #'
 #' # -----------------------------------------------------
 #' # Convert to tna objects for tna package
+#' # (as_tna() applies its own row normalisation)
 #' # -----------------------------------------------------
-#' cs <- cluster_summary(mat, clusters, type = "tna")
+#' cs <- cluster_summary(mat, clusters, method = "sum")
 #' tna_models <- as_tna(cs)
 #' # tna_models$macro      # tna object
 #' # tna_models$clusters$Alpha # tna object
@@ -295,7 +277,6 @@ cluster_summary <- function(x,
                             clusters = NULL,
                             method = c("sum", "mean", "median", "max",
                                        "min", "density", "geomean"),
-                            type = c("tna", "cooccurrence", "semi_markov", "raw"),
                             directed = TRUE,
                             compute_within = TRUE) {
 
@@ -304,7 +285,6 @@ cluster_summary <- function(x,
     return(x) # nocov
   }
 
-  type <- match.arg(type)
   method <- match.arg(method)
 
   # Store original for cluster extraction
@@ -373,8 +353,9 @@ cluster_summary <- function(x,
     }
   }
 
-  # Process based on type
-  between_weights <- .process_weights(between_raw, type, directed)
+  # Matrix path is aggregation only — no post-processing. Caller normalises
+  # downstream if they need a Markov chain (e.g. via as_tna()).
+  between_weights <- between_raw
 
   # Compute inits from column sums
   col_sums <- colSums(between_raw)
@@ -416,8 +397,7 @@ cluster_summary <- function(x,
         within_raw <- mat[idx_i, idx_i]
         dimnames(within_raw) <- list(cl_nodes, cl_nodes)
 
-        # Process based on type
-        within_weights_i <- .process_weights(within_raw, type, directed)
+        within_weights_i <- within_raw
 
         # Within-cluster inits (handle NAs)
         col_sums_w <- colSums(within_raw, na.rm = TRUE)
@@ -450,7 +430,6 @@ cluster_summary <- function(x,
       clusters = within_data,
       cluster_members = cluster_list,
       meta = list(
-        type = type,
         method = method,
         directed = directed,
         n_nodes = n,
@@ -562,6 +541,10 @@ build_mcml <- function(x,
     return(x)
   }
 
+  # Remember whether the caller passed `type` explicitly — used below to
+  # warn when type is applied to matrix input, where it has no effect.
+  type_explicit <- !missing(type)
+
   type <- match.arg(type)
   method <- match.arg(method)
 
@@ -570,6 +553,17 @@ build_mcml <- function(x,
 
   input_type <- .detect_mcml_input(x)
 
+  is_matrix_path <- input_type %in% c("matrix", "tna_matrix",
+                                       "netobject_matrix")
+  if (type_explicit && is_matrix_path) {
+    warning(
+      "`type` is ignored for matrix input: the matrix path of build_mcml() ",
+      "is aggregation-only. Pass `method` to choose the aggregation and ",
+      "normalise downstream if a Markov chain is needed (e.g. via as_tna()).",
+      call. = FALSE
+    )
+  }
+
   switch(input_type,
     "edgelist" = .build_mcml_edgelist(x, clusters, method, type,
                                        directed, compute_within),
@@ -577,7 +571,7 @@ build_mcml <- function(x,
                                        directed, compute_within),
     "tna_data" = .build_mcml_sequence(x$data, clusters, method, type,
                                        directed, compute_within),
-    "tna_matrix" = cluster_summary(x, clusters, method = method, type = type,
+    "tna_matrix" = cluster_summary(x, clusters, method = method,
                                     directed = directed,
                                     compute_within = compute_within),
     "netobject_data" = {
@@ -599,10 +593,10 @@ build_mcml <- function(x,
       if (is.null(clusters)) {
         clusters <- .auto_detect_clusters(x) # nocov
       }
-      cluster_summary(x, clusters, method = method, type = type,
+      cluster_summary(x, clusters, method = method,
                        directed = directed, compute_within = compute_within)
     },
-    "matrix" = cluster_summary(x, clusters, method = method, type = type,
+    "matrix" = cluster_summary(x, clusters, method = method,
                                 directed = directed,
                                 compute_within = compute_within),
     stop("Cannot build MCML from input of class '", class(x)[1], "'",
@@ -1201,9 +1195,12 @@ as_tna <- function(x) {
 #' @return A \code{netobject_group} with data preserved from each sub-network.
 #' @export
 as_tna.mcml <- function(x) {
-  # Determine method from meta
+  # Determine method from meta. Matrix path does not set $meta$type (it's
+  # aggregation only), so a missing field falls back to "frequency" —
+  # treat the aggregated matrix as counts rather than pretending it is
+  # already row-normalised probabilities.
   meta_type <- x$meta$type
-  net_method <- if (!is.null(meta_type) && meta_type %in% c("raw", "frequency")) {
+  net_method <- if (is.null(meta_type) || meta_type %in% c("raw", "frequency")) {
     "frequency"
   } else {
     "relative"
@@ -1367,7 +1364,11 @@ print.mcml <- function(x, ...) {
 
   cat("MCML Network\n")
   cat("============\n")
-  cat("Type:", x$meta$type, " | Method:", x$meta$method, "\n")
+  if (!is.null(x$meta$type)) {
+    cat("Type:", x$meta$type, " | Method:", x$meta$method, "\n")
+  } else {
+    cat("Method:", x$meta$method, " (matrix path, aggregation-only)\n")
+  }
   cat("Nodes:", n_nodes, " | Clusters:", n_clusters, "\n")
   if (!is.null(x$edges)) {
     cat("Transitions:", nrow(x$edges), "\n")
@@ -1395,7 +1396,9 @@ print.mcml <- function(x, ...) {
 #' @param object An \code{mcml} object.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return The input object, invisibly.
+#' @return A tidy data frame with one row per cluster and columns
+#'   \code{cluster}, \code{size}, \code{within_total}, \code{between_out},
+#'   \code{between_in}. Prints the full object to the console as a side effect.
 #'
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
@@ -1415,4 +1418,53 @@ print.mcml <- function(x, ...) {
 #' @export
 summary.mcml <- function(object, ...) {
   print(object, ...)
+
+  as_mat <- function(x) {
+    if (is.null(x)) return(NULL)
+    if (is.matrix(x) && is.numeric(x)) return(x)
+    if (is.list(x) && is.numeric(x$weights)) return(x$weights)
+    if (is.list(x) && is.numeric(x$matrix))  return(x$matrix)
+    NULL
+  }
+
+  macro    <- as_mat(object$macro)
+  cluster_mats <- lapply(object$clusters, as_mat)
+  cluster_names <- names(cluster_mats)
+  if (is.null(cluster_names))
+    cluster_names <- paste0("Cluster_", seq_along(cluster_mats))
+  sizes <- object$meta$cluster_sizes
+  if (is.null(sizes)) sizes <- vapply(object$cluster_members, length, integer(1L))
+
+  within_total <- vapply(cluster_mats, function(mat) {
+    if (is.null(mat)) return(0)
+    sum(abs(mat[row(mat) != col(mat)]))
+  }, numeric(1L))
+
+  directed <- isTRUE(object$meta$directed)
+  if (!is.null(macro)) {
+    diag0 <- macro
+    diag(diag0) <- 0
+    if (directed) {
+      between_out <- rowSums(abs(diag0))
+      between_in  <- colSums(abs(diag0))
+    } else {
+      # For undirected macro networks, in/out split is not meaningful;
+      # report total incident weight under between_out and leave between_in NA.
+      between_out <- rowSums(abs(diag0))
+      between_in  <- rep(NA_real_, length(cluster_names))
+    }
+  } else {
+    between_out <- rep(NA_real_, length(cluster_names))
+    between_in  <- rep(NA_real_, length(cluster_names))
+  }
+
+  data.frame(
+    cluster      = cluster_names,
+    size         = as.integer(sizes),
+    within_total = as.numeric(within_total),
+    between_out  = as.numeric(between_out),
+    between_in   = as.numeric(between_in),
+    stringsAsFactors = FALSE,
+    row.names    = NULL
+  )
 }

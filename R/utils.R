@@ -5,6 +5,57 @@
 #' @importFrom utils tail head
 NULL
 
+# Polyfill `%||%` for R < 4.4. Base R 4.4 added it; before then it lived only
+# in rlang/purrr. Many internal call sites already use it. Defined unconditionally
+# because Nestimate's namespace looks here first; base's version on R >= 4.4 is
+# functionally identical, so this is a harmless shadow.
+`%||%` <- function(a, b) if (is.null(a)) b else a
+
+
+#' Convert a named numeric matrix to a long tidy data.frame.
+#'
+#' Used by `summary()` methods on class-stamped matrix returns to produce a
+#' `(from, to, <value>)` edge-list view, keeping row/column names as strings.
+#'
+#' @param m A numeric matrix.
+#' @param value_col Name of the value column (e.g. "weight", "count").
+#' @param include One of `"nonzero"` (default) or `"positive"` — which entries
+#'   to include.
+#' @param sort_by One of `"abs_value"` (default, descending) or `"none"`.
+#' @return A data.frame with columns `from`, `to`, and `<value_col>`.
+#' @noRd
+.matrix_to_long_df <- function(m, value_col = "weight",
+                               include = c("nonzero", "positive"),
+                               sort_by = c("abs_value", "none")) {
+  include <- match.arg(include)
+  sort_by <- match.arg(sort_by)
+  empty_df <- function() {
+    out <- data.frame(from = character(0L), to = character(0L),
+                      x = numeric(0L), stringsAsFactors = FALSE)
+    names(out)[3L] <- value_col
+    out
+  }
+  if (!is.matrix(m) || nrow(m) == 0L || ncol(m) == 0L) return(empty_df())
+  idx <- switch(include,
+                nonzero  = which(m != 0, arr.ind = TRUE),
+                positive = which(m > 0,  arr.ind = TRUE))
+  if (nrow(idx) == 0L) return(empty_df())
+  rn <- rownames(m); if (is.null(rn)) rn <- as.character(seq_len(nrow(m)))
+  cn <- colnames(m); if (is.null(cn)) cn <- as.character(seq_len(ncol(m)))
+  vals <- m[idx]
+  df <- data.frame(
+    from = rn[idx[, 1L]],
+    to   = cn[idx[, 2L]],
+    x    = if (value_col == "count") as.integer(vals) else as.numeric(vals),
+    stringsAsFactors = FALSE,
+    row.names        = NULL
+  )
+  names(df)[3L] <- value_col
+  if (sort_by == "abs_value") df <- df[order(-abs(df[[3L]])), ]
+  row.names(df) <- NULL
+  df
+}
+
 # Global variable declarations to avoid R CMD check notes
 utils::globalVariables(c(
   # Common column names

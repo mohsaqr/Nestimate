@@ -817,12 +817,10 @@ summary.net_clustering <- function(object, ...) {
     cat("\n")
     .print_covariate_profiles(cov)
     cat("\nNote: Covariates are post-hoc and do not influence cluster assignments.\n")
-
-    result <- list(cluster_stats = cluster_stats, covariates = cov)
-    return(invisible(result))
+    return(structure(cluster_stats, covariates = cov))
   }
 
-  invisible(cluster_stats)
+  cluster_stats
 }
 
 #' Plot Sequence Clustering Results

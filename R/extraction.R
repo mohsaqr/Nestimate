@@ -95,7 +95,21 @@ extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
     weights <- weights / row_sums
   }
 
-  return(weights)
+  class(weights) <- c("nest_transition_matrix", class(weights))
+  weights
+}
+
+
+#' Summary Method for Transition Matrices
+#'
+#' @param object A \code{nest_transition_matrix} returned by
+#'   \code{\link{extract_transition_matrix}}.
+#' @param ... Additional arguments (ignored).
+#' @return A tidy data frame with columns \code{from}, \code{to},
+#'   \code{weight}, with one row per non-zero entry.
+#' @export
+summary.nest_transition_matrix <- function(object, ...) {
+  .matrix_to_long_df(unclass(object), value_col = "weight")
 }
 
 
@@ -185,7 +199,30 @@ extract_initial_probs <- function(model) {
     initial <- initial / sum(initial)
   }
 
-  return(initial)
+  class(initial) <- c("nest_initial_probs", class(initial))
+  initial
+}
+
+
+#' Summary Method for Initial Probability Vectors
+#'
+#' @param object A \code{nest_initial_probs} named numeric vector returned
+#'   by \code{\link{extract_initial_probs}}.
+#' @param ... Additional arguments (ignored).
+#' @return A tidy data frame with columns \code{state} and \code{prob},
+#'   sorted by decreasing probability.
+#' @export
+summary.nest_initial_probs <- function(object, ...) {
+  v <- unclass(object)
+  states <- names(v)
+  if (is.null(states)) states <- paste0("S", seq_along(v))
+  df <- data.frame(
+    state = states,
+    prob  = as.numeric(v),
+    stringsAsFactors = FALSE,
+    row.names        = NULL
+  )
+  df[order(-df$prob), ]
 }
 
 

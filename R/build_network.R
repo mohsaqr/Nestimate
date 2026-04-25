@@ -568,14 +568,18 @@ build_network <- function(data,
     result[[key]] <- est_result[[key]]
   }
 
-  # Auto-compute predictability (R²) for undirected association methods
+  # Auto-compute predictability (R²) for undirected association methods.
+  # Stored as a named numeric vector for backward compatibility with downstream
+  # consumers (e.g. cograph::splot pie ring). Users calling predictability()
+  # directly get the full tidy data.frame with R2 + RMSE.
   if (isTRUE(predictability) && !directed) {
-    # Temporarily assign class so predictability() dispatches correctly
     class(result) <- c("netobject", "cograph_network")
-    result$predictability <- tryCatch(
-      predictability(result),
-      error = function(e) NULL
-    )
+    pred_df <- tryCatch(predictability(result), error = function(e) NULL)
+    if (!is.null(pred_df)) {
+      vec <- pred_df$R2
+      names(vec) <- pred_df$node
+      result$predictability <- vec
+    }
   }
 
   structure(result, class = c("netobject", "cograph_network"))
@@ -671,7 +675,7 @@ print.netobject <- function(x, ...) {
     }, character(1L))
   }
 
-  # ---- Predictability (R²) ----
+  # ---- Predictability (R\u00b2) ----
   if (!is.null(x$predictability) && length(x$predictability) > 0) {
     cat("\n  Predictability (R\u00b2):\n")
     pred <- x$predictability
@@ -830,26 +834,25 @@ predictability <- function(object, ...) {
 #' @rdname predictability
 #' @return A named numeric vector of predictability values per node.
 #' @export
-predictability.netobject <- function(object, ...) {
+predictability.netobject <- function(object, data = NULL, ...) {
+  labels <- object$nodes$label
+  p <- length(labels)
+
+  # ---- R² ----
   if (!is.null(object$precision_matrix)) {
-    # glasso / pcor: analytical R²_j = 1 - 1/Omega_jj
     omega_diag <- diag(object$precision_matrix)
     r2 <- 1 - 1 / omega_diag
   } else if (!is.null(object$cor_matrix)) {
-    # cor method: multiple R² from correlation matrix
-    S <- object$cor_matrix
+    S   <- object$cor_matrix
     net <- object$weights
-    p <- ncol(net)
     r2 <- vapply(seq_len(p), function(j) {
       neighbors <- which(net[j, ] != 0)
       if (length(neighbors) == 0L) return(0)
       if (length(neighbors) == 1L) return(S[neighbors, j]^2)
       r_vec <- S[neighbors, j]
-      R_nn <- S[neighbors, neighbors]
-      tryCatch(
-        as.numeric(crossprod(r_vec, solve(R_nn, r_vec))),
-        error = function(e) 0
-      )
+      R_nn  <- S[neighbors, neighbors]
+      tryCatch(as.numeric(crossprod(r_vec, solve(R_nn, r_vec))),
+               error = function(e) 0)
     }, numeric(1))
   } else {
     stop("predictability() requires a precision or correlation matrix ",
@@ -857,8 +860,47 @@ predictability.netobject <- function(object, ...) {
          "' does not support predictability.", call. = FALSE)
   }
   r2 <- pmin(pmax(r2, 0), 1)
-  names(r2) <- object$nodes$label
-  r2
+
+  # ---- RMSE ----
+  if (is.null(data)) data <- object$data
+  rmse <- rep(NA_real_, p)
+
+  if (is.data.frame(data) || is.matrix(data)) {
+    X <- tryCatch(as.matrix(data[, labels, drop = FALSE]),
+                  error = function(e) NULL)
+    if (!is.null(X) && is.numeric(X)) {
+      X  <- X[complete.cases(X), , drop = FALSE]
+      mu <- colMeans(X)
+      sd <- apply(X, 2, stats::sd)
+      Z  <- scale(X, center = mu, scale = sd)
+
+      if (!is.null(object$precision_matrix)) {
+        Omega <- object$precision_matrix
+        rmse <- vapply(seq_len(p), function(j) {
+          beta_z <- -Omega[-j, j] / Omega[j, j]
+          z_hat  <- Z[, -j, drop = FALSE] %*% beta_z
+          y_hat  <- mu[j] + sd[j] * z_hat
+          sqrt(mean((X[, j] - y_hat)^2))
+        }, numeric(1))
+      } else {
+        S   <- object$cor_matrix
+        net <- object$weights
+        rmse <- vapply(seq_len(p), function(j) {
+          nbrs <- which(net[j, ] != 0)
+          if (length(nbrs) == 0L) return(sd[j])
+          beta_z <- tryCatch(solve(S[nbrs, nbrs, drop = FALSE], S[nbrs, j]),
+                             error = function(e) NULL)
+          if (is.null(beta_z)) return(NA_real_)
+          z_hat <- Z[, nbrs, drop = FALSE] %*% beta_z
+          y_hat <- mu[j] + sd[j] * z_hat
+          sqrt(mean((X[, j] - y_hat)^2))
+        }, numeric(1))
+      }
+    }
+  }
+
+  data.frame(node = labels, R2 = r2, RMSE = rmse,
+             stringsAsFactors = FALSE, row.names = NULL)
 }
 
 

@@ -641,24 +641,22 @@ summary.net_mogen <- function(object, ...) {
   cat(sprintf("  Paths: %d | Observations: %d\n\n",
               object$n_paths, object$n_observations))
 
-  # Table of results
   res <- data.frame(
-    order = object$orders,
+    order     = object$orders,
     layer_dof = as.integer(object$layer_dof),
-    cum_dof = as.integer(object$dof),
-    loglik = round(object$log_likelihood, 2),
-    aic = round(object$aic, 2),
-    bic = round(object$bic, 2),
+    cum_dof   = as.integer(object$dof),
+    loglik    = round(object$log_likelihood, 2),
+    aic       = round(object$aic, 2),
+    bic       = round(object$bic, 2),
     stringsAsFactors = FALSE
   )
   best <- object$optimal_order + 1L
   res$selected <- ""
   res$selected[best] <- "<--"
-  print(res, row.names = FALSE)
 
-  cat(sprintf("\n  Optimal order: %d (by %s)\n", object$optimal_order,
+  cat(sprintf("  Optimal order: %d (by %s)\n\n", object$optimal_order,
               object$criterion))
-  invisible(object)
+  res
 }
 
 #' Plot Method for net_mogen

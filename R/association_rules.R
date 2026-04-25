@@ -558,13 +558,8 @@ print.net_association_rules <- function(x, ...) {
 #' @export
 summary.net_association_rules <- function(object, ...) {
   r <- object$rules
-  if (nrow(r) == 0) {
-    cat("No rules found.\n")
-    return(invisible(data.frame()))
-  }
-
-  print(r, row.names = FALSE)
-  invisible(r)
+  row.names(r) <- NULL
+  r
 }
 
 

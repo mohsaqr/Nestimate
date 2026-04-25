@@ -9,7 +9,7 @@
 \usage{
 predictability(object, ...)
 
-\method{predictability}{netobject}(object, ...)
+\method{predictability}{netobject}(object, data = NULL, ...)
 
 \method{predictability}{netobject_ml}(object, ...)
 

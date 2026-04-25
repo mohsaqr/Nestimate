@@ -73,9 +73,27 @@ frequencies <- function(data,
   stopifnot(is.null(cols) || is.character(cols))
   format <- match.arg(format)
 
-  .count_transitions(
+  mat <- .count_transitions(
     data, format = format, action = action, id = id, time = time, cols = cols
   )
+  if (is.matrix(mat)) {
+    class(mat) <- c("nest_transition_counts", class(mat))
+  }
+  mat
+}
+
+
+#' Summary Method for Transition Count Matrices
+#'
+#' @param object A \code{nest_transition_counts} matrix returned by
+#'   \code{\link{frequencies}()}.
+#' @param ... Additional arguments (ignored).
+#' @return A tidy data frame with columns \code{from}, \code{to},
+#'   \code{count}, with one row per non-zero transition.
+#' @export
+summary.nest_transition_counts <- function(object, ...) {
+  .matrix_to_long_df(unclass(object), value_col = "count",
+                     include = "positive")
 }
 
 

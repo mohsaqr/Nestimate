@@ -360,8 +360,7 @@ summary.net_markov_stability <- function(object, ...) {
   sticky  <- df$state[which.max(df$sojourn_time)]
   cat(sprintf("Most accessible state (attractor): %s\n", attract))
   cat(sprintf("Most persistent state (stickiest): %s\n\n", sticky))
-  print(df, row.names = FALSE)
-  invisible(object)
+  df
 }
 
 #' @param metrics Character vector. Which metrics to plot. Options:

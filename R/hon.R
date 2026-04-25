@@ -1237,7 +1237,6 @@ summary.net_hon <- function(object, ...) {
   cat(sprintf("  Min frequency: %d\n", object$min_freq))
 
   if (object$n_nodes > 0L) {
-    # Order distribution: count arrows to determine order
     node_orders <- vapply(object$nodes$label, function(nd) {
       length(strsplit(nd, " -> ", fixed = TRUE)[[1L]])
     }, integer(1L))
@@ -1248,6 +1247,6 @@ summary.net_hon <- function(object, ...) {
     }
   }
 
-  invisible(object)
+  object$edges
 }
 

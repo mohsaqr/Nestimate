@@ -384,6 +384,29 @@ summary.net_hypa <- function(object, n = 10L,
     cat("  No anomalous paths detected.\n")
   }
 
-  invisible(object)
+  over <- object$over
+  under <- object$under
+  cols <- c("path", "observed", "expected", "ratio", "p_value")
+  pick <- function(df, dir) {
+    if (is.null(df) || nrow(df) == 0L) return(NULL)
+    out <- df[, intersect(cols, names(df)), drop = FALSE]
+    out$direction <- dir
+    out
+  }
+  combined <- do.call(rbind, Filter(Negate(is.null),
+                                    list(pick(over, "over"),
+                                         pick(under, "under"))))
+  if (is.null(combined)) {
+    combined <- data.frame(path = character(0L),
+                           observed = numeric(0L),
+                           expected = numeric(0L),
+                           ratio = numeric(0L),
+                           p_value = numeric(0L),
+                           direction = character(0L),
+                           stringsAsFactors = FALSE)
+  } else {
+    row.names(combined) <- NULL
+  }
+  combined
 }
 

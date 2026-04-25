@@ -3,6 +3,7 @@
 \name{casedrop_reliability}
 \alias{casedrop_reliability}
 \alias{print.net_casedrop_reliability}
+\alias{summary.net_casedrop_reliability}
 \alias{print.net_casedrop_reliability_group}
 \alias{summary.net_casedrop_reliability_group}
 \alias{print.summary.net_casedrop_reliability_group}
@@ -22,6 +23,8 @@ casedrop_reliability(
 )
 
 \method{print}{net_casedrop_reliability}(x, digits = 3, ...)
+
+\method{summary}{net_casedrop_reliability}(object, ...)
 
 \method{print}{net_casedrop_reliability_group}(x, ...)
 
@@ -83,6 +86,10 @@ iteration correlations.}
 }
 
 The input \code{x} invisibly.
+
+A tidy data frame with columns \code{metric}, \code{drop_prop},
+\code{mean}, \code{sd} summarising edge-weight stability across
+case-dropping iterations.
 
 A data frame with one row per network containing
 \code{cor}, \code{mean_abs_dev}, \code{median_abs_dev}, \code{max_abs_dev} formatted as

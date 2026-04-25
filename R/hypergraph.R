@@ -253,11 +253,15 @@ summary.net_hypergraph <- function(object, ...) {
     cat(sprintf("  Mean size:     %.2f\n", mean(he_sizes)))
     cat(sprintf("  Max size:      %d\n", max(he_sizes)))
   }
-  cat("\nNode degree distribution (hyperedges per node):\n")
+
+  nodes <- if (!is.null(object$nodes)) object$nodes else
+    rownames(object$incidence)
+  if (is.null(nodes)) nodes <- paste0("n", seq_len(object$n_nodes))
   if (object$n_hyperedges > 0L) {
-    print(summary(rowSums(object$incidence)))
+    deg <- as.integer(rowSums(object$incidence > 0))
   } else {
-    cat("  (no hyperedges)\n")
+    deg <- rep(0L, object$n_nodes)
   }
-  invisible(object)
+  data.frame(node = as.character(nodes), degree = deg,
+             stringsAsFactors = FALSE, row.names = NULL)
 }

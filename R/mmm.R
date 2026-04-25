@@ -775,7 +775,22 @@ summary.net_mmm <- function(object, ...) {
     )
   }
 
-  invisible(object)
+  k <- object$k
+  mean_posterior <- vapply(seq_len(k), function(m) {
+    idx <- which(object$assignments == m)
+    if (length(idx) == 0L) return(NA_real_)
+    mean(object$posterior[idx, m])
+  }, numeric(1L))
+
+  data.frame(
+    component      = seq_len(k),
+    prior          = as.numeric(object$mixing),
+    n_assigned     = as.integer(tabulate(object$assignments, nbins = k)),
+    mean_posterior = mean_posterior,
+    avepp          = as.numeric(object$quality$avepp),
+    stringsAsFactors = FALSE,
+    row.names      = NULL
+  )
 }
 
 #' Plot Method for net_mmm
@@ -880,6 +895,28 @@ print.mmm_compare <- function(x, ...) {
   if (best_icl != best_bic) x$best[best_icl] <- paste(x$best[best_icl], "<-- ICL")
   print.data.frame(x, row.names = FALSE, right = FALSE)
   invisible(x)
+}
+
+#' Summary Method for mmm_compare
+#'
+#' @param object An \code{mmm_compare} object (a data.frame subclass).
+#' @param ... Additional arguments (ignored).
+#' @return A tidy data frame with one row per \code{k}, plus a \code{best}
+#'   character column flagging the minimum-BIC and minimum-ICL solutions.
+#' @export
+summary.mmm_compare <- function(object, ...) {
+  best_bic <- which.min(object$BIC)
+  best_icl <- which.min(object$ICL)
+  best <- rep("", nrow(object))
+  best[best_bic] <- "BIC"
+  if (length(best_icl) && best_icl != best_bic) {
+    best[best_icl] <- if (nzchar(best[best_icl]))
+      paste(best[best_icl], "ICL", sep = "+") else "ICL"
+  }
+  out <- as.data.frame(object)
+  out$best <- best
+  row.names(out) <- NULL
+  out
 }
 
 #' Plot Method for mmm_compare

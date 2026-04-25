@@ -1037,7 +1037,7 @@ summary.net_gimme <- function(object, ...) {
   cat(strrep("-", 30), "\n")
   print(round(object$contemporaneous_avg, 3))
 
-  invisible(object)
+  fit_summary
 }
 
 

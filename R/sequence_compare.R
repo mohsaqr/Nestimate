@@ -414,12 +414,13 @@ print.net_sequence_comparison <- function(x, ...) {
 #'
 #' @param object A \code{net_sequence_comparison} object.
 #' @param ... Additional arguments (ignored).
-#' @return The patterns data.frame, invisibly.
+#' @return The patterns data.frame (tidy: one row per k-gram pattern, per
+#'   group, with frequency and proportion columns; includes p-values when a
+#'   permutation test was run).
 #' @inherit sequence_compare examples
 #' @export
 summary.net_sequence_comparison <- function(object, ...) {
-  print(object$patterns, row.names = FALSE)
-  invisible(object$patterns)
+  object$patterns
 }
 
 
