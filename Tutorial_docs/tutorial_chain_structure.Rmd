@@ -1,0 +1,340 @@
+---
+title: "Tutorial: Qualitative structure of a discrete-time Markov chain"
+subtitle: "When is the stationary distribution meaningful? When can a learner get from A to B? When do they get stuck?"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  out.width  = "100%",
+  fig.width  = 8,
+  fig.height = 5,
+  dpi        = 96,
+  warning    = FALSE,
+  message    = FALSE
+)
+library(Nestimate)
+```
+
+## What this tutorial answers
+
+`passage_time()` and `markov_stability()` both return a stationary
+distribution and use it as the basis for every per-state metric they report.
+That is only meaningful if the underlying chain has *one* long-run distribution
+to converge to — which is to say, if the chain is **regular** (irreducible
+plus aperiodic). When it is not, the reported `stationary_prob` is averaging
+across distinct behavioural phases that the learner never actually mixes
+between. `chain_structure()` is the diagnostic that tells you which case
+you are in.
+
+It also answers two interpretive questions that come up every time a coded
+sequence dataset has a clear terminal behaviour ("submitted", "abandoned",
+"gave up"): which states *funnel* into which, and how long does the funnel
+take.
+
+This tutorial walks through `chain_structure()` on four bundled datasets:
+
+- `trajectories` — engagement states (Active / Average / Disengaged).
+- `group_regulation_long` — collaborative-regulation actions across 27,533
+  events, six courses, two achievement strata.
+- `ai_long` — AI-coded vibe-coding interaction sessions.
+- `human_long` — the same sessions coded by a human rater.
+
+Every section follows the same shape: state the question, run a single
+`Nestimate` call, read the printed result, draw a conclusion.
+
+---
+
+## What `chain_structure()` returns
+
+```{r}
+P <- matrix(c(
+  0.5, 0.3, 0.2,
+  0.4, 0.4, 0.2,
+  0.0, 0.0, 1.0
+), nrow = 3, byrow = TRUE,
+   dimnames = list(c("Working", "Distracted", "GivenUp"),
+                   c("Working", "Distracted", "GivenUp")))
+chain_structure(P)
+```
+
+The header summarises four chain-level questions: is the chain
+irreducible (one communicating class)? aperiodic? regular (= both)? does
+it satisfy detailed balance against its stationary distribution? Below
+that, every state is classified as **absorbing**, **recurrent**, or
+**transient**, and — when absorbing states exist — the absorption
+probabilities and expected absorption times tell you what happens to the
+transient states.
+
+In this synthetic example, GivenUp is absorbing (`P[GivenUp, GivenUp] = 1`)
+and the other two are transient: every learner eventually gives up,
+taking five steps on average from either Working or Distracted. The
+chain is *not* regular because there is no return path from GivenUp;
+running `markov_stability(P)` here would report a stationary distribution
+concentrated entirely on GivenUp, which is correct as a long-run statement
+but uninformative about how long Working and Distracted persist before
+absorption — that information lives in `mean_absorption_time`, not
+`stationary_prob`.
+
+The `plot()` method renders the hitting-probability matrix with rows
+and columns ordered by communicating class, so the block structure of
+the chain is visible at a glance. Axis labels are coloured by
+classification (absorbing in vermillion, recurrent in blue, transient
+in orange).
+
+```{r, fig.height = 4}
+plot(chain_structure(P))
+```
+
+Reading the heatmap: the **GivenUp** column is solid dark — every
+state, including itself, reaches GivenUp with probability 1. The
+**GivenUp** row is white except in the GivenUp column — once you are
+in GivenUp, you cannot reach Working or Distracted. That asymmetry is
+the visual signature of an absorbing state.
+
+The remainder of the tutorial uses `chain_structure()` as a
+*precondition check* on real data, then reads off the per-state
+absorption and hitting structure where it applies.
+
+---
+
+## Engagement trajectories
+
+The `trajectories` dataset records 138 students' engagement states across
+15 weekly time points. The three states are coarse: Active, Average,
+Disengaged. The first analytic question is whether transitions between
+these states form a regular chain; if so, `markov_stability()`'s long-run
+output is interpretable; if not, we need a different reading.
+
+```{r}
+net_traj <- build_network(as.data.frame(trajectories), method = "relative")
+cs_traj  <- chain_structure(net_traj)
+cs_traj
+```
+
+The chain is irreducible, aperiodic, regular, and not reversible. Every
+state is recurrent — no engagement category is a one-way door. The
+*non-reversibility* is the substantive finding here: it says students do
+not flow symmetrically between the three states. There is a preferred
+direction in the long-run flux, even though every state is recurrent.
+
+Because the chain is regular, `markov_stability()` can be reported
+without further hedging:
+
+```{r}
+markov_stability(net_traj)
+```
+
+Active and Average have similar return times (about 2.7 weeks); the
+sojourn times — how long a student stays in a state once they enter it —
+are all near 1 week, which means trajectories are noisy at the weekly
+grain.
+
+The hitting probabilities are saturated:
+
+```{r, fig.height = 3.5}
+plot(cs_traj)
+```
+
+Every state can reach every other with probability 1 — the heatmap is
+saturated dark across all 9 cells. With three recurrent states and no
+absorbing endpoint, the educational interpretation is straightforward:
+students cycle between engagement levels for the duration of the
+course, and the long-run average stationary distribution genuinely
+describes the population.
+
+---
+
+## Group regulation actions
+
+`group_regulation_long` contains 27,533 collaborative-regulation events
+from 23 students across six courses, two achievement levels, and 14
+distinct actions (cohesion, consensus, discuss, plan, monitor, etc.).
+The first question, again, is whether the regulation chain is regular —
+in particular, whether any regulation behaviour is a dead-end that
+students never recover from.
+
+```{r}
+net_gr <- build_network(group_regulation_long,
+                        action = "Action",
+                        actor  = "Actor",
+                        time   = "Time",
+                        method = "relative")
+cs_gr <- chain_structure(net_gr)
+cs_gr
+```
+
+The chain is irreducible, aperiodic, regular, and *not* reversible.
+Substantively, the regularity finding says every regulation action is
+reachable from every other and there are no absorbing behaviours — if
+some single action had been a dead-end (for example "disengage" or
+"exit"), it would warrant a separate funnel analysis. The fact that
+none is absorbing means `markov_stability()` reads directly as a
+portrait of the population.
+
+Non-reversibility is the substantively important finding. It says the
+flux between any pair of regulation actions is asymmetric at
+equilibrium: the rate of transitions from action *i* to *j* differs
+from the rate from *j* to *i*. There *is* a preferred direction
+through the regulation behaviours — collaborative regulation is a
+sequenced process, not a memoryless mix of marginally-preferred
+actions. The next question, then, is whether the *direction* of that
+sequence differs between high and low achievers.
+
+```{r}
+net_gr_grp <- build_network(group_regulation_long,
+                            action = "Action",
+                            actor  = "Actor",
+                            time   = "Time",
+                            group  = "Achiever",
+                            method = "relative")
+cs_high <- chain_structure(net_gr_grp$High)
+cs_low  <- chain_structure(net_gr_grp$Low)
+
+data.frame(
+  group         = c("High", "Low"),
+  irreducible   = c(cs_high$is_irreducible, cs_low$is_irreducible),
+  aperiodic     = c(cs_high$is_aperiodic,   cs_low$is_aperiodic),
+  regular       = c(cs_high$is_regular,     cs_low$is_regular),
+  reversible    = c(cs_high$is_reversible,  cs_low$is_reversible),
+  n_classes     = c(length(cs_high$communicating_classes),
+                    length(cs_low$communicating_classes)),
+  stringsAsFactors = FALSE
+)
+```
+
+Both strata produce regular non-reversible chains with one
+communicating class — the qualitative chain structure is identical.
+The substantive difference between high and low achievers, if any, is
+therefore in the quantitative parameters (transition probabilities,
+dwell times, stationary frequencies), not in the *qualitative* shape
+of the regulation process. That is exactly the question
+`passage_time()` on each group answers, and it is exactly the question
+that would be *meaningless* if the two chains had different qualitative
+structure.
+
+```{r, fig.height = 5, fig.width = 7}
+plot(cs_high, show_values = FALSE)
+```
+
+```{r, fig.height = 5, fig.width = 7}
+plot(cs_low, show_values = FALSE)
+```
+
+The two heatmaps show a similar global pattern: every regulation
+action is reachable from every other (no white off-block region),
+which confirms the regularity finding numerically; the diagonal
+intensity (return probability) varies across actions in both groups,
+identifying which regulation behaviours are most self-reinforcing.
+
+---
+
+## Vibe-coding interactions: AI- vs human-coded
+
+The `ai_long` and `human_long` datasets code 429 vibe-coding sessions
+into a small set of cluster categories (three at the coarsest level used
+here). The two coders disagree on the boundary of nearly every category,
+but the question for `chain_structure()` is coarser: do they agree on
+the *qualitative* structure of the resulting chain?
+
+```{r}
+net_ai    <- build_network(ai_long,    action = "cluster",
+                           actor = "session_id", time = "code_order",
+                           method = "relative")
+net_human <- build_network(human_long, action = "cluster",
+                           actor = "session_id", time = "code_order",
+                           method = "relative")
+cs_ai    <- chain_structure(net_ai)
+cs_human <- chain_structure(net_human)
+
+data.frame(
+  coder       = c("AI", "Human"),
+  n_states    = c(length(cs_ai$states), length(cs_human$states)),
+  irreducible = c(cs_ai$is_irreducible, cs_human$is_irreducible),
+  aperiodic   = c(cs_ai$is_aperiodic,   cs_human$is_aperiodic),
+  regular     = c(cs_ai$is_regular,     cs_human$is_regular),
+  reversible  = c(cs_ai$is_reversible,  cs_human$is_reversible),
+  absorbing   = c(length(cs_ai$absorbing_states),
+                  length(cs_human$absorbing_states)),
+  stringsAsFactors = FALSE
+)
+```
+
+The two coding schemes produce qualitatively identical chains: regular,
+non-reversible, no absorbing states. So even though raters disagree on
+which utterance maps to which category, they agree on the topological
+shape of the conversational process. That is a stronger inter-rater
+guarantee than category-level agreement statistics provide.
+
+Non-reversibility for both says the same thing it said for
+`trajectories`: there is a preferred direction in the long-run flow
+between behaviours. Coding sessions move forward, not symmetrically.
+
+For a per-state comparison, the cleanest readout is the diagonal of the
+hitting-probability matrix. `H[i, i]` is the probability of *returning*
+to state *i* on a path of length at least one — a measure of how
+self-reinforcing each behaviour is.
+
+```{r}
+cmp <- data.frame(
+  cluster   = cs_ai$states,
+  H_self_ai = round(diag(cs_ai$hitting_probabilities), 3),
+  stringsAsFactors = FALSE
+)
+cmp$H_self_human <- round(diag(cs_human$hitting_probabilities)[match(cmp$cluster, cs_human$states)], 3)
+cmp$delta <- round(cmp$H_self_ai - cmp$H_self_human, 3)
+cmp[order(-abs(cmp$delta)), ]
+```
+
+The largest cross-coder disagreement is in how often a behaviour
+returns to itself — the `delta` column. Categories where the AI
+coder reports markedly higher `H_self` than the human coder are
+categories where the AI is *over-fragmenting* the conversation
+(the same underlying behaviour, sliced into more frequent
+self-transitions); categories where the human reports higher
+`H_self` are where the human is over-aggregating. This is a more
+diagnostic measure of coder disagreement than any category-frequency
+statistic, because it captures the *temporal* signature of the
+coding choice rather than just the marginal counts.
+
+---
+
+## When to use which
+
+| Question | Function |
+|---|---|
+| Is this chain regular? Should I trust `markov_stability()`'s stationary output? | `chain_structure()$is_regular` |
+| Is there a one-way pathway through behaviours? | `chain_structure()$is_reversible` (FALSE means yes) |
+| Are any behaviours dead-ends? | `chain_structure()$absorbing_states` |
+| Given a learner is in behaviour X, what is the probability of *eventually* reaching Y? | `chain_structure()$hitting_probabilities[X, Y]` |
+| Given a learner is in behaviour X, expected number of steps to absorption? | `chain_structure()$mean_absorption_time[X]` |
+| Given absorbing states exist, which one does each transient state most likely funnel into? | `chain_structure()$absorption_probabilities` |
+| Long-run state frequencies *given* a regular chain | `markov_stability()$stationary_prob` |
+| Mean steps from state *i* to state *j* *given* a regular chain | `passage_time()$matrix[i, j]` |
+
+Run `chain_structure()` first; the output tells you whether the rest of
+the long-run analysis is meaningful. If `is_regular = FALSE`, the
+absorption-and-hitting analyses inside `chain_structure()` itself replace
+the stationary-distribution-based summaries.
+
+## References
+
+- Kemeny, J. G., and Snell, J. L. (1976). *Finite Markov Chains*.
+  Springer-Verlag. (Fundamental matrix, absorption-time formula.)
+- Norris, J. R. (1997). *Markov Chains*. Cambridge University Press.
+  (Hitting probabilities as the minimal non-negative solution of the
+  recurrence; Theorem 1.3.2.)
+- Spedicato, G. A. (2017). *Discrete Time Markov Chains with R*.
+  R Journal 9(2), 84–104. (Reference implementation in the
+  `markovchain` package; `chain_structure()` is validated to machine
+  precision against `markovchain::*` across 100 random configurations
+  in `local_testing_and_equivalence/test-equiv-chain_structure.R`.)

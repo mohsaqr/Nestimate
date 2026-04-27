@@ -8,7 +8,6 @@ cluster_summary(
   x,
   clusters = NULL,
   method = c("sum", "mean", "median", "max", "min", "density", "geomean"),
-  type = c("tna", "cooccurrence", "semi_markov", "raw"),
   directed = TRUE,
   compute_within = TRUE
 )
@@ -63,24 +62,6 @@ by cluster size combinations.}
 multiplicative processes.}
 }}
 
-\item{type}{Post-processing applied to aggregated weights. Determines the
-interpretation of the resulting matrices:
-\describe{
-\item{"tna"}{(default) Row-normalize so each row sums to 1. Creates
-transition probabilities suitable for Markov chain analysis.
-Interpretation: "Given I'm in cluster A, what's the probability
-of transitioning to cluster B?"
-Required for use with tna package functions.
-Diagonal represents within-cluster transition probability.}
-\item{"raw"}{No normalization. Returns aggregated counts/weights as-is.
-Use for frequency analysis or when you need raw counts.
-Compatible with igraph's contract + simplify output.}
-\item{"cooccurrence"}{Symmetrize the matrix: (A + t(A)) / 2.
-For undirected co-occurrence analysis.}
-\item{"semi_markov"}{Row-normalize with duration weighting.
-For semi-Markov process analysis.}
-}}
-
 \item{directed}{Logical. If \code{TRUE} (default), treat network as directed.
 A->B and B->A are separate edges. If \code{FALSE}, edges are undirected
 and the matrix is symmetrized before processing.}
@@ -97,9 +78,10 @@ A \code{cluster_summary} object (S3 class) containing:
 \item{between}{List with two elements:
 \describe{
 \item{weights}{k x k matrix of cluster-to-cluster weights, where k is
-the number of clusters. Row i, column j contains the aggregated
-weight from cluster i to cluster j. Diagonal contains within-cluster
-totals. Processing depends on \code{type}.}
+the number of clusters. Row i, column j contains the elementwise
+aggregation (per \code{method}) of all edges from nodes in cluster
+i to nodes in cluster j. Diagonal contains within-cluster totals.
+Pure arithmetic — no row normalization.}
 \item{inits}{Numeric vector of length k. Initial state distribution
 across clusters, computed from column sums of the original matrix.
 Represents the proportion of incoming edges to each cluster.}
@@ -116,7 +98,6 @@ NULL if \code{compute_within = FALSE}.}
 Example: \code{list(A = c("n1", "n2"), B = c("n3", "n4", "n5"))}}
 \item{meta}{List of metadata:
 \describe{
-\item{type}{The \code{type} argument used ("tna", "raw", etc.)}
 \item{method}{The \code{method} argument used ("sum", "mean", etc.)}
 \item{directed}{Logical, whether network was treated as directed}
 \item{n_nodes}{Total number of nodes in original network}
@@ -143,10 +124,10 @@ Typical MCML analysis workflow:
 net <- build_network(data, method = "relative")
 net$nodes$clusters <- group_assignments
 
-# 2. Compute cluster summary
-cs <- cluster_summary(net, type = "tna")
+# 2. Compute cluster summary (arithmetic aggregation over edges)
+cs <- cluster_summary(net, method = "sum")
 
-# 3. Convert to tna models
+# 3. Convert to tna models (normalization happens in as_tna)
 tna_models <- as_tna(cs)
 
 # 4. Analyze/visualize
@@ -160,21 +141,29 @@ tna::centralities(tna_models$macro)
 The \code{macro$weights} matrix has clusters as both rows and columns:
 \itemize{
 \item Off-diagonal (row i, col j): Aggregated weight from cluster i to cluster j
-\item Diagonal (row i, col i): Within-cluster total (sum of internal edges in cluster i)
+\item Diagonal (row i, col i): Within-cluster total (aggregation of internal edges)
 }
 
-When \code{type = "tna"}, rows sum to 1 and diagonal values represent
-"retention rate" - the probability of staying within the same cluster.
+Rows are NOT normalized. Entries are elementwise aggregates produced by
+\code{method}. If the caller wants probabilities, they should normalize
+downstream (e.g. via \code{as_tna()}). Mixing an arithmetic aggregation
+with row-normalization here (the old \code{type = "tna"} combined with
+\code{method = "min"} / \code{"mean"} etc.) produces numbers that sum to 1
+per row but are not a probability distribution over any process; that
+silently-wrong combination is why \code{type} was removed from the matrix
+path. The sequence and edgelist paths of \code{build_mcml()} keep
+\code{type}, where the aggregation is always counts and the post-processing
+chooses between well-defined network constructions.
 }
 
-\subsection{Choosing method and type}{
+\subsection{Choosing method}{
 
 \tabular{lll}{
-\strong{Input data} \tab \strong{Recommended} \tab \strong{Reason} \cr
-Edge counts \tab method="sum", type="tna" \tab Preserves total flow, normalizes to probabilities \cr
-Transition matrix \tab method="mean", type="tna" \tab Avoids cluster size bias \cr
-Frequencies \tab method="sum", type="raw" \tab Keep raw counts for analysis \cr
-Correlation matrix \tab method="mean", type="raw" \tab Average correlations \cr
+\strong{Input data} \tab \strong{Recommended method} \tab \strong{Reason} \cr
+Edge counts \tab \code{"sum"} \tab Preserves total flow between clusters \cr
+Transition matrix \tab \code{"mean"} \tab Avoids cluster size bias \cr
+Correlation matrix \tab \code{"mean"} \tab Average correlations \cr
+Dense weighted \tab \code{"max"} / \code{"median"} \tab Robust summary \cr
 }
 }
 }
@@ -202,7 +191,7 @@ clusters <- list(
   Beta = c("D", "E", "F"),
   Gamma = c("G", "H", "I", "J")
 )
-cs <- cluster_summary(mat, clusters, type = "tna")
+cs <- cluster_summary(mat, clusters)
 cs$macro$weights    # Rows/cols named Alpha, Beta, Gamma
 cs$clusters$Alpha       # Within Alpha cluster
 
@@ -226,15 +215,6 @@ cs_mean <- cluster_summary(mat, clusters, method = "mean") # Average
 cs_max <- cluster_summary(mat, clusters, method = "max")   # Strongest
 
 # -----------------------------------------------------
-# Raw counts vs TNA probabilities
-# -----------------------------------------------------
-cs_raw <- cluster_summary(mat, clusters, type = "raw")
-cs_tna <- cluster_summary(mat, clusters, type = "tna")
-
-rowSums(cs_raw$macro$weights)  # Various sums
-rowSums(cs_tna$macro$weights)  # All equal to 1
-
-# -----------------------------------------------------
 # Skip within-cluster computation for speed
 # -----------------------------------------------------
 cs_fast <- cluster_summary(mat, clusters, compute_within = FALSE)
@@ -242,8 +222,9 @@ cs_fast$clusters  # NULL
 
 # -----------------------------------------------------
 # Convert to tna objects for tna package
+# (as_tna() applies its own row normalisation)
 # -----------------------------------------------------
-cs <- cluster_summary(mat, clusters, type = "tna")
+cs <- cluster_summary(mat, clusters, method = "sum")
 tna_models <- as_tna(cs)
 # tna_models$macro      # tna object
 # tna_models$clusters$Alpha # tna object

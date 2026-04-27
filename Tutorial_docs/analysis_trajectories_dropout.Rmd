@@ -1,0 +1,257 @@
+---
+title: "Analysis: engagement trajectories and dropout risk"
+subtitle: "What chain-structure adds to a 3-state engagement model"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+    code_folding: hide
+    df_print: kable
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "",
+  out.width  = "100%",
+  fig.width  = 8,
+  fig.height = 5,
+  dpi        = 96,
+  warning    = FALSE,
+  message    = FALSE
+)
+library(Nestimate)
+kt <- function(df, ...) knitr::kable(df, row.names = FALSE, ...)
+```
+
+The bundled `trajectories` dataset records the weekly engagement state
+of 138 students across 15 weeks of a course. Three states: **Active**,
+**Average**, **Disengaged**. Some students have a *terminal-NA*
+pattern in the matrix — once their data goes missing, it stays missing
+— which we treat as **dropout**. This is the cleanest dataset in the
+package for `chain_structure()` because it admits two complementary
+chain models:
+
+1. **Engagement-only chain** (3 states): how do students cycle
+   between engagement levels? Regular, non-reversible —
+   `markov_stability()`'s long-run distribution is interpretable.
+2. **Augmented chain with Dropout as a fourth absorbing state**: how
+   long until a student drops out, conditional on current
+   engagement? The three engagement states are now **transient** and
+   `markov_stability()` is *not* the right summary —
+   `chain_structure()` is.
+
+Both models are needed for a complete reading. Two functions in the
+package handle the wide-data plumbing:
+
+- `actor_endpoints(data)` — tidy per-actor first/last state +
+  dropout flag.
+- `mark_terminal_state(data, state = "Dropout")` — fill terminal NAs
+  with an explicit label so the resulting chain has the label as a
+  structurally absorbing state.
+
+---
+
+## Setup
+
+```{r}
+ep <- actor_endpoints(trajectories)
+kt(data.frame(
+  metric = c("students", "weeks observed", "dropouts (terminal NA)",
+             "completers"),
+  value  = c(nrow(ep), ncol(trajectories),
+             sum(ep$dropped_out), sum(!ep$dropped_out)),
+  stringsAsFactors = FALSE
+))
+```
+
+```{r}
+kt(head(ep, 6),
+   caption = "actor_endpoints() — first six rows")
+```
+
+Each row records when the student entered the course (`first_step`,
+`first_state`), when they were last seen (`last_step`,
+`last_state`), and whether they dropped out (`last_step < 15` with
+all subsequent weeks NA).
+
+---
+
+## Part 1 — Engagement chain (no dropout)
+
+`build_network()` on the raw matrix gives the engagement-only chain:
+the dynamics conditional on remaining in the course. NAs are skipped
+silently when transitions are counted.
+
+```{r}
+net_eng <- build_network(as.data.frame(trajectories), method = "relative")
+cs_eng  <- chain_structure(net_eng)
+summary(cs_eng)
+```
+
+Reading the summary: the chain is **regular** (irreducible plus
+aperiodic), so `markov_stability()`'s stationary distribution is
+interpretable. **Disengaged is the least sticky state**
+(persistence ≈ 0.48, sojourn ≈ 1.93 weeks); Active is the stickiest
+(persistence ≈ 0.70, sojourn ≈ 3.31). All three states return to
+themselves with probability 1 (`return_probability` = 1 for recurrent
+states by definition).
+
+Long-run mass: **~37% Active, ~44% Average, ~19% Disengaged**.
+Disengaged absorbs the smallest share of student-weeks.
+
+```{r}
+kt(round(net_eng$weights, 3),
+   caption = "Engagement transition matrix (rows = this week, cols = next)")
+```
+
+The off-diagonals show how each state is exited. From Disengaged,
+**40% recover to Average and 12% jump to Active**. From Active, only
+**3.5% drop directly to Disengaged** — the Active → Disengaged
+direct path is ten times less likely than Average → Disengaged,
+suggesting disengagement is reached *gradually*, not abruptly.
+
+```{r, fig.height = 4}
+plot(cs_eng)
+```
+
+The heatmap is saturated dark across all 9 cells: every state is
+reachable from every other with probability 1. The diagonal pattern
+is the visual signature of non-reversibility — the asymmetric flow
+between Active, Average, and Disengaged.
+
+---
+
+## Part 2 — Augmented chain with Dropout
+
+`mark_terminal_state(trajectories, state = "Dropout")` fills every
+terminal NA with the label `"Dropout"`. The resulting chain has
+Dropout as a structurally absorbing state.
+
+```{r}
+M_aug   <- mark_terminal_state(trajectories, state = "Dropout")
+net_aug <- build_network(M_aug, method = "relative")
+cs_aug  <- chain_structure(net_aug)
+summary(cs_aug)
+```
+
+The summary now tells a different story:
+
+- **`is_regular = FALSE`** — the chain is not regular because Dropout
+  is absorbing. Running `markov_stability()` here would put all
+  long-run mass on Dropout (correct as a limit, useless as a
+  characterisation of student behaviour).
+- **The three engagement states are classified `transient`**, and
+  Dropout is `absorbing` with `period = 1` and infinite sojourn
+  (once entered, never left).
+- **`absorption_probability` is 1 for every transient state** — every
+  student eventually drops out under this model. That follows from
+  Dropout being the only absorbing state and every transient state
+  having a positive path to it.
+- **`mean_absorption_time` is what differs by starting state**.
+
+```{r}
+kt(round(net_aug$weights, 3),
+   caption = "Augmented transition matrix (Dropout column = per-week dropout probability)")
+```
+
+The Dropout column reads off the **per-week dropout probability** by
+current engagement state:
+
+- **Active → Dropout: ~0.3% per week** (~1 in 333 student-weeks)
+- **Average → Dropout: ~0.8% per week**
+- **Disengaged → Dropout: ~3.0% per week** (~1 in 33 student-weeks)
+
+Disengaged students drop out at **~10× the rate** of Active students.
+A single week of disengagement carries the immediate dropout risk of
+ten weeks of active engagement.
+
+```{r, fig.height = 4}
+plot(cs_aug)
+```
+
+Visually, the **Dropout column is solid dark** (every state reaches
+Dropout with probability 1) and the **Dropout row is white except
+in the Dropout column** (once dropped, no return). The asymmetry of
+that row vs column is the signature of an absorbing state.
+
+### Why does starting state matter so little for absorption time?
+
+The chain is *forgiving*. Even though Disengaged → Dropout per-week
+rate is 10× Active → Dropout, students mix between engagement states
+fast: from Disengaged, **52% are at Average or Active next week**.
+The bad-week-now disadvantage is diluted within one or two steps.
+
+Mathematically, `mean_absorption_time` integrates over future
+trajectories, weighted by transition probabilities. A Disengaged
+student's expected dropout time is **not** the inverse of the
+immediate dropout rate (1/0.030 ≈ 33 weeks); it is the
+equilibrium-mixture-weighted rate (~1/0.0104 ≈ 96 weeks). The chain
+absorbs the short-run rate ratio into a long-run rate that is much
+closer across starting states.
+
+This is a general property of regular transient cores embedded in
+absorbing chains — the long-run absorption rate is closer to the
+stationary mixture rate than to any individual state's per-step
+rate. `chain_structure()` makes both the immediate rates (visible
+in the augmented transition matrix) and the absorbed-by rates
+(in `mean_absorption_time`) visible side by side.
+
+---
+
+## Part 3 — Cross-tabulation: where were dropouts last seen?
+
+The model-based view above has a model-free counterpart: simply
+cross-tabulate the per-actor `last_state` against the dropout flag.
+
+```{r}
+tab <- with(ep[!is.na(ep$last_state), ],
+            table(last_state, dropped_out, dnn = c("last_state", "dropped_out")))
+kt(data.frame(
+  last_state  = rownames(tab),
+  dropouts    = as.integer(tab[, "TRUE"]),
+  completers  = as.integer(tab[, "FALSE"]),
+  pct_dropout = sprintf("%.1f%%",
+                        100 * tab[, "TRUE"] /
+                              (tab[, "TRUE"] + tab[, "FALSE"])),
+  stringsAsFactors = FALSE
+))
+```
+
+**Of students last seen Disengaged, ~35% dropped out**. Of students
+last seen Average, ~10% dropped out. Of students last seen Active,
+~5% dropped out. The ten-to-one ratio between Disengaged and Active
+matches the per-week transition-probability ratio computed via the
+chain. The two readings agree on the behavioural signal.
+
+---
+
+## When to use which
+
+| Question | Right summary |
+|---|---|
+| Long-run engagement balance, ignoring dropout | `markov_stability()` on the engagement-only chain |
+| Is the engagement chain regular? Does the stationary distribution exist? | `chain_structure()$is_regular` on the engagement-only chain |
+| Per-week dropout probability by current state | `P[i, "Dropout"]` from `build_network(mark_terminal_state(data))` |
+| Expected weeks to dropout from each state | `chain_structure()$mean_absorption_time` on the augmented chain |
+| Probability of *eventual* dropout | `chain_structure()$absorption_probabilities` (= 1 here) |
+| Per-actor first/last state and dropout flag | `actor_endpoints(data)` |
+| Backwards check: where were the dropouts last seen? | Cross-tab `last_state` × `dropped_out` from `actor_endpoints()` |
+
+The two chain models — engagement-only and engagement-plus-Dropout —
+are complementary. The first describes the dynamics of the
+*transient core*; the second embeds those dynamics in a funnel
+toward absorption. `chain_structure()` is the diagnostic that
+chooses the right summary: when an absorbing state is present,
+`markov_stability()` is uninterpretable and the absorption analysis
+takes its place.
+
+## References
+
+- Kemeny, J. G. and Snell, J. L. (1976). *Finite Markov Chains*.
+  Springer-Verlag.
+- Norris, J. R. (1997). *Markov Chains*. Cambridge University Press.
+- Spedicato, G. A. (2017). Discrete Time Markov Chains with R.
+  *R Journal* 9(2), 84–104.

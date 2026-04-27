@@ -4,7 +4,7 @@
 \alias{plot.net_reliability}
 \title{Plot Method for net_reliability}
 \usage{
-\method{plot}{net_reliability}(x, ...)
+\method{plot}{net_reliability}(x, bins = 60L, ...)
 }
 \arguments{
 \item{x}{A \code{net_reliability} object.}
