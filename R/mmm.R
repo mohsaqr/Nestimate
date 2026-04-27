@@ -27,29 +27,25 @@
   # Initialize posterior (N x M)
   if (is.null(init_posterior)) {
     post <- matrix(runif(N * n_comp), nrow = N, ncol = n_comp)
-    post <- post / rowSums(post)
+    post <- post / .rowSums(post, N, n_comp)
   } else {
     post <- init_posterior
   }
 
-  # Pre-compute from-state indicator: K^2 x K binary matrix
-  # from_ind[j, k] = 1 if pair j has from-state = k
-  # j = (from-1)*K + to, so from = (j-1) %/% K + 1
-  if (is.null(from_ind)) {
-    from_idx <- rep(seq_len(K), each = K)
-    from_ind <- matrix(0, K2, K)
-    from_ind[cbind(seq_len(K2), from_idx)] <- 1
-  }
-  from_ind_t <- t(from_ind)  # K x K^2
+  # Index of "from" state for each K^2 pair (K^2-length integer vector).
+  # pair j = (from-1)*K + to, so from = (j-1) %/% K + 1.
+  from_idx <- rep(seq_len(K), each = K)
 
-  # Initial state indicator: N x K binary matrix
+  # Initial state indicator (N x K, sparse: one 1 per row).
+  # Used in the M-step only — the E-step indexes log(init_all) directly.
   init_ind <- matrix(0, N, K)
   valid_init <- !is.na(init_state)
   init_ind[cbind(which(valid_init), init_state[valid_init])] <- 1
+  init_state_safe <- init_state
+  init_state_safe[!valid_init] <- 1L
 
   ll_prev <- -Inf
   converged <- FALSE
-  cov_fit <- NULL
   cov_beta <- NULL
 
   # Pre-compute design matrix for covariates (once)
@@ -58,20 +54,30 @@
     X_cov <- stats::model.matrix(~ ., data = cov_df)
   }
 
+  log_lik <- matrix(0, N, n_comp)
+
   for (iter in seq_len(max_iter)) {
     # ---- M-step ----
-    # Transition probabilities: weighted counts grouped by from-state
-    weighted_smooth <- crossprod(post, counts) + smooth  # M x K^2
-    from_sums <- weighted_smooth %*% from_ind  # M x K
-    from_sums[from_sums == 0] <- 1
-    divisor <- from_sums %*% from_ind_t  # M x K^2
-    P_all <- t(weighted_smooth / divisor)  # K^2 x M
+    # Compute transition table directly in K^2 x M shape so the E-step
+    # can use it without a transpose. Pure-R BLAS one-shot:
+    #   counts is N x K^2, post is N x M, so crossprod(counts, post)
+    #   = t(counts) %*% post is K^2 x M.
+    P_unnorm <- crossprod(counts, post) + smooth        # K^2 x M
+    # Sum over from-state groups via 3D array view. P_unnorm has columns
+    # indexed by j = (f-1)*K + t (column-major), so reshaping to
+    # (K_to, K_from, M) and colSums-ing over the to-axis gives K_from x M.
+    dim(P_unnorm) <- c(K, K, n_comp)
+    from_sums_t <- colSums(P_unnorm)                    # K x M
+    dim(P_unnorm) <- c(K2, n_comp)
+    from_sums_t[from_sums_t == 0] <- 1
+    # Expand K x M to K^2 x M by repeating each row K times in place.
+    P_all <- P_unnorm / from_sums_t[from_idx, , drop = FALSE]   # K^2 x M
 
-    # Initial state probabilities: weighted first-state counts
-    init_weighted <- crossprod(post, init_ind) + smooth  # M x K
-    init_sums <- rowSums(init_weighted)
+    # Initial state probabilities: K x M directly (skip the t() at the end).
+    init_unnorm <- crossprod(init_ind, post) + smooth     # K x M
+    init_sums <- .colSums(init_unnorm, K, n_comp)         # M
     init_sums[init_sums == 0] <- 1
-    init_all <- t(init_weighted / init_sums)  # K x M
+    init_all <- init_unnorm / rep(init_sums, each = K)    # K x M
 
     # Mixing proportions
     if (is.null(cov_df)) {
@@ -82,33 +88,41 @@
                                       n_steps = 3L)
       log_pi_mat <- sm$log_pi_mat
       cov_beta <- sm$beta
-      pi_mix <- colMeans(exp(log_pi_mat))
+      pi_mix <- .colMeans(exp(log_pi_mat), N, n_comp)
     }
 
     # ---- E-step ----
-    # Transition log-likelihood: N x M
-    log_lik <- counts %*% log(P_all + 1e-300)
-    # Initial state log-likelihood: N x M
-    log_lik <- log_lik + init_ind %*% log(init_all + 1e-300)
-    # Mixing proportions
+    # log_P: K^2 x M. log_init: K x M. log_pi: M (or N x M with covariates).
+    log_P <- log(P_all + 1e-300)
+    log_init <- log(init_all + 1e-300)
+
+    # Transition log-likelihood: N x M = (N x K^2) %*% (K^2 x M)
+    log_lik <- counts %*% log_P
+    # Initial-state log-likelihood: each row i needs log_init[init_state[i], ].
+    # init_ind %*% log_init reduces to indexed extraction.
+    log_lik <- log_lik + log_init[init_state_safe, , drop = FALSE]
+    # Mixing
     if (is.null(cov_df)) {
       log_lik <- log_lik + rep(log_pi, each = N)
     } else {
       log_lik <- log_lik + log_pi_mat
     }
 
-    # Log-sum-exp with vectorized row max
+    # Log-sum-exp row max: pmax.int is variadic, so a single C call covers
+    # any n_comp. Special-cased only because column extraction is unrolled.
     if (n_comp == 2L) {
-      log_max <- pmax(log_lik[, 1L], log_lik[, 2L])
+      log_max <- pmax.int(log_lik[, 1L], log_lik[, 2L])
+    } else if (n_comp == 3L) {
+      log_max <- pmax.int(log_lik[, 1L], log_lik[, 2L], log_lik[, 3L])
+    } else if (n_comp == 4L) {
+      log_max <- pmax.int(log_lik[, 1L], log_lik[, 2L], log_lik[, 3L], log_lik[, 4L])
     } else {
-      log_max <- log_lik[, 1L]
-      for (m in 2:n_comp) log_max <- pmax(log_max, log_lik[, m])
+      log_max <- do.call(pmax.int, lapply(seq_len(n_comp), function(m) log_lik[, m]))
     }
-    log_lik <- log_lik - log_max
-    post <- exp(log_lik)
-    row_sums <- rowSums(post)
+    exp_lik <- exp(log_lik - log_max)
+    row_sums <- .rowSums(exp_lik, N, n_comp)
     row_sums[row_sums == 0] <- 1e-300
-    post <- post / row_sums
+    post <- exp_lik / row_sums
 
     ll <- sum(log_max + log(row_sums))
 
@@ -183,8 +197,17 @@
     mean(posterior[idx, m])
   }, numeric(1))
 
-  # Max posterior per sequence (computed once, reused)
-  max_post <- do.call(pmax, as.data.frame(posterior))
+  # Max posterior per sequence — direct pmax.int beats `do.call(pmax,
+  # as.data.frame(posterior))` which copies the matrix into a list.
+  max_post <- if (M == 2L) {
+    pmax.int(posterior[, 1L], posterior[, 2L])
+  } else if (M == 3L) {
+    pmax.int(posterior[, 1L], posterior[, 2L], posterior[, 3L])
+  } else if (M == 4L) {
+    pmax.int(posterior[, 1L], posterior[, 2L], posterior[, 3L], posterior[, 4L])
+  } else {
+    do.call(pmax.int, lapply(seq_len(M), function(m) posterior[, m]))
+  }
 
   # Overall AvePP (mean of max posteriors)
   avepp_overall <- mean(max_post)
@@ -583,7 +606,8 @@ build_mmm <- function(data,
   names(models) <- paste0("Cluster ", seq_len(k))
 
   # ---- Assignments & quality ----
-  assignments <- apply(best$posterior, 1L, which.max)
+  # max.col is the vectorized row-wise argmax — avoids `apply` overhead.
+  assignments <- max.col(best$posterior, ties.method = "first")
   quality <- .mmm_quality(best$posterior, assignments, k)
 
   # ---- Information criteria ----
