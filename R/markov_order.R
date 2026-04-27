@@ -221,6 +221,27 @@
 #' @export
 markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
                                parallel = FALSE, n_cores = 2L, seed = NULL) {
+  if (inherits(data, "netobject_group")) {
+    out <- lapply(data, function(net) {
+      seq_data <- net$data
+      if (is.null(seq_data)) {
+        stop("netobject_group member has no $data; rebuild with build_network().",
+             call. = FALSE)
+      }
+      markov_order_test(seq_data, max_order = max_order, n_perm = n_perm,
+                        alpha = alpha, parallel = parallel,
+                        n_cores = n_cores, seed = seed)
+    })
+    class(out) <- c("net_markov_order_group", "list")
+    return(out)
+  }
+  if (inherits(data, "netobject")) {
+    if (is.null(data$data)) {
+      stop("netobject has no $data; rebuild with build_network().",
+           call. = FALSE)
+    }
+    data <- data$data
+  }
   max_order <- as.integer(max_order)
   n_perm    <- as.integer(n_perm)
   stopifnot(
@@ -354,6 +375,24 @@ print.net_markov_order <- function(x, ...) {
   tt$BIC    <- round(tt$BIC,    2)
   tt$g2     <- round(tt$g2,     2)
   print(tt, row.names = FALSE)
+  invisible(x)
+}
+
+#' Print method for `net_markov_order_group`
+#'
+#' @param x A `net_markov_order_group` (named list of `net_markov_order`
+#'   results, one per group).
+#' @param ... Forwarded to `print.net_markov_order` for each element.
+#' @return `x` invisibly.
+#' @export
+print.net_markov_order_group <- function(x, ...) {
+  cat(sprintf("Markov Order Test — %d groups: %s\n\n",
+              length(x), paste(names(x), collapse = ", ")))
+  for (nm in names(x)) {
+    cat(sprintf("--- %s ---\n", nm))
+    print(x[[nm]], ...)
+    cat("\n")
+  }
   invisible(x)
 }
 

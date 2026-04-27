@@ -123,6 +123,13 @@
 #'
 #' @export
 passage_time <- function(x, states = NULL, normalize = TRUE) {
+  if (inherits(x, "netobject_group")) {
+    out <- lapply(x, function(net) {
+      passage_time(net, states = states, normalize = normalize)
+    })
+    class(out) <- c("net_mpt_group", "list")
+    return(out)
+  }
   P           <- .mpt_extract_P(x)
   state_names <- colnames(P)
   if (is.null(state_names)) {
@@ -170,6 +177,23 @@ print.net_mpt <- function(x, digits = 1, ...) {
   print(round(x$matrix, digits))
   cat("\nStationary distribution:\n")
   print(round(x$stationary, 4))
+  invisible(x)
+}
+
+#' Print method for `net_mpt_group`
+#'
+#' @param x A `net_mpt_group` (named list of `net_mpt` results).
+#' @param ... Forwarded to `print.net_mpt` for each element.
+#' @return `x` invisibly.
+#' @export
+print.net_mpt_group <- function(x, ...) {
+  cat(sprintf("Mean First Passage Times — %d groups: %s\n\n",
+              length(x), paste(names(x), collapse = ", ")))
+  for (nm in names(x)) {
+    cat(sprintf("--- %s ---\n", nm))
+    print(x[[nm]], ...)
+    cat("\n")
+  }
   invisible(x)
 }
 
@@ -310,6 +334,13 @@ plot.net_mpt <- function(x,
 #' @seealso \code{\link{passage_time}}
 #' @export
 markov_stability <- function(x, normalize = TRUE) {
+  if (inherits(x, "netobject_group")) {
+    out <- lapply(x, function(net) {
+      markov_stability(net, normalize = normalize)
+    })
+    class(out) <- c("net_markov_stability_group", "list")
+    return(out)
+  }
   P           <- .mpt_extract_P(x)
   state_names <- colnames(P)
   if (is.null(state_names)) {
@@ -350,6 +381,24 @@ markov_stability <- function(x, normalize = TRUE) {
 print.net_markov_stability <- function(x, ...) {
   cat("Markov Stability Analysis\n\n")
   print(x$stability, row.names = FALSE)
+  invisible(x)
+}
+
+#' Print method for `net_markov_stability_group`
+#'
+#' @param x A `net_markov_stability_group` (named list of
+#'   `net_markov_stability` results).
+#' @param ... Forwarded to `print.net_markov_stability` for each element.
+#' @return `x` invisibly.
+#' @export
+print.net_markov_stability_group <- function(x, ...) {
+  cat(sprintf("Markov Stability — %d groups: %s\n\n",
+              length(x), paste(names(x), collapse = ", ")))
+  for (nm in names(x)) {
+    cat(sprintf("--- %s ---\n", nm))
+    print(x[[nm]], ...)
+    cat("\n")
+  }
   invisible(x)
 }
 

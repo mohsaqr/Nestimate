@@ -80,3 +80,38 @@ test_that("print runs without error", {
   expect_output(print(res), "Markov Order Test")
   expect_output(print(res), "Selected order")
 })
+
+# --- Group dispatch -----------------------------------------------------
+
+# Build a wide-format grouped data.frame from `.sim_order_k`'s list-of-vectors
+.sim_grouped_wide <- function(seeds, n_seqs = 6L, len = 18L) {
+  blocks <- mapply(function(s, idx) {
+    seqs <- .sim_order_k(1L, n_seqs = n_seqs, len = len, seed = s)
+    df <- as.data.frame(do.call(rbind, seqs), stringsAsFactors = FALSE)
+    colnames(df) <- paste0("T", seq_len(len))
+    df$grp <- paste0("g", idx)
+    df
+  }, seeds, seq_along(seeds), SIMPLIFY = FALSE)
+  do.call(rbind, blocks)
+}
+
+test_that("markov_order_test dispatches over netobject_group", {
+  combined <- .sim_grouped_wide(c(11L, 22L), n_seqs = 8L, len = 18L)
+  grp_net  <- build_network(combined, method = "relative", group = "grp")
+  expect_s3_class(grp_net, "netobject_group")
+
+  res_grp <- markov_order_test(grp_net, max_order = 2L, n_perm = 40L,
+                                seed = 1L)
+  expect_s3_class(res_grp, "net_markov_order_group")
+  expect_named(res_grp, names(grp_net))
+  expect_true(all(vapply(res_grp, inherits, logical(1),
+                         "net_markov_order")))
+  expect_invisible(print(res_grp))
+})
+
+test_that("markov_order_test accepts a single netobject", {
+  one <- .sim_grouped_wide(33L, n_seqs = 8L, len = 18L)[, paste0("T", 1:18)]
+  net <- build_network(one, method = "relative")
+  res <- markov_order_test(net, max_order = 2L, n_perm = 40L, seed = 1L)
+  expect_s3_class(res, "net_markov_order")
+})

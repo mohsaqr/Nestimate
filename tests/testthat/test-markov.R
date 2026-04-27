@@ -326,3 +326,54 @@ test_that("markov_stability accepts a wide sequence data.frame", {
   ms <- markov_stability(seqs)
   expect_s3_class(ms, "net_markov_stability")
 })
+
+# --- Group dispatch -----------------------------------------------------
+
+test_that("passage_time dispatches over netobject_group", {
+  seqs <- data.frame(
+    V1 = rep(c("A","B","C"), 6L),
+    V2 = rep(c("B","C","A"), 6L),
+    V3 = rep(c("C","A","B"), 6L),
+    grp = rep(c("g1", "g2"), each = 9L),
+    stringsAsFactors = FALSE
+  )
+  grp_net <- build_network(seqs, method = "relative", group = "grp")
+  expect_s3_class(grp_net, "netobject_group")
+
+  pt_grp <- passage_time(grp_net)
+  expect_s3_class(pt_grp, "net_mpt_group")
+  expect_named(pt_grp, names(grp_net))
+  expect_true(all(vapply(pt_grp, inherits, logical(1), "net_mpt")))
+
+  # Group result for each member must match the per-member call.
+  for (nm in names(grp_net)) {
+    expect_equal(pt_grp[[nm]]$matrix,
+                 passage_time(grp_net[[nm]])$matrix,
+                 tolerance = 1e-12,
+                 info = sprintf("group %s", nm))
+  }
+  expect_invisible(print(pt_grp))
+})
+
+test_that("markov_stability dispatches over netobject_group", {
+  seqs <- data.frame(
+    V1 = rep(c("A","B","C"), 6L),
+    V2 = rep(c("B","C","A"), 6L),
+    V3 = rep(c("C","A","B"), 6L),
+    grp = rep(c("g1", "g2"), each = 9L),
+    stringsAsFactors = FALSE
+  )
+  grp_net <- build_network(seqs, method = "relative", group = "grp")
+
+  ms_grp <- markov_stability(grp_net)
+  expect_s3_class(ms_grp, "net_markov_stability_group")
+  expect_named(ms_grp, names(grp_net))
+  expect_true(all(vapply(ms_grp, inherits, logical(1),
+                         "net_markov_stability")))
+  for (nm in names(grp_net)) {
+    expect_equal(ms_grp[[nm]]$stability,
+                 markov_stability(grp_net[[nm]])$stability,
+                 info = sprintf("group %s", nm))
+  }
+  expect_invisible(print(ms_grp))
+})
