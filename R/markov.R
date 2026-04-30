@@ -10,13 +10,17 @@
       stop("Object has no numeric weight matrix.", call. = FALSE)
     return(P)
   }
+  if (is.matrix(x) && (is.character(x) || is.logical(x))) {
+    x <- as.data.frame(x, stringsAsFactors = FALSE)
+  }
   if (is.data.frame(x)) {
     net <- build_network(x, method = "relative")
     return(net$weights)
   }
   stop(
-    "'x' must be a numeric matrix, netobject, cograph_network, tna object, ",
-    "or a wide sequence data.frame.",
+    "'x' must be a numeric matrix (transition matrix), a netobject / ",
+    "cograph_network / tna object, or a wide sequence data.frame / ",
+    "character matrix.",
     call. = FALSE
   )
 }

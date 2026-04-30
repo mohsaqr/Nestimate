@@ -1,0 +1,255 @@
+---
+title: "Transition entropy of AI assistant interaction sequences"
+author: "Nestimate"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo     = TRUE,
+  message  = FALSE,
+  warning  = FALSE,
+  fig.width  = 8,
+  fig.height = 4.5,
+  dpi      = 96
+)
+suppressPackageStartupMessages({
+  library(Nestimate)
+  library(ggplot2)
+})
+```
+
+## The analytic question
+
+Given the AI assistant has just produced a coded action — *Plan*, *Execute*,
+*Repair*, ... — how predictable is what comes next? Two summaries answer
+this at different scales. Per-state row entropy $H(P_{i\cdot})$ measures
+how dispersed the outgoing transitions from state $i$ are. The chain-level
+**entropy rate** $h(P) = \sum_i \pi_i H(P_{i\cdot})$ aggregates row
+entropies under the long-run stationary distribution $\pi$ and is the
+Shannon–McMillan–Breiman per-step uncertainty of trajectories
+[Cover & Thomas, 2006, ch. 4]. The deficit $H(\pi) - h(P)$ quantifies how
+much the order-1 Markov structure compresses the process below the
+i.i.d. baseline.
+
+## Data
+
+`ai_long` contains 8,551 coded AI-assistant turns across 428 sessions and
+34 projects, classified into 8 fine-grained codes and 3 super-class
+clusters (Action / Communication / Repair).
+
+```{r load-data}
+data(ai_long, package = "Nestimate")
+str(ai_long)
+table(code = ai_long$code)
+```
+
+## Building the transition network
+
+`build_network()` consumes the long-format data directly, identifies the
+session boundary via `id_col`, and orders events by `time`. The
+`"relative"` method row-normalises raw transition counts to produce a
+proper Markov transition matrix.
+
+```{r build-net}
+net_codes <- build_network(
+  ai_long,
+  method  = "relative",
+  id_col  = "session_id",
+  action  = "code",
+  time    = "order_in_session"
+)
+round(net_codes$weights, 3)
+```
+
+Each row sums to one, so `net_codes$weights` is the maximum-likelihood
+estimator of the AI's order-1 transition matrix.
+
+## Per-state branching: which codes are most predictable?
+
+```{r te-codes}
+te_codes <- transition_entropy(net_codes, base = 2)
+te_codes
+```
+
+Per-state row entropy is bounded above by $\log_2 8 = 3$ bits (uniform
+branching across all 8 codes) and below by 0 (deterministic next code).
+
+```{r summary-codes}
+summary(te_codes)
+```
+
+The summary table sorts by stationary probability when read alongside
+`stationary` — *Execute* is the most-visited state (44 % of stationary
+mass), and its row entropy of `r round(te_codes$row_entropy["Execute"], 2)`
+bits sits below the chain mean, meaning the AI's behaviour after an
+*Execute* turn is more constrained than after, e.g., *Explain*.
+
+```{r plot-codes, fig.height = 4.5}
+plot(te_codes, title = "AI codes — per-state branching entropy")
+```
+
+Bar widths in the plot are proportional to stationary probability, so the
+total visual area sums to the entropy rate $h(P)$. The dashed orange line
+is $h(P)$, the dotted grey line is the uniform-branching upper bound
+$\log_2 n$.
+
+## Chain-level summary
+
+```{r chain-summary}
+te_codes$entropy_rate
+te_codes$stationary_entropy
+te_codes$redundancy
+te_codes$redundancy / te_codes$stationary_entropy
+```
+
+Entropy rate $h(P) =$ `r round(te_codes$entropy_rate, 3)` bits/step;
+stationary entropy $H(\pi) =$ `r round(te_codes$stationary_entropy, 3)`
+bits. The redundancy ratio
+$\big(H(\pi) - h(P)\big) / H(\pi) =$
+`r round(te_codes$redundancy / te_codes$stationary_entropy, 3)` says the
+order-1 Markov memory removes about 8 % of the uncertainty an i.i.d.
+process at the same marginals would carry. The chain has structure, but
+a single-step memory is far from a deterministic predictor.
+
+The maximum theoretical entropy rate at this state-space cardinality is
+$\log_2 8 = 3$ bits. The observed `r round(te_codes$entropy_rate, 2)`
+bits represents
+`r round(100 * te_codes$entropy_rate / log2(8), 1)` % of that maximum —
+the AI's coded action stream is closer to "moderately uncertain" than to
+"random".
+
+## Coarsening to 3 super-class clusters
+
+When the same sequences are re-coded at the cluster level (Action,
+Communication, Repair), the state space shrinks from 8 to 3 and so does
+the maximum entropy ($\log_2 3 \approx 1.585$).
+
+```{r te-clusters}
+net_clusters <- build_network(
+  ai_long,
+  method  = "relative",
+  id_col  = "session_id",
+  action  = "cluster",
+  time    = "order_in_session"
+)
+te_clusters <- transition_entropy(net_clusters, base = 2)
+te_clusters
+
+c(
+  fine   = te_codes$entropy_rate    / log2(8),
+  coarse = te_clusters$entropy_rate / log2(3)
+)
+```
+
+Normalising each entropy rate by the appropriate $\log_2 n$ ceiling
+removes the trivial state-space-size effect. The two ratios show how
+much of the maximum uncertainty each granularity actually attains. A
+sharp drop on coarsening would indicate the cluster scheme is capturing
+real grouping structure; a flat ratio indicates the cluster boundaries
+are essentially arbitrary cuts through a homogeneous transition surface.
+
+```{r plot-clusters, fig.height = 3.5}
+plot(te_clusters, title = "AI clusters — per-state branching entropy")
+```
+
+## Group dispatch: per-project entropy rates
+
+`transition_entropy()` dispatches on `netobject_group` so a per-project
+analysis is one extra argument to `build_network()`.
+
+```{r te-projects, fig.height = 4.5}
+projects_keep <- names(which(table(ai_long$project) >= 100))
+ai_subset <- ai_long[ai_long$project %in% projects_keep, ]
+
+net_by_project <- build_network(
+  ai_subset,
+  method = "relative",
+  id_col = "session_id",
+  action = "code",
+  time   = "order_in_session",
+  group  = "project"
+)
+te_by_project <- transition_entropy(net_by_project, base = 2)
+te_by_project
+```
+
+```{r plot-projects, fig.height = 4}
+rates <- vapply(te_by_project, function(o) o$entropy_rate, numeric(1))
+df_rates <- data.frame(
+  project      = names(rates),
+  entropy_rate = unname(rates)
+)
+df_rates <- df_rates[order(df_rates$entropy_rate), ]
+df_rates$project <- factor(df_rates$project, levels = df_rates$project)
+
+ggplot(df_rates, aes(x = entropy_rate, y = project)) +
+  geom_col(fill = "#0072B2", alpha = 0.85) +
+  geom_vline(xintercept = te_codes$entropy_rate,
+             linetype = "dashed", colour = "#D55E00") +
+  annotate("text", x = te_codes$entropy_rate, y = 1,
+           label = sprintf("Pooled h(P) = %.2f", te_codes$entropy_rate),
+           hjust = -0.05, vjust = -0.4, colour = "#D55E00", size = 3.4) +
+  labs(x = "Entropy rate (bits)", y = NULL,
+       title = "Per-project entropy rate of AI code transitions",
+       subtitle = sprintf("%d projects with >=100 turns; vertical line = pooled chain",
+                         nrow(df_rates))) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+The spread across projects measures how strongly project context shapes
+the AI's order-1 behaviour. Projects clustered tightly around the pooled
+$h(P)$ would indicate a stable, project-invariant behavioural profile;
+wide spread indicates project-specific transition regimes that a single
+pooled model would average over.
+
+## Validation
+
+`transition_entropy()` is validated to machine precision against an
+independent reference composition built from
+`markovchain::steadyStates()` and `entropy::entropy.plugin()`. Across
+100 random irreducible aperiodic configurations spanning 3–7 states with
+log bases 2, $e$, 10:
+
+| Quantity              | Max abs error | Tolerance |
+|-----------------------|---------------|-----------|
+| Entropy rate $h(P)$   | 6.66 × 10⁻¹⁶ | 1 × 10⁻¹⁰ |
+| Stationary $H(\pi)$   | 8.88 × 10⁻¹⁶ | 1 × 10⁻¹⁰ |
+| Per-row $H(P_{i\cdot})$ | 8.88 × 10⁻¹⁶ | 1 × 10⁻¹⁰ |
+| Stationary $\pi$      | 4.44 × 10⁻¹⁶ | 1 × 10⁻⁸  |
+
+Reproduce with
+`NESTIMATE_EQUIV_TESTS=true Rscript -e 'devtools::load_all("."); testthat::test_file("local_testing_and_equivalence/test-equiv-transition_entropy.R")'`.
+
+## When to use which
+
+| Quantity              | Reads as                                                               |
+|-----------------------|------------------------------------------------------------------------|
+| `row_entropy[i]`      | uncertainty of the AI's *next* code given it just emitted code $i$     |
+| `stationary_entropy`  | i.i.d. baseline; the entropy of the marginal-state distribution        |
+| `entropy_rate`        | irreducible per-step trajectory uncertainty under the order-1 chain    |
+| `redundancy`          | bits of memory the chain captures at order 1; zero iff i.i.d.          |
+
+Pair `transition_entropy()` with `markov_order_test()` to ask whether the
+order-1 entropy rate is the *true* asymptotic rate or whether longer
+memory still removes uncertainty. Pair it with `chain_structure()` to
+verify the chain is regular before interpreting $\pi$ as a stable long-run
+distribution; for non-regular chains $\pi$ is non-unique and the entropy
+rate is conditional on the recurrent class assumed.
+
+## References
+
+Cover, T.M., Thomas, J.A. (2006). *Elements of Information Theory*, 2nd
+ed., chapter 4. Wiley.
+
+Shannon, C.E. (1948). A mathematical theory of communication. *Bell
+System Technical Journal*, **27**, 379–423.

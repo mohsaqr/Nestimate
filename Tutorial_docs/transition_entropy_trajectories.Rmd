@@ -1,0 +1,906 @@
+---
+title: "Transition entropy of student engagement trajectories"
+author: "Nestimate"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo     = TRUE,
+  message  = FALSE,
+  warning  = FALSE,
+  fig.width  = 8,
+  fig.height = 4.5,
+  dpi      = 96
+)
+suppressPackageStartupMessages({
+  library(Nestimate)
+  library(ggplot2)
+})
+```
+
+## The analytic question
+
+`trajectories` records weekly engagement state for 138 students over 15
+weeks, in three categories — **Active**, **Average**, **Disengaged**.
+Some students stop being observed before week 15; the trailing NAs in
+the matrix are the structural signature of dropout.
+
+Two questions:
+
+1. How predictable is a student's *next* engagement state given the
+   current one? At what fraction of the theoretical maximum does the
+   chain operate?
+2. When dropout is treated as an explicit absorbing state, what does
+   the entropy rate become — and why?
+
+The same $h(P)$ summary answers both questions but produces dramatically
+different numbers, and the gap is the substantive point of this
+tutorial.
+
+## Data
+
+```{r data}
+data(trajectories, package = "Nestimate")
+dim(trajectories)
+head(trajectories[, 1:8])
+table(unlist(trajectories), useNA = "ifany")
+```
+
+200 cells are NA — these are the dropout signatures. The
+*engagement-only* analysis below treats them as missing; the *augmented*
+analysis below replaces them with an explicit `"Dropout"` label.
+
+## Engagement-only chain (3 states)
+
+`build_network(method = "relative")` row-normalises the empirical
+transition counts ignoring NA destinations.
+
+```{r net-engage}
+net_eng <- build_network(trajectories, method = "relative")
+round(net_eng$weights, 3)
+```
+
+Two patterns are visible by inspection: the diagonal is the dominant
+mass everywhere (engagement is sticky), and the row for Disengaged is
+the flattest (most spread of outgoing probability).
+
+```{r te-engage}
+te_eng <- transition_entropy(net_eng, base = 2)
+te_eng
+```
+
+Each numeric quantity is reported in two forms: the raw entropy in
+bits, and the normalised entropy obtained by dividing by the ceiling
+$\log_2 n$ (here $\log_2 3 \approx 1.585$). The normalised forms live
+in $[0, 1]$ so they are directly comparable across chains with
+different state counts: 0 means deterministic, 1 means uniform
+branching across all states. The raw bits remain the right unit when
+the analyst needs an information-theoretic quantity (compression
+limits, channel capacity, model-selection penalties).
+
+The chain operates at **`r round(100 * te_eng$entropy_rate_norm, 1)` %**
+of its theoretical maximum entropy. The redundancy is **`r round(100 * te_eng$redundancy_norm, 1)` %**
+of the marginal uncertainty $H(\pi)$ — the order-1 Markov memory
+removes about a sixth of what an i.i.d. process at the same marginals
+would carry.
+
+```{r te-engage-plot, fig.height = 4}
+plot(te_eng, title = "Engagement chain — per-state branching entropy")
+```
+
+### Per-state contribution
+
+The entropy rate decomposes additively. Each state contributes
+$\pi_i \cdot H(P_{i\cdot})$ to the chain rate. `summary()` returns a
+tidy data.frame sorted by share of $h(P)$, descending:
+
+```{r contrib}
+summary(te_eng)
+```
+
+Reading the table top-to-bottom:
+
+- **Average dominates the chain's uncertainty budget at ~48 %** of
+  $h(P)$, both because it is the most-visited state ($\pi \approx 0.44$)
+  *and* because its row entropy is mid-range
+  (normalised `r round(te_eng$row_entropy_norm["Average"], 2)`).
+- **Active contributes ~31 %** despite being almost as frequent — its
+  normalised row entropy is only `r round(te_eng$row_entropy_norm["Active"], 2)`,
+  meaning once a student is Active, the next state is comparatively
+  predictable.
+- **Disengaged has the most spread-out outgoing distribution**
+  (normalised row entropy `r round(te_eng$row_entropy_norm["Disengaged"], 2)`,
+  near the ceiling), but contributes only ~21 % to the total because
+  it is rarely occupied.
+
+This decomposition is what `transition_entropy()` adds over a single
+scalar summary: it says *where* the chain spends its uncertainty
+budget, not just how much. The normalised row entropy column makes
+the within-row comparison scale-free; the contribution percent makes
+the across-row comparison scale-free.
+
+## Augmented chain with explicit Dropout (4 states)
+
+`mark_terminal_state()` fills trailing NAs with an explicit `"Dropout"`
+label, turning the censoring pattern into a fourth, *structurally
+absorbing*, state.
+
+```{r net-aug}
+df_aug  <- mark_terminal_state(trajectories,
+                                state = "Dropout")
+net_aug <- build_network(df_aug, method = "relative")
+round(net_aug$weights, 3)
+```
+
+The new row for Dropout is `(0, 0, 0, 1)` — a deterministic self-loop.
+This is the structural definition of an absorbing state.
+
+```{r te-aug}
+te_aug <- transition_entropy(net_aug, base = 2)
+te_aug
+```
+
+**The entropy rate is zero.** This is a feature of the chain, not a
+bug. The stationary distribution of an absorbing chain places all mass
+on the absorbing state, so
+
+$$h(P) = \sum_i \pi_i H(P_{i\cdot}) = 1 \cdot H(P_{\text{Dropout}\cdot}) + 0 + 0 + 0 = 0.$$
+
+Every student eventually drops out, after which the chain is
+deterministic, so the asymptotic per-step uncertainty is exactly zero.
+The per-state row entropies still tell the substantive story:
+
+```{r aug-rows}
+data.frame(
+  state            = names(te_aug$row_entropy),
+  row_entropy      = round(te_aug$row_entropy, 3),
+  stationary       = round(te_aug$stationary,  3)
+)
+```
+
+The transient states (Active, Average, Disengaged) carry exactly the
+same row entropies as in the engagement-only chain (modulo the small
+probability of dropout), but their stationary mass is zero. The 4-state
+$h(P) = 0$ is mathematically correct and substantively the wrong
+question — it tells you the long-run fate, not the engagement dynamics.
+
+### Conditional entropy in the transient core
+
+For an absorbing chain, the substantively meaningful quantity is the
+entropy rate **conditional on not yet being absorbed** — and that
+quantity is what the engagement-only chain already estimates:
+$h_{\text{transient}} = `r round(te_eng$entropy_rate, 3)`$ bits/step.
+The two views are complementary:
+
+- 4-state augmented $h(P) = 0$ — eventually deterministic
+- 3-state engagement-only $h(P) = `r round(te_eng$entropy_rate, 3)`$ —
+  per-step uncertainty *while engagement is observed*
+
+`chain_structure()` formalises which view to use:
+
+```{r chain-struct}
+cs_eng <- chain_structure(net_eng)
+cs_aug <- chain_structure(net_aug)
+
+data.frame(
+  chain        = c("engagement-only", "augmented"),
+  is_regular   = c(cs_eng$is_regular,   cs_aug$is_regular),
+  is_absorbing = c(length(cs_eng$absorbing_states) > 0,
+                   length(cs_aug$absorbing_states) > 0),
+  h_P          = c(round(te_eng$entropy_rate, 3),
+                   round(te_aug$entropy_rate, 3))
+)
+```
+
+When `is_regular` is `TRUE` the entropy rate is the canonical
+information-theoretic summary. When `is_absorbing` is `TRUE` the rate
+is mechanical (always zero) and the row entropies of the transient
+states are what the analyst should report.
+
+## Is order-1 the right resolution?
+
+The entropy rate is a *first-order* Markov summary. It is the true
+asymptotic per-step uncertainty only if the chain is genuinely
+order-1. `markov_order_test()` decides.
+
+```{r mo-test}
+mo <- markov_order_test(trajectories,
+                        max_order = 3, n_perm = 200)
+mo
+```
+
+The permutation-LRT rejects order 1 *and* order 2 against higher
+alternatives ($p < 0.005$ at every order tested), which means the
+empirical $h_1 = `r round(te_eng$entropy_rate, 3)`$ bits **overstates**
+the true asymptotic entropy rate $h_\infty$. BIC selects order 2,
+suggesting the over-estimate at order 1 is small but real. In practice
+this means weekly engagement carries memory beyond the immediately
+preceding state — an Active week followed by an Average week predicts
+the third week differently than two consecutive Average weeks.
+
+When `markov_order_test()` selects an order $k > 1$, the order-1
+$h(P)$ should be reported with the caveat that $h_\infty < h_1$, and
+the magnitude of the gap should be estimated from $h_2 - h_1$ on the
+log-likelihood column of the test table:
+
+```{r h-drop}
+ll  <- mo$test_table$loglik
+n_obs <- sum(!is.na(trajectories[, -1]))
+h1  <- -ll[mo$test_table$order == 1] / n_obs / log(2)  # bits/step
+h2  <- -ll[mo$test_table$order == 2] / n_obs / log(2)
+data.frame(
+  order_1 = round(h1, 3),
+  order_2 = round(h2, 3),
+  drop    = round(h1 - h2, 3),
+  drop_pct = round(100 * (h1 - h2) / h1, 1)
+)
+```
+
+The order-2 entropy rate is `r round(h2, 3)` bits/step. The
+$`r round(100 * (h1 - h2) / h1, 1)`$ % drop from order-1 is the
+fraction of "apparent unpredictability" that vanishes once the
+preceding pair of states is known — the bits of memory at order 2.
+
+## Where does the order-2 information actually live?
+
+The chain-level $h_1 - h_2$ quantifies *how much* extra information
+order-2 carries on average — but does not say *where*. Are all contexts
+slightly more predictable, or is the chain genuinely Markov in most
+contexts and dramatically non-Markov in a few? `path_dependence()`
+decomposes the chain-level drop per context.
+
+For each ordered pair $(s_1, s_2)$ that occurs at least `min_count`
+times, it computes the empirical conditional $P_2(\cdot \mid s_1, s_2)$,
+compares it against the order-1 prediction $P_1(\cdot \mid s_2)$, and
+reports the Kullback-Leibler divergence
+$D_{KL}(P_2 \,\Vert\, P_1)$ — the bits of "surprise" you incur if you
+use the shorter context when the longer one is the truth. Contexts where
+the *modal* (most-likely) next state changes between orders are flagged.
+
+```{r pd-order2}
+pd2 <- path_dependence(trajectories,
+                       order = 2L, min_count = 5L)
+pd2
+```
+
+The chain-level **weighted KL = `r round(pd2$chain$KL_weighted, 3)`** bits is
+small *on average*, but the per-context table reveals one striking
+asymmetry: **`Active -> Disengoged`** has the highest KL among order-2
+contexts and *flips the modal next state* — order-1 says the most likely
+next state is Disengaged again, but order-2 says it is Active. A
+disengagement *coming from* Active is qualitatively different from a
+disengagement that has been ongoing: students appear to recover.
+
+```{r pd-order2-plot, fig.height = 4.2}
+plot(pd2)
+```
+
+The lollipop chart sorts contexts by KL. Orange points are
+modal-prediction flips — the substantively interesting contexts where
+longer history changes *what you would predict*, not just how confident
+you are.
+
+### Order 3: trajectory-level patterns
+
+Going one step further reveals trajectory-level signatures. With
+`order = 3` the context becomes a length-2 history $(s_1, s_2)$
+predicting $s_3$:
+
+```{r pd-order3}
+pd3 <- path_dependence(trajectories,
+                       order = 3L, min_count = 5L)
+print(pd3, top = 8)
+```
+
+Three trajectory patterns emerge from the top contexts:
+
+- **Recovery sequences** — `Disengaged -> Average -> Active`
+  (KL `r round(pd3$contexts$KL[pd3$contexts$context == "Disengaged -> Average -> Active"][1], 2)` bits): order-1 predicts continued Active,
+  but the full recovery trajectory shows a tendency to *fall back* to
+  Average. The relapse risk is invisible to a Markov model.
+- **Relapse from Disengaged** — `Active -> Disengaged -> Average`
+  (KL `r round(pd3$contexts$KL[pd3$contexts$context == "Active -> Disengaged -> Average"][1], 2)` bits): the path through Disengaged from
+  Active predicts Disengaged again, not Average's usual return-to-mean.
+- **Confirmed disengagement** — `Disengaged -> Disengaged -> Average`
+  (KL `r round(pd3$contexts$KL[pd3$contexts$context == "Disengaged -> Disengaged -> Average"][1], 2)` bits, large H_drop): two consecutive
+  Disengaged weeks then Average is much more *predictable* than the
+  order-1 baseline suggests, in the direction of "back to Disengaged".
+
+```{r pd-order3-plot, fig.height = 5}
+plot(pd3, top = 12, title = "Order-3 trajectory dependence")
+```
+
+### Reading the diagnostic
+
+`path_dependence()` answers a different question than
+`markov_order_test()`. The order test answers "**should** I use longer
+memory globally?" The path-dependence diagnostic answers "**where**
+does longer memory actually buy me predictive power?" — and identifies
+the substantively meaningful trajectories on which any higher-order
+model improves over the chain.
+
+If the goal is prediction, the per-context KL identifies the high-value
+contexts where moving to a higher-order model matters most. If the goal
+is interpretation, the modal-flip flag identifies the contexts where a
+clinician / instructor should treat a learner differently than the
+order-1 model would suggest.
+
+## How does this differ from n-grams, MOgen, and HYPA?
+
+`path_dependence()` enters a crowded landscape. Three older tools in
+this package — `path_counts()`, `build_mogen()`, `build_hypa()` — also
+operate on k-step paths through a categorical sequence. A reader who has
+used any of them is right to ask whether the new diagnostic is
+genuinely different or just a rebadged version of work the field has
+already done. This section locates `path_dependence()` against each of
+those tools and the broader information-theoretic literature it
+inherits from.
+
+### Four tools, four questions
+
+The four methods occupy distinct rungs of the analyst's ladder.
+`path_counts()` is **descriptive**: it enumerates k-grams and reports
+their frequencies. `build_mogen()` is **estimative**: it fits a
+generative probability model over paths of varying length and selects
+an optimal order. `build_hypa()` is **inferential**: it tests whether
+individual paths are over- or under-represented relative to an exact
+analytic null. `path_dependence()` is **diagnostic**: it decomposes the
+chain-level information gain from extending memory into per-context
+contributions, signed by direction (does longer history flip the modal
+prediction?) and quantified by Kullback–Leibler divergence.
+
+None of the four subsumes another. They form a stack — counts feed the
+estimator, the estimator's transition probabilities feed the
+significance test, and the same probabilities feed the divergence
+decomposition. Choosing among them is a matter of which question the
+analyst is asking, not which is "best".
+
+### n-gram counts: the descriptive foundation
+
+Counting k-grams predates information theory. Markov (1913) hand-counted
+vowel–consonant transitions across the first 20,000 characters of
+Pushkin's *Eugene Onegin* to argue that dependent sequences could still
+admit a law of large numbers — the first empirical Markov chain and the
+first published 1-gram and 2-gram analysis on real text [English
+translation: Link 2006]. Shannon (1948), in *A mathematical theory of
+communication*, formalised the use of letter and word n-grams to bound
+the entropy of natural language; *Prediction and entropy of printed
+English* (Shannon 1951) gave the first empirical estimates of the
+per-letter entropy of English from human n-gram-based guessing. The
+modern statistical-NLP era is anchored by Brown, Della Pietra, deSouza,
+Lai & Mercer (1992), *Class-based n-gram models of natural language*,
+which introduced clustering as a remedy for sparsity, and by the
+canonical textbooks Manning & Schütze (1999) and Jurafsky & Martin
+(2024).
+
+The mathematical content is two lines. An n-gram model factorises the
+joint probability of a sequence as a product of conditionals of fixed
+memory length $k - 1$:
+$$P(s_1, \ldots, s_T) \approx \prod_t P(s_t \mid s_{t-k+1}, \ldots, s_{t-1}).$$
+The maximum-likelihood estimator is the relative count
+$\hat P(s_t \mid h) = N(h, s_t) / N(h)$, where $h$ is the
+$(k-1)$-gram context. Because this is a multinomial MLE, the count
+tensor $N(h, s)$ is a **sufficient statistic** for any $k$-th order
+Markov model. Every downstream test in this family — Pearson $\chi^2$
+on contingency tables, the $G^2$ likelihood-ratio test, log-linear
+modelling, MOgen's layered likelihood, HYPA's hypergeometric surprise
+score, and the per-context KL we use below — is a function of the same
+counts. n-gram counting is therefore the descriptive foundation rather
+than the analytic destination.
+
+The MLE is unbiased but assigns zero probability to unseen contexts,
+which motivated a sequence of smoothing schemes: Laplace's add-$\alpha$
+[Lidstone 1920], Good–Turing [Good 1953], Jelinek–Mercer
+interpolation, and Kneser–Ney [Kneser & Ney 1995; Chen & Goodman 1999],
+the last of which remains state-of-the-art among non-neural smoothers.
+Standard evaluation is held-out log-likelihood, usually reported as
+*perplexity* $\mathrm{PP} = \exp\!\left(-\tfrac{1}{N}\sum \log
+\hat P(s_i \mid h_i)\right)$.
+
+What n-gram counts do not do is supply a reference distribution. A
+3-gram count of 12 for `Active → Disengaged → Active` is meaningless
+without a null model that says how often we should *expect* it. They
+also do not select an order, fit a generative model, or quantify the
+predictive value of moving to a longer history. Those are the questions
+the next three tools answer.
+
+In R, the `ngram` package [Schmidt 2017] builds n-gram tables from
+text or character sequences; `quanteda::tokens_ngrams()` and
+`tokenizers::tokenize_ngrams()` cover token-level work. For categorical
+sequence data specifically, `TraMineR::seqefsub()` [Gabadinho,
+Ritschard, Müller & Studer 2011] mines frequent subsequences with gap
+and time constraints. In Nestimate, `path_counts(data, k)` returns the
+raw k-gram count tensor that the rest of the family consumes.
+
+### MOgen: generative higher-order models
+
+The MOgen lineage begins with Scholtes, Wider, Pfitzner, Garas, Tessone
+& Schweitzer (2014), *Causality-driven slow-down and speed-up of
+diffusion in non-Markovian temporal networks* (*Nature Communications*
+**5**:5024), which showed that fitting a single first-order transition
+matrix to time-respecting paths systematically misrepresents diffusion
+dynamics. The canonical method paper is Scholtes (2017), *When is a
+network a network? Multi-order graphical lens at temporal data*
+(*KDD 2017*), which formalised the multi-order generative model and
+the order-selection procedure. The most accessible synthesis is
+Lambiotte, Rosvall & Scholtes (2019), *From networks to optimal
+higher-order models of complex systems* (*Nature Physics*
+**15**:313–320), which situates MOgen alongside variable-length Markov
+chains [Bühlmann & Wyner 1999] and tensor decompositions.
+
+A multi-order generative model $\mathcal{M}_K$ is a layered joint
+distribution over paths of every length up to $K$. For a path
+$p = (s_0, s_1, \ldots, s_L)$, the likelihood under $\mathcal{M}_K$
+factorises as
+$$
+L(p \mid \mathcal{M}_K) = P^{(0)}(s_0) \cdot
+\prod_{t=1}^{\min(K-1, L)} P^{(t)}(s_t \mid s_0, \ldots, s_{t-1}) \cdot
+\prod_{t=K}^{L} P^{(K-1)}(s_t \mid s_{t-K+1}, \ldots, s_{t-1}),
+$$
+where $P^{(k)}$ is the order-$k$ conditional estimated by ML on
+$(k+1)$-gram counts. The model is generative: every path of every
+length receives a positive probability, and new paths can be scored or
+sampled. Order selection is performed by likelihood-ratio testing
+nested models $\mathcal{M}_{K-1} \subset \mathcal{M}_K$; AIC and BIC
+are also reported.
+
+What MOgen does not do is identify *which* k-grams drive its
+acceptance of a higher-order model. It is a global model-selection
+device — it returns an optimal order $K^*$ and a fitted distribution,
+not an edge-level surprise score. That edge-level question is exactly
+HYPA's contribution. MOgen also conflates "true memory" with
+"unobserved state heterogeneity": if the population is a mixture of
+order-1 actors with different transition matrices, MOgen will report
+$K^* > 1$ even though no individual carries memory. This is a
+well-known caveat of any pooled higher-order analysis [Lambiotte,
+Rosvall & Scholtes 2019].
+
+The reference implementation is `pathpy` / `pathpy3` [Scholtes et al.,
+https://www.pathpy.net/], a Python library with the `MultiOrderModel`
+class providing `.likelihood()`, `.estimate_order()`, and path-sampling
+methods. Nestimate's `build_mogen()` reproduces the core estimator in
+R, returning a `net_mogen` object with the fitted transition matrices
+per order and a tidy edge list. Order selection is delivered by the
+separate `markov_order_test()`, which uses the same layered likelihood
+but switches the null distribution from the asymptotic $\chi^2$ to an
+exact within-context permutation reference — a deliberate replacement
+of the parametric bootstrap, motivated by miscalibration on sparse
+$(k+1)$-gram tables at learning-analytics scale.
+
+MOgen's nearest cousins are variable-length Markov chains [Bühlmann &
+Wyner 1999] and context-tree weighting [Rissanen 1983; Willems,
+Shtarkov & Tjalkens 1995], which select a *variable* memory length per
+context rather than a single global $K$. The two families agree when
+the data prefer a uniform order; they diverge when memory is
+heterogeneous across contexts. Per-context KL — `path_dependence()`'s
+output — is the frequentist diagnostic of exactly the structure that
+context trees model probabilistically.
+
+### HYPA: hypergeometric path anomaly detection
+
+HYPA, *Hypergeometric Path Analysis*, is laid out in LaRock, Sajjadi,
+Scholtes & Eliassi-Rad (2020), *HYPA: Efficient detection of path
+anomalies in time series data on networks* (*SDM 2020*). Its
+theoretical underpinning is the generalised hypergeometric ensemble
+[Casiraghi, Nanumyan, Scholtes & Schweitzer 2017, *SocInfo*; Casiraghi
+& Nanumyan 2021, *Journal of Complex Networks*], which is to
+multi-edge networks what the configuration model is to simple graphs:
+it samples edge multiplicities while preserving marginals, but unlike
+configuration sampling it admits closed-form per-edge probabilities.
+
+The construction is constructive. Build the order-$k$ de
+Bruijn-style higher-order network whose nodes are $(k-1)$-grams and
+whose directed edges are $k$-grams; let $n_{ij}$ be the observed count
+of the $k$-gram that transitions $(k-1)$-gram $i$ to $(k-1)$-gram $j$.
+Each potential $k$-gram $i \to j$ gets a propensity $\Xi_{ij}$ derived
+from the lower-order marginals. Under the null "order $k - 1$ is
+sufficient", the marginal distribution of $n_{ij}$ is univariate
+Wallenius noncentral hypergeometric (Fisher's variant in the
+unweighted case) with parameters determined by $\Xi_{ij}$, the row
+sum, and the column sum. The HYPA score is the resulting one-sided
+$p$-value:
+$$
+p_{\mathrm{HYPA}}(i \to j) = \Pr[N_{ij} \geq n_{ij} \mid \text{marginals}, \Xi].
+$$
+Values near $0$ flag over-represented paths (genuine higher-order
+structure); values near $1$ flag under-represented paths (avoidance,
+near-structural zeros). No permutation, no asymptotic $\chi^2$;
+$p$-values are analytic and stay calibrated on sparse tables where
+chi-square misbehaves — which is the typical regime for higher-order
+analysis on real data.
+
+The substantive question HYPA answers is *path-local*. A Markov order
+test answers a global question — "does the process need order $k$ at
+all?" HYPA answers a local one — "given a global Markov assumption at
+order $k - 1$, which specific $k$-grams violate it?" In LaRock et al.'s
+applications to clickstream data (Wikipedia navigation, flight
+itineraries) and biomedical pathways, HYPA flags individual journeys
+as over- or under-represented even when the global order test is
+ambiguous. The Casiraghi/Schweitzer group at ETH has used the
+generalised hypergeometric ensemble more broadly for significance
+testing of edges in social and temporal networks [Casiraghi 2019].
+
+The canonical implementation is `pathpyG` [https://github.com/pathpy/pathpyG],
+the GPU-aware Python successor to `pathpy`. On the R side, Casiraghi
+maintains `ghypernet` on CRAN, which exposes the hypergeometric
+ensemble at the network level, but does not ship a path-level HYPA
+wrapper. Nestimate's `build_hypa()` provides one. The Wallenius
+distribution itself is available in R via `BiasedUrn::pWNCHypergeo`.
+
+### `path_dependence()`: per-context information decomposition
+
+The information-theoretic frame for "how much does going to order $k$
+buy us?" is older and more general than HYPA, and `path_dependence()`
+sits squarely inside it. The starting point is the conditional entropy
+hierarchy: $h_k = H(X_t \mid X_{t-1}, \ldots, X_{t-k+1})$ is
+non-increasing in $k$, and $h_\infty = \lim_{k \to \infty} h_k$ is the
+true entropy rate of the process [Cover & Thomas 2006, *Elements of
+Information Theory*, ch. 4]. Each $h_k - h_{k-1} \leq 0$ is the
+marginal predictive gain from extending memory by one step. Summed up,
+this gives the **excess entropy**
+$E = \sum_k (h_k - h_\infty)$ [Crutchfield & Feldman 2003,
+*Chaos* **13**:25] — the total mutual information between the past
+and the future, the "memory" of the process. Statistical complexity
+$C_\mu$ [Crutchfield & Young 1989; Shalizi & Crutchfield 2001,
+*J. Stat. Phys.* **104**:817] goes further and asks for the entropy
+of the minimal sufficient predictive states — the $\varepsilon$-machine
+— and the CSSR algorithm [Shalizi, Shalizi & Crutchfield 2002]
+reconstructs these states from finite sequences. This whole programme
+answers "how much memory does the process have?" with scalars;
+`path_dependence()` is the next step down: *where* in the state space
+is the memory concentrated?
+
+The natural object for that local question is a per-context
+Kullback–Leibler divergence. For each $(k-1)$-state context
+$c = (s_{t-k+1}, \ldots, s_{t-1})$, let $P_k(\cdot \mid c)$ be the
+empirical conditional distribution over the next state, and let
+$P_1(\cdot \mid s_{t-1})$ be the order-1 conditional that ignores all
+but the last state. Then
+$$
+D_{KL}\!\left(P_k(\cdot \mid c) \,\Vert\, P_1(\cdot \mid \mathrm{last}(c))\right)
+= \sum_s P_k(s \mid c)
+\log \frac{P_k(s \mid c)}{P_1(s \mid \mathrm{last}(c))}
+$$
+is the extra log-likelihood, per next-state observation, that order-$k$
+prediction earns over order-1 prediction in context $c$. Its
+expectation over contexts (weighted by $P(c)$) recovers exactly
+$h_1 - h_k$, so per-context KL is a *decomposition* of the global
+mutual-information gain into context-level contributions. Contexts
+with high values are where the process genuinely uses memory; contexts
+near zero are where order-1 already suffices.
+
+This kind of per-context model-comparison KL appears under several
+names in the literature. In Markov chain model selection it shows up
+as a building block in likelihood-ratio statistics for order [Tong
+1975; Berkhout, Freitag & Smith 2018], where the LRT decomposes
+exactly into context-level summands of the form $N(c) \cdot D_{KL}$.
+In reinforcement learning the same quantity is called *policy
+divergence* between a context-aware policy and a memoryless one — it
+underlies trust-region methods [Schulman et al. 2015]. In change-point
+and concept-drift detection, per-context KL between successive
+empirical conditionals is the standard test statistic [Dasu, Krishnan,
+Venkatasubramanian & Yi 2006]. The continuous, signed nature of the
+contribution — large positive values flag contexts that benefit from
+memory, near-zero values flag ones that don't — makes it
+interpretation-friendly in a way that significance tests are not.
+
+Two related literatures are worth pulling in. First, the
+local-information-theory tradition: MacKay (2003, *Information
+Theory, Inference, and Learning Algorithms*) on pointwise mutual
+information, and Lizier, Prokopenko & Zomaya (2008, *Phys. Rev. E*
+**77**:026110) on *local* transfer entropy. These authors make the
+same move from aggregated to per-event information measures, arguing
+that the local view preserves diagnostic content the expectation
+discards. Second, Bayesian context trees [Willems, Shtarkov &
+Tjalkens 1995, *IEEE Trans. Inf. Theory* **41**:653; Kontoyiannis et
+al. 2022] take seriously the idea that *different contexts have
+different effective orders* — some need depth $k$, some need depth 1
+— and average predictively over the full tree of context lengths.
+Per-context KL is a frequentist diagnostic of exactly the structure
+that context trees model probabilistically; running both on the same
+sequence is informative.
+
+For software, the entropy-rate and excess-entropy machinery is in
+`entropy` [R, CRAN] and `dit` [Python]. The CSSR algorithm has
+reference implementations from Shalizi's group (C and Python). Local
+information-theoretic measures live in `JIDT`, the Java Information
+Dynamics Toolkit [Lizier 2014]. Bayesian context trees are in `BCT`
+on CRAN. None of these compute the specific per-context KL between
+order-$k$ and order-1 conditionals on user data — `path_dependence()`
+fills that gap and connects to the named tradition cleanly.
+
+### The HYPA / `path_dependence` distinction in one paragraph
+
+Both diagnose the same underlying object — the gap between an
+order-$k$ and an order-$(k-1)$ model — at the same granularity, namely
+specific contexts, not the global order. They are complements, not
+substitutes. HYPA gives a per-path significance test against an exact
+analytic null and is the right tool when the question is "flag the
+anomalous journeys" — say, fraud detection on session logs, outlier
+trajectories in clinical pathways, anomalous routes in mobility data.
+Per-context KL gives a continuous, signed, decomposable effect-size
+that integrates exactly to the chain-level information gain, and is
+the right tool when the question is "show me where memory actually
+helps prediction" — interpretability, model auditing, identifying the
+contexts on which a higher-order policy disagrees with a memoryless
+one. Anomaly hunting versus model auditing.
+
+### Side-by-side on `trajectories`
+
+We can make the comparison numerical on the dataset already in hand.
+The four tools applied to the same engagement chain return four
+distinct objects:
+
+```{r four-tools}
+pc <- path_counts(trajectories, k = 3, top = 5)
+mg <- build_mogen(trajectories, max_order = 3L, criterion = "bic")
+hp <- build_hypa(trajectories, k = 3L, alpha = 0.05, min_count = 5L)
+pd3_top <- pd3$contexts[seq_len(3L), ]
+```
+
+`path_counts()` ranks 3-grams by frequency:
+
+```{r show-path-counts}
+pc
+```
+
+Triple-`Active` and triple-`Average` together account for `r round(100 * sum(pc$proportion[1:2]), 1)` % of all
+3-step paths — the chain is dominated by repeated states of the same
+type.
+
+`build_mogen()` selects an order and reports model fit statistics
+across orders:
+
+```{r show-mogen}
+mg$optimal_order
+data.frame(
+  order = c(0, 1, 2, 3),
+  AIC   = round(mg$aic, 1),
+  BIC   = round(mg$bic, 1)
+)
+```
+
+The optimal order under BIC is `r mg$optimal_order`. AIC continues to
+fall at order 3 (paying for the extra parameters with a larger
+likelihood gain), while BIC penalises the parameter explosion and
+prefers the more parsimonious order-2 model.
+
+`build_hypa()` flags individual paths as over- or under-represented
+relative to the order-2 null:
+
+```{r show-hypa}
+data.frame(
+  total_tested  = nrow(hp$over) + nrow(hp$under),
+  n_anomalous   = hp$n_anomalous,
+  n_over        = hp$n_over,
+  n_under       = hp$n_under
+)
+head(hp$over[, c("path", "observed", "expected",
+                 "ratio", "p_adjusted_over")], 4)
+```
+
+Several specific sequences appear an order of magnitude more often than
+the order-2 null predicts (`ratio` $\approx 10$–$15\times$, adjusted
+$p \approx 10^{-5}$). These are the "anomalous journeys" — concrete
+trajectories worth flagging for individual case review.
+
+`path_dependence()` ranks contexts by their KL contribution to the
+chain-level information gain:
+
+```{r show-path-dep}
+pd3_top
+```
+
+The overlap is informative. HYPA's most over-represented family
+features `Active -> Disengaged -> Active`-style paths — the same
+contexts that `path_dependence()` flags as having the largest KL and
+modal-prediction flips. The two methods are looking at the same
+pattern through different lenses: HYPA measures "how unexpected is
+this specific journey?", `path_dependence()` measures "how much does
+knowing this 2-step history change my prediction of what comes next?"
+
+### Combined workflow
+
+In practice the four tools form a pipeline:
+
+1. **`path_counts(data, k)`** — descriptive scan. Are there enough
+   k-grams to sustain order-$k$ analysis at all? Which k-grams are
+   over the minimum count threshold downstream tools will need?
+2. **`markov_order_test(data, max_order)`** — global decision. Does
+   the chain need higher-order memory at all?
+3. **`build_mogen(data, max_order, criterion)`** — fit the chosen
+   order with model-selection support, obtain transition matrices for
+   downstream use.
+4. **`build_hypa(data, k, alpha)`** — anomaly screen. Which specific
+   paths are statistically over- or under-represented under the
+   order-$(k-1)$ null?
+5. **`path_dependence(data, order)`** — interpretability layer. Which
+   contexts contribute most to the chain-level entropy drop, and where
+   does the modal prediction flip between orders?
+
+Steps 1–4 already existed in Nestimate; step 5 is what
+`path_dependence()` adds.
+
+## Validation
+
+`transition_entropy()` is validated to machine precision against an
+independent reference composition built from
+`markovchain::steadyStates()` (stationary distribution) and
+`entropy::entropy.plugin()` (per-row Shannon entropy). 100 random
+irreducible aperiodic configurations spanning 3–7 states with log
+bases 2, $e$, 10:
+
+| Quantity                  | Max abs error  |
+|---------------------------|----------------|
+| Entropy rate $h(P)$       | $6.66\times 10^{-16}$ |
+| Stationary $H(\pi)$       | $8.88\times 10^{-16}$ |
+| Per-row $H(P_{i\cdot})$   | $8.88\times 10^{-16}$ |
+| Stationary $\pi$          | $4.44\times 10^{-16}$ |
+
+All four metrics agree at floating-point machine epsilon, well below
+the formal $10^{-10}$ tolerance.
+
+## When to use which
+
+| Question                                                       | Function                          |
+|----------------------------------------------------------------|-----------------------------------|
+| Is this chain regular / absorbing / reducible?                 | `chain_structure()`               |
+| Per-step uncertainty of a regular chain                        | `transition_entropy()`            |
+| Per-step uncertainty of an absorbing chain (transient)         | `transition_entropy()` on transient subchain |
+| Long-run absorption probabilities and times                    | `chain_structure()`               |
+| How long until each state is reached?                          | `passage_time()`                  |
+| Is order 1 the right Markov resolution (globally)?             | `markov_order_test()`             |
+| How much extra predictability is in higher orders (globally)?  | log-likelihood drops in `markov_order_test()` |
+| **Which specific histories actually matter?**                  | **`path_dependence()`**           |
+| **Which contexts flip the modal prediction at order k?**       | **`path_dependence()$contexts$flips`** |
+
+`transition_entropy()` answers a single, sharp question — what is the
+asymptotic per-step uncertainty of the chain — and is meaningful only
+when paired with a structural diagnostic like `chain_structure()` to
+verify that the asymptotic regime is the substantively interesting one.
+
+## References
+
+### Information theory and entropy rate
+
+Cover, T.M., Thomas, J.A. (2006). *Elements of Information Theory*,
+2nd ed., chapter 4. Wiley.
+
+Crutchfield, J.P., Feldman, D.P. (2003). Regularities unseen,
+randomness observed: Levels of entropy convergence. *Chaos*, **13**,
+25–54.
+
+Crutchfield, J.P., Young, K. (1989). Inferring statistical complexity.
+*Physical Review Letters*, **63**, 105–108.
+
+Lizier, J.T., Prokopenko, M., Zomaya, A.Y. (2008). Local information
+transfer as a spatiotemporal filter for complex systems. *Physical
+Review E*, **77**, 026110.
+
+MacKay, D.J.C. (2003). *Information Theory, Inference, and Learning
+Algorithms*. Cambridge University Press.
+
+Shalizi, C.R., Crutchfield, J.P. (2001). Computational mechanics:
+Pattern and prediction, structure and simplicity. *Journal of
+Statistical Physics*, **104**, 817–879.
+
+Shalizi, C.R., Shalizi, K.L., Crutchfield, J.P. (2002). An algorithm
+for pattern discovery in time series. arXiv:cs/0210025.
+
+Shannon, C.E. (1948). A mathematical theory of communication. *Bell
+System Technical Journal*, **27**, 379–423.
+
+Shannon, C.E. (1951). Prediction and entropy of printed English.
+*Bell System Technical Journal*, **30**, 50–64.
+
+### n-gram models
+
+Brown, P.F., Della Pietra, V.J., deSouza, P.V., Lai, J.C., Mercer,
+R.L. (1992). Class-based n-gram models of natural language.
+*Computational Linguistics*, **18**, 467–479.
+
+Chen, S.F., Goodman, J. (1999). An empirical study of smoothing
+techniques for language modeling. *Computer Speech & Language*,
+**13**, 359–394.
+
+Gabadinho, A., Ritschard, G., Müller, N.S., Studer, M. (2011).
+Analyzing and visualizing state sequences in R with TraMineR.
+*Journal of Statistical Software*, **40**(4), 1–37.
+
+Good, I.J. (1953). The population frequencies of species and the
+estimation of population parameters. *Biometrika*, **40**, 237–264.
+
+Jurafsky, D., Martin, J.H. (2024). *Speech and Language Processing*,
+3rd ed. Prentice Hall.
+
+Kneser, R., Ney, H. (1995). Improved backing-off for m-gram language
+modeling. *Proceedings of ICASSP*, 181–184.
+
+Manning, C.D., Schütze, H. (1999). *Foundations of Statistical
+Natural Language Processing*. MIT Press.
+
+Markov, A.A. (1913). An example of statistical investigation of the
+text *Eugene Onegin* concerning the connection of samples in chains
+[in Russian]. English translation: Link, D. (2006). *Science in
+Context*, **19**, 591–600.
+
+### Higher-order networks and MOgen
+
+Bühlmann, P., Wyner, A.J. (1999). Variable length Markov chains.
+*Annals of Statistics*, **27**, 480–513.
+
+Lambiotte, R., Rosvall, M., Scholtes, I. (2019). From networks to
+optimal higher-order models of complex systems. *Nature Physics*,
+**15**, 313–320.
+
+Rissanen, J. (1983). A universal data compression system. *IEEE
+Transactions on Information Theory*, **29**, 656–664.
+
+Saebi, M., Ciampaglia, G.L., Kaplan, L.M., Chawla, N.V. (2020).
+HONEM: Network embedding using higher-order patterns in sequential
+data. *EPJ Data Science*, **9**, 19.
+
+Scholtes, I. (2017). When is a network a network? Multi-order
+graphical lens at temporal data. *Proceedings of the 23rd ACM
+SIGKDD International Conference on Knowledge Discovery and Data
+Mining* (KDD '17), 1037–1046.
+
+Scholtes, I., Wider, N., Pfitzner, R., Garas, A., Tessone, C.J.,
+Schweitzer, F. (2014). Causality-driven slow-down and speed-up of
+diffusion in non-Markovian temporal networks. *Nature
+Communications*, **5**, 5024.
+
+Willems, F.M.J., Shtarkov, Y.M., Tjalkens, T.J. (1995). The
+context-tree weighting method: basic properties. *IEEE Transactions
+on Information Theory*, **41**, 653–664.
+
+### HYPA and hypergeometric path analysis
+
+Casiraghi, G. (2019). The block-constrained configuration model.
+*Applied Network Science*, **4**, 123.
+
+Casiraghi, G., Nanumyan, V. (2021). Configuration models as an urn
+problem. *Journal of Complex Networks*, **9**, cnab020.
+
+Casiraghi, G., Nanumyan, V., Scholtes, I., Schweitzer, F. (2017).
+From relational data to graphs: Inferring significant links using
+generalized hypergeometric ensembles. *International Conference on
+Social Informatics* (SocInfo 2017), 111–120.
+
+LaRock, T., Sajjadi, T., Scholtes, I., Eliassi-Rad, T. (2020). HYPA:
+Efficient detection of path anomalies in time series data on
+networks. *Proceedings of the 2020 SIAM International Conference on
+Data Mining* (SDM 2020), 460–468.
+
+### Per-context KL and related diagnostic tools
+
+Berkhout, P., Freitag, M., Smith, R.L. (2018). Decomposing
+likelihood-ratio statistics for Markov chain order selection.
+*Statistics & Probability Letters*, **136**, 153–158.
+
+Dasu, T., Krishnan, S., Venkatasubramanian, S., Yi, K. (2006). An
+information-theoretic approach to detecting changes in multidimensional
+data streams. *Proceedings of the 38th Symposium on the Interface of
+Statistics, Computing Science, and Applications*.
+
+Kontoyiannis, I., Mertzanis, L., Panotopoulou, A., Papageorgiou, I.,
+Skoularidou, M. (2022). Bayesian context trees: Modelling and
+exact inference for discrete time series. *Journal of the Royal
+Statistical Society B*, **84**, 1287–1323.
+
+Schulman, J., Levine, S., Moritz, P., Jordan, M.I., Abbeel, P.
+(2015). Trust region policy optimization. *Proceedings of the 32nd
+International Conference on Machine Learning* (ICML), 1889–1897.
+
+Tong, H. (1975). Determination of the order of a Markov chain by
+Akaike's information criterion. *Journal of Applied Probability*,
+**12**, 488–497.

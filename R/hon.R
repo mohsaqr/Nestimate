@@ -49,6 +49,9 @@
 #' @return List of character vectors.
 #' @noRd
 .hon_parse_input <- function(data, collapse_repeats = FALSE) {
+  if (is.matrix(data) && !is.numeric(data)) {
+    data <- as.data.frame(data, stringsAsFactors = FALSE)
+  }
   if (is.data.frame(data)) {
     stopifnot("data.frame must have at least one column" = ncol(data) >= 1L)
     stopifnot("data.frame must have at least one row" = nrow(data) >= 1L)
