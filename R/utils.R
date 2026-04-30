@@ -12,6 +12,71 @@ NULL
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
 
+#' Coerce a labels argument to a named character lookup.
+#' Accepts a 2-col data.frame `(name, label)`, a named character vector,
+#' or a named list. Returns a named character vector or NULL on empty input.
+#' @noRd
+.coerce_label_map <- function(labels) {
+  if (is.null(labels)) return(NULL)
+  if (is.data.frame(labels)) {
+    stopifnot(ncol(labels) >= 2)
+    return(setNames(as.character(labels[[2]]), as.character(labels[[1]])))
+  }
+  if (is.list(labels) && !is.null(names(labels))) return(unlist(labels))
+  if (is.character(labels) && !is.null(names(labels))) return(labels)
+  stop("`labels` must be a named character vector, named list, or 2-column ",
+       "data.frame (name, label).", call. = FALSE)
+}
+
+#' Apply a name -> label remap to a netobject or mcml object.
+#'
+#' For a netobject: rewrites `$nodes$label` and the dimnames of `$weights`.
+#' For an mcml object: rewrites within-cluster `$labels`, weight dimnames,
+#' init names, `$cluster_members`, and `$edges$from`/`$to`. Macro layer is
+#' left untouched (its labels are cluster names, not node names).
+#' Unmapped names pass through unchanged.
+#' @noRd
+.apply_node_labels <- function(x, labels) {
+  map <- .coerce_label_map(labels)
+  if (is.null(map)) return(x)
+
+  remap <- function(v) {
+    out <- map[v]; out[is.na(out)] <- v[is.na(out)]; unname(out)
+  }
+
+  if (inherits(x, "mcml")) {
+    relabel_one <- function(net) {
+      if (is.null(net)) return(net)
+      net$labels <- remap(net$labels)
+      if (!is.null(net$weights))
+        dimnames(net$weights) <- list(net$labels, net$labels)
+      if (!is.null(net$inits)) names(net$inits) <- net$labels
+      net
+    }
+    if (!is.null(x$clusters))        x$clusters        <- lapply(x$clusters, relabel_one)
+    if (!is.null(x$cluster_members)) x$cluster_members <- lapply(x$cluster_members, remap)
+    if (!is.null(x$edges)) {
+      x$edges$from <- remap(x$edges$from)
+      x$edges$to   <- remap(x$edges$to)
+    }
+    return(x)
+  }
+
+  if (inherits(x, "netobject")) {
+    if (!is.null(x$nodes) && "name" %in% names(x$nodes)) {
+      x$nodes$label <- remap(as.character(x$nodes$name))
+    }
+    if (!is.null(x$weights)) {
+      nm <- rownames(x$weights) %||% colnames(x$weights)
+      if (!is.null(nm)) dimnames(x$weights) <- list(remap(nm), remap(nm))
+    }
+    return(x)
+  }
+
+  x
+}
+
+
 #' Convert a named numeric matrix to a long tidy data.frame.
 #'
 #' Used by `summary()` methods on class-stamped matrix returns to produce a
@@ -191,6 +256,10 @@ safe_sd <- function(x) {
       }) # nocov end
     }
     return(df)
+  }
+  ## Bare sequence matrix (character / logical) → wide data.frame.
+  if (is.matrix(data) && !is.numeric(data)) {
+    return(as.data.frame(data, stringsAsFactors = FALSE))
   }
   data
 }

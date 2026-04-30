@@ -22,6 +22,11 @@
 #'   \code{list(format = "wide")} for transition methods). This is the key
 #'   composability feature: downstream functions like bootstrap or grid search
 #'   can store and replay the full params list without knowing method internals.
+#' @param labels Optional name -> label remap applied after construction.
+#'   Accepts a 2-column data.frame \code{(name, label)}, a named character
+#'   vector \code{c(name = "label")}, or a named list. Rewrites
+#'   \code{$nodes$label} and \code{dimnames(weights)}. Unmapped names pass
+#'   through unchanged.
 #' @param scaling Character vector or NULL. Post-estimation scaling to apply
 #'   (in order). Options: \code{"minmax"}, \code{"max"}, \code{"rank"},
 #'   \code{"normalize"}. Can combine: \code{c("rank", "minmax")}.
@@ -162,7 +167,15 @@ build_network <- function(data,
                           state_cols = NULL,
                           metadata_cols = NULL,
                           params = list(),
+                          labels = NULL,
                           ...) {
+  # --- Coerce sequence matrices (character / logical / integer) to data.frame ---
+  # Numeric square matrices are left alone — they may already be transition
+  # matrices for downstream estimators that accept them.
+  if (is.matrix(data) && !is.numeric(data)) {
+    data <- as.data.frame(data, stringsAsFactors = FALSE)
+  }
+
   # --- Early dispatch for net_clustering objects ---
   if (inherits(data, "net_clustering")) {
     if (missing(method)) method <- data$network_method %||% "relative"
@@ -582,7 +595,9 @@ build_network <- function(data,
     }
   }
 
-  structure(result, class = c("netobject", "cograph_network"))
+  result <- structure(result, class = c("netobject", "cograph_network"))
+  if (!is.null(labels)) result <- .apply_node_labels(result, labels)
+  result
 }
 
 

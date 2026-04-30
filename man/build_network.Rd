@@ -25,6 +25,7 @@ build_network(
   state_cols = NULL,
   metadata_cols = NULL,
   params = list(),
+  labels = NULL,
   ...
 )
 }
@@ -110,6 +111,12 @@ function (e.g. \code{list(gamma = 0.5)} for glasso, or
 \code{list(format = "wide")} for transition methods). This is the key
 composability feature: downstream functions like bootstrap or grid search
 can store and replay the full params list without knowing method internals.}
+
+\item{labels}{Optional name -> label remap applied after construction.
+Accepts a 2-column data.frame \code{(name, label)}, a named character
+vector \code{c(name = "label")}, or a named list. Rewrites
+\code{$nodes$label} and \code{dimnames(weights)}. Unmapped names pass
+through unchanged.}
 
 \item{...}{Additional arguments passed to the estimator function.}
 }

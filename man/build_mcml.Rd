@@ -10,7 +10,14 @@ build_mcml(
   method = c("sum", "mean", "median", "max", "min", "density", "geomean"),
   type = c("tna", "frequency", "cooccurrence", "semi_markov", "raw"),
   directed = TRUE,
-  compute_within = TRUE
+  compute_within = TRUE,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
+  order = NULL,
+  session = NULL,
+  time_threshold = 900,
+  labels = NULL
 )
 }
 \arguments{
@@ -58,6 +65,18 @@ column containing cluster labels. The mapping is built from unique
 \item{directed}{Logical. Treat as directed network? Default TRUE.}
 
 \item{compute_within}{Logical. Compute within-cluster matrices? Default TRUE.}
+
+\item{actor, action, time, order, session, time_threshold}{Long-format event-log
+shortcut. When \code{action} is supplied on a data.frame input, the data
+is passed through \code{prepare()} to derive a wide sequence, which is
+then routed to the existing sequence path. Behaves identically to
+\code{prepare(...) |> build_network() |> build_mcml()}.}
+
+\item{labels}{Optional name -> label remap applied to within-cluster nodes
+(the macro layer is left untouched because its labels are cluster
+names). Accepts a 2-column data.frame \code{(name, label)}, a named
+character vector \code{c(name = "label")}, or a named list. Unmapped
+names pass through unchanged.}
 }
 \value{
 A \code{cluster_summary} object with \code{meta$source = "transitions"},

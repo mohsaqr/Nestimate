@@ -497,6 +497,16 @@ cluster_summary <- function(x,
 #'   (symmetrize), "semi_markov", or "raw". Default "tna".
 #' @param directed Logical. Treat as directed network? Default TRUE.
 #' @param compute_within Logical. Compute within-cluster matrices? Default TRUE.
+#' @param actor,action,time,order,session,time_threshold Long-format event-log
+#'   shortcut. When \code{action} is supplied on a data.frame input, the data
+#'   is passed through \code{prepare()} to derive a wide sequence, which is
+#'   then routed to the existing sequence path. Behaves identically to
+#'   \code{prepare(...) |> build_network() |> build_mcml()}.
+#' @param labels Optional name -> label remap applied to within-cluster nodes
+#'   (the macro layer is left untouched because its labels are cluster
+#'   names). Accepts a 2-column data.frame \code{(name, label)}, a named
+#'   character vector \code{c(name = "label")}, or a named list. Unmapped
+#'   names pass through unchanged.
 #'
 #' @return A \code{cluster_summary} object with \code{meta$source = "transitions"},
 #'   fully compatible with \code{plot()}, \code{as_tna()}, and
@@ -534,7 +544,14 @@ build_mcml <- function(x,
                        type = c("tna", "frequency", "cooccurrence",
                                 "semi_markov", "raw"),
                        directed = TRUE,
-                       compute_within = TRUE) {
+                       compute_within = TRUE,
+                       actor = NULL,
+                       action = NULL,
+                       time = NULL,
+                       order = NULL,
+                       session = NULL,
+                       time_threshold = 900,
+                       labels = NULL) {
 
   # If already an mcml object, return as-is
   if (inherits(x, "mcml")) {
@@ -547,6 +564,17 @@ build_mcml <- function(x,
 
   type <- match.arg(type)
   method <- match.arg(method)
+
+  # Long-format event-log shortcut: if `action` is supplied on a data.frame,
+  # delegate to prepare() and feed the resulting wide sequence into the
+  # existing sequence path. Behaves identically to
+  # prepare(...) |> build_network() |> build_mcml().
+  if (is.data.frame(x) && !is.null(action)) {
+    prepared <- prepare(x, actor = actor, action = action, time = time,
+                        order = order, session = session,
+                        time_threshold = time_threshold)
+    x <- prepared$sequence_data
+  }
 
   # Coerce cograph_network so downstream branches see a netobject
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
@@ -564,7 +592,7 @@ build_mcml <- function(x,
     )
   }
 
-  switch(input_type,
+  result <- switch(input_type,
     "edgelist" = .build_mcml_edgelist(x, clusters, method, type,
                                        directed, compute_within),
     "sequence" = .build_mcml_sequence(x, clusters, method, type,
@@ -602,6 +630,11 @@ build_mcml <- function(x,
     stop("Cannot build MCML from input of class '", class(x)[1], "'",
          call. = FALSE)
   )
+
+  if (!is.null(labels)) {
+    result <- .apply_node_labels(result, labels)
+  }
+  result
 }
 
 #' Detect input type for build_mcml
