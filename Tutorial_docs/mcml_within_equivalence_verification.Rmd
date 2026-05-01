@@ -1,0 +1,220 @@
+---
+title: "MCML within-cluster equivalence: build_mcml vs NA-mask + tna::tna"
+output: html_document
+---
+
+This document verifies, cluster by cluster, that
+`build_mcml(..., type = "tna")$clusters[[k]]$weights` is bit-identical to the
+transition matrix obtained by
+
+1. masking states from other clusters to `NA` in the original wide sequences,
+2. calling `tna::tna()` on the masked sequences.
+
+It also checks that `as_tna(MCMLL)` carries the same row-stochastic weights
+into the wrapped netobjects, and that the initial probabilities match
+`tna::tna()$inits`.
+
+```{r setup, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(Nestimate)
+library(tna)
+
+# Maximum absolute element-wise difference, NA-safe.
+matrix_delta <- function(a, b) {
+  common <- intersect(rownames(a), rownames(b))
+  max(abs(a[common, common] - b[common, common]))
+}
+```
+
+## 1. Load the data
+
+```{r load}
+Interactions <- rio::import("/Users/mohammedsaqr/Downloads/mcml_code/Mcdata/complicated_nw2.csv")
+Nodesin      <- rio::import("/Users/mohammedsaqr/Downloads/mcml_code/Mcdata/Codemapping.xlsx")
+
+clusters_list <- split(Nodesin$name, Nodesin$groups)
+str(clusters_list)
+```
+
+## 2. Build MCML and the wide sequences in one place
+
+`build_mcml()` accepts long-format event-log data directly via the
+`actor`/`time`/`action` arguments — it pipes the data through `prepare()`
+internally. We also call `prepare()` ourselves so we have the same wide
+sequence frame to mask later.
+
+```{r mcml-build}
+MCMLL <- build_mcml(
+  Interactions,
+  clusters = clusters_list,
+  actor    = "course_group",
+  time     = "timestamp",
+  action   = "From",
+  type     = "tna"
+)
+
+prepared <- prepare(
+  Interactions,
+  actor  = "course_group",
+  time   = "timestamp",
+  action = "From"
+)
+sequences <- prepared$sequence_data
+```
+
+`MCMLL$macro$weights` is the cluster-level transition matrix. Each
+`MCMLL$clusters[[k]]$weights` is the within-cluster row-stochastic chain we
+want to verify.
+
+```{r macro-summary}
+round(MCMLL$macro$weights, 3)
+```
+
+## 3. Tidy NA-masking helper
+
+For each cluster, replace any state outside the cluster with `NA` across all
+time-step columns. `dplyr::across()` does the work in one expression.
+
+```{r mask-fn}
+mask_to_cluster <- function(seqs, cluster_nodes) {
+  seqs |>
+    mutate(across(everything(),
+                  ~ if_else(. %in% cluster_nodes, ., NA_character_)))
+}
+```
+
+## 4. Cluster-by-cluster verification
+
+Each section runs the same three-step recipe:
+
+1. Mask the wide sequences to the focal cluster.
+2. Call `tna::tna()` on the masked sequences.
+3. Compare the resulting transition matrix and inits to `MCMLL`'s output.
+
+### 4.1 Cognitive
+
+```{r cluster-cognitive}
+cl <- "Cognitive"; nodes <- clusters_list[[cl]]; nodes
+
+masked_cog <- mask_to_cluster(sequences, nodes)
+tna_cog    <- tna::tna(masked_cog)
+
+# MCML vs tna::tna - transition matrix
+mcml_W <- MCMLL$clusters[[cl]]$weights
+round(mcml_W, 3)
+round(tna_cog$weights, 3)
+matrix_delta(mcml_W, tna_cog$weights)
+
+# MCML vs tna::tna - inits
+mcml_I <- as_tna(MCMLL)[[cl]]$inits
+round(mcml_I, 3); round(tna_cog$inits, 3)
+max(abs(mcml_I[names(tna_cog$inits)] - tna_cog$inits))
+```
+
+### 4.2 Procedural
+
+```{r cluster-procedural}
+cl <- "Procedural"; nodes <- clusters_list[[cl]]; nodes
+
+masked_pro <- mask_to_cluster(sequences, nodes)
+tna_pro    <- tna::tna(masked_pro)
+
+mcml_W <- MCMLL$clusters[[cl]]$weights
+round(mcml_W, 3); round(tna_pro$weights, 3)
+matrix_delta(mcml_W, tna_pro$weights)
+
+mcml_I <- as_tna(MCMLL)[[cl]]$inits
+round(mcml_I, 3); round(tna_pro$inits, 3)
+max(abs(mcml_I[names(tna_pro$inits)] - tna_pro$inits))
+```
+
+### 4.3 Question
+
+```{r cluster-question}
+cl <- "Question"; nodes <- clusters_list[[cl]]; nodes
+
+masked_q <- mask_to_cluster(sequences, nodes)
+tna_q    <- tna::tna(masked_q)
+
+mcml_W <- MCMLL$clusters[[cl]]$weights
+round(mcml_W, 3); round(tna_q$weights, 3)
+matrix_delta(mcml_W, tna_q$weights)
+
+mcml_I <- as_tna(MCMLL)[[cl]]$inits
+round(mcml_I, 3); round(tna_q$inits, 3)
+max(abs(mcml_I[names(tna_q$inits)] - tna_q$inits))
+```
+
+### 4.4 Reasoning
+
+```{r cluster-reasoning}
+cl <- "Reasoning"; nodes <- clusters_list[[cl]]; nodes
+
+masked_r <- mask_to_cluster(sequences, nodes)
+tna_r    <- tna::tna(masked_r)
+
+mcml_W <- MCMLL$clusters[[cl]]$weights
+round(mcml_W, 3); round(tna_r$weights, 3)
+matrix_delta(mcml_W, tna_r$weights)
+
+mcml_I <- as_tna(MCMLL)[[cl]]$inits
+round(mcml_I, 3); round(tna_r$inits, 3)
+max(abs(mcml_I[names(tna_r$inits)] - tna_r$inits))
+```
+
+### 4.5 Social
+
+```{r cluster-social}
+cl <- "Social"; nodes <- clusters_list[[cl]]; nodes
+
+masked_s <- mask_to_cluster(sequences, nodes)
+tna_s    <- tna::tna(masked_s)
+
+mcml_W <- MCMLL$clusters[[cl]]$weights
+round(mcml_W, 3); round(tna_s$weights, 3)
+matrix_delta(mcml_W, tna_s$weights)
+
+mcml_I <- as_tna(MCMLL)[[cl]]$inits
+round(mcml_I, 3); round(tna_s$inits, 3)
+max(abs(mcml_I[names(tna_s$inits)] - tna_s$inits))
+```
+
+### 4.6 Tutor
+
+```{r cluster-tutor}
+cl <- "Tutor"; nodes <- clusters_list[[cl]]; nodes
+
+masked_t <- mask_to_cluster(sequences, nodes)
+tna_t    <- tna::tna(masked_t)
+
+mcml_W <- MCMLL$clusters[[cl]]$weights
+round(mcml_W, 3); round(tna_t$weights, 3)
+matrix_delta(mcml_W, tna_t$weights)
+
+mcml_I <- as_tna(MCMLL)[[cl]]$inits
+round(mcml_I, 3); round(tna_t$inits, 3)
+max(abs(mcml_I[names(tna_t$inits)] - tna_t$inits))
+```
+
+## 5. All-clusters summary
+
+```{r summary, message = FALSE}
+all_results <- imap_dfr(clusters_list, function(nodes, cl_name) {
+  masked  <- mask_to_cluster(sequences, nodes)
+  tna_net <- tna::tna(masked)
+  mcml_W  <- MCMLL$clusters[[cl_name]]$weights
+  mcml_I  <- as_tna(MCMLL)[[cl_name]]$inits
+  tibble(
+    cluster      = cl_name,
+    n_states     = length(nodes),
+    delta_weights = matrix_delta(mcml_W, tna_net$weights),
+    delta_inits  = max(abs(mcml_I[names(tna_net$inits)] - tna_net$inits))
+  )
+})
+all_results
+```
+
+A `delta_weights` and `delta_inits` of `0` for every row confirms each
+within-cluster network is exactly the conditional Markov chain
+`P(next = j | current = i, both i, j ∈ cluster k)` and that the inits match
+`tna::tna()`'s column-1 first-state distribution.

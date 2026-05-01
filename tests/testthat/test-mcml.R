@@ -895,21 +895,28 @@ test_that("print.mcml without edges shows no Transitions line (L1385-1386)", {
 
 # ---- summary.mcml (L1404) ----
 
-test_that("summary.mcml runs and produces output (L1404)", {
+test_that("summary.mcml returns a tidy per-cluster data.frame (no print side-effect)", {
   mat <- matrix(runif(9), 3, 3,
                 dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
   cs <- cluster_summary(mat, list(G1 = c("A", "B"), G2 = "C"))
-  expect_output(summary(cs), "MCML")
+  s <- summary(cs)
+  expect_s3_class(s, "data.frame")
+  expect_setequal(names(s),
+                  c("cluster", "size", "within_total",
+                    "between_out", "between_in"))
+  expect_equal(nrow(s), 2L)
 })
 
-test_that("summary.mcml on build_mcml result also works (L1404)", {
+test_that("summary.mcml on build_mcml result returns the same shape", {
   seqs <- data.frame(
     T1 = c("A", "B"),
     T2 = c("B", "A"),
     T3 = c("A", "B")
   )
   cs <- build_mcml(seqs, list(G1 = "A", G2 = "B"))
-  expect_output(summary(cs))
+  s <- summary(cs)
+  expect_s3_class(s, "data.frame")
+  expect_equal(nrow(s), 2L)
 })
 
 

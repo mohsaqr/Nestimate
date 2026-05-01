@@ -21,8 +21,7 @@
 #' net_aggregate_weights(w, "sum")   # 2.5
 #' net_aggregate_weights(w, "mean")  # 0.625
 #' net_aggregate_weights(w, "max")   # 0.9
-#' mat <- matrix(c(0, 0.5, 0.5, 0.3, 0, 0.7, 0.4, 0.6, 0), 3, 3, byrow = TRUE)
-#' net_aggregate_weights(mat)
+#' net_aggregate_weights(w, "density", n_possible = 9)  # 2.5 / 9
 net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
   # Remove NA and zero weights
   w <- w[!is.na(w) & w != 0]
@@ -314,6 +313,11 @@ cluster_summary <- function(x,
     stop("x must be a square matrix", call. = FALSE)
   }
 
+  # Symmetrize matrix when treating it as undirected, matching the docstring
+  # contract. Without this, callers passing `directed = FALSE` got the same
+  # output as `directed = TRUE`, which silently violated the contract.
+  if (!isTRUE(directed)) mat <- (mat + t(mat)) / 2
+
   n <- nrow(mat)
   node_names <- rownames(mat)
   if (is.null(node_names)) node_names <- as.character(seq_len(n))
@@ -322,7 +326,6 @@ cluster_summary <- function(x,
   cluster_list <- .normalize_clusters(clusters, node_names)
   n_clusters <- length(cluster_list)
   cluster_names <- names(cluster_list)
-  if (is.null(cluster_names)) cluster_names <- as.character(seq_len(n_clusters)) # nocov
   names(cluster_list) <- cluster_names
 
   # Get node indices for each cluster
@@ -430,11 +433,13 @@ cluster_summary <- function(x,
       clusters = within_data,
       cluster_members = cluster_list,
       meta = list(
+        type = "aggregate",
         method = method,
         directed = directed,
         n_nodes = n,
         n_clusters = n_clusters,
-        cluster_sizes = vapply(cluster_list, length, integer(1))
+        cluster_sizes = vapply(cluster_list, length, integer(1)),
+        source = "matrix"
       )
     ),
     class = "mcml"
@@ -603,18 +608,34 @@ build_mcml <- function(x,
                                     directed = directed,
                                     compute_within = compute_within),
     "netobject_data" = {
-      data <- x$data
       # Auto-detect clusters from network if not provided
       if (is.null(clusters)) {
         clusters <- .auto_detect_clusters(x) # nocov
       }
-      sub_type <- .detect_mcml_input(data)
-      if (sub_type == "edgelist") {
-        .build_mcml_edgelist(data, clusters, method, type,
-                              directed, compute_within)
+      # Respect the netobject's method. Count-based methods (relative,
+      # frequency, co_occurrence) are well-defined to re-derive from raw
+      # data, so we route through the data path for an exact conditional
+      # Markov chain. Model-derived methods (attention, ising, glasso,
+      # mgm, pcor, cor, mlvar_*) carry weights that re-counting would
+      # silently discard, so we route through the matrix path on $weights.
+      net_method <- x$method %||% "relative"
+      count_methods <- c("relative", "frequency", "co_occurrence",
+                         "tna", "ftna", "cna", "wcna", "wtna",
+                         "wtna_cooccurrence", "wtna_transition")
+      if (net_method %in% count_methods) {
+        data <- x$data
+        sub_type <- .detect_mcml_input(data)
+        if (sub_type == "edgelist") {
+          .build_mcml_edgelist(data, clusters, method, type,
+                                directed, compute_within)
+        } else {
+          .build_mcml_sequence(data, clusters, method, type,
+                                directed, compute_within)
+        }
       } else {
-        .build_mcml_sequence(data, clusters, method, type,
-                              directed, compute_within)
+        cluster_summary(x, clusters, method = method,
+                        directed = directed,
+                        compute_within = compute_within)
       }
     },
     "netobject_matrix" = {
@@ -749,6 +770,29 @@ build_mcml <- function(x,
        call. = FALSE)
 }
 
+#' Empirical first-state distribution from a wide sequence data.frame.
+#' Matches `tna::tna()`'s inits: tabulate the values of column 1 (the first
+#' time-step), dropping NAs, optionally restricted to a `restrict_to`
+#' whitelist (anything outside the whitelist is treated as NA so it is
+#' dropped). Normalised to sum to 1. Returns a zero-vector with
+#' `length(levels)` entries when no rows contribute.
+#' @keywords internal
+#' @noRd
+.first_state_distribution <- function(wide_df, levels, restrict_to = NULL) {
+  empty <- setNames(rep(0, length(levels)), levels)
+  if (!is.data.frame(wide_df) || nrow(wide_df) == 0L || ncol(wide_df) == 0L) {
+    return(empty)
+  }
+  first <- as.character(wide_df[[1]])
+  if (!is.null(restrict_to)) first[!first %in% restrict_to] <- NA_character_
+  first <- first[!is.na(first)]
+  if (length(first) == 0L) return(empty)
+  fr <- table(factor(first, levels = levels))
+  out <- as.numeric(fr) / sum(fr)
+  names(out) <- levels
+  out
+}
+
 #' Build cluster_summary from transition vectors
 #' @keywords internal
 .build_from_transitions <- function(from_nodes, to_nodes, weights,
@@ -776,38 +820,57 @@ build_mcml <- function(x,
   b_w <- weights
 
   if (length(b_from) > 0) {
-    # Build pair keys and aggregate
-    pair_keys <- paste(b_from, b_to, sep = "\t")
-    names(b_w) <- pair_keys
-    agg_vals <- tapply(b_w, pair_keys, function(w) {
-      n_possible <- NULL
-      if (method == "density") {
-        parts <- strsplit(names(w)[1], "\t")[[1]]
-        n_i <- length(cluster_list[[parts[1]]])
-        n_j <- length(cluster_list[[parts[2]]])
-        n_possible <- n_i * n_j
-      }
-      net_aggregate_weights(w, method, n_possible)
-    })
+    cluster_sizes <- vapply(cluster_list, length, integer(1L))
+    n_possible_mat <- if (method == "density") {
+      outer(cluster_sizes, cluster_sizes, "*")
+    } else NULL
 
-    for (key in names(agg_vals)) {
-      parts <- strsplit(key, "\t")[[1]]
-      between_raw[parts[1], parts[2]] <- agg_vals[[key]]
+    fc <- factor(b_from, levels = cluster_names)
+    tc <- factor(b_to, levels = cluster_names)
+    agg <- tapply(b_w, list(fc, tc), function(w) {
+      net_aggregate_weights(w, method)
+    }, default = NA_real_)
+    agg[is.na(agg)] <- 0
+    between_raw[] <- as.numeric(agg)
+    if (!is.null(n_possible_mat)) {
+      sums <- tapply(b_w, list(fc, tc), sum, default = 0)
+      sums[is.na(sums)] <- 0
+      between_raw[] <- as.numeric(sums) / as.numeric(n_possible_mat)
+      between_raw[!is.finite(between_raw)] <- 0
     }
   }
 
   # Process between weights
   between_weights <- .process_weights(between_raw, type, directed)
 
-  # Compute inits from column sums
-  col_sums <- colSums(between_raw)
-  total <- sum(col_sums)
-  if (total > 0) {
-    between_inits <- col_sums / total
+  # Compute initial-state probabilities. When sequence data is available we
+  # use the empirical first-state distribution (matches tna::tna()'s inits);
+  # otherwise (edgelist or no data) we fall back to the column-sum proxy
+  # documented earlier — there is no first-state to read off an edgelist.
+  is_seq_for_inits <- is.data.frame(data) && !any(tolower(names(data)) %in%
+    c("from", "source", "src", "v1", "node1", "i",
+      "to", "target", "tgt", "v2", "node2", "j"))
+  between_inits <- if (is_seq_for_inits) {
+    # tna-equivalent macro inits: tabulate column 1 (first time-step) of the
+    # wide sequence, drop NAs, map each first state to its cluster, normalise.
+    first_state <- as.character(data[[1]])
+    first_state <- first_state[!is.na(first_state)]
+    if (length(first_state) == 0L) {
+      setNames(rep(0, n_clusters), cluster_names)
+    } else {
+      first_clu <- cluster_lookup[first_state]
+      fr <- table(factor(first_clu, levels = cluster_names))
+      out <- as.numeric(fr) / sum(fr)
+      names(out) <- cluster_names
+      out
+    }
   } else {
-    between_inits <- rep(1 / n_clusters, n_clusters) # nocov
+    col_sums <- colSums(between_raw)
+    total <- sum(col_sums)
+    out <- if (total > 0) col_sums / total else rep(1 / n_clusters, n_clusters)
+    names(out) <- cluster_names
+    out
   }
-  names(between_inits) <- cluster_names
 
   # ---- Build recoded sequence data for bootstrap compatibility ----
   # The bootstrap fast path (.bootstrap_transition) needs a data.frame
@@ -849,13 +912,14 @@ build_mcml <- function(x,
       )
     })
   } else if (length(from_nodes) > 0L) {
-    # Edgelist branch: every transition -> one 2-column pseudo-sequence row.
-    # Tag with source = "edgelist" so bootstrap_network() can warn — edgelist
-    # bootstrap treats transitions as independent, ignoring within-actor
-    # correlation, so CIs are anti-conservative.
+    # Edgelist branch: every transition -> one 2-row pseudo-sequence.
+    # Columns named `from`/`to` so the data is self-describing on inspection.
+    # Tagged with source = "edgelist" so bootstrap_network() can warn —
+    # edgelist bootstrap treats transitions as independent, ignoring
+    # within-actor correlation, so CIs are anti-conservative.
     between_seq_data <- data.frame(
-      V1 = unname(from_clusters),
-      V2 = unname(to_clusters),
+      from = unname(from_clusters),
+      to = unname(to_clusters),
       stringsAsFactors = FALSE
     )
     attr(between_seq_data, "source") <- "edgelist"
@@ -863,8 +927,8 @@ build_mcml <- function(x,
     within_seq_data_list <- lapply(cluster_list, function(cl_nodes) {
       keep <- from_nodes %in% cl_nodes & to_nodes %in% cl_nodes
       df <- data.frame(
-        V1 = from_nodes[keep],
-        V2 = to_nodes[keep],
+        from = from_nodes[keep],
+        to = to_nodes[keep],
         stringsAsFactors = FALSE
       )
       attr(df, "source") <- "edgelist"
@@ -894,14 +958,21 @@ build_mcml <- function(x,
       n_i <- length(cl_nodes)
 
       if (n_i <= 1) {
-        # Single node: count self-loops
+        # Singleton cluster: aggregate self-loop weight, then route through
+        # .process_weights so type = "tna"/"semi_markov" row-normalises just
+        # like the multi-node branch (1x1 [N] -> [1.0]; 1x1 [0] stays [0]).
         keep_self <- w_from %in% cl_nodes & w_to %in% cl_nodes
         self_weight <- if (any(keep_self)) {
           net_aggregate_weights(w_w[keep_self], method)
         } else { 0 }
-        within_weights_i <- matrix(self_weight, 1, 1,
-                                    dimnames = list(cl_nodes, cl_nodes))
-        within_inits_i <- setNames(1, cl_nodes)
+        within_raw <- matrix(self_weight, 1, 1,
+                             dimnames = list(cl_nodes, cl_nodes))
+        within_weights_i <- .process_weights(within_raw, type, directed)
+        within_inits_i <- if (is_seq_for_inits) {
+          .first_state_distribution(data, levels = cl_nodes, restrict_to = cl_nodes)
+        } else {
+          setNames(1, cl_nodes)
+        }
       } else {
         # Filter transitions for this cluster (keep self-loops)
         keep <- w_from %in% cl_nodes & w_to %in% cl_nodes
@@ -913,26 +984,31 @@ build_mcml <- function(x,
                               dimnames = list(cl_nodes, cl_nodes))
 
         if (length(cf) > 0) {
-          pair_keys <- paste(cf, ct, sep = "\t")
-          agg_vals <- tapply(cw, pair_keys, function(w) {
+          fc <- factor(cf, levels = cl_nodes)
+          tc <- factor(ct, levels = cl_nodes)
+          agg <- tapply(cw, list(fc, tc), function(w) {
             net_aggregate_weights(w, method)
-          })
-          for (key in names(agg_vals)) {
-            parts <- strsplit(key, "\t")[[1]]
-            within_raw[parts[1], parts[2]] <- agg_vals[[key]]
-          }
+          }, default = NA_real_)
+          agg[is.na(agg)] <- 0
+          within_raw[] <- as.numeric(agg)
         }
 
         within_weights_i <- .process_weights(within_raw, type, directed)
 
-        col_sums_w <- colSums(within_raw, na.rm = TRUE)
-        total_w <- sum(col_sums_w, na.rm = TRUE)
-        within_inits_i <- if (!is.na(total_w) && total_w > 0) {
-          col_sums_w / total_w
+        # Within-cluster inits: first cluster-k state per row, NA-masked
+        # against other clusters (matches tna::tna() on the masked sequence).
+        # For edgelist or matrix-only input, fall back to the column-sum proxy.
+        within_inits_i <- if (is_seq_for_inits) {
+          .first_state_distribution(data, levels = cl_nodes,
+                                 restrict_to = cl_nodes)
         } else {
-          rep(1 / n_i, n_i) # nocov
+          col_sums_w <- colSums(within_raw, na.rm = TRUE)
+          total_w <- sum(col_sums_w, na.rm = TRUE)
+          out <- if (!is.na(total_w) && total_w > 0) col_sums_w / total_w
+                 else rep(1 / n_i, n_i)
+          names(out) <- cl_nodes
+          out
         }
-        names(within_inits_i) <- cl_nodes
       }
 
       # Attach filtered sequence data for this cluster
@@ -1228,12 +1304,12 @@ as_tna <- function(x) {
 #' @return A \code{netobject_group} with data preserved from each sub-network.
 #' @export
 as_tna.mcml <- function(x) {
-  # Determine method from meta. Matrix path does not set $meta$type (it's
-  # aggregation only), so a missing field falls back to "frequency" —
-  # treat the aggregated matrix as counts rather than pretending it is
-  # already row-normalised probabilities.
+  # Determine the method to record on the wrapped netobjects:
+  #   * "raw"/"frequency"/"aggregate" -> "frequency" (matrix-path or counts)
+  #   * "tna"/"semi_markov" etc.      -> "relative" (already row-normalised)
   meta_type <- x$meta$type
-  net_method <- if (is.null(meta_type) || meta_type %in% c("raw", "frequency")) {
+  net_method <- if (is.null(meta_type) ||
+                    meta_type %in% c("raw", "frequency", "aggregate")) {
     "frequency"
   } else {
     "relative"
@@ -1242,17 +1318,31 @@ as_tna.mcml <- function(x) {
 
   # Macro
   macro_net <- .wrap_netobject(x$macro$weights, data = x$macro$data,
-                               method = net_method, directed = directed)
+                               method = net_method, directed = directed,
+                               inits = x$macro$inits)
 
-  # Per-cluster
+  # Per-cluster. Drop a cluster only when the wrapped netobject would be
+  # un-normalisable (relative-method requires positive row sums). For
+  # frequency-method counts a zero row is a legitimate sink and is kept.
   cluster_nets <- if (!is.null(x$clusters)) {
+    drop_zero_rows <- net_method == "relative"
+    dropped <- character()
     nets <- lapply(names(x$clusters), function(cl) {
       w <- x$clusters[[cl]]$weights
       d <- x$clusters[[cl]]$data
-      if (any(rowSums(w) == 0)) return(NULL)
-      .wrap_netobject(w, data = d, method = net_method, directed = directed)
+      i <- x$clusters[[cl]]$inits
+      if (drop_zero_rows && any(rowSums(w) == 0)) {
+        dropped[[length(dropped) + 1L]] <<- cl
+        return(NULL)
+      }
+      .wrap_netobject(w, data = d, method = net_method, directed = directed,
+                      inits = i)
     })
     names(nets) <- names(x$clusters)
+    if (length(dropped) > 0L) {
+      warning("Dropped clusters with zero row sums (cannot row-normalise): ",
+              paste(dropped, collapse = ", "), call. = FALSE)
+    }
     nets[!vapply(nets, is.null, logical(1))]
   } else {
     list()
@@ -1267,18 +1357,20 @@ as_tna.mcml <- function(x) {
 #' Wrap a weight matrix + optional data into a minimal netobject
 #' @noRd
 .wrap_netobject <- function(mat, data = NULL, method = "relative",
-                            directed = TRUE) {
+                            directed = TRUE, inits = NULL) {
   states <- rownames(mat)
   edges <- .extract_edges_from_matrix(mat, directed = directed)
   nodes_df <- data.frame(
     id = seq_along(states), label = states, name = states,
     x = NA_real_, y = NA_real_, stringsAsFactors = FALSE
   )
+  if (!is.null(inits)) inits <- inits[states]
 
   structure(
     list(
       data       = data,
       weights    = mat,
+      inits      = inits,
       nodes      = nodes_df,
       edges      = edges,
       directed   = directed,
@@ -1450,8 +1542,6 @@ print.mcml <- function(x, ...) {
 #'
 #' @export
 summary.mcml <- function(object, ...) {
-  print(object, ...)
-
   as_mat <- function(x) {
     if (is.null(x)) return(NULL)
     if (is.matrix(x) && is.numeric(x)) return(x)
