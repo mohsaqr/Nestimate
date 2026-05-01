@@ -1,0 +1,205 @@
+---
+title: "MCML analysis of coded discussion interactions"
+output: html_document
+---
+
+```{r setup, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(Nestimate)
+library(tna)
+# cograph is referenced via `cograph::splot()` only, not attached, because
+# cograph also exports `build_mcml`, `as_tna`, `cluster_summary`, and
+# `centrality` and would mask the Nestimate versions used in this analysis.
+```
+
+This document walks through a Multi-Cluster Multi-Level (MCML) analysis on a
+coded discussion-forum dataset. Each event is a coded utterance (`From` and
+`To` columns). The 26 codes are grouped into six theoretical clusters
+(Cognitive, Procedural, Question, Reasoning, Social, Tutor) by an external
+code-mapping table. The pipeline is:
+
+1. Load the raw event log and the code-mapping table.
+2. Build the MCML in one call, passing the actor / time / action arguments
+   for session detection and the `labels` argument so within-cluster nodes
+   carry human-readable labels (e.g. `Argument` instead of `c_arg`).
+3. Convert to a `netobject_group` via `as_tna()` for downstream analysis.
+4. Bootstrap the macro (cluster-level) network for edge stability.
+5. Bootstrap one within-cluster network in detail.
+6. Compute centralities at both levels.
+7. Visualise with `cograph::splot()`.
+
+# 1. Load the data
+
+The event log has one row per coded message; `From` is the speaker's coded
+utterance and `course_group` identifies the actor (a course-group thread).
+The code-mapping table links each code (`name`) to a cluster (`groups`) and
+to a human-readable label (`Code`).
+
+```{r load}
+Interactions <- rio::import(
+  "/Users/mohammedsaqr/Downloads/mcml_code/Mcdata/complicated_nw2.csv"
+)
+Nodesin <- rio::import(
+  "/Users/mohammedsaqr/Downloads/mcml_code/Mcdata/Codemapping.xlsx"
+)
+
+clusters_list <- split(Nodesin$name, Nodesin$groups)
+labels_df     <- Nodesin |> select(name, Code)
+
+length(clusters_list)         # number of clusters
+sapply(clusters_list, length) # nodes per cluster
+```
+
+# 2. Build the MCML
+
+`build_mcml()` accepts long-format event-log data directly and pipes it
+through `prepare()` for session detection. We pass the `labels` argument so
+within-cluster nodes carry the human-readable labels from `Codemapping`.
+`type = "tna"` requests row-stochastic transition probabilities at every
+level (the within-cluster networks are then conditional Markov chains
+`P(next = j | current = i, both i, j ∈ cluster k)`).
+
+```{r build}
+MCMLL <- build_mcml(
+  Interactions,
+  clusters = clusters_list,
+  actor    = "course_group",
+  time     = "timestamp",
+  action   = "From",
+  type     = "tna",
+  labels   = labels_df
+)
+
+MCMLL
+```
+
+# 3. The macro (cluster-level) network
+
+The macro network reads `P(next ∈ cluster_j | current ∈ cluster_i)`. The
+diagonal is the probability of staying in the same cluster on the next
+move; the off-diagonal is the probability of crossing between clusters.
+
+```{r macro-weights}
+round(MCMLL$macro$weights, 3)
+round(MCMLL$macro$inits,   3)
+```
+
+The off-diagonal mass tells you which cluster pairs interact most. The
+`inits` vector reads as: out of all session-opening codes, which cluster
+opened them.
+
+# 4. Within-cluster networks
+
+Each `MCMLL$clusters[[k]]` is a row-stochastic chain on the nodes of
+cluster `k`, with the human-readable labels we passed in. We don't loop —
+just inspect a couple to get a feel for the data.
+
+```{r within-cognitive}
+round(MCMLL$clusters$Cognitive$weights, 3)
+round(MCMLL$clusters$Cognitive$inits,   3)
+```
+
+```{r within-reasoning}
+round(MCMLL$clusters$Reasoning$weights, 3)
+round(MCMLL$clusters$Reasoning$inits,   3)
+```
+
+# 5. Convert to a `netobject_group`
+
+`as_tna()` wraps every layer (macro plus one per cluster) as a netobject
+suitable for the rest of the package's workflow (bootstrap, centrality,
+cograph visualisation). Initial probabilities propagate through.
+
+```{r as-tna}
+MCMLL_tna <- as_tna(MCMLL)
+class(MCMLL_tna)
+names(MCMLL_tna)
+```
+
+# 6. Bootstrap the macro network
+
+`bootstrap_network()` resamples the recoded sequences and recomputes the
+transition matrix on every iteration, returning per-edge means, 95% CIs,
+and a CS-style stability flag (Epskamp, Borsboom & Fried, 2018).
+
+```{r boot-macro, fig.width = 7, fig.height = 5}
+set.seed(2026)
+boot_macro <- bootstrap_network(MCMLL_tna$macro, iter = 500)
+boot_macro
+
+cograph::plot_bootstrap_forest(boot_macro)
+```
+
+The print summary tells you how many cluster-to-cluster edges survived the
+stability criterion at the chosen confidence level. The forest plot shows
+each edge's mean weight with the bootstrap CI.
+
+# 7. Bootstrap a within-cluster network
+
+The Cognitive cluster has four sub-codes. Bootstrapping at this level tests
+which within-cluster transitions are stable.
+
+```{r boot-cognitive, fig.width = 7, fig.height = 5}
+set.seed(2026)
+boot_cog <- bootstrap_network(MCMLL_tna$Cognitive, iter = 500)
+boot_cog
+
+# A within-cluster bootstrap may have few or no edges surviving the default
+# stability criterion. The forest plot only renders if there is at least one
+# significant edge, so we guard the call.
+if (isTRUE(any(boot_cog$significant))) {
+  cograph::plot_bootstrap_forest(boot_cog)
+} else {
+  message("No within-cluster edges met the default stability criterion ",
+          "for the Cognitive cluster — forest plot skipped.")
+}
+```
+
+# 8. Centralities
+
+`cograph::centrality()` computes the standard set of network centrality
+measures (prestige, brokerage, etc.) on a netobject. We run it on the macro
+and on each within-cluster netobject.
+
+```{r centrality-macro}
+cograph::centrality(MCMLL_tna$macro)
+```
+
+```{r centrality-cognitive}
+cograph::centrality(MCMLL_tna$Cognitive)
+```
+
+# 9. Visualisation
+
+`cograph::splot()` renders any netobject. Use it on the macro for the
+cluster-of-clusters view and on a within-cluster netobject for the
+fine-grained view.
+
+```{r splot-macro, fig.width = 7, fig.height = 5}
+cograph::splot(MCMLL_tna$macro,
+               edge_labels = TRUE,
+               edge_label_size = 0.7)
+```
+
+```{r splot-cognitive, fig.width = 7, fig.height = 5}
+cograph::splot(MCMLL_tna$Cognitive,
+               edge_labels = TRUE,
+               edge_label_size = 0.7)
+```
+
+# 10. What to read off this analysis
+
+* **Macro diagonal vs off-diagonal**: how cluster-bound the discussion is.
+  A high `Reasoning -> Reasoning` value means reasoning utterances are
+  followed by more reasoning, not by social or procedural follow-ups.
+* **Macro inits**: which cluster opens sessions. If the discussion is
+  Tutor-initiated, expect a high `Tutor` init.
+* **Bootstrap CIs**: a wide CI on a macro edge tells you the cluster-level
+  flow is sensitive to which actors / sessions you sample. Narrow CIs
+  with stars are the stable interactions worth interpreting.
+* **Within-cluster networks**: the conditional dynamics inside each
+  cluster, useful for fine-grained pedagogical claims (e.g.
+  `Argument -> Counter-argument` rates inside Cognitive).
+* **Centralities**: at the macro level, an outgoing-strength hub is a
+  cluster the discussion frequently leaves; an incoming hub is a cluster
+  it frequently lands in.

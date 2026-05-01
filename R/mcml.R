@@ -432,6 +432,7 @@ cluster_summary <- function(x,
       macro = between,
       clusters = within_data,
       cluster_members = cluster_list,
+      edges = NULL,    # NULL placeholder; transitions paths fill this in
       meta = list(
         type = "aggregate",
         method = method,
@@ -1050,7 +1051,6 @@ build_mcml <- function(x,
       clusters = within_data,
       cluster_members = cluster_list,
       edges = edges,
-      data = data,
       meta = list(
         type = type,
         method = method,

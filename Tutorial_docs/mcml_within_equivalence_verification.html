@@ -354,48 +354,55 @@ vs NA-mask + tna::tna</h1>
 </div>
 
 
-<p>This document verifies, cluster by cluster, that
-<code>build_mcml(..., type = &quot;tna&quot;)$clusters[[k]]$weights</code> is
-bit-identical to the transition matrix obtained by</p>
-<ol style="list-style-type: decimal">
-<li>masking states from other clusters to <code>NA</code> in the
-original wide sequences,</li>
-<li>calling <code>tna::tna()</code> on the masked sequences.</li>
-</ol>
-<p>It also checks that <code>as_tna(MCMLL)</code> carries the same
-row-stochastic weights into the wrapped netobjects, and that the initial
-probabilities match <code>tna::tna()$inits</code>.</p>
 <pre class="r"><code>library(tidyverse)
 library(Nestimate)
-library(tna)
-
-# Maximum absolute element-wise difference, NA-safe.
-matrix_delta &lt;- function(a, b) {
-  common &lt;- intersect(rownames(a), rownames(b))
-  max(abs(a[common, common] - b[common, common]))
-}</code></pre>
-<div id="load-the-data" class="section level2">
-<h2>1. Load the data</h2>
+library(tna)</code></pre>
+<p>Each within-cluster network produced by
+<code>build_mcml(..., type = &quot;tna&quot;)</code> is the conditional Markov
+chain on cluster <code>k</code>,
+<code>P(next = j | current = i, both i, j ∈ cluster k)</code>.
+Equivalent to:</p>
+<ol style="list-style-type: decimal">
+<li>take the wide sequences,</li>
+<li>replace every state outside the cluster with <code>NA</code>,</li>
+<li>call <code>tna::tna()</code> on the masked sequences.</li>
+</ol>
+<p>This document verifies both the transition matrix and the initial
+probabilities for every cluster, against <code>tna::tna()</code>
+directly. Both objects must be reordered onto the same node order before
+comparison: <code>build_mcml()</code> preserves the user-supplied
+cluster order, while <code>tna::tna()</code> sorts states
+alphabetically.</p>
+<div id="load-data" class="section level1">
+<h1>1. Load data</h1>
 <pre class="r"><code>Interactions &lt;- rio::import(&quot;/Users/mohammedsaqr/Downloads/mcml_code/Mcdata/complicated_nw2.csv&quot;)
 Nodesin      &lt;- rio::import(&quot;/Users/mohammedsaqr/Downloads/mcml_code/Mcdata/Codemapping.xlsx&quot;)
 
 clusters_list &lt;- split(Nodesin$name, Nodesin$groups)
-str(clusters_list)</code></pre>
-<pre><code>## List of 6
-##  $ Cognitive : chr [1:4] &quot;c_arg&quot; &quot;c_counter_arg&quot; &quot;c_disagreement&quot; &quot;c_evaluation&quot;
-##  $ Procedural: chr [1:3] &quot;pi_problem_handeling&quot; &quot;pi_task_management&quot; &quot;pi_team_building&quot;
-##  $ Question  : chr [1:4] &quot;q_open&quot; &quot;q_alternative&quot; &quot;q_verification&quot; &quot;q_critical&quot;
-##  $ Reasoning : chr [1:7] &quot;r_argument&quot; &quot;r_clasification&quot; &quot;r_comparison&quot; &quot;r_conclude_result&quot; ...
-##  $ Social    : chr [1:4] &quot;ot_share_experience&quot; &quot;ot_share_feelings&quot; &quot;ot_socializing&quot; &quot;s_info_materials&quot;
-##  $ Tutor     : chr [1:4] &quot;t_encouraging&quot; &quot;t_feedback&quot; &quot;t_guiding&quot; &quot;t_socializing&quot;</code></pre>
+clusters_list</code></pre>
+<pre><code>## $Cognitive
+## [1] &quot;c_arg&quot;          &quot;c_counter_arg&quot;  &quot;c_disagreement&quot; &quot;c_evaluation&quot;  
+## 
+## $Procedural
+## [1] &quot;pi_problem_handeling&quot; &quot;pi_task_management&quot;   &quot;pi_team_building&quot;    
+## 
+## $Question
+## [1] &quot;q_open&quot;         &quot;q_alternative&quot;  &quot;q_verification&quot; &quot;q_critical&quot;    
+## 
+## $Reasoning
+## [1] &quot;r_argument&quot;            &quot;r_clasification&quot;       &quot;r_comparison&quot;         
+## [4] &quot;r_conclude_result&quot;     &quot;r_statement&quot;           &quot;r_acceptance&quot;         
+## [7] &quot;r_identify_objectives&quot;
+## 
+## $Social
+## [1] &quot;ot_share_experience&quot; &quot;ot_share_feelings&quot;   &quot;ot_socializing&quot;     
+## [4] &quot;s_info_materials&quot;   
+## 
+## $Tutor
+## [1] &quot;t_encouraging&quot; &quot;t_feedback&quot;    &quot;t_guiding&quot;     &quot;t_socializing&quot;</code></pre>
 </div>
-<div id="build-mcml-and-the-wide-sequences-in-one-place" class="section level2">
-<h2>2. Build MCML and the wide sequences in one place</h2>
-<p><code>build_mcml()</code> accepts long-format event-log data directly
-via the <code>actor</code>/<code>time</code>/<code>action</code>
-arguments — it pipes the data through <code>prepare()</code> internally.
-We also call <code>prepare()</code> ourselves so we have the same wide
-sequence frame to mask later.</p>
+<div id="build-mcml-and-the-wide-sequences" class="section level1">
+<h1>2. Build MCML and the wide sequences</h1>
 <pre class="r"><code>MCMLL &lt;- build_mcml(
   Interactions,
   clusters = clusters_list,
@@ -405,17 +412,14 @@ sequence frame to mask later.</p>
   type     = &quot;tna&quot;
 )</code></pre>
 <pre><code>## Metadata aggregated per session: ties resolved by first occurrence in &#39;To&#39; (1510 sessions), &#39;Source&#39; (725 sessions), &#39;Target&#39; (579 sessions), &#39;Source_student&#39; (99 sessions), &#39;Target_Student&#39; (225 sessions), &#39;CodesFrom&#39; (204 sessions), &#39;CodesTo&#39; (199 sessions), &#39;messageID&#39; (421 sessions), &#39;description.x&#39; (1424 sessions), &#39;phase_based_on_zimmerman_jarvela_et_al_2016_would_not_maybe_use_these_in_the_analysis_but_included_them_here_anyway_might_be_useful_in_the_paper_when_relating_these_to_the_regulation_framework.x&#39; (194 sessions), &#39;interaction_type_jarvela_et_al_2016.x&#39; (202 sessions), &#39;knowledge_construction_socio_emotional_interaction_regulation_tormanen_et_al_2022_zabolotna_et_al_2022.x&#39; (630 sessions), &#39;examples_zabolotna_et_al_2022.x&#39; (788 sessions), &#39;references.x&#39; (212 sessions), &#39;description.y&#39; (1510 sessions), &#39;phase_based_on_zimmerman_jarvela_et_al_2016_would_not_maybe_use_these_in_the_analysis_but_included_them_here_anyway_might_be_useful_in_the_paper_when_relating_these_to_the_regulation_framework.y&#39; (144 sessions), &#39;interaction_type_jarvela_et_al_2016.y&#39; (156 sessions), &#39;knowledge_construction_socio_emotional_interaction_regulation_tormanen_et_al_2022_zabolotna_et_al_2022.y&#39; (509 sessions), &#39;examples_zabolotna_et_al_2022.y&#39; (652 sessions), &#39;references.y&#39; (174 sessions)</code></pre>
-<pre class="r"><code>prepared &lt;- prepare(
+<pre class="r"><code>sequences &lt;- prepare(
   Interactions,
   actor  = &quot;course_group&quot;,
   time   = &quot;timestamp&quot;,
   action = &quot;From&quot;
-)</code></pre>
+)$sequence_data</code></pre>
 <pre><code>## Metadata aggregated per session: ties resolved by first occurrence in &#39;To&#39; (1510 sessions), &#39;Source&#39; (725 sessions), &#39;Target&#39; (579 sessions), &#39;Source_student&#39; (99 sessions), &#39;Target_Student&#39; (225 sessions), &#39;CodesFrom&#39; (204 sessions), &#39;CodesTo&#39; (199 sessions), &#39;messageID&#39; (421 sessions), &#39;description.x&#39; (1424 sessions), &#39;phase_based_on_zimmerman_jarvela_et_al_2016_would_not_maybe_use_these_in_the_analysis_but_included_them_here_anyway_might_be_useful_in_the_paper_when_relating_these_to_the_regulation_framework.x&#39; (194 sessions), &#39;interaction_type_jarvela_et_al_2016.x&#39; (202 sessions), &#39;knowledge_construction_socio_emotional_interaction_regulation_tormanen_et_al_2022_zabolotna_et_al_2022.x&#39; (630 sessions), &#39;examples_zabolotna_et_al_2022.x&#39; (788 sessions), &#39;references.x&#39; (212 sessions), &#39;description.y&#39; (1510 sessions), &#39;phase_based_on_zimmerman_jarvela_et_al_2016_would_not_maybe_use_these_in_the_analysis_but_included_them_here_anyway_might_be_useful_in_the_paper_when_relating_these_to_the_regulation_framework.y&#39; (144 sessions), &#39;interaction_type_jarvela_et_al_2016.y&#39; (156 sessions), &#39;knowledge_construction_socio_emotional_interaction_regulation_tormanen_et_al_2022_zabolotna_et_al_2022.y&#39; (509 sessions), &#39;examples_zabolotna_et_al_2022.y&#39; (652 sessions), &#39;references.y&#39; (174 sessions)</code></pre>
-<pre class="r"><code>sequences &lt;- prepared$sequence_data</code></pre>
-<p><code>MCMLL$macro$weights</code> is the cluster-level transition
-matrix. Each <code>MCMLL$clusters[[k]]$weights</code> is the
-within-cluster row-stochastic chain we want to verify.</p>
+<pre class="r"><code>MCMLL_tna &lt;- as_tna(MCMLL)</code></pre>
 <pre class="r"><code>round(MCMLL$macro$weights, 3)</code></pre>
 <pre><code>##            Cognitive Procedural Question Reasoning Social Tutor
 ## Cognitive      0.302      0.006    0.044     0.230  0.399 0.019
@@ -424,129 +428,133 @@ within-cluster row-stochastic chain we want to verify.</p>
 ## Reasoning      0.101      0.049    0.034     0.299  0.504 0.012
 ## Social         0.128      0.010    0.028     0.309  0.522 0.004
 ## Tutor          0.042      0.006    0.022     0.053  0.022 0.855</code></pre>
+<pre class="r"><code>round(MCMLL$macro$inits,   3)</code></pre>
+<pre><code>##  Cognitive Procedural   Question  Reasoning     Social      Tutor 
+##      0.114      0.059      0.035      0.306      0.447      0.040</code></pre>
 </div>
-<div id="tidy-na-masking-helper" class="section level2">
-<h2>3. Tidy NA-masking helper</h2>
-<p>For each cluster, replace any state outside the cluster with
-<code>NA</code> across all time-step columns.
-<code>dplyr::across()</code> does the work in one expression.</p>
-<pre class="r"><code>mask_to_cluster &lt;- function(seqs, cluster_nodes) {
-  seqs |&gt;
-    mutate(across(everything(),
-                  ~ if_else(. %in% cluster_nodes, ., NA_character_)))
-}</code></pre>
-</div>
-<div id="cluster-by-cluster-verification" class="section level2">
-<h2>4. Cluster-by-cluster verification</h2>
-<p>Each section runs the same three-step recipe:</p>
-<ol style="list-style-type: decimal">
-<li>Mask the wide sequences to the focal cluster.</li>
-<li>Call <code>tna::tna()</code> on the masked sequences.</li>
-<li>Compare the resulting transition matrix and inits to
-<code>MCMLL</code>’s output.</li>
-</ol>
-<div id="cognitive" class="section level3">
-<h3>4.1 Cognitive</h3>
-<pre class="r"><code>cl &lt;- &quot;Cognitive&quot;; nodes &lt;- clusters_list[[cl]]; nodes</code></pre>
-<pre><code>## [1] &quot;c_arg&quot;          &quot;c_counter_arg&quot;  &quot;c_disagreement&quot; &quot;c_evaluation&quot;</code></pre>
-<pre class="r"><code>masked_cog &lt;- mask_to_cluster(sequences, nodes)
-tna_cog    &lt;- tna::tna(masked_cog)
+<div id="cluster-by-cluster-verification" class="section level1">
+<h1>3. Cluster-by-cluster verification</h1>
+<p>Same recipe in every section:</p>
+<ul>
+<li>mask the wide sequences to the focal cluster with
+<code>mutate(across(everything(), ~ if_else(. %in% nodes, ., NA_character_)))</code>,</li>
+<li>call <code>tna::tna()</code>,</li>
+<li>reorder <code>tna::tna()</code>’s output onto the cluster’s node
+order,</li>
+<li>compare to MCML’s matrix and inits.</li>
+</ul>
+<div id="cognitive" class="section level2">
+<h2>3.1 Cognitive</h2>
+<pre class="r"><code>nodes &lt;- clusters_list$Cognitive
 
-# MCML vs tna::tna - transition matrix
-mcml_W &lt;- MCMLL$clusters[[cl]]$weights
-round(mcml_W, 3)</code></pre>
+masked  &lt;- sequences |&gt;
+  mutate(across(everything(), ~ if_else(. %in% nodes, ., NA_character_)))
+tna_net &lt;- tna::tna(masked)
+
+tna_W &lt;- tna_net$weights[nodes, nodes]
+tna_I &lt;- tna_net$inits[nodes]
+
+round(MCMLL$clusters$Cognitive$weights, 3)</code></pre>
 <pre><code>##                c_arg c_counter_arg c_disagreement c_evaluation
 ## c_arg          0.464         0.009          0.007        0.521
 ## c_counter_arg  0.017         0.933          0.000        0.050
 ## c_disagreement 0.200         0.067          0.600        0.133
 ## c_evaluation   0.496         0.005          0.008        0.491</code></pre>
-<pre class="r"><code>round(tna_cog$weights, 3)</code></pre>
+<pre class="r"><code>round(tna_W, 3)</code></pre>
 <pre><code>##                c_arg c_counter_arg c_disagreement c_evaluation
 ## c_arg          0.464         0.009          0.007        0.521
 ## c_counter_arg  0.017         0.933          0.000        0.050
 ## c_disagreement 0.200         0.067          0.600        0.133
 ## c_evaluation   0.496         0.005          0.008        0.491</code></pre>
-<pre class="r"><code>matrix_delta(mcml_W, tna_cog$weights)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># MCML vs tna::tna - inits
-mcml_I &lt;- as_tna(MCMLL)[[cl]]$inits
-round(mcml_I, 3); round(tna_cog$inits, 3)</code></pre>
+<pre class="r"><code>all.equal(MCMLL$clusters$Cognitive$weights, tna_W)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>round(MCMLL_tna$Cognitive$inits, 3)</code></pre>
 <pre><code>##          c_arg  c_counter_arg c_disagreement   c_evaluation 
 ##          0.465          0.114          0.033          0.388</code></pre>
+<pre class="r"><code>round(tna_I, 3)</code></pre>
 <pre><code>##          c_arg  c_counter_arg c_disagreement   c_evaluation 
 ##          0.465          0.114          0.033          0.388</code></pre>
-<pre class="r"><code>max(abs(mcml_I[names(tna_cog$inits)] - tna_cog$inits))</code></pre>
-<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>all.equal(MCMLL_tna$Cognitive$inits, tna_I)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
-<div id="procedural" class="section level3">
-<h3>4.2 Procedural</h3>
-<pre class="r"><code>cl &lt;- &quot;Procedural&quot;; nodes &lt;- clusters_list[[cl]]; nodes</code></pre>
-<pre><code>## [1] &quot;pi_problem_handeling&quot; &quot;pi_task_management&quot;   &quot;pi_team_building&quot;</code></pre>
-<pre class="r"><code>masked_pro &lt;- mask_to_cluster(sequences, nodes)
-tna_pro    &lt;- tna::tna(masked_pro)
+<div id="procedural" class="section level2">
+<h2>3.2 Procedural</h2>
+<pre class="r"><code>nodes &lt;- clusters_list$Procedural
 
-mcml_W &lt;- MCMLL$clusters[[cl]]$weights
-round(mcml_W, 3); round(tna_pro$weights, 3)</code></pre>
+masked  &lt;- sequences |&gt;
+  mutate(across(everything(), ~ if_else(. %in% nodes, ., NA_character_)))
+tna_net &lt;- tna::tna(masked)
+
+tna_W &lt;- tna_net$weights[nodes, nodes]
+tna_I &lt;- tna_net$inits[nodes]
+
+round(MCMLL$clusters$Procedural$weights, 3)</code></pre>
 <pre><code>##                      pi_problem_handeling pi_task_management pi_team_building
 ## pi_problem_handeling                0.397              0.492            0.111
 ## pi_task_management                  0.140              0.279            0.581
 ## pi_team_building                    0.040              0.780            0.181</code></pre>
+<pre class="r"><code>round(tna_W, 3)</code></pre>
 <pre><code>##                      pi_problem_handeling pi_task_management pi_team_building
 ## pi_problem_handeling                0.397              0.492            0.111
 ## pi_task_management                  0.140              0.279            0.581
 ## pi_team_building                    0.040              0.780            0.181</code></pre>
-<pre class="r"><code>matrix_delta(mcml_W, tna_pro$weights)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code>mcml_I &lt;- as_tna(MCMLL)[[cl]]$inits
-round(mcml_I, 3); round(tna_pro$inits, 3)</code></pre>
+<pre class="r"><code>all.equal(MCMLL$clusters$Procedural$weights, tna_W)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>round(MCMLL_tna$Procedural$inits, 3)</code></pre>
 <pre><code>## pi_problem_handeling   pi_task_management     pi_team_building 
 ##                0.167                0.564                0.269</code></pre>
+<pre class="r"><code>round(tna_I, 3)</code></pre>
 <pre><code>## pi_problem_handeling   pi_task_management     pi_team_building 
 ##                0.167                0.564                0.269</code></pre>
-<pre class="r"><code>max(abs(mcml_I[names(tna_pro$inits)] - tna_pro$inits))</code></pre>
-<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>all.equal(MCMLL_tna$Procedural$inits, tna_I)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
-<div id="question" class="section level3">
-<h3>4.3 Question</h3>
-<pre class="r"><code>cl &lt;- &quot;Question&quot;; nodes &lt;- clusters_list[[cl]]; nodes</code></pre>
-<pre><code>## [1] &quot;q_open&quot;         &quot;q_alternative&quot;  &quot;q_verification&quot; &quot;q_critical&quot;</code></pre>
-<pre class="r"><code>masked_q &lt;- mask_to_cluster(sequences, nodes)
-tna_q    &lt;- tna::tna(masked_q)
+<div id="question" class="section level2">
+<h2>3.3 Question</h2>
+<pre class="r"><code>nodes &lt;- clusters_list$Question
 
-mcml_W &lt;- MCMLL$clusters[[cl]]$weights
-round(mcml_W, 3); round(tna_q$weights, 3)</code></pre>
+masked  &lt;- sequences |&gt;
+  mutate(across(everything(), ~ if_else(. %in% nodes, ., NA_character_)))
+tna_net &lt;- tna::tna(masked)
+
+tna_W &lt;- tna_net$weights[nodes, nodes]
+tna_I &lt;- tna_net$inits[nodes]
+
+round(MCMLL$clusters$Question$weights, 3)</code></pre>
 <pre><code>##                q_open q_alternative q_verification q_critical
 ## q_open          0.718         0.026          0.141      0.115
 ## q_alternative   0.083         0.750          0.000      0.167
 ## q_verification  0.125         0.062          0.604      0.208
 ## q_critical      0.108         0.010          0.137      0.745</code></pre>
-<pre><code>##                q_alternative q_critical q_open q_verification
-## q_alternative          0.750      0.167  0.083          0.000
-## q_critical             0.010      0.745  0.108          0.137
-## q_open                 0.026      0.115  0.718          0.141
-## q_verification         0.062      0.208  0.125          0.604</code></pre>
-<pre class="r"><code>matrix_delta(mcml_W, tna_q$weights)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code>mcml_I &lt;- as_tna(MCMLL)[[cl]]$inits
-round(mcml_I, 3); round(tna_q$inits, 3)</code></pre>
+<pre class="r"><code>round(tna_W, 3)</code></pre>
+<pre><code>##                q_open q_alternative q_verification q_critical
+## q_open          0.718         0.026          0.141      0.115
+## q_alternative   0.083         0.750          0.000      0.167
+## q_verification  0.125         0.062          0.604      0.208
+## q_critical      0.108         0.010          0.137      0.745</code></pre>
+<pre class="r"><code>all.equal(MCMLL$clusters$Question$weights, tna_W)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>round(MCMLL_tna$Question$inits, 3)</code></pre>
 <pre><code>##         q_open  q_alternative q_verification     q_critical 
 ##          0.359          0.065          0.087          0.489</code></pre>
-<pre><code>##  q_alternative     q_critical         q_open q_verification 
-##          0.065          0.489          0.359          0.087</code></pre>
-<pre class="r"><code>max(abs(mcml_I[names(tna_q$inits)] - tna_q$inits))</code></pre>
-<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>round(tna_I, 3)</code></pre>
+<pre><code>##         q_open  q_alternative q_verification     q_critical 
+##          0.359          0.065          0.087          0.489</code></pre>
+<pre class="r"><code>all.equal(MCMLL_tna$Question$inits, tna_I)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
-<div id="reasoning" class="section level3">
-<h3>4.4 Reasoning</h3>
-<pre class="r"><code>cl &lt;- &quot;Reasoning&quot;; nodes &lt;- clusters_list[[cl]]; nodes</code></pre>
-<pre><code>## [1] &quot;r_argument&quot;            &quot;r_clasification&quot;       &quot;r_comparison&quot;         
-## [4] &quot;r_conclude_result&quot;     &quot;r_statement&quot;           &quot;r_acceptance&quot;         
-## [7] &quot;r_identify_objectives&quot;</code></pre>
-<pre class="r"><code>masked_r &lt;- mask_to_cluster(sequences, nodes)
-tna_r    &lt;- tna::tna(masked_r)
+<div id="reasoning" class="section level2">
+<h2>3.4 Reasoning</h2>
+<pre class="r"><code>nodes &lt;- clusters_list$Reasoning
 
-mcml_W &lt;- MCMLL$clusters[[cl]]$weights
-round(mcml_W, 3); round(tna_r$weights, 3)</code></pre>
+masked  &lt;- sequences |&gt;
+  mutate(across(everything(), ~ if_else(. %in% nodes, ., NA_character_)))
+tna_net &lt;- tna::tna(masked)
+
+tna_W &lt;- tna_net$weights[nodes, nodes]
+tna_I &lt;- tna_net$inits[nodes]
+
+round(MCMLL$clusters$Reasoning$weights, 3)</code></pre>
 <pre><code>##                       r_argument r_clasification r_comparison r_conclude_result
 ## r_argument                 0.475           0.030        0.007              0.00
 ## r_clasification            0.129           0.225        0.045              0.00
@@ -563,51 +571,54 @@ round(mcml_W, 3); round(tna_r$weights, 3)</code></pre>
 ## r_statement                 0.404        0.025                 0.000
 ## r_acceptance                0.116        0.596                 0.000
 ## r_identify_objectives       0.067        0.000                 0.933</code></pre>
-<pre><code>##                       r_acceptance r_argument r_clasification r_comparison
-## r_acceptance                 0.596      0.288           0.000        0.000
-## r_argument                   0.065      0.475           0.030        0.007
-## r_clasification              0.006      0.129           0.225        0.045
-## r_comparison                 0.020      0.040           0.160        0.320
-## r_conclude_result            0.000      0.250           0.000        0.000
-## r_identify_objectives        0.000      0.000           0.000        0.000
-## r_statement                  0.025      0.384           0.149        0.039
-##                       r_conclude_result r_identify_objectives r_statement
-## r_acceptance                       0.00                 0.000       0.116
-## r_argument                         0.00                 0.003       0.421
-## r_clasification                    0.00                 0.000       0.596
-## r_comparison                       0.00                 0.000       0.460
-## r_conclude_result                  0.75                 0.000       0.000
-## r_identify_objectives              0.00                 0.933       0.067
-## r_statement                        0.00                 0.000       0.404</code></pre>
-<pre class="r"><code>matrix_delta(mcml_W, tna_r$weights)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code>mcml_I &lt;- as_tna(MCMLL)[[cl]]$inits
-round(mcml_I, 3); round(tna_r$inits, 3)</code></pre>
+<pre class="r"><code>round(tna_W, 3)</code></pre>
+<pre><code>##                       r_argument r_clasification r_comparison r_conclude_result
+## r_argument                 0.475           0.030        0.007              0.00
+## r_clasification            0.129           0.225        0.045              0.00
+## r_comparison               0.040           0.160        0.320              0.00
+## r_conclude_result          0.250           0.000        0.000              0.75
+## r_statement                0.384           0.149        0.039              0.00
+## r_acceptance               0.288           0.000        0.000              0.00
+## r_identify_objectives      0.000           0.000        0.000              0.00
+##                       r_statement r_acceptance r_identify_objectives
+## r_argument                  0.421        0.065                 0.003
+## r_clasification             0.596        0.006                 0.000
+## r_comparison                0.460        0.020                 0.000
+## r_conclude_result           0.000        0.000                 0.000
+## r_statement                 0.404        0.025                 0.000
+## r_acceptance                0.116        0.596                 0.000
+## r_identify_objectives       0.067        0.000                 0.933</code></pre>
+<pre class="r"><code>all.equal(MCMLL$clusters$Reasoning$weights, tna_W)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>round(MCMLL_tna$Reasoning$inits, 3)</code></pre>
 <pre><code>##            r_argument       r_clasification          r_comparison 
 ##                 0.350                 0.040                 0.012 
 ##     r_conclude_result           r_statement          r_acceptance 
 ##                 0.004                 0.448                 0.098 
 ## r_identify_objectives 
 ##                 0.047</code></pre>
-<pre><code>##          r_acceptance            r_argument       r_clasification 
-##                 0.098                 0.350                 0.040 
-##          r_comparison     r_conclude_result r_identify_objectives 
-##                 0.012                 0.004                 0.047 
-##           r_statement 
-##                 0.448</code></pre>
-<pre class="r"><code>max(abs(mcml_I[names(tna_r$inits)] - tna_r$inits))</code></pre>
-<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>round(tna_I, 3)</code></pre>
+<pre><code>##            r_argument       r_clasification          r_comparison 
+##                 0.350                 0.040                 0.012 
+##     r_conclude_result           r_statement          r_acceptance 
+##                 0.004                 0.448                 0.098 
+## r_identify_objectives 
+##                 0.047</code></pre>
+<pre class="r"><code>all.equal(MCMLL_tna$Reasoning$inits, tna_I)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
-<div id="social" class="section level3">
-<h3>4.5 Social</h3>
-<pre class="r"><code>cl &lt;- &quot;Social&quot;; nodes &lt;- clusters_list[[cl]]; nodes</code></pre>
-<pre><code>## [1] &quot;ot_share_experience&quot; &quot;ot_share_feelings&quot;   &quot;ot_socializing&quot;     
-## [4] &quot;s_info_materials&quot;</code></pre>
-<pre class="r"><code>masked_s &lt;- mask_to_cluster(sequences, nodes)
-tna_s    &lt;- tna::tna(masked_s)
+<div id="social" class="section level2">
+<h2>3.5 Social</h2>
+<pre class="r"><code>nodes &lt;- clusters_list$Social
 
-mcml_W &lt;- MCMLL$clusters[[cl]]$weights
-round(mcml_W, 3); round(tna_s$weights, 3)</code></pre>
+masked  &lt;- sequences |&gt;
+  mutate(across(everything(), ~ if_else(. %in% nodes, ., NA_character_)))
+tna_net &lt;- tna::tna(masked)
+
+tna_W &lt;- tna_net$weights[nodes, nodes]
+tna_I &lt;- tna_net$inits[nodes]
+
+round(MCMLL$clusters$Social$weights, 3)</code></pre>
 <pre><code>##                     ot_share_experience ot_share_feelings ot_socializing
 ## ot_share_experience               0.085             0.012          0.159
 ## ot_share_feelings                 0.000             0.190          0.349
@@ -618,6 +629,7 @@ round(mcml_W, 3); round(tna_s$weights, 3)</code></pre>
 ## ot_share_feelings              0.461
 ## ot_socializing                 0.585
 ## s_info_materials               0.696</code></pre>
+<pre class="r"><code>round(tna_W, 3)</code></pre>
 <pre><code>##                     ot_share_experience ot_share_feelings ot_socializing
 ## ot_share_experience               0.085             0.012          0.159
 ## ot_share_feelings                 0.000             0.190          0.349
@@ -628,63 +640,68 @@ round(mcml_W, 3); round(tna_s$weights, 3)</code></pre>
 ## ot_share_feelings              0.461
 ## ot_socializing                 0.585
 ## s_info_materials               0.696</code></pre>
-<pre class="r"><code>matrix_delta(mcml_W, tna_s$weights)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code>mcml_I &lt;- as_tna(MCMLL)[[cl]]$inits
-round(mcml_I, 3); round(tna_s$inits, 3)</code></pre>
+<pre class="r"><code>all.equal(MCMLL$clusters$Social$weights, tna_W)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>round(MCMLL_tna$Social$inits, 3)</code></pre>
 <pre><code>## ot_share_experience   ot_share_feelings      ot_socializing    s_info_materials 
 ##               0.008               0.024               0.208               0.761</code></pre>
+<pre class="r"><code>round(tna_I, 3)</code></pre>
 <pre><code>## ot_share_experience   ot_share_feelings      ot_socializing    s_info_materials 
 ##               0.008               0.024               0.208               0.761</code></pre>
-<pre class="r"><code>max(abs(mcml_I[names(tna_s$inits)] - tna_s$inits))</code></pre>
-<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>all.equal(MCMLL_tna$Social$inits, tna_I)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
-<div id="tutor" class="section level3">
-<h3>4.6 Tutor</h3>
-<pre class="r"><code>cl &lt;- &quot;Tutor&quot;; nodes &lt;- clusters_list[[cl]]; nodes</code></pre>
-<pre><code>## [1] &quot;t_encouraging&quot; &quot;t_feedback&quot;    &quot;t_guiding&quot;     &quot;t_socializing&quot;</code></pre>
-<pre class="r"><code>masked_t &lt;- mask_to_cluster(sequences, nodes)
-tna_t    &lt;- tna::tna(masked_t)
+<div id="tutor" class="section level2">
+<h2>3.6 Tutor</h2>
+<pre class="r"><code>nodes &lt;- clusters_list$Tutor
 
-mcml_W &lt;- MCMLL$clusters[[cl]]$weights
-round(mcml_W, 3); round(tna_t$weights, 3)</code></pre>
+masked  &lt;- sequences |&gt;
+  mutate(across(everything(), ~ if_else(. %in% nodes, ., NA_character_)))
+tna_net &lt;- tna::tna(masked)
+
+tna_W &lt;- tna_net$weights[nodes, nodes]
+tna_I &lt;- tna_net$inits[nodes]
+
+round(MCMLL$clusters$Tutor$weights, 3)</code></pre>
 <pre><code>##               t_encouraging t_feedback t_guiding t_socializing
 ## t_encouraging         0.158      0.568     0.108         0.165
 ## t_feedback            0.121      0.491     0.234         0.154
 ## t_guiding             0.064      0.545     0.307         0.083
 ## t_socializing         0.116      0.543     0.121         0.220</code></pre>
+<pre class="r"><code>round(tna_W, 3)</code></pre>
 <pre><code>##               t_encouraging t_feedback t_guiding t_socializing
 ## t_encouraging         0.158      0.568     0.108         0.165
 ## t_feedback            0.121      0.491     0.234         0.154
 ## t_guiding             0.064      0.545     0.307         0.083
 ## t_socializing         0.116      0.543     0.121         0.220</code></pre>
-<pre class="r"><code>matrix_delta(mcml_W, tna_t$weights)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code>mcml_I &lt;- as_tna(MCMLL)[[cl]]$inits
-round(mcml_I, 3); round(tna_t$inits, 3)</code></pre>
+<pre class="r"><code>all.equal(MCMLL$clusters$Tutor$weights, tna_W)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>round(MCMLL_tna$Tutor$inits, 3)</code></pre>
 <pre><code>## t_encouraging    t_feedback     t_guiding t_socializing 
 ##         0.125         0.490         0.231         0.154</code></pre>
+<pre class="r"><code>round(tna_I, 3)</code></pre>
 <pre><code>## t_encouraging    t_feedback     t_guiding t_socializing 
 ##         0.125         0.490         0.231         0.154</code></pre>
-<pre class="r"><code>max(abs(mcml_I[names(tna_t$inits)] - tna_t$inits))</code></pre>
-<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>all.equal(MCMLL_tna$Tutor$inits, tna_I)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
 </div>
-<div id="all-clusters-summary" class="section level2">
-<h2>5. All-clusters summary</h2>
-<pre class="r"><code>all_results &lt;- imap_dfr(clusters_list, function(nodes, cl_name) {
-  masked  &lt;- mask_to_cluster(sequences, nodes)
+<div id="all-clusters-summary" class="section level1">
+<h1>4. All-clusters summary</h1>
+<pre class="r"><code>imap_dfr(clusters_list, function(nodes, cl) {
+  masked  &lt;- sequences |&gt;
+    mutate(across(everything(), ~ if_else(. %in% nodes, ., NA_character_)))
   tna_net &lt;- tna::tna(masked)
-  mcml_W  &lt;- MCMLL$clusters[[cl_name]]$weights
-  mcml_I  &lt;- as_tna(MCMLL)[[cl_name]]$inits
+  tna_W   &lt;- tna_net$weights[nodes, nodes]
+  tna_I   &lt;- tna_net$inits[nodes]
+
   tibble(
-    cluster      = cl_name,
-    n_states     = length(nodes),
-    delta_weights = matrix_delta(mcml_W, tna_net$weights),
-    delta_inits  = max(abs(mcml_I[names(tna_net$inits)] - tna_net$inits))
+    cluster       = cl,
+    n_states      = length(nodes),
+    delta_weights = max(abs(MCMLL$clusters[[cl]]$weights - tna_W)),
+    delta_inits   = max(abs(MCMLL_tna[[cl]]$inits - tna_I))
   )
-})
-all_results</code></pre>
+})</code></pre>
 <pre><code>## # A tibble: 6 × 4
 ##   cluster    n_states delta_weights delta_inits
 ##   &lt;chr&gt;         &lt;int&gt;         &lt;dbl&gt;       &lt;dbl&gt;
@@ -697,9 +714,9 @@ all_results</code></pre>
 <p>A <code>delta_weights</code> and <code>delta_inits</code> of
 <code>0</code> for every row confirms each within-cluster network is
 exactly the conditional Markov chain
-<code>P(next = j | current = i, both i, j ∈ cluster k)</code> and that
-the inits match <code>tna::tna()</code>’s column-1 first-state
-distribution.</p>
+<code>P(next = j | current = i, both i, j ∈ cluster k)</code>, with
+initial probabilities matching <code>tna::tna()</code>’s column-1
+first-state distribution.</p>
 </div>
 
 

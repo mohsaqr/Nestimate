@@ -454,3 +454,104 @@ test_that("comprehensive verification: cross-validate every cluster vs tna::tna(
     )
   }
 })
+
+
+# ---------------------------------------------------------------------------
+# Structural invariants for mcml objects: every construction path must
+# produce the same field schema, and within a path, label/rowname/init-name
+# alignment must hold across macro and per-cluster slots.
+# ---------------------------------------------------------------------------
+
+test_that("mcml object has uniform schema across all construction paths", {
+  set.seed(7)
+  states <- c("a","b","c","d","e","f")
+  clu    <- list(L = c("a","b","c"), R = c("d","e","f"))
+  wide   <- as.data.frame(matrix(sample(states, 50 * 15, TRUE), 50, 15),
+                          stringsAsFactors = FALSE)
+  names(wide) <- paste0("T", seq_len(15))
+  edges  <- data.frame(from = sample(states, 200, TRUE),
+                       to   = sample(states, 200, TRUE),
+                       weight = sample(1:5, 200, TRUE),
+                       stringsAsFactors = FALSE)
+  W <- matrix(runif(36), 6, 6); rownames(W) <- colnames(W) <- states
+
+  paths <- list(
+    seq  = build_mcml(wide,  clusters = clu, type = "tna"),
+    edge = build_mcml(edges, clusters = clu, type = "tna"),
+    mat  = cluster_summary(W, clusters = clu, method = "sum")
+  )
+
+  expected_top <- c("macro", "clusters", "cluster_members",
+                    "edges", "meta")
+  expected_macro <- c("weights", "inits", "labels", "data")
+  expected_clu   <- c("weights", "inits", "labels", "data")
+  expected_meta  <- c("type", "method", "directed", "n_nodes",
+                      "n_clusters", "cluster_sizes", "source")
+
+  for (p in names(paths)) {
+    o <- paths[[p]]
+    expect_setequal(names(o), expected_top)
+    expect_setequal(names(o$macro), expected_macro)
+    for (cl in names(o$clusters)) {
+      expect_setequal(names(o$clusters[[cl]]), expected_clu)
+    }
+    # meta is a strict superset (some paths add extra fields)
+    expect_true(all(expected_meta %in% names(o$meta)),
+                info = paste("meta missing fields on path", p))
+  }
+})
+
+test_that("mcml object label / rowname / init-name alignment", {
+  set.seed(7)
+  states <- c("a","b","c","d","e","f")
+  clu    <- list(L = c("a","b","c"), R = c("d","e","f"))
+  wide   <- as.data.frame(matrix(sample(states, 50 * 15, TRUE), 50, 15),
+                          stringsAsFactors = FALSE)
+  names(wide) <- paste0("T", seq_len(15))
+  W <- matrix(runif(36), 6, 6); rownames(W) <- colnames(W) <- states
+
+  for (mc in list(build_mcml(wide, clusters = clu, type = "tna"),
+                  cluster_summary(W, clusters = clu, method = "sum"))) {
+    # Macro
+    expect_identical(mc$macro$labels, rownames(mc$macro$weights))
+    expect_identical(mc$macro$labels, colnames(mc$macro$weights))
+    expect_setequal(names(mc$macro$inits), mc$macro$labels)
+    expect_equal(sum(mc$macro$inits), 1, tolerance = 1e-12)
+
+    # Per-cluster
+    for (cl in names(mc$clusters)) {
+      n <- mc$clusters[[cl]]
+      expect_identical(n$labels, rownames(n$weights))
+      expect_identical(n$labels, colnames(n$weights))
+      expect_setequal(names(n$inits), n$labels)
+    }
+
+    # cluster_members keys equal macro labels
+    expect_setequal(names(mc$cluster_members), mc$macro$labels)
+  }
+})
+
+test_that("as_tna(mcml) returns netobject_group with inits propagated", {
+  set.seed(7)
+  states <- c("a","b","c","d","e","f")
+  clu    <- list(L = c("a","b","c"), R = c("d","e","f"))
+  wide   <- as.data.frame(matrix(sample(states, 50 * 15, TRUE), 50, 15),
+                          stringsAsFactors = FALSE)
+  names(wide) <- paste0("T", seq_len(15))
+
+  res <- as_tna(build_mcml(wide, clusters = clu, type = "tna"))
+  expect_s3_class(res, "netobject_group")
+
+  # Macro netobject
+  expect_true(inherits(res$macro, "netobject"))
+  expect_false(is.null(res$macro$inits))
+  expect_equal(sum(res$macro$inits), 1, tolerance = 1e-12)
+  expect_setequal(names(res$macro$inits), rownames(res$macro$weights))
+
+  # Each cluster netobject
+  for (cl in c("L", "R")) {
+    expect_true(inherits(res[[cl]], "netobject"))
+    expect_false(is.null(res[[cl]]$inits))
+    expect_setequal(names(res[[cl]]$inits), rownames(res[[cl]]$weights))
+  }
+})
