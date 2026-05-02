@@ -1,0 +1,395 @@
+---
+title: "State Frequencies: Marimekko and Bar Plots"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, warning = FALSE, message = FALSE,
+  fig.width = 6, fig.height = 3.2, dpi = 96
+)
+```
+
+The question this tutorial answers: *how do the relative frequencies of
+states differ across groups?* `plot_state_frequencies()` is the
+package's native generic for this pattern. It dispatches across
+`netobject`, `netobject_group`, `mcml`, and `htna`. The rendering is
+class-aware:
+
+- For `mcml` and `htna`, the state set in each group/cluster is
+  typically disjoint (different clusters carry different states; AI
+  uses different actions than Human). The default is a per-facet
+  layout: each panel is a stand-alone treemap with its **own** legend
+  showing only that panel's states, all panels arranged side-by-side.
+- For a single `netobject` (no groups) or a `netobject_group` (where
+  groups share the same state set), the default is a single-chart
+  layout with one shared legend at the bottom. Each group still gets
+  its own treemap panel; only the legend is shared.
+
+Both layouts use the colorblind-safe Okabe-Ito palette.
+
+```{r}
+library(Nestimate)
+```
+
+## A single network
+
+A single `netobject` has no groups, so the chart is a single
+squarified treemap: each state becomes a rectangle whose area is
+exactly proportional to its overall share.
+
+```{r single-net}
+data(trajectories, package = "Nestimate")
+nw <- build_network(as.data.frame(trajectories),
+                    method = "relative", format = "wide")
+
+plot_state_frequencies(nw)
+```
+
+`Average` covers roughly two-thirds of the panel, occupying the
+largest tile; `Active` and `Disengaged` split the remainder into
+smaller tiles. Reading areas directly: tile size = proportion.
+
+The inline tile labels are controlled via `label`. The default is
+`"prop"` (proportions). To show raw counts instead, set
+`label = "freq"`; for both, set `label = "both"`; to suppress
+inline labels entirely, `label = "none"`.
+
+```{r single-both}
+plot_state_frequencies(nw, label = "both")
+```
+
+The bar style produces horizontal bars sorted by frequency:
+
+```{r single-bars}
+plot_state_frequencies(nw, style = "bars")
+```
+
+For bars, `metric` controls whether the bar length encodes the
+proportion (default) or the raw count:
+
+```{r single-bars-freq}
+plot_state_frequencies(nw, style = "bars", metric = "freq",
+                       label = "freq")
+```
+
+## Per-group networks (faceted treemaps)
+
+`build_network()` called with `group =` returns a `netobject_group`.
+Each group becomes its own treemap panel --- the within-group state
+mix is read directly from tile areas.
+
+```{r group-net}
+data(group_regulation_long, package = "Nestimate")
+nw_g <- build_network(group_regulation_long,
+                      method = "relative", format = "long",
+                      actor = "Actor", action = "Action",
+                      order = "Time", group = "Course")
+
+plot_state_frequencies(nw_g)
+```
+
+Three panels, one per course. Each panel is a squarified treemap of
+that course's action distribution: the largest tile is the
+most-frequent action in that course. Cross-panel comparison is by
+which colored tile dominates each panel.
+
+The bar style switches to horizontal bars, faceted by group:
+
+```{r group-bars}
+plot_state_frequencies(nw_g, style = "bars")
+```
+
+## Multi-cluster multi-level (MCML)
+
+`build_mcml()` partitions the state set into clusters. Because the
+state vocabularies in different clusters are typically disjoint, the
+default is a per-cluster layout: each cluster becomes its own
+treemap panel with its own legend listing only that cluster's states.
+
+```{r mcml-net, fig.width = 8, fig.height = 8}
+Interactions <- rio::import(
+  "/Users/mohammedsaqr/Downloads/mcml_code/Mcdata/complicated_nw2.csv"
+)
+Nodesin <- rio::import(
+  "/Users/mohammedsaqr/Downloads/mcml_code/Mcdata/Codemapping.xlsx"
+)
+
+clusters_list <- split(Nodesin$name, Nodesin$groups)
+labels_df     <- Nodesin[, c("name", "Code")]
+
+mc <- build_mcml(
+  Interactions,
+  clusters = clusters_list,
+  actor    = "course_group",
+  time     = "timestamp",
+  action   = "From",
+  type     = "tna",
+  labels   = labels_df
+)
+plot_state_frequencies(mc, label = "all", ncol = 2)
+```
+
+One stand-alone treemap per cluster, each with its own legend listing
+only that cluster's codes. Each panel restarts the palette from the
+first color, so within-cluster ordering is read by tile size; cross-
+panel comparison is by cluster width and within-cluster spread.
+
+## Heterogeneous networks (htna)
+
+An `htna` object carries a node-level grouping (`$node_groups`) that
+labels each state by an actor or context. Each group becomes its own
+marimekko panel.
+
+```{r htna-net, eval = requireNamespace("htna", quietly = TRUE)}
+library(htna)
+data(ai_long, package = "Nestimate")
+data(human_long, package = "Nestimate")
+
+ht <- build_htna(list(AI = ai_long, Human = human_long),
+                 action = "code", session = "session_id",
+                 order = "code_order")
+
+plot_state_frequencies(ht)
+```
+
+Two stand-alone treemaps side-by-side --- AI on the left with its
+own legend (only AI's actions), Human on the right with its own
+legend (only Human's actions). Each legend is enclosed in a thin
+border, sitting next to its panel like a key card. Colors stay
+consistent across panels so the same code keeps the same color.
+
+## The `plot_mosaic()` primitive
+
+The hierarchical-marimekko geometry is also exposed as a low-level
+primitive. Any tidy `data.frame(group, state, weight)` works:
+
+```{r mosaic-primitive}
+df <- data.frame(
+  group  = rep(c("A", "B", "C"), each = 3),
+  state  = rep(c("s1", "s2", "s3"), 3),
+  count  = c(10, 5, 2,  7, 8, 3,  4, 6, 12)
+)
+plot_mosaic(df, x = "group", y = "state", weight = "count")
+```
+
+The `fill` argument can map to any other column when residual or
+effect-size shading is wanted instead of state colors. This makes
+`plot_mosaic()` reusable for residual-style mosaic plots downstream
+(for example, in permutation-test visualisations).
+
+## Label and legend combinations
+
+Three arguments control all annotation:
+
+- `label` --- text inside each tile/bar.
+  `"prop"` (default), `"freq"`, `"both"`, `"state"`, `"all"`, `"none"`.
+- `legend` --- where the state legend sits.
+  `"bottom"` (default), `"top"`, `"right"`, `"left"`, `"none"`.
+- `legend_frame` --- `"none"` (default) or `"border"` for an enclosed legend.
+
+Below: a gallery on the same `netobject_group` showing each combination.
+
+### Default (proportions, legend at bottom)
+
+```{r combo-default}
+plot_state_frequencies(nw_g)
+```
+
+Tile size = state share; percentage labels on the top tiles; legend
+names the colors at the bottom. The same state always lands in the
+same relative position across facets, so cross-panel comparison is by
+*size of the same colored tile*.
+
+### Counts in tiles, legend at right (vertical)
+
+```{r combo-freq-right}
+plot_state_frequencies(nw_g, label = "freq", legend = "right")
+```
+
+Right-side legend saves vertical space; useful when the figure is
+tall.
+
+### Both numbers, legend at right with border
+
+```{r combo-both-right-frame}
+plot_state_frequencies(nw_g, label = "both", legend = "right",
+                       legend_frame = "border")
+```
+
+`"1,234 (66%)"` inline on each tile; legend enclosed in a thin
+rectangle (`legend_frame = "border"`) so it reads as a single boxed
+unit beside the cards.
+
+### Both numbers, no legend
+
+```{r combo-both-nolegend}
+plot_state_frequencies(nw_g, label = "both", legend = "none")
+```
+
+Counts + proportions inline, legend hidden because the tiles already
+carry both numbers. Color is decorative here.
+
+### State names in tiles, no legend (handout style)
+
+```{r combo-state-nolegend}
+plot_state_frequencies(nw_g, label = "state", legend = "none")
+```
+
+State names written directly on the tiles, no separate legend.
+Useful for printable handouts. Small tiles drop their labels
+automatically; tile text auto-rotates 90 degrees in tall-narrow
+tiles to follow the tile's long axis.
+
+### State name + proportion inline, framed legend
+
+```{r combo-all-frame}
+plot_state_frequencies(nw_g, label = "all", legend_frame = "border")
+```
+
+Highest information density: tiles read `"Average (66%)"` on a
+single line; the legend is still present but enclosed in a border so
+it reads as a key card.
+
+### Legend on top, horizontal
+
+```{r combo-legend-top}
+plot_state_frequencies(nw_g, legend = "top")
+```
+
+Caption-style legend above the cards. Good for slide layouts where
+the chart needs to anchor to the bottom of the frame.
+
+### Legend on left, framed
+
+```{r combo-legend-left-frame}
+plot_state_frequencies(nw_g, legend = "left", legend_frame = "border")
+```
+
+Vertical legend on the left side, framed --- mirrors the right-side
+boxed pattern.
+
+### Frequencies only, no labels in tiles
+
+```{r combo-prop-only-state}
+plot_state_frequencies(nw_g, label = "none", legend = "right",
+                       legend_frame = "border")
+```
+
+Pure tile-area encoding: no inline text at all, only color, with a
+boxed right-side legend acting as the legend card.
+
+## Label/legend on the htna treemap
+
+```{r htna-combo, eval = requireNamespace("htna", quietly = TRUE)}
+plot_state_frequencies(ht, label = "all", legend = "right",
+                       legend_frame = "border")
+```
+
+State names + proportions written inline on each actor's tiles, with
+a framed right-side legend providing the color key.
+
+## Per-facet legends
+
+For `htna` (one panel per actor) and `mcml` (one per cluster), the
+states in each panel are often disjoint --- AI uses a different action
+set than Human; the Engaged cluster contains different states than
+Disengaged. A single global legend mixes them all together and is
+hard to read.
+
+`legend = "per_facet"` renders each panel as its own treemap with an
+isolated legend that only lists the states present in that panel.
+Colors stay consistent across panels (a state always maps to the same
+color) so cross-panel comparison still works.
+
+### htna with per-actor legends
+
+```{r htna-per-facet, eval = requireNamespace("htna", quietly = TRUE) && requireNamespace("gridExtra", quietly = TRUE)}
+plot_state_frequencies(ht, legend = "per_facet", label = "all")
+```
+
+Two panels, AI on the left and Human on the right, each with its own
+legend showing only that actor's actions. Enclosed-square legend by
+default for this mode.
+
+### mcml with per-cluster legends
+
+```{r mcml-per-facet, eval = requireNamespace("gridExtra", quietly = TRUE)}
+plot_state_frequencies(mc, legend = "per_facet", label = "all")
+```
+
+Each cluster becomes a stand-alone treemap with a per-cluster legend.
+Useful when the cluster state sets are very different.
+
+### netobject_group with per-group legends
+
+```{r group-per-facet, eval = requireNamespace("gridExtra", quietly = TRUE)}
+plot_state_frequencies(nw_g, legend = "per_facet", label = "all")
+```
+
+For groups that share the same state set (every course has every
+action), the per-facet legends will repeat the same set of states. In
+that case a single shared legend (the default) reads cleaner. Per-
+facet really shines when the state vocabularies differ across panels.
+
+## Standardized-residual mosaic
+
+`style = "mosaic"` answers a different question: *which states are
+over- or under-represented in each group, relative to the marginal
+distribution?* The chart is a state x group contingency table where:
+
+- Row heights are proportional to the state's total frequency across
+  all groups
+- Column widths are proportional to the group's total count
+- Each cell is colored by its **standardized residual**
+  $r_{ij} = (O_{ij} - E_{ij}) / \sqrt{E_{ij}\,(1 - p_{i\cdot})(1 - p_{\cdot j})}$,
+  matching the formula used in `sequence_compare()` --- blue for
+  over-represented, red for under-represented, white for at-expected.
+
+```{r mosaic-groupreg, fig.height = 4.16}
+plot_state_frequencies(nw_g, style = "mosaic", label = "all")
+```
+
+`consensus` is sharply over-represented in course A (residual ~+7) and
+sharply under-represented in B and C; `plan` shows the opposite
+pattern. The reading rule: any cell darker than ±2 is statistically
+non-trivial under the chi-square independence model.
+
+## Bar combinations
+
+```{r bars-prop-default}
+plot_state_frequencies(nw_g, style = "bars")
+```
+
+```{r bars-freq-both}
+plot_state_frequencies(nw_g, style = "bars", metric = "freq", label = "both")
+```
+
+```{r bars-prop-state-nolegend}
+plot_state_frequencies(nw_g, style = "bars", label = "state",
+                       legend = "none")
+```
+
+```{r bars-prop-all-frame}
+plot_state_frequencies(nw_g, style = "bars", label = "all",
+                       legend = "right", legend_frame = "border")
+```
+
+## When to use which
+
+- For `mcml`, `plot_state_frequencies()` automatically renders the
+  hierarchical 2D marimekko --- this is the right chart whenever
+  states partition into clusters.
+- For `netobject_group` and `htna`, the per-panel state-column
+  marimekko is the default --- one panel per group, each showing
+  variable-width state columns. Use `style = "bars"` when raw counts
+  are the report unit.
+- For a single `netobject` without groups, the marimekko collapses to
+  a single panel --- easier to read than a stacked column.
+- Reach for `plot_mosaic()` directly when the input is not a Nestimate
+  object but the marimekko semantics fit (custom tabulations, residual
+  fills, etc.).

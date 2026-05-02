@@ -1,6 +1,55 @@
 # Cluster Metrics for Network Analysis
 # Summary measures for between/within clusters and multilayer networks
 
+
+# Tagged-list constructor for an mcml layer (macro or one cluster). The
+# class buys us a `print.mcml_layer` method so `print(mc$macro)` shows a
+# tidy summary instead of dumping every named element of the list.
+# Field access (`$weights`, `$inits`, `$labels`, `$data`) is unchanged.
+.mcml_layer <- function(weights, inits, labels, data = NULL) {
+  obj <- list(weights = weights, inits = inits, labels = labels, data = data)
+  class(obj) <- "mcml_layer"
+  obj
+}
+
+
+#' Print Method for an mcml Layer
+#'
+#' Compact summary of one mcml layer (macro or a single within-cluster
+#' network) -- nodes, edges, weight matrix dimensions -- without spilling
+#' the full \code{$weights}, \code{$inits}, or \code{$data} contents.
+#'
+#' @param x An \code{mcml_layer}.
+#' @param ... Unused.
+#' @return The input, invisibly.
+#' @export
+print.mcml_layer <- function(x, ...) {
+  w <- x$weights
+  n <- if (is.null(w)) 0L else nrow(w)
+  ne <- if (is.null(w)) 0L else sum(w != 0)
+  d <- x$data
+  data_dim <- if (is.null(d)) "none"
+              else if (is.data.frame(d) || is.matrix(d))
+                sprintf("%d x %d", nrow(d), ncol(d))
+              else sprintf("length %d", length(d))
+  cat(sprintf("mcml layer  |  %d nodes  |  %d non-zero edges\n", n, ne))
+  if (!is.null(x$labels)) {
+    nm <- x$labels
+    head_n <- min(8L, length(nm))
+    extra <- if (length(nm) > head_n) sprintf(" ... (+%d)", length(nm) - head_n) else ""
+    cat("  labels: ", paste(nm[seq_len(head_n)], collapse = ", "), extra, "\n",
+        sep = "")
+  }
+  if (!is.null(x$inits)) {
+    cat(sprintf("  inits : %d entries (sum = %.3f)\n",
+                length(x$inits), sum(x$inits, na.rm = TRUE)))
+  }
+  cat("  data  : ", data_dim, "\n", sep = "")
+  cat("Use $weights, $inits, $labels, $data to inspect; ",
+      "as_tna() to convert to a netobject.\n", sep = "")
+  invisible(x)
+}
+
 # ==============================================================================
 # 1. Edge Weight Aggregation
 # ==============================================================================
@@ -371,11 +420,11 @@ cluster_summary <- function(x,
   names(between_inits) <- cluster_names
 
   # Build $macro
-  between <- list(
+  between <- .mcml_layer(
     weights = between_weights,
-    inits = between_inits,
-    labels = cluster_names,
-    data = NULL
+    inits   = between_inits,
+    labels  = cluster_names,
+    data    = NULL
   )
 
   # ============================================================================
@@ -413,11 +462,11 @@ cluster_summary <- function(x,
         names(within_inits_i) <- cl_nodes
       }
 
-      list(
+      .mcml_layer(
         weights = within_weights_i,
-        inits = within_inits_i,
-        labels = cl_nodes,
-        data = NULL
+        inits   = within_inits_i,
+        labels  = cl_nodes,
+        data    = NULL
       )
     })
     names(within_data) <- cluster_names
@@ -937,11 +986,11 @@ build_mcml <- function(x,
     })
   }
 
-  between <- list(
+  between <- .mcml_layer(
     weights = between_weights,
-    inits = between_inits,
-    labels = cluster_names,
-    data = between_seq_data
+    inits   = between_inits,
+    labels  = cluster_names,
+    data    = between_seq_data
   )
 
   # ---- Within-cluster matrices ----
@@ -1019,11 +1068,11 @@ build_mcml <- function(x,
         NULL
       }
 
-      list(
+      .mcml_layer(
         weights = within_weights_i,
-        inits = within_inits_i,
-        labels = cl_nodes,
-        data = cl_seq_data
+        inits   = within_inits_i,
+        labels  = cl_nodes,
+        data    = cl_seq_data
       )
     })
     names(within_data) <- cluster_names

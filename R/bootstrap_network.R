@@ -724,6 +724,17 @@ print.net_bootstrap_group <- function(x, ...) {
   sig_keys  <- lapply(grp_names, function(nm) .edge_keys(x[[nm]]$summary))
   shared    <- Reduce(intersect, sig_keys)
 
+  # Detect disjoint state spaces (e.g. mcml: macro carries cluster
+  # names, each within-cluster carries different code names). When the
+  # union of every group's FULL edge set has empty pairwise overlap,
+  # the "shared edges" metric is meaningless -- suppress its line.
+  full_keys <- lapply(grp_names, function(nm) {
+    s <- x[[nm]]$summary
+    if (is.null(s) || nrow(s) == 0L) character(0L)
+    else paste0(s$from, "→", s$to)
+  })
+  has_shared_space <- length(Reduce(intersect, full_keys)) > 0L
+
   # Top shared edges table first
   if (length(shared) > 0L) {
     .mean_for_key <- function(nm, key) {
@@ -755,7 +766,9 @@ print.net_bootstrap_group <- function(x, ...) {
     cat(sprintf("  %-20s  %d sig / %d total\n",
                 nm, grp_stats["sig", nm], grp_stats["total", nm]))
   }
-  cat(sprintf("  Shared (all groups)   %d edges\n", length(shared)))
+  if (has_shared_space) {
+    cat(sprintf("  Shared (all groups)   %d edges\n", length(shared)))
+  }
 
   invisible(x)
 }

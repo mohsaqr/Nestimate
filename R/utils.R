@@ -45,15 +45,43 @@ NULL
   }
 
   if (inherits(x, "mcml")) {
+    # Apply the label remap to the values inside a cluster's $data so
+    # they line up with the relabeled $weights rownames. Without this,
+    # bootstrap_network() in its precomputed fast path silently
+    # produces all-zero matrices because match($data, states) returns
+    # NA for every cell. Values not in `map` (e.g. macro $data carries
+    # cluster names) are preserved.
+    remap_data <- function(d) {
+      if (is.null(d)) return(d)
+      if (is.data.frame(d)) {
+        for (j in seq_along(d)) {
+          col <- d[[j]]
+          if (is.factor(col)) {
+            levels(col) <- remap(levels(col))
+            d[[j]] <- col
+          } else if (is.character(col)) {
+            d[[j]] <- remap(col)
+          }
+        }
+        return(d)
+      }
+      if (is.matrix(d) && is.character(d)) {
+        d[] <- remap(as.vector(d))
+        return(d)
+      }
+      d
+    }
     relabel_one <- function(net) {
       if (is.null(net)) return(net)
       net$labels <- remap(net$labels)
       if (!is.null(net$weights))
         dimnames(net$weights) <- list(net$labels, net$labels)
       if (!is.null(net$inits)) names(net$inits) <- net$labels
+      net$data <- remap_data(net$data)
       net
     }
     if (!is.null(x$clusters))        x$clusters        <- lapply(x$clusters, relabel_one)
+    if (!is.null(x$macro))           x$macro           <- relabel_one(x$macro)
     if (!is.null(x$cluster_members)) x$cluster_members <- lapply(x$cluster_members, remap)
     if (!is.null(x$edges)) {
       x$edges$from <- remap(x$edges$from)

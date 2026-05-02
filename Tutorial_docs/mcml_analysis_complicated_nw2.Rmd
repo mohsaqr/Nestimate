@@ -4,7 +4,13 @@ output: html_document
 ---
 
 ```{r setup, message = FALSE, warning = FALSE}
+#install latest
+#devtools::install_github("mohsaqr/Nestimate")
+#devtools::install_github("sonsoleslp/cograph")
+
+
 library(tidyverse)
+library(cograph)
 library(Nestimate)
 library(tna)
 # cograph is referenced via `cograph::splot()` only, not attached, because
@@ -60,7 +66,7 @@ level (the within-cluster networks are then conditional Markov chains
 `P(next = j | current = i, both i, j ∈ cluster k)`).
 
 ```{r build}
-MCMLL <- build_mcml(
+MCMLL <- Nestimate::build_mcml(
   Interactions,
   clusters = clusters_list,
   actor    = "course_group",
@@ -73,36 +79,9 @@ MCMLL <- build_mcml(
 MCMLL
 ```
 
-# 3. The macro (cluster-level) network
 
-The macro network reads `P(next ∈ cluster_j | current ∈ cluster_i)`. The
-diagonal is the probability of staying in the same cluster on the next
-move; the off-diagonal is the probability of crossing between clusters.
 
-```{r macro-weights}
-round(MCMLL$macro$weights, 3)
-round(MCMLL$macro$inits,   3)
-```
 
-The off-diagonal mass tells you which cluster pairs interact most. The
-`inits` vector reads as: out of all session-opening codes, which cluster
-opened them.
-
-# 4. Within-cluster networks
-
-Each `MCMLL$clusters[[k]]` is a row-stochastic chain on the nodes of
-cluster `k`, with the human-readable labels we passed in. We don't loop —
-just inspect a couple to get a feel for the data.
-
-```{r within-cognitive}
-round(MCMLL$clusters$Cognitive$weights, 3)
-round(MCMLL$clusters$Cognitive$inits,   3)
-```
-
-```{r within-reasoning}
-round(MCMLL$clusters$Reasoning$weights, 3)
-round(MCMLL$clusters$Reasoning$inits,   3)
-```
 
 # 5. Convert to a `netobject_group`
 
@@ -111,9 +90,10 @@ suitable for the rest of the package's workflow (bootstrap, centrality,
 cograph visualisation). Initial probabilities propagate through.
 
 ```{r as-tna}
-MCMLL_tna <- as_tna(MCMLL)
-class(MCMLL_tna)
-names(MCMLL_tna)
+MCMLL_tna <- Nestimate::as_tna(MCMLL)
+# One figure per layer (macro + each cluster), instead of all stacked
+# in a single combined plot.
+lapply(MCMLL_tna, splot)
 ```
 
 # 6. Bootstrap the macro network
@@ -124,10 +104,13 @@ and a CS-style stability flag (Epskamp, Borsboom & Fried, 2018).
 
 ```{r boot-macro, fig.width = 7, fig.height = 5}
 set.seed(2026)
-boot_macro <- bootstrap_network(MCMLL_tna$macro, iter = 500)
+boot_macro <- bootstrap_network(MCMLL, iter = 1000)
 boot_macro
 
-cograph::plot_bootstrap_forest(boot_macro)
+
+# MCMLL$clusters$Cognitive$data
+
+
 ```
 
 The print summary tells you how many cluster-to-cluster edges survived the
@@ -141,7 +124,7 @@ which within-cluster transitions are stable.
 
 ```{r boot-cognitive, fig.width = 7, fig.height = 5}
 set.seed(2026)
-boot_cog <- bootstrap_network(MCMLL_tna$Cognitive, iter = 500)
+boot_cog <- bootstrap_network(MCMLL, iter = 500)
 boot_cog
 
 # A within-cluster bootstrap may have few or no edges surviving the default

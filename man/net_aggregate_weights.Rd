@@ -26,6 +26,5 @@ w <- c(0.5, 0.8, 0.3, 0.9)
 net_aggregate_weights(w, "sum")   # 2.5
 net_aggregate_weights(w, "mean")  # 0.625
 net_aggregate_weights(w, "max")   # 0.9
-mat <- matrix(c(0, 0.5, 0.5, 0.3, 0, 0.7, 0.4, 0.6, 0), 3, 3, byrow = TRUE)
-net_aggregate_weights(mat)
+net_aggregate_weights(w, "density", n_possible = 9)  # 2.5 / 9
 }

@@ -1,3 +1,16 @@
+# Nestimate (development)
+
+## New features
+* `plot_state_frequencies()` — native S3 generic for state-frequency
+  plots across `netobject`, `netobject_group`, `mcml`, and `htna`.
+  Defaults to a marimekko (mosaic) layout where column widths reflect
+  per-group totals and segment heights reflect within-group state
+  proportions; also supports a colored-bars style and a per-group
+  faceted marimekko. Uses the package Okabe-Ito palette throughout.
+* `plot_mosaic()` — exported low-level marimekko primitive built on
+  `geom_rect()` with cumulative-width / cumulative-height geometry.
+  Reusable for any tidy `data.frame(group, state, weight)` input.
+
 # Nestimate 0.4.4
 
 ## Bug fixes
