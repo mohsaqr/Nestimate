@@ -24,29 +24,56 @@
 #' @return The input, invisibly.
 #' @export
 print.mcml_layer <- function(x, ...) {
-  w <- x$weights
-  n <- if (is.null(w)) 0L else nrow(w)
-  ne <- if (is.null(w)) 0L else sum(w != 0)
+  w  <- x$weights
+  if (is.null(w) || nrow(w) == 0L) {
+    cat("MCML layer  [empty]\n"); return(invisible(x))
+  }
+
+  cat("MCML layer (transition probabilities)  [directed]\n")
+  cat(sprintf("  Nodes: %d  |  Non-zero edges: %d\n",
+              nrow(w), sum(w != 0)))
+
+  # ---- Weight summary line ----
+  nz <- w[w != 0]
+  if (length(nz) > 0) {
+    cat(sprintf("  Weights: [%.3f, %.3f]  |  mean: %.3f\n",
+                min(nz), max(nz), mean(nz)))
+  }
+
+  # ---- Weight matrix ----
+  cat("\n  Weight matrix:\n")
+  digits <- if (all(nz == floor(nz))) 0L else 3L
+  mat_r <- round(w, digits)
+  if (!is.null(x$labels)) dimnames(mat_r) <- list(x$labels, x$labels)
+  formatted <- utils::capture.output(print(mat_r))
+  cat(paste0("  ", formatted, collapse = "\n"), "\n")
+
+  # ---- Initial probabilities (bar plot, same style as netobject) ----
+  if (!is.null(x$inits) && length(x$inits) > 0L) {
+    cat("\n  Initial probabilities:\n")
+    init  <- x$inits
+    nm    <- names(init)
+    if (is.null(nm) && !is.null(x$labels)) nm <- x$labels
+    if (is.null(nm)) nm <- as.character(seq_along(init))
+    ord   <- order(init, decreasing = TRUE)
+    bar_w <- 40L
+    max_v <- max(init, na.rm = TRUE)
+    for (i in ord) {
+      bars <- if (is.finite(max_v) && max_v > 0)
+        strrep("█", round(init[i] / max_v * bar_w)) else ""
+      cat(sprintf("  %-14s  %.3f  %s\n", nm[i], init[i], bars))
+    }
+  }
+
+  # ---- Data dimensions ----
   d <- x$data
-  data_dim <- if (is.null(d)) "none"
-              else if (is.data.frame(d) || is.matrix(d))
-                sprintf("%d x %d", nrow(d), ncol(d))
-              else sprintf("length %d", length(d))
-  cat(sprintf("mcml layer  |  %d nodes  |  %d non-zero edges\n", n, ne))
-  if (!is.null(x$labels)) {
-    nm <- x$labels
-    head_n <- min(8L, length(nm))
-    extra <- if (length(nm) > head_n) sprintf(" ... (+%d)", length(nm) - head_n) else ""
-    cat("  labels: ", paste(nm[seq_len(head_n)], collapse = ", "), extra, "\n",
-        sep = "")
+  if (!is.null(d)) {
+    data_dim <- if (is.data.frame(d) || is.matrix(d))
+      sprintf("%d x %d", nrow(d), ncol(d))
+    else sprintf("length %d", length(d))
+    cat(sprintf("\n  Data: %s\n", data_dim))
   }
-  if (!is.null(x$inits)) {
-    cat(sprintf("  inits : %d entries (sum = %.3f)\n",
-                length(x$inits), sum(x$inits, na.rm = TRUE)))
-  }
-  cat("  data  : ", data_dim, "\n", sep = "")
-  cat("Use $weights, $inits, $labels, $data to inspect; ",
-      "as_tna() to convert to a netobject.\n", sep = "")
+
   invisible(x)
 }
 

@@ -81,6 +81,18 @@ MCMLL
 
 
 
+```{r}
+cograph::centrality_degree(MCMLL_tna$macro)
+
+cograph::centrality_degree(MCMLL_tna$macro$weights)
+
+
+TNA <- tna::tna(group_regulation)
+
+cograph::centrality_degree(TNA)
+cograph::centrality_degree(TNA$weights)
+
+```
 
 
 # 5. Convert to a `netobject_group`
@@ -150,7 +162,23 @@ cograph::centrality(MCMLL_tna$macro)
 
 ```{r centrality-cognitive}
 cograph::centrality(MCMLL_tna$Cognitive)
+
+
+
+cograph::centrality_degree(MCMLL_tna$macro)
+
+cograph::centrality_degree(MCMLL_tna$macro$weights)
+
+
+TNA <- tna::tna(group_regulation)
+
+cograph::centrality_degree(TNA)
+cograph::centrality_degree(TNA$weights)
+
+
+
 ```
+
 
 # 9. Visualisation
 

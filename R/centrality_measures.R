@@ -160,6 +160,10 @@ centrality <- function(x, ...) {
 #' @export
 net_centrality <- function(x, measures = NULL, loops = FALSE,
                             centrality_fn = NULL, ...) {
+  if (isFALSE(loops)) {
+    message("centralities computed excluding loops (diagonal). ",
+            "Pass `loops = TRUE` to include self-transitions.")
+  }
   centrality(x, measures = measures, loops = loops,
              centrality_fn = centrality_fn, ...)
 }

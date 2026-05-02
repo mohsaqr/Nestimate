@@ -79,7 +79,9 @@ bootstrap_network <- function(x,
                               inference = "stability",
                               consistency_range = c(0.75, 1.25),
                               edge_threshold = NULL,
-                              seed = NULL) {
+                              seed = NULL,
+                              boundary = c("inclusive", "strict")) {
+  boundary <- match.arg(boundary)
 
   # ---- wtna_mixed dispatch: bootstrap both components ----
   if (inherits(x, "wtna_mixed")) {
@@ -88,11 +90,13 @@ bootstrap_network <- function(x,
       transition   = bootstrap_network(x$transition,   iter = iter,
                                        ci_level = ci_level, inference = inference,
                                        consistency_range = consistency_range,
-                                       edge_threshold = edge_threshold),
+                                       edge_threshold = edge_threshold,
+                                       boundary = boundary),
       cooccurrence = bootstrap_network(x$cooccurrence, iter = iter,
                                        ci_level = ci_level, inference = inference,
                                        consistency_range = consistency_range,
-                                       edge_threshold = edge_threshold)
+                                       edge_threshold = edge_threshold,
+                                       boundary = boundary)
     )
     class(result) <- "wtna_boot_mixed"
     return(result)
@@ -109,7 +113,8 @@ bootstrap_network <- function(x,
       bootstrap_network(net, iter = iter, ci_level = ci_level,
                         inference = inference,
                         consistency_range = consistency_range,
-                        edge_threshold = edge_threshold, seed = seed)
+                        edge_threshold = edge_threshold, seed = seed,
+                        boundary = boundary)
     })
     class(results) <- c("net_bootstrap_group", "list")
     return(results)
@@ -223,7 +228,8 @@ bootstrap_network <- function(x,
     ci_level = ci_level,
     inference = inference,
     consistency_range = consistency_range,
-    edge_threshold = edge_threshold
+    edge_threshold = edge_threshold,
+    boundary = boundary
   )
 
   # ---- Build summary data frame ----
@@ -473,7 +479,8 @@ bootstrap_network <- function(x,
 #' @noRd
 .compute_bootstrap_stats <- function(boot_matrices, original_matrix, states,
                                      directed, iter, ci_level, inference,
-                                     consistency_range, edge_threshold) {
+                                     consistency_range, edge_threshold,
+                                     boundary = "inclusive") {
   n_states <- length(states)
   orig_flat <- as.vector(original_matrix)
 
@@ -499,8 +506,13 @@ bootstrap_network <- function(x,
                    orig_flat * consistency_range[2])
     cr_high <- pmax(orig_flat * consistency_range[1],
                     orig_flat * consistency_range[2])
-    below <- sweep(bm, 2, cr_low, "<")
-    above <- sweep(bm, 2, cr_high, ">")
+    # boundary = "inclusive" (default, tna-compatible): <=, >= count an
+    # iteration that lands EXACTLY on the band edge as outside the band.
+    # boundary = "strict": <, > count only iterations strictly outside.
+    cmp_lo <- if (identical(boundary, "strict")) "<"  else "<="
+    cmp_hi <- if (identical(boundary, "strict")) ">"  else ">="
+    below <- sweep(bm, 2, cr_low,  cmp_lo)
+    above <- sweep(bm, 2, cr_high, cmp_hi)
     p_counts <- colSums(below | above)
     p_values <- (p_counts + 1) / (n_valid + 1)
   } else {
