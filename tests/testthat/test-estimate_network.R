@@ -454,17 +454,17 @@ test_that("edges match non-zero entries in matrix (directed)", {
   net <- suppressWarnings(estimate_network(wide, method = "relative"))
 
   mat <- net$weights
-  # All non-diagonal non-zero entries
-  expected_n <- sum(mat != 0 & row(mat) != col(mat))
+  # All non-zero entries -- self-loops included.
+  expected_n <- sum(mat != 0)
   expect_equal(nrow(net$edges), expected_n)
 })
 
-test_that("edges match upper triangle (undirected)", {
+test_that("edges match upper triangle + diagonal (undirected)", {
   df <- .make_assoc_data(n = 80, p = 5)
   net <- suppressWarnings(estimate_network(df, method = "cor"))
 
   mat <- net$weights
-  expected_n <- sum(upper.tri(mat) & mat != 0)
+  expected_n <- sum(mat != 0 & row(mat) <= col(mat))
   expect_equal(nrow(net$edges), expected_n)
 })
 

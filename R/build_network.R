@@ -652,9 +652,9 @@ print.netobject <- function(x, ...) {
   # ---- Weight summary (one line) ----
   mat <- x$weights
   if (x$directed) {
-    nz <- mat[mat != 0 & row(mat) != col(mat)]
+    nz <- mat[mat != 0]
   } else {
-    nz <- mat[upper.tri(mat) & mat != 0]
+    nz <- mat[mat != 0 & row(mat) <= col(mat)]
   }
   if (length(nz) > 0) {
     is_assoc <- x$method %in% c("cor", "pcor", "glasso", "ising")

@@ -107,6 +107,8 @@ reference:
     contents:
       - sequence_plot
       - distribution_plot
+      - plot_state_frequencies
+      - plot_mosaic
       - sequence_compare
       - association_rules
       - passage_time

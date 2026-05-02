@@ -272,9 +272,12 @@ build_ising <- function(data, ...) {
 #' @noRd
 .extract_edges_from_matrix <- function(mat, directed = FALSE) {
   if (directed) {
-    idx <- which(mat != 0 & row(mat) != col(mat), arr.ind = TRUE)
+    # Keep self-loops too: every non-zero entry is a real edge.
+    idx <- which(mat != 0, arr.ind = TRUE)
   } else {
-    idx <- which(upper.tri(mat) & mat != 0, arr.ind = TRUE)
+    # row <= col keeps the upper triangle PLUS the diagonal (one row
+    # per self-loop, no double-count for undirected networks).
+    idx <- which(mat != 0 & row(mat) <= col(mat), arr.ind = TRUE)
   }
 
   if (nrow(idx) == 0) {
