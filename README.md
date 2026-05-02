@@ -10,6 +10,21 @@
 
 Nestimate is a comprehensive R package for estimating, validating, and comparing networks from behavioral sequence data, psychological scales, and longitudinal panel data. A single entry point — `build_network()` — dispatches to 13 built-in estimators. Every network type shares the same validation pipeline: bootstrap confidence intervals, permutation testing, split-half reliability, and centrality stability. The entire package has only 4 hard imports (ggplot2, glasso, data.table, cluster).
 
+### Full tutorials
+
+- [Network Estimation & Visualization](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-nestimate.html)
+- [Higher-Order & Simplicial Complexes](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-simplicial.html)
+- [Multi-Cluster Multi-Level (MCML)](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-mcml.html)
+
+### Quick guides
+
+- [Transition Networks](https://mohsaqr.github.io/Nestimate/articles/transition-networks.html)
+- [Sequence Plots & Comparison](https://mohsaqr.github.io/Nestimate/articles/sequence-plots.html)
+- [Clustering & Multi-Level Analysis](https://mohsaqr.github.io/Nestimate/articles/clustering.html)
+- [Markov Stability](https://mohsaqr.github.io/Nestimate/articles/markov-stability.html)
+- [Sequence Pattern Comparison](https://mohsaqr.github.io/Nestimate/articles/sequence-comparison.html)
+
+
 ## Installation
 
 ```r
@@ -342,8 +357,6 @@ boot_gl <- boot_glasso(net_pna, iter = 1000)
 |---------|-------------|
 | `human_long` | 10,796 human actions across 429 human-AI coding sessions |
 | `ai_long` | Matched AI actions from the same 429 sessions |
-| `human_cat` | Same sessions coded at category level (9 types) |
-| `human_detailed` | Same sessions at fine-grained code level |
 | `srl_strategies` | SRL strategy frequencies — 250 students, 9 strategies |
 | `chatgpt_srl` | ChatGPT-generated SRL scale scores for psychological networks |
 | `learning_activities` | Binary learning activity indicators — 200 students × 30 timepoints |
@@ -354,10 +367,9 @@ boot_gl <- boot_glasso(net_pna, iter = 1000)
 
 ## Documentation
 
-- [Transition Networks](https://saqr.me/Nestimate/articles/transition-networks.html)
-- [Psychological Networks](https://saqr.me/Nestimate/articles/psychological-networks.html)
-- [Clustering & Multilevel](https://saqr.me/Nestimate/articles/clustering.html)
-- [Full Reference](https://saqr.me/Nestimate/reference/)
+- [Transition Networks](https://mohsaqr.github.io/Nestimate/articles/transition-networks.html)
+- [Clustering & Multilevel](https://mohsaqr.github.io/Nestimate/articles/clustering.html)
+- [Full Reference](https://mohsaqr.github.io/Nestimate/reference/)
 
 ## Citation
 

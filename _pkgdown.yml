@@ -5,25 +5,8 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, articles]
+    left: [intro, reference, articles, news]
     right: [search, github]
-  components:
-    articles:
-      text: Articles
-      menu:
-        - text: Transition Networks
-          href: articles/transition-networks.html
-        - text: Sequence Plots & Comparison
-          href: articles/sequence-plots.html
-        - text: Psychological Networks
-          href: articles/psychological-networks.html
-        - text: Clustering & Multi-Level Analysis
-          href: articles/clustering.html
-        - text: Markov Stability
-          href: articles/markov-stability.html
-        - text: Sequence Pattern Comparison
-          href: articles/sequence-comparison.html
-
 reference:
   - title: Network Estimation
     desc: Core functions for building networks from data
@@ -34,6 +17,14 @@ reference:
       - get_estimator
       - list_estimators
       - remove_estimator
+      - build_tna
+      - build_atna
+      - build_ftna
+      - build_cna
+      - build_cor
+      - build_pcor
+      - build_glasso
+      - build_ising
       - wtna
       - cooccurrence
       - build_mlvar
@@ -71,7 +62,6 @@ reference:
       - cluster_summary
       - cluster_mmm
       - cluster_network
-      - csum
       - build_mcml
       - build_mmm
       - compare_mmm
@@ -104,9 +94,9 @@ reference:
       - predictability
       - frequencies
       - state_frequencies
-      - aggregate_weights
-      - wagg
-      - centrality
+      - net_aggregate_weights
+      - net_centrality
+      - coefs
       - as_tna
       - extract_edges
       - extract_initial_probs
@@ -131,8 +121,8 @@ reference:
   - title: Data
     desc: Example datasets
     contents:
-      - vibcoding-data
-      - human_ai_edges
+      - ai_long
+      - human_long
       - srl_strategies
       - learning_activities
       - group_regulation_long
@@ -151,3 +141,19 @@ authors:
     href: https://saqr.me
   Sonsoles López-Pernas:
     href: https://sonsoles.me
+
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - starts_with("transition")
+  - starts_with("sequence")
+  - starts_with("clustering")
+  - starts_with("markov")
+
+- title: Tutorials
+  desc: Full tutorials
+  contents:
+  - starts_with("articles/cograph-tutorial-nestimate")
+  - starts_with("articles/cograph-tutorial-simplicial")
+  - starts_with("articles/cograph-tutorial-mcml")
