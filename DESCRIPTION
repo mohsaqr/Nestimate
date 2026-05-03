@@ -46,7 +46,6 @@ Suggests:
     gridExtra,
     lme4,
     corpcor,
-    mlVAR,
     mgm,
     Matrix,
     NetworkComparisonTest,
