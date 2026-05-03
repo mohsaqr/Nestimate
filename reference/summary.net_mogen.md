@@ -26,6 +26,21 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+mg <- build_mogen(seqs, max_order = 2)
+summary(mg)
+#> Multi-Order Generative Model (MOGen) Summary
+#> 
+#>   States: A, B, C, D
+#>   Paths: 3 | Observations: 12
+#> 
+#>   Optimal order: 1 (by aic)
+#> 
+#>         order layer_dof cum_dof loglik   aic   bic selected
+#> order_0     0         3       3 -16.30 38.59 40.05         
+#> order_1     1         1       4  -5.49 18.99 20.93      <--
+#> order_2     2         1       5  -5.49 20.99 23.41         
+
 # \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),
@@ -39,11 +54,11 @@ summary(mog)
 #>   States: A, B, C
 #>   Paths: 5 | Observations: 15
 #> 
-#>  order layer_dof cum_dof loglik   aic   bic selected
-#>      0         2       2 -16.48 36.96 38.37         
-#>      1         0       2  -5.49 14.99 16.40      <--
-#>      2         0       2  -5.49 14.99 16.40         
-#> 
 #>   Optimal order: 1 (by aic)
+#> 
+#>         order layer_dof cum_dof loglik   aic   bic selected
+#> order_0     0         2       2 -16.48 36.96 38.37         
+#> order_1     1         0       2  -5.49 14.99 16.40      <--
+#> order_2     2         0       2  -5.49 14.99 16.40         
 # }
 ```

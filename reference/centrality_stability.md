@@ -125,11 +125,15 @@ An object of class `"net_stability"` containing:
 ## See also
 
 [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-[`reliability`](https://mohsaqr.github.io/Nestimate/reference/reliability.md)
+[`network_reliability`](https://mohsaqr.github.io/Nestimate/reference/network_reliability.md)
 
 ## Examples
 
 ``` r
+net <- build_network(data.frame(V1 = c("A","B","C","A"),
+  V2 = c("B","C","A","B")), method = "relative")
+cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+#> Warning: All centrality measures have zero variance. No stability can be assessed.
 # \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -143,7 +147,7 @@ print(cs)
 #>   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 #> 
 #>   CS-coefficients:
-#>     InStrength       0.00
-#>     OutStrength      0.20
+#>     InStrength       0.30
+#>     OutStrength      0.00
 # }
 ```

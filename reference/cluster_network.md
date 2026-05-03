@@ -16,7 +16,7 @@ cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 - data:
 
   Sequence data. Accepts a data frame, matrix, or `netobject`. See
-  [`cluster_data`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)
+  [`build_clusters`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)
   for supported formats.
 
 - k:
@@ -26,7 +26,7 @@ cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 - cluster_by:
 
   Character. Clustering algorithm passed to
-  [`cluster_data`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)'s
+  [`build_clusters`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)'s
   `method` parameter (`"pam"`, `"ward.D2"`, `"ward.D"`, `"complete"`,
   `"average"`, `"single"`, `"mcquitty"`, `"median"`, `"centroid"`), or
   `"mmm"` for Mixed Markov Model clustering. Default: `"pam"`.
@@ -38,10 +38,15 @@ cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 
 - ...:
 
-  Passed directly to
+  Passed to
   [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
-  Use `method` to specify the network type; `threshold`, `scaling`, and
-  all other `build_network` arguments are supported.
+  When `cluster_by = "mmm"`, recognised
+  [`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
+  arguments (`n_starts`, `max_iter`, `tol`, `smooth`, `seed`,
+  `covariates`) are intercepted and forwarded to
+  [`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
+  so a single call controls both the MMM fit and the per-cluster network
+  estimation.
 
 ## Value
 
@@ -55,14 +60,24 @@ networks match the type of the input network.
 
 ## See also
 
-[`cluster_data`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md),
+[`build_clusters`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md),
 [`cluster_mmm`](https://mohsaqr.github.io/Nestimate/reference/cluster_mmm.md),
 [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
 
 ## Examples
 
 ``` r
+seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
+                   V3 = c("C","A","B","C","B"))
+grp <- cluster_network(seqs, k = 2)
+grp
+#> Group Networks (2 clusters via pam / hamming)
+#> 
+#>   Group      Nodes  Edges  Weights         N
+#>   Cluster 1  3      2      [1.000, 1.000]  2 (40.0%)
+#>   Cluster 2  3      4      [0.500, 1.000]  3 (60.0%)
 # \donttest{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 50, TRUE), V2 = sample(LETTERS[1:4], 50, TRUE),
   V3 = sample(LETTERS[1:4], 50, TRUE), V4 = sample(LETTERS[1:4], 50, TRUE)

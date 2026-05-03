@@ -26,9 +26,7 @@ Invisible `NULL`.
 ## Examples
 
 ``` r
-# \donttest{
 register_estimator("test_est", function(data, ...) diag(3),
   description = "test", directed = FALSE)
 remove_estimator("test_est")
-# }
 ```

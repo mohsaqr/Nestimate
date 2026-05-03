@@ -22,12 +22,10 @@ A data frame with columns: `state`, `count`, `proportion`.
 ## Examples
 
 ``` r
-# \donttest{
 trajs <- list(c("A","B","C"), c("A","B","A"))
 state_frequencies(trajs)
 #>   state count proportion
 #> 1     A     3     0.5000
 #> 2     B     2     0.3333
 #> 3     C     1     0.1667
-# }
 ```

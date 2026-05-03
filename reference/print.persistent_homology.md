@@ -26,21 +26,15 @@ The input object, invisibly.
 ## Examples
 
 ``` r
-# \donttest{
-seqs <- data.frame(
-  V1 = c("A","B","C","A","B"),
-  V2 = c("B","C","A","B","C"),
-  V3 = c("C","A","B","C","A")
-)
-net <- build_network(seqs, method = "relative")
-ph  <- persistent_homology(net)
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+ph <- persistent_homology(mat, n_steps = 10)
 print(ph)
 #> Persistent Homology
-#>   20 filtration steps [1.0000 → 0.0100]
+#>   10 filtration steps [0.6000 → 0.0060]
 #>   Features: b0: 3 (1 persistent) 
 #>   Longest-lived:
-#>     b0: 1.0000 → 0.0000 (life: 1.0000)
-#>     b0: 1.0000 → 0.9479 (life: 0.0521)
-#>     b0: 1.0000 → 0.9479 (life: 0.0521)
-# }
+#>     b0: 0.6000 → 0.0000 (life: 0.6000)
+#>     b0: 0.6000 → 0.4680 (life: 0.1320)
+#>     b0: 0.6000 → 0.5340 (life: 0.0660)
 ```

@@ -146,6 +146,9 @@ algorithm to application for anomaly detection. *EPJ Data Science*,
 ## Examples
 
 ``` r
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hon <- build_hon(seqs, max_order = 2)
+
 # \donttest{
 # From list of trajectories
 trajs <- list(
@@ -169,6 +172,14 @@ summary(hon)
 #>   Min frequency: 1
 #>   Node order distribution:
 #>     Order 1: 4 nodes
+#>   from to    weight
+#> 1    3  1 0.3333333
+#> 2    4  1 0.6666667
+#> 3    1  2 1.0000000
+#> 4    2  3 0.6666667
+#> 5    4  3 0.3333333
+#> 6    2  4 0.3333333
+#> 7    3  4 0.6666667
 
 # From data.frame (rows = trajectories)
 df <- data.frame(T1 = c("A", "A"), T2 = c("B", "B"),

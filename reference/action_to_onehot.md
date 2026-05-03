@@ -50,7 +50,6 @@ Data frame with one-hot encoded columns (0/1 integers).
 ## Examples
 
 ``` r
-# \donttest{
 long_data <- data.frame(
   Actor = rep(1:3, each = 4),
   Time = rep(1:4, 3),
@@ -65,5 +64,4 @@ head(onehot_data)
 #> 4     1    4 1 0 0
 #> 5     2    1 0 0 1
 #> 6     2    2 0 1 0
-# }
 ```

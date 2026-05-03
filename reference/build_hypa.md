@@ -8,7 +8,7 @@ null model are flagged as over- or under-represented.
 ## Usage
 
 ``` r
-build_hypa(data, k = 3L, alpha = 0.05, min_count = 5L)
+build_hypa(data, k = 3L, alpha = 0.05, min_count = 5L, p_adjust = "BH")
 ```
 
 ## Arguments
@@ -37,16 +37,27 @@ build_hypa(data, k = 3L, alpha = 0.05, min_count = 5L)
   classified as `"normal"` regardless of their HYPA score, since single
   occurrences are unreliable.
 
+- p_adjust:
+
+  Character. Method for multiple testing correction of p-values. Default
+  `"BH"` (Benjamini-Hochberg FDR control). Accepts any method from
+  [`p.adjust.methods`](https://rdrr.io/r/stats/p.adjust.html) or
+  `"none"` to skip correction. Under- and over-representation p-values
+  are adjusted separately (two-sided testing).
+
 ## Value
 
 An object of class `net_hypa` with components:
 
 - scores:
 
-  Data frame with path, from, to, observed, expected, ratio, hypa_score,
-  anomaly columns. The `path` column shows the full state sequence
-  (e.g., "A -\> B -\> C"); `from` is the context (conditioning states);
-  `to` is the next state; `ratio` is observed / expected.
+  Data frame with path, from, to, observed, expected, ratio, p_value,
+  p_adjusted_under, p_adjusted_over, anomaly columns. The `path` column
+  shows the full state sequence (e.g., "A -\> B -\> C"); `from` is the
+  context (conditioning states); `to` is the next state; `ratio` is
+  observed / expected; `p_value` is the raw hypergeometric CDF value;
+  `p_adjusted_under` and `p_adjusted_over` are the corrected p-values
+  for under- and over-representation tests respectively.
 
 - adjacency:
 
@@ -63,6 +74,10 @@ An object of class `net_hypa` with components:
 - alpha:
 
   Significance threshold used.
+
+- p_adjust:
+
+  Multiple testing correction method used.
 
 - n_anomalous:
 
@@ -93,6 +108,9 @@ Time Series Data on Networks. *SDM 2020*, 460–468.
 ## Examples
 
 ``` r
+seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
+hyp <- build_hypa(seqs, k = 2)
+
 # \donttest{
 trajs <- list(c("A","B","C"), c("A","B","C"), c("A","B","C"),
               c("A","B","D"), c("C","B","D"), c("C","B","A"))
@@ -101,7 +119,7 @@ print(h)
 #> HYPA: Path Anomaly Detection
 #>   Order k:      2
 #>   Edges:        4
-#>   Anomalous:    0 (alpha=0.05)
+#>   Anomalous:    0 (alpha=0.05, p_adjust=BH)
 #>     Over-repr:  0
 #>     Under-repr: 0
 # }

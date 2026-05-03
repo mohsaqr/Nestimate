@@ -26,6 +26,16 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+oh <- matrix(c(1,0,0, 0,1,0, 0,0,1, 1,0,0), nrow = 4, byrow = TRUE,
+             dimnames = list(NULL, c("A","B","C")))
+mixed <- wtna(oh, method = "both")
+print(mixed)
+#> Mixed Window TNA (transition + co-occurrence)
+#> -- Transition (directed) --
+#>   Nodes: 3  |  Edges: 3
+#> -- Co-occurrence (undirected) --
+#>   Nodes: 3  |  Edges: 3
+
 # \donttest{
 oh <- data.frame(
   A = c(1,0,1,0,1,0,1,0),
@@ -36,8 +46,8 @@ mixed <- wtna(oh, method = "both")
 print(mixed)
 #> Mixed Window TNA (transition + co-occurrence)
 #> -- Transition (directed) --
-#>   Nodes: 3  |  Edges: 6
+#>   Nodes: 3  |  Edges: 7
 #> -- Co-occurrence (undirected) --
-#>   Nodes: 3  |  Edges: 2
+#>   Nodes: 3  |  Edges: 5
 # }
 ```

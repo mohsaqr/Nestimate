@@ -1,407 +1,456 @@
 # Nestimate
 
-> An R package for network estimation, validation, and comparison.
+> Unified network estimation, analysis, and validation for behavioral,
+> psychological, and panel data.
 
-Nestimate is a computational package for building, validating, and
-comparing networks. Nestimate is designed to include all types of
-computational heavy functions in one place that combines a vast array of
-dynamic, probablisitc and dynamic networks that are estimated (e.g.,
-where the input data will be the basis for computation of the network
-relationships). Nestimate provides a unified
+Nestimate is a comprehensive R package for estimating, validating, and
+comparing networks from behavioral sequence data, psychological scales,
+and longitudinal panel data. A single entry point —
 [`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
-simple interface that simplifies the implenetation of network
-estimation. As of now, Nestimate supports five areas:
+— dispatches to 13 built-in estimators. Every network type shares the
+same validation pipeline: bootstrap confidence intervals, permutation
+testing, split-half reliability, and centrality stability. The entire
+package has only 4 hard imports (ggplot2, glasso, data.table, cluster).
 
-- **Dynamic networks** — transition, frequency, attention-weighted,
-  co-occurrence, windowed transition, and mixed (directed + undirected)
-  networks from sequential and binary event data
-- **Psychological networks** — correlation, partial correlation,
-  graphical lasso (EBICglasso), and Ising models from cross-sectional or
-  panel data
-- **Multi-cluster networks** — MCML decomposition of networks into macro
-  (between-cluster) and micro (within-cluster) layers, plus sequence
-  clustering and mixed Markov models
-- **Higher-order networks** — HON, HONEM, HyPa, and Multi-Order
-  Generative models that capture dependencies beyond first-order
-  transitions
-- **Statistical validation** — bootstrap, permutation testing,
-  split-half reliability, centrality stability, and difference tests
-  across all network types
+### Full tutorials
 
-### What Sets Nestimate Apart
+- [Network Estimation &
+  Visualization](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-nestimate.html)
+- [Higher-Order & Simplicial
+  Complexes](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-simplicial.html)
+- [Multi-Cluster Multi-Level
+  (MCML)](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-mcml.html)
 
-Nestimate implements several families of transition network and dynamic
-networks: standard TNA (Markov), frequency TNA, attention TNA
-(transition with memory), and co-occurrence networks from event data. On
-top of these, windowed TNA
-([`wtna()`](https://mohsaqr.github.io/Nestimate/reference/wtna.md))
-builds networks from binary data using temporal windows — resulting in
-directed transitions between windows, undirected co-occurrence within
-windows, or mixed networks that combine both in a single model. For
-psychological networks, Nestimate implements EBICglasso, partial
-correlations, and Ising estimation from scratch using coordinate descent
-regularization, precision matrix inversion, and EBIC model selection.
-These require no external network packages — the entire package has only
-4 imports (ggplot2, glasso, data.table, cluster) — and produce
-numerically equivalent results. These low dependency makes Nestimate
-versatile, easy to install, run and import. Nestimate is planned to
-expand and cover different types of other probabliitic networks and
-several models are already in testing.
+### Quick guides
 
-All Nestimate networks and functions are byte-identical to the `tna`
-package; permutation tests match to Monte Carlo precision; EBICglasso
-produces numerically equivalent results to established implementations.
-All equivalence tests compare outputs value by value on identical
-synthetic datasets. Nestimate has a strict validation techniques to
-ensure that the resulting models are accurate, verifiable and
-replicable. Every network type — dynamic, psychological, higher-order —
-shares the same validation pipeline: bootstrap confidence intervals,
-permutation testing, split-half reliability, and centrality stability
-analysis. These are not separate packages bolted on; they are part of
-the same interface.
+- [Transition
+  Networks](https://mohsaqr.github.io/Nestimate/articles/transition-networks.html)
+- [Sequence Plots &
+  Comparison](https://mohsaqr.github.io/Nestimate/articles/sequence-plots.html)
+- [Clustering & Multi-Level
+  Analysis](https://mohsaqr.github.io/Nestimate/articles/clustering.html)
+- [Markov
+  Stability](https://mohsaqr.github.io/Nestimate/articles/markov-stability.html)
+- [Sequence Pattern
+  Comparison](https://mohsaqr.github.io/Nestimate/articles/sequence-comparison.html)
 
 ## Installation
 
 ``` r
+
 # From CRAN
 install.packages("Nestimate")
 
-# Development version from GitHub
+# Development version
 devtools::install_github("mohsaqr/Nestimate")
 ```
 
-## Quick Start
+## What Nestimate Covers
 
-``` r
-library(Nestimate)
+| Area | Key Functions |
+|----|----|
+| Dynamic / Transition Networks | [`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md), [`wtna()`](https://mohsaqr.github.io/Nestimate/reference/wtna.md), [`cooccurrence()`](https://mohsaqr.github.io/Nestimate/reference/cooccurrence.md) |
+| Psychological Networks | `build_network(method = "glasso/pcor/cor/ising/mgm")` |
+| Multilevel VAR | [`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md) |
+| Idiographic Networks | [`build_gimme()`](https://mohsaqr.github.io/Nestimate/reference/build_gimme.md) |
+| Cluster & Group Networks | [`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md), [`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md), [`build_mcml()`](https://mohsaqr.github.io/Nestimate/reference/build_mcml.md) |
+| Higher-Order Networks | [`build_hon()`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md), [`build_honem()`](https://mohsaqr.github.io/Nestimate/reference/build_honem.md), [`build_hypa()`](https://mohsaqr.github.io/Nestimate/reference/build_hypa.md), [`build_mogen()`](https://mohsaqr.github.io/Nestimate/reference/build_mogen.md) |
+| Topological Analysis | [`build_simplicial()`](https://mohsaqr.github.io/Nestimate/reference/build_simplicial.md), [`persistent_homology()`](https://mohsaqr.github.io/Nestimate/reference/persistent_homology.md), [`q_analysis()`](https://mohsaqr.github.io/Nestimate/reference/q_analysis.md) |
+| Sequence Visualization | [`sequence_plot()`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md), [`distribution_plot()`](https://mohsaqr.github.io/Nestimate/reference/distribution_plot.md) |
+| Sequence Pattern Comparison | [`sequence_compare()`](https://mohsaqr.github.io/Nestimate/reference/sequence_compare.md) |
+| Association Mining | [`association_rules()`](https://mohsaqr.github.io/Nestimate/reference/association_rules.md) |
+| Link Prediction | [`predict_links()`](https://mohsaqr.github.io/Nestimate/reference/predict_links.md), [`evaluate_links()`](https://mohsaqr.github.io/Nestimate/reference/evaluate_links.md) |
+| Markov Chain Analysis | [`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md), [`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md) |
+| Statistical Validation | [`bootstrap_network()`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md), [`permutation()`](https://mohsaqr.github.io/Nestimate/reference/permutation.md), [`nct()`](https://mohsaqr.github.io/Nestimate/reference/nct.md), [`network_reliability()`](https://mohsaqr.github.io/Nestimate/reference/network_reliability.md), [`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md) |
 
-# Transition network from event-log data
-data(human_cat)
-net <- build_network(human_cat, method = "tna",
-                     action = "category", actor = "session_id",
-                     time = "timestamp")
-
-# Psychological network from cross-sectional data
-data(srl_strategies)
-net_pna <- build_network(srl_strategies, method = "glasso",
-                         params = list(gamma = 0.5))
-
-# Validate with bootstrap
-boot <- bootstrap_network(net, iter = 1000)
-```
+------------------------------------------------------------------------
 
 ## Dynamic Networks
 
-All dynamic network methods are accessed through
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
-with a `method` argument. The function accepts long-format event logs
-directly — specifying `action` (what happened), `actor` (who), and
-`time` (when) — and handles format conversion internally.
+All dynamic network methods use
+[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+Pass an event log with `action`, `actor`, and `time` columns — no
+preprocessing needed.
 
 ### Estimation Methods
 
-| Method            | Aliases                 | Description                                                     |
-|-------------------|-------------------------|-----------------------------------------------------------------|
-| `"relative"`      | `"tna"`, `"transition"` | Transition probabilities (directed)                             |
-| `"frequency"`     | `"ftna"`, `"counts"`    | Raw transition counts (directed)                                |
-| `"attention"`     | `"atna"`                | Decay-weighted transitions emphasizing recent events (directed) |
-| `"co_occurrence"` | `"cna"`                 | Co-occurrence counts from binary data (undirected)              |
-
-No data preparation is required.
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
-accepts raw event logs directly — pass the column names for `action`,
-`actor`, and `time`, and the function handles format conversion, session
-detection, ordering, and metadata preservation internally. A `group`
-argument builds separate per-group networks in a single call with no
-extra steps.
+| Method | Aliases | Description |
+|----|----|----|
+| `"relative"` | `"tna"`, `"transition"` | Transition probabilities (directed) |
+| `"frequency"` | `"ftna"`, `"counts"` | Raw transition counts (directed) |
+| `"attention"` | `"atna"` | Decay-weighted transitions emphasising recent events (directed) |
+| `"co_occurrence"` | `"cna"` | Co-occurrence from sequential data (undirected) |
 
 ``` r
-net_tna  <- build_network(human_cat, method = "tna",
-                          action = "category", actor = "session_id",
-                          time = "timestamp")
-net_ftna <- build_network(human_cat, method = "ftna",
-                          action = "category", actor = "session_id",
-                          time = "timestamp")
-net_atna <- build_network(human_cat, method = "atna",
-                          action = "category", actor = "session_id",
-                          time = "timestamp")
 
-# Per-group networks — one network per superclass, no extra steps
-group_nets <- build_network(human_cat, method = "tna",
-                            action = "category", actor = "session_id",
-                            time = "timestamp", group = "superclass")
+library(Nestimate)
+data(human_long)
+
+net <- build_network(human_long, method = "tna",
+                     action = "action", actor = "session_id", time = "time")
+
+# Per-group networks in one call
+group_nets <- build_network(human_long, method = "tna",
+                            action = "action", actor = "session_id",
+                            time = "time", group = "phase")
 ```
 
 ### Window-Based TNA
 
 [`wtna()`](https://mohsaqr.github.io/Nestimate/reference/wtna.md) builds
-networks from binary (one-hot) data using temporal windowing. Many
-datasets are binary: at each time point, multiple states are either
-active (1) or inactive (0). WTNA supports three modes:
-
-- **`"transition"`**: directed transitions between consecutive windows
-- **`"cooccurrence"`**: undirected co-occurrence within windows
-- **`"both"`**: a mixed network combining directed and undirected edges
-
-The mixed mode captures both the temporal sequencing (which states
-follow each other across windows) and the contemporaneous structure
-(which states co-occur within the same window) in a single model.
+networks from binary (one-hot) data using temporal windows — directed
+transitions between windows, undirected co-occurrence within windows, or
+a mixed network combining both.
 
 ``` r
+
 data(learning_activities)
-
-# Co-occurrence network
-net_co <- build_network(learning_activities, method = "cna", actor = "student")
-
-# Windowed transition network
-net_wtna <- wtna(learning_activities, actor = "student",
-                 method = "transition", type = "relative")
-
-# Mixed network: transitions + co-occurrence
+net_wtna  <- wtna(learning_activities, actor = "student",
+                  method = "transition", type = "relative")
 net_mixed <- wtna(learning_activities, actor = "student",
                   method = "both", type = "relative")
 ```
 
+### Co-occurrence Networks
+
+[`cooccurrence()`](https://mohsaqr.github.io/Nestimate/reference/cooccurrence.md)
+builds undirected co-occurrence networks from 6 input formats (delimited
+fields, long/bipartite, binary matrix, wide sequence, lists) with 8
+similarity methods (Jaccard, cosine, association strength, Dice, and
+more).
+
+``` r
+
+# From a long-format data frame
+net_co <- cooccurrence(human_long, field = "action", by = "session_id",
+                       similarity = "jaccard", threshold = 0.1)
+```
+
+------------------------------------------------------------------------
+
 ## Psychological Networks
 
-| Method     | Aliases                         | Description                                                                  |
-|------------|---------------------------------|------------------------------------------------------------------------------|
-| `"cor"`    | `"corr"`, `"correlation"`       | Pearson correlations (undirected)                                            |
-| `"pcor"`   | `"partial"`                     | Partial correlations controlling for all other variables (undirected)        |
-| `"glasso"` | `"ebicglasso"`, `"regularized"` | L1-regularized precision matrix with EBIC selection (undirected, sparse)     |
-| `"ising"`  | —                               | L1-regularized logistic regression for binary variables (undirected, sparse) |
+| Method | Description |
+|----|----|
+| `"cor"` | Pearson correlations |
+| `"pcor"` | Partial correlations (precision matrix inversion) |
+| `"glasso"` | EBICglasso — sparse regularised partial correlations |
+| `"ising"` | L1-regularised logistic regression for binary items |
+| `"mgm"` | Mixed Graphical Model — continuous + categorical variables together |
 
-All estimators are implemented from scratch — EBICglasso with coordinate
-descent, partial correlations via precision matrix inversion, EBIC model
-selection — with no dependency on igraph, bootnet, or qgraph.
+All implemented from scratch with no dependency on igraph, qgraph, or
+bootnet.
 
 ``` r
+
 data(srl_strategies)
-net_cor    <- build_network(srl_strategies, method = "cor")
-net_pcor   <- build_network(srl_strategies, method = "pcor")
-net_glasso <- build_network(srl_strategies, method = "glasso",
-                            params = list(gamma = 0.5))
+net_gl  <- build_network(srl_strategies, method = "glasso")
+net_mgm <- build_network(mixed_data, method = "mgm")   # scales + demographics
 
-# Node predictability (R-squared from network structure)
-predictability(net_glasso)
+predictability(net_gl)   # R-squared per node from network structure
 ```
 
-Custom estimators can be added via
-[`register_estimator()`](https://mohsaqr.github.io/Nestimate/reference/register_estimator.md).
+------------------------------------------------------------------------
 
-## Multi-Cluster Networks
+## Multilevel VAR
 
-### MCML
+[`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md)
+estimates three networks simultaneously from ESM/EMA diary data — the
+three pillars of mlVAR analysis in a single function call:
 
-MCML decomposes a network whose nodes belong to known groups
-(communities, categories, topics) into two layers. The **macro** layer
-aggregates node-to-node edges into a cluster-to-cluster network. The
-**micro** layer extracts the internal transition structure inside each
-group.
+- **Temporal** (directed) — lagged fixed effects: what predicts what
+  across time
+- **Contemporaneous** (undirected) — partial correlations of
+  within-person residuals: what moves together right now
+- **Between-subjects** (undirected) — partial correlations of person
+  means: who differs from whom
 
-[`cluster_summary()`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md)
-computes MCML from a pre-existing weight matrix;
-[`build_mcml()`](https://mohsaqr.github.io/Nestimate/reference/build_mcml.md)
-works from raw transition data by recoding node labels to cluster labels
-and counting actual transitions.
+Machine-precision equivalence to
+[`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) validated
+across 25 real ESM datasets, runs 1.45× faster.
 
 ``` r
-clusters <- list(
-  Metacognitive = c("Planning", "Monitoring", "Evaluating"),
-  Cognitive = c("Elaboration", "Organization", "Rehearsal"),
-  Resource = c("Help_Seeking", "Time_Mgmt", "Effort_Reg")
-)
 
-mcml <- cluster_summary(net, clusters, type = "tna")
-mcml$macro$weights                   # Cluster-to-cluster transition matrix
-mcml$clusters$Metacognitive$weights  # Within-cluster transitions
+data(chatgpt_srl)
+fit <- build_mlvar(chatgpt_srl, vars = c("planning", "monitoring", "evaluation"),
+                   id = "id", day = "day", beep = "beep")
 
-# Or from raw sequence/edge data
-mcml2 <- build_mcml(sequences, clusters)
+fit$temporal          # directed network of lagged effects
+fit$contemporaneous   # undirected within-person partial correlations
+fit$between           # undirected between-persons partial correlations
+coefs(fit)            # tidy data.frame: beta, SE, t, p, CI for every edge
 ```
+
+------------------------------------------------------------------------
+
+## Idiographic Networks
+
+[`build_gimme()`](https://mohsaqr.github.io/Nestimate/reference/build_gimme.md)
+estimates a separate network for each person using the Group Iterative
+Mean Estimation (GIMME) algorithm, then aggregates to a group-level
+picture. Use this when between-person heterogeneity matters and a single
+group network would average over meaningfully different individuals.
+
+``` r
+
+fit_g <- build_gimme(panel_data, vars = c("x1", "x2", "x3"), id = "id")
+fit_g$group_network       # aggregated group-level paths
+fit_g$individual_networks # one network per person
+```
+
+------------------------------------------------------------------------
+
+## Cluster & Group Networks
 
 ### Sequence Clustering
 
-[`cluster_data()`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)
-computes pairwise sequence distances and partitions into `k` groups.
-Supports 9 distance metrics (Hamming, Levenshtein, LCS, cosine, Jaccard,
-and more), 8 clustering methods (PAM, Ward, complete/average/single
-linkage), and optional temporal weighting.
-
-Both
-[`cluster_data()`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)
+[`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)
+partitions sequences into `k` groups using pairwise distance matrices.
+Supports 9 distance metrics and 8 clustering algorithms. Both
+[`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)
 and
 [`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
-results can be passed directly to
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-which builds a separate network per cluster and returns a
-`netobject_group` — a named list of networks ready for comparison,
-permutation testing, or visualization.
+results pass directly to
+[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
 
 ``` r
-clust <- cluster_data(net, k = 3, dissimilarity = "hamming", method = "ward.D2")
+
+clust <- build_clusters(net, k = 3, dissimilarity = "hamming", method = "ward.D2")
 plot(clust, type = "silhouette")
-plot(clust, type = "mds")
-
-# Convert to per-cluster networks
 cluster_nets <- build_network(clust, method = "tna")
-
-# Compare clusters with permutation test
-permutation_test(cluster_nets$`Cluster 1`, cluster_nets$`Cluster 2`)
 ```
 
 ### Mixed Markov Models
 
 [`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
-fits a mixture of Markov chains via EM, clustering sequences by their
-transition dynamics rather than sequence similarity. Supports soft
-assignments, BIC/AIC/ICL model selection, and covariate regression:
+discovers latent subgroups of sequences that share similar transition
+dynamics via EM — without pre-labelling groups. BIC/AIC/ICL model
+selection via
+[`compare_mmm()`](https://mohsaqr.github.io/Nestimate/reference/compare_mmm.md).
 
 ``` r
-mmm <- build_mmm(net, k = 3, covariates = c("project"))
-compare_mmm(net, k = 2:6)
 
-# Convert to per-cluster networks
-mmm_nets <- build_network(mmm)
+mmm   <- build_mmm(net, k = 3)
+compare_mmm(net, k = 2:6)   # model selection plot + table
+mmm_nets <- build_network(mmm, method = "tna")
 ```
 
-### Covariates
+### MCML
 
-Both clustering methods support covariate analysis, but with different
-roles. In
-[`cluster_data()`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md),
-covariates are **post-hoc**: they do not influence the clustering itself
-but characterize who ends up in which cluster via multinomial logistic
-regression after the fact. In
-[`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md),
-covariates are **integrated into the EM algorithm**: they model
-covariate-dependent mixing proportions, so the covariate structure
-directly influences cluster membership during estimation.
+[`build_mcml()`](https://mohsaqr.github.io/Nestimate/reference/build_mcml.md)
+decomposes a network into macro (between-cluster) and micro
+(within-cluster) layers when nodes belong to known groups.
 
 ``` r
-data(group_regulation_long)
-net_GR <- build_network(group_regulation_long, method = "tna",
-                        action = "Action", actor = "Actor", time = "Time")
 
-# Post-hoc: clustering is purely behavioral, covariates analyzed afterward
-clust <- cluster_data(net_GR, k = 2, covariates = c("Achiever"))
-summary(clust)  # Includes covariate profiles and odds ratios
-
-# Integrated: covariates influence cluster assignments during EM
-mmm <- build_mmm(net_GR, k = 2, covariates = c("Group"))
-summary(mmm)
+clusters <- list(Metacognitive = c("Planning", "Monitoring"),
+                 Cognitive     = c("Elaboration", "Organisation"))
+mcml <- cluster_summary(net, clusters)
+mcml$macro$weights
 ```
+
+------------------------------------------------------------------------
 
 ## Higher-Order Networks
 
-Methods that capture dependencies beyond first-order transitions:
+Capture dependencies beyond first-order transitions:
 
-| Function                                                                        | Method                                                       |
-|---------------------------------------------------------------------------------|--------------------------------------------------------------|
-| [`build_hon()`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md)     | Higher-Order Network — variable-length memory dependencies   |
-| [`build_honem()`](https://mohsaqr.github.io/Nestimate/reference/build_honem.md) | Higher-Order Network Embedding                               |
-| [`build_hypa()`](https://mohsaqr.github.io/Nestimate/reference/build_hypa.md)   | Hyper-Path Anomaly detection                                 |
-| [`build_mogen()`](https://mohsaqr.github.io/Nestimate/reference/build_mogen.md) | Multi-Order Generative model — optimal Markov order per node |
+| Function | What it finds |
+|----|----|
+| [`build_hon()`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md) | Variable-length memory paths |
+| [`build_honem()`](https://mohsaqr.github.io/Nestimate/reference/build_honem.md) | Higher-order network embedding |
+| [`build_hypa()`](https://mohsaqr.github.io/Nestimate/reference/build_hypa.md) | Statistically anomalous paths (over/under-represented) |
+| [`build_mogen()`](https://mohsaqr.github.io/Nestimate/reference/build_mogen.md) | Optimal Markov order per node |
 
 ``` r
-hon <- build_hon(net, max_order = 2)
-pathways(hon)
+
+hon  <- build_hon(net, max_order = 2)
+pathways(hon)                      # arrow-notation path strings
+hypa <- build_hypa(net)
+hypa$over                          # over-represented paths with p-values
 ```
 
-## Simplicial Complex Analysis
+------------------------------------------------------------------------
 
-Topological analysis of network structure:
+## Topological Analysis
+
+Go beyond edges — find cliques, holes, and high-order connectivity using
+tools from algebraic topology.
 
 ``` r
+
 sc <- build_simplicial(net, method = "clique")
-betti_numbers(sc)
+betti_numbers(sc)          # connected components, cycles, voids
 euler_characteristic(sc)
-
-ph <- persistent_homology(net)
-qa <- q_analysis(sc)
+ph <- persistent_homology(net)  # track topology across thresholds
+plot(ph)
+qa <- q_analysis(sc)       # Atkin's Q-connectivity structure vectors
 ```
+
+------------------------------------------------------------------------
+
+## Sequence Visualization
+
+Visualize raw sequence data as index plots or state distribution charts
+— before or after clustering.
+
+``` r
+
+# Sequence index plot: one row per person, coloured by state
+sequence_plot(net)
+
+# After clustering: faceted by cluster
+clust <- build_clusters(net, k = 3)
+sequence_plot(clust, type = "index")
+
+# State distribution over time
+distribution_plot(net, type = "area")
+distribution_plot(clust, type = "bar")
+```
+
+------------------------------------------------------------------------
+
+## Sequence Pattern Comparison
+
+[`sequence_compare()`](https://mohsaqr.github.io/Nestimate/reference/sequence_compare.md)
+extracts all k-gram patterns from grouped sequences, counts per-group
+frequencies, and tests statistical differences via permutation —
+answering the question “do these groups actually behave differently, and
+where?”
+
+``` r
+
+data(human_long)
+net <- build_network(human_long, method = "tna",
+                     action = "action", actor = "session_id",
+                     time = "time", group = "phase")
+
+res <- sequence_compare(net, sub = 2:4, test = "chisq", adjust = "fdr")
+res$patterns                        # per-pattern frequencies + p-values
+plot(res)                           # back-to-back pyramid chart
+plot(res, style = "heatmap")        # heatmap for many patterns
+```
+
+------------------------------------------------------------------------
+
+## Association Rule Mining
+
+[`association_rules()`](https://mohsaqr.github.io/Nestimate/reference/association_rules.md)
+mines “if A then B” patterns from sequences or binary matrices using the
+Apriori algorithm. Returns support, confidence, lift, and conviction for
+every rule above a threshold.
+
+``` r
+
+rules <- association_rules(net, min_support = 0.05, min_confidence = 0.6)
+rules$rules                       # tidy data.frame, sorted by lift
+pathways(rules)                   # rules as arrow-notation strings
+
+# From a raw binary matrix
+rules2 <- association_rules(binary_mat, min_support = 0.1)
+```
+
+------------------------------------------------------------------------
+
+## Link Prediction
+
+[`predict_links()`](https://mohsaqr.github.io/Nestimate/reference/predict_links.md)
+scores all unobserved node pairs using structural similarity,
+identifying which missing connections are most likely to exist.
+[`evaluate_links()`](https://mohsaqr.github.io/Nestimate/reference/evaluate_links.md)
+computes AUC, precision, and recall against held-out edges.
+
+``` r
+
+preds <- predict_links(net)       # common neighbours, Adamic-Adar, Katz, ...
+head(preds$scores)                # sorted by predicted score
+
+# Evaluate against known missing edges
+eval  <- evaluate_links(net, held_out = test_edges)
+eval$auc
+```
+
+------------------------------------------------------------------------
+
+## Markov Chain Analysis
+
+[`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)
+measures how stable a network partition is under random-walk dynamics at
+different time scales — a resolution-free way to find communities.
+[`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+computes expected first-passage and return times between states.
+
+``` r
+
+stab <- markov_stability(net, times = seq(0.1, 10, 0.1))
+plot(stab)                # stability vs time-scale curve
+
+pt <- passage_time(net)
+pt$first_passage          # expected steps to reach state j from state i
+pt$return_time            # expected steps to return to the same state
+```
+
+------------------------------------------------------------------------
 
 ## Statistical Validation
 
-``` r
-# Split-half reliability
-reliability(net)
+Every network type shares the same validation pipeline.
 
-# Bootstrap confidence intervals and significance
+``` r
+
+# Bootstrap confidence intervals
 boot <- bootstrap_network(net, iter = 1000)
+summary(boot)
+
+# Permutation test: are two networks different?
+perm <- permutation(group_nets$`Cluster 1`, group_nets$`Cluster 2`)
+
+# Network Comparison Test (NCT): formal test of structure + global strength
+nct_res <- nct(data1, data2, iter = 500)
+print(nct_res)            # M-statistic, S-statistic, per-edge p-values
+
+# Split-half reliability
+network_reliability(net)
 
 # Centrality stability (CS-coefficient)
 centrality_stability(net)
 
-# Permutation-based group comparison
-perm <- permutation_test(net_group1, net_group2)
-
-# Specialized glasso bootstrap (edge CIs, centrality stability, difference tests)
-boot_gl <- boot_glasso(net_pna, iter = 1000,
-                       centrality = c("strength", "expected_influence"))
+# Glasso-specific bootstrap (edge inclusion + centrality CIs)
+boot_gl <- boot_glasso(net_pna, iter = 1000)
 ```
 
-| Function                                                                                          | Purpose                                                                        |
-|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [`reliability()`](https://mohsaqr.github.io/Nestimate/reference/reliability.md)                   | Split-half reliability of edge weights                                         |
-| [`bootstrap_network()`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md)       | Bootstrap CIs, p-values, and significance for each edge                        |
-| [`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md) | CS-coefficient via case-dropping subsets                                       |
-| [`permutation_test()`](https://mohsaqr.github.io/Nestimate/reference/permutation_test.md)         | Edge-level comparison between two networks (paired/unpaired)                   |
-| [`boot_glasso()`](https://mohsaqr.github.io/Nestimate/reference/boot_glasso.md)                   | Edge inclusion, centrality stability, and difference tests for glasso networks |
+| Function | Purpose |
+|----|----|
+| [`bootstrap_network()`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md) | Bootstrap CIs and p-values for each edge |
+| [`permutation()`](https://mohsaqr.github.io/Nestimate/reference/permutation.md) | Edge-level comparison between two networks |
+| [`nct()`](https://mohsaqr.github.io/Nestimate/reference/nct.md) | Formal Network Comparison Test (global strength + structure) |
+| [`network_reliability()`](https://mohsaqr.github.io/Nestimate/reference/network_reliability.md) | Split-half reliability of edge weights |
+| [`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md) | CS-coefficient via case-dropping |
+| [`boot_glasso()`](https://mohsaqr.github.io/Nestimate/reference/boot_glasso.md) | Edge inclusion, centrality CIs, difference tests for glasso networks |
 
-### Centrality
-
-``` r
-centrality(net)
-```
-
-Computes InStrength, OutStrength, and Betweenness for directed networks;
-Strength for undirected.
-
-## Data Preparation
-
-Data preparation is not necessary —
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
-accepts long format, wide format, and one-hot binary matrices directly
-and handles conversion internally. The following utilities are provided
-for convenience when working outside
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md):
-
-``` r
-prepare_data(event_log, action = "code", actor = "student", time = "timestamp")
-wide_to_long(wide_data)
-long_to_wide(long_data, action = "action", actor = "id", time = "time")
-action_to_onehot(long_data, action = "action", actor = "id", time = "time")
-```
+------------------------------------------------------------------------
 
 ## Bundled Datasets
 
-| Dataset                 | Description                                              | N                                        |
-|-------------------------|----------------------------------------------------------|------------------------------------------|
-| `human_cat`             | Human interactions in AI pair programming (9 categories) | 10,796 events, 429 sessions              |
-| `human_detailed`        | Same interactions at fine-grained code level             | 10,796 events                            |
-| `learning_activities`   | Binary learning activity indicators                      | 6,000 obs (200 students x 30 timepoints) |
-| `srl_strategies`        | Self-regulated learning strategy frequencies             | 250 students, 9 strategies               |
-| `group_regulation_long` | Group regulation sequences with covariates               | Long format with Actor, Action, Time     |
-| `human_ai_edges`        | Pre-computed edge list                                   | —                                        |
+| Dataset | Description |
+|----|----|
+| `human_long` | 10,796 human actions across 429 human-AI coding sessions |
+| `ai_long` | Matched AI actions from the same 429 sessions |
+| `srl_strategies` | SRL strategy frequencies — 250 students, 9 strategies |
+| `chatgpt_srl` | ChatGPT-generated SRL scale scores for psychological networks |
+| `learning_activities` | Binary learning activity indicators — 200 students × 30 timepoints |
+| `group_regulation_long` | Group regulation sequences with covariates |
+| `trajectories` | 138-student engagement trajectory matrix |
 
-See `?vibcoding-data` for the full family of human-AI coding datasets at
-three granularity levels.
+------------------------------------------------------------------------
 
 ## Documentation
 
 - [Transition
-  Networks](https://saqr.me/Nestimate/articles/transition-networks.html)
-  — TNA, FTNA, ATNA, co-occurrence, WTNA, validation, clustering, MMM
-- [Co-occurrence & Ising
-  Networks](https://saqr.me/Nestimate/articles/co-occurrence-networks.html)
-  — binary data analysis
-- [Psychological
-  Networks](https://saqr.me/Nestimate/articles/psychological-networks.html)
-  — correlation, partial correlation, glasso, bootstrap
-- [Clustering](https://saqr.me/Nestimate/articles/clustering.html) —
-  dissimilarity-based clustering, MMM, per-cluster networks
-- [Full Reference](https://saqr.me/Nestimate/reference/)
+  Networks](https://mohsaqr.github.io/Nestimate/articles/transition-networks.html)
+- [Clustering &
+  Multilevel](https://mohsaqr.github.io/Nestimate/articles/clustering.html)
+- [Full Reference](https://mohsaqr.github.io/Nestimate/reference/)
 
 ## Citation
 
@@ -416,7 +465,7 @@ If you use Nestimate in your research, please cite:
 
 > Saqr, M., Beck, E., & Lopez-Pernas, S. (2024). Psychological Networks.
 > In M. Saqr & S. Lopez-Pernas (Eds.), *Learning Analytics Methods and
-> Tutorials* (pp. 513-546). Springer. doi:
+> Tutorials* (pp. 513–546). Springer. doi:
 > [10.1007/978-3-031-54464-4_19](https://doi.org/10.1007/978-3-031-54464-4_19)
 
 ## License
@@ -441,8 +490,30 @@ Core functions for building networks from data
   : List All Registered Estimators
 - [`remove_estimator()`](https://mohsaqr.github.io/Nestimate/reference/remove_estimator.md)
   : Remove a Registered Estimator
+- [`build_tna()`](https://mohsaqr.github.io/Nestimate/reference/build_tna.md)
+  : Build a Transition Network (TNA)
+- [`build_atna()`](https://mohsaqr.github.io/Nestimate/reference/build_atna.md)
+  : Build an Attention-Weighted Transition Network (ATNA)
+- [`build_ftna()`](https://mohsaqr.github.io/Nestimate/reference/build_ftna.md)
+  : Build a Frequency Transition Network (FTNA)
+- [`build_cna()`](https://mohsaqr.github.io/Nestimate/reference/build_cna.md)
+  : Build a Co-occurrence Network (CNA)
+- [`build_cor()`](https://mohsaqr.github.io/Nestimate/reference/build_cor.md)
+  : Build a Correlation Network
+- [`build_pcor()`](https://mohsaqr.github.io/Nestimate/reference/build_pcor.md)
+  : Build a Partial Correlation Network
+- [`build_glasso()`](https://mohsaqr.github.io/Nestimate/reference/build_glasso.md)
+  : Build a Graphical Lasso Network (EBICglasso)
+- [`build_ising()`](https://mohsaqr.github.io/Nestimate/reference/build_ising.md)
+  : Build an Ising Network
 - [`wtna()`](https://mohsaqr.github.io/Nestimate/reference/wtna.md) :
   Window-based Transition Network Analysis
+- [`cooccurrence()`](https://mohsaqr.github.io/Nestimate/reference/cooccurrence.md)
+  : Build a Co-occurrence Network
+- [`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md)
+  : Build a Multilevel Vector Autoregression (mlVAR) network
+- [`build_gimme()`](https://mohsaqr.github.io/Nestimate/reference/build_gimme.md)
+  : GIMME: Group Iterative Multiple Model Estimation
 
 ## Higher-Order Networks
 
@@ -462,6 +533,32 @@ Methods for capturing higher-order dependencies
   : Extract Transition Table from a MOGen Model
 - [`path_counts()`](https://mohsaqr.github.io/Nestimate/reference/path_counts.md)
   : Count Path Frequencies in Trajectory Data
+- [`bipartite_groups()`](https://mohsaqr.github.io/Nestimate/reference/bipartite_groups.md)
+  : Hypergraph from bipartite group / event data
+- [`clique_expansion()`](https://mohsaqr.github.io/Nestimate/reference/clique_expansion.md)
+  : Clique expansion of a hypergraph
+- [`hypergraph_centrality()`](https://mohsaqr.github.io/Nestimate/reference/hypergraph_centrality.md)
+  : Hypergraph eigenvector centralities
+
+## Markov Analysis
+
+Order, structure, entropy, and stability of Markov chains
+
+- [`chain_structure()`](https://mohsaqr.github.io/Nestimate/reference/chain_structure.md)
+  : Qualitative structure of a discrete-time Markov chain.
+- [`markov_order_test()`](https://mohsaqr.github.io/Nestimate/reference/markov_order_test.md)
+  : Test the Markov order of a sequential process
+- [`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)
+  [`plot(`*`<net_markov_stability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)
+  : Markov Stability Analysis
+- [`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+  [`summary(`*`<net_mpt>`*`)`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+  [`plot(`*`<net_mpt>`*`)`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+  : Mean First Passage Times
+- [`path_dependence()`](https://mohsaqr.github.io/Nestimate/reference/path_dependence.md)
+  : Per-Context Path Dependence at Order k
+- [`transition_entropy()`](https://mohsaqr.github.io/Nestimate/reference/transition_entropy.md)
+  : Transition Entropy of a Markov Chain
 
 ## Bootstrap & Inference
 
@@ -471,14 +568,16 @@ Statistical inference for network estimation
   : Bootstrap a Network Estimate
 - [`boot_glasso()`](https://mohsaqr.github.io/Nestimate/reference/boot_glasso.md)
   : Bootstrap for Regularized Partial Correlation Networks
-- [`permutation_test()`](https://mohsaqr.github.io/Nestimate/reference/permutation_test.md)
+- [`permutation()`](https://mohsaqr.github.io/Nestimate/reference/permutation.md)
   : Permutation Test for Network Comparison
+- [`nct()`](https://mohsaqr.github.io/Nestimate/reference/nct.md) :
+  Network Comparison Test
 
 ## Reliability & Stability
 
 Assess reliability and stability of network estimates
 
-- [`reliability()`](https://mohsaqr.github.io/Nestimate/reference/reliability.md)
+- [`network_reliability()`](https://mohsaqr.github.io/Nestimate/reference/network_reliability.md)
   : Split-Half Reliability for Network Estimates
 - [`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md)
   : Centrality Stability Coefficient (CS-coefficient)
@@ -487,11 +586,14 @@ Assess reliability and stability of network estimates
 
 Cluster-based and multilevel network analysis
 
-- [`cluster_data()`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)
-  [`cluster_sequences()`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)
+- [`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)
   : Cluster Sequences by Dissimilarity
+- [`cluster_choice()`](https://mohsaqr.github.io/Nestimate/reference/cluster_choice.md)
+  : Cluster Choice – sweep k, dissimilarity and method
+- [`cluster_diagnostics()`](https://mohsaqr.github.io/Nestimate/reference/cluster_diagnostics.md)
+  [`as.data.frame(`*`<net_cluster_diagnostics>`*`)`](https://mohsaqr.github.io/Nestimate/reference/cluster_diagnostics.md)
+  : Cluster Diagnostics
 - [`cluster_summary()`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md)
-  [`csum()`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md)
   : Cluster Summary Statistics
 - [`cluster_mmm()`](https://mohsaqr.github.io/Nestimate/reference/cluster_mmm.md)
   : Cluster sequences using Mixed Markov Models
@@ -527,7 +629,7 @@ Topological analysis of networks
 
 Convert and prepare data for network estimation
 
-- [`prepare_data()`](https://mohsaqr.github.io/Nestimate/reference/prepare_data.md)
+- [`prepare()`](https://mohsaqr.github.io/Nestimate/reference/prepare.md)
   : Prepare Event Log Data for Network Estimation
 - [`prepare_for_tna()`](https://mohsaqr.github.io/Nestimate/reference/prepare_for_tna.md)
   : Prepare Data for TNA Analysis
@@ -541,6 +643,12 @@ Convert and prepare data for network estimation
   : Convert Long Format to Wide Sequences
 - [`convert_sequence_format()`](https://mohsaqr.github.io/Nestimate/reference/convert_sequence_format.md)
   : Convert Sequence Data to Different Formats
+- [`actor_endpoints()`](https://mohsaqr.github.io/Nestimate/reference/actor_endpoints.md)
+  : Tidy per-actor endpoint summary of a wide-format sequence dataset.
+- [`mark_first_state()`](https://mohsaqr.github.io/Nestimate/reference/mark_first_state.md)
+  : Mark leading-NA cells with an explicit state label.
+- [`mark_terminal_state()`](https://mohsaqr.github.io/Nestimate/reference/mark_terminal_state.md)
+  : Mark terminal-NA cells with an explicit state label.
 
 ## Utilities
 
@@ -552,11 +660,12 @@ Helper functions and extractors
   : Sequence Data Conversion Functions
 - [`state_frequencies()`](https://mohsaqr.github.io/Nestimate/reference/state_frequencies.md)
   : Compute State Frequencies from Trajectory Data
-- [`aggregate_weights()`](https://mohsaqr.github.io/Nestimate/reference/aggregate_weights.md)
-  [`wagg()`](https://mohsaqr.github.io/Nestimate/reference/aggregate_weights.md)
+- [`net_aggregate_weights()`](https://mohsaqr.github.io/Nestimate/reference/net_aggregate_weights.md)
   : Aggregate Edge Weights
-- [`centrality()`](https://mohsaqr.github.io/Nestimate/reference/centrality.md)
+- [`net_centrality()`](https://mohsaqr.github.io/Nestimate/reference/net_centrality.md)
   : Compute Centrality Measures for a Network
+- [`coefs()`](https://mohsaqr.github.io/Nestimate/reference/coefs.md) :
+  Tidy coefficients from a fitted mlvar model
 - [`as_tna()`](https://mohsaqr.github.io/Nestimate/reference/as_tna.md)
   : Convert cluster_summary to tna Objects
 - [`extract_edges()`](https://mohsaqr.github.io/Nestimate/reference/extract_edges.md)
@@ -566,158 +675,435 @@ Helper functions and extractors
 - [`extract_transition_matrix()`](https://mohsaqr.github.io/Nestimate/reference/extract_transition_matrix.md)
   : Extract Transition Matrix from Model
 
-## Other Methods
+## Sequence Analysis
 
-Additional network estimation approaches
+Sequence visualization, pattern comparison, and association mining
 
-- [`build_gimme()`](https://mohsaqr.github.io/Nestimate/reference/build_gimme.md)
-  : GIMME: Group Iterative Multiple Model Estimation
+- [`sequence_plot()`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md)
+  : Sequence Plot (heatmap, index, or distribution)
+- [`distribution_plot()`](https://mohsaqr.github.io/Nestimate/reference/distribution_plot.md)
+  : State Distribution Plot Over Time
+- [`plot_state_frequencies()`](https://mohsaqr.github.io/Nestimate/reference/plot_state_frequencies.md)
+  : Plot State Frequency Distributions
+- [`plot_mosaic()`](https://mohsaqr.github.io/Nestimate/reference/plot_mosaic.md)
+  : Draw a Marimekko / Mosaic Plot from a Tidy Data Frame
+- [`sequence_compare()`](https://mohsaqr.github.io/Nestimate/reference/sequence_compare.md)
+  : Compare Subsequence Patterns Between Groups
+- [`association_rules()`](https://mohsaqr.github.io/Nestimate/reference/association_rules.md)
+  : Discover Association Rules from Sequential or Transaction Data
+
+## Link Prediction
+
+Predict and evaluate missing connections
+
+- [`predict_links()`](https://mohsaqr.github.io/Nestimate/reference/predict_links.md)
+  : Predict Missing or Future Links in a Network
+- [`evaluate_links()`](https://mohsaqr.github.io/Nestimate/reference/evaluate_links.md)
+  : Evaluate Link Predictions Against Known Edges
 
 ## Data
 
 Example datasets
 
-- [`human_ai`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`human_ai_cat`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`human_ai_super`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`human_detailed`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`human_cat`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`human_super`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`ai_detailed`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`ai_cat`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`ai_super`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`human_wide`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  [`ai_wide`](https://mohsaqr.github.io/Nestimate/reference/vibcoding-data.md)
-  : Human-AI Vibe Coding Interaction Data
-- [`human_ai_edges`](https://mohsaqr.github.io/Nestimate/reference/human_ai_edges.md)
-  : Human-AI Vibe Coding Edge List
+- [`human_long`](https://mohsaqr.github.io/Nestimate/reference/long-data.md)
+  [`ai_long`](https://mohsaqr.github.io/Nestimate/reference/long-data.md)
+  : Human-AI Vibe Coding Interaction Data (Long Format)
 - [`srl_strategies`](https://mohsaqr.github.io/Nestimate/reference/srl_strategies.md)
   : Self-Regulated Learning Strategy Frequencies
 - [`learning_activities`](https://mohsaqr.github.io/Nestimate/reference/learning_activities.md)
   : Online Learning Activity Indicators
 - [`group_regulation_long`](https://mohsaqr.github.io/Nestimate/reference/group_regulation_long.md)
   : Group Regulation in Collaborative Learning (Long Format)
+- [`chatgpt_srl`](https://mohsaqr.github.io/Nestimate/reference/chatgpt_srl.md)
+  : ChatGPT Self-Regulated Learning Scale Scores
+- [`trajectories`](https://mohsaqr.github.io/Nestimate/reference/trajectories.md)
+  : Student Engagement Trajectories
 
 ## S3 Methods
 
 Print, summary, and plot methods for package classes
 
+- [`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+  [`print(`*`<net_hypergraph>`*`)`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+  [`summary(`*`<net_hypergraph>`*`)`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+  : Higher-order hypergraph from a network's clique structure
+
+- [`casedrop_reliability()`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<net_casedrop_reliability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+  [`summary(`*`<net_casedrop_reliability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<net_casedrop_reliability_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+  [`summary(`*`<net_casedrop_reliability_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<summary.net_casedrop_reliability_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+  [`plot(`*`<net_casedrop_reliability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+  [`plot(`*`<net_casedrop_reliability_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+  : Edge-weight Case-dropping Stability
+
+- [`hypergraph_measures()`](https://mohsaqr.github.io/Nestimate/reference/hypergraph_measures.md)
+  [`print(`*`<hypergraph_measures>`*`)`](https://mohsaqr.github.io/Nestimate/reference/hypergraph_measures.md)
+  : Structural measures for a hypergraph
+
 - [`print(`*`<boot_glasso>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.boot_glasso.md)
   : Print Method for boot_glasso
+
+- [`print(`*`<chain_structure>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.chain_structure.md)
+  :
+
+  Print method for `chain_structure`.
+
+- [`print(`*`<chain_structure_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.chain_structure_group.md)
+  :
+
+  Print method for `chain_structure_group`.
+
+- [`print(`*`<cluster_choice>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.cluster_choice.md)
+  : Print Method for cluster_choice
+
 - [`print(`*`<mcml>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.mcml.md)
   : Print Method for mcml
+
+- [`print(`*`<mcml_layer>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.mcml_layer.md)
+  : Print Method for an mcml Layer
+
 - [`print(`*`<mmm_compare>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.mmm_compare.md)
   : Print Method for mmm_compare
+
 - [`print(`*`<nestimate_data>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.nestimate_data.md)
   : Print Method for nestimate_data
+
+- [`print(`*`<net_association_rules>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_association_rules.md)
+  : Print Method for net_association_rules
+
 - [`print(`*`<net_bootstrap>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_bootstrap.md)
   : Print Method for net_bootstrap
+
 - [`print(`*`<net_bootstrap_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_bootstrap_group.md)
   : Print Method for net_bootstrap_group
+
+- [`print(`*`<net_cluster_diagnostics>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_cluster_diagnostics.md)
+  : Print Method for net_cluster_diagnostics
+
 - [`print(`*`<net_clustering>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_clustering.md)
   : Print Method for net_clustering
+
 - [`print(`*`<net_gimme>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_gimme.md)
   : Print Method for net_gimme
+
 - [`print(`*`<net_hon>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_hon.md)
   : Print Method for net_hon
+
 - [`print(`*`<net_honem>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_honem.md)
   : Print Method for net_honem
+
 - [`print(`*`<net_hypa>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_hypa.md)
   : Print Method for net_hypa
+
+- [`print(`*`<net_link_prediction>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_link_prediction.md)
+  : Print Method for net_link_prediction
+
+- [`print(`*`<net_markov_order>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_markov_order.md)
+  : Print Method for net_markov_order
+
+- [`print(`*`<net_markov_order_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_markov_order_group.md)
+  :
+
+  Print method for `net_markov_order_group`
+
+- [`print(`*`<net_markov_stability_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_markov_stability_group.md)
+  :
+
+  Print method for `net_markov_stability_group`
+
+- [`print(`*`<net_mlvar>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_mlvar.md)
+  : Print method for net_mlvar
+
 - [`print(`*`<net_mmm>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_mmm.md)
   : Print Method for net_mmm
+
+- [`print(`*`<net_mmm_clustering>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_mmm_clustering.md)
+  : Print Method for MMM Clustering Attribute
+
 - [`print(`*`<net_mogen>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_mogen.md)
   : Print Method for net_mogen
+
+- [`print(`*`<net_mpt_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_mpt_group.md)
+  :
+
+  Print method for `net_mpt_group`
+
+- [`print(`*`<net_nct>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_nct.md)
+  : Print Method for net_nct
+
+- [`print(`*`<net_path_dependence>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_path_dependence.md)
+  :
+
+  Print method for `net_path_dependence`
+
 - [`print(`*`<net_permutation>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_permutation.md)
   : Print Method for net_permutation
+
 - [`print(`*`<net_permutation_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_permutation_group.md)
   : Print Method for net_permutation_group
+
 - [`print(`*`<net_reliability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_reliability.md)
   : Print Method for net_reliability
+
+- [`print(`*`<net_sequence_comparison>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_sequence_comparison.md)
+  : Print Method for net_sequence_comparison
+
 - [`print(`*`<net_stability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_stability.md)
   : Print Method for net_stability
+
+- [`print(`*`<net_stability_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_stability_group.md)
+  : Print Method for net_stability_group
+
+- [`print(`*`<net_transition_entropy>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_transition_entropy.md)
+  :
+
+  Print method for `net_transition_entropy`
+
+- [`print(`*`<net_transition_entropy_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.net_transition_entropy_group.md)
+  :
+
+  Print method for `net_transition_entropy_group`
+
 - [`print(`*`<netobject>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.netobject.md)
   : Print Method for Network Object
+
 - [`print(`*`<netobject_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.netobject_group.md)
   : Print Method for Group Network Object
+
 - [`print(`*`<netobject_ml>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.netobject_ml.md)
   : Print Method for Multilevel Network Object
+
 - [`print(`*`<persistent_homology>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.persistent_homology.md)
   : Print persistent homology results
+
 - [`print(`*`<q_analysis>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.q_analysis.md)
   : Print Q-analysis results
+
 - [`print(`*`<simplicial_complex>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.simplicial_complex.md)
   : Print a simplicial complex
+
+- [`print(`*`<summary.net_path_dependence>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.summary.net_path_dependence.md)
+  :
+
+  Print method for `summary.net_path_dependence`
+
+- [`print(`*`<summary.net_transition_entropy>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.summary.net_transition_entropy.md)
+  :
+
+  Print method for `summary.net_transition_entropy`
+
+- [`print(`*`<summary_chain_structure>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.summary_chain_structure.md)
+  :
+
+  Print method for `summary.chain_structure`.
+
 - [`print(`*`<wtna_boot_mixed>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.wtna_boot_mixed.md)
   : Print Method for wtna_boot_mixed
+
 - [`print(`*`<wtna_mixed>`*`)`](https://mohsaqr.github.io/Nestimate/reference/print.wtna_mixed.md)
   : Print Method for wtna_mixed
+
+- [`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+  [`summary(`*`<net_mpt>`*`)`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+  [`plot(`*`<net_mpt>`*`)`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+  : Mean First Passage Times
+
 - [`summary(`*`<boot_glasso>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.boot_glasso.md)
   : Summary Method for boot_glasso
+
+- [`summary(`*`<chain_structure>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.chain_structure.md)
+  :
+
+  Tidy per-state summary of a `chain_structure`.
+
+- [`summary(`*`<chain_structure_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.chain_structure_group.md)
+  :
+
+  Cross-group comparison of `chain_structure_group`.
+
+- [`summary(`*`<cluster_choice>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.cluster_choice.md)
+  : Summary Method for cluster_choice
+
 - [`summary(`*`<mcml>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.mcml.md)
   : Summary Method for mcml
+
+- [`summary(`*`<mmm_compare>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.mmm_compare.md)
+  : Summary Method for mmm_compare
+
+- [`summary(`*`<nest_initial_probs>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.nest_initial_probs.md)
+  : Summary Method for Initial Probability Vectors
+
+- [`summary(`*`<nest_transition_counts>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.nest_transition_counts.md)
+  : Summary Method for Transition Count Matrices
+
+- [`summary(`*`<nest_transition_matrix>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.nest_transition_matrix.md)
+  : Summary Method for Transition Matrices
+
+- [`summary(`*`<net_association_rules>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_association_rules.md)
+  : Summary Method for net_association_rules
+
 - [`summary(`*`<net_bootstrap>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_bootstrap.md)
   : Summary Method for net_bootstrap
+
 - [`summary(`*`<net_bootstrap_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_bootstrap_group.md)
   : Summary Method for net_bootstrap_group
+
 - [`summary(`*`<net_clustering>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_clustering.md)
   : Summary Method for net_clustering
+
 - [`summary(`*`<net_gimme>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_gimme.md)
   : Summary Method for net_gimme
+
 - [`summary(`*`<net_hon>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_hon.md)
   : Summary Method for net_hon
+
 - [`summary(`*`<net_honem>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_honem.md)
   : Summary Method for net_honem
+
 - [`summary(`*`<net_hypa>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_hypa.md)
   : Summary Method for net_hypa
+
+- [`summary(`*`<net_link_prediction>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_link_prediction.md)
+  : Summary Method for net_link_prediction
+
+- [`summary(`*`<net_markov_order>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_markov_order.md)
+  : Summary Method for net_markov_order
+
+- [`summary(`*`<net_mlvar>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_mlvar.md)
+  : Summary method for net_mlvar
+
 - [`summary(`*`<net_mmm>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_mmm.md)
   : Summary Method for net_mmm
+
 - [`summary(`*`<net_mogen>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_mogen.md)
   : Summary Method for net_mogen
+
+- [`summary(`*`<net_nct>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_nct.md)
+  : Summary Method for net_nct
+
+- [`summary(`*`<net_path_dependence>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_path_dependence.md)
+  :
+
+  Summary method for `net_path_dependence`
+
 - [`summary(`*`<net_permutation>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_permutation.md)
   : Summary Method for net_permutation
+
 - [`summary(`*`<net_permutation_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_permutation_group.md)
   : Summary Method for net_permutation_group
+
+- [`summary(`*`<net_reliability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_reliability.md)
+  : Summary Method for net_reliability
+
+- [`summary(`*`<net_sequence_comparison>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_sequence_comparison.md)
+  : Summary Method for net_sequence_comparison
+
 - [`summary(`*`<net_stability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_stability.md)
   : Summary Method for net_stability
+
+- [`summary(`*`<net_stability_group>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_stability_group.md)
+  : Summary Method for net_stability_group
+
+- [`summary(`*`<net_transition_entropy>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.net_transition_entropy.md)
+  :
+
+  Summary method for `net_transition_entropy`
+
 - [`summary(`*`<wtna_boot_mixed>`*`)`](https://mohsaqr.github.io/Nestimate/reference/summary.wtna_boot_mixed.md)
   : Summary Method for wtna_boot_mixed
+
+- [`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)
+  [`plot(`*`<net_markov_stability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)
+  : Markov Stability Analysis
+
 - [`plot(`*`<boot_glasso>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.boot_glasso.md)
   : Plot Method for boot_glasso
-- [`plot(`*`<mcml>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.mcml.md)
-  : Plot Method for mcml
+
+- [`plot(`*`<chain_structure>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.chain_structure.md)
+  :
+
+  Plot method for `chain_structure`.
+
+- [`plot(`*`<cluster_choice>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.cluster_choice.md)
+  : Plot Method for cluster_choice
+
 - [`plot(`*`<mmm_compare>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.mmm_compare.md)
   : Plot Method for mmm_compare
+
+- [`plot(`*`<net_association_rules>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_association_rules.md)
+  : Plot Method for net_association_rules
+
+- [`plot(`*`<net_cluster_diagnostics>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_cluster_diagnostics.md)
+  : Plot Method for net_cluster_diagnostics
+
 - [`plot(`*`<net_clustering>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_clustering.md)
   : Plot Sequence Clustering Results
+
 - [`plot(`*`<net_gimme>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_gimme.md)
   : Plot Method for net_gimme
+
 - [`plot(`*`<net_honem>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_honem.md)
   : Plot Method for net_honem
+
+- [`plot(`*`<net_markov_order>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_markov_order.md)
+  : Plot Method for net_markov_order
+
 - [`plot(`*`<net_mmm>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_mmm.md)
   : Plot Method for net_mmm
+
+- [`plot(`*`<net_mmm_clustering>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_mmm_clustering.md)
+  : Plot Method for MMM Clustering Attribute
+
 - [`plot(`*`<net_mogen>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_mogen.md)
   : Plot Method for net_mogen
+
+- [`plot(`*`<net_path_dependence>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_path_dependence.md)
+  :
+
+  Plot method for `net_path_dependence`
+
 - [`plot(`*`<net_reliability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_reliability.md)
   : Plot Method for net_reliability
+
+- [`plot(`*`<net_sequence_comparison>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_sequence_comparison.md)
+  : Plot Method for net_sequence_comparison
+
 - [`plot(`*`<net_stability>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_stability.md)
   : Plot Method for net_stability
+
+- [`plot(`*`<net_transition_entropy>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.net_transition_entropy.md)
+  :
+
+  Plot method for `net_transition_entropy`
+
 - [`plot(`*`<persistent_homology>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.persistent_homology.md)
   : Plot Persistent Homology
+
 - [`plot(`*`<q_analysis>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.q_analysis.md)
   : Plot Q-Analysis
+
 - [`plot(`*`<simplicial_complex>`*`)`](https://mohsaqr.github.io/Nestimate/reference/plot.simplicial_complex.md)
   : Plot a Simplicial Complex
 
+- [`plot_mosaic()`](https://mohsaqr.github.io/Nestimate/reference/plot_mosaic.md)
+  : Draw a Marimekko / Mosaic Plot from a Tidy Data Frame
+
+- [`plot_state_frequencies()`](https://mohsaqr.github.io/Nestimate/reference/plot_state_frequencies.md)
+  : Plot State Frequency Distributions
+
 # Articles
 
-### All vignettes
+### Articles
 
-- [Sequence
-  Clustering](https://mohsaqr.github.io/Nestimate/articles/clustering.md):
-- [Co-occurrence Networks with
-  Nestimate](https://mohsaqr.github.io/Nestimate/articles/co-occurrence-networks.md):
-- [Psychological Network Analysis with
-  Nestimate](https://mohsaqr.github.io/Nestimate/articles/psychological-networks.md):
 - [Network Estimation and Analysis with
   Nestimate](https://mohsaqr.github.io/Nestimate/articles/transition-networks.md):
+- [Sequence Pattern Comparison: Early vs Late Human-AI
+  Interactions](https://mohsaqr.github.io/Nestimate/articles/sequence-comparison.md):
+- [Sequence Plots: heatmap, index, and
+  distribution](https://mohsaqr.github.io/Nestimate/articles/sequence-plots.md):
+- [Sequence
+  Clustering](https://mohsaqr.github.io/Nestimate/articles/clustering.md):
+- [Markov Stability
+  Analysis](https://mohsaqr.github.io/Nestimate/articles/markov-stability.md):

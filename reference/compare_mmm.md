@@ -30,6 +30,18 @@ A `mmm_compare` data frame with BIC, AIC, ICL, AvePP, entropy per k.
 ## Examples
 
 ``` r
+seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+                   V2 = sample(c("A","B","C"), 30, TRUE))
+comp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
+comp
+#> MMM Model Comparison
+#> 
+#>  k log_likelihood AIC      BIC      ICL      AvePP    Entropy   converged
+#>  2 -63.27791      160.5558 184.3762 186.5265 0.964899 0.2153937 FALSE    
+#>  3 -63.27792      178.5558 214.9870 218.8336 0.938229 0.2455097  TRUE    
+#>  best   
+#>  <-- BIC
+#>         
 # \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
@@ -39,9 +51,9 @@ comp <- compare_mmm(seqs, k = 2:3, seed = 42)
 print(comp)
 #> MMM Model Comparison
 #> 
-#>  k log_likelihood AIC      BIC      ICL      AvePP     Entropy    converged
-#>  2 -124.1824      282.3648 306.1851 309.0453 0.9598347 0.13863520 TRUE     
-#>  3 -120.6159      293.2317 329.6628 331.8871 0.9697914 0.06640355 TRUE     
+#>  k log_likelihood AIC      BIC      ICL      AvePP     Entropy   converged
+#>  2 -122.4385      278.8771 302.6974 310.2070 0.8974786 0.3160632 TRUE     
+#>  3 -118.1764      288.3527 324.7838 332.3711 0.9006835 0.1882551 TRUE     
 #>  best   
 #>  <-- BIC
 #>         

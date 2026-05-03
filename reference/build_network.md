@@ -25,7 +25,11 @@ build_network(
   threshold = 0,
   level = NULL,
   time_threshold = 900,
+  predictability = TRUE,
+  state_cols = NULL,
+  metadata_cols = NULL,
   params = list(),
+  labels = NULL,
   ...
 )
 ```
@@ -115,6 +119,31 @@ build_network(
   Numeric. Maximum time gap (seconds) for long format session splitting.
   Default: `900`.
 
+- predictability:
+
+  Logical. If `TRUE` (default), compute and store node predictability
+  (R-squared) for undirected association methods (glasso, pcor, cor).
+  Stored in `$predictability` and auto-displayed as donuts by
+  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
+
+- state_cols:
+
+  Character vector or `NULL`. Explicit names of columns to classify as
+  state columns in the returned netobject's `$data` slot. When provided,
+  all other columns of the cleaned input go to `$metadata`.
+  Auto-detection (values-in-nodes heuristic) is bypassed. Use this when
+  a metadata column happens to contain values that overlap with node
+  names (e.g. condition labels `"A","B","C"` and nodes `"A","B","C"`)
+  and auto-detection would misclassify it. Default: `NULL`
+  (auto-detect).
+
+- metadata_cols:
+
+  Character vector or `NULL`. Explicit names of columns to force into
+  the `$metadata` slot. The remaining columns are auto-detected as state
+  via the values-in-nodes rule. Cannot overlap with `state_cols`.
+  Default: `NULL`.
+
 - params:
 
   Named list. Method-specific parameters passed to the estimator
@@ -123,6 +152,13 @@ build_network(
   composability feature: downstream functions like bootstrap or grid
   search can store and replay the full params list without knowing
   method internals.
+
+- labels:
+
+  Optional name -\> label remap applied after construction. Accepts a
+  2-column data.frame `(name, label)`, a named character vector
+  `c(name = "label")`, or a named list. Rewrites `$nodes$label` and
+  `dimnames(weights)`. Unmapped names pass through unchanged.
 
 - ...:
 
@@ -190,6 +226,12 @@ An object of class `c("netobject", "cograph_network")` containing:
 
   Node groupings data frame, or NULL.
 
+- predictability:
+
+  Named numeric vector of R-squared predictability values per node (for
+  undirected association methods when `predictability = TRUE`). NULL for
+  directed methods.
+
 Method-specific extras (e.g. `precision_matrix`, `cor_matrix`,
 `frequency_matrix`, `lambda_selected`, etc.) are preserved from the
 estimator output.
@@ -223,6 +265,22 @@ The function works as follows:
 ## Examples
 
 ``` r
+seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+net <- build_network(seqs, method = "relative")
+net
+#> Transition Network (relative probabilities) [directed]
+#>   Weights: [1.000, 1.000]  |  mean: 1.000
+#> 
+#>   Weight matrix:
+#>     A B C
+#>   A 0 1 0
+#>   B 0 0 1
+#>   C 1 0 0 
+#> 
+#>   Initial probabilities:
+#>   A             0.500  ████████████████████████████████████████
+#>   B             0.250  ████████████████████
+#>   C             0.250  ████████████████████
 # \donttest{
 # Transition network (relative probabilities)
 seqs <- data.frame(
@@ -232,7 +290,7 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 print(net)
 #> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.111, 0.556]  |  mean: 0.238
+#>   Weights: [0.111, 0.556]  |  mean: 0.250
 #> 
 #>   Weight matrix:
 #>         A     B     C     D

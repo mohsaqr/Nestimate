@@ -79,7 +79,6 @@ lists).
 ## Examples
 
 ``` r
-# \donttest{
 # Wide format
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 freq <- frequencies(seqs, format = "wide")
@@ -90,5 +89,4 @@ long <- data.frame(
   Action = c("A","B","C","B","A","C")
 )
 freq <- frequencies(long, action = "Action", id = "Actor")
-# }
 ```

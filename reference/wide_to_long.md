@@ -78,7 +78,6 @@ for preparing data for TNA analysis.
 ## Examples
 
 ``` r
-# \donttest{
 wide_data <- data.frame(
   V1 = c("A", "B", "C"), V2 = c("B", "C", "A"), V3 = c("C", "A", "B")
 )
@@ -91,5 +90,4 @@ head(long_data)
 #> 4  2    1      B
 #> 5  2    2      C
 #> 6  2    3      A
-# }
 ```

@@ -26,6 +26,15 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+print(hem)
+#> HONEM: Higher-Order Network Embedding
+#>   Nodes:      4
+#>   Dimensions: 2
+#>   Max power:  10
+#>   Variance explained: 78.2%
+
 # \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),

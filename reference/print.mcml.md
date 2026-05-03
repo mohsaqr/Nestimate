@@ -26,6 +26,25 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+clusters <- list(G1 = c("A","B"), G2 = c("C"))
+cs <- build_mcml(seqs, clusters)
+print(cs)
+#> MCML Network
+#> ============
+#> Type: tna  | Method: sum 
+#> Nodes: 3  | Clusters: 2 
+#> Transitions: 4 
+#>   Macro: 2  | Per-cluster: 2 
+#> 
+#> Clusters:
+#>   G1 (2): A, B
+#>   G2 (1): C
+#> 
+#> Macro (cluster-level) weights:
+#>        G1     G2
+#> G1 0.6667 0.3333
+#> G2 1.0000 0.0000
 # \donttest{
 seqs <- data.frame(
   T1 = c("A","B","A"), T2 = c("B","C","B"),

@@ -34,16 +34,17 @@ A data frame with columns: `path`, `count`, `proportion`.
 ## Examples
 
 ``` r
-# \donttest{
 trajs <- list(c("A","B","C","D"), c("A","B","D","C"))
-path_counts(trajs, k = 2)        # transition counts
+path_counts(trajs, k = 2)
 #>     path count proportion
 #> 1 A -> B     2     0.3333
 #> 2 B -> C     1     0.1667
 #> 3 B -> D     1     0.1667
 #> 4 C -> D     1     0.1667
 #> 5 D -> C     1     0.1667
-path_counts(trajs, k = 3, top = 10)  # top 10 three-step paths
+
+# \donttest{
+path_counts(trajs, k = 3, top = 10)
 #>          path count proportion
 #> 1 A -> B -> C     1       0.25
 #> 2 A -> B -> D     1       0.25

@@ -17,7 +17,14 @@ build_mcml(
   method = c("sum", "mean", "median", "max", "min", "density", "geomean"),
   type = c("tna", "frequency", "cooccurrence", "semi_markov", "raw"),
   directed = TRUE,
-  compute_within = TRUE
+  compute_within = TRUE,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
+  order = NULL,
+  session = NULL,
+  time_threshold = 900,
+  labels = NULL
 )
 ```
 
@@ -114,6 +121,23 @@ build_mcml(
 
   Logical. Compute within-cluster matrices? Default TRUE.
 
+- actor, action, time, order, session, time_threshold:
+
+  Long-format event-log shortcut. When `action` is supplied on a
+  data.frame input, the data is passed through
+  [`prepare()`](https://mohsaqr.github.io/Nestimate/reference/prepare.md)
+  to derive a wide sequence, which is then routed to the existing
+  sequence path. Behaves identically to
+  `prepare(...) |> build_network() |> build_mcml()`.
+
+- labels:
+
+  Optional name -\> label remap applied to within-cluster nodes (the
+  macro layer is left untouched because its labels are cluster names).
+  Accepts a 2-column data.frame `(name, label)`, a named character
+  vector `c(name = "label")`, or a named list. Unmapped names pass
+  through unchanged.
+
 ## Value
 
 A `cluster_summary` object with `meta$source = "transitions"`, fully
@@ -125,9 +149,7 @@ and [`plot()`](https://rdrr.io/r/graphics/plot.default.html).
 ## See also
 
 [`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md)
-for matrix-based aggregation,
-[`as_tna()`](https://mohsaqr.github.io/Nestimate/reference/as_tna.md) to
-convert to tna objects,
+for matrix-based aggregation, `net_as_tna()` to convert to tna objects,
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
 visualization
 

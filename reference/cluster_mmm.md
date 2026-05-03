@@ -1,10 +1,12 @@
 # Cluster sequences using Mixed Markov Models
 
-Convenience alias for
-[`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md).
-Fits a mixture of Markov chains to sequence data and returns
-per-component transition networks with EM-fitted initial state
-probabilities.
+Fits a mixture of Markov chains to sequence data and returns a
+`netobject_group` containing per-cluster transition networks. This is
+the MMM equivalent of
+[`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
+(which uses distance-based clustering); both functions share the
+`cluster_by = ...` surface argument so the call shape stays uniform
+across clustering families.
 
 ## Usage
 
@@ -17,7 +19,9 @@ cluster_mmm(
   tol = 1e-06,
   smooth = 0.01,
   seed = NULL,
-  covariates = NULL
+  covariates = NULL,
+  cluster_by = "mmm",
+  ...
 )
 ```
 
@@ -57,52 +61,99 @@ cluster_mmm(
   Optional. Covariates integrated into the EM algorithm to model
   covariate-dependent mixing proportions. Accepts formula, character
   vector, string, or data.frame (same forms as
-  [`cluster_data`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)).
+  [`build_clusters`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)).
   Unlike the post-hoc analysis in
-  [`cluster_data()`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md),
+  [`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md),
   these covariates directly influence cluster membership during
   estimation. Requires the nnet package.
 
+- cluster_by:
+
+  Character. Accepted only as `"mmm"` (the default). Present so
+  `cluster_mmm()` and
+  [`cluster_network()`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
+  share the same call shape; any other value raises an error pointing at
+  [`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md).
+
+- ...:
+
+  Reserved for forward compatibility with the unified `cluster_*`
+  surface. Currently unused.
+
 ## Value
 
-A `net_mmm` object. See
-[`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
-for details.
+A `netobject_group` (list of `netobject`s, one per cluster).
+MMM-specific information is stored in `attr(, "clustering")` (class
+`"net_mmm_clustering"`):
+
+- assignments:
+
+  Integer vector of cluster assignments.
+
+- k:
+
+  Number of clusters.
+
+- posterior:
+
+  N x k matrix of posterior probabilities.
+
+- mixing:
+
+  Mixing proportions.
+
+- quality:
+
+  List with AvePP, entropy, classification error.
+
+- BIC, AIC, ICL:
+
+  Model fit statistics.
+
+- data:
+
+  The full N-row sequence frame, matching `$assignments` – so
+  [`sequence_plot`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md)
+  and
+  [`distribution_plot`](https://mohsaqr.github.io/Nestimate/reference/distribution_plot.md)
+  can recover both.
 
 ## Details
 
-Use
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
-on the result to extract per-cluster networks with any estimation
-method, or use
-[`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
-for a one-shot clustering + network call.
+For the full `net_mmm` object with posterior probabilities, model fit
+statistics, and S3 methods, use
+[`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
+instead.
 
 ## See also
 
-[`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md),
+[`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
+for the full MMM object,
 [`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
+for distance-based clustering
 
 ## Examples
 
 ``` r
+seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+                   V2 = sample(c("A","B","C"), 30, TRUE))
+grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+grp[[1]]$weights
+#>           A         B          C
+#> A 0.1089275 0.8624067 0.02866584
+#> B 0.4564744 0.4564744 0.08705128
+#> C 0.1384553 0.5770726 0.28447209
+attr(grp, "clustering")$assignments
+#>  [1] 1 2 1 2 1 1 1 1 1 1 1 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1
 # \donttest{
+# Visualise with sequence_plot
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 40, TRUE),
   V2 = sample(LETTERS[1:3], 40, TRUE),
   V3 = sample(LETTERS[1:3], 40, TRUE)
 )
-mmm <- cluster_mmm(seqs, k = 2)
-print(mmm)
-#> Mixed Markov Model
-#>   k = 2 | 40 sequences | 3 states
-#>   LL = -122.9 | BIC = 308.6 | ICL = 314.2
-#> 
-#>   Cluster  Size  Mix%%   AvePP
-#>   ------------------------------
-#>         1    23  56.6%  0.944
-#>         2    17  43.4%  0.945
-#> 
-#>   Overall AvePP = 0.944 | Entropy = 0.153 | Class.Err = 0.0%
+grp <- cluster_mmm(seqs, k = 2)
+sequence_plot(grp, type = "index")
+
 # }
 ```

@@ -23,11 +23,9 @@ Integer.
 ## Examples
 
 ``` r
-# \donttest{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")
 sc <- build_simplicial(mat, threshold = 0.3)
 euler_characteristic(sc)
 #> [1] 1
-# }
 ```

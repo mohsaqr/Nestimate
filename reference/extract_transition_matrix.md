@@ -51,7 +51,6 @@ for extracting an edge list.
 ## Examples
 
 ``` r
-# \donttest{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 net <- build_network(seqs, method = "relative")
 trans_mat <- extract_transition_matrix(net)
@@ -60,5 +59,6 @@ print(trans_mat)
 #> A 0 0.3333333 0.6666667
 #> B 1 0.0000000 0.0000000
 #> C 0 1.0000000 0.0000000
-# }
+#> attr(,"class")
+#> [1] "nest_transition_matrix" "matrix"                 "array"                 
 ```

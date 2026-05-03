@@ -33,7 +33,11 @@ wtna(
 - type:
 
   Character. Output type: `"frequency"` (raw counts) or `"relative"`
-  (row-normalized probabilities). Default: `"frequency"`.
+  (row-normalized probabilities). Default: `"frequency"`. Note that
+  `type = "relative"` applied to `method = "cooccurrence"` produces an
+  asymmetric matrix (conditional co-occurrence given row state), not a
+  symmetric undirected weight matrix — use `type = "frequency"` if
+  symmetric co-occurrence counts are required.
 
 - codes:
 
@@ -88,6 +92,10 @@ group and summed.
 ## Examples
 
 ``` r
+oh <- matrix(c(1,0,0, 0,1,0, 0,0,1, 1,0,0), nrow = 4, byrow = TRUE,
+             dimnames = list(NULL, c("A","B","C")))
+w <- wtna(oh)
+
 # \donttest{
 # Simple one-hot data
 df <- data.frame(
@@ -131,7 +139,7 @@ print(nets$transition)
 #>   C             0.000  
 print(nets$cooccurrence)
 #> Network (method: wtna_cooccurrence) [undirected]
-#>   Weights: [1.000, 1.000]  |  mean: 1.000
+#>   Weights: [1.000, 3.000]  |  mean: 1.750
 #> 
 #>   Weight matrix:
 #>     A B C

@@ -26,14 +26,9 @@ The input object, invisibly.
 ## Examples
 
 ``` r
-# \donttest{
-seqs <- data.frame(
-  V1 = c("A","B","C","A","B"),
-  V2 = c("B","C","A","B","C"),
-  V3 = c("C","A","B","C","A")
-)
-net <- build_network(seqs, method = "relative")
-sc  <- build_simplicial(net, type = "clique")
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+sc <- build_simplicial(mat, threshold = 0.3)
 print(sc)
 #> Clique Complex 
 #>   3 nodes, 7 simplices, dimension 2
@@ -41,5 +36,4 @@ print(sc)
 #>   f-vector: (f0=3 f1=3 f2=1)
 #>   Betti: b0=1
 #>   Nodes: A, B, C 
-# }
 ```

@@ -93,7 +93,6 @@ for building transition frequency matrices.
 ## Examples
 
 ``` r
-# \donttest{
 # Wide format input
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 convert_sequence_format(seqs, format = "frequency")
@@ -106,5 +105,4 @@ convert_sequence_format(seqs, format = "edgelist")
 #> 1  A    B  A
 #> 2  B    A  C
 #> 3  A    C  B
-# }
 ```

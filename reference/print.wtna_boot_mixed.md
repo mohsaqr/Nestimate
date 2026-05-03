@@ -26,6 +26,21 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+oh <- data.frame(A = c(1,0,1,0), B = c(0,1,0,1), C = c(1,1,0,0))
+mixed <- wtna(oh, method = "both")
+boot  <- bootstrap_network(mixed, iter = 10)
+print(boot)
+#> Mixed Window TNA Bootstrap
+#> -- Transition --
+#> Bootstrap Network  [Window TNA | directed]
+#>   Iterations : 10  |  Nodes : 3
+#>   Edges      : 0 significant / 6 total
+#>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
+#> -- Co-occurrence --
+#> Bootstrap Network  [Network (wtna_cooccurrence) | undirected]
+#>   Iterations : 10  |  Nodes : 3
+#>   Edges      : 0 significant / 5 total
+#>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 # \donttest{
 set.seed(1)
 oh <- data.frame(
@@ -40,12 +55,12 @@ print(boot)
 #> -- Transition --
 #> Bootstrap Network  [Window TNA | directed]
 #>   Iterations : 20  |  Nodes : 3
-#>   Edges      : 0 significant / 6 total
+#>   Edges      : 0 significant / 7 total
 #>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 #> -- Co-occurrence --
 #> Bootstrap Network  [Network (wtna_cooccurrence) | undirected]
 #>   Iterations : 20  |  Nodes : 3
-#>   Edges      : 0 significant / 2 total
+#>   Edges      : 0 significant / 5 total
 #>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 # }
 ```

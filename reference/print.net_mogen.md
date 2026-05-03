@@ -26,6 +26,16 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+mg <- build_mogen(seqs, max_order = 2)
+print(mg)
+#> Multi-Order Generative Model (MOGen)
+#>   Optimal order:  1 (by aic)
+#>   Orders tested:  0 to 2
+#>   States:         4
+#>   Paths:          3 (12 observations)
+#>   AIC:           38.6 | 19.0 | 21.0
+
 # \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),

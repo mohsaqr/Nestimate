@@ -26,6 +26,16 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
+hyp <- build_hypa(seqs, k = 2)
+print(hyp)
+#> HYPA: Path Anomaly Detection
+#>   Order k:      2
+#>   Edges:        3
+#>   Anomalous:    0 (alpha=0.05, p_adjust=BH)
+#>     Over-repr:  0
+#>     Under-repr: 0
+
 # \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B","C","A","B","C","A"),
@@ -38,7 +48,7 @@ print(hypa)
 #> HYPA: Path Anomaly Detection
 #>   Order k:      2
 #>   Edges:        3
-#>   Anomalous:    0 (alpha=0.05)
+#>   Anomalous:    0 (alpha=0.05, p_adjust=BH)
 #>     Over-repr:  0
 #>     Under-repr: 0
 # }

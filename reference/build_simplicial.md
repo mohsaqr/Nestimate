@@ -31,7 +31,8 @@ build_simplicial(
 
 - x:
 
-  A square matrix, `tna`, `netobject`, `net_hon`, or `net_hypa`.
+  A square matrix, `tna`, `netobject`, `net_hon`, `net_hypa`, or
+  `net_mogen`.
 
 - type:
 
@@ -71,22 +72,17 @@ A `simplicial_complex` object.
 ## Examples
 
 ``` r
-# \donttest{
-seqs <- data.frame(
-  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
-  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
-)
-net <- build_network(seqs, method = "relative")
-sc <- build_simplicial(net, threshold = 0.05)
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+sc <- build_simplicial(mat, threshold = 0.3)
 print(sc)
 #> Clique Complex 
-#>   4 nodes, 15 simplices, dimension 3
-#>   Density: 100.0%  |  Mean dim: 1.13  |  Euler: 1
-#>   f-vector: (f0=4 f1=6 f2=4 f3=1)
+#>   3 nodes, 7 simplices, dimension 2
+#>   Density: 100.0%  |  Mean dim: 0.71  |  Euler: 1
+#>   f-vector: (f0=3 f1=3 f2=1)
 #>   Betti: b0=1
-#>   Nodes: A, B, C, D 
+#>   Nodes: A, B, C 
 betti_numbers(sc)
-#> b0 b1 b2 b3 
-#>  1  0  0  0 
-# }
+#> b0 b1 b2 
+#>  1  0  0 
 ```

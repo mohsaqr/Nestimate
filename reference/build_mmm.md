@@ -55,9 +55,9 @@ build_mmm(
   Optional. Covariates integrated into the EM algorithm to model
   covariate-dependent mixing proportions. Accepts formula, character
   vector, string, or data.frame (same forms as
-  [`cluster_data`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)).
+  [`build_clusters`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)).
   Unlike the post-hoc analysis in
-  [`cluster_data()`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md),
+  [`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md),
   these covariates directly influence cluster membership during
   estimation. Requires the nnet package.
 
@@ -106,6 +106,19 @@ An object of class `net_mmm` with components:
 ## Examples
 
 ``` r
+seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+                   V2 = sample(c("A","B","C"), 30, TRUE))
+mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+mmm
+#> Mixed Markov Model
+#>   Sequences: 30  |  Clusters: 2  |  States: 3
+#>   ICs: LL = -57.596  |  BIC = 173.013  |  AIC = 149.192  |  ICL = 174.931
+#>   Quality: AvePP = 0.969  |  Entropy = 0.192  |  Class.Err = 0.0%
+#>   Status: did not converge in 10 iterations
+#> 
+#>   Cluster  N           Mix%   AvePP
+#>   1        24 (80.0%)  78.5%  0.971
+#>   2        6 (20.0%)   21.5%  0.961
 # \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),
@@ -114,38 +127,37 @@ seqs <- data.frame(
 mmm <- build_mmm(seqs, k = 2, seed = 42)
 print(mmm)
 #> Mixed Markov Model
-#>   k = 2 | 30 sequences | 3 states
-#>   LL = -122.4 | BIC = 302.7 | ICL = 302.8
+#>   Sequences: 30  |  Clusters: 2  |  States: 3
+#>   ICs: LL = -124.400  |  BIC = 306.621  |  AIC = 282.800  |  ICL = 313.645
+#>   Quality: AvePP = 0.904  |  Entropy = 0.304  |  Class.Err = 0.0%
 #> 
-#>   Cluster  Size  Mix%%   AvePP
-#>   ------------------------------
-#>         1    24  80.0%  0.998
-#>         2     6  20.0%  0.995
-#> 
-#>   Overall AvePP = 0.998 | Entropy = 0.019 | Class.Err = 0.0%
+#>   Cluster  N           Mix%   AvePP
+#>   1        20 (66.7%)  62.4%  0.896
+#>   2        10 (33.3%)  37.6%  0.919
 summary(mmm)
 #> Mixed Markov Model
-#>   k = 2 | 30 sequences | 3 states
-#>   LL = -122.4 | BIC = 302.7 | ICL = 302.8
+#>   Sequences: 30  |  Clusters: 2  |  States: 3
+#>   ICs: LL = -124.400  |  BIC = 306.621  |  AIC = 282.800  |  ICL = 313.645
+#>   Quality: AvePP = 0.904  |  Entropy = 0.304  |  Class.Err = 0.0%
 #> 
-#>   Cluster  Size  Mix%%   AvePP
-#>   ------------------------------
-#>         1    24  80.0%  0.998
-#>         2     6  20.0%  0.995
+#>   Cluster  N           Mix%   AvePP
+#>   1        20 (66.7%)  62.4%  0.896
+#>   2        10 (33.3%)  37.6%  0.919
 #> 
-#>   Overall AvePP = 0.998 | Entropy = 0.019 | Class.Err = 0.0%
-#> 
-#> --- Cluster 1 (80.0%, n=24) ---
+#> --- Cluster 1 (62.4%, n=20) ---
 #>       A     B     C
-#> A 0.250 0.250 0.500
-#> B 0.302 0.333 0.364
-#> C 0.334 0.466 0.200
+#> A 0.001 0.568 0.431
+#> B 0.485 0.203 0.313
+#> C 0.189 0.629 0.181
 #> 
-#> --- Cluster 2 (20.0%, n=6) ---
+#> --- Cluster 2 (37.6%, n=10) ---
 #>       A     B     C
-#> A 0.002 0.798 0.200
-#> B 0.746 0.251 0.003
-#> C 0.333 0.444 0.223
+#> A 0.593 0.261 0.145
+#> B 0.149 0.397 0.454
+#> C 0.394 0.002 0.604
 #> 
+#>   component     prior n_assigned mean_posterior     avepp
+#> 1         1 0.6241614         20      0.8959195 0.8959195
+#> 2         2 0.3758386         10      0.9193350 0.9193350
 # }
 ```

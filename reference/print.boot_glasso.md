@@ -26,6 +26,20 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+set.seed(1)
+dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+print(bg)
+#> GLASSO Bootstrap (10 iterations, 5 case-drop per proportion)
+#>   Data: 20 x 3  |  Alpha: 0.05  |  Gamma: 0.50
+#>   Edges: 0/3 significant (CI excludes zero)
+#>   Mean inclusion probability: 0.63
+#> 
+#>   Centrality Stability (CS-coefficient):
+#>     strength:              0.00 [Unstable]
+#> 
+#>   Edge differences: 2/3 pairs significantly different
+#>   Timing: 0.0s (bootstrap: 0.0s, case-drop: 0.0s)
 # \donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
@@ -42,6 +56,6 @@ print(boot)
 #>     strength:              0.00 [Unstable]
 #> 
 #>   Edge differences: 1/15 pairs significantly different
-#>   Timing: 0.1s (bootstrap: 0.1s, case-drop: 0.0s)
+#>   Timing: 0.1s (bootstrap: 0.0s, case-drop: 0.0s)
 # }
 ```

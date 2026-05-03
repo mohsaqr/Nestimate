@@ -93,12 +93,10 @@ for format conversions.
 ## Examples
 
 ``` r
-# \donttest{
 # From wide format sequences
 sequences <- data.frame(
   V1 = c("A","B","C","A"), V2 = c("B","C","A","B"),
   V3 = c("C","A","B","C"), V4 = c("A","B","A","B")
 )
 tna_data <- prepare_for_tna(sequences, type = "sequences")
-# }
 ```

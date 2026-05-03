@@ -12,16 +12,6 @@ cluster_summary(
   x,
   clusters = NULL,
   method = c("sum", "mean", "median", "max", "min", "density", "geomean"),
-  type = c("tna", "cooccurrence", "semi_markov", "raw"),
-  directed = TRUE,
-  compute_within = TRUE
-)
-
-csum(
-  x,
-  clusters = NULL,
-  method = c("sum", "mean", "median", "max", "min", "density", "geomean"),
-  type = c("tna", "cooccurrence", "semi_markov", "raw"),
   directed = TRUE,
   compute_within = TRUE
 )
@@ -123,35 +113,6 @@ csum(
   :   Geometric mean of positive weights. Useful for multiplicative
       processes.
 
-- type:
-
-  Post-processing applied to aggregated weights. Determines the
-  interpretation of the resulting matrices:
-
-  "tna"
-
-  :   (default) Row-normalize so each row sums to 1. Creates transition
-      probabilities suitable for Markov chain analysis. Interpretation:
-      "Given I'm in cluster A, what's the probability of transitioning
-      to cluster B?" Required for use with tna package functions.
-      Diagonal represents within-cluster transition probability.
-
-  "raw"
-
-  :   No normalization. Returns aggregated counts/weights as-is. Use for
-      frequency analysis or when you need raw counts. Compatible with
-      igraph's contract + simplify output.
-
-  "cooccurrence"
-
-  :   Symmetrize the matrix: (A + t(A)) / 2. For undirected
-      co-occurrence analysis.
-
-  "semi_markov"
-
-  :   Row-normalize with duration weighting. For semi-Markov process
-      analysis.
-
 - directed:
 
   Logical. If `TRUE` (default), treat network as directed. A-\>B and
@@ -177,9 +138,10 @@ A `cluster_summary` object (S3 class) containing:
   weights
 
   :   k x k matrix of cluster-to-cluster weights, where k is the number
-      of clusters. Row i, column j contains the aggregated weight from
-      cluster i to cluster j. Diagonal contains within-cluster totals.
-      Processing depends on `type`.
+      of clusters. Row i, column j contains the elementwise aggregation
+      (per `method`) of all edges from nodes in cluster i to nodes in
+      cluster j. Diagonal contains within-cluster totals. Pure
+      arithmetic — no row normalization.
 
   inits
 
@@ -211,10 +173,6 @@ A `cluster_summary` object (S3 class) containing:
 
   List of metadata:
 
-  type
-
-  :   The `type` argument used ("tna", "raw", etc.)
-
   method
 
   :   The `method` argument used ("sum", "mean", etc.)
@@ -235,8 +193,6 @@ A `cluster_summary` object (S3 class) containing:
 
   :   Named vector of cluster sizes
 
-See `cluster_summary`.
-
 ## Details
 
 This is the core function for Multi-Cluster Multi-Level (MCML) analysis.
@@ -249,14 +205,15 @@ package.
 
 Typical MCML analysis workflow:
 
+
     # 1. Create network
     net <- build_network(data, method = "relative")
     net$nodes$clusters <- group_assignments
 
-    # 2. Compute cluster summary
-    cs <- cluster_summary(net, type = "tna")
+    # 2. Compute cluster summary (arithmetic aggregation over edges)
+    cs <- cluster_summary(net, method = "sum")
 
-    # 3. Convert to tna models
+    # 3. Convert to tna models (normalization happens in as_tna)
     tna_models <- as_tna(cs)
 
     # 4. Analyze/visualize
@@ -270,21 +227,31 @@ The `macro$weights` matrix has clusters as both rows and columns:
 - Off-diagonal (row i, col j): Aggregated weight from cluster i to
   cluster j
 
-- Diagonal (row i, col i): Within-cluster total (sum of internal edges
-  in cluster i)
+- Diagonal (row i, col i): Within-cluster total (aggregation of internal
+  edges)
 
-When `type = "tna"`, rows sum to 1 and diagonal values represent
-"retention rate" - the probability of staying within the same cluster.
+Rows are NOT normalized. Entries are elementwise aggregates produced by
+`method`. If the caller wants probabilities, they should normalize
+downstream (e.g. via
+[`as_tna()`](https://mohsaqr.github.io/Nestimate/reference/as_tna.md)).
+Mixing an arithmetic aggregation with row-normalization here (the old
+`type = "tna"` combined with `method = "min"` / `"mean"` etc.) produces
+numbers that sum to 1 per row but are not a probability distribution
+over any process; that silently-wrong combination is why `type` was
+removed from the matrix path. The sequence and edgelist paths of
+[`build_mcml()`](https://mohsaqr.github.io/Nestimate/reference/build_mcml.md)
+keep `type`, where the aggregation is always counts and the
+post-processing chooses between well-defined network constructions.
 
-### Choosing method and type
+### Choosing method
 
-|                    |                           |                                                   |
-|--------------------|---------------------------|---------------------------------------------------|
-| **Input data**     | **Recommended**           | **Reason**                                        |
-| Edge counts        | method="sum", type="tna"  | Preserves total flow, normalizes to probabilities |
-| Transition matrix  | method="mean", type="tna" | Avoids cluster size bias                          |
-| Frequencies        | method="sum", type="raw"  | Keep raw counts for analysis                      |
-| Correlation matrix | method="mean", type="raw" | Average correlations                              |
+|  |  |  |
+|----|----|----|
+| **Input data** | **Recommended method** | **Reason** |
+| Edge counts | `"sum"` | Preserves total flow between clusters |
+| Transition matrix | `"mean"` | Avoids cluster size bias |
+| Correlation matrix | `"mean"` | Average correlations |
+| Dense weighted | `"max"` / `"median"` | Robust summary |
 
 ## See also
 
@@ -308,21 +275,21 @@ cs <- cluster_summary(mat, clusters)
 
 # Access results
 cs$macro$weights    # 3x3 cluster transition matrix
-#>           1         2         3
-#> 1 0.3096851 0.3024384 0.3878765
-#> 2 0.3022261 0.2590855 0.4386884
-#> 3 0.2565129 0.2628054 0.4806818
+#>          1        2        3
+#> 1 4.784827 5.331427 6.186107
+#> 2 3.368078 4.033927 6.611524
+#> 3 5.279989 6.773042 9.423943
 cs$macro$inits      # Initial distribution
-#>         1         2         3 
-#> 0.2868688 0.2746885 0.4384427 
+#>        1        2        3 
+#> 0.259358 0.311595 0.429047 
 cs$clusters$`1`$weights # Within-cluster 1 transitions
-#>            A         B         C
-#> A 0.35884842 0.6027075 0.0384441
-#> B 0.07374815 0.4482965 0.4779554
-#> C 0.31270223 0.3622318 0.3250660
+#>           A         B         C
+#> A 0.7720692 0.6796373 0.5709870
+#> B 0.6576550 0.3574632 0.7623484
+#> C 0.7057731 0.1342718 0.1446221
 cs$meta               # Metadata
 #> $type
-#> [1] "tna"
+#> [1] "aggregate"
 #> 
 #> $method
 #> [1] "sum"
@@ -340,6 +307,9 @@ cs$meta               # Metadata
 #> 1 2 3 
 #> 3 3 4 
 #> 
+#> $source
+#> [1] "matrix"
+#> 
 
 # -----------------------------------------------------
 # Named list clusters (more readable)
@@ -349,29 +319,27 @@ clusters <- list(
   Beta = c("D", "E", "F"),
   Gamma = c("G", "H", "I", "J")
 )
-cs <- cluster_summary(mat, clusters, type = "tna")
+cs <- cluster_summary(mat, clusters)
 cs$macro$weights    # Rows/cols named Alpha, Beta, Gamma
-#>           Alpha      Beta     Gamma
-#> Alpha 0.3096851 0.3024384 0.3878765
-#> Beta  0.3022261 0.2590855 0.4386884
-#> Gamma 0.2565129 0.2628054 0.4806818
+#>          Alpha     Beta    Gamma
+#> Alpha 4.784827 5.331427 6.186107
+#> Beta  3.368078 4.033927 6.611524
+#> Gamma 5.279989 6.773042 9.423943
 cs$clusters$Alpha       # Within Alpha cluster
-#> $weights
-#>            A         B         C
-#> A 0.35884842 0.6027075 0.0384441
-#> B 0.07374815 0.4482965 0.4779554
-#> C 0.31270223 0.3622318 0.3250660
+#> MCML layer (transition probabilities)  [directed]
+#>   Nodes: 3  |  Non-zero edges: 9
+#>   Weights: [0.134, 0.772]  |  mean: 0.532
 #> 
-#> $inits
-#>         A         B         C 
-#> 0.2358790 0.4452836 0.3188374 
+#>   Weight matrix:
+#>         A     B     C
+#>   A 0.772 0.680 0.571
+#>   B 0.658 0.357 0.762
+#>   C 0.706 0.134 0.145 
 #> 
-#> $labels
-#> [1] "A" "B" "C"
-#> 
-#> $data
-#> NULL
-#> 
+#>   Initial probabilities:
+#>   A               0.446  ████████████████████████████████████████
+#>   C               0.309  ████████████████████████████
+#>   B               0.245  ██████████████████████
 
 # -----------------------------------------------------
 # Auto-detect clusters from netobject
@@ -393,19 +361,6 @@ cs_mean <- cluster_summary(mat, clusters, method = "mean") # Average
 cs_max <- cluster_summary(mat, clusters, method = "max")   # Strongest
 
 # -----------------------------------------------------
-# Raw counts vs TNA probabilities
-# -----------------------------------------------------
-cs_raw <- cluster_summary(mat, clusters, type = "raw")
-cs_tna <- cluster_summary(mat, clusters, type = "tna")
-
-rowSums(cs_raw$macro$weights)  # Various sums
-#>    Alpha     Beta    Gamma 
-#> 16.59946 14.45172 19.78782 
-rowSums(cs_tna$macro$weights)  # All equal to 1
-#> Alpha  Beta Gamma 
-#>     1     1     1 
-
-# -----------------------------------------------------
 # Skip within-cluster computation for speed
 # -----------------------------------------------------
 cs_fast <- cluster_summary(mat, clusters, compute_within = FALSE)
@@ -414,27 +369,10 @@ cs_fast$clusters  # NULL
 
 # -----------------------------------------------------
 # Convert to tna objects for tna package
+# (as_tna() applies its own row normalisation)
 # -----------------------------------------------------
-cs <- cluster_summary(mat, clusters, type = "tna")
+cs <- cluster_summary(mat, clusters, method = "sum")
 tna_models <- as_tna(cs)
 # tna_models$macro      # tna object
 # tna_models$clusters$Alpha # tna object
-# \donttest{
-mat <- matrix(runif(16), 4, 4)
-rownames(mat) <- colnames(mat) <- LETTERS[1:4]
-csum(mat, c(1, 1, 2, 2))
-#> MCML Network
-#> ============
-#> Type: tna  | Method: sum 
-#> Nodes: 4  | Clusters: 2 
-#> 
-#> Clusters:
-#>   1 (2): A, B
-#>   2 (2): C, D
-#> 
-#> Macro (cluster-level) weights:
-#>        1      2
-#> 1 0.5383 0.4617
-#> 2 0.4832 0.5168
-# }
 ```

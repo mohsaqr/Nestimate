@@ -70,7 +70,6 @@ for preparing data for TNA analysis.
 ## Examples
 
 ``` r
-# \donttest{
 long_data <- data.frame(
   Actor = rep(1:3, each = 4),
   Time = rep(1:4, 3),
@@ -79,8 +78,7 @@ long_data <- data.frame(
 wide_data <- long_to_wide(long_data, id_col = "Actor")
 head(wide_data)
 #>   Actor V1 V2 V3 V4
-#> 1     1  B  A  C  B
-#> 2     2  A  B  A  C
-#> 3     3  C  A  C  A
-# }
+#> 1     1  C  B  B  C
+#> 2     2  C  A  C  B
+#> 3     3  A  C  C  B
 ```

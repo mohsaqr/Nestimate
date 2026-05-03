@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Network Estimation and Analysis with Nestimate • Nestimate</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -20,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.19</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,12 +38,14 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/transition-networks.html">Transition Networks</a></li>
-    <li><a class="dropdown-item" href="../articles/co-occurrence-networks.html">Co-occurrence &amp; Ising Networks</a></li>
-    <li><a class="dropdown-item" href="../articles/psychological-networks.html">Psychological Networks</a></li>
-    <li><a class="dropdown-item" href="../articles/clustering.html">Clustering &amp; Multi-Level Analysis</a></li>
+<li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
+    <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -88,16 +95,15 @@ comparison.</p>
 <h3 id="theoretical-grounding">Theoretical Grounding<a class="anchor" aria-label="anchor" href="#theoretical-grounding"></a>
 </h3>
 <p>TNA uses stochastic process modeling to capture the dynamics of
-temporal processes, namely Markov models. Markov models align with the
-view that a temporal process is an outcome of a stochastic data
-generating process that produces various network configurations or
-patterns based on rules, constraints, or guiding principles. The
-transitions are governed by a stochastic process: the specific ways in
-which the system changes or evolves is rather random and therefore can’t
-be strictly determined. That is, the transitions are probabilistically
-dependent on preceding states — a method that assumes events are
-probabilistically dependent on the preceding ones like Markov
-models.</p>
+temporal processes via Markov models. Markov models align with the view
+that a temporal process is an outcome of a stochastic data generating
+process that produces various network configurations or patterns based
+on rules, constraints, or guiding principles. The transitions are
+governed by a stochastic process: the specific ways in which the system
+changes or evolves is rather random and therefore cannot be strictly
+determined. That is, the transitions are probabilistically dependent on
+preceding states — a method that assumes events are probabilistically
+dependent on the preceding ones.</p>
 <p>The main principle of TNA is representing the transition matrix
 between events as a graph to take full advantage of graph theory
 potentials and the wealth of network analysis. TNA brings network
@@ -109,75 +115,87 @@ statistical rigor that brings validation and hypothesis testing at each
 step of the analysis offers a method for researchers to build, verify,
 and advance existing theories on the basis of a robust scientific
 approach.</p>
+<p>For a comprehensive introduction to TNA in learning analytics, see
+Saqr et al. (2025a) and Saqr (2024). For detailed tutorials on TNA
+clustering and heterogeneity analysis, see López-Pernas et
+al. (2025).</p>
 </div>
 <div class="section level3">
 <h3 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h3>
-<p>The <code>human_cat</code> dataset contains 10,796 coded human
-interactions from 429 human-AI pair programming sessions across 34
-projects, classified into 9 behavioral categories. Each row represents a
-single interaction event — the kind of data typically exported from log
-files, coded interaction data, or learning management systems.</p>
+<p>The <code>human_long</code> dataset contains 10,796 coded human
+interaction turns from 429 human-AI pair programming sessions across 34
+projects. Each row is a single turn, with <code>code</code> recording
+the interaction type, <code>session_id</code> identifying the session,
+and <code>timestamp</code> providing temporal ordering. For a detailed
+description of the dataset and coding scheme, see <a href="https://saqr.me/blog/2026/human-ai-interaction-cograph/" class="external-link">Saqr
+(2026)</a>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">human_cat</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        id   project   session_id                timestamp session_date actor</span></span>
-<span><span class="co">#&gt; 5094 3439 Project_7 0086cabebd15 2026-03-05T11:32:52.057Z   2026-03-05 Human</span></span>
-<span><span class="co">#&gt; 5095 3439 Project_7 0086cabebd15 2026-03-05T11:32:52.057Z   2026-03-05 Human</span></span>
-<span><span class="co">#&gt; 5096 3439 Project_7 0086cabebd15 2026-03-05T11:32:52.057Z   2026-03-05 Human</span></span>
-<span><span class="co">#&gt; 5097 3440 Project_7 0086cabebd15 2026-03-05T11:32:52.068Z   2026-03-05 Human</span></span>
-<span><span class="co">#&gt; 5100 3442 Project_7 0086cabebd15 2026-03-05T11:39:19.098Z   2026-03-05 Human</span></span>
-<span><span class="co">#&gt; 5103 3444 Project_7 0086cabebd15 2026-03-05T11:41:55.500Z   2026-03-05 Human</span></span>
-<span><span class="co">#&gt;               code  category    superclass</span></span>
-<span><span class="co">#&gt; 5094       Context   Specify     Directive</span></span>
-<span><span class="co">#&gt; 5095        Direct   Command     Directive</span></span>
-<span><span class="co">#&gt; 5096 Specification   Specify     Directive</span></span>
-<span><span class="co">#&gt; 5097     Interrupt Interrupt Metacognitive</span></span>
-<span><span class="co">#&gt; 5100  Verification    Verify    Evaluative</span></span>
-<span><span class="co">#&gt; 5103 Specification   Specify     Directive</span></span></code></pre></div>
-<p>The dataset is in long format with columns recording <em>what
-happened</em> (<code>category</code>), <em>who did it</em>
-(<code>session_id</code>), and <em>when</em> (<code>timestamp</code>).
-Additional columns like <code>project</code>, <code>code</code>, and
-<code>superclass</code> are automatically preserved as metadata and can
-be used later for group comparisons or covariate analysis without manual
-data wrangling.</p>
+<span></span>
+<span><span class="co"># Subsample for vignette speed (CRAN build-time limit)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">human_long</span><span class="op">$</span><span class="va">session_id</span><span class="op">)</span>, <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">human_sub</span> <span class="op">&lt;-</span> <span class="va">human_long</span><span class="op">[</span><span class="va">human_long</span><span class="op">$</span><span class="va">session_id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">keep</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">human_sub</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     message_id   project   session_id  timestamp session_date      code</span></span>
+<span><span class="co">#&gt; 395       2902 Project_7 0605767ae57f 1772229600   2026-02-28   Specify</span></span>
+<span><span class="co">#&gt; 396       2902 Project_7 0605767ae57f 1772229600   2026-02-28   Command</span></span>
+<span><span class="co">#&gt; 397       2902 Project_7 0605767ae57f 1772229600   2026-02-28   Request</span></span>
+<span><span class="co">#&gt; 398       2902 Project_7 0605767ae57f 1772229600   2026-02-28   Specify</span></span>
+<span><span class="co">#&gt; 399       2903 Project_7 0605767ae57f 1772229600   2026-02-28 Interrupt</span></span>
+<span><span class="co">#&gt; 400       2905 Project_7 0605767ae57f 1772229600   2026-02-28   Command</span></span>
+<span><span class="co">#&gt;           cluster code_order order_in_session</span></span>
+<span><span class="co">#&gt; 395     Directive          1                1</span></span>
+<span><span class="co">#&gt; 396     Directive          2                2</span></span>
+<span><span class="co">#&gt; 397     Directive          3                3</span></span>
+<span><span class="co">#&gt; 398     Directive          4                4</span></span>
+<span><span class="co">#&gt; 399 Metacognitive          1                5</span></span>
+<span><span class="co">#&gt; 400     Directive          1                8</span></span></code></pre></div>
+<p>The dataset is in long format: <code>code</code> records what
+happened, <code>session_id</code> who did it, and <code>timestamp</code>
+when. Additional columns like <code>project</code> and
+<code>cluster</code> are automatically preserved as metadata for
+downstream covariate analysis.</p>
 </div>
 <div class="section level3">
 <h3 id="building-networks">Building Networks<a class="anchor" aria-label="anchor" href="#building-networks"></a>
 </h3>
-<p>Building networks in Nestimate is a single step: the
-<code><a href="../reference/build_network.html">build_network()</a></code> function is the universal entry point for
-all network estimation. It accepts long-format event data directly with
+<p>Building networks in Nestimate is a single step:
+<code><a href="../reference/build_network.html">build_network()</a></code> is the universal entry point for all
+network estimation. It accepts long-format event data directly with
 three key parameters:</p>
 <ul>
 <li>
 <strong><code>action</code></strong>: the column containing state
-labels — the occurrences or events that become network nodes</li>
+labels</li>
 <li>
 <strong><code>actor</code></strong>: the column identifying
-sequences — who performed the action (one sequence per actor)</li>
+sequences (one sequence per actor)</li>
 <li>
 <strong><code>time</code></strong>: the column providing temporal
-ordering — when it happened</li>
+ordering</li>
 </ul>
-<p>Under the hood, <code><a href="../reference/build_network.html">build_network()</a></code> calls
-<code><a href="../reference/prepare_data.html">prepare_data()</a></code> to convert the long-format event log into
-wide-format sequences, automatically handling chronological ordering,
-session detection, and metadata preservation.</p>
+<p>Under the hood, <code><a href="../reference/build_network.html">build_network()</a></code> automatically converts
+the long-format event log into wide-format sequences, handling
+chronological ordering, session detection, and metadata preservation.
+You can also call <code><a href="../reference/prepare.html">prepare()</a></code> directly to inspect or reuse
+the processed data before passing it to
+<code><a href="../reference/build_network.html">build_network()</a></code>.</p>
 <div class="section level4">
 <h4 id="transition-network-tna">Transition Network (TNA)<a class="anchor" aria-label="anchor" href="#transition-network-tna"></a>
 </h4>
 <p>The standard TNA method estimates a first-order Markov model from
 sequence data. Given a sequence of events, the transition probability
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>v</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>v</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(v_j | v_i)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>v</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>v</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(v_j | v_i)</annotation></semantics></math>
 is estimated as the ratio of observed transitions from state
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>i</mi></msub><annotation encoding="application/x-tex">v_i</annotation></semantics></math>
 to state
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>j</mi></msub><annotation encoding="application/x-tex">v_j</annotation></semantics></math>
 to the total number of outgoing transitions from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>i</mi></msub><annotation encoding="application/x-tex">v_i</annotation></semantics></math>.
-These estimated probabilities are assembled into a <strong>transition
+These probabilities are assembled into a <strong>transition
 matrix</strong>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>,
 where each element
@@ -185,101 +203,98 @@ where each element
 represents the estimated probability of transitioning from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>i</mi></msub><annotation encoding="application/x-tex">v_i</annotation></semantics></math>
 to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>j</mi></msub><annotation encoding="application/x-tex">v_j</annotation></semantics></math>.
-The resulting directed weighted network captures the probabilistic
-dependencies between events — the contingencies that shape the temporal
-process.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>j</mi></msub><annotation encoding="application/x-tex">v_j</annotation></semantics></math>
+(Saqr et al., 2025a).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net_tna</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_cat</span>, method <span class="op">=</span> <span class="st">"tna"</span>,</span>
-<span>                         action <span class="op">=</span> <span class="st">"category"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
+<code class="sourceCode R"><span><span class="va">net_tna</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_sub</span>, method <span class="op">=</span> <span class="st">"tna"</span>,</span>
+<span>                         action <span class="op">=</span> <span class="st">"code"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
 <span>                         time <span class="op">=</span> <span class="st">"timestamp"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net_tna</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.017, 0.657]  |  mean: 0.109</span></span>
+<span><span class="co">#&gt;   Weights: [0.019, 0.577]  |  mean: 0.111</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;             Command Correct Frustrate Inquire Interrupt Refine Request Specify</span></span>
-<span><span class="co">#&gt;   Command     0.211   0.092     0.053   0.060     0.032  0.039   0.158   0.303</span></span>
-<span><span class="co">#&gt;   Correct     0.085   0.093     0.141   0.051     0.047  0.115   0.118   0.291</span></span>
-<span><span class="co">#&gt;   Frustrate   0.098   0.119     0.173   0.069     0.045  0.172   0.110   0.131</span></span>
-<span><span class="co">#&gt;   Inquire     0.190   0.138     0.101   0.188     0.078  0.065   0.086   0.108</span></span>
-<span><span class="co">#&gt;   Interrupt   0.244   0.096     0.099   0.117     0.093  0.089   0.068   0.140</span></span>
-<span><span class="co">#&gt;   Refine      0.053   0.076     0.069   0.044     0.033  0.086   0.150   0.470</span></span>
-<span><span class="co">#&gt;   Request     0.086   0.017     0.043   0.062     0.037  0.033   0.035   0.657</span></span>
-<span><span class="co">#&gt;   Specify     0.267   0.060     0.077   0.067     0.171  0.077   0.062   0.181</span></span>
-<span><span class="co">#&gt;   Verify      0.205   0.080     0.167   0.123     0.036  0.109   0.111   0.085</span></span>
+<span><span class="co">#&gt;   Command     0.209   0.091     0.040   0.067     0.037  0.047   0.158   0.295</span></span>
+<span><span class="co">#&gt;   Correct     0.099   0.109     0.134   0.054     0.059  0.109   0.124   0.282</span></span>
+<span><span class="co">#&gt;   Frustrate   0.078   0.150     0.204   0.083     0.019  0.209   0.107   0.117</span></span>
+<span><span class="co">#&gt;   Inquire     0.155   0.155     0.140   0.166     0.109  0.041   0.093   0.098</span></span>
+<span><span class="co">#&gt;   Interrupt   0.298   0.055     0.055   0.193     0.144  0.039   0.066   0.077</span></span>
+<span><span class="co">#&gt;   Refine      0.042   0.090     0.090   0.066     0.048  0.096   0.114   0.416</span></span>
+<span><span class="co">#&gt;   Request     0.102   0.019     0.070   0.074     0.051  0.033   0.033   0.577</span></span>
+<span><span class="co">#&gt;   Specify     0.291   0.069     0.076   0.067     0.176  0.052   0.064   0.162</span></span>
+<span><span class="co">#&gt;   Verify      0.230   0.100     0.110   0.100     0.050  0.140   0.080   0.110</span></span>
 <span><span class="co">#&gt;             Verify</span></span>
-<span><span class="co">#&gt;   Command    0.051</span></span>
-<span><span class="co">#&gt;   Correct    0.059</span></span>
-<span><span class="co">#&gt;   Frustrate  0.082</span></span>
-<span><span class="co">#&gt;   Inquire    0.046</span></span>
-<span><span class="co">#&gt;   Interrupt  0.054</span></span>
-<span><span class="co">#&gt;   Refine     0.019</span></span>
-<span><span class="co">#&gt;   Request    0.031</span></span>
-<span><span class="co">#&gt;   Specify    0.037</span></span>
-<span><span class="co">#&gt;   Verify     0.085 </span></span>
+<span><span class="co">#&gt;   Command    0.056</span></span>
+<span><span class="co">#&gt;   Correct    0.030</span></span>
+<span><span class="co">#&gt;   Frustrate  0.034</span></span>
+<span><span class="co">#&gt;   Inquire    0.041</span></span>
+<span><span class="co">#&gt;   Interrupt  0.072</span></span>
+<span><span class="co">#&gt;   Refine     0.036</span></span>
+<span><span class="co">#&gt;   Request    0.042</span></span>
+<span><span class="co">#&gt;   Specify    0.043</span></span>
+<span><span class="co">#&gt;   Verify     0.080 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Specify       0.293  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Command       0.253  ██████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Interrupt     0.098  █████████████</span></span>
-<span><span class="co">#&gt;   Request       0.093  █████████████</span></span>
-<span><span class="co">#&gt;   Inquire       0.087  ████████████</span></span>
-<span><span class="co">#&gt;   Frustrate     0.069  █████████</span></span>
-<span><span class="co">#&gt;   Verify        0.038  █████</span></span>
-<span><span class="co">#&gt;   Refine        0.035  █████</span></span>
-<span><span class="co">#&gt;   Correct       0.033  ████</span></span></code></pre></div>
+<span><span class="co">#&gt;   Specify       0.664  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   Command       0.216  █████████████</span></span>
+<span><span class="co">#&gt;   Request       0.048  ███</span></span>
+<span><span class="co">#&gt;   Correct       0.040  ██</span></span>
+<span><span class="co">#&gt;   Interrupt     0.016  █</span></span>
+<span><span class="co">#&gt;   Frustrate     0.008  </span></span>
+<span><span class="co">#&gt;   Refine        0.008  </span></span>
+<span><span class="co">#&gt;   Inquire       0.000  </span></span>
+<span><span class="co">#&gt;   Verify        0.000</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="frequency-network-ftna">Frequency Network (FTNA)<a class="anchor" aria-label="anchor" href="#frequency-network-ftna"></a>
 </h4>
 <p>The frequency method preserves raw transition counts rather than
 normalizing to conditional probabilities. This is useful when absolute
-frequencies matter — for instance, a transition that occurs 500 times
-from a common state may be more practically important than one occurring
-5 times from a rare state, even if the latter has a higher conditional
-probability. Frequency networks retain the magnitude of evidence for
-each transition, which is lost in the normalization step.</p>
+frequencies matter — a transition occurring 500 times from a common
+state may be more practically important than one occurring 5 times from
+a rare state, even if the latter has a higher conditional
+probability.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net_ftna</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_cat</span>, method <span class="op">=</span> <span class="st">"ftna"</span>,</span>
-<span>                          action <span class="op">=</span> <span class="st">"category"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
+<code class="sourceCode R"><span><span class="va">net_ftna</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_sub</span>, method <span class="op">=</span> <span class="st">"ftna"</span>,</span>
+<span>                          action <span class="op">=</span> <span class="st">"code"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
 <span>                          time <span class="op">=</span> <span class="st">"timestamp"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net_ftna</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Network (frequency counts) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [14.000, 669.000]  |  mean: 110.903</span></span>
+<span><span class="co">#&gt;   Weights: [4.000, 169.000]  |  mean: 28.062</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;             Command Correct Frustrate Inquire Interrupt Refine Request Specify</span></span>
-<span><span class="co">#&gt;   Command       377     164        95     108        58     70     283     543</span></span>
-<span><span class="co">#&gt;   Correct        63      69       104      38        35     85      87     215</span></span>
-<span><span class="co">#&gt;   Frustrate      85     103       150      60        39    149      95     113</span></span>
-<span><span class="co">#&gt;   Inquire       139     101        74     138        57     48      63      79</span></span>
-<span><span class="co">#&gt;   Interrupt     150      59        61      72        57     55      42      86</span></span>
-<span><span class="co">#&gt;   Refine         40      57        52      33        25     65     113     354</span></span>
-<span><span class="co">#&gt;   Request        81      16        41      59        35     31      33     622</span></span>
-<span><span class="co">#&gt;   Specify       669     149       194     169       428    194     156     452</span></span>
-<span><span class="co">#&gt;   Verify         85      33        69      51        15     45      46      35</span></span>
+<span><span class="co">#&gt;   Command        90      39        17      29        16     20      68     127</span></span>
+<span><span class="co">#&gt;   Correct        20      22        27      11        12     22      25      57</span></span>
+<span><span class="co">#&gt;   Frustrate      16      31        42      17         4     43      22      24</span></span>
+<span><span class="co">#&gt;   Inquire        30      30        27      32        21      8      18      19</span></span>
+<span><span class="co">#&gt;   Interrupt      54      10        10      35        26      7      12      14</span></span>
+<span><span class="co">#&gt;   Refine          7      15        15      11         8     16      19      69</span></span>
+<span><span class="co">#&gt;   Request        22       4        15      16        11      7       7     124</span></span>
+<span><span class="co">#&gt;   Specify       169      40        44      39       102     30      37      94</span></span>
+<span><span class="co">#&gt;   Verify         23      10        11      10         5     14       8      11</span></span>
 <span><span class="co">#&gt;             Verify</span></span>
-<span><span class="co">#&gt;   Command       92</span></span>
-<span><span class="co">#&gt;   Correct       44</span></span>
-<span><span class="co">#&gt;   Frustrate     71</span></span>
-<span><span class="co">#&gt;   Inquire       34</span></span>
-<span><span class="co">#&gt;   Interrupt     33</span></span>
-<span><span class="co">#&gt;   Refine        14</span></span>
-<span><span class="co">#&gt;   Request       29</span></span>
-<span><span class="co">#&gt;   Specify       93</span></span>
-<span><span class="co">#&gt;   Verify        35 </span></span>
+<span><span class="co">#&gt;   Command       24</span></span>
+<span><span class="co">#&gt;   Correct        6</span></span>
+<span><span class="co">#&gt;   Frustrate      7</span></span>
+<span><span class="co">#&gt;   Inquire        8</span></span>
+<span><span class="co">#&gt;   Interrupt     13</span></span>
+<span><span class="co">#&gt;   Refine         6</span></span>
+<span><span class="co">#&gt;   Request        9</span></span>
+<span><span class="co">#&gt;   Specify       25</span></span>
+<span><span class="co">#&gt;   Verify         8 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Specify       0.293  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Command       0.253  ██████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Interrupt     0.098  █████████████</span></span>
-<span><span class="co">#&gt;   Request       0.093  █████████████</span></span>
-<span><span class="co">#&gt;   Inquire       0.087  ████████████</span></span>
-<span><span class="co">#&gt;   Frustrate     0.069  █████████</span></span>
-<span><span class="co">#&gt;   Verify        0.038  █████</span></span>
-<span><span class="co">#&gt;   Refine        0.035  █████</span></span>
-<span><span class="co">#&gt;   Correct       0.033  ████</span></span></code></pre></div>
+<span><span class="co">#&gt;   Specify       0.664  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   Command       0.216  █████████████</span></span>
+<span><span class="co">#&gt;   Request       0.048  ███</span></span>
+<span><span class="co">#&gt;   Correct       0.040  ██</span></span>
+<span><span class="co">#&gt;   Interrupt     0.016  █</span></span>
+<span><span class="co">#&gt;   Frustrate     0.008  </span></span>
+<span><span class="co">#&gt;   Refine        0.008  </span></span>
+<span><span class="co">#&gt;   Inquire       0.000  </span></span>
+<span><span class="co">#&gt;   Verify        0.000</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="attention-network-atna">Attention Network (ATNA)<a class="anchor" aria-label="anchor" href="#attention-network-atna"></a>
@@ -289,64 +304,62 @@ importance to recent transitions within each sequence. The
 <code>lambda</code> parameter controls the decay rate: higher values
 produce faster decay. This captures the idea that later events in a
 process may be more indicative of the underlying dynamics than early
-ones — for example, in learning settings where initial exploration gives
-way to more purposeful regulatory behavior.</p>
+ones.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net_atna</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_cat</span>, method <span class="op">=</span> <span class="st">"atna"</span>,</span>
-<span>                          action <span class="op">=</span> <span class="st">"category"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
+<code class="sourceCode R"><span><span class="va">net_atna</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_sub</span>, method <span class="op">=</span> <span class="st">"atna"</span>,</span>
+<span>                          action <span class="op">=</span> <span class="st">"code"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
 <span>                          time <span class="op">=</span> <span class="st">"timestamp"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net_atna</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Attention Network (decay-weighted transitions) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [8.030, 304.838]  |  mean: 58.943</span></span>
+<span><span class="co">#&gt;   Weights: [2.719, 81.786]  |  mean: 15.834</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             Command Correct Frustrate Inquire Interrupt  Refine Request Specify</span></span>
-<span><span class="co">#&gt;   Command   199.284  83.233    55.725  64.170    56.786  41.242 131.205 280.612</span></span>
-<span><span class="co">#&gt;   Correct    41.997  42.362    52.144  24.589    22.371  43.843  41.453 113.721</span></span>
-<span><span class="co">#&gt;   Frustrate  48.965  52.465    83.859  34.492    24.027  69.751  48.671  81.297</span></span>
-<span><span class="co">#&gt;   Inquire    71.426  54.891    38.953  69.478    27.777  26.778  35.555  62.024</span></span>
-<span><span class="co">#&gt;   Interrupt  69.784  28.088    29.698  35.491    37.512  27.001  21.151  58.873</span></span>
-<span><span class="co">#&gt;   Refine     31.811  35.092    34.129  20.991    16.778  48.027  55.107 163.550</span></span>
-<span><span class="co">#&gt;   Request    50.030  15.374    28.468  33.049    39.931  26.790  25.926 263.278</span></span>
-<span><span class="co">#&gt;   Specify   304.838  84.283   111.199  92.172   183.669 106.532 115.536 301.458</span></span>
-<span><span class="co">#&gt;   Verify     40.968  17.392    34.647  26.091     8.030  23.976  23.509  34.011</span></span>
+<span><span class="co">#&gt;             Command Correct Frustrate Inquire Interrupt Refine Request Specify</span></span>
+<span><span class="co">#&gt;   Command    50.398  21.700    12.450  16.556    15.164 11.968  31.860  68.371</span></span>
+<span><span class="co">#&gt;   Correct    13.595  13.498    14.098   8.029     7.025 12.674  11.888  30.257</span></span>
+<span><span class="co">#&gt;   Frustrate  10.506  15.087    23.142   9.736     3.927 20.308  12.254  18.614</span></span>
+<span><span class="co">#&gt;   Inquire    16.073  17.002    13.903  16.691    11.297  4.845   9.755  14.765</span></span>
+<span><span class="co">#&gt;   Interrupt  25.913   6.000     5.844  17.104    17.124  3.850   6.353  12.338</span></span>
+<span><span class="co">#&gt;   Refine      6.765   9.389     9.894   6.244     4.124 10.875  10.187  33.191</span></span>
+<span><span class="co">#&gt;   Request    14.348   4.176     8.718  10.071    10.654  6.075   6.291  53.456</span></span>
+<span><span class="co">#&gt;   Specify    81.786  22.700    26.216  25.113    44.442 18.861  28.052  65.762</span></span>
+<span><span class="co">#&gt;   Verify     11.587   5.170     5.991   5.540     2.719  7.318   5.262   8.894</span></span>
 <span><span class="co">#&gt;             Verify</span></span>
-<span><span class="co">#&gt;   Command   47.426</span></span>
-<span><span class="co">#&gt;   Correct   21.554</span></span>
-<span><span class="co">#&gt;   Frustrate 31.931</span></span>
-<span><span class="co">#&gt;   Inquire   16.465</span></span>
-<span><span class="co">#&gt;   Interrupt 18.287</span></span>
-<span><span class="co">#&gt;   Refine    10.621</span></span>
-<span><span class="co">#&gt;   Request   18.414</span></span>
-<span><span class="co">#&gt;   Specify   57.758</span></span>
-<span><span class="co">#&gt;   Verify    20.888 </span></span>
+<span><span class="co">#&gt;   Command   13.721</span></span>
+<span><span class="co">#&gt;   Correct    3.554</span></span>
+<span><span class="co">#&gt;   Frustrate  3.574</span></span>
+<span><span class="co">#&gt;   Inquire    4.062</span></span>
+<span><span class="co">#&gt;   Interrupt  6.741</span></span>
+<span><span class="co">#&gt;   Refine     3.204</span></span>
+<span><span class="co">#&gt;   Request    5.989</span></span>
+<span><span class="co">#&gt;   Specify   15.915</span></span>
+<span><span class="co">#&gt;   Verify     3.943 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Specify       0.293  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Command       0.253  ██████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Interrupt     0.098  █████████████</span></span>
-<span><span class="co">#&gt;   Request       0.093  █████████████</span></span>
-<span><span class="co">#&gt;   Inquire       0.087  ████████████</span></span>
-<span><span class="co">#&gt;   Frustrate     0.069  █████████</span></span>
-<span><span class="co">#&gt;   Verify        0.038  █████</span></span>
-<span><span class="co">#&gt;   Refine        0.035  █████</span></span>
-<span><span class="co">#&gt;   Correct       0.033  ████</span></span></code></pre></div>
+<span><span class="co">#&gt;   Specify       0.664  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   Command       0.216  █████████████</span></span>
+<span><span class="co">#&gt;   Request       0.048  ███</span></span>
+<span><span class="co">#&gt;   Correct       0.040  ██</span></span>
+<span><span class="co">#&gt;   Interrupt     0.016  █</span></span>
+<span><span class="co">#&gt;   Frustrate     0.008  </span></span>
+<span><span class="co">#&gt;   Refine        0.008  </span></span>
+<span><span class="co">#&gt;   Inquire       0.000  </span></span>
+<span><span class="co">#&gt;   Verify        0.000</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="co-occurrence-network-from-binary-data">Co-occurrence Network from Binary Data<a class="anchor" aria-label="anchor" href="#co-occurrence-network-from-binary-data"></a>
 </h4>
 <p>When the data is binary (0/1) — as is common in learning analytics
-where multiple activities are coded as present or absent within time
-windows — <code><a href="../reference/build_network.html">build_network()</a></code> automatically detects the format
-and uses co-occurrence analysis to model how codes are associated with
-each other. The resulting undirected network captures which events tend
-to co-occur, complementing the temporal sequencing captured by TNA.</p>
+where activities are coded as present or absent within time windows —
+<code><a href="../reference/build_network.html">build_network()</a></code> automatically detects the format and uses
+co-occurrence analysis. The resulting undirected network captures which
+events tend to co-occur.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">learning_activities</span><span class="op">)</span></span>
 <span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">learning_activities</span>, method <span class="op">=</span> <span class="st">"cna"</span>, actor <span class="op">=</span> <span class="st">"student"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Co-occurrence Network [undirected]</span></span>
-<span><span class="co">#&gt;   Weights: [2681.000, 3290.000]  |  mean: 3047.333</span></span>
+<span><span class="co">#&gt;   Weights: [2681.000, 6262.000]  |  mean: 3867.381</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;           Reading Video Forum Quiz Coding Review</span></span>
@@ -360,10 +373,9 @@ to co-occur, complementing the temporal sequencing captured by TNA.</p>
 <div class="section level4">
 <h4 id="window-based-tna-wtna">Window-based TNA (WTNA)<a class="anchor" aria-label="anchor" href="#window-based-tna-wtna"></a>
 </h4>
-<p>The <code><a href="../reference/wtna.html">wtna()</a></code> function provides an alternative approach for
-computing networks from one-hot encoded (binary) data, using temporal
-windowing. This is useful when multiple states can be active
-simultaneously within a time window. WTNA supports three modes:</p>
+<p>The <code><a href="../reference/wtna.html">wtna()</a></code> function computes networks from one-hot
+encoded (binary) data using temporal windowing. It supports three
+modes:</p>
 <ul>
 <li>
 <strong><code>"transition"</code></strong>: directed transitions
@@ -375,17 +387,12 @@ co-occurrence within windows</li>
 <strong><code>"both"</code></strong>: a mixed network combining
 transitions and co-occurrences</li>
 </ul>
-<p>Since states can co-occur within the same window <em>and</em> follow
-each other from one window to the next, a mixed network captures both
-relationships simultaneously — modeling the events that co-occur
-together and those that transition, which neither a purely directed nor
-a purely undirected network can represent alone.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net_wtna</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wtna.html">wtna</a></span><span class="op">(</span><span class="va">learning_activities</span>, actor <span class="op">=</span> <span class="st">"student"</span>,</span>
 <span>                 method <span class="op">=</span> <span class="st">"transition"</span>, type <span class="op">=</span> <span class="st">"frequency"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net_wtna</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network (method: wtna_transition) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [877.000, 1094.000]  |  mean: 995.233</span></span>
+<span><span class="co">#&gt;   Weights: [877.000, 1861.000]  |  mean: 1120.278</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;           Reading Video Forum Quiz Coding Review</span></span>
@@ -407,7 +414,7 @@ a purely undirected network can represent alone.</p>
 <code class="sourceCode R"><span><span class="va">net_wtna_rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wtna.html">wtna</a></span><span class="op">(</span><span class="va">learning_activities</span>, method <span class="op">=</span> <span class="st">"transition"</span>, type <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net_wtna_rel</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network (method: wtna_transition) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.132, 0.159]  |  mean: 0.148</span></span>
+<span><span class="co">#&gt;   Weights: [0.132, 0.263]  |  mean: 0.167</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;           Reading Video Forum  Quiz Coding Review</span></span>
@@ -427,31 +434,31 @@ a purely undirected network can represent alone.</p>
 <span><span class="co">#&gt;   Review        0.000</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="mixed-network-transitions-co-occurrences">Mixed network (transitions + co-occurrences)<a class="anchor" aria-label="anchor" href="#mixed-network-transitions-co-occurrences"></a>
+<h4 id="mixed-network-transitions-co-occurrences">Mixed Network (Transitions + Co-occurrences)<a class="anchor" aria-label="anchor" href="#mixed-network-transitions-co-occurrences"></a>
 </h4>
 <p>Since states can co-occur within the same window <em>and</em> follow
-each other from one window to the next, a mixed network captures both
-relationships simultaneously.</p>
+each other across windows, a mixed network captures both relationships
+simultaneously — modeling co-activity and temporal succession in a
+single structure.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net_wtna_mixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wtna.html">wtna</a></span><span class="op">(</span><span class="va">learning_activities</span>, method <span class="op">=</span> <span class="st">"both"</span>, type <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net_wtna_mixed</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Mixed Window TNA (transition + co-occurrence)</span></span>
 <span><span class="co">#&gt; -- Transition (directed) --</span></span>
-<span><span class="co">#&gt;   Nodes: 6  |  Edges: 30</span></span>
+<span><span class="co">#&gt;   Nodes: 6  |  Edges: 36</span></span>
 <span><span class="co">#&gt; -- Co-occurrence (undirected) --</span></span>
-<span><span class="co">#&gt;   Nodes: 6  |  Edges: 15</span></span></code></pre></div>
+<span><span class="co">#&gt;   Nodes: 6  |  Edges: 21</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
 <h3 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a>
 </h3>
 <p>Most research on networks or process mining uses descriptive methods.
-The validation or the statistical significance of such models are almost
+The validation or the statistical significance of such models is almost
 absent in the literature. Having validated models allows us to assess
 the robustness and reproducibility of our models to ensure that the
 insights we get are not merely a product of chance and are therefore
-generalizable. TNA offers rigorous validation and hypothesis testing at
-each step of the analysis.</p>
+generalizable.</p>
 <div class="section level4">
 <h4 id="reliability">Reliability<a class="anchor" aria-label="anchor" href="#reliability"></a>
 </h4>
@@ -460,65 +467,60 @@ stable when the data is randomly divided into two halves. High
 reliability means the network structure is a consistent property of the
 data, not driven by a small number of idiosyncratic sequences.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/reliability.html">reliability</a></span><span class="op">(</span><span class="va">net_tna</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/network_reliability.html">network_reliability</a></span><span class="op">(</span><span class="va">net_tna</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Split-Half Reliability (1000 iterations, split = 50%)</span></span>
-<span><span class="co">#&gt;   Mean Abs. Dev.      mean = 0.0172  sd = 0.0017</span></span>
-<span><span class="co">#&gt;   Median Abs. Dev.    mean = 0.0131  sd = 0.0018</span></span>
-<span><span class="co">#&gt;   Correlation         mean = 0.9720  sd = 0.0058</span></span>
-<span><span class="co">#&gt;   Max Abs. Dev.       mean = 0.0747  sd = 0.0167</span></span></code></pre></div>
+<span><span class="co">#&gt;   Mean Abs. Diff.     mean = 0.0361  sd = 0.0038</span></span>
+<span><span class="co">#&gt;   Median Abs. Diff.   mean = 0.0269  sd = 0.0038</span></span>
+<span><span class="co">#&gt;   Pearson             mean = 0.8642  sd = 0.0290</span></span>
+<span><span class="co">#&gt;   Max Abs. Diff.      mean = 0.1733  sd = 0.0391</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="bootstrap-analysis">Bootstrap Analysis<a class="anchor" aria-label="anchor" href="#bootstrap-analysis"></a>
 </h4>
-<p>Bootstrapping is a re-sampling technique that entails repeatedly —
-usually hundreds, if not thousands of times — drawing samples from the
-original dataset with replacement to estimate the model for each of
-these samples. When edges consistently appear across the majority of the
-estimated models, they are considered stable and significant. In doing
-so, bootstrapping helps effectively filter out small, negligible, or
-spurious edges resulting in a stable model and valid model. The
-bootstrap also provides confidence intervals and p-values for each edge
-weight, offering a quantifiable measure of uncertainty and robustness
-for each transition in the network.</p>
+<p>Bootstrapping repeatedly draws samples from the original dataset with
+replacement to estimate the model for each sample. When edges
+consistently appear across the majority of the estimated models, they
+are considered stable and significant. The bootstrap also provides
+confidence intervals and p-values for each edge weight, offering a
+quantifiable measure of uncertainty and robustness for each transition
+in the network.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">net_tna</span><span class="op">)</span></span>
+<span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">net_tna</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">boot</span></span>
 <span><span class="co">#&gt;   Edge                   Mean     95% CI          p</span></span>
 <span><span class="co">#&gt;   -----------------------------------------------</span></span>
-<span><span class="co">#&gt;   Request → Specify    0.656  [0.625, 0.688]  ***</span></span>
-<span><span class="co">#&gt;   Refine → Specify     0.470  [0.429, 0.515]  ***</span></span>
-<span><span class="co">#&gt;   Command → Specify    0.304  [0.281, 0.327]  ***</span></span>
-<span><span class="co">#&gt;   Correct → Specify    0.290  [0.262, 0.326]  ***</span></span>
-<span><span class="co">#&gt;   Specify → Command    0.267  [0.249, 0.286]  ***</span></span>
-<span><span class="co">#&gt;   ... and 37 more significant edges</span></span>
+<span><span class="co">#&gt;   Request → Specify    0.578  [0.506, 0.661]  ** </span></span>
+<span><span class="co">#&gt;   Refine → Specify     0.417  [0.320, 0.496]  *  </span></span>
+<span><span class="co">#&gt;   Command → Specify    0.294  [0.251, 0.331]  ** </span></span>
+<span><span class="co">#&gt;   Specify → Command    0.290  [0.256, 0.327]  ** </span></span>
+<span><span class="co">#&gt;   Correct → Specify    0.285  [0.234, 0.350]  *  </span></span>
+<span><span class="co">#&gt;   ... and 3 more significant edges</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Bootstrap Network  [Transition Network (relative) | directed]</span></span>
-<span><span class="co">#&gt;   Iterations : 1000  |  Nodes : 9</span></span>
-<span><span class="co">#&gt;   Edges      : 38 significant / 72 total</span></span>
+<span><span class="co">#&gt;   Iterations : 100  |  Nodes : 9</span></span>
+<span><span class="co">#&gt;   Edges      : 8 significant / 81 total</span></span>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="centrality-stability">Centrality Stability<a class="anchor" aria-label="anchor" href="#centrality-stability"></a>
 </h4>
-<p>Centrality measures provide a quantification of the role or
-importance of a state or an event in the process. However, the
-robustness of these rankings must be verified. Centrality stability
-analysis quantifies how robust centrality rankings are to case-dropping:
-the CS-coefficient is the maximum proportion of cases that can be
-dropped while maintaining a correlation of at least 0.7 with the
-original centrality values. A CS-coefficient above 0.5 indicates stable
-centrality rankings; below 0.25 indicates instability and the centrality
-ranking should not be interpreted.</p>
+<p>Centrality measures quantify the role or importance of each state in
+the process. Centrality stability analysis quantifies how robust
+centrality rankings are to case-dropping: the CS-coefficient is the
+maximum proportion of cases that can be dropped while maintaining a
+correlation of at least 0.7 with the original centrality values. A
+CS-coefficient above 0.5 indicates stable rankings; below 0.25 indicates
+instability.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/centrality_stability.html">centrality_stability</a></span><span class="op">(</span><span class="va">net_tna</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Centrality Stability (1000 iterations, threshold = 0.7)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/centrality_stability.html">centrality_stability</a></span><span class="op">(</span><span class="va">net_tna</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Centrality Stability (100 iterations, threshold = 0.7)</span></span>
 <span><span class="co">#&gt;   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   CS-coefficients:</span></span>
 <span><span class="co">#&gt;     InStrength       0.90</span></span>
-<span><span class="co">#&gt;     OutStrength      0.80</span></span>
-<span><span class="co">#&gt;     Betweenness      0.90</span></span></code></pre></div>
+<span><span class="co">#&gt;     OutStrength      0.50</span></span>
+<span><span class="co">#&gt;     Betweenness      0.70</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -527,197 +529,63 @@ ranking should not be interpreted.</p>
 <p>Clusters represent typical transition networks that recur across
 different instances. Unlike communities, clusters involve the entire
 network where groups of sequences are similarly interconnected and each
-exhibit a distinct transition pattern with its own set of transition
+exhibits a distinct transition pattern with its own set of transition
 probabilities. Identifying clusters captures the dynamics, revealing
-typical relations that learners frequently adopt as units across
-different instances. <code><a href="../reference/cluster_data.html">cluster_data()</a></code> computes pairwise
-dissimilarities between sequences and partitions them into
-<code>k</code> groups, then builds a separate network for each
-cluster.</p>
+typical behavioral strategies that learners frequently adopt.
+<code><a href="../reference/build_clusters.html">build_clusters()</a></code> computes pairwise dissimilarities between
+sequences and partitions them into <code>k</code> groups, then builds a
+separate network for each cluster (López-Pernas et al., 2025).</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">Cls</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_data.html">cluster_data</a></span><span class="op">(</span><span class="va">net_tna</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">Cls</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net_tna</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">Clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">Cls</span>, method <span class="op">=</span> <span class="st">"tna"</span><span class="op">)</span></span>
 <span><span class="va">Clusters</span></span>
-<span><span class="co">#&gt; Group Networks (3 groups)</span></span>
-<span><span class="co">#&gt;   Cluster 1: 9 nodes, 72 edges</span></span>
-<span><span class="co">#&gt;   Cluster 2: 9 nodes, 72 edges</span></span>
-<span><span class="co">#&gt;   Cluster 3: 9 nodes, 72 edges</span></span></code></pre></div>
-<div class="section level4">
-<h4 id="centrality">Centrality<a class="anchor" aria-label="anchor" href="#centrality"></a>
-</h4>
-<p>The <code><a href="../reference/centrality.html">centrality()</a></code> function computes centrality measures
-for each cluster network. For directed networks, the defaults are
-InStrength (the sum of incoming transition probabilities — how central a
-state is as a destination), OutStrength (the sum of outgoing transition
-probabilities), and Betweenness (how often a state bridges transitions
-between other states).</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">Nestimate</span><span class="fu">::</span><span class="fu"><a href="../reference/centrality.html">centrality</a></span><span class="op">(</span><span class="va">Clusters</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $`Cluster 1`</span></span>
-<span><span class="co">#&gt;           InStrength OutStrength Betweenness</span></span>
-<span><span class="co">#&gt; Command    1.4766026   0.8305085   0.3571429</span></span>
-<span><span class="co">#&gt; Correct    0.5762721   0.9302326   0.0000000</span></span>
-<span><span class="co">#&gt; Frustrate  0.6976714   0.7932961   0.0000000</span></span>
-<span><span class="co">#&gt; Inquire    0.5322287   0.8321678   0.0000000</span></span>
-<span><span class="co">#&gt; Interrupt  0.5640009   0.9132948   1.2142857</span></span>
-<span><span class="co">#&gt; Refine     0.6740550   0.8896104   0.0000000</span></span>
-<span><span class="co">#&gt; Request    0.7077846   0.9245283   0.0000000</span></span>
-<span><span class="co">#&gt; Specify    2.3544971   0.8722222   1.5000000</span></span>
-<span><span class="co">#&gt; Verify     0.3001842   0.8974359   0.0000000</span></span>
+<span><span class="co">#&gt; Group Networks (3 clusters via pam / hamming)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $`Cluster 2`</span></span>
-<span><span class="co">#&gt;           InStrength OutStrength Betweenness</span></span>
-<span><span class="co">#&gt; Command    1.2513964   0.7542214  0.35714286</span></span>
-<span><span class="co">#&gt; Correct    0.8106253   0.8646288  0.07142857</span></span>
-<span><span class="co">#&gt; Frustrate  0.8483317   0.8571429  0.50000000</span></span>
-<span><span class="co">#&gt; Inquire    0.7323874   0.8164251  0.07142857</span></span>
-<span><span class="co">#&gt; Interrupt  0.4361842   0.9248120  0.00000000</span></span>
-<span><span class="co">#&gt; Refine     0.5935612   0.9470199  0.14285714</span></span>
-<span><span class="co">#&gt; Request    0.8849288   0.9586777  0.07142857</span></span>
-<span><span class="co">#&gt; Specify    1.8767351   0.7624021  1.21428571</span></span>
-<span><span class="co">#&gt; Verify     0.3857592   0.9345794  0.00000000</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $`Cluster 3`</span></span>
-<span><span class="co">#&gt;           InStrength OutStrength Betweenness</span></span>
-<span><span class="co">#&gt; Command    1.0870893   0.7885350  0.28571429</span></span>
-<span><span class="co">#&gt; Correct    0.6628886   0.9240838  0.07142857</span></span>
-<span><span class="co">#&gt; Frustrate  0.7296484   0.8231293  0.07142857</span></span>
-<span><span class="co">#&gt; Inquire    0.5734889   0.8015666  0.00000000</span></span>
-<span><span class="co">#&gt; Interrupt  0.4483984   0.8964401  0.57142857</span></span>
-<span><span class="co">#&gt; Refine     0.7667206   0.9107143  0.14285714</span></span>
-<span><span class="co">#&gt; Request    0.9414318   0.9798535  0.00000000</span></span>
-<span><span class="co">#&gt; Specify    2.2281499   0.8079943  1.50000000</span></span>
-<span><span class="co">#&gt; Verify     0.4071647   0.9126638  0.00000000</span></span></code></pre></div>
-</div>
+<span><span class="co">#&gt;   Group      Nodes  Edges  Weights         N</span></span>
+<span><span class="co">#&gt;   Cluster 1  9      81     [0.010, 0.626]  89 (71.2%)</span></span>
+<span><span class="co">#&gt;   Cluster 2  9      80     [0.017, 0.506]  35 (28.0%)</span></span>
+<span><span class="co">#&gt;   Cluster 3  9      53     [0.043, 0.667]  1 ( 0.8%)</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="permutation-test-for-clusters">Permutation Test for Clusters<a class="anchor" aria-label="anchor" href="#permutation-test-for-clusters"></a>
 </h4>
-<p>TNA offers a rigorous systematic method for process comparison based
-on permutation. Permutation testing is particularly important for
-data-driven clusters: because clustering algorithms partition sequences
-to maximize between-group separation, some degree of apparent difference
-is guaranteed by construction. The permutation test provides the
-necessary corrective — by randomly reassigning sequences to groups while
+<p>Permutation testing is particularly important for data-driven
+clusters: because clustering algorithms partition sequences to maximize
+between-group separation, some degree of apparent difference is
+guaranteed by construction. The permutation test provides the necessary
+corrective — by randomly reassigning sequences to groups while
 preserving internal sequential structure, it constructs null
 distributions for edge-level differences. Only differences that exceed
 this null distribution constitute evidence of genuine structural
 divergence rather than algorithmic artifacts.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/permutation_test.html">permutation_test</a></span><span class="op">(</span><span class="va">Clusters</span><span class="op">$</span><span class="va">`Cluster 1`</span>, <span class="va">Clusters</span><span class="op">$</span><span class="va">`Cluster 2`</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">Clusters</span><span class="op">$</span><span class="va">`Cluster 1`</span>, <span class="va">Clusters</span><span class="op">$</span><span class="va">`Cluster 2`</span>,</span>
+<span>                         iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">perm</span></span>
 <span><span class="co">#&gt; Permutation Test:Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Iterations: 1000  |  Alpha: 0.05</span></span>
-<span><span class="co">#&gt;   Nodes: 9  |  Edges tested: 81  |  Significant: 13</span></span></code></pre></div>
+<span><span class="co">#&gt;   Iterations: 100  |  Alpha: 0.05</span></span>
+<span><span class="co">#&gt;   Nodes: 9  |  Edges tested: 81  |  Significant: 8</span></span></code></pre></div>
 </div>
-</div>
-<div class="section level3">
-<h3 id="mixed-markov-models">Mixed Markov Models<a class="anchor" aria-label="anchor" href="#mixed-markov-models"></a>
-</h3>
-<p>Mixed Markov Models (MMM) provide an alternative clustering approach
-that uses an EM algorithm to discover latent subgroups with distinct
-transition dynamics. Unlike <code><a href="../reference/cluster_data.html">cluster_data()</a></code>, which clusters
-based on sequence dissimilarity, MMM directly models the transition
-probabilities within each component and assigns sequences
-probabilistically through soft assignments. The <code>covariates</code>
-argument integrates external variables into the EM algorithm, allowing
-mixing proportions to depend on observed characteristics.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"group_regulation_long"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">net_GR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"tna"</span>,</span>
-<span>                        action <span class="op">=</span> <span class="st">"Action"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>,</span>
-<span>                        time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">mmmCls</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mmm.html">build_mmm</a></span><span class="op">(</span><span class="va">net_GR</span>, k <span class="op">=</span> <span class="fl">2</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Group"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">mmmCls</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Mixed Markov Model</span></span>
-<span><span class="co">#&gt;   k = 2 | 2000 sequences | 9 states</span></span>
-<span><span class="co">#&gt;   LL = -45975.1 | BIC = 93181.5 | ICL = 93188.1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Cluster  Size  Mix%%   AvePP</span></span>
-<span><span class="co">#&gt;   ------------------------------</span></span>
-<span><span class="co">#&gt;         1  1001  50.1%  0.999</span></span>
-<span><span class="co">#&gt;         2   999  49.9%  0.999</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Overall AvePP = 0.999 | Entropy = 0.005 | Class.Err = 0.0%</span></span>
-<span><span class="co">#&gt;   Covariates:    Group (integrated, 1 predictors)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Cluster 1 (50.1%, n=1001) ---</span></span>
-<span><span class="co">#&gt;            adapt cohesion consensus coregulate discuss emotion monitor  plan</span></span>
-<span><span class="co">#&gt; adapt      0.000    0.278     0.460      0.030   0.070   0.111   0.035 0.016</span></span>
-<span><span class="co">#&gt; cohesion   0.000    0.007     0.448      0.166   0.084   0.113   0.053 0.129</span></span>
-<span><span class="co">#&gt; consensus  0.005    0.009     0.080      0.207   0.136   0.062   0.060 0.432</span></span>
-<span><span class="co">#&gt; coregulate 0.011    0.036     0.156      0.032   0.305   0.146   0.078 0.217</span></span>
-<span><span class="co">#&gt; discuss    0.120    0.033     0.214      0.096   0.222   0.099   0.028 0.011</span></span>
-<span><span class="co">#&gt; emotion    0.002    0.325     0.301      0.047   0.078   0.095   0.042 0.111</span></span>
-<span><span class="co">#&gt; monitor    0.011    0.061     0.159      0.064   0.381   0.086   0.018 0.207</span></span>
-<span><span class="co">#&gt; plan       0.001    0.019     0.287      0.011   0.075   0.116   0.076 0.416</span></span>
-<span><span class="co">#&gt; synthesis  0.302    0.037     0.387      0.067   0.088   0.075   0.021 0.023</span></span>
-<span><span class="co">#&gt;            synthesis</span></span>
-<span><span class="co">#&gt; adapt          0.000</span></span>
-<span><span class="co">#&gt; cohesion       0.000</span></span>
-<span><span class="co">#&gt; consensus      0.007</span></span>
-<span><span class="co">#&gt; coregulate     0.019</span></span>
-<span><span class="co">#&gt; discuss        0.176</span></span>
-<span><span class="co">#&gt; emotion        0.000</span></span>
-<span><span class="co">#&gt; monitor        0.014</span></span>
-<span><span class="co">#&gt; plan           0.000</span></span>
-<span><span class="co">#&gt; synthesis      0.000</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Cluster 2 (49.9%, n=999) ---</span></span>
-<span><span class="co">#&gt;            adapt cohesion consensus coregulate discuss emotion monitor  plan</span></span>
-<span><span class="co">#&gt; adapt      0.000    0.260     0.523      0.000   0.030   0.143   0.029 0.014</span></span>
-<span><span class="co">#&gt; cohesion   0.005    0.044     0.538      0.082   0.040   0.118   0.017 0.151</span></span>
-<span><span class="co">#&gt; consensus  0.004    0.020     0.083      0.171   0.233   0.082   0.035 0.364</span></span>
-<span><span class="co">#&gt; coregulate 0.022    0.036     0.109      0.013   0.235   0.203   0.096 0.266</span></span>
-<span><span class="co">#&gt; discuss    0.024    0.062     0.426      0.073   0.168   0.112   0.017 0.013</span></span>
-<span><span class="co">#&gt; emotion    0.003    0.326     0.337      0.023   0.122   0.062   0.032 0.091</span></span>
-<span><span class="co">#&gt; monitor    0.011    0.049     0.160      0.051   0.369   0.097   0.019 0.226</span></span>
-<span><span class="co">#&gt; plan       0.001    0.032     0.294      0.024   0.060   0.182   0.075 0.327</span></span>
-<span><span class="co">#&gt; synthesis  0.144    0.029     0.573      0.015   0.029   0.065   0.000 0.146</span></span>
-<span><span class="co">#&gt;            synthesis</span></span>
-<span><span class="co">#&gt; adapt          0.000</span></span>
-<span><span class="co">#&gt; cohesion       0.006</span></span>
-<span><span class="co">#&gt; consensus      0.008</span></span>
-<span><span class="co">#&gt; coregulate     0.019</span></span>
-<span><span class="co">#&gt; discuss        0.106</span></span>
-<span><span class="co">#&gt; emotion        0.005</span></span>
-<span><span class="co">#&gt; monitor        0.019</span></span>
-<span><span class="co">#&gt; plan           0.003</span></span>
-<span><span class="co">#&gt; synthesis      0.000</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Covariate Analysis (integrated into EM -- influences cluster membership) </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Cluster Profiles (numeric):</span></span>
-<span><span class="co">#&gt;  Cluster N (%)      Group Mean (SD) Group Median</span></span>
-<span><span class="co">#&gt;  1       1001 (50%) 150.45 (28.91)  150.00      </span></span>
-<span><span class="co">#&gt;  2       999 (50%)  50.45 (28.85)   50.00       </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Predictors of Membership (reference: Cluster 1):</span></span>
-<span><span class="co">#&gt;  Cluster Variable OR   95% CI       p      Sig</span></span>
-<span><span class="co">#&gt;  2       Group    0.15 [0.15, 0.15] &lt;0.001 ***</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Model: AIC = 25.3 | BIC = 36.5 | McFadden R-squared = 0.99</span></span></code></pre></div>
-<p>Building networks from the MMM result produces one network per
-discovered cluster:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">Mnets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">mmmCls</span><span class="op">)</span></span>
-<span><span class="va">Mnets</span></span>
-<span><span class="co">#&gt; Group Networks (2 groups)</span></span>
-<span><span class="co">#&gt;   Cluster 1: 9 nodes, 72 edges</span></span>
-<span><span class="co">#&gt;   Cluster 2: 9 nodes, 72 edges</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="post-hoc-covariate-analysis">Post-hoc Covariate Analysis<a class="anchor" aria-label="anchor" href="#post-hoc-covariate-analysis"></a>
 </h3>
-<p><code><a href="../reference/cluster_data.html">cluster_data()</a></code> supports post-hoc covariate analysis:
+<p><code><a href="../reference/build_clusters.html">build_clusters()</a></code> supports post-hoc covariate analysis:
 covariates do not influence the clustering but are analyzed after the
 fact to characterize who ends up in which cluster. This is the
 appropriate approach when the clustering should reflect behavioral
 patterns alone, and the researcher then asks whether those patterns are
 associated with external variables.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">Post</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_data.html">cluster_data</a></span><span class="op">(</span><span class="va">net_GR</span>, k <span class="op">=</span> <span class="fl">2</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Achiever"</span><span class="op">)</span><span class="op">)</span></span>
+<p>The <code>group_regulation_long</code> dataset contains
+self-regulated learning sequences annotated with an
+<code>Achiever</code> covariate distinguishing high and low
+achievers.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"group_regulation_long"</span><span class="op">)</span></span>
+<span><span class="va">net_GR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"tna"</span>,</span>
+<span>                        action <span class="op">=</span> <span class="st">"Action"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>,</span>
+<span>                        time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">Post</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net_GR</span>, k <span class="op">=</span> <span class="fl">2</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Achiever"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">Post</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Sequence Clustering Summary</span></span>
 <span><span class="co">#&gt;   Method:        pam </span></span>
@@ -742,13 +610,18 @@ associated with external variables.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Model: AIC = 2774.6 | BIC = 2785.8 | McFadden R-squared = 0.00</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Note: Covariates are post-hoc and do not influence cluster assignments.</span></span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt; Note: Covariates are post-hoc and do not influence cluster assignments.</span></span>
+<span><span class="co">#&gt;   cluster size mean_within_dist</span></span>
+<span><span class="co">#&gt; 1       1  982         10.69340</span></span>
+<span><span class="co">#&gt; 2       2 1018         18.59498</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Postgr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">Post</span><span class="op">)</span></span>
 <span><span class="va">Postgr</span></span>
-<span><span class="co">#&gt; Group Networks (2 groups)</span></span>
-<span><span class="co">#&gt;   Cluster 1: 9 nodes, 71 edges</span></span>
-<span><span class="co">#&gt;   Cluster 2: 9 nodes, 71 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Group Networks (2 clusters via pam / hamming)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Group      Nodes  Edges  Weights         N</span></span>
+<span><span class="co">#&gt;   Cluster 1  9      78     [0.001, 0.506]  982 (49.1%)</span></span>
+<span><span class="co">#&gt;   Cluster 2  9      78     [0.001, 0.494]  1018 (50.9%)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -757,121 +630,56 @@ associated with external variables.</p>
 <div class="section level3">
 <h3 id="theoretical-grounding-1">Theoretical Grounding<a class="anchor" aria-label="anchor" href="#theoretical-grounding-1"></a>
 </h3>
-<p>Probabilistic processes are commonly — and indeed best — represented
-mathematically as matrices, where rows represent nodes and columns
-denote direct probabilistic interactions between them. Several
-probabilistic network disciplines have recently become popular, most
-notably psychological networks, which estimate the conditional
-dependency structure among a set of variables. In psychological network
-analysis, variables (e.g., symptoms, traits, behaviors) are represented
-as nodes, and edges represent partial correlations — the association
-between two variables after controlling for all others. This approach
-reveals which variables are directly connected versus those whose
-association is mediated through other variables.</p>
+<p>Psychological network analysis estimates the conditional dependency
+structure among a set of variables. Variables (e.g., symptoms, traits,
+behaviors) are represented as nodes, and edges represent partial
+correlations — the association between two variables after controlling
+for all others. This approach reveals which variables are directly
+connected versus those whose association is mediated through other
+variables (Saqr et al., 2024).</p>
 <p><code>Nestimate</code> supports three estimation methods for
 psychological networks, all accessed through the same
-<code><a href="../reference/build_network.html">build_network()</a></code> interface.</p>
+<code><a href="../reference/build_network.html">build_network()</a></code> interface:</p>
+<ul>
+<li>
+<strong>Correlation networks</strong> (<code>method = "cor"</code>)
+estimate pairwise Pearson correlations and produce fully connected
+undirected networks. While informative as a starting point, they do not
+distinguish direct from indirect associations.</li>
+<li>
+<strong>Partial correlation networks</strong>
+(<code>method = "pcor"</code>) control for all other variables,
+revealing only direct associations. They provide a more accurate picture
+of the dependency structure, though results can be noisy in small
+samples.</li>
+<li>
+<strong>Regularized networks via EBICglasso</strong>
+(<code>method = "glasso"</code>) apply L1 regularization to the
+precision matrix, shrinking weak or unreliable edges to exactly zero.
+This is the recommended approach for psychological network analysis, as
+it balances model fit against complexity and produces sparse,
+interpretable, and replicable structures.</li>
+</ul>
 </div>
 <div class="section level3">
 <h3 id="data-1">Data<a class="anchor" aria-label="anchor" href="#data-1"></a>
 </h3>
-<p>The <code>srl_strategies</code> dataset contains frequency counts of
-9 self-regulated learning strategies for 250 students, falling into
-three clusters: metacognitive (Planning, Monitoring, Evaluating),
-cognitive (Elaboration, Organization, Rehearsal), and resource
-management (Help_Seeking, Time_Mgmt, Effort_Reg).</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">srl_strategies</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">srl_strategies</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Planning Monitoring Evaluating Elaboration Organization Rehearsal</span></span>
-<span><span class="co">#&gt; 1       13         15         13           5            3        13</span></span>
-<span><span class="co">#&gt; 2       14         11         12          10           25        19</span></span>
-<span><span class="co">#&gt; 3       24         20         22          14            3        10</span></span>
-<span><span class="co">#&gt; 4       19         18         15          17           27        13</span></span>
-<span><span class="co">#&gt; 5       17         21         15           8            5        12</span></span>
-<span><span class="co">#&gt; 6        4          6          5          26           24        25</span></span>
-<span><span class="co">#&gt;   Help_Seeking Time_Mgmt Effort_Reg</span></span>
-<span><span class="co">#&gt; 1           27        12         21</span></span>
-<span><span class="co">#&gt; 2           15        17         24</span></span>
-<span><span class="co">#&gt; 3            6        12         29</span></span>
-<span><span class="co">#&gt; 4           13        11         20</span></span>
-<span><span class="co">#&gt; 5            6         7          8</span></span>
-<span><span class="co">#&gt; 6           14        11         17</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="correlation-network">Correlation Network<a class="anchor" aria-label="anchor" href="#correlation-network"></a>
-</h3>
-<p>The simplest approach estimates pairwise Pearson correlations. This
-produces a fully connected undirected network where every pair of
-variables has an edge. While informative as a starting point,
-correlation networks do not distinguish direct from indirect
-associations.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net_cor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">srl_strategies</span>, method <span class="op">=</span> <span class="st">"cor"</span><span class="op">)</span></span>
-<span><span class="va">net_cor</span></span>
-<span><span class="co">#&gt; Correlation Network [undirected]</span></span>
-<span><span class="co">#&gt;   Sample size: 250</span></span>
-<span><span class="co">#&gt;   Weights: [-0.130, 0.485]  |  +26 / -10 edges</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;                Planning Monitoring Evaluating Elaboration Organization Rehearsal</span></span>
-<span><span class="co">#&gt;   Planning        0.000      0.423      0.358      -0.096       -0.083    -0.019</span></span>
-<span><span class="co">#&gt;   Monitoring      0.423      0.000      0.485       0.195        0.028     0.132</span></span>
-<span><span class="co">#&gt;   Evaluating      0.358      0.485      0.000       0.077        0.313     0.076</span></span>
-<span><span class="co">#&gt;   Elaboration    -0.096      0.195      0.077       0.000        0.432     0.341</span></span>
-<span><span class="co">#&gt;   Organization   -0.083      0.028      0.313       0.432        0.000     0.339</span></span>
-<span><span class="co">#&gt;   Rehearsal      -0.019      0.132      0.076       0.341        0.339     0.000</span></span>
-<span><span class="co">#&gt;   Help_Seeking   -0.108     -0.116      0.023       0.008        0.123    -0.130</span></span>
-<span><span class="co">#&gt;   Time_Mgmt       0.285      0.015      0.079      -0.033        0.085    -0.106</span></span>
-<span><span class="co">#&gt;   Effort_Reg     -0.010     -0.008      0.250       0.050        0.135     0.029</span></span>
-<span><span class="co">#&gt;                Help_Seeking Time_Mgmt Effort_Reg</span></span>
-<span><span class="co">#&gt;   Planning           -0.108     0.285     -0.010</span></span>
-<span><span class="co">#&gt;   Monitoring         -0.116     0.015     -0.008</span></span>
-<span><span class="co">#&gt;   Evaluating          0.023     0.079      0.250</span></span>
-<span><span class="co">#&gt;   Elaboration         0.008    -0.033      0.050</span></span>
-<span><span class="co">#&gt;   Organization        0.123     0.085      0.135</span></span>
-<span><span class="co">#&gt;   Rehearsal          -0.130    -0.106      0.029</span></span>
-<span><span class="co">#&gt;   Help_Seeking        0.000     0.209      0.176</span></span>
-<span><span class="co">#&gt;   Time_Mgmt           0.209     0.000      0.467</span></span>
-<span><span class="co">#&gt;   Effort_Reg          0.176     0.467      0.000</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="partial-correlation-network">Partial Correlation Network<a class="anchor" aria-label="anchor" href="#partial-correlation-network"></a>
-</h3>
-<p>Partial correlations control for all other variables, revealing
-direct associations only. If two variables are correlated solely because
-they share a common cause, their partial correlation will be near zero.
-This provides a more accurate picture of the dependency structure than
-zero-order correlations, though the resulting network can still be noisy
-in small samples.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net_pcor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">srl_strategies</span>, method <span class="op">=</span> <span class="st">"pcor"</span><span class="op">)</span></span>
-<span><span class="va">net_pcor</span></span>
-<span><span class="co">#&gt; Partial Correlation Network (unregularised) [undirected]</span></span>
-<span><span class="co">#&gt;   Sample size: 250</span></span>
-<span><span class="co">#&gt;   Weights: [-0.235, 0.502]  |  +21 / -15 edges</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;                Planning Monitoring Evaluating Elaboration Organization Rehearsal</span></span>
-<span><span class="co">#&gt;   Planning        0.000      0.268      0.283      -0.103       -0.146     0.046</span></span>
-<span><span class="co">#&gt;   Monitoring      0.268      0.000      0.432       0.274       -0.213     0.095</span></span>
-<span><span class="co">#&gt;   Evaluating      0.283      0.432      0.000      -0.156        0.406    -0.098</span></span>
-<span><span class="co">#&gt;   Elaboration    -0.103      0.274     -0.156       0.000        0.380     0.181</span></span>
-<span><span class="co">#&gt;   Organization   -0.146     -0.213      0.406       0.380        0.000     0.274</span></span>
-<span><span class="co">#&gt;   Rehearsal       0.046      0.095     -0.098       0.181        0.274     0.000</span></span>
-<span><span class="co">#&gt;   Help_Seeking   -0.121     -0.054      0.039       0.004        0.102    -0.144</span></span>
-<span><span class="co">#&gt;   Time_Mgmt       0.397     -0.007     -0.207      -0.031        0.158    -0.137</span></span>
-<span><span class="co">#&gt;   Effort_Reg     -0.235     -0.099      0.330       0.049       -0.092     0.096</span></span>
-<span><span class="co">#&gt;                Help_Seeking Time_Mgmt Effort_Reg</span></span>
-<span><span class="co">#&gt;   Planning           -0.121     0.397     -0.235</span></span>
-<span><span class="co">#&gt;   Monitoring         -0.054    -0.007     -0.099</span></span>
-<span><span class="co">#&gt;   Evaluating          0.039    -0.207      0.330</span></span>
-<span><span class="co">#&gt;   Elaboration         0.004    -0.031      0.049</span></span>
-<span><span class="co">#&gt;   Organization        0.102     0.158     -0.092</span></span>
-<span><span class="co">#&gt;   Rehearsal          -0.144    -0.137      0.096</span></span>
-<span><span class="co">#&gt;   Help_Seeking        0.000     0.161      0.051</span></span>
-<span><span class="co">#&gt;   Time_Mgmt           0.161     0.000      0.502</span></span>
-<span><span class="co">#&gt;   Effort_Reg          0.051     0.502      0.000</span></span></code></pre></div>
+<p>The <code>chatgpt_srl</code> dataset contains scale scores on five
+self-regulated learning (SRL) constructs — Comprehension and Study
+Understanding (CSU), Intrinsic Value (IV), Self-Efficacy (SE),
+Self-Regulation (SR), and Task Avoidance (TA) — for 1,000 responses
+generated by ChatGPT to a validated SRL questionnaire (Vogelsmeier et
+al., 2025).</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">chatgpt_srl</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chatgpt_srl</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        CSU       IV       SE       SR   TA</span></span>
+<span><span class="co">#&gt; 1 4.538462 5.222222 4.000000 3.222222 5.00</span></span>
+<span><span class="co">#&gt; 2 4.153846 4.333333 4.888889 4.333333 4.50</span></span>
+<span><span class="co">#&gt; 3 4.846154 5.111111 3.777778 4.666667 4.25</span></span>
+<span><span class="co">#&gt; 4 4.307692 4.222222 4.777778 3.777778 4.00</span></span>
+<span><span class="co">#&gt; 5 4.307692 4.777778 4.333333 4.111111 5.75</span></span>
+<span><span class="co">#&gt; 6 4.692308 3.777778 5.222222 3.888889 5.00</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="regularized-network-ebicglasso">Regularized Network (EBICglasso)<a class="anchor" aria-label="anchor" href="#regularized-network-ebicglasso"></a>
@@ -880,144 +688,64 @@ in small samples.</p>
 (the inverse of the covariance matrix), producing a sparse network where
 weak or unreliable edges are shrunk to exactly zero. The
 <code>gamma</code> parameter controls sparsity through EBIC model
-selection — higher values yield sparser networks. This is the
-recommended approach for psychological network analysis, as it balances
-model fit against complexity and produces interpretable, replicable
-network structures.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net_glasso</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">srl_strategies</span>, method <span class="op">=</span> <span class="st">"glasso"</span>,</span>
+selection — higher values yield sparser networks.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">net_glasso</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">chatgpt_srl</span>, method <span class="op">=</span> <span class="st">"glasso"</span>,</span>
 <span>                            params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gamma <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">net_glasso</span></span>
 <span><span class="co">#&gt; Partial Correlation Network (EBICglasso) [undirected]</span></span>
-<span><span class="co">#&gt;   Sample size: 250</span></span>
-<span><span class="co">#&gt;   Weights: [0.089, 0.413]  |  +13 / -0 edges</span></span>
+<span><span class="co">#&gt;   Sample size: 1000</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;                Planning Monitoring Evaluating Elaboration Organization Rehearsal</span></span>
-<span><span class="co">#&gt;   Planning        0.000      0.295      0.161       0.000        0.000     0.000</span></span>
-<span><span class="co">#&gt;   Monitoring      0.295      0.000      0.361       0.105        0.000     0.000</span></span>
-<span><span class="co">#&gt;   Evaluating      0.161      0.361      0.000       0.000        0.221     0.000</span></span>
-<span><span class="co">#&gt;   Elaboration     0.000      0.105      0.000       0.000        0.329     0.228</span></span>
-<span><span class="co">#&gt;   Organization    0.000      0.000      0.221       0.329        0.000     0.218</span></span>
-<span><span class="co">#&gt;   Rehearsal       0.000      0.000      0.000       0.228        0.218     0.000</span></span>
-<span><span class="co">#&gt;   Help_Seeking    0.000      0.000      0.000       0.000        0.000     0.000</span></span>
-<span><span class="co">#&gt;   Time_Mgmt       0.205      0.000      0.000       0.000        0.000     0.000</span></span>
-<span><span class="co">#&gt;   Effort_Reg      0.000      0.000      0.161       0.000        0.000     0.000</span></span>
-<span><span class="co">#&gt;                Help_Seeking Time_Mgmt Effort_Reg</span></span>
-<span><span class="co">#&gt;   Planning            0.000     0.205      0.000</span></span>
-<span><span class="co">#&gt;   Monitoring          0.000     0.000      0.000</span></span>
-<span><span class="co">#&gt;   Evaluating          0.000     0.000      0.161</span></span>
-<span><span class="co">#&gt;   Elaboration         0.000     0.000      0.000</span></span>
-<span><span class="co">#&gt;   Organization        0.000     0.000      0.000</span></span>
-<span><span class="co">#&gt;   Rehearsal           0.000     0.000      0.000</span></span>
-<span><span class="co">#&gt;   Help_Seeking        0.000     0.141      0.089</span></span>
-<span><span class="co">#&gt;   Time_Mgmt           0.141     0.000      0.413</span></span>
-<span><span class="co">#&gt;   Effort_Reg          0.089     0.413      0.000 </span></span>
+<span><span class="co">#&gt;       CSU IV SE SR TA</span></span>
+<span><span class="co">#&gt;   CSU   0  0  0  0  0</span></span>
+<span><span class="co">#&gt;   IV    0  0  0  0  0</span></span>
+<span><span class="co">#&gt;   SE    0  0  0  0  0</span></span>
+<span><span class="co">#&gt;   SR    0  0  0  0  0</span></span>
+<span><span class="co">#&gt;   TA    0  0  0  0  0 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Gamma: 0.50  |  Lambda: 0.1319</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="predictability">Predictability<a class="anchor" aria-label="anchor" href="#predictability"></a>
-</h3>
-<p>Node predictability measures how well each node is predicted by its
-neighbors (R-squared from the network structure). High predictability
-indicates that a node’s variance is largely explained by its direct
-connections in the network; low predictability suggests the node is
-driven by factors outside the estimated network.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/predictability.html">predictability</a></span><span class="op">(</span><span class="va">net_glasso</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">pred</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     Planning   Monitoring   Evaluating  Elaboration Organization    Rehearsal </span></span>
-<span><span class="co">#&gt;        0.251        0.316        0.332        0.241        0.279        0.161 </span></span>
-<span><span class="co">#&gt; Help_Seeking    Time_Mgmt   Effort_Reg </span></span>
-<span><span class="co">#&gt;        0.051        0.274        0.252</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="bootstrap-inference">Bootstrap Inference<a class="anchor" aria-label="anchor" href="#bootstrap-inference"></a>
-</h3>
-<p>Non-parametric bootstrap assesses edge stability, centrality
-stability, and provides significance tests for edge and centrality
-differences. The <code><a href="../reference/boot_glasso.html">boot_glasso()</a></code> function is specialized for
-graphical lasso networks, providing edge inclusion frequencies,
-confidence intervals, CS-coefficients, and pairwise difference tests in
-a single call.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">boot_gl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/boot_glasso.html">boot_glasso</a></span><span class="op">(</span><span class="va">net_glasso</span>, iter <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>                       centrality <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strength"</span>, <span class="st">"expected_influence"</span><span class="op">)</span>,</span>
-<span>                       seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></code></pre></div>
-<div class="section level4">
-<h4 id="edge-significance">Edge Significance<a class="anchor" aria-label="anchor" href="#edge-significance"></a>
-</h4>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot_gl</span>, type <span class="op">=</span> <span class="st">"edges"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                            edge     weight      ci_lower   ci_upper inclusion</span></span>
-<span><span class="co">#&gt; 36      Time_Mgmt -- Effort_Reg 0.32491515  0.2402787627 0.49995578     1.000</span></span>
-<span><span class="co">#&gt; 3      Monitoring -- Evaluating 0.30049766  0.2135739099 0.44420273     1.000</span></span>
-<span><span class="co">#&gt; 10  Elaboration -- Organization 0.26232453  0.1759094880 0.40494836     1.000</span></span>
-<span><span class="co">#&gt; 1        Planning -- Monitoring 0.22902145  0.1438835150 0.35852942     1.000</span></span>
-<span><span class="co">#&gt; 14     Elaboration -- Rehearsal 0.15760204  0.0554857192 0.28256604     0.998</span></span>
-<span><span class="co">#&gt; 9    Evaluating -- Organization 0.15443135  0.0724680604 0.38310566     0.998</span></span>
-<span><span class="co">#&gt; 15    Organization -- Rehearsal 0.15232840  0.0636729072 0.29191756     0.998</span></span>
-<span><span class="co">#&gt; 22        Planning -- Time_Mgmt 0.13034652  0.0414121518 0.37922397     0.989</span></span>
-<span><span class="co">#&gt; 2        Planning -- Evaluating 0.12953651  0.0535907183 0.29342854     0.994</span></span>
-<span><span class="co">#&gt; 31     Evaluating -- Effort_Reg 0.09309602  0.0000000000 0.30523777     0.953</span></span>
-<span><span class="co">#&gt; 28    Help_Seeking -- Time_Mgmt 0.06512062  0.0000000000 0.22045877     0.883</span></span>
-<span><span class="co">#&gt; 5     Monitoring -- Elaboration 0.03881843  0.0000000000 0.27775412     0.842</span></span>
-<span><span class="co">#&gt; 35   Help_Seeking -- Effort_Reg 0.01956134  0.0000000000 0.16452337     0.639</span></span>
-<span><span class="co">#&gt; 4       Planning -- Elaboration 0.00000000 -0.1765238132 0.00000000     0.569</span></span>
-<span><span class="co">#&gt; 6     Evaluating -- Elaboration 0.00000000 -0.1500953615 0.00000000     0.188</span></span>
-<span><span class="co">#&gt; 7      Planning -- Organization 0.00000000 -0.1700927401 0.00000000     0.597</span></span>
-<span><span class="co">#&gt; 8    Monitoring -- Organization 0.00000000 -0.2260417137 0.00000000     0.358</span></span>
-<span><span class="co">#&gt; 11        Planning -- Rehearsal 0.00000000 -0.0422651527 0.03811323     0.119</span></span>
-<span><span class="co">#&gt; 12      Monitoring -- Rehearsal 0.00000000  0.0000000000 0.14113867     0.465</span></span>
-<span><span class="co">#&gt; 13      Evaluating -- Rehearsal 0.00000000 -0.0797648695 0.02565436     0.141</span></span>
-<span><span class="co">#&gt; 16     Planning -- Help_Seeking 0.00000000 -0.1689276000 0.00000000     0.548</span></span>
-<span><span class="co">#&gt; 17   Monitoring -- Help_Seeking 0.00000000 -0.1325894747 0.00000000     0.525</span></span>
-<span><span class="co">#&gt; 18   Evaluating -- Help_Seeking 0.00000000  0.0000000000 0.07943598     0.109</span></span>
-<span><span class="co">#&gt; 19  Elaboration -- Help_Seeking 0.00000000 -0.0438698021 0.04286525     0.116</span></span>
-<span><span class="co">#&gt; 20 Organization -- Help_Seeking 0.00000000  0.0000000000 0.17705659     0.614</span></span>
-<span><span class="co">#&gt; 21    Rehearsal -- Help_Seeking 0.00000000 -0.2120800796 0.00000000     0.644</span></span>
-<span><span class="co">#&gt; 23      Monitoring -- Time_Mgmt 0.00000000 -0.0965496487 0.00000000     0.225</span></span>
-<span><span class="co">#&gt; 24      Evaluating -- Time_Mgmt 0.00000000 -0.1745304366 0.00000000     0.207</span></span>
-<span><span class="co">#&gt; 25     Elaboration -- Time_Mgmt 0.00000000 -0.0708145578 0.00000000     0.146</span></span>
-<span><span class="co">#&gt; 26    Organization -- Time_Mgmt 0.00000000  0.0000000000 0.14618494     0.306</span></span>
-<span><span class="co">#&gt; 27       Rehearsal -- Time_Mgmt 0.00000000 -0.1601119497 0.00000000     0.527</span></span>
-<span><span class="co">#&gt; 29       Planning -- Effort_Reg 0.00000000 -0.2377412472 0.00000000     0.503</span></span>
-<span><span class="co">#&gt; 30     Monitoring -- Effort_Reg 0.00000000 -0.1316710059 0.00000000     0.308</span></span>
-<span><span class="co">#&gt; 32    Elaboration -- Effort_Reg 0.00000000 -0.0001367775 0.07300666     0.164</span></span>
-<span><span class="co">#&gt; 33   Organization -- Effort_Reg 0.00000000  0.0000000000 0.09380279     0.336</span></span>
-<span><span class="co">#&gt; 34      Rehearsal -- Effort_Reg 0.00000000  0.0000000000 0.09946240     0.190</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="centrality-stability-1">Centrality Stability<a class="anchor" aria-label="anchor" href="#centrality-stability-1"></a>
-</h4>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot_gl</span>, type <span class="op">=</span> <span class="st">"centrality"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $strength</span></span>
-<span><span class="co">#&gt;           node      value   ci_lower  ci_upper</span></span>
-<span><span class="co">#&gt; 1     Planning 0.48890448 0.37253704 1.4995496</span></span>
-<span><span class="co">#&gt; 2   Monitoring 0.56833754 0.44124222 1.4631744</span></span>
-<span><span class="co">#&gt; 3   Evaluating 0.67756154 0.53015851 1.6425503</span></span>
-<span><span class="co">#&gt; 4  Elaboration 0.45874500 0.33341348 1.1808440</span></span>
-<span><span class="co">#&gt; 5 Organization 0.56908428 0.44195673 1.5442505</span></span>
-<span><span class="co">#&gt; 6    Rehearsal 0.30993044 0.22306635 0.9836351</span></span>
-<span><span class="co">#&gt; 7 Help_Seeking 0.08468196 0.01772335 0.8334546</span></span>
-<span><span class="co">#&gt; 8    Time_Mgmt 0.52038228 0.38168367 1.4554888</span></span>
-<span><span class="co">#&gt; 9   Effort_Reg 0.43757251 0.32045449 1.2261947</span></span>
+<span><span class="co">#&gt;   Predictability (R²):</span></span>
+<span><span class="co">#&gt;   CSU           0.000  </span></span>
+<span><span class="co">#&gt;   IV            0.000  </span></span>
+<span><span class="co">#&gt;   SE            0.000  </span></span>
+<span><span class="co">#&gt;   SR            0.000  </span></span>
+<span><span class="co">#&gt;   TA            0.000  </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $expected_influence</span></span>
-<span><span class="co">#&gt;           node      value    ci_lower  ci_upper</span></span>
-<span><span class="co">#&gt; 1     Planning 0.48890448  0.20691831 0.6142270</span></span>
-<span><span class="co">#&gt; 2   Monitoring 0.56833754  0.39864460 0.8304885</span></span>
-<span><span class="co">#&gt; 3   Evaluating 0.67756154  0.53015851 1.1390458</span></span>
-<span><span class="co">#&gt; 4  Elaboration 0.45874500  0.28614495 0.7207834</span></span>
-<span><span class="co">#&gt; 5 Organization 0.56908428  0.42522959 0.9582501</span></span>
-<span><span class="co">#&gt; 6    Rehearsal 0.30993044  0.09868951 0.4621349</span></span>
-<span><span class="co">#&gt; 7 Help_Seeking 0.08468196 -0.13814207 0.2614040</span></span>
-<span><span class="co">#&gt; 8    Time_Mgmt 0.52038228  0.36555268 0.8701167</span></span>
-<span><span class="co">#&gt; 9   Effort_Reg 0.43757251  0.30571131 0.7375021</span></span></code></pre></div>
+<span><span class="co">#&gt;   Gamma: 0.50  |  Lambda: 0.0517</span></span></code></pre></div>
 </div>
 </div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Saqr, M. (2024). Temporal Network Analysis: Introduction, Methods and
+Analysis with R. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Learning
+Analytics Methods and Tutorials: A Practical Guide Using R</em>.
+Springer. <a href="https://lamethods.org/book1/chapters/ch17-temporal-networks/ch17-tna.html" class="external-link uri">https://lamethods.org/book1/chapters/ch17-temporal-networks/ch17-tna.html</a></p>
+<p>Saqr, M., Beck, E., &amp; López-Pernas, S. (2024). Psychological
+Networks: A Modern Approach to Analysis of Learning and Complex Learning
+Processes. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Learning
+Analytics Methods and Tutorials: A Practical Guide Using R</em>.
+Springer. <a href="https://lamethods.org/book1/chapters/ch19-psychological-networks/ch19-psych.html" class="external-link uri">https://lamethods.org/book1/chapters/ch19-psychological-networks/ch19-psych.html</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2025a). Mapping
+Relational Dynamics with Transition Network Analysis: A Primer and
+Tutorial. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced Learning
+Analytics Methods: AI, Precision and Complexity</em>. Springer Nature
+Switzerland. <a href="https://lamethods.org/book2/chapters/ch15-tna/ch15-tna.html" class="external-link uri">https://lamethods.org/book2/chapters/ch15-tna/ch15-tna.html</a></p>
+<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K.,
+&amp; Tikka, S. (2025b). Transition network analysis: A novel framework
+for modeling, visualizing, and identifying the temporal patterns of
+learners and learning processes. <em>Proceedings of the 15th
+International Learning Analytics and Knowledge Conference (LAK25)</em>.
+ACM. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
+<p>López-Pernas, S., Tikka, S., &amp; Saqr, M. (2025). Mining Patterns
+and Clusters with Transition Network Analysis: A Heterogeneity Approach.
+In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced Learning Analytics
+Methods: AI, Precision and Complexity</em>. Springer Nature Switzerland.
+<a href="https://lamethods.org/book2/chapters/ch17-tna-clusters/ch17-tna-clusters.html" class="external-link uri">https://lamethods.org/book2/chapters/ch17-tna-clusters/ch17-tna-clusters.html</a></p>
+<p>Vogelsmeier, L.V.D.E., Oliveira, E., Misiejuk, K., López-Pernas, S.,
+&amp; Saqr, M. (2025). Delving into the psychology of Machines:
+Exploring the structure of self-regulated learning via LLM-generated
+survey responses. <em>Computers in Human Behavior</em>, 173, 108769. <a href="https://doi.org/10.1016/j.chb.2025.108769" class="external-link uri">https://doi.org/10.1016/j.chb.2025.108769</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

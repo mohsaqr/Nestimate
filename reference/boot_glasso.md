@@ -223,6 +223,10 @@ An object of class `"boot_glasso"` containing:
 ## Examples
 
 ``` r
+set.seed(1)
+dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+net <- build_network(dat, method = "glasso")
+bg <- boot_glasso(net, iter = 10, cs_iter = 5, centrality = "strength")
 # \donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
@@ -241,7 +245,7 @@ print(boot)
 #>     expected_influence:    0.00 [Unstable]
 #> 
 #>   Edge differences: 1/15 pairs significantly different
-#>   Timing: 0.4s (bootstrap: 0.2s, case-drop: 0.1s)
+#>   Timing: 0.3s (bootstrap: 0.2s, case-drop: 0.1s)
 summary(boot, type = "edges")
 #>     edge weight    ci_lower  ci_upper inclusion
 #> 1 A -- B      0 -0.15265878 0.3016145      0.24

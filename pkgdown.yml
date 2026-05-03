@@ -1,12 +1,13 @@
-pandoc: 3.1.11
+pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   clustering: clustering.html
-  co-occurrence-networks: co-occurrence-networks.html
-  psychological-networks: psychological-networks.html
+  markov-stability: markov-stability.html
+  sequence-comparison: sequence-comparison.html
+  sequence-plots: sequence-plots.html
   transition-networks: transition-networks.html
-last_built: 2026-04-01T11:49Z
+last_built: 2026-05-03T21:31Z
 urls:
   reference: https://mohsaqr.github.io/Nestimate/reference
   article: https://mohsaqr.github.io/Nestimate/articles

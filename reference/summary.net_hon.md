@@ -26,6 +26,23 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hon <- build_hon(seqs, max_order = 2)
+summary(hon)
+#> Higher-Order Network (HON) Summary
+#>   Nodes: 4 | Edges: 5 | Trajectories: 3
+#>   First-order states: A, B, C, D
+#>   Max order observed: 1 (requested: 2)
+#>   Min frequency: 1
+#>   Node order distribution:
+#>     Order 1: 4 nodes
+#>   from to    weight
+#> 1    3  1 0.3333333
+#> 2    4  1 1.0000000
+#> 3    1  2 1.0000000
+#> 4    2  3 1.0000000
+#> 5    3  4 0.6666667
+
 # \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),
@@ -41,5 +58,9 @@ summary(hon)
 #>   Min frequency: 1
 #>   Node order distribution:
 #>     Order 1: 3 nodes
+#>   from to weight
+#> 1    3  1      1
+#> 2    1  2      1
+#> 3    2  3      1
 # }
 ```

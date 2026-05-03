@@ -21,15 +21,28 @@ A data frame with columns `name`, `description`, `directed`.
 
 ``` r
 list_estimators()
-#>                 name                                    description directed
-#> 1          attention           Decay-weighted attention transitions     TRUE
-#> 2      co_occurrence                 Co-occurrence within sequences    FALSE
-#> 3                cor                   Pairwise correlation network    FALSE
-#> 4          frequency                Raw transition frequency counts     TRUE
-#> 5             glasso    EBICglasso regularized partial correlations    FALSE
-#> 6              ising Ising model (L1-penalized logistic regression)    FALSE
-#> 7               pcor             Unregularized partial correlations    FALSE
-#> 8           relative        Row-normalized transition probabilities     TRUE
-#> 9               wtna         Window-based TNA transitions (one-hot)     TRUE
-#> 10 wtna_cooccurrence       Window-based TNA co-occurrence (one-hot)    FALSE
+#>                 name                                                description
+#> 1          attention                       Decay-weighted attention transitions
+#> 2      co_occurrence                             Co-occurrence within sequences
+#> 3                cor                               Pairwise correlation network
+#> 4          frequency                            Raw transition frequency counts
+#> 5             glasso                EBICglasso regularized partial correlations
+#> 6              ising             Ising model (L1-penalized logistic regression)
+#> 7                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)
+#> 8               pcor                         Unregularized partial correlations
+#> 9           relative                    Row-normalized transition probabilities
+#> 10              wtna                     Window-based TNA transitions (one-hot)
+#> 11 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)
+#>    directed
+#> 1      TRUE
+#> 2     FALSE
+#> 3     FALSE
+#> 4      TRUE
+#> 5     FALSE
+#> 6     FALSE
+#> 7     FALSE
+#> 8     FALSE
+#> 9      TRUE
+#> 10     TRUE
+#> 11    FALSE
 ```

@@ -44,20 +44,15 @@ A `persistent_homology` object with:
 ## Examples
 
 ``` r
-# \donttest{
-seqs <- data.frame(
-  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
-  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
-)
-net <- build_network(seqs, method = "relative")
-ph <- persistent_homology(net, n_steps = 15)
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+ph <- persistent_homology(mat, n_steps = 10)
 print(ph)
 #> Persistent Homology
-#>   15 filtration steps [0.3636 → 0.0036]
-#>   Features: b0: 4 (1 persistent) 
+#>   10 filtration steps [0.6000 → 0.0060]
+#>   Features: b0: 3 (1 persistent) 
 #>   Longest-lived:
-#>     b0: 0.3636 → 0.0000 (life: 0.3636)
-#>     b0: 0.3636 → 0.3122 (life: 0.0514)
-#>     b0: 0.3636 → 0.3122 (life: 0.0514)
-# }
+#>     b0: 0.6000 → 0.0000 (life: 0.6000)
+#>     b0: 0.6000 → 0.4680 (life: 0.1320)
+#>     b0: 0.6000 → 0.5340 (life: 0.0660)
 ```

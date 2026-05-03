@@ -26,6 +26,19 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+set.seed(1)
+obs <- data.frame(id = rep(1:3, each = 5),
+                  A = rnorm(15), B = rnorm(15), C = rnorm(15))
+net_ml <- build_network(obs, method = "cor",
+                         params = list(id = "id"), level = "both")
+print(net_ml)
+#> Multilevel Network (method: cor)
+#> -- Between-person --
+#>   Nodes: 3  |  Edges: 3
+#>   Sample size: 3 (unique persons)
+#> -- Within-person --
+#>   Nodes: 3  |  Edges: 3
+#>   Sample size: 15 (observations)
 # \donttest{
 set.seed(1)
 obs <- data.frame(

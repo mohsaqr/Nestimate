@@ -26,7 +26,6 @@ d1+). Sorted by total descending.
 ## Examples
 
 ``` r
-# \donttest{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")
 sc <- build_simplicial(mat, threshold = 0.3)
@@ -35,5 +34,4 @@ simplicial_degree(sc)
 #> 1    A  1  2  1     3
 #> 2    B  1  2  1     3
 #> 3    C  1  2  1     3
-# }
 ```

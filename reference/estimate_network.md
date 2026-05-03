@@ -72,11 +72,9 @@ A `netobject` (see
 ## Examples
 
 ``` r
-# \donttest{
 data <- data.frame(A = c("x","y","z","x"), B = c("y","x","z","y"))
 net <- estimate_network(data, method = "relative")
 #> Warning: 'estimate_network' is deprecated.
 #> Use 'build_network' instead.
 #> See help("Deprecated")
-# }
 ```

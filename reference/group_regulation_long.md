@@ -52,14 +52,12 @@ package.
 ## Examples
 
 ``` r
-# \donttest{
-# Build a transition network per actor
 net <- build_network(group_regulation_long,
                      method = "relative",
                      actor = "Actor", action = "Action", time = "Time")
 net
 #> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.001, 0.498]  |  mean: 0.116
+#>   Weights: [0.001, 0.498]  |  mean: 0.115
 #> 
 #>   Weight matrix:
 #>              adapt cohesion consensus coregulate discuss emotion monitor  plan
@@ -93,47 +91,4 @@ net
 #>   synthesis     0.019  ████
 #>   coregulate    0.019  ████
 #>   adapt         0.011  ██
-
-# Group networks by achievement level
-nets <- build_network(group_regulation_long,
-                      method = "relative",
-                      actor = "Actor", action = "Action", time = "Time",
-                      groups = "Achiever")
-nets
-#> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.001, 0.498]  |  mean: 0.116
-#> 
-#>   Weight matrix:
-#>              adapt cohesion consensus coregulate discuss emotion monitor  plan
-#>   adapt      0.000    0.273     0.477      0.022   0.059   0.120   0.033 0.016
-#>   cohesion   0.003    0.027     0.498      0.119   0.060   0.116   0.033 0.141
-#>   consensus  0.005    0.015     0.082      0.188   0.188   0.073   0.047 0.396
-#>   coregulate 0.016    0.036     0.135      0.023   0.274   0.172   0.086 0.239
-#>   discuss    0.071    0.048     0.321      0.084   0.195   0.106   0.022 0.012
-#>   emotion    0.002    0.325     0.320      0.034   0.102   0.077   0.036 0.100
-#>   monitor    0.011    0.056     0.159      0.058   0.375   0.091   0.018 0.216
-#>   plan       0.001    0.025     0.290      0.017   0.068   0.147   0.076 0.374
-#>   synthesis  0.235    0.034     0.466      0.044   0.063   0.071   0.012 0.075
-#>              synthesis
-#>   adapt          0.000
-#>   cohesion       0.004
-#>   consensus      0.008
-#>   coregulate     0.019
-#>   discuss        0.141
-#>   emotion        0.003
-#>   monitor        0.016
-#>   plan           0.002
-#>   synthesis      0.000 
-#> 
-#>   Initial probabilities:
-#>   consensus     0.214  ████████████████████████████████████████
-#>   plan          0.204  ██████████████████████████████████████
-#>   discuss       0.175  █████████████████████████████████
-#>   emotion       0.151  ████████████████████████████
-#>   monitor       0.144  ███████████████████████████
-#>   cohesion      0.060  ███████████
-#>   synthesis     0.019  ████
-#>   coregulate    0.019  ████
-#>   adapt         0.011  ██
-# }
 ```

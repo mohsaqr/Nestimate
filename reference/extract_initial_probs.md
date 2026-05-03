@@ -35,12 +35,12 @@ for extracting an edge list.
 ## Examples
 
 ``` r
-# \donttest{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 net <- build_network(seqs, method = "relative")
 init_probs <- extract_initial_probs(net)
 print(init_probs)
 #>         A         B         C 
 #> 0.6666667 0.3333333 0.0000000 
-# }
+#> attr(,"class")
+#> [1] "nest_initial_probs" "numeric"           
 ```

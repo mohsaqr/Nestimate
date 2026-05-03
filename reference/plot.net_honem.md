@@ -31,11 +31,15 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
+hem <- build_honem(build_hon(seqs, max_order = 2), dim = 2)
+plot(hem)
+
+
 # \donttest{
 seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
 hon <- build_hon(seqs, max_order = 3)
 he <- build_honem(hon, dim = 2)
 plot(he)
-
 # }
 ```

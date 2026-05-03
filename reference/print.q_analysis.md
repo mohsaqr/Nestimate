@@ -26,19 +26,13 @@ The input object, invisibly.
 ## Examples
 
 ``` r
-# \donttest{
-seqs <- data.frame(
-  V1 = c("A","B","C","A","B"),
-  V2 = c("B","C","A","B","C"),
-  V3 = c("C","A","B","C","A")
-)
-net <- build_network(seqs, method = "relative")
-sc  <- build_simplicial(net, type = "clique")
-qa  <- q_analysis(sc)
+mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
+colnames(mat) <- rownames(mat) <- c("A","B","C")
+sc <- build_simplicial(mat, threshold = 0.3)
+qa <- q_analysis(sc)
 print(qa)
 #> Q-Analysis (max q = 2)
 #>   Components: q2:1 q1:1 q0:1
 #>   Fully connected at all q levels
 #>   Structure: A:2 B:2 C:2
-# }
 ```

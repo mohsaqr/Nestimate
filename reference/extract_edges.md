@@ -60,7 +60,6 @@ for network estimation.
 ## Examples
 
 ``` r
-# \donttest{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 net <- build_network(seqs, method = "relative")
 edges <- extract_edges(net, threshold = 0.05)
@@ -70,5 +69,4 @@ head(edges)
 #> 2    C  B 1.0000000
 #> 3    A  C 0.6666667
 #> 4    A  B 0.3333333
-# }
 ```

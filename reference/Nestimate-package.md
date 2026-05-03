@@ -2,14 +2,15 @@
 
 Estimate, compare, and analyze dynamic and psychological networks using
 a unified interface. Provides transition network analysis estimation
-(transition, frequency, co-occurrence, attention-weighted)
+(transition, frequency, co-occurrence, attention-weighted) Saqr et al.
+(2025)
 [doi:10.1145/3706468.3706513](https://doi.org/10.1145/3706468.3706513) ,
 psychological network methods (correlation, partial correlation,
-'graphical lasso', 'Ising')
+'graphical lasso', 'Ising') Saqr, Beck, and Lopez-Pernas (2024)
 [doi:10.1007/978-3-031-54464-4_19](https://doi.org/10.1007/978-3-031-54464-4_19)
-, and higher-order network methods including Higher-Order Network (HON),
-Higher-Order Network Embedding, Hyper-Path Anomaly, and Multi-Order
-Generative model. Supports bootstrap inference, permutation testing,
+, and higher-order network methods including higher-order networks,
+higher-order network embedding, hyper-path anomaly, and multi-order
+generative model. Supports bootstrap inference, permutation testing,
 split-half reliability, centrality stability analysis, mixed Markov
 models, multi-cluster multi-layer networks and clustering.
 

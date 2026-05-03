@@ -31,7 +31,6 @@ Atkin, R. H. (1974). *Mathematical Structure in Human Affairs*.
 ## Examples
 
 ``` r
-# \donttest{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")
 sc <- build_simplicial(mat, threshold = 0.3)
@@ -40,5 +39,4 @@ q_analysis(sc)
 #>   Components: q2:1 q1:1 q0:1
 #>   Fully connected at all q levels
 #>   Structure: A:2 B:2 C:2
-# }
 ```

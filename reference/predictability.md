@@ -18,9 +18,12 @@ edges).
 predictability(object, ...)
 
 # S3 method for class 'netobject'
-predictability(object, ...)
+predictability(object, data = NULL, ...)
 
 # S3 method for class 'netobject_ml'
+predictability(object, ...)
+
+# S3 method for class 'netobject_group'
 predictability(object, ...)
 ```
 
@@ -46,6 +49,8 @@ A named numeric vector of predictability values per node.
 
 A list with `within` and `between` predictability vectors.
 
+A named list of per-group predictability vectors.
+
 ## References
 
 Haslbeck, J. M. B., & Waldorp, L. J. (2018). How well do network models
@@ -56,13 +61,14 @@ models. *Behavior Research Methods*, 50(2), 853–861.
 ## Examples
 
 ``` r
-# \donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
 colnames(mat) <- LETTERS[1:4]
 net <- build_network(as.data.frame(mat), method = "glasso")
 predictability(net)
-#> A B C D 
-#> 0 0 0 0 
-# }
+#>   node R2      RMSE
+#> 1    A  0 0.9904791
+#> 2    B  0 1.3109578
+#> 3    C  0 0.9630332
+#> 4    D  0 1.0523124
 ```

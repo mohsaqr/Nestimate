@@ -26,6 +26,14 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
+  method = "relative")
+boot <- bootstrap_network(net, iter = 10)
+print(boot)
+#> Bootstrap Network  [Transition Network (relative) | directed]
+#>   Iterations : 10  |  Nodes : 3
+#>   Edges      : 0 significant / 3 total
+#>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 # \donttest{
 set.seed(1)
 seqs <- data.frame(

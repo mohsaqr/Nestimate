@@ -65,6 +65,7 @@ an error with installation instructions.
 
 ### Workflow
 
+
     # Full MCML workflow
     net <- build_network(data, method = "relative")
     net$nodes$clusters <- group_assignments
@@ -107,16 +108,11 @@ mat <- matrix(runif(36), 6, 6)
 rownames(mat) <- colnames(mat) <- LETTERS[1:6]
 clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"), G3 = c("E", "F"))
 cs <- cluster_summary(mat, clusters, type = "tna")
+#> Error in cluster_summary(mat, clusters, type = "tna"): unused argument (type = "tna")
 tna_models <- as_tna(cs)
+#> Error: object 'cs' not found
 tna_models
-#> Group Networks (4 groups)
-#>   macro: 3 nodes, 6 edges
-#>   G1: 2 nodes, 2 edges
-#>   G2: 2 nodes, 2 edges
-#>   G3: 2 nodes, 2 edges
+#> Error: object 'tna_models' not found
 tna_models$macro$weights
-#>           G1        G2        G3
-#> G1 0.3605522 0.3496602 0.2897876
-#> G2 0.2108219 0.3460607 0.4431174
-#> G3 0.4029241 0.2495898 0.3474861
+#> Error: object 'tna_models' not found
 ```

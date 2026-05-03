@@ -21,11 +21,20 @@ summary(object, ...)
 
 ## Value
 
-The input object, invisibly.
+A tidy data frame with one row per cluster and columns `cluster`,
+`size`, `within_total`, `between_out`, `between_in`. Prints the full
+object to the console as a side effect.
 
 ## Examples
 
 ``` r
+seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
+clusters <- list(G1 = c("A","B"), G2 = c("C"))
+cs <- build_mcml(seqs, clusters)
+summary(cs)
+#>   cluster size within_total between_out between_in
+#> 1      G1    2            1   0.3333333  1.0000000
+#> 2      G2    1            0   1.0000000  0.3333333
 # \donttest{
 seqs <- data.frame(
   T1 = c("A","B","A"), T2 = c("B","C","B"),
@@ -34,20 +43,8 @@ seqs <- data.frame(
 clusters <- c("Alpha", "Beta", "Alpha")
 cs <- build_mcml(seqs, clusters, type = "raw")
 summary(cs)
-#> MCML Network
-#> ============
-#> Type: raw  | Method: sum 
-#> Nodes: 3  | Clusters: 2 
-#> Transitions: 9 
-#>   Macro: 6  | Per-cluster: 3 
-#> 
-#> Clusters:
-#>   Alpha (2): A, C
-#>   Beta (1): B
-#> 
-#> Macro (cluster-level) weights:
-#>       Alpha Beta
-#> Alpha     3    3
-#> Beta      3    0
+#>   cluster size within_total between_out between_in
+#> 1   Alpha    2            3           3          3
+#> 2    Beta    1            0           3          3
 # }
 ```

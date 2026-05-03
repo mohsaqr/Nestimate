@@ -31,6 +31,14 @@ A data frame or list of data frames depending on `type`.
 ## Examples
 
 ``` r
+set.seed(1)
+dat <- as.data.frame(matrix(rnorm(60), ncol = 3))
+bg <- boot_glasso(dat, iter = 10, cs_iter = 5, centrality = "strength")
+summary(bg, type = "edges")
+#>       edge weight   ci_lower  ci_upper inclusion
+#> 1 V1 -- V2      0 -0.4571610 0.3104397       0.5
+#> 2 V1 -- V3      0  0.0000000 0.5580800       0.8
+#> 3 V2 -- V3      0 -0.4873358 0.0000000       0.6
 # \donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
