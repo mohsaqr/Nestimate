@@ -907,7 +907,10 @@ test_that("print.netobject_group shows group info", {
   out <- capture.output(print(nets))
   expect_true(any(grepl("Group Networks", out)))
   expect_true(any(grepl("3 groups", out)))
-  expect_true(any(grepl("X:", out)))
+  # Each group label appears in the per-group table.
+  expect_true(any(grepl("\\bX\\b", out)))
+  expect_true(any(grepl("\\bY\\b", out)))
+  expect_true(any(grepl("\\bZ\\b", out)))
 })
 
 test_that("print.netobject_group returns invisible(x)", {

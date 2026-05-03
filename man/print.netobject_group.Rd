@@ -4,10 +4,14 @@
 \alias{print.netobject_group}
 \title{Print Method for Group Network Object}
 \usage{
-\method{print}{netobject_group}(x, ...)
+\method{print}{netobject_group}(x, digits = 3L, ...)
 }
 \arguments{
 \item{x}{A \code{netobject_group}.}
+
+\item{digits}{Integer. Decimal places for the weight summary. Default
+\code{3}. Non-breaking: \code{print(x)} keeps the same shape as
+before, with the addition of a weight-range column.}
 
 \item{...}{Additional arguments (ignored).}
 }
@@ -15,7 +19,13 @@
 The input object, invisibly.
 }
 \description{
-Print Method for Group Network Object
+Compact summary of a \code{netobject_group}. Header surfaces the source
+(a clustering attached by \code{\link{cluster_network}} or
+\code{\link{cluster_mmm}}, or a plain split by \code{group_col}). The
+per-group table carries node and edge counts, weight range, and -- when
+a clustering attribute is present -- N and percentage of sequences per
+cluster (matching the layout used by \code{\link{print.net_clustering}}
+and \code{\link{print.net_mmm}}).
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","A","B"), V2 = c("B","A","B","A"),

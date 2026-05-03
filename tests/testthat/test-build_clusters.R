@@ -159,7 +159,7 @@ test_that("print.net_clustering works", {
   expect_true(any(grepl("Sequence Clustering", out)))
   expect_true(any(grepl("pam", out)))
   expect_true(any(grepl("hamming", out)))
-  expect_true(any(grepl("Silhouette", out)))
+  expect_true(any(grepl("silhouette", out, ignore.case = TRUE)))
 })
 
 test_that("summary.net_clustering works", {

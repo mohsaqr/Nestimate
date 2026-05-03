@@ -6,6 +6,91 @@
 # type = "distribution" - dispatches to distribution_plot().
 # ==============================================================================
 
+# ---- Input extraction helper ------------------------------------------------
+#' Extract sequence data and clustering info from various input types
+#'
+#' Supports: data.frame, matrix, net_clustering, netobject, netobject_group,
+#' net_mmm. Returns a list with data, group (assignments), and clustering info.
+#' @noRd
+.extract_seqplot_input <- function(x, group = NULL) {
+  clustering <- NULL
+  data <- NULL
+
+
+  # --- net_clustering (from build_clusters) ---
+  if (inherits(x, "net_clustering")) {
+    data <- x$data
+    if (is.null(group)) group <- x$assignments
+    clustering <- x
+  }
+  # --- net_mmm (from build_mmm) ---
+  else if (inherits(x, "net_mmm")) {
+    data <- x$models[[1L]]$data
+    if (is.null(group)) group <- x$assignments
+    # No distance matrix in MMM; clustering info for reference only
+    clustering <- list(assignments = x$assignments, k = x$k)
+  }
+  # --- netobject_group (from cluster_network / build_network on clustering) ---
+  else if (inherits(x, "netobject_group")) {
+    cl <- attr(x, "clustering")
+    # Prefer the full N-row data carried by the clustering attribute --
+    # cluster_network() splits per-cluster $data subsets into each member,
+    # so x[[1L]]$data has only n1 rows whereas $assignments has all N.
+    # cluster_mmm() now stashes the same full data to make this invariant.
+    if (!is.null(cl) && !is.null(cl$data)) {
+      data <- cl$data
+      if (is.null(group)) group <- cl$assignments
+      clustering <- cl
+    } else {
+      # Fallback: no clustering attribute (plain group_col split). Rebuild
+      # the full sequence frame from per-group subsets and label rows by
+      # their group membership.
+      parts <- lapply(seq_along(x), function(i) x[[i]]$data)
+      if (any(vapply(parts, is.null, logical(1L)))) {
+        stop("netobject_group members have no $data; rebuild with ",
+             "build_network() carrying data, or pass the original ",
+             "clustering object instead.", call. = FALSE)
+      }
+      data <- do.call(rbind, parts)
+      if (is.null(group)) {
+        labs <- if (!is.null(names(x))) names(x) else as.character(seq_along(x))
+        group <- factor(rep(labs, vapply(parts, NROW, integer(1L))),
+                        levels = labs)
+      }
+    }
+  }
+  # --- netobject (single network) ---
+  else if (inherits(x, "netobject") || inherits(x, "cograph_network")) {
+    if (is.null(x$data)) {
+      stop("netobject has no $data. Pass the original sequence data.",
+           call. = FALSE)
+    }
+    data <- x$data
+  }
+  # --- tna model ---
+  else if (inherits(x, "tna")) {
+    if (is.null(x$data) || is.null(x$labels)) {
+      stop("tna object missing $data or $labels.", call. = FALSE)
+    }
+    # Decode integer matrix back to state names
+    decoded <- matrix(x$labels[x$data], nrow = nrow(x$data),
+                      ncol = ncol(x$data))
+    colnames(decoded) <- colnames(x$data)
+    data <- as.data.frame(decoded, stringsAsFactors = FALSE)
+  }
+  # --- data.frame or matrix (pass through) ---
+  else if (is.data.frame(x) || is.matrix(x)) {
+    data <- x
+  }
+  else {
+    stop("Unsupported input type: ", paste(class(x), collapse = ", "),
+         ". Expected data.frame, matrix, netobject, netobject_group, ",
+         "net_clustering, net_mmm, or tna.", call. = FALSE)
+  }
+
+  list(data = data, group = group, clustering = clustering)
+}
+
 #' Sequence Plot (heatmap, index, or distribution)
 #'
 #' Single entry point for three categorical-sequence visualisations.
@@ -19,9 +104,21 @@
 #'     \code{\link{distribution_plot}}.
 #' }
 #'
-#' @param x Wide-format sequence data (\code{data.frame} or \code{matrix})
-#'   or a \code{net_clustering}. One row per sequence, one column per
-#'   time point.
+#' @param x Wide-format sequence data. Accepts:
+#'   \describe{
+#'     \item{data.frame / matrix}{Rows = sequences, columns = time points.}
+#'     \item{netobject}{Extracts \code{$data}.}
+#'     \item{net_clustering}{From \code{\link{build_clusters}}. Uses
+#'       \code{$data}, \code{$assignments} for grouping, and \code{$distance}
+#'       for dendrogram.}
+#'     \item{netobject_group}{From \code{\link{cluster_network}} or
+#'       \code{\link{build_network}} on a clustering. Extracts data and
+#'       assignments from \code{attr(, "clustering")}.
+#'     }
+#'     \item{net_mmm}{From \code{\link{build_mmm}}. Uses \code{$models[[1]]$data}
+#'       and \code{$assignments}.}
+#'     \item{tna}{From the tna package. Decodes integer-encoded sequences.}
+#'   }
 #' @param type One of \code{"heatmap"} (default), \code{"index"}, or
 #'   \code{"distribution"}.
 #' @param sort Row-ordering strategy for heatmap / within-panel for index.
@@ -181,20 +278,24 @@ sequence_plot <- function(x,
                                    legend, legend_size, legend_title,
                                    legend_ncol, legend_border, legend_bty) {
 
-  if (inherits(x, "net_clustering")) {
-    if (is.null(tree)) {
-      hc_method <- if (x$method %in% c("ward.D", "ward.D2", "single",
-                                       "complete", "average", "mcquitty",
-                                       "median", "centroid")) {
-        x$method
-      } else "ward.D2"
-      tree <- stats::hclust(stats::as.dist(x$distance), method = hc_method)
-    }
-    x <- x$data
+  # Extract data from various input types
+  extracted <- .extract_seqplot_input(x)
+  clustering <- extracted$clustering
+  sort_used <- sort
+
+  # Build dendrogram from clustering distance matrix if available
+  if (!is.null(clustering) && is.null(tree) && !is.null(clustering$distance)) {
+    hc_method <- if (!is.null(clustering$method) &&
+                     clustering$method %in% c("ward.D", "ward.D2", "single",
+                                              "complete", "average", "mcquitty",
+                                              "median", "centroid")) {
+      clustering$method
+    } else "ward.D2"
+    tree <- stats::hclust(stats::as.dist(clustering$distance), method = hc_method)
     sort_used <- "net_clustering"
-  } else {
-    sort_used <- sort
   }
+
+  x <- extracted$data
 
   enc        <- .encode_states(x)
   codes      <- enc$codes
@@ -300,10 +401,11 @@ sequence_plot <- function(x,
   stopifnot(is.numeric(row_gap), length(row_gap) == 1L,
             row_gap >= 0, row_gap < 1)
 
-  if (inherits(x, "net_clustering")) {
-    group <- x$assignments
-    x <- x$data
-  }
+  # Extract data and group from various input types
+  extracted <- .extract_seqplot_input(x, group)
+  x <- extracted$data
+  group <- extracted$group
+
   if (!is.null(group)) {
     stopifnot(length(group) == nrow(x))
     group <- as.factor(group)

@@ -4,10 +4,14 @@
 \alias{print.net_mmm}
 \title{Print Method for net_mmm}
 \usage{
-\method{print}{net_mmm}(x, ...)
+\method{print}{net_mmm}(x, digits = 3L, ...)
 }
 \arguments{
 \item{x}{A \code{net_mmm} object.}
+
+\item{digits}{Integer. Decimal places for floating-point statistics.
+Default \code{3}. Non-breaking: \code{print(x)} keeps the same
+alignment as before.}
 
 \item{...}{Additional arguments (ignored).}
 }
@@ -15,7 +19,11 @@
 The input object, invisibly.
 }
 \description{
-Print Method for net_mmm
+Compact summary of a Mixed Markov Model fit. Header carries dimensions
+and information criteria; cluster table carries N, mixing share, and
+per-cluster average posterior probability (AvePP). Layout matches
+\code{\link{print.net_clustering}} so distance- and model-based
+clusterings can be compared at a glance.
 }
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),

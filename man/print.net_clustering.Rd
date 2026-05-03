@@ -4,10 +4,14 @@
 \alias{print.net_clustering}
 \title{Print Method for net_clustering}
 \usage{
-\method{print}{net_clustering}(x, ...)
+\method{print}{net_clustering}(x, digits = 3L, ...)
 }
 \arguments{
 \item{x}{A \code{net_clustering} object.}
+
+\item{digits}{Integer. Decimal places used for floating-point statistics
+in the printout. Default \code{3}. Non-breaking: existing
+\code{print(x)} calls keep their previous formatting.}
 
 \item{...}{Additional arguments (ignored).}
 }
@@ -15,7 +19,11 @@
 The input object, invisibly.
 }
 \description{
-Print Method for net_clustering
+Compact, fixed-width summary of a sequence-clustering result. The header
+carries the clustering method and dissimilarity; the per-cluster table
+carries cluster size (count and percentage) and mean within-cluster
+distance when available. Optional medoid and covariate lines surface
+only when those fields are populated.
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),

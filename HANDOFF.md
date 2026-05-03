@@ -1,78 +1,84 @@
-# Session Handoff — 2026-05-02
+# Session Handoff — 2026-05-03
 
 ## Completed
 
-### `.extract_edges_from_matrix()` self-loop fix (R/estimate_network.R:273)
+### Unified `sequence_plot()` input types
 
-The helper used by `.wrap_netobject()` to populate every netobject's
-`$edges` data.frame was silently filtering the diagonal:
+Added `.extract_seqplot_input()` helper in `R/sequence_plot.R` that normalizes
+various input types. Both `sequence_plot()` and `distribution_plot()` now accept:
 
-```r
-# before
-if (directed) {
-  idx <- which(mat != 0 & row(mat) != col(mat), arr.ind = TRUE)
-} else {
-  idx <- which(upper.tri(mat) & mat != 0, arr.ind = TRUE)
-}
-# after
-if (directed) {
-  idx <- which(mat != 0, arr.ind = TRUE)
-} else {
-  idx <- which(mat != 0 & row(mat) <= col(mat), arr.ind = TRUE)
-}
-```
+| Input | Extracts |
+|-------|----------|
+| `netobject` | `$data` |
+| `netobject_group` | first network's `$data` + `attr(,"clustering")$assignments` |
+| `net_mmm` | `$models[[1]]$data` + `$assignments` |
+| `tna` | decoded `$data` using `$labels` |
+| `net_clustering` | `$data` + `$assignments` (unchanged) |
+| `data.frame` / `matrix` | pass through (unchanged) |
 
-Result: every netobject built by `build_network()`, `build_mcml()`,
-`build_mmm()`, `bootstrap_network()`, `wtna()`, or `as_tna()` now has
-`$edges` containing every non-zero matrix entry (including the
-diagonal), matching `$weights`. Previously `$weights` and `$edges`
-silently disagreed on any matrix with a non-zero diagonal — the
-canonical case being MCML macros, where diagonal entries represent
-intra-cluster retention.
+Files modified:
+- `R/sequence_plot.R` — added helper, updated `.sequence_plot_heatmap()` and `.sequence_plot_index()`
+- `R/distribution_plot.R` — updated to use same helper
 
-Symptom that triggered the investigation:
-`cograph::centrality_degree(MCMLL_tna$macro)` returned 10 while
-`cograph::centrality_degree(MCMLL_tna$macro$weights)` returned 12 on a
-6-cluster fully-connected macro. The matrix path goes through
-`igraph::graph_from_adjacency_matrix(weighted = TRUE)` which keeps the
-diagonal; the netobject path went through cograph's
-`network_to_igraph()` which builds from `$edges` and so saw a
-loop-free graph.
+### `cluster_mmm()` now returns `netobject_group`
+
+Changed from alias (`cluster_mmm <- build_mmm`) to proper wrapper that returns
+`netobject_group` with MMM info in `attr(,"clustering")`. Parallels `cluster_network()`.
+
+| Function | Returns | Breaking? |
+|----------|---------|-----------|
+| `build_mmm()` | `net_mmm` | Unchanged |
+| `cluster_mmm()` | `netobject_group` | No (was unused alias) |
+| `cluster_network()` | `netobject_group` | Unchanged |
+
+File modified: `R/mmm.R`
+
+### Updated clustering vignette
+
+`vignettes/clustering.Rmd` now shows:
+- Comparison table of `cluster_network()` vs `cluster_mmm()`
+- Both return `netobject_group`
+- `sequence_plot()` works with both
+- Clear workflow: `build_*` for full objects, `cluster_*` for `netobject_group`
 
 ## Current State
 
-- All 7 internal callers of `.extract_edges_from_matrix()` re-checked;
-  none assumed loop-free edges.
-- Nestimate test suite: 781 tests, 0 failures, 0 errors, 18
-  environment-gated equiv skips (set `NESTIMATE_EQUIV_TESTS=true` to
-  run those).
-- cograph regression test added on its side
-  (`tests/testthat/test-validate-nestimate-bootstrap-permutation.R`)
-  that asserts `centrality(netobj) == centrality(netobj$weights)` when
-  `diag(weights) != 0`. Passes with this Nestimate.
+- All changes staged but NOT committed
+- Tests pass:
+  - `sequence_plot`: 84 pass
+  - `distribution_plot`: 19 pass
+  - `mmm`: 104 pass
+  - `cluster`: 440 pass (5 failures are pre-existing tna export issue)
+- Documentation regenerated via `devtools::document()`
 
-## Open Issues
+## Files Changed (staged)
 
-- Existing on-disk netobjects saved before this fix still have
-  loop-free `$edges`. They will keep producing wrong centrality counts
-  until rebuilt. No migration helper provided — users should rebuild
-  from sequence/matrix data.
+```
+R/distribution_plot.R
+R/mmm.R
+R/sequence_plot.R
+man/bootstrap_network.Rd
+man/cluster_mmm.Rd
+man/distribution_plot.Rd
+man/sequence_plot.Rd
+vignettes/clustering.Rmd
+```
 
 ## Next Steps
 
-- Optional: have cograph add a defensive fallback in
-  `network_to_igraph()` that prefers `$weights` over `$edges` when
-  both are present and the diagonals disagree. This was deliberately
-  *not* added in this session because the source-of-truth fix here is
-  preferred. Reconsider only if users hit the legacy-object case
-  often.
-- Bump `Nestimate` dev version when ready and note the bug fix in the
-  next CRAN release line.
+1. Review changes and commit:
+   ```r
+   git commit -m "feat(clustering): unify sequence_plot input types and cluster_mmm output"
+   git push
+   ```
+
+2. Optional: Consider standardizing clustering output structure across all functions
+   (discussed but deferred — current design keeps `build_clusters()` as clustering-only,
+   `build_mmm()` as full MMM object, and `cluster_*` functions for `netobject_group`).
 
 ## Context
 
-- File touched: `R/estimate_network.R` (one helper, ~5 lines).
-- Verified end-to-end via synthetic 6-cluster MCML reproduction:
-  `nrow($macro$edges)` went from 30 → 36 (the missing 6 self-loops),
-  `centrality_degree($macro)` went from 10 → 12 matching the matrix
-  path.
+User wanted consistency between clustering functions:
+- `cluster_network()` and `cluster_mmm()` both return `netobject_group`
+- `sequence_plot()` accepts all network/clustering object types
+- No breaking changes to existing APIs

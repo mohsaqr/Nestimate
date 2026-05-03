@@ -11,7 +11,8 @@ bootstrap_network(
   inference = "stability",
   consistency_range = c(0.75, 1.25),
   edge_threshold = NULL,
-  seed = NULL
+  seed = NULL,
+  boundary = c("inclusive", "strict")
 )
 }
 \arguments{

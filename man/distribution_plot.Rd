@@ -33,8 +33,10 @@ distribution_plot(
 )
 }
 \arguments{
-\item{x}{Wide-format sequence data (\code{data.frame} or \code{matrix})
-or a \code{net_clustering}. When a \code{net_clustering} is passed,
+\item{x}{Wide-format sequence data. Accepts the same inputs as
+\code{\link{sequence_plot}}: \code{data.frame}, \code{matrix},
+\code{netobject}, \code{net_clustering}, \code{netobject_group},
+\code{net_mmm}, or \code{tna}. When clustering info is available,
 one panel is drawn per cluster.}
 
 \item{group}{Optional grouping vector (length \code{nrow(x)}) producing

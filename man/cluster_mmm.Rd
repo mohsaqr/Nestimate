@@ -39,33 +39,46 @@ character vector, string, or data.frame (same forms as
 membership during estimation. Requires the \pkg{nnet} package.}
 }
 \value{
-A \code{net_mmm} object. See \code{\link{build_mmm}} for details.
+A \code{netobject_group} (list of \code{netobject}s, one per
+cluster). MMM-specific information is stored in
+\code{attr(, "clustering")}:
+\describe{
+\item{assignments}{Integer vector of cluster assignments.}
+\item{k}{Number of clusters.}
+\item{posterior}{N x k matrix of posterior probabilities.}
+\item{mixing}{Mixing proportions.}
+\item{quality}{List with AvePP, entropy, classification error.}
+\item{BIC, AIC, ICL}{Model fit statistics.}
+}
 }
 \description{
-Convenience alias for \code{\link{build_mmm}}. Fits a mixture of Markov
-chains to sequence data and returns per-component transition networks with
-EM-fitted initial state probabilities.
+Fits a mixture of Markov chains to sequence data and returns a
+\code{netobject_group} containing per-cluster transition networks.
+This is the MMM equivalent of \code{\link{cluster_network}} (which uses
+distance-based clustering).
 }
 \details{
-Use \code{\link{build_network}} on the result to extract per-cluster
-networks with any estimation method, or use \code{\link{cluster_network}}
-for a one-shot clustering + network call.
+For the full \code{net_mmm} object with posterior probabilities, model
+fit statistics, and S3 methods, use \code{\link{build_mmm}} instead.
 }
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))
-mmm <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-mmm
+grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+grp[[1]]$weights
+attr(grp, "clustering")$assignments
 \donttest{
+# Visualize with sequence_plot
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 40, TRUE),
   V2 = sample(LETTERS[1:3], 40, TRUE),
   V3 = sample(LETTERS[1:3], 40, TRUE)
 )
-mmm <- cluster_mmm(seqs, k = 2)
-print(mmm)
+grp <- cluster_mmm(seqs, k = 2)
+sequence_plot(grp, type = "index")
 }
 }
 \seealso{
-\code{\link{build_mmm}}, \code{\link{cluster_network}}
+\code{\link{build_mmm}} for the full MMM object,
+\code{\link{cluster_network}} for distance-based clustering
 }

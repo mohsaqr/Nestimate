@@ -712,9 +712,46 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
 # 6. S3 Methods
 # ==============================================================================
 
+# ------------------------------------------------------------------------------
+# Shared formatter for cluster summary tables.
+#
+# `cols` is a named list of vectors (length k each). The first column drives
+# row count; all other columns must match that length. Returns a character
+# vector of formatted lines, indented and headed by a separator rule. Used by
+# print.net_clustering / print.net_mmm / print.net_mmm_clustering /
+# print.netobject_group so a netobject_group built by cluster_network() and
+# one built by cluster_mmm() print with the same shape.
+# ------------------------------------------------------------------------------
+.cluster_table_lines <- function(cols, indent = "  ") {
+  stopifnot(is.list(cols), length(cols) >= 1L, !is.null(names(cols)))
+  k <- length(cols[[1L]])
+  if (k == 0L) return(character(0L))
+  df <- as.data.frame(cols, stringsAsFactors = FALSE,
+                      check.names = FALSE)
+  out <- utils::capture.output(
+    print(df, row.names = FALSE, right = FALSE, max = 1e6)
+  )
+  paste0(indent, out)
+}
+
+# Helper: format size + percentage as a "30 (50.0%)" string.
+.fmt_size_pct <- function(sizes, total = sum(sizes)) {
+  pct <- if (isTRUE(total > 0)) sizes / total * 100 else rep(0, length(sizes))
+  sprintf("%d (%4.1f%%)", as.integer(sizes), pct)
+}
+
 #' Print Method for net_clustering
 #'
+#' Compact, fixed-width summary of a sequence-clustering result. The header
+#' carries the clustering method and dissimilarity; the per-cluster table
+#' carries cluster size (count and percentage) and mean within-cluster
+#' distance when available. Optional medoid and covariate lines surface
+#' only when those fields are populated.
+#'
 #' @param x A \code{net_clustering} object.
+#' @param digits Integer. Decimal places used for floating-point statistics
+#'   in the printout. Default \code{3}. Non-breaking: existing
+#'   \code{print(x)} calls keep their previous formatting.
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
@@ -736,26 +773,63 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
 #' }
 #'
 #' @export
-print.net_clustering <- function(x, ...) {
-  cat("Sequence Clustering\n")
-  cat("  Method:       ", x$method, "\n")
-  cat("  Dissimilarity:", x$dissimilarity,
-      if (x$weighted) sprintf("(weighted, lambda = %g)", x$lambda) else "",
-      "\n")
-  cat("  Clusters:     ", x$k, "\n")
-  cat("  Silhouette:   ", round(x$silhouette, 4), "\n")
-  cat("  Cluster sizes:", paste(x$sizes, collapse = ", "), "\n")
-  if (!is.null(x$medoids)) {
-    cat("  Medoids:      ", paste(x$medoids, collapse = ", "), "\n")
+print.net_clustering <- function(x, digits = 3L, ...) {
+  digits <- as.integer(digits)
+  k <- as.integer(x$k)
+  sizes <- as.integer(x$sizes)
+  n_total <- sum(sizes)
+
+  diss_lab <- if (isTRUE(x$weighted)) {
+    sprintf("%s (weighted, lambda = %g)", x$dissimilarity, x$lambda)
+  } else {
+    x$dissimilarity
   }
+
+  cat(sprintf("Sequence Clustering [%s]\n", x$method))
+  cat(sprintf("  Sequences: %d  |  Clusters: %d\n", n_total, k))
+  cat(sprintf("  Dissimilarity: %s\n", diss_lab))
+  if (!is.null(x$silhouette)) {
+    cat(sprintf("  Quality: silhouette = %.*f\n",
+                digits, x$silhouette))
+  }
+
+  # Per-cluster mean within-cluster distance, when distance matrix is present.
+  mean_within <- rep(NA_real_, k)
+  if (!is.null(x$distance) && !is.null(x$assignments) && k > 0L) {
+    dmat <- as.matrix(x$distance)
+    for (cl in seq_len(k)) {
+      members <- which(x$assignments == cl)
+      if (length(members) > 1L) {
+        sub <- dmat[members, members]
+        mean_within[cl] <- mean(sub[lower.tri(sub)])
+      } else {
+        mean_within[cl] <- 0
+      }
+    }
+  }
+
+  cat("\n")
+  cols <- list(
+    Cluster = sprintf("%d", seq_len(k)),
+    N       = .fmt_size_pct(sizes, n_total)
+  )
+  if (!all(is.na(mean_within))) {
+    cols[["Mean within-dist"]] <- sprintf(paste0("%.", digits, "f"),
+                                          mean_within)
+  }
+  if (!is.null(x$medoids) && length(x$medoids) == k) {
+    cols[["Medoid"]] <- as.character(x$medoids)
+  }
+  cat(paste(.cluster_table_lines(cols), collapse = "\n"), "\n", sep = "")
+
   if (!is.null(x$covariates)) {
     cov_names <- setdiff(
       unique(x$covariates$coefficients$variable), "(Intercept)"
     )
-    cat("  Covariates:   ",
-        paste(cov_names, collapse = ", "),
-        sprintf("(post-hoc, %d predictors)", length(cov_names)), "\n")
+    cat(sprintf("\n  Covariates: %s (post-hoc, %d predictors)\n",
+                paste(cov_names, collapse = ", "), length(cov_names)))
   }
+
   invisible(x)
 }
 

@@ -706,7 +706,16 @@ compare_mmm <- function(data, k = 2:5, ...) {
 
 #' Print Method for net_mmm
 #'
+#' Compact summary of a Mixed Markov Model fit. Header carries dimensions
+#' and information criteria; cluster table carries N, mixing share, and
+#' per-cluster average posterior probability (AvePP). Layout matches
+#' \code{\link{print.net_clustering}} so distance- and model-based
+#' clusterings can be compared at a glance.
+#'
 #' @param x A \code{net_mmm} object.
+#' @param digits Integer. Decimal places for floating-point statistics.
+#'   Default \code{3}. Non-breaking: \code{print(x)} keeps the same
+#'   alignment as before.
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
@@ -728,31 +737,47 @@ compare_mmm <- function(data, k = 2:5, ...) {
 #' }
 #'
 #' @export
-print.net_mmm <- function(x, ...) {
-  cat("Mixed Markov Model\n")
-  cat(sprintf("  k = %d | %d sequences | %d states\n",
-              x$k, x$n_sequences, length(x$states)))
-  cat(sprintf("  LL = %.1f | BIC = %.1f | ICL = %.1f\n",
-              x$log_likelihood, x$BIC, x$ICL))
+print.net_mmm <- function(x, digits = 3L, ...) {
+  digits <- as.integer(digits)
+  k <- as.integer(x$k)
+  n_total <- as.integer(x$n_sequences)
 
-  # Cluster table
-  cat("\n  Cluster  Size  Mix%%   AvePP\n")
-  cat("  " , strrep("-", 30), "\n", sep = "")
-  for (m in seq_len(x$k)) {
-    n_in <- sum(x$assignments == m)
-    cat(sprintf("  %7d  %4d  %4.1f%%  %.3f\n",
-                m, n_in, x$mixing[m] * 100, x$quality$avepp[m]))
+  cat("Mixed Markov Model\n")
+  cat(sprintf("  Sequences: %d  |  Clusters: %d  |  States: %d\n",
+              n_total, k, length(x$states)))
+  cat(sprintf("  ICs: LL = %.*f  |  BIC = %.*f  |  AIC = %.*f  |  ICL = %.*f\n",
+              digits, x$log_likelihood, digits, x$BIC,
+              digits, x$AIC, digits, x$ICL))
+  if (!is.null(x$quality)) {
+    cat(sprintf(
+      "  Quality: AvePP = %.*f  |  Entropy = %.*f  |  Class.Err = %.1f%%\n",
+      digits, x$quality$avepp_overall, digits, x$quality$entropy,
+      x$quality$classification_error * 100))
   }
-  cat(sprintf("\n  Overall AvePP = %.3f | Entropy = %.3f | Class.Err = %.1f%%\n",
-              x$quality$avepp_overall, x$quality$entropy,
-              x$quality$classification_error * 100))
+  if (isFALSE(x$converged)) {
+    cat(sprintf("  Status: did not converge in %d iterations\n",
+                as.integer(x$iterations)))
+  }
+
+  cat("\n")
+  sizes <- as.integer(tabulate(x$assignments, nbins = k))
+  cols <- list(
+    Cluster = sprintf("%d", seq_len(k)),
+    N       = .fmt_size_pct(sizes, n_total),
+    `Mix%`  = sprintf("%4.1f%%", as.numeric(x$mixing) * 100),
+    AvePP   = sprintf(paste0("%.", digits, "f"),
+                      as.numeric(x$quality$avepp))
+  )
+  cat(paste(.cluster_table_lines(cols), collapse = "\n"), "\n", sep = "")
+
   if (!is.null(x$covariates)) {
     cov_names <- setdiff(
       unique(x$covariates$coefficients$variable), "(Intercept)"
     )
-    cat(sprintf("  Covariates:    %s (integrated, %d predictors)\n",
+    cat(sprintf("\n  Covariates: %s (integrated, %d predictors)\n",
                 paste(cov_names, collapse = ", "), length(cov_names)))
   }
+
   invisible(x)
 }
 
@@ -993,35 +1018,134 @@ plot.mmm_compare <- function(x, ...) {
 }
 
 # ---------------------------------------------------------------------------
-# cluster_mmm — convenience alias for build_mmm
+# cluster_mmm — wrapper returning netobject_group (parallel to cluster_network)
 # ---------------------------------------------------------------------------
 
 #' Cluster sequences using Mixed Markov Models
 #'
-#' Convenience alias for \code{\link{build_mmm}}. Fits a mixture of Markov
-#' chains to sequence data and returns per-component transition networks with
-#' EM-fitted initial state probabilities.
+#' Fits a mixture of Markov chains to sequence data and returns a
+#' \code{netobject_group} containing per-cluster transition networks.
+#' This is the MMM equivalent of \code{\link{cluster_network}} (which uses
+#' distance-based clustering).
 #'
-#' Use \code{\link{build_network}} on the result to extract per-cluster
-#' networks with any estimation method, or use \code{\link{cluster_network}}
-#' for a one-shot clustering + network call.
+#' For the full \code{net_mmm} object with posterior probabilities, model
+#' fit statistics, and S3 methods, use \code{\link{build_mmm}} instead.
 #'
 #' @inheritParams build_mmm
-#' @return A \code{net_mmm} object. See \code{\link{build_mmm}} for details.
-#' @seealso \code{\link{build_mmm}}, \code{\link{cluster_network}}
+#' @return A \code{netobject_group} (list of \code{netobject}s, one per
+#'   cluster). MMM-specific information is stored in
+#'   \code{attr(, "clustering")}:
+#'   \describe{
+#'     \item{assignments}{Integer vector of cluster assignments.}
+#'     \item{k}{Number of clusters.}
+#'     \item{posterior}{N x k matrix of posterior probabilities.}
+#'     \item{mixing}{Mixing proportions.}
+#'     \item{quality}{List with AvePP, entropy, classification error.}
+#'     \item{BIC, AIC, ICL}{Model fit statistics.}
+#'   }
+#' @seealso \code{\link{build_mmm}} for the full MMM object,
+#'   \code{\link{cluster_network}} for distance-based clustering
 #' @examples
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
 #'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' mmm <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-#' mmm
+#' grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' grp[[1]]$weights
+#' attr(grp, "clustering")$assignments
 #' \donttest{
+#' # Visualize with sequence_plot
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 40, TRUE),
 #'   V2 = sample(LETTERS[1:3], 40, TRUE),
 #'   V3 = sample(LETTERS[1:3], 40, TRUE)
 #' )
-#' mmm <- cluster_mmm(seqs, k = 2)
-#' print(mmm)
+#' grp <- cluster_mmm(seqs, k = 2)
+#' sequence_plot(grp, type = "index")
 #' }
 #' @export
-cluster_mmm <- build_mmm
+cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
+                        tol = 1e-6, smooth = 0.01, seed = NULL,
+                        covariates = NULL) {
+  mmm <- build_mmm(data = data, k = k, n_starts = n_starts,
+                   max_iter = max_iter, tol = tol, smooth = smooth,
+                   seed = seed, covariates = covariates)
+
+  # Extract networks as the main list
+  grp <- mmm$models
+  if (is.null(names(grp))) names(grp) <- paste0("Cluster ", seq_along(grp))
+
+  # Store all MMM info (except $models) in clustering attribute. Also stash
+  # the full sequence data so .extract_seqplot_input() and other consumers
+  # of `attr(, "clustering")$data` get an N-row frame matching $assignments
+  # (matches the invariant set by cluster_network()).
+  clustering_info <- mmm[setdiff(names(mmm), "models")]
+  full_data <- if (length(grp) > 0L) grp[[1L]]$data else NULL
+  if (!is.null(full_data)) clustering_info$data <- full_data
+  class(clustering_info) <- "net_mmm_clustering"
+  attr(grp, "clustering") <- clustering_info
+  attr(grp, "group_col") <- "cluster"
+
+  class(grp) <- "netobject_group"
+  grp
+}
+
+#' Print Method for MMM Clustering Attribute
+#'
+#' Prints the clustering metadata that \code{\link{cluster_mmm}} attaches
+#' to its \code{netobject_group} return value (\code{attr(grp, "clustering")}).
+#' Layout mirrors \code{\link{print.net_clustering}}: a one-line dimension
+#' header, a quality line with AvePP / entropy / classification error,
+#' information criteria, and a per-cluster table.
+#'
+#' @param x A \code{net_mmm_clustering} object.
+#' @param digits Integer. Decimal places for floating-point statistics.
+#'   Default \code{3}.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return The input object, invisibly.
+#'
+#' @examples
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
+#'                    V2 = sample(c("A","B","C"), 30, TRUE))
+#' grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' print(attr(grp, "clustering"))
+#'
+#' @export
+print.net_mmm_clustering <- function(x, digits = 3L, ...) {
+  digits <- as.integer(digits)
+  k <- as.integer(x$k)
+  n_total <- as.integer(x$n_sequences)
+
+  cat("MMM Clustering [k = ", k, "]\n", sep = "")
+  cat(sprintf("  Sequences: %d  |  Clusters: %d\n", n_total, k))
+  if (!is.null(x$quality)) {
+    cat(sprintf(
+      "  Quality: AvePP = %.*f  |  Entropy = %.*f  |  Class.Err = %.1f%%\n",
+      digits, x$quality$avepp_overall, digits, x$quality$entropy,
+      x$quality$classification_error * 100))
+  }
+  if (!is.null(x$BIC)) {
+    cat(sprintf("  ICs: BIC = %.*f  |  AIC = %.*f  |  ICL = %.*f\n",
+                digits, x$BIC, digits, x$AIC, digits, x$ICL))
+  }
+
+  cat("\n")
+  sizes <- as.integer(tabulate(x$assignments, nbins = k))
+  cols <- list(
+    Cluster = sprintf("%d", seq_len(k)),
+    N       = .fmt_size_pct(sizes, n_total),
+    `Mix%`  = sprintf("%4.1f%%", as.numeric(x$mixing) * 100),
+    AvePP   = sprintf(paste0("%.", digits, "f"),
+                      as.numeric(x$quality$avepp))
+  )
+  cat(paste(.cluster_table_lines(cols), collapse = "\n"), "\n", sep = "")
+
+  if (!is.null(x$covariates)) {
+    cov_names <- setdiff(
+      unique(x$covariates$coefficients$variable), "(Intercept)"
+    )
+    cat(sprintf("\n  Covariates: %s (integrated, %d predictors)\n",
+                paste(cov_names, collapse = ", "), length(cov_names)))
+  }
+
+  invisible(x)
+}

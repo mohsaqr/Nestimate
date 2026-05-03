@@ -10,8 +10,10 @@
 #' renders the result as a stacked area (default) or stacked bar chart.
 #' Accepts the same inputs as \code{\link{sequence_plot}}.
 #'
-#' @param x Wide-format sequence data (\code{data.frame} or \code{matrix})
-#'   or a \code{net_clustering}. When a \code{net_clustering} is passed,
+#' @param x Wide-format sequence data. Accepts the same inputs as
+#'   \code{\link{sequence_plot}}: \code{data.frame}, \code{matrix},
+#'   \code{netobject}, \code{net_clustering}, \code{netobject_group},
+#'   \code{net_mmm}, or \code{tna}. When clustering info is available,
 #'   one panel is drawn per cluster.
 #' @param group Optional grouping vector (length \code{nrow(x)}) producing
 #'   one panel per group. Ignored if \code{x} is a \code{net_clustering}.
@@ -103,10 +105,11 @@ distribution_plot <- function(x,
   stopifnot(is.numeric(legend_size), length(legend_size) == 1L,
             legend_size > 0)
 
-  if (inherits(x, "net_clustering")) {
-    group <- x$assignments
-    x <- x$data
-  }
+  # Extract data and group from various input types
+  extracted <- .extract_seqplot_input(x, group)
+  x <- extracted$data
+  group <- extracted$group
+
   if (!is.null(group)) {
     stopifnot(length(group) == nrow(x))
     group <- as.factor(group)

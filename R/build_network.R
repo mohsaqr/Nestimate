@@ -724,7 +724,18 @@ print.netobject <- function(x, ...) {
 
 #' Print Method for Group Network Object
 #'
+#' Compact summary of a \code{netobject_group}. Header surfaces the source
+#' (a clustering attached by \code{\link{cluster_network}} or
+#' \code{\link{cluster_mmm}}, or a plain split by \code{group_col}). The
+#' per-group table carries node and edge counts, weight range, and -- when
+#' a clustering attribute is present -- N and percentage of sequences per
+#' cluster (matching the layout used by \code{\link{print.net_clustering}}
+#' and \code{\link{print.net_mmm}}).
+#'
 #' @param x A \code{netobject_group}.
+#' @param digits Integer. Decimal places for the weight summary. Default
+#'   \code{3}. Non-breaking: \code{print(x)} keeps the same shape as
+#'   before, with the addition of a weight-range column.
 #' @param ... Additional arguments (ignored).
 #'
 #' @return The input object, invisibly.
@@ -746,13 +757,79 @@ print.netobject <- function(x, ...) {
 #' }
 #'
 #' @export
-print.netobject_group <- function(x, ...) {
-  grps <- names(x)
-  cat(sprintf("Group Networks (%d groups)\n", length(grps)))
-  for (g in grps) {
-    net <- x[[g]]
-    cat(sprintf("  %s: %d nodes, %d edges\n", g, net$n_nodes, net$n_edges))
+print.netobject_group <- function(x, digits = 3L, ...) {
+  digits <- as.integer(digits)
+  grps   <- names(x)
+  if (is.null(grps) || any(grps == "")) {
+    grps <- paste0("Group ", seq_along(x))
   }
+  k <- length(grps)
+  cl <- attr(x, "clustering")
+
+  # ---- Header --------------------------------------------------------
+  if (inherits(cl, "net_mmm_clustering")) {
+    cat(sprintf("Group Networks (%d clusters from MMM)\n", k))
+  } else if (inherits(cl, "net_clustering")) {
+    cat(sprintf("Group Networks (%d clusters via %s / %s)\n",
+                k, cl$method, cl$dissimilarity))
+  } else {
+    group_col <- attr(x, "group_col")
+    if (!is.null(group_col)) {
+      cat(sprintf("Group Networks (%d groups, group_col: %s)\n",
+                  k, group_col))
+    } else {
+      cat(sprintf("Group Networks (%d groups)\n", k))
+    }
+  }
+
+  # ---- Per-group table ----------------------------------------------
+  nodes_v <- integer(k)
+  edges_v <- integer(k)
+  wmin_v  <- numeric(k)
+  wmax_v  <- numeric(k)
+  for (i in seq_len(k)) {
+    net <- x[[i]]
+    nodes_v[i] <- as.integer(net$n_nodes %||% 0L)
+    edges_v[i] <- as.integer(net$n_edges %||% 0L)
+    mat <- net$weights
+    if (!is.null(mat)) {
+      nz <- if (isTRUE(net$directed)) mat[mat != 0] else
+        mat[mat != 0 & row(mat) <= col(mat)]
+      if (length(nz) > 0L) {
+        wmin_v[i] <- min(nz); wmax_v[i] <- max(nz)
+      } else {
+        wmin_v[i] <- NA_real_; wmax_v[i] <- NA_real_
+      }
+    } else {
+      wmin_v[i] <- NA_real_; wmax_v[i] <- NA_real_
+    }
+  }
+
+  weights_str <- ifelse(
+    is.na(wmin_v),
+    "--",
+    sprintf(paste0("[%.", digits, "f, %.", digits, "f]"), wmin_v, wmax_v)
+  )
+
+  cat("\n")
+  cols <- list(
+    Group   = grps,
+    Nodes   = sprintf("%d", nodes_v),
+    Edges   = sprintf("%d", edges_v),
+    Weights = weights_str
+  )
+
+  # If a clustering attribute provides assignments, append N + %.
+  if (!is.null(cl) && !is.null(cl$assignments)) {
+    sizes <- as.integer(tabulate(cl$assignments, nbins = k))
+    n_total <- sum(sizes)
+    if (n_total > 0L) {
+      cols[["N"]] <- .fmt_size_pct(sizes, n_total)
+    }
+  }
+
+  cat(paste(.cluster_table_lines(cols), collapse = "\n"), "\n", sep = "")
+
   invisible(x)
 }
 
