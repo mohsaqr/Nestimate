@@ -98,7 +98,7 @@ tmp/mlvar_equivalence_20seeds.R."><meta property="og:image" content="https://moh
 
     <div class="ref-description section level2">
     <p>Estimates three networks from ESM/EMA panel data, matching
-<code>mlVAR::mlVAR()</code> with <code>estimator = "lmer"</code>, <code>temporal = "fixed"</code>,
+<code><a href="https://rdrr.io/pkg/mlVAR/man/mlVAR.html" class="external-link">mlVAR::mlVAR()</a></code> with <code>estimator = "lmer"</code>, <code>temporal = "fixed"</code>,
 <code>contemporaneous = "fixed"</code> at machine precision: (1) a directed
 temporal network of fixed-effect lagged regression coefficients, (2)
 an undirected contemporaneous network of partial correlations among
@@ -120,7 +120,7 @@ and lmer residual SDs.</p></li>
 <li><p>Between-subjects network:
 <code>cor2pcor(pseudoinverse(forcePositive(D (I - Gamma))))</code>.</p></li>
 </ol><p>Validated to machine precision (max_diff &lt; 1e-10) against
-<code>mlVAR::mlVAR()</code> on 25 real ESM datasets from <code>openesm</code> and 20 simulated
+<code><a href="https://rdrr.io/pkg/mlVAR/man/mlVAR.html" class="external-link">mlVAR::mlVAR()</a></code> on 25 real ESM datasets from <code>openesm</code> and 20 simulated
 configurations (seeds 201-220). See <code>tmp/mlvar_equivalence_real20.R</code> and
 <code>tmp/mlvar_equivalence_20seeds.R</code>.</p>
     </div>

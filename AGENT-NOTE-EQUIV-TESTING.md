@@ -76,7 +76,7 @@ divergence point.
 
 - [`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md)
   → verify temporal/contemporaneous/between matrices against
-  `mlVAR::mlVAR()` directly
+  [`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) directly
 - [`build_gimme()`](https://mohsaqr.github.io/Nestimate/reference/build_gimme.md)
   → verify against
   [`gimme::gimme()`](https://rdrr.io/pkg/gimme/man/gimmeSEM.html)

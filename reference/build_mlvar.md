@@ -1,12 +1,13 @@
 # Build a Multilevel Vector Autoregression (mlVAR) network
 
 Estimates three networks from ESM/EMA panel data, matching
-`mlVAR::mlVAR()` with `estimator = "lmer"`, `temporal = "fixed"`,
-`contemporaneous = "fixed"` at machine precision: (1) a directed
-temporal network of fixed-effect lagged regression coefficients, (2) an
-undirected contemporaneous network of partial correlations among
-residuals, and (3) an undirected between-subjects network of partial
-correlations derived from the person-mean fixed effects.
+[`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) with
+`estimator = "lmer"`, `temporal = "fixed"`, `contemporaneous = "fixed"`
+at machine precision: (1) a directed temporal network of fixed-effect
+lagged regression coefficients, (2) an undirected contemporaneous
+network of partial correlations among residuals, and (3) an undirected
+between-subjects network of partial correlations derived from the
+person-mean fixed effects.
 
 \#' @details The algorithm follows mlVAR's lmer pipeline exactly:
 
@@ -32,8 +33,9 @@ correlations derived from the person-mean fixed effects.
     `cor2pcor(pseudoinverse(forcePositive(D (I - Gamma))))`.
 
 Validated to machine precision (max_diff \< 1e-10) against
-`mlVAR::mlVAR()` on 25 real ESM datasets from `openesm` and 20 simulated
-configurations (seeds 201-220). See `tmp/mlvar_equivalence_real20.R` and
+[`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) on 25 real
+ESM datasets from `openesm` and 20 simulated configurations (seeds
+201-220). See `tmp/mlvar_equivalence_real20.R` and
 `tmp/mlvar_equivalence_20seeds.R`.
 
 ## Usage

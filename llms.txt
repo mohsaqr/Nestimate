@@ -165,8 +165,9 @@ three pillars of mlVAR analysis in a single function call:
 - **Between-subjects** (undirected) — partial correlations of person
   means: who differs from whom
 
-Machine-precision equivalence to `mlVAR::mlVAR()` validated across 25
-real ESM datasets, runs 1.45× faster.
+Machine-precision equivalence to
+[`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) validated
+across 25 real ESM datasets, runs 1.45× faster.
 
 ``` r
 
