@@ -334,6 +334,34 @@ test_that("cluster_mmm accepts cluster_by + extra ... without erroring", {
 # cluster_data() deprecation alias
 # ==============================================================================
 
+# ==============================================================================
+# plot.net_mmm_clustering (the attribute object plot method)
+# ==============================================================================
+
+test_that("plot.net_mmm_clustering: posterior produces a ggplot", {
+  d <- .make_clust_data()
+  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  cl <- attr(grp, "clustering")
+
+  p <- plot(cl, type = "posterior")
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot.net_mmm_clustering: predictors is alias for covariates, errors w/o covariates", {
+  d <- .make_clust_data()
+  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  cl <- attr(grp, "clustering")
+
+  # No covariates set on this run -> both predictors and covariates error
+  # with the same message.
+  expect_error(plot(cl, type = "covariates"), "No covariate analysis")
+  expect_error(plot(cl, type = "predictors"), "No covariate analysis")
+})
+
+# ==============================================================================
+# cluster_data() deprecation alias
+# ==============================================================================
+
 test_that("cluster_data() forwards to build_clusters() with a deprecation warning", {
   d <- .make_clust_data()
 

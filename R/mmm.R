@@ -1180,3 +1180,55 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
 
   invisible(x)
 }
+
+#' Plot Method for MMM Clustering Attribute
+#'
+#' Plot routines for the MMM clustering metadata attached to a
+#' \code{netobject_group} by \code{\link{cluster_mmm}} (or
+#' \code{\link{cluster_network}} with \code{cluster_by = "mmm"}).
+#' Mirrors the type-driven surface of
+#' \code{\link{plot.net_clustering}} but covers only the metrics the EM
+#' fit produces -- there is no distance matrix on an MMM clustering, so
+#' \code{"silhouette"} / \code{"mds"} / \code{"heatmap"} aren't defined
+#' here. The \code{netobject_group} dispatcher
+#' (\code{\link{plot.netobject_group}}) raises a clear error if you ask
+#' for one of those on an MMM result.
+#'
+#' @param x A \code{net_mmm_clustering} object.
+#' @param type Character. One of \code{"posterior"} (default; histogram of
+#'   max posterior probability per sequence, coloured by cluster),
+#'   \code{"covariates"} or its alias \code{"predictors"} (covariate
+#'   forest plot when \code{cluster_mmm()} was run with \code{covariates}).
+#' @param ... Currently unused.
+#' @return A \code{ggplot} object, invisibly.
+#'
+#' @examples
+#' \donttest{
+#' seqs <- data.frame(V1 = sample(c("A","B","C"), 40, TRUE),
+#'                    V2 = sample(c("A","B","C"), 40, TRUE))
+#' grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+#' plot(attr(grp, "clustering"), type = "posterior")
+#' }
+#' @export
+plot.net_mmm_clustering <- function(x, type = c("posterior", "covariates",
+                                                 "predictors"), ...) {
+  type <- match.arg(type)
+  if (type == "predictors") type <- "covariates"
+
+  if (type == "covariates") {
+    if (is.null(x$covariates)) {
+      stop("No covariate analysis on this clustering. Re-run ",
+           "cluster_mmm() (or build_mmm()) with covariates = ...",
+           call. = FALSE)
+    }
+    return(.plot_covariate_forest(
+      x$covariates$coefficients,
+      sprintf("Covariate Effects (ref: Cluster %s)",
+              x$covariates$fit$reference_cluster)
+    ))
+  }
+
+  # type == "posterior": .plot_mmm_posterior() reads only $posterior +
+  # $assignments, both carried by net_mmm_clustering.
+  .plot_mmm_posterior(x)
+}
