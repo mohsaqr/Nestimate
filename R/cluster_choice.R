@@ -115,9 +115,11 @@ cluster_choice <- function(data,
   out <- cbind(grid, do.call(rbind, rows))
   rownames(out) <- NULL
   class(out) <- c("cluster_choice", "data.frame")
-  attr(out, "swept") <- list(k = length(k) > 1L,
-                              dissimilarity = length(dissimilarity) > 1L,
-                              method = length(method) > 1L)
+  swept_axes <- character()
+  if (length(k)             > 1L) swept_axes <- c(swept_axes, "k")
+  if (length(dissimilarity) > 1L) swept_axes <- c(swept_axes, "dissimilarity")
+  if (length(method)        > 1L) swept_axes <- c(swept_axes, "method")
+  attr(out, "swept") <- swept_axes
   out
 }
 
@@ -139,9 +141,6 @@ cluster_choice <- function(data,
   values
 }
 
-# Per-fit row: read pre-computed silhouette, compute size-weighted mean
-# within-cluster distance the same way summary.net_clustering does
-# (R/cluster_data.R:891-905), and read cluster sizes for balance.
 #' @noRd
 .cluster_choice_row <- function(fit) {
   sizes <- as.integer(fit$sizes %||% tabulate(fit$assignments))
@@ -150,16 +149,8 @@ cluster_choice <- function(data,
 
   mean_within <- NA_real_
   if (!is.null(fit$distance) && n > 0L) {
-    dmat <- as.matrix(fit$distance)
-    per_cluster <- vapply(seq_len(k_), function(cl) {
-      members <- which(fit$assignments == cl)
-      if (length(members) > 1L) {
-        sub <- dmat[members, members]
-        mean(sub[lower.tri(sub)])
-      } else {
-        0
-      }
-    }, numeric(1L))
+    per_cluster <- .per_cluster_within_dist(fit$distance, fit$assignments,
+                                              k_)
     mean_within <- stats::weighted.mean(per_cluster, sizes)
   }
 
@@ -189,21 +180,17 @@ cluster_choice <- function(data,
 print.cluster_choice <- function(x, digits = 3L, ...) {
   digits <- as.integer(digits)
   swept  <- attr(x, "swept") %||%
-            list(k = TRUE, dissimilarity = TRUE, method = TRUE)
-  swept_names <- names(swept)[vapply(swept, isTRUE, logical(1L))]
+            c("k", "dissimilarity", "method")
 
-  if (length(swept_names) == 0L) {
+  if (length(swept) == 0L) {
     only_method <- unique(x$method)[1L]
     only_dissim <- unique(x$dissimilarity)[1L]
     cat(sprintf("Cluster Choice [%s / %s]\n\n", only_method, only_dissim))
   } else {
     cat(sprintf("Cluster Choice (sweep: %s)\n\n",
-                paste(swept_names, collapse = " x ")))
+                paste(swept, collapse = " x ")))
   }
 
-  # Build a tidy display copy: round numerics, compress min/max into one
-  # column, drop constant axis columns, prepend the silhouette-best
-  # marker so it sits adjacent to silhouette.
   disp <- data.frame(
     k             = x$k,
     dissimilarity = x$dissimilarity,
@@ -220,11 +207,9 @@ print.cluster_choice <- function(x, digits = 3L, ...) {
   best[best_idx] <- "<-- best"
   disp$best <- best
 
-  # Drop axis columns that don't vary so a single-dissimilarity sweep
-  # doesn't carry a redundant column through the printout.
-  if (!isTRUE(swept$k))             disp$k             <- NULL
-  if (!isTRUE(swept$dissimilarity)) disp$dissimilarity <- NULL
-  if (!isTRUE(swept$method))        disp$method        <- NULL
+  for (axis in c("k", "dissimilarity", "method")) {
+    if (!(axis %in% swept)) disp[[axis]] <- NULL
+  }
 
   print.data.frame(disp, row.names = FALSE, right = FALSE)
 
@@ -327,13 +312,9 @@ plot.cluster_choice <- function(x,
     stop("Package 'ggplot2' required.", call. = FALSE)
   } # nocov end
   type  <- match.arg(type)
-  swept <- attr(x, "swept") %||%
-           list(k = TRUE, dissimilarity = TRUE, method = TRUE)
+  swept <- attr(x, "swept") %||% c("k", "dissimilarity", "method")
 
   if (type == "auto") type <- .auto_choice_type(swept)
-
-  # Validate the chosen type against the swept axes -- give the caller a
-  # one-line hint about which type fits when the request can't be drawn.
   .require_type_supported(type, swept)
 
   # Apply abbreviations to a working copy if requested. The original
@@ -356,45 +337,39 @@ plot.cluster_choice <- function(x,
   invisible(p)
 }
 
-# Pick an auto type given which axes are swept. Mirrors what the previous
-# auto-only plot did, but routed through the named types so the user can
-# follow the dispatch.
 #' @noRd
 .auto_choice_type <- function(swept) {
-  n_axes <- sum(unlist(swept))
+  n_axes <- length(swept)
   if (n_axes <= 1L) {
-    if (isTRUE(swept$k)) "lines" else "bars"
-  } else if (isTRUE(swept$k) && isTRUE(swept$dissimilarity) &&
-             isTRUE(swept$method)) {
+    if ("k" %in% swept) "lines" else "bars"
+  } else if (all(c("k", "dissimilarity", "method") %in% swept)) {
     "facet"
-  } else if (isTRUE(swept$k)) {
+  } else if ("k" %in% swept) {
     "lines"
   } else {
     "heatmap"
   }
 }
 
-# Validate that the user's chosen type is plottable for the data on hand.
 #' @noRd
 .require_type_supported <- function(type, swept) {
   msg <- function(...) stop(..., call. = FALSE)
   switch(type,
-         lines = if (!isTRUE(swept$k))
+         lines = if (!("k" %in% swept))
            msg("type = \"lines\" requires k to be swept (length > 1). ",
                "Use type = \"bars\" or type = \"heatmap\" for a fixed-k ",
                "sweep."),
-         heatmap = if (!isTRUE(swept$dissimilarity) || !isTRUE(swept$method))
+         heatmap = if (!all(c("dissimilarity", "method") %in% swept))
            msg("type = \"heatmap\" requires both dissimilarity and method ",
                "to be swept. Use type = \"bars\" for one categorical axis ",
                "or type = \"lines\" for a k sweep."),
-         facet = if (!isTRUE(swept$k) ||
-                     sum(unlist(swept)) < 3L)
+         facet = if (!("k" %in% swept) || length(swept) < 3L)
            msg("type = \"facet\" requires k plus two categorical axes ",
                "(dissimilarity and method) to be swept. Use type = ",
                "\"lines\" for k + one categorical, or type = \"heatmap\" ",
                "for two categoricals at fixed k."),
-         bars     = invisible(),  # fits any shape, just shows silhouette per row
-         tradeoff = invisible())   # fits any shape
+         bars     = invisible(),
+         tradeoff = invisible())
 }
 
 # ---------------------------------------------------------------------------
@@ -404,7 +379,7 @@ plot.cluster_choice <- function(x,
 #' @noRd
 .plot_choice_lines <- function(df, swept) {
   # k-only sweep: silhouette and within_dist as two y-series.
-  if (isTRUE(swept$k) && sum(unlist(swept)) == 1L) {
+  if (identical(swept, "k")) {
     long <- data.frame(
       k = rep(df$k, 2L),
       value = c(df$silhouette, df$mean_within_dist),
@@ -427,8 +402,8 @@ plot.cluster_choice <- function(x,
   }
 
   # k + one categorical axis: silhouette vs k, one line per axis level.
-  colour_axis <- if (isTRUE(swept$dissimilarity)) "dissimilarity" else
-                 if (isTRUE(swept$method))        "method"        else NA
+  colour_axis <- if ("dissimilarity" %in% swept) "dissimilarity" else
+                 if ("method"        %in% swept) "method"        else NA
 
   aes_obj <- if (!is.na(colour_axis))
     ggplot2::aes(x = .data$k, y = .data$silhouette,
@@ -450,24 +425,18 @@ plot.cluster_choice <- function(x,
 
 #' @noRd
 .plot_choice_bars <- function(df, swept) {
-  # Pick the categorical axis to bar against. If both are swept and k
-  # isn't, treat it as a flattened (dissim x method) categorical.
-  axis <- if (isTRUE(swept$dissimilarity) && !isTRUE(swept$method))
-            "dissimilarity"
-          else if (isTRUE(swept$method) && !isTRUE(swept$dissimilarity))
-            "method"
-          else if (isTRUE(swept$k) && !isTRUE(swept$dissimilarity) &&
-                   !isTRUE(swept$method))
-            "k"
+  # Pick the categorical axis to bar against. If multiple axes vary,
+  # flatten them into one composite "k / dissim / method" label.
+  axis <- if (identical(swept, "dissimilarity")) "dissimilarity"
+          else if (identical(swept, "method"))   "method"
+          else if (identical(swept, "k"))        "k"
           else NA
 
   if (is.na(axis)) {
-    # Multi-axis fallback: bars over the row index labelled by all
-    # swept fields. Handles k x dissim, k x method, dissim x method.
     label_parts <- list()
-    if (isTRUE(swept$k))             label_parts$k    <- as.character(df$k)
-    if (isTRUE(swept$dissimilarity)) label_parts$diss <- df$dissimilarity
-    if (isTRUE(swept$method))        label_parts$meth <- df$method
+    if ("k"             %in% swept) label_parts$k    <- as.character(df$k)
+    if ("dissimilarity" %in% swept) label_parts$diss <- df$dissimilarity
+    if ("method"        %in% swept) label_parts$meth <- df$method
     df$.row <- do.call(paste, c(label_parts, sep = " / "))
     axis <- ".row"
   }
@@ -510,14 +479,14 @@ plot.cluster_choice <- function(x,
   # Build a label that names whichever axes vary, so the scatter is
   # readable without a legend.
   parts <- list()
-  if (isTRUE(swept$k))             parts$k    <- sprintf("k=%d", df$k)
-  if (isTRUE(swept$dissimilarity)) parts$diss <- df$dissimilarity
-  if (isTRUE(swept$method))        parts$meth <- df$method
+  if ("k"             %in% swept) parts$k    <- sprintf("k=%d", df$k)
+  if ("dissimilarity" %in% swept) parts$diss <- df$dissimilarity
+  if ("method"        %in% swept) parts$meth <- df$method
   df$.label <- do.call(paste, c(parts, sep = "/"))
 
-  colour_axis <- if (isTRUE(swept$dissimilarity)) "dissimilarity" else
-                 if (isTRUE(swept$method))        "method"        else
-                 if (isTRUE(swept$k))             "k"             else NA
+  colour_axis <- if ("dissimilarity" %in% swept) "dissimilarity" else
+                 if ("method"        %in% swept) "method"        else
+                 if ("k"             %in% swept) "k"             else NA
 
   aes_obj <- if (!is.na(colour_axis))
     ggplot2::aes(x = .data$size_ratio, y = .data$silhouette,

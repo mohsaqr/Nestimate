@@ -784,6 +784,24 @@ cluster_data <- function(...) {
   sprintf("%d (%4.1f%%)", as.integer(sizes), pct)
 }
 
+# Per-cluster mean within-cluster distance. Singletons return 0 (no
+# within-distance defined). Used by print.net_clustering,
+# summary.net_clustering, cluster_diagnostics.net_clustering, and
+# cluster_choice's per-row builder.
+.per_cluster_within_dist <- function(distance, assignments, k = max(assignments)) {
+  if (is.null(distance)) return(rep(NA_real_, k))
+  dmat <- as.matrix(distance)
+  vapply(seq_len(k), function(cl) {
+    members <- which(assignments == cl)
+    if (length(members) > 1L) {
+      sub <- dmat[members, members]
+      mean(sub[lower.tri(sub)])
+    } else {
+      0
+    }
+  }, numeric(1L))
+}
+
 #' Print Method for net_clustering
 #'
 #' Compact, fixed-width summary of a sequence-clustering result. The header
@@ -838,18 +856,10 @@ print.net_clustering <- function(x, digits = 3L, ...) {
   }
 
   # Per-cluster mean within-cluster distance, when distance matrix is present.
-  mean_within <- rep(NA_real_, k)
-  if (!is.null(x$distance) && !is.null(x$assignments) && k > 0L) {
-    dmat <- as.matrix(x$distance)
-    for (cl in seq_len(k)) {
-      members <- which(x$assignments == cl)
-      if (length(members) > 1L) {
-        sub <- dmat[members, members]
-        mean_within[cl] <- mean(sub[lower.tri(sub)])
-      } else {
-        mean_within[cl] <- 0
-      }
-    }
+  mean_within <- if (!is.null(x$distance) && !is.null(x$assignments) && k > 0L) {
+    .per_cluster_within_dist(x$distance, x$assignments, k)
+  } else {
+    rep(NA_real_, k)
   }
 
   cat("\n")
@@ -902,24 +912,16 @@ print.net_clustering <- function(x, digits = 3L, ...) {
 #'
 #' @export
 summary.net_clustering <- function(object, ...) {
-  dist_mat <- as.matrix(object$distance)
   k <- object$k
   assignments <- object$assignments
-
-  cluster_stats <- vapply(seq_len(k), function(cl) {
-    members <- which(assignments == cl)
-    sz <- length(members)
-    if (sz > 1L) {
-      within <- dist_mat[members, members]
-      mean_within <- mean(within[lower.tri(within)])
-    } else {
-      mean_within <- 0
-    }
-    c(size = sz, mean_within_dist = mean_within)
-  }, numeric(2L))
-
-  cluster_stats <- as.data.frame(t(cluster_stats))
-  cluster_stats <- cbind(cluster = seq_len(k), cluster_stats)
+  sizes <- as.integer(tabulate(assignments, nbins = k))
+  cluster_stats <- data.frame(
+    cluster          = seq_len(k),
+    size             = sizes,
+    mean_within_dist = .per_cluster_within_dist(object$distance,
+                                                 assignments, k),
+    stringsAsFactors = FALSE
+  )
   rownames(cluster_stats) <- NULL
 
   cat("Sequence Clustering Summary\n")

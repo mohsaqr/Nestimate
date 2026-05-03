@@ -51,11 +51,11 @@
              "build_network() carrying data, or pass the original ",
              "clustering object instead.", call. = FALSE)
       }
+      part_nrow <- vapply(parts, NROW, integer(1L))
       data <- do.call(rbind, parts)
       if (is.null(group)) {
-        labs <- if (!is.null(names(x))) names(x) else as.character(seq_along(x))
-        group <- factor(rep(labs, vapply(parts, NROW, integer(1L))),
-                        levels = labs)
+        labs  <- if (!is.null(names(x))) names(x) else as.character(seq_along(x))
+        group <- factor(rep(labs, part_nrow), levels = labs)
       }
     }
   }

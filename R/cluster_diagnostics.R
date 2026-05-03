@@ -90,22 +90,10 @@ cluster_diagnostics.net_clustering <- function(x, ...) {
   sizes <- as.integer(x$sizes %||% tabulate(assignments, nbins = k))
   n_total <- sum(sizes)
 
-  # Per-cluster mean within-cluster distance. Logic lifted from
-  # summary.net_clustering -- duplicated rather than refactored because
-  # it's ~10 lines and the alternative is shuffling the summary method
-  # for no callsite benefit.
-  mean_within <- rep(NA_real_, k)
-  if (!is.null(x$distance)) {
-    dmat <- as.matrix(x$distance)
-    for (cl in seq_len(k)) {
-      members <- which(assignments == cl)
-      if (length(members) > 1L) {
-        sub <- dmat[members, members]
-        mean_within[cl] <- mean(sub[lower.tri(sub)])
-      } else {
-        mean_within[cl] <- 0
-      }
-    }
+  mean_within <- if (!is.null(x$distance)) {
+    .per_cluster_within_dist(x$distance, assignments, k)
+  } else {
+    rep(NA_real_, k)
   }
 
   # Per-cluster silhouette mean -- compute once, aggregate. Skip when the
