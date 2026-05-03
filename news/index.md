@@ -63,13 +63,12 @@
   `NESTIMATE_EQUIV_TESTS=true`): `test-equiv-permutation.R`
   (vs. [`stats::p.adjust`](https://rdrr.io/r/stats/p.adjust.html) +
   hand-coded base-R permutation loop), `test-equiv-mlvar.R`
-  (vs. [`mlVAR::mlVAR`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) at
-  machine precision), `test-equiv-association-rules.R` (vs.
+  (vs. `mlVAR::mlVAR` at machine precision),
+  `test-equiv-association-rules.R` (vs.
   [`arules::apriori`](https://rdrr.io/pkg/arules/man/apriori.html)),
   `test-equiv-link-prediction.R` (vs. clean-room matrix algebra +
   [`igraph::similarity`](https://r.igraph.org/reference/similarity.html)),
-  `test-equiv-centrality-stability.R`
-  (vs. [`bootnet::corStability`](https://rdrr.io/pkg/bootnet/man/corStability.html)).
+  `test-equiv-centrality-stability.R` (vs. `bootnet::corStability`).
   Total ~162k per-value comparisons; all within machine precision except
   centrality-stability which uses a documented drop-grid tolerance
   because bootnet uses `igraph` path-based centrality and Nestimate uses
@@ -125,9 +124,7 @@ CRAN release: 2026-04-20
 - [`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md)
   — multilevel VAR networks from ESM/EMA panel data. Estimates temporal
   (directed), contemporaneous (undirected), and between-subjects
-  (undirected) networks matching
-  [`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) at
-  machine precision.
+  (undirected) networks matching `mlVAR::mlVAR()` at machine precision.
 - [`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
   /
   [`compare_mmm()`](https://mohsaqr.github.io/Nestimate/reference/compare_mmm.md)

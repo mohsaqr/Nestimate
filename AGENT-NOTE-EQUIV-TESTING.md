@@ -39,8 +39,7 @@ divergence point.
 - `build_network(data, method = "cor")` → verify against
   [`stats::cor()`](https://rdrr.io/r/stats/cor.html)
 - `build_network(data, method = "pcor")` → verify against
-  [`ppcor::pcor()`](https://rdrr.io/pkg/ppcor/man/pcor.html) or manual
-  inverse correlation
+  `ppcor::pcor()` or manual inverse correlation
 - `build_network(data, method = "glasso")` → verify against
   [`qgraph::EBICglasso()`](https://rdrr.io/pkg/qgraph/man/EBICglasso.html)
   directly
@@ -77,7 +76,7 @@ divergence point.
 
 - [`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md)
   → verify temporal/contemporaneous/between matrices against
-  [`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) directly
+  `mlVAR::mlVAR()` directly
 - [`build_gimme()`](https://mohsaqr.github.io/Nestimate/reference/build_gimme.md)
   → verify against
   [`gimme::gimme()`](https://rdrr.io/pkg/gimme/man/gimmeSEM.html)
