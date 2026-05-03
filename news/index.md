@@ -68,7 +68,8 @@
   [`arules::apriori`](https://rdrr.io/pkg/arules/man/apriori.html)),
   `test-equiv-link-prediction.R` (vs. clean-room matrix algebra +
   [`igraph::similarity`](https://r.igraph.org/reference/similarity.html)),
-  `test-equiv-centrality-stability.R` (vs. `bootnet::corStability`).
+  `test-equiv-centrality-stability.R`
+  (vs. [`bootnet::corStability`](https://rdrr.io/pkg/bootnet/man/corStability.html)).
   Total ~162k per-value comparisons; all within machine precision except
   centrality-stability which uses a documented drop-grid tolerance
   because bootnet uses `igraph` path-based centrality and Nestimate uses

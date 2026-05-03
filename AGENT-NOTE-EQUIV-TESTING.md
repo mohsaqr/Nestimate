@@ -39,7 +39,8 @@ divergence point.
 - `build_network(data, method = "cor")` → verify against
   [`stats::cor()`](https://rdrr.io/r/stats/cor.html)
 - `build_network(data, method = "pcor")` → verify against
-  `ppcor::pcor()` or manual inverse correlation
+  [`ppcor::pcor()`](https://rdrr.io/pkg/ppcor/man/pcor.html) or manual
+  inverse correlation
 - `build_network(data, method = "glasso")` → verify against
   [`qgraph::EBICglasso()`](https://rdrr.io/pkg/qgraph/man/EBICglasso.html)
   directly
