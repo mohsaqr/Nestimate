@@ -169,9 +169,3 @@ articles:
   - starts_with("clustering")
   - starts_with("markov")
 
-- title: Tutorials
-  desc: Full tutorials
-  contents:
-  - starts_with("articles/cograph-tutorial-nestimate")
-  - starts_with("articles/cograph-tutorial-simplicial")
-  - starts_with("articles/cograph-tutorial-mcml")
