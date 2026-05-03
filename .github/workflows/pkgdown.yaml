@@ -24,9 +24,13 @@ jobs:
       - uses: quarto-dev/quarto-actions/setup@v2
         with:
           # pkgdown requires Quarto >= 1.5 to render the .qmd articles in
-          # vignettes/articles/. Pin a known-good stable release; the
+          # vignettes/articles/. Use the latest stable release; the
           # action's default has historically lagged the 1.5 cutoff.
-          version: '1.5.57'
+          version: 'release'
+
+      - name: Show Quarto version on the runner
+        run: quarto --version || true
+        shell: bash
 
       - uses: r-lib/actions/setup-pandoc@v2
 
