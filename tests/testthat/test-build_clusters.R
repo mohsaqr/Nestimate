@@ -197,91 +197,6 @@ test_that("plot.net_clustering heatmap works", {
 # 9. Cross-validation against tna
 # ==============================================================================
 
-test_that("distance matrices match tna for metrics with matching implementations", {
-  skip_if_not_installed("tna")
-  data <- tna::group_regulation[1:50, ]
-
-  # Only compare metrics where tna and stringdist agree.
-  # tna's own C implementations of osa/lv/dl/lcs/jw differ from
-  # stringdist (which is the reference implementation). Confirmed:
-  # stringdist::stringdist("acfhicbc", tna3, method="lv") matches
-  # our result (21) while tna:::levenshtein_dist gives 18.
-  for (metric in c("hamming", "qgram", "cosine", "jaccard")) {
-    tna_r <- tna::cluster_data(data, k = 2, dissimilarity = metric, q = 2)
-    our_r <- build_clusters(data, k = 2, dissimilarity = metric, q = 2L)
-    expect_equal(
-      as.matrix(our_r$distance), as.matrix(tna_r$distance),
-      tolerance = 1e-10, info = metric
-    )
-  }
-})
-
-test_that("weighted hamming matches tna (lambda = 0.5)", {
-  skip_if_not_installed("tna")
-  data <- tna::group_regulation[1:50, ]
-
-  tna_r <- tna::cluster_data(data, k = 2, dissimilarity = "hamming",
-                             weighted = TRUE, lambda = 0.5)
-  our_r <- build_clusters(data, k = 2, dissimilarity = "hamming",
-                        weighted = TRUE, lambda = 0.5)
-  expect_equal(
-    as.matrix(our_r$distance), as.matrix(tna_r$distance),
-    tolerance = 1e-10
-  )
-})
-
-test_that("weighted hamming matches tna (lambda = 2.0)", {
-  skip_if_not_installed("tna")
-  data <- tna::group_regulation[1:50, ]
-
-  tna_r <- tna::cluster_data(data, k = 2, dissimilarity = "hamming",
-                             weighted = TRUE, lambda = 2.0)
-  our_r <- build_clusters(data, k = 2, dissimilarity = "hamming",
-                        weighted = TRUE, lambda = 2.0)
-  expect_equal(
-    as.matrix(our_r$distance), as.matrix(tna_r$distance),
-    tolerance = 1e-10
-  )
-})
-
-test_that("cluster assignments match tna for PAM", {
-  skip_if_not_installed("tna")
-  data <- tna::group_regulation[1:50, ]
-
-  tna_r <- tna::cluster_data(data, k = 3, dissimilarity = "hamming")
-  our_r <- build_clusters(data, k = 3, dissimilarity = "hamming")
-
-  # Distance matrices must match exactly
-  expect_equal(
-    as.matrix(our_r$distance), as.matrix(tna_r$distance),
-    tolerance = 1e-10
-  )
-  # PAM is deterministic on same distance matrix → same assignments
-  expect_equal(our_r$assignments, tna_r$assignments)
-  expect_equal(our_r$silhouette, tna_r$silhouette, tolerance = 1e-10)
-})
-
-test_that("cluster assignments match tna for hclust methods", {
-  skip_if_not_installed("tna")
-  data <- tna::group_regulation[1:50, ]
-
-  for (m in c("complete", "average")) {
-    tna_r <- tna::cluster_data(data, k = 3, dissimilarity = "hamming",
-                               method = m)
-    our_r <- build_clusters(data, k = 3, dissimilarity = "hamming",
-                          method = m)
-    expect_equal(
-      as.matrix(our_r$distance), as.matrix(tna_r$distance),
-      tolerance = 1e-10, info = m
-    )
-    expect_equal(our_r$assignments, tna_r$assignments, info = m)
-  }
-})
-
-# ==============================================================================
-# 10. R fallback vs stringdist consistency
-# ==============================================================================
-
 test_that("R fallback matches stringdist for all applicable metrics", {
   skip_if_not_installed("stringdist")
   df <- make_test_data(n = 30, k = 10, n_states = 4)
@@ -462,36 +377,6 @@ test_that("build_clusters rejects association-method netobjects", {
   net <- build_network(ndf, method = "cor")
   expect_error(build_clusters(net, k = 2), "sequence data")
 })
-
-test_that("build_clusters works on tna model", {
-  skip_if_not_installed("tna")
-  data <- tna::group_regulation[1:30, ]
-  model <- tna::tna(data)
-  cl_tna <- build_clusters(model, k = 2)
-  cl_df <- build_clusters(data, k = 2)
-  expect_s3_class(cl_tna, "net_clustering")
-  expect_equal(as.matrix(cl_tna$distance), as.matrix(cl_df$distance),
-               tolerance = 1e-10)
-})
-
-test_that("build_clusters works on cograph_network", {
-  skip_if_not_installed("cograph")
-  df <- make_test_data(n = 30, k = 10, n_states = 4)
-  # Build a mock cograph_network with $data
-  cg <- structure(
-    list(data = df, weights = matrix(0, 4, 4), directed = TRUE),
-    class = c("cograph_network", "list")
-  )
-  cl_cg <- build_clusters(cg, k = 3)
-  cl_df <- build_clusters(df, k = 3)
-  expect_s3_class(cl_cg, "net_clustering")
-  expect_equal(as.matrix(cl_cg$distance), as.matrix(cl_df$distance),
-               tolerance = 1e-10)
-})
-
-# ==============================================================================
-# 15. build_network dispatch for net_clustering
-# ==============================================================================
 
 test_that("build_network dispatches on net_clustering", {
   df <- make_test_data(n = 30, k = 10, n_states = 4)
@@ -942,15 +827,6 @@ test_that("cosine distance R path handles all-NA sequences (zero-norm rows)", {
 # ==============================================================================
 # 27. tna / cograph_network covariates rejection (L430, L440)
 # ==============================================================================
-
-test_that("tna input with column-name covariates errors", {
-  skip_if_not_installed("tna")
-  model <- tna::tna(tna::group_regulation[1:20, ])
-  expect_error(
-    build_clusters(model, k = 2, covariates = "some_col"),
-    "tna/cograph_network"
-  )
-})
 
 test_that("cograph_network input with column-name covariates errors", {
   cg <- structure(

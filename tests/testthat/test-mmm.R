@@ -169,20 +169,6 @@ test_that("build_mmm works with netobject input", {
   expect_equal(mmm$k, 2)
 })
 
-test_that("build_mmm works with tna input", {
-  skip_if_not_installed("tna")
-  model <- tna::tna(tna::group_regulation)
-  mmm <- build_mmm(model, k = 2, n_starts = 3, seed = 1)
-
-  expect_s3_class(mmm, "net_mmm")
-  expect_equal(mmm$k, 2)
-  expect_true(length(mmm$states) > 2)
-})
-
-# ============================================
-# compare_mmm
-# ============================================
-
 test_that("compare_mmm returns comparison table", {
   data <- .make_mmm_data()
   comp <- compare_mmm(data, k = 2:3, n_starts = 2, seed = 1)

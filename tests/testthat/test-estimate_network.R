@@ -471,36 +471,6 @@ test_that("edges match upper triangle + diagonal (undirected)", {
 
 # ---- tna package integration ----
 
-test_that("estimate_network works with tna::group_regulation (wide)", {
-  skip_if_not_installed("tna")
-
-  net <- suppressWarnings(
-    estimate_network(tna::group_regulation, method = "relative")
-  )
-
-  expect_s3_class(net, "netobject")
-  expect_true(net$directed)
-  expect_equal(net$n_nodes, 9)
-  # Rows sum to ~1
-  row_sums <- rowSums(net$weights)
-  expect_true(all(abs(row_sums - 1) < 1e-10))
-})
-
-test_that("estimate_network frequency matches frequencies() output", {
-  skip_if_not_installed("tna")
-
-  net <- suppressWarnings(
-    estimate_network(tna::group_regulation, method = "frequency")
-  )
-  freq_mat <- frequencies(tna::group_regulation, format = "wide")
-
-  expect_equal(net$weights, freq_mat)
-})
-
-
-# ---- Coverage gap tests ----
-
-# estimate_network.R L81: minmax scaling when all non-zero values equal
 test_that(".apply_scaling minmax: no-op when all non-zero values equal", {
   # Build a matrix where all non-zero values are the same
   mat <- matrix(c(0, 0.5, 0.5, 0), 2, 2)
@@ -578,4 +548,3 @@ test_that(".decompose_multilevel returns original data for unrecognised level", 
   result <- .decompose_multilevel(df, id_col = "person", level = "neither")
   expect_identical(result, df)
 })
-

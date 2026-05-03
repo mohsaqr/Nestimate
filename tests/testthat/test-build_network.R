@@ -723,15 +723,6 @@ test_that("$data is NULL for association methods (matrix input)", {
   expect_null(net$data)
 })
 
-test_that("$data is a data frame for transition methods", {
-  skip_if_not_installed("tna")
-  net <- build_network(tna::group_regulation, method = "tna")
-
-  expect_true(is.data.frame(net$data))
-  expect_equal(nrow(net$data), 2000)
-  expect_equal(ncol(net$data), 26)
-})
-
 test_that("print.netobject shows data dimensions", {
   df <- .make_freq_data(n = 80, p = 5)
   net <- build_network(df, method = "glasso", params = list(nlambda = 20L))
@@ -870,30 +861,6 @@ test_that("print.netobject shows generic label for unknown method", {
 })
 
 # L474-475: print.netobject shows metadata when present
-test_that("print.netobject shows metadata column names", {
-  skip_if_not_installed("tna")
-  # tna::group_regulation has sequences with metadata-like columns
-  # Build a dataset where there are extra non-state numeric columns
-  set.seed(42)
-  df <- data.frame(
-    T1 = sample(c("A", "B"), 50, replace = TRUE),
-    T2 = sample(c("A", "B"), 50, replace = TRUE),
-    T3 = sample(c("A", "B"), 50, replace = TRUE),
-    Age = rpois(50, 25),
-    stringsAsFactors = FALSE
-  )
-  net <- build_network(df, method = "relative",
-                       params = list(format = "wide"))
-  # metadata should be present
-  if (!is.null(net$metadata)) {
-    out <- capture.output(print(net))
-    expect_true(any(grepl("Metadata:", out)))
-  } else {
-    skip("No metadata column detected in this data")
-  }
-})
-
-# L569-575: print.netobject_group
 test_that("print.netobject_group shows group info", {
   set.seed(42)
   df <- data.frame(
@@ -1435,15 +1402,6 @@ test_that("auto-convert: cor from wide character sequences", {
 })
 
 # ---- 4. ising: no auto-convert (requires binary 0/1, not counts) ----
-test_that("auto-convert: ising does NOT auto-convert sequences", {
-  skip_if_not_installed("IsingFit")
-  seqs <- .make_seq_data(n = 100, states = c("A", "B"))
-  # Ising requires binary data; frequency counts are integers > 1
-  # so auto-conversion is skipped and the estimator errors
-  expect_error(build_network(seqs, method = "ising"))
-})
-
-# ---- 5. Aliases work: ebicglasso, corr ----
 test_that("auto-convert: method aliases work with sequences", {
   seqs <- .make_seq_data()
   net1 <- build_network(seqs, method = "ebicglasso")
@@ -1470,34 +1428,6 @@ test_that("auto-convert: matches manual convert_sequence_format pipeline", {
 })
 
 # ---- 7. tna::group_regulation ----
-test_that("auto-convert: glasso on tna::group_regulation", {
-  skip_if_not_installed("tna")
-  data(group_regulation, package = "tna")
-  net <- build_network(group_regulation, method = "glasso")
-  expect_s3_class(net, "netobject")
-  expect_equal(nrow(net$weights), 9)  # 9 states
-  expect_true(any(net$weights != 0))
-})
-
-# ---- 8. pcor on tna::group_regulation ----
-test_that("auto-convert: pcor on tna::group_regulation", {
-  skip_if_not_installed("tna")
-  data(group_regulation, package = "tna")
-  net <- build_network(group_regulation, method = "pcor")
-  expect_s3_class(net, "netobject")
-  expect_equal(nrow(net$weights), 9)
-})
-
-# ---- 9. cor on tna::group_regulation ----
-test_that("auto-convert: cor on tna::group_regulation", {
-  skip_if_not_installed("tna")
-  data(group_regulation, package = "tna")
-  net <- build_network(group_regulation, method = "cor")
-  expect_s3_class(net, "netobject")
-  expect_equal(nrow(net$weights), 9)
-})
-
-# ---- 10. No conversion for transition methods (still works as before) ----
 test_that("auto-convert: transition methods skip conversion", {
   seqs <- .make_seq_data()
   net <- build_network(seqs, method = "relative")

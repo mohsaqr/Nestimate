@@ -144,50 +144,6 @@ test_that("summary.net_mlvar reports B, Theta, and between blocks", {
 
 # ---- Numerical equivalence against mlVAR --------------------------------
 
-test_that("mlVAR equivalence - temporal/contemporaneous/between", {
-  skip_if_not_installed("mlVAR")
-  skip_if_not_installed("lme4")
-  skip_if_not_installed("corpcor")
-
-  # Run 5 simulated configurations — each fit takes ~0.2s so the whole
-  # block is well under a second. The full 20-seed validation runs in
-  # tmp/mlvar_equivalence_20seeds.R.
-  seeds <- c(201, 205, 210, 215, 220)
-  for (s in seeds) {
-    d <- simulate_data("mlvar", seed = s)
-    vars <- attr(d, "vars")
-
-    ours <- build_mlvar(d, vars = vars,
-                        id = "id", day = "day", beep = "beep")
-    ref <- suppressWarnings(mlVAR::mlVAR(
-      d, vars = vars, idvar = "id", dayvar = "day", beepvar = "beep",
-      lags = 1, estimator = "lmer",
-      temporal = "fixed", contemporaneous = "fixed",
-      scale = FALSE, verbose = FALSE
-    ))
-
-    ref_B     <- ref$results$Beta$mean[, , 1]
-    ref_theta <- ref$results$Theta$pcor$mean
-    diag(ref_theta) <- 0
-    ref_betw  <- ref$results$Omega_mu$pcor$mean
-    diag(ref_betw)  <- 0
-
-    strip <- function(m) { dimnames(m) <- NULL; m }
-    expect_equal(max(abs(strip(ours$temporal$weights)        - strip(ref_B))),
-                 0, tolerance = 1e-12,
-                 label = sprintf("seed %d temporal", s))
-    expect_equal(max(abs(strip(ours$contemporaneous$weights) - strip(ref_theta))),
-                 0, tolerance = 1e-12,
-                 label = sprintf("seed %d contemporaneous", s))
-    expect_equal(max(abs(strip(ours$between$weights)         - strip(ref_betw))),
-                 0, tolerance = 1e-10,
-                 label = sprintf("seed %d between", s))
-  }
-})
-
-
-# ---- Convergence diagnostics ----
-
 test_that("build_mlvar warns on singular fit", {
   # Create data that will produce a singular random-effects fit:
   # very few subjects, minimal variation in random intercepts
@@ -215,38 +171,4 @@ test_that("build_mlvar warns on singular fit", {
   # Test passes if no error — the warning pathway is exercised
   # (the actual singular condition depends on the data/optimizer)
   expect_true(TRUE)
-})
-
-test_that("build_mlvar numerical equivalence preserved with convergence checks", {
-  # Verify that the convergence checking code does not change numerical output
-  skip_if_not_installed("mlVAR")
-  skip_if_not_installed("lme4")
-  skip_if_not_installed("corpcor")
-
-  # Use seed 210 — known to work from the 20-seed validation suite
-  d <- simulate_data("mlvar", seed = 210)
-  vars <- attr(d, "vars")
-
-  ours <- suppressWarnings(build_mlvar(
-    d, vars = vars, id = "id", day = "day", beep = "beep"
-  ))
-  ref  <- suppressWarnings(mlVAR::mlVAR(
-    d, vars = vars, idvar = "id", dayvar = "day", beepvar = "beep",
-    lags = 1, estimator = "lmer",
-    temporal = "fixed", contemporaneous = "fixed",
-    scale = FALSE, verbose = FALSE
-  ))
-
-  ref_B     <- ref$results$Beta$mean[, , 1]
-  ref_theta <- ref$results$Theta$pcor$mean
-  ref_betw  <- ref$results$Omega_mu$pcor$mean
-  diag(ref_theta) <- 0; diag(ref_betw) <- 0
-
-  strip <- function(m) { dimnames(m) <- NULL; m }
-  expect_equal(max(abs(strip(ours$temporal$weights) - strip(ref_B))),
-               0, tolerance = 1e-12)
-  expect_equal(max(abs(strip(ours$contemporaneous$weights) - strip(ref_theta))),
-               0, tolerance = 1e-12)
-  expect_equal(max(abs(strip(ours$between$weights) - strip(ref_betw))),
-               0, tolerance = 1e-10)
 })

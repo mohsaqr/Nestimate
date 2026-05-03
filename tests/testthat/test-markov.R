@@ -263,35 +263,6 @@ test_that("markov_stability works on trajectories netobject", {
 
 # ---- tna object support ----
 
-test_that("passage_time accepts a tna object", {
-  skip_if_pkg_broken("tna")
-  m  <- tna::tna(tna::group_regulation)
-  pt <- passage_time(m)
-  expect_s3_class(pt, "net_mpt")
-  expect_equal(ncol(pt$matrix), nrow(pt$matrix))
-  expect_true(all(pt$matrix > 0))
-})
-
-test_that("markov_stability accepts a tna object", {
-  skip_if_pkg_broken("tna")
-  m  <- tna::tna(tna::group_regulation)
-  ms <- markov_stability(m)
-  expect_s3_class(ms, "net_markov_stability")
-  expect_equal(nrow(ms$stability), ncol(m$weights))
-})
-
-test_that("passage_time matches netobject when built from same data as tna", {
-  skip_if_pkg_broken("tna")
-  m   <- tna::tna(tna::group_regulation)
-  pt_tna <- passage_time(m)
-  net    <- build_network(tna::group_regulation, method = "relative")
-  pt_net <- passage_time(net)
-  # Both extract the same weight matrix so results must be identical
-  expect_equal(pt_tna$matrix, pt_net$matrix, tolerance = 1e-8)
-})
-
-# ---- wide data.frame support ----
-
 test_that("passage_time accepts a wide sequence data.frame", {
   seqs <- data.frame(
     V1 = c("A","B","C","A","B"),

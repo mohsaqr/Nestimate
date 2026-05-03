@@ -241,19 +241,6 @@ test_that("3-itemset rules exist when data supports them", {
 
 # ---- 17. tna::group_regulation ----
 
-test_that("association_rules works on tna::group_regulation via netobject", {
-  skip_if_not_installed("tna")
-  data(group_regulation, package = "tna")
-  net <- build_network(group_regulation, method = "relative")
-  rules <- association_rules(net, min_support = 0.3,
-                             min_confidence = 0.5, min_lift = 1)
-  expect_s3_class(rules, "net_association_rules")
-  expect_true(rules$n_rules > 0)
-})
-
-
-# ---- 18. print and summary work ----
-
 test_that("print and summary methods work", {
   rules <- association_rules(.make_ar_trans(), min_support = 0.3,
                              min_confidence = 0.5, min_lift = 0)

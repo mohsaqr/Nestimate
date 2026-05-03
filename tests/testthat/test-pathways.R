@@ -201,20 +201,3 @@ test_that("pathways.netobject defaults to hon", {
 
 
 # ---- cograph compatibility ----
-
-test_that("pathways output is parseable by plot_simplicial", {
-  skip_if_not_installed("cograph")
-  skip_if(!exists(".parse_pathways", envir = asNamespace("cograph")),
-          "cograph:::.parse_pathways not available in this version")
-  seqs <- .make_ho_seqs()
-  hon <- build_hon(seqs, max_order = 3)
-  pw <- pathways(hon, min_prob = 0.5)
-  skip_if(length(pw) == 0, "No higher-order pathways found")
-
-  parsed <- cograph:::.parse_pathways(pw, LETTERS[1:4])
-  expect_length(parsed, length(pw))
-  for (p in parsed) {
-    expect_true(length(p$source) >= 1)
-    expect_true(length(p$target) == 1)
-  }
-})

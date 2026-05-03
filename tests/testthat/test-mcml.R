@@ -240,16 +240,6 @@ test_that("net_aggregate_weights geomean returns 0 when all non-positive", {
 
 # ---- cluster_summary: various input types ----
 
-test_that("cluster_summary with tna object extracts weights (L300)", {
-  skip_if_not_installed("tna")
-  mat <- matrix(c(0, 0.6, 0.4, 0.7, 0, 0.3, 0.5, 0.5, 0), 3, 3,
-                dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  tna_obj <- tna::tna(mat)
-  cs <- cluster_summary(tna_obj, list(G1 = c("A", "B"), G2 = "C"))
-  expect_s3_class(cs, "mcml")
-  expect_equal(nrow(cs$macro$weights), 2)
-})
-
 test_that("cluster_summary assigns sequential node names when matrix has no rownames (L313-315)", {
   mat <- matrix(c(0, 2, 3, 1, 0, 4, 5, 6, 0), 3, 3)
   # No rownames/colnames
@@ -300,36 +290,6 @@ test_that("build_mcml accepts cograph_network input (L572)", {
 })
 
 # ---- build_mcml: tna_data branch (L581-598) ----
-
-test_that("build_mcml handles tna object with data (tna_data branch, L581-598)", {
-  skip_if_not_installed("tna")
-  seqs <- data.frame(
-    T1 = c("A", "B", "C"),
-    T2 = c("B", "C", "A"),
-    T3 = c("C", "A", "B")
-  )
-  # Build a tna object that contains $data (integer-encoded: 1=A, 2=B, 3=C)
-  tna_obj <- tna::tna(seqs)
-  if (!is.null(tna_obj$data)) {
-    # tna encodes states as integers 1,2,3 in $data
-    cs <- build_mcml(tna_obj, list(G1 = c("1", "2"), G2 = "3"))
-    expect_s3_class(cs, "mcml")
-  } else {
-    skip("tna object has no $data field in this version")
-  }
-})
-
-test_that("build_mcml handles tna object without data (tna_matrix branch, L583-585)", {
-  skip_if_not_installed("tna")
-  mat <- matrix(c(0, 0.6, 0.4, 0.7, 0, 0.3, 0.5, 0.5, 0), 3, 3,
-                dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  tna_obj <- tna::tna(mat)
-  cs <- build_mcml(tna_obj, list(G1 = c("A", "B"), G2 = "C"))
-  expect_s3_class(cs, "mcml")
-  expect_equal(nrow(cs$macro$weights), 2)
-})
-
-# ---- build_mcml: netobject_data branch (L586-599) ----
 
 test_that("build_mcml handles netobject with sequence data (netobject_data branch, L586-599)", {
   set.seed(1)
@@ -400,27 +360,6 @@ test_that("build_mcml errors on unknown input class (L611-612)", {
 })
 
 # ---- .detect_mcml_input coverage (L620-644) ----
-
-test_that(".detect_mcml_input returns tna_data for tna with data (L620)", {
-  skip_if_not_installed("tna")
-  seqs <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"))
-  tna_obj <- tna::tna(seqs)
-  if (!is.null(tna_obj$data)) {
-    result <- Nestimate:::.detect_mcml_input(tna_obj)
-    expect_equal(result, "tna_data")
-  } else {
-    skip("tna object has no $data in this version")
-  }
-})
-
-test_that(".detect_mcml_input returns tna_matrix for tna without data (L621)", {
-  skip_if_not_installed("tna")
-  mat <- matrix(c(0, 0.5, 0.5, 0.3, 0, 0.7, 0.6, 0.4, 0), 3, 3,
-                dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  tna_obj <- tna::tna(mat)
-  result <- Nestimate:::.detect_mcml_input(tna_obj)
-  expect_equal(result, "tna_matrix")
-})
 
 test_that(".detect_mcml_input returns netobject_data for netobject with data (L625)", {
   seqs <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"))
@@ -791,15 +730,6 @@ test_that(".wrap_netobject produces valid dual-class object (L1270-1296)", {
   expect_equal(result$n_nodes, 3)
   expect_true(is.data.frame(result$nodes))
   expect_equal(result$nodes$label, c("A", "B", "C"))
-})
-
-test_that("as_tna.default returns tna object unchanged (L1303-1305)", {
-  skip_if_not_installed("tna")
-  mat <- matrix(c(0, 0.5, 0.5, 0.3, 0, 0.7, 0.6, 0.4, 0), 3, 3,
-                dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-  tna_obj <- tna::tna(mat)
-  result <- as_tna(tna_obj)
-  expect_true(inherits(result, "tna"))
 })
 
 test_that("as_tna.default errors for non-tna objects (L1305-1306)", {

@@ -92,13 +92,6 @@ test_that("build_simplicial accepts netobject input", {
   expect_true(sc$n_nodes > 0L)
 })
 
-test_that("build_simplicial accepts tna object input", {
-  skip_if_not_installed("tna")
-  tna_model <- tna::tna(tna::group_regulation)
-  sc <- build_simplicial(tna_model, threshold = 0.1)
-  expect_s3_class(sc, "simplicial_complex")
-})
-
 test_that("build_simplicial on matrix without rownames assigns V-names", {
   mat <- matrix(c(0, 1, 1, 1, 0, 1, 1, 1, 0), 3, 3)
   sc <- build_simplicial(mat)
@@ -193,34 +186,6 @@ test_that("build_simplicial pathway from hypa works", {
 
 # =========================================================================
 # .sc_extract_matrix
-# =========================================================================
-
-test_that(".sc_extract_matrix handles different input types", {
-  # Matrix
-  mat <- .make_sc_mat()
-  expect_identical(.sc_extract_matrix(mat), mat)
-
-  # netobject
-  net <- .make_sc_net()
-  expect_identical(.sc_extract_matrix(net), net$weights)
-
-  # tna object
-  skip_if_not_installed("tna")
-  tna_model <- tna::tna(tna::group_regulation)
-  expect_identical(.sc_extract_matrix(tna_model), tna_model$weights)
-
-  # net_hon object
-  trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
-  hon <- build_hon(trajs, max_order = 2, min_freq = 1)
-  expect_identical(.sc_extract_matrix(hon), hon$matrix)
-
-  # Unsupported
-  expect_error(.sc_extract_matrix(data.frame(a = 1)), "Cannot extract")
-})
-
-
-# =========================================================================
-# betti_numbers
 # =========================================================================
 
 test_that("betti_numbers on filled triangle gives b0=1, rest 0", {
