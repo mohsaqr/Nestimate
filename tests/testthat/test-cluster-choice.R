@@ -233,7 +233,7 @@ test_that("summary returns data.frame with $best on silhouette-max row", {
 # Plot
 # ==============================================================================
 
-test_that("plot returns a ggplot for each sweep shape", {
+test_that("plot(type = 'auto') returns a ggplot for each sweep shape", {
   d <- .make_choice_data()
 
   ch1 <- cluster_choice(d, k = 2:4, method = "ward.D2")
@@ -246,4 +246,102 @@ test_that("plot returns a ggplot for each sweep shape", {
   ch3 <- cluster_choice(d, k = 2:4,
                         dissimilarity = c("hamming", "lcs"))
   expect_true(inherits(plot(ch3), "ggplot"))
+})
+
+# ==============================================================================
+# Explicit type dispatch
+# ==============================================================================
+
+test_that("plot accepts each explicit type when the data supports it", {
+  d <- .make_choice_data()
+  ch_full <- cluster_choice(d, k = 2:4,
+                             dissimilarity = c("hamming", "lcs"),
+                             method = c("ward.D2", "complete"))
+
+  for (t in c("lines", "bars", "tradeoff", "facet", "heatmap")) {
+    p <- if (t == "heatmap") {
+      # heatmap doesn't use the k axis -- pass a fixed-k object.
+      plot(cluster_choice(d, k = 4,
+                           dissimilarity = c("hamming", "lcs"),
+                           method = c("ward.D2", "complete")),
+           type = t)
+    } else {
+      plot(ch_full, type = t)
+    }
+    expect_true(inherits(p, "ggplot"),
+                info = sprintf("type = %s", t))
+  }
+})
+
+test_that("plot type validation: unsupported type points at the alternative", {
+  d <- .make_choice_data()
+
+  # heatmap requires both dissim and method swept
+  ch_one <- cluster_choice(d, k = 2:4, method = "ward.D2",
+                            dissimilarity = "hamming")
+  expect_error(plot(ch_one, type = "heatmap"),
+               "requires both dissimilarity and method")
+
+  # facet requires k + 2 categoricals
+  expect_error(plot(ch_one, type = "facet"),
+               "requires k plus two categorical")
+
+  # lines requires k swept
+  ch_fixed_k <- cluster_choice(d, k = 4,
+                                dissimilarity = c("hamming", "lcs"))
+  expect_error(plot(ch_fixed_k, type = "lines"),
+               "requires k to be swept")
+})
+
+# ==============================================================================
+# abbrev display
+# ==============================================================================
+
+test_that("abbrev = TRUE shortens dissimilarity / method labels", {
+  d <- .make_choice_data()
+  ch <- cluster_choice(d, k = 4,
+                        dissimilarity = c("hamming", "cosine", "jaccard"),
+                        method = c("ward.D2", "complete"))
+
+  p_short <- plot(ch, type = "heatmap", abbrev = TRUE)
+  # ggplot stores the data for the geoms; the displayed dissimilarity
+  # column should now carry abbreviations.
+  expect_true(inherits(p_short, "ggplot"))
+  expect_setequal(unique(p_short$data$dissimilarity),
+                   c("ham", "cos", "jac"))
+  expect_setequal(unique(p_short$data$method),
+                   c("wD2", "cmp"))
+
+  # abbrev = FALSE leaves the canonical names unchanged.
+  p_long <- plot(ch, type = "heatmap", abbrev = FALSE)
+  expect_setequal(unique(p_long$data$dissimilarity),
+                   c("hamming", "cosine", "jaccard"))
+  expect_setequal(unique(p_long$data$method),
+                   c("ward.D2", "complete"))
+})
+
+test_that("abbrev does not mutate the underlying cluster_choice object", {
+  d <- .make_choice_data()
+  ch <- cluster_choice(d, k = 4,
+                        dissimilarity = c("hamming", "cosine"),
+                        method = "ward.D2")
+  before <- ch
+  plot(ch, type = "bars", abbrev = TRUE)
+  expect_identical(ch, before)
+})
+
+# ==============================================================================
+# print no longer carries the editorial within_dist note
+# ==============================================================================
+
+test_that("print does not emit interpretive 'units of dissimilarity' note", {
+  d <- .make_choice_data()
+  ch <- cluster_choice(d, k = 4,
+                        dissimilarity = c("hamming", "cosine", "jaccard"))
+  out <- capture.output(print(ch))
+  # The footer note we used to print would have read e.g. 'within_dist is
+  # in the units of...'. Make sure no such guidance leaks back in.
+  expect_false(any(grepl("units of",       out)))
+  expect_false(any(grepl("apples to",      out)))
+  expect_false(any(grepl("only meaningful", out)))
 })

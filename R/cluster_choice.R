@@ -228,12 +228,6 @@ print.cluster_choice <- function(x, digits = 3L, ...) {
 
   print.data.frame(disp, row.names = FALSE, right = FALSE)
 
-  if (length(unique(x$dissimilarity)) > 1L) {
-    cat("\nNote: within_dist is in the units of each row's ",
-        "dissimilarity; cross-row comparisons are only meaningful for ",
-        "silhouette.\n", sep = "")
-  }
-
   invisible(x)
 }
 
@@ -254,108 +248,315 @@ summary.cluster_choice <- function(object, ...) {
   out
 }
 
+# ---------------------------------------------------------------------------
+# Abbreviation helpers (display-only). The underlying $dissimilarity and
+# $method columns always carry the canonical names; abbreviation is a
+# rendering concern triggered by `abbrev = TRUE` on plot().
+# ---------------------------------------------------------------------------
+
+.dissimilarity_abbrev <- c(
+  hamming = "ham", osa = "osa", lv  = "lv",  dl  = "dl",  lcs = "lcs",
+  qgram   = "qgr", cosine = "cos", jaccard = "jac", jw  = "jw"
+)
+
+.method_abbrev <- c(
+  pam = "pam", ward.D2 = "wD2", ward.D = "wD", complete = "cmp",
+  average = "avg", single = "sng", mcquitty = "mcq", median = "mdn",
+  centroid = "cen"
+)
+
+# Map canonical names -> abbreviations; pass through any unknown value.
+#' @noRd
+.abbrev_dissimilarity <- function(x) {
+  out <- unname(.dissimilarity_abbrev[as.character(x)])
+  ifelse(is.na(out), as.character(x), out)
+}
+
+#' @noRd
+.abbrev_method <- function(x) {
+  out <- unname(.method_abbrev[as.character(x)])
+  ifelse(is.na(out), as.character(x), out)
+}
+
 #' Plot Method for cluster_choice
 #'
-#' Adapts to the swept axes: a single-axis sweep produces the same shape
-#' as \code{\link{plot.mmm_compare}} (silhouette + within-distance vs k);
-#' multi-axis sweeps colour by the secondary axis and facet by any
-#' tertiary axis.
+#' Six explicit chart types plus a smart \code{"auto"} default. The user
+#' picks the shape; the function does not editorialise (no "best"
+#' annotation, no interpretive subtitles, no inferred recommendation).
+#'
+#' Type cheat-sheet:
+#' \describe{
+#'   \item{\code{"auto"}}{Default. Picks one of the others based on which
+#'     axes were swept. k-only -> \code{"lines"}; one categorical axis
+#'     swept -> \code{"bars"}; k plus one categorical -> \code{"lines"};
+#'     k plus two categoricals -> \code{"facet"}; both categoricals
+#'     without k -> \code{"heatmap"}.}
+#'   \item{\code{"lines"}}{Silhouette across k (and \code{mean_within_dist}
+#'     when \code{k} is the only swept axis), one line per non-k axis
+#'     when present.}
+#'   \item{\code{"bars"}}{Horizontal bar chart of silhouette per axis
+#'     level. Bars sorted by silhouette.}
+#'   \item{\code{"heatmap"}}{Tiled silhouette across two categorical
+#'     axes. Requires both \code{dissimilarity} and \code{method} swept.}
+#'   \item{\code{"tradeoff"}}{Scatter: silhouette (y) vs \code{size_ratio}
+#'     (x). Works for any sweep; labels each point.}
+#'   \item{\code{"facet"}}{Lines vs k, colour by one categorical axis,
+#'     facet by another. Requires \code{k} plus two categoricals.}
+#' }
+#'
+#' Asking for a type the data can't support raises an error pointing at
+#' the alternatives.
 #'
 #' @param x A \code{cluster_choice} object.
+#' @param type Character. One of \code{"auto"} (default), \code{"lines"},
+#'   \code{"bars"}, \code{"heatmap"}, \code{"tradeoff"}, \code{"facet"}.
+#' @param abbrev Logical. If \code{TRUE}, dissimilarity and method names
+#'   shown on tick labels and point labels are shortened (e.g.
+#'   \code{"hamming"} -> \code{"ham"}, \code{"ward.D2"} -> \code{"wD2"}).
+#'   The legend shows the full canonical name. Default \code{FALSE}.
 #' @param ... Additional arguments (ignored).
 #' @return A \code{ggplot} object, invisibly.
 #' @export
-plot.cluster_choice <- function(x, ...) {
+plot.cluster_choice <- function(x,
+                                 type   = c("auto", "lines", "bars",
+                                             "heatmap", "tradeoff",
+                                             "facet"),
+                                 abbrev = FALSE,
+                                 ...) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) { # nocov start
     stop("Package 'ggplot2' required.", call. = FALSE)
   } # nocov end
-
+  type  <- match.arg(type)
   swept <- attr(x, "swept") %||%
            list(k = TRUE, dissimilarity = TRUE, method = TRUE)
 
-  # Single-axis sweep: replicate the mmm_compare shape -- silhouette and
-  # mean_within_dist as two y-series. Long-format the two metrics so a
-  # single ggplot draws both with a colour aesthetic.
-  if (sum(unlist(swept)) <= 1L) {
-    if (isTRUE(swept$k)) {
-      df <- data.frame(
-        k         = rep(x$k, 2),
-        value     = c(x$silhouette, x$mean_within_dist),
-        metric    = rep(c("silhouette", "mean_within_dist"),
-                        each = nrow(x)),
-        stringsAsFactors = FALSE
-      )
-      p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$k, y = .data$value,
-                                              color = .data$metric)) +
-        ggplot2::geom_line(linewidth = 1) +
-        ggplot2::geom_point(size = 3) +
-        ggplot2::scale_x_continuous(breaks = unique(x$k)) +
-        ggplot2::labs(x = "k", y = "value",
-                      title = "Cluster Choice", color = NULL) +
-        ggplot2::theme_minimal() +
-        ggplot2::theme(legend.position = "bottom")
-    } else {
-      # dissimilarity-only or method-only sweep -> bar chart of silhouette.
-      axis <- if (isTRUE(swept$dissimilarity)) "dissimilarity" else "method"
-      df <- data.frame(
-        x_axis     = x[[axis]],
-        silhouette = x$silhouette,
-        stringsAsFactors = FALSE
-      )
-      p <- ggplot2::ggplot(df, ggplot2::aes(x = stats::reorder(
-                                              .data$x_axis,
-                                              -.data$silhouette),
-                                              y = .data$silhouette)) +
-        ggplot2::geom_col(fill = "steelblue") +
-        ggplot2::labs(x = axis, y = "silhouette",
-                      title = "Cluster Choice") +
-        ggplot2::theme_minimal()
-    }
-    print(p)
-    return(invisible(p))
+  if (type == "auto") type <- .auto_choice_type(swept)
+
+  # Validate the chosen type against the swept axes -- give the caller a
+  # one-line hint about which type fits when the request can't be drawn.
+  .require_type_supported(type, swept)
+
+  # Apply abbreviations to a working copy if requested. The original
+  # object is never mutated -- callers keep canonical names in their
+  # data frame.
+  df <- as.data.frame(x)
+  if (abbrev) {
+    df$dissimilarity <- .abbrev_dissimilarity(df$dissimilarity)
+    df$method        <- .abbrev_method(df$method)
   }
 
-  # Multi-axis sweep: silhouette vs k, colour by dissimilarity, facet
-  # by method. Falls back gracefully when k isn't swept.
-  if (isTRUE(swept$k)) {
-    color_axis <- if (isTRUE(swept$dissimilarity)) "dissimilarity" else
-                  if (isTRUE(swept$method))        "method"        else NA
-    facet_axis <- if (isTRUE(swept$dissimilarity) && isTRUE(swept$method))
-                    "method" else NA
-
-    aes_color <- if (!is.na(color_axis))
-      ggplot2::aes(x = .data$k, y = .data$silhouette,
-                   color = .data[[color_axis]]) else
-      ggplot2::aes(x = .data$k, y = .data$silhouette)
-
-    p <- ggplot2::ggplot(x, aes_color) +
-      ggplot2::geom_line(linewidth = 1) +
-      ggplot2::geom_point(size = 3) +
-      ggplot2::scale_x_continuous(breaks = unique(x$k)) +
-      ggplot2::labs(x = "k", y = "silhouette",
-                    title = "Cluster Choice",
-                    color = if (!is.na(color_axis)) color_axis else NULL) +
-      ggplot2::theme_minimal() +
-      ggplot2::theme(legend.position = "bottom")
-
-    if (!is.na(facet_axis)) {
-      p <- p + ggplot2::facet_wrap(stats::as.formula(
-                paste0("~ ", facet_axis)))
-    }
-  } else {
-    # No k axis: treat dissimilarity x method as a heatmap on silhouette.
-    p <- ggplot2::ggplot(x, ggplot2::aes(x = .data$dissimilarity,
-                                          y = .data$method,
-                                          fill = .data$silhouette)) +
-      ggplot2::geom_tile() +
-      ggplot2::geom_text(ggplot2::aes(label = sprintf("%.2f",
-                                                       .data$silhouette))) +
-      ggplot2::scale_fill_gradient(low = "white", high = "steelblue") +
-      ggplot2::labs(title = "Cluster Choice (silhouette)",
-                    x = "dissimilarity", y = "method") +
-      ggplot2::theme_minimal()
-  }
+  p <- switch(type,
+              lines    = .plot_choice_lines(df, swept),
+              bars     = .plot_choice_bars(df, swept),
+              heatmap  = .plot_choice_heatmap(df),
+              tradeoff = .plot_choice_tradeoff(df, swept),
+              facet    = .plot_choice_facet(df, swept))
 
   print(p)
   invisible(p)
+}
+
+# Pick an auto type given which axes are swept. Mirrors what the previous
+# auto-only plot did, but routed through the named types so the user can
+# follow the dispatch.
+#' @noRd
+.auto_choice_type <- function(swept) {
+  n_axes <- sum(unlist(swept))
+  if (n_axes <= 1L) {
+    if (isTRUE(swept$k)) "lines" else "bars"
+  } else if (isTRUE(swept$k) && isTRUE(swept$dissimilarity) &&
+             isTRUE(swept$method)) {
+    "facet"
+  } else if (isTRUE(swept$k)) {
+    "lines"
+  } else {
+    "heatmap"
+  }
+}
+
+# Validate that the user's chosen type is plottable for the data on hand.
+#' @noRd
+.require_type_supported <- function(type, swept) {
+  msg <- function(...) stop(..., call. = FALSE)
+  switch(type,
+         lines = if (!isTRUE(swept$k))
+           msg("type = \"lines\" requires k to be swept (length > 1). ",
+               "Use type = \"bars\" or type = \"heatmap\" for a fixed-k ",
+               "sweep."),
+         heatmap = if (!isTRUE(swept$dissimilarity) || !isTRUE(swept$method))
+           msg("type = \"heatmap\" requires both dissimilarity and method ",
+               "to be swept. Use type = \"bars\" for one categorical axis ",
+               "or type = \"lines\" for a k sweep."),
+         facet = if (!isTRUE(swept$k) ||
+                     sum(unlist(swept)) < 3L)
+           msg("type = \"facet\" requires k plus two categorical axes ",
+               "(dissimilarity and method) to be swept. Use type = ",
+               "\"lines\" for k + one categorical, or type = \"heatmap\" ",
+               "for two categoricals at fixed k."),
+         bars     = invisible(),  # fits any shape, just shows silhouette per row
+         tradeoff = invisible())   # fits any shape
+}
+
+# ---------------------------------------------------------------------------
+# Per-type plot builders (each returns a ggplot, no editorialising)
+# ---------------------------------------------------------------------------
+
+#' @noRd
+.plot_choice_lines <- function(df, swept) {
+  # k-only sweep: silhouette and within_dist as two y-series.
+  if (isTRUE(swept$k) && sum(unlist(swept)) == 1L) {
+    long <- data.frame(
+      k = rep(df$k, 2L),
+      value = c(df$silhouette, df$mean_within_dist),
+      metric = rep(c("silhouette", "mean_within_dist"),
+                   each = nrow(df)),
+      stringsAsFactors = FALSE
+    )
+    return(
+      ggplot2::ggplot(long, ggplot2::aes(x = .data$k, y = .data$value,
+                                           colour = .data$metric,
+                                           group  = .data$metric)) +
+        ggplot2::geom_line(linewidth = 1) +
+        ggplot2::geom_point(size = 2.8) +
+        ggplot2::scale_x_continuous(breaks = unique(df$k)) +
+        ggplot2::labs(title = "Cluster Choice", x = "k", y = NULL,
+                      colour = NULL) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(legend.position = "bottom")
+    )
+  }
+
+  # k + one categorical axis: silhouette vs k, one line per axis level.
+  colour_axis <- if (isTRUE(swept$dissimilarity)) "dissimilarity" else
+                 if (isTRUE(swept$method))        "method"        else NA
+
+  aes_obj <- if (!is.na(colour_axis))
+    ggplot2::aes(x = .data$k, y = .data$silhouette,
+                 colour = .data[[colour_axis]],
+                 group  = .data[[colour_axis]])
+  else
+    ggplot2::aes(x = .data$k, y = .data$silhouette)
+
+  ggplot2::ggplot(df, aes_obj) +
+    ggplot2::geom_line(linewidth = 1) +
+    ggplot2::geom_point(size = 2.8) +
+    ggplot2::scale_x_continuous(breaks = unique(df$k)) +
+    ggplot2::scale_colour_viridis_d(option = "D", end = 0.85) +
+    ggplot2::labs(title = "Cluster Choice", x = "k", y = "silhouette",
+                  colour = colour_axis) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = "bottom")
+}
+
+#' @noRd
+.plot_choice_bars <- function(df, swept) {
+  # Pick the categorical axis to bar against. If both are swept and k
+  # isn't, treat it as a flattened (dissim x method) categorical.
+  axis <- if (isTRUE(swept$dissimilarity) && !isTRUE(swept$method))
+            "dissimilarity"
+          else if (isTRUE(swept$method) && !isTRUE(swept$dissimilarity))
+            "method"
+          else if (isTRUE(swept$k) && !isTRUE(swept$dissimilarity) &&
+                   !isTRUE(swept$method))
+            "k"
+          else NA
+
+  if (is.na(axis)) {
+    # Multi-axis fallback: bars over the row index labelled by all
+    # swept fields. Handles k x dissim, k x method, dissim x method.
+    label_parts <- list()
+    if (isTRUE(swept$k))             label_parts$k    <- as.character(df$k)
+    if (isTRUE(swept$dissimilarity)) label_parts$diss <- df$dissimilarity
+    if (isTRUE(swept$method))        label_parts$meth <- df$method
+    df$.row <- do.call(paste, c(label_parts, sep = " / "))
+    axis <- ".row"
+  }
+
+  ggplot2::ggplot(df,
+                   ggplot2::aes(x = stats::reorder(.data[[axis]],
+                                                     .data$silhouette),
+                                  y = .data$silhouette)) +
+    ggplot2::geom_col(fill = "steelblue") +
+    ggplot2::geom_text(ggplot2::aes(label = sprintf("%.3f",
+                                                      .data$silhouette)),
+                        hjust = -0.15, size = 3.2, colour = "grey25") +
+    ggplot2::coord_flip() +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult =
+                                                              c(0, 0.18))) +
+    ggplot2::labs(title = "Cluster Choice",
+                  x = if (axis == ".row") NULL else axis,
+                  y = "silhouette") +
+    ggplot2::theme_minimal()
+}
+
+#' @noRd
+.plot_choice_heatmap <- function(df) {
+  ggplot2::ggplot(df, ggplot2::aes(x = .data$dissimilarity,
+                                     y = .data$method,
+                                     fill = .data$silhouette)) +
+    ggplot2::geom_tile(colour = "white", linewidth = 0.5) +
+    ggplot2::geom_text(ggplot2::aes(label = sprintf("%.2f",
+                                                      .data$silhouette)),
+                        size = 3.4, colour = "grey15") +
+    ggplot2::scale_fill_viridis_c(option = "D", end = 0.95) +
+    ggplot2::labs(title = "Cluster Choice", x = "dissimilarity",
+                  y = "method", fill = "silhouette") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank())
+}
+
+#' @noRd
+.plot_choice_tradeoff <- function(df, swept) {
+  # Build a label that names whichever axes vary, so the scatter is
+  # readable without a legend.
+  parts <- list()
+  if (isTRUE(swept$k))             parts$k    <- sprintf("k=%d", df$k)
+  if (isTRUE(swept$dissimilarity)) parts$diss <- df$dissimilarity
+  if (isTRUE(swept$method))        parts$meth <- df$method
+  df$.label <- do.call(paste, c(parts, sep = "/"))
+
+  colour_axis <- if (isTRUE(swept$dissimilarity)) "dissimilarity" else
+                 if (isTRUE(swept$method))        "method"        else
+                 if (isTRUE(swept$k))             "k"             else NA
+
+  aes_obj <- if (!is.na(colour_axis))
+    ggplot2::aes(x = .data$size_ratio, y = .data$silhouette,
+                 colour = .data[[colour_axis]])
+  else
+    ggplot2::aes(x = .data$size_ratio, y = .data$silhouette)
+
+  p <- ggplot2::ggplot(df, aes_obj) +
+    ggplot2::geom_point(size = 3, alpha = 0.85) +
+    ggplot2::geom_text(ggplot2::aes(label = .data$.label),
+                        hjust = -0.15, size = 3, colour = "grey25") +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult =
+                                                              c(0.05, 0.18))) +
+    ggplot2::labs(title = "Cluster Choice",
+                  x = "size_ratio", y = "silhouette",
+                  colour = if (!is.na(colour_axis)) colour_axis else NULL) +
+    ggplot2::theme_minimal()
+
+  if (!is.na(colour_axis) &&
+      colour_axis %in% c("dissimilarity", "method")) {
+    p <- p + ggplot2::scale_colour_viridis_d(option = "D", end = 0.85)
+  }
+  p
+}
+
+#' @noRd
+.plot_choice_facet <- function(df, swept) {
+  # k + dissim + method: lines vs k, colour = dissim, facet = method.
+  ggplot2::ggplot(df, ggplot2::aes(x = .data$k, y = .data$silhouette,
+                                     colour = .data$dissimilarity,
+                                     group  = .data$dissimilarity)) +
+    ggplot2::geom_line(linewidth = 1) +
+    ggplot2::geom_point(size = 2.5) +
+    ggplot2::scale_x_continuous(breaks = unique(df$k)) +
+    ggplot2::scale_colour_viridis_d(option = "D", end = 0.85) +
+    ggplot2::facet_wrap(~ method) +
+    ggplot2::labs(title = "Cluster Choice", x = "k", y = "silhouette",
+                  colour = "dissimilarity") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = "bottom",
+                   strip.text = ggplot2::element_text(face = "bold"))
 }

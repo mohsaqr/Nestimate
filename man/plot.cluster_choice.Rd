@@ -4,10 +4,23 @@
 \alias{plot.cluster_choice}
 \title{Plot Method for cluster_choice}
 \usage{
-\method{plot}{cluster_choice}(x, ...)
+\method{plot}{cluster_choice}(
+  x,
+  type = c("auto", "lines", "bars", "heatmap", "tradeoff", "facet"),
+  abbrev = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{cluster_choice} object.}
+
+\item{type}{Character. One of \code{"auto"} (default), \code{"lines"},
+\code{"bars"}, \code{"heatmap"}, \code{"tradeoff"}, \code{"facet"}.}
+
+\item{abbrev}{Logical. If \code{TRUE}, dissimilarity and method names
+shown on tick labels and point labels are shortened (e.g.
+\code{"hamming"} -> \code{"ham"}, \code{"ward.D2"} -> \code{"wD2"}).
+The legend shows the full canonical name. Default \code{FALSE}.}
 
 \item{...}{Additional arguments (ignored).}
 }
@@ -15,8 +28,31 @@
 A \code{ggplot} object, invisibly.
 }
 \description{
-Adapts to the swept axes: a single-axis sweep produces the same shape
-as \code{\link{plot.mmm_compare}} (silhouette + within-distance vs k);
-multi-axis sweeps colour by the secondary axis and facet by any
-tertiary axis.
+Six explicit chart types plus a smart \code{"auto"} default. The user
+picks the shape; the function does not editorialise (no "best"
+annotation, no interpretive subtitles, no inferred recommendation).
+}
+\details{
+Type cheat-sheet:
+\describe{
+\item{\code{"auto"}}{Default. Picks one of the others based on which
+axes were swept. k-only -> \code{"lines"}; one categorical axis
+swept -> \code{"bars"}; k plus one categorical -> \code{"lines"};
+k plus two categoricals -> \code{"facet"}; both categoricals
+without k -> \code{"heatmap"}.}
+\item{\code{"lines"}}{Silhouette across k (and \code{mean_within_dist}
+when \code{k} is the only swept axis), one line per non-k axis
+when present.}
+\item{\code{"bars"}}{Horizontal bar chart of silhouette per axis
+level. Bars sorted by silhouette.}
+\item{\code{"heatmap"}}{Tiled silhouette across two categorical
+axes. Requires both \code{dissimilarity} and \code{method} swept.}
+\item{\code{"tradeoff"}}{Scatter: silhouette (y) vs \code{size_ratio}
+(x). Works for any sweep; labels each point.}
+\item{\code{"facet"}}{Lines vs k, colour by one categorical axis,
+facet by another. Requires \code{k} plus two categoricals.}
+}
+
+Asking for a type the data can't support raises an error pointing at
+the alternatives.
 }
