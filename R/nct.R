@@ -53,9 +53,6 @@
 nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
                  paired = FALSE, abs = TRUE, weighted = TRUE,
                  p_adjust = "none") {
-  if (!requireNamespace("qgraph", quietly = TRUE)) {
-    stop("nct() requires the 'qgraph' package.", call. = FALSE)
-  }
   if (!requireNamespace("Matrix", quietly = TRUE)) {
     stop("nct() requires the 'Matrix' package.", call. = FALSE)
   }
@@ -74,15 +71,20 @@ nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
   p  <- ncol(data1)
   dataall <- rbind(data1, data2)
 
-  # Estimator: nearPD symmetrization + qgraph::EBICglasso
-  # (matches NetworkComparisonTest::NCT_estimator_GGM exactly)
+  # Estimator: nearPD symmetrization + EBIC-glasso. Matches the shape of
+  # NetworkComparisonTest::NCT_estimator_GGM but uses the package's own
+  # EBIC-glasso path (.compute_lambda_path + .select_ebic + .wi2net) so
+  # we don't pull qgraph just for one line.
   est <- function(x) {
     cor_x <- stats::cor(x)
     cor_x <- as.matrix(Matrix::nearPD(cor_x, corr = TRUE)$mat)
     cor_x <- (cor_x + t(cor_x)) / 2
-    suppressWarnings(suppressMessages(
-      qgraph::EBICglasso(cor_x, n = nrow(x), gamma = gamma, verbose = FALSE)
-    ))
+    lambda_path <- .compute_lambda_path(cor_x, nlambda = 100L,
+                                          lambda.min.ratio = 0.01)
+    selected <- .select_ebic(cor_x, lambda_path,
+                              n = nrow(x), gamma = gamma,
+                              penalize_diagonal = FALSE)
+    .wi2net(selected$wi)
   }
 
   nw1 <- est(data1)

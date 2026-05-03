@@ -43,7 +43,6 @@ Suggests:
     IsingFit,
     bootnet,
     gimme,
-    qgraph,
     reticulate,
     gridExtra,
     lme4,
