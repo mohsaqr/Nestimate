@@ -41,7 +41,6 @@ Suggests:
     stringdist,
     nnet,
     IsingFit,
-    bootnet,
     gimme,
     reticulate,
     gridExtra,
