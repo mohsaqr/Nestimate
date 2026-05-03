@@ -40,6 +40,19 @@ reference:
       - pathways
       - mogen_transitions
       - path_counts
+      - bipartite_groups
+      - clique_expansion
+      - hypergraph_centrality
+
+  - title: Markov Analysis
+    desc: Order, structure, entropy, and stability of Markov chains
+    contents:
+      - chain_structure
+      - markov_order_test
+      - markov_stability
+      - passage_time
+      - path_dependence
+      - transition_entropy
 
   - title: Bootstrap & Inference
     desc: Statistical inference for network estimation
@@ -59,6 +72,8 @@ reference:
     desc: Cluster-based and multilevel network analysis
     contents:
       - build_clusters
+      - cluster_choice
+      - cluster_diagnostics
       - cluster_summary
       - cluster_mmm
       - cluster_network
@@ -87,6 +102,9 @@ reference:
       - wide_to_long
       - long_to_wide
       - convert_sequence_format
+      - actor_endpoints
+      - mark_first_state
+      - mark_terminal_state
 
   - title: Utilities
     desc: Helper functions and extractors
@@ -111,8 +129,6 @@ reference:
       - plot_mosaic
       - sequence_compare
       - association_rules
-      - passage_time
-      - markov_stability
 
   - title: Link Prediction
     desc: Predict and evaluate missing connections

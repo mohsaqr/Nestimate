@@ -29,10 +29,15 @@ To illustrate clustering, we will use the `human_long` dataset, which contains 1
 library(Nestimate)
 data("human_long")
 
-# Subsample for vignette speed (CRAN build-time limit)
+# Subsample for vignette speed (CRAN build-time limit). Keep only
+# sessions of at least 5 turns -- some metrics are undefined on very
+# short sequences and downstream sequence_plot row-ordering uses an
+# LCS-distance hclust that needs >= 2 observed turns per row.
 set.seed(1)
-keep <- sample(unique(human_long$session_id), 80)
-human_sub <- human_long[human_long$session_id %in% keep, ]
+session_lengths <- table(human_long$session_id)
+long_enough     <- names(session_lengths)[session_lengths >= 5]
+keep            <- sample(long_enough, 80)
+human_sub       <- human_long[human_long$session_id %in% keep, ]
 
 head(human_sub)
 ```
@@ -156,47 +161,43 @@ clust_complete$silhouette
 ```
 
 
-### Choosing k (Number of Clusters)
+### Choosing k, dissimilarity, and method
 
-To choose the right clustering solution and method, we need to compare the silhouette scores across different k values and clustering methods (and also distance metrics if we want):
+`cluster_choice()` sweeps any combination of `k`, `dissimilarity`, and `method` in a single call and returns one row per configuration with silhouette, mean within-cluster distance, and cluster-size balance. Pass a vector to any axis to sweep it; `dissimilarity = "all"` and `method = "all"` expand to every supported option.
 
 ```{r choose-k}
-methods <- c("pam", "ward.D2", "complete", "average")
-
-silhouettes <- lapply(methods, function(m) {
-  sapply(2:4, function(k) {
-    build_clusters(net, k = k, method = m, seed = 42)$silhouette
-  })
-})
-
-names(silhouettes) <- methods
-
-silhouettes
+ch <- cluster_choice(net, k = 2:4,
+                      method = c("pam", "ward.D2", "complete", "average"))
+ch
 ```
 
-```{r choose-k-plot, fig.alt = "Silhouette scores across different k values"}
-methods <- names(silhouettes)
-colors <- rainbow(length(methods))
+`plot()` accepts an explicit `type =` so you can pick the chart that suits the sweep shape (`"lines"`, `"bars"`, `"heatmap"`, `"tradeoff"`, `"facet"`, or the default `"auto"`).
 
-plot(2:4, silhouettes[[1]], type = "b", pch = 19, col = colors[1],
-     xlab = "Number of clusters (k)",
-     ylab = "Average silhouette width",
-     ylim = c(0, 1),
-     main = "Choosing k")
-
-for (i in 2:length(methods)) {
-  lines(2:4, silhouettes[[i]], type = "b", pch = 19, col = colors[i])
-}
-
-legend("topright", legend = methods, col = colors, lty = 1, pch = 19)
+```{r choose-k-plot, fig.alt = "Silhouette across k for each clustering method"}
+plot(ch, type = "lines")
 ```
 
-Higher silhouette scores indicate better-defined clusters. Look for an "elbow" or maximum. Here we select `ward.D2` with 2 clusters, which yields a reasonable silhouette width.
+Higher silhouette indicates better-defined clusters. The `<-- best` marker in the printed table is the silhouette-max row; `summary(ch)$best` returns it programmatically. We select `ward.D2` with 2 clusters here.
+
 ```{r}
 clust <- build_clusters(net, k = 2, method = "ward.D2", seed = 42)
-
 summary(clust)
 ```
+
+### Validating the choice with `cluster_diagnostics()`
+
+Once a clustering is fit, `cluster_diagnostics()` returns a uniform diagnostic surface that works for both distance-based fits (`net_clustering`) and model-based fits (`net_mmm`, `net_mmm_clustering`). The print method shows per-cluster size, mean within-distance, and silhouette for distance-based fits; AvePP, mixing share, and per-cluster classification error for MMM fits.
+
+```{r cluster-diagnostics}
+diag <- cluster_diagnostics(clust)
+diag
+```
+
+```{r cluster-diagnostics-plot, fig.alt = "Per-observation silhouette by cluster"}
+plot(diag, type = "silhouette")
+```
+
+`as.data.frame(diag)` returns the per-cluster table for downstream use.
 
 
 
@@ -211,7 +212,11 @@ mmm_fit <- build_mmm(net, k = 2)
 summary(mmm_fit)
 ```
 
-The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and per-cluster transition matrices in `$models`.
+The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and per-cluster transition matrices in `$models`. `cluster_diagnostics()` works on it too, with MMM-specific columns:
+
+```{r mmm-diagnostics}
+cluster_diagnostics(mmm_fit)
+```
 
 ## Building Networks per Cluster
 
