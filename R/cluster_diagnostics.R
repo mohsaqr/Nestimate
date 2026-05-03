@@ -322,7 +322,7 @@ print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
       `Mean within-dist` = ifelse(is.na(pc$mean_within_dist), "--",
                                    sprintf(paste0("%.", digits, "f"),
                                            pc$mean_within_dist)),
-      `Sil mean`         = ifelse(is.na(pc$sil_mean), "--",
+      Silhouette         = ifelse(is.na(pc$sil_mean), "--",
                                    sprintf(paste0("%.", digits, "f"),
                                            pc$sil_mean))
     )

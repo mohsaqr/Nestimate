@@ -158,7 +158,7 @@ test_that("print(): distance family header + per_cluster table", {
   hdr <- grep("^\\s+Cluster\\s+N\\s", out)
   expect_length(hdr, 1L)
   expect_true(grepl("Mean within-dist", out[hdr]))
-  expect_true(grepl("Sil mean",         out[hdr]))
+  expect_true(grepl("Silhouette",       out[hdr]))
 })
 
 test_that("print(): mmm family header + IC line + per_cluster table", {

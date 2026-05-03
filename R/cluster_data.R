@@ -745,16 +745,37 @@ cluster_data <- function(...) {
 # print.netobject_group so a netobject_group built by cluster_network() and
 # one built by cluster_mmm() print with the same shape.
 # ------------------------------------------------------------------------------
-.cluster_table_lines <- function(cols, indent = "  ") {
+.cluster_table_lines <- function(cols, indent = "  ", sep = "  ") {
   stopifnot(is.list(cols), length(cols) >= 1L, !is.null(names(cols)))
   k <- length(cols[[1L]])
   if (k == 0L) return(character(0L))
-  df <- as.data.frame(cols, stringsAsFactors = FALSE,
-                      check.names = FALSE)
-  out <- utils::capture.output(
-    print(df, row.names = FALSE, right = FALSE, max = 1e6)
-  )
-  paste0(indent, out)
+
+  names_v <- names(cols)
+  # Column widths from header + cell content (cells are already character).
+  widths <- vapply(seq_along(cols), function(j) {
+    cells <- as.character(cols[[j]])
+    max(nchar(names_v[[j]]), if (length(cells)) max(nchar(cells)) else 0L)
+  }, integer(1L))
+
+  ncol_v <- length(cols)
+  # `print(data.frame)` left-aligns; we keep the same convention but pad
+  # only up to (not past) the *last* column so trailing whitespace on the
+  # right edge is gone.
+  pad <- function(s, w, last) if (last) s else formatC(s, width = w, flag = "-")
+
+  build_row <- function(cells) {
+    parts <- vapply(seq_len(ncol_v), function(j) {
+      pad(cells[[j]], widths[[j]], last = j == ncol_v)
+    }, character(1L))
+    paste(parts, collapse = sep)
+  }
+
+  header <- build_row(as.list(names_v))
+  rows   <- vapply(seq_len(k), function(i) {
+    build_row(lapply(cols, function(col) as.character(col[[i]])))
+  }, character(1L))
+
+  paste0(indent, c(header, rows))
 }
 
 # Helper: format size + percentage as a "30 (50.0%)" string.
