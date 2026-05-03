@@ -177,6 +177,25 @@ ch
 plot(ch, type = "lines")
 ```
 
+To compare several dissimilarities at a fixed `k`, pass a vector and use the `bars` plot type. `dissimilarity = "all"` expands to every supported metric (`hamming`, `osa`, `lv`, `dl`, `lcs`, `qgram`, `cosine`, `jaccard`, `jw`); some metrics require denser sequences than others, so for this short-sequence sample we name a curated subset directly. `abbrev = TRUE` shortens the metric names on the tick labels.
+
+```{r choose-d}
+ch_d <- cluster_choice(net, k = 2,
+                        dissimilarity = c("hamming", "lv", "lcs"),
+                        method = "ward.D2")
+ch_d
+```
+
+```{r choose-d-plot, fig.alt = "Silhouette per dissimilarity at k = 2"}
+plot(ch_d, type = "bars", abbrev = TRUE)
+```
+
+A high silhouette can come from one big cluster and a tiny outlier cluster. The `tradeoff` type plots silhouette against the cluster-size ratio so you can see both axes at once.
+
+```{r choose-tradeoff, fig.alt = "Quality vs cluster-size balance"}
+plot(ch_d, type = "tradeoff", abbrev = TRUE)
+```
+
 Higher silhouette indicates better-defined clusters. The `<-- best` marker in the printed table is the silhouette-max row; `summary(ch)$best` returns it programmatically. We select `ward.D2` with 2 clusters here.
 
 ```{r}
@@ -212,10 +231,17 @@ mmm_fit <- build_mmm(net, k = 2)
 summary(mmm_fit)
 ```
 
-The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and per-cluster transition matrices in `$models`. `cluster_diagnostics()` works on it too, with MMM-specific columns:
+The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and per-cluster transition matrices in `$models`. `cluster_diagnostics()` works on it too, with MMM-specific columns (mixing share, average posterior probability, per-cluster classification error):
 
 ```{r mmm-diagnostics}
-cluster_diagnostics(mmm_fit)
+diag_mmm <- cluster_diagnostics(mmm_fit)
+diag_mmm
+```
+
+The `posterior` plot type shows the distribution of each sequence's max posterior probability, faceted by cluster. Tight distributions near 1 indicate clean assignment; spread-out distributions indicate fuzzy clusters.
+
+```{r mmm-diagnostics-plot, fig.alt = "Posterior certainty per MMM cluster"}
+plot(diag_mmm, type = "posterior")
 ```
 
 ## Building Networks per Cluster
@@ -283,4 +309,39 @@ cluster_net <- build_network(clust)
 We can compare which transition probabilities differ significantly among clusters using permutation testing:
 ```{r}
 comparison <- permutation(grp_dist, iter = 100)
+```
+
+## Workflow Summary
+
+The end-to-end path from raw sequence data to validated per-cluster networks:
+
+```{r workflow, eval = FALSE}
+# 1. Build the network from long-format data
+net <- build_network(human_long, method = "tna",
+                     actor = "session_id",
+                     action = "cluster",
+                     time   = "timestamp")
+
+# 2. Sweep the parameter space
+ch <- cluster_choice(net, k = 2:5,
+                     dissimilarity = c("hamming", "lcs", "cosine"),
+                     method = c("pam", "ward.D2"))
+plot(ch, type = "facet", abbrev = TRUE)
+
+# 3. Pick a configuration and fit
+clust <- build_clusters(net, k = 2,
+                         dissimilarity = "hamming",
+                         method = "ward.D2")
+
+# 4. Validate
+diag <- cluster_diagnostics(clust)
+diag
+plot(diag, type = "silhouette")
+
+# 5. Build per-cluster networks
+grp <- build_network(clust)
+
+# 6. Optional: model-based second opinion
+mmm <- build_mmm(net, k = 2)
+plot(cluster_diagnostics(mmm), type = "posterior")
 ```
