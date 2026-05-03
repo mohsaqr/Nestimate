@@ -1021,20 +1021,47 @@ plot.mmm_compare <- function(x, ...) {
 # cluster_mmm — wrapper returning netobject_group (parallel to cluster_network)
 # ---------------------------------------------------------------------------
 
+# Attach MMM clustering metadata (assignments, posterior, mixing, ICs, full
+# sequence data) to a netobject_group built from a net_mmm. Used by both
+# cluster_mmm() and build_network.net_mmm so the netobject_group invariant
+# is the same regardless of how the user got there: every member has its
+# own $weights/$nodes/$edges, and `attr(, "clustering")` carries N-row
+# $data matching $assignments.
+#' @noRd
+.attach_mmm_clustering <- function(nets, mmm, full_data = NULL) {
+  clustering_info <- mmm[setdiff(names(mmm), "models")]
+  if (is.null(full_data) && length(nets) > 0L) {
+    full_data <- nets[[1L]]$data
+  }
+  if (!is.null(full_data)) clustering_info$data <- full_data
+  class(clustering_info) <- "net_mmm_clustering"
+  attr(nets, "clustering") <- clustering_info
+  attr(nets, "group_col")  <- "cluster"
+  nets
+}
+
 #' Cluster sequences using Mixed Markov Models
 #'
 #' Fits a mixture of Markov chains to sequence data and returns a
 #' \code{netobject_group} containing per-cluster transition networks.
 #' This is the MMM equivalent of \code{\link{cluster_network}} (which uses
-#' distance-based clustering).
+#' distance-based clustering); both functions share the
+#' \code{cluster_by = ...} surface argument so the call shape stays
+#' uniform across clustering families.
 #'
 #' For the full \code{net_mmm} object with posterior probabilities, model
 #' fit statistics, and S3 methods, use \code{\link{build_mmm}} instead.
 #'
 #' @inheritParams build_mmm
+#' @param cluster_by Character. Accepted only as \code{"mmm"} (the
+#'   default). Present so \code{cluster_mmm()} and \code{cluster_network()}
+#'   share the same call shape; any other value raises an error pointing
+#'   at \code{\link{cluster_network}}.
+#' @param ... Reserved for forward compatibility with the unified
+#'   \code{cluster_*} surface. Currently unused.
 #' @return A \code{netobject_group} (list of \code{netobject}s, one per
 #'   cluster). MMM-specific information is stored in
-#'   \code{attr(, "clustering")}:
+#'   \code{attr(, "clustering")} (class \code{"net_mmm_clustering"}):
 #'   \describe{
 #'     \item{assignments}{Integer vector of cluster assignments.}
 #'     \item{k}{Number of clusters.}
@@ -1042,6 +1069,9 @@ plot.mmm_compare <- function(x, ...) {
 #'     \item{mixing}{Mixing proportions.}
 #'     \item{quality}{List with AvePP, entropy, classification error.}
 #'     \item{BIC, AIC, ICL}{Model fit statistics.}
+#'     \item{data}{The full N-row sequence frame, matching
+#'       \code{$assignments} -- so \code{\link{sequence_plot}} and
+#'       \code{\link{distribution_plot}} can recover both.}
 #'   }
 #' @seealso \code{\link{build_mmm}} for the full MMM object,
 #'   \code{\link{cluster_network}} for distance-based clustering
@@ -1052,7 +1082,7 @@ plot.mmm_compare <- function(x, ...) {
 #' grp[[1]]$weights
 #' attr(grp, "clustering")$assignments
 #' \donttest{
-#' # Visualize with sequence_plot
+#' # Visualise with sequence_plot
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:3], 40, TRUE),
 #'   V2 = sample(LETTERS[1:3], 40, TRUE),
@@ -1064,28 +1094,29 @@ plot.mmm_compare <- function(x, ...) {
 #' @export
 cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
                         tol = 1e-6, smooth = 0.01, seed = NULL,
-                        covariates = NULL) {
+                        covariates = NULL,
+                        cluster_by = "mmm", ...) {
+  # cluster_by exists for API parity with cluster_network() so a single
+  # surface argument toggles the clustering family. Only "mmm" is valid
+  # here; anything else is a programming error worth catching loudly.
+  if (!identical(as.character(cluster_by), "mmm")) {
+    stop("cluster_mmm() only supports cluster_by = \"mmm\". For other ",
+         "clustering algorithms, use cluster_network(..., cluster_by = ...).",
+         call. = FALSE)
+  }
+  # Quietly ignore further `...` so the cluster_network()-style call
+  # `cluster_mmm(x, k, dissimilarity = "hamming")` doesn't fail noisily.
+  # (build_mmm has no `...` itself; we don't want to leak strange args
+  # into the EM core either.)
+
   mmm <- build_mmm(data = data, k = k, n_starts = n_starts,
                    max_iter = max_iter, tol = tol, smooth = smooth,
                    seed = seed, covariates = covariates)
 
-  # Extract networks as the main list
   grp <- mmm$models
   if (is.null(names(grp))) names(grp) <- paste0("Cluster ", seq_along(grp))
-
-  # Store all MMM info (except $models) in clustering attribute. Also stash
-  # the full sequence data so .extract_seqplot_input() and other consumers
-  # of `attr(, "clustering")$data` get an N-row frame matching $assignments
-  # (matches the invariant set by cluster_network()).
-  clustering_info <- mmm[setdiff(names(mmm), "models")]
-  full_data <- if (length(grp) > 0L) grp[[1L]]$data else NULL
-  if (!is.null(full_data)) clustering_info$data <- full_data
-  class(clustering_info) <- "net_mmm_clustering"
-  attr(grp, "clustering") <- clustering_info
-  attr(grp, "group_col") <- "cluster"
-
   class(grp) <- "netobject_group"
-  grp
+  .attach_mmm_clustering(grp, mmm, full_data = grp[[1L]]$data)
 }
 
 #' Print Method for MMM Clustering Attribute

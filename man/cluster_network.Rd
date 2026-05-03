@@ -21,10 +21,12 @@ or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.}
 \item{dissimilarity}{Character. Distance metric for sequence clustering
 (ignored when \code{cluster_by = "mmm"}). Default: \code{"hamming"}.}
 
-\item{...}{Passed directly to \code{\link{build_network}}. Use
-\code{method} to specify the network type; \code{threshold},
-\code{scaling}, and all other \code{build_network} arguments are
-supported.}
+\item{...}{Passed to \code{\link{build_network}}. When
+\code{cluster_by = "mmm"}, recognised \code{\link{build_mmm}} arguments
+(\code{n_starts}, \code{max_iter}, \code{tol}, \code{smooth},
+\code{seed}, \code{covariates}) are intercepted and forwarded to
+\code{build_mmm()} so a single call controls both the MMM fit and the
+per-cluster network estimation.}
 }
 \value{
 A \code{netobject_group}.

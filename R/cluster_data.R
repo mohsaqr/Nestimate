@@ -707,6 +707,29 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
   )
 }
 
+#' Cluster sequence data (deprecated alias)
+#'
+#' Renamed to \code{\link{build_clusters}} in Nestimate 0.4.3. This thin
+#' wrapper is preserved so the function name in older tutorials and the
+#' historical pkgdown reference continues to work; it issues a one-shot
+#' deprecation warning and forwards every argument unchanged.
+#'
+#' @param ... Passed verbatim to \code{\link{build_clusters}}.
+#' @return The \code{net_clustering} object returned by
+#'   \code{\link{build_clusters}}.
+#' @seealso \code{\link{build_clusters}}, \code{\link{cluster_network}},
+#'   \code{\link{cluster_mmm}}.
+#' @keywords internal
+#' @export
+cluster_data <- function(...) {
+  .Deprecated("build_clusters",
+              package = "Nestimate",
+              msg = paste0(
+                "cluster_data() was renamed to build_clusters() in ",
+                "Nestimate 0.4.3. Please use build_clusters() instead."))
+  build_clusters(...)
+}
+
 
 # ==============================================================================
 # 6. S3 Methods
@@ -1494,10 +1517,12 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #'   or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.
 #' @param dissimilarity Character. Distance metric for sequence clustering
 #'   (ignored when \code{cluster_by = "mmm"}). Default: \code{"hamming"}.
-#' @param ... Passed directly to \code{\link{build_network}}. Use
-#'   \code{method} to specify the network type; \code{threshold},
-#'   \code{scaling}, and all other \code{build_network} arguments are
-#'   supported.
+#' @param ... Passed to \code{\link{build_network}}. When
+#'   \code{cluster_by = "mmm"}, recognised \code{\link{build_mmm}} arguments
+#'   (\code{n_starts}, \code{max_iter}, \code{tol}, \code{smooth},
+#'   \code{seed}, \code{covariates}) are intercepted and forwarded to
+#'   \code{build_mmm()} so a single call controls both the MMM fit and the
+#'   per-cluster network estimation.
 #' @return A \code{netobject_group}.
 #' @seealso \code{\link{build_clusters}}, \code{\link{cluster_mmm}},
 #'   \code{\link{build_network}}
@@ -1541,8 +1566,16 @@ cluster_network <- function(data, k, cluster_by = "pam",
   }
 
   if (identical(cluster_by, "mmm")) {
-    mmm_fit <- build_mmm(data, k = k)
-    return(do.call(build_network, c(list(data = mmm_fit), dots)))
+    # Split caller's `...` into MMM EM hyperparameters vs build_network args
+    # so a single cluster_network() call controls both stages without a
+    # silently-dropped `n_starts`/`max_iter`/`seed`. Anything else falls
+    # through to build_network() unchanged.
+    mmm_arg_names  <- c("n_starts", "max_iter", "tol", "smooth",
+                        "seed", "covariates")
+    mmm_args       <- dots[intersect(names(dots), mmm_arg_names)]
+    build_dots     <- dots[setdiff(names(dots), mmm_arg_names)]
+    mmm_fit <- do.call(build_mmm, c(list(data = data, k = k), mmm_args))
+    return(do.call(build_network, c(list(data = mmm_fit), build_dots)))
   }
 
   cls <- build_clusters(data, k = k, method = cluster_by,

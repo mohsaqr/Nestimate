@@ -204,16 +204,15 @@ build_network <- function(data,
         net
       })
       names(nets) <- paste0("Cluster ", seq_len(k_comp))
-      attr(nets, "group_col") <- "component"
       class(nets) <- "netobject_group"
-      return(nets)
+      return(.attach_mmm_clustering(nets, data, full_data = raw_data))
     }
     # Default: wrap pre-built "relative" models (retain $initial from EM)
     nets <- data$models
     if (is.null(names(nets))) names(nets) <- paste0("Cluster ", seq_along(nets))
-    attr(nets, "group_col") <- "component"
     class(nets) <- "netobject_group"
-    return(nets)
+    return(.attach_mmm_clustering(nets, data,
+                                  full_data = data$models[[1L]]$data))
   }
 
   stopifnot(is.character(method), length(method) == 1)

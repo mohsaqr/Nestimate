@@ -270,3 +270,85 @@ test_that("sequence_plot accepts plain netobject_group without clustering attr",
   # rows by their group. Should not error.
   expect_silent(p <- sequence_plot(nets, type = "index"))
 })
+
+# ==============================================================================
+# cluster_network(cluster_by = "mmm") + build_network(net_mmm) interplay
+# ==============================================================================
+
+test_that("cluster_network(cluster_by='mmm') forwards MMM args to build_mmm", {
+  d <- .make_clust_data()
+
+  # If n_starts is forwarded, two seeds give reproducible-but-different
+  # numerical state. If it's silently dropped (the bug), build_mmm runs with
+  # the default n_starts and seed; both calls would still be free to differ
+  # by chance, but the converged log-likelihood with n_starts = 50 is
+  # rarely worse than with n_starts = 1, and we can verify by comparing to
+  # the explicit build_mmm call.
+  grp_a <- cluster_network(d, k = 2, cluster_by = "mmm",
+                           n_starts = 1, max_iter = 5, seed = 1)
+  expect_s3_class(grp_a, "netobject_group")
+
+  # If n_starts/max_iter were silently dropped, the LL would match the
+  # default n_starts = 50 fit, not this 1-start, 5-iter fit. Compare via
+  # the clustering attribute attached to the netobject_group.
+  cl_a  <- attr(grp_a, "clustering")
+  ref   <- build_mmm(d, k = 2, n_starts = 1, max_iter = 5, seed = 1)
+  expect_equal(cl_a$log_likelihood, ref$log_likelihood, tolerance = 1e-6)
+})
+
+test_that("cluster_network(cluster_by='mmm') sets attr(, 'clustering') so seqplot panels differ", {
+  d <- .make_clust_data()
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
+  cl  <- attr(grp, "clustering")
+
+  # Without this attribute, .extract_seqplot_input falls back to rbind-ing
+  # each member's $data -- which for net_mmm -> netobject_group are 2
+  # copies of the full dataset, producing identical panels.
+  expect_s3_class(cl, "net_mmm_clustering")
+  expect_false(is.null(cl$data))
+  expect_equal(NROW(cl$data), length(cl$assignments))
+  expect_equal(NROW(cl$data), nrow(d))
+  expect_silent(p <- sequence_plot(grp, type = "index"))
+})
+
+test_that("cluster_mmm accepts cluster_by + extra ... without erroring", {
+  d <- .make_clust_data()
+
+  # API parity with cluster_network(): the unified surface
+  # cluster_*(data, k, cluster_by = ..., ...) shouldn't blow up because
+  # cluster_mmm() got a name it doesn't use internally.
+  expect_silent(grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20,
+                                    seed = 1, cluster_by = "mmm"))
+  expect_s3_class(grp, "netobject_group")
+
+  # But mistyping cluster_by should produce a clear error, not run
+  # something else.
+  expect_error(
+    cluster_mmm(d, k = 2, n_starts = 1, seed = 1, cluster_by = "pam"),
+    "only supports cluster_by"
+  )
+})
+
+# ==============================================================================
+# cluster_data() deprecation alias
+# ==============================================================================
+
+test_that("cluster_data() forwards to build_clusters() with a deprecation warning", {
+  d <- .make_clust_data()
+
+  # Deprecation warning is raised once per session, so use
+  # withCallingHandlers + .Deprecated's "deprecatedWarning" condition class
+  # rather than expect_warning() (which can swallow only the first call).
+  saw <- FALSE
+  withCallingHandlers(
+    cl <- cluster_data(d, k = 2, method = "ward.D2"),
+    deprecatedWarning = function(w) {
+      saw <<- TRUE
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_true(saw)
+  expect_s3_class(cl, "net_clustering")
+  expect_equal(cl$k, 2L)
+})

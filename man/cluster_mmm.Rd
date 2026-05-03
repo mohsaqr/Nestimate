@@ -12,7 +12,9 @@ cluster_mmm(
   tol = 1e-06,
   smooth = 0.01,
   seed = NULL,
-  covariates = NULL
+  covariates = NULL,
+  cluster_by = "mmm",
+  ...
 )
 }
 \arguments{
@@ -37,11 +39,19 @@ character vector, string, or data.frame (same forms as
 \code{\link{build_clusters}}). Unlike the post-hoc analysis in
 \code{build_clusters()}, these covariates directly influence cluster
 membership during estimation. Requires the \pkg{nnet} package.}
+
+\item{cluster_by}{Character. Accepted only as \code{"mmm"} (the
+default). Present so \code{cluster_mmm()} and \code{cluster_network()}
+share the same call shape; any other value raises an error pointing
+at \code{\link{cluster_network}}.}
+
+\item{...}{Reserved for forward compatibility with the unified
+\code{cluster_*} surface. Currently unused.}
 }
 \value{
 A \code{netobject_group} (list of \code{netobject}s, one per
 cluster). MMM-specific information is stored in
-\code{attr(, "clustering")}:
+\code{attr(, "clustering")} (class \code{"net_mmm_clustering"}):
 \describe{
 \item{assignments}{Integer vector of cluster assignments.}
 \item{k}{Number of clusters.}
@@ -49,13 +59,18 @@ cluster). MMM-specific information is stored in
 \item{mixing}{Mixing proportions.}
 \item{quality}{List with AvePP, entropy, classification error.}
 \item{BIC, AIC, ICL}{Model fit statistics.}
+\item{data}{The full N-row sequence frame, matching
+\code{$assignments} -- so \code{\link{sequence_plot}} and
+\code{\link{distribution_plot}} can recover both.}
 }
 }
 \description{
 Fits a mixture of Markov chains to sequence data and returns a
 \code{netobject_group} containing per-cluster transition networks.
 This is the MMM equivalent of \code{\link{cluster_network}} (which uses
-distance-based clustering).
+distance-based clustering); both functions share the
+\code{cluster_by = ...} surface argument so the call shape stays
+uniform across clustering families.
 }
 \details{
 For the full \code{net_mmm} object with posterior probabilities, model
@@ -68,7 +83,7 @@ grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
 grp[[1]]$weights
 attr(grp, "clustering")$assignments
 \donttest{
-# Visualize with sequence_plot
+# Visualise with sequence_plot
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 40, TRUE),
   V2 = sample(LETTERS[1:3], 40, TRUE),
