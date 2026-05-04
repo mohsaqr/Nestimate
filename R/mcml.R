@@ -1302,11 +1302,9 @@ build_mcml <- function(x,
 #' the tna package for centrality analysis, bootstrap validation, permutation
 #' tests, and visualization.
 #'
-#' @param x A \code{cluster_summary} object created by \code{\link{cluster_summary}}.
-#'   The cluster_summary should typically be created with \code{type = "tna"} to
-#'   ensure row-normalized transition probabilities. If created with
-#'   \code{type = "raw"}, the raw counts will be passed to \code{tna::tna()}
-#'   which will normalize them.
+#' @param x A \code{cluster_summary} object created by
+#'   \code{\link{cluster_summary}}. The aggregated weights are passed to
+#'   \code{tna::tna()}, which row-normalises them as needed.
 #'
 #' @return A \code{cluster_tna} object (S3 class) containing:
 #'   \describe{
@@ -1334,7 +1332,7 @@ build_mcml <- function(x,
 #' # Full MCML workflow
 #' net <- build_network(data, method = "relative")
 #' net$nodes$clusters <- group_assignments
-#' cs <- cluster_summary(net, type = "tna")
+#' cs <- cluster_summary(net)
 #' tna_models <- as_tna(cs)
 #'
 #' # Now use tna package functions
@@ -1368,7 +1366,7 @@ build_mcml <- function(x,
 #' mat <- matrix(runif(36), 6, 6)
 #' rownames(mat) <- colnames(mat) <- LETTERS[1:6]
 #' clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"), G3 = c("E", "F"))
-#' cs <- cluster_summary(mat, clusters, type = "tna")
+#' cs <- cluster_summary(mat, clusters)
 #' tna_models <- as_tna(cs)
 #' tna_models
 #' tna_models$macro$weights
