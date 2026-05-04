@@ -41,9 +41,12 @@ Suggests:
     lme4,
     corpcor,
     Matrix,
+    cograph,
     knitr,
     rmarkdown,
     pkgdown
+Remotes:
+    sonsoleslp/cograph
 Config/testthat/edition: 3
 Depends: 
     R (>= 4.1.0)
