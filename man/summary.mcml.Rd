@@ -14,7 +14,11 @@
 \value{
 A tidy data frame with one row per cluster and columns
 \code{cluster}, \code{size}, \code{within_total}, \code{between_out},
-\code{between_in}. Prints the full object to the console as a side effect.
+\code{between_in}. For undirected macro networks the in/out split is
+not meaningful, so \code{between_out} reports total incident weight
+and \code{between_in} is \code{NA}. The data frame is returned
+silently \emph{without} printing the full object — call
+\code{print(object)} explicitly if you want the verbose dump.
 }
 \description{
 Summary Method for mcml

@@ -186,6 +186,33 @@ test_that("compare_mmm BIC favors correct k", {
   expect_equal(comp$k[which.min(comp$BIC)], 2)
 })
 
+test_that("compare_mmm default does not retain fits (audit_clustering #6)", {
+  # Default behaviour stays light — no `fits` attribute, identical row
+  # shape to the historical return.
+  data <- .make_mmm_data()
+  comp <- compare_mmm(data, k = 2:3, n_starts = 2, seed = 1)
+  expect_null(attr(comp, "fits"))
+})
+
+test_that("compare_mmm(return_fits = TRUE) attaches fits keyed by k", {
+  data <- .make_mmm_data()
+  comp <- compare_mmm(data, k = 2:3, n_starts = 2, seed = 1,
+                      return_fits = TRUE)
+  fits <- attr(comp, "fits")
+  expect_type(fits, "list")
+  expect_equal(names(fits), c("2", "3"))
+  expect_true(all(vapply(fits, inherits, logical(1), what = "net_mmm")))
+  # The retained k=2 fit must reproduce the comparison table's k=2 BIC,
+  # so users can pick the model directly without re-running EM.
+  expect_equal(fits[["2"]]$BIC, comp$BIC[comp$k == 2L])
+})
+
+test_that("compare_mmm rejects non-logical return_fits", {
+  data <- .make_mmm_data()
+  expect_error(compare_mmm(data, k = 2, n_starts = 1, return_fits = "yes"),
+               "must be a single logical")
+})
+
 # ============================================
 # S3 methods
 # ============================================
@@ -524,4 +551,52 @@ test_that("build_mmm works with cograph_network (decode path)", {
   mmm <- build_mmm(net, k = 2, n_starts = 2, seed = 1)
   expect_s3_class(mmm, "net_mmm")
   expect_equal(mmm$k, 2L)
+})
+
+# ============================================
+# audit_clustering #5 (doc-only path): pin the documented behaviour that
+# init_state is read from the FIRST sequence column verbatim. If the
+# first column is NA-encoded, init_state is NA. This locks in the
+# contract documented in the build_mmm() roxygen "Initial states"
+# section, so a future "use first non-missing" change becomes a
+# deliberate breaking change rather than a silent drift.
+# ============================================
+
+test_that("build_mmm uses first column verbatim for init_state (NA when first col is NA)", {
+  # Pin the documented behaviour: init_state is read from the FIRST
+  # sequence column with no forward-scan, AND build_mmm() does not honor
+  # build_clusters-style na_syms — only actual NAs are treated as
+  # missing. So "%" becomes a real state, but NA in the first column
+  # becomes an NA init_state.
+  seqs <- data.frame(
+    V1 = c(NA, "B", NA, "C"),
+    V2 = c("A", "B", "C", "C"),
+    V3 = c("B", "A", "C", "B"),
+    V4 = c("C", "C", "A", "A"),
+    stringsAsFactors = FALSE
+  )
+  fit <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 5, seed = 1)
+  states <- fit$states
+  first_col <- as.character(seqs[[1L]])
+  init_state <- match(first_col, states)
+  expect_true(is.na(init_state[1L]))
+  expect_true(is.na(init_state[3L]))
+  expect_false(is.na(init_state[2L]))
+  expect_false(is.na(init_state[4L]))
+})
+
+test_that("build_mmm treats sentinel characters as real states (does not honor na_syms)", {
+  # If the user encodes missings as "%" and does NOT recode to NA before
+  # calling build_mmm(), the sentinel becomes a valid state in the
+  # vocabulary. This pins the documented contract so a future
+  # "auto-honor na_syms" change would be a deliberate breaking change.
+  seqs <- data.frame(
+    V1 = c("%", "B", "%", "C"),
+    V2 = c("A", "B", "C", "C"),
+    V3 = c("B", "A", "C", "B"),
+    V4 = c("C", "C", "A", "A"),
+    stringsAsFactors = FALSE
+  )
+  fit <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 5, seed = 1)
+  expect_true("%" %in% fit$states)
 })

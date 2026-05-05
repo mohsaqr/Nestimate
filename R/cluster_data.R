@@ -549,6 +549,17 @@
 #'   Default: \code{"pam"}.
 #' @param na_syms Character vector. Symbols treated as missing values.
 #'   Default: \code{c("*", "\%")}.
+#'
+#'   \strong{Missing-value distance rule:} after symbols are converted to
+#'   \code{NA}, missing values are encoded as a single comparable sentinel
+#'   state — \emph{not} pairwise-deleted. Two missing values in the same
+#'   position match (distance contribution 0); a missing value paired with
+#'   any observed state mismatches (distance contribution 1 for Hamming,
+#'   etc.). This is the conventional behaviour for aligned sequence
+#'   matrices because pairwise deletion would change the effective length
+#'   of every pair and break the metric. If you want pairwise deletion or
+#'   a different missing-value semantic, drop or recode the missing cells
+#'   before passing the data in.
 #' @param weighted Logical. Apply exponential decay weighting to Hamming
 #'   distance positions? Only valid when \code{dissimilarity = "hamming"}.
 #'   Default: \code{FALSE}.
@@ -619,20 +630,34 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
   data <- .extract_sequence_data(data)
 
   # --- Input validation ---
+  # Use named-condition stopifnot for type checks so the failure message
+  # names the offending argument instead of dumping the predicate.
   stopifnot(
-    is.numeric(k), length(k) == 1L,
-    is.character(dissimilarity), length(dissimilarity) == 1L,
-    is.character(method), length(method) == 1L,
-    is.character(na_syms),
-    is.logical(weighted), length(weighted) == 1L,
-    is.numeric(lambda), length(lambda) == 1L,
-    is.numeric(q), length(q) == 1L,
-    is.numeric(p), length(p) == 1L
+    "'k' must be a single numeric value"            = is.numeric(k) && length(k) == 1L,
+    "'dissimilarity' must be a single character"    = is.character(dissimilarity) && length(dissimilarity) == 1L,
+    "'method' must be a single character"           = is.character(method) && length(method) == 1L,
+    "'na_syms' must be a character vector"          = is.character(na_syms),
+    "'weighted' must be a single logical"           = is.logical(weighted) && length(weighted) == 1L,
+    "'lambda' must be a single numeric"             = is.numeric(lambda) && length(lambda) == 1L,
+    "'q' must be a single numeric"                  = is.numeric(q) && length(q) == 1L,
+    "'p' must be a single numeric"                  = is.numeric(p) && length(p) == 1L
   )
   k <- as.integer(k)
   q <- as.integer(q)
   n <- nrow(data)
-  stopifnot(k >= 2L, k <= n - 1L)
+  if (k < 2L) {
+    stop(sprintf(
+      "'k' must be at least 2 (got k = %d). Clustering with one group is not meaningful.",
+      k
+    ), call. = FALSE)
+  }
+  if (k > n - 1L) {
+    stop(sprintf(
+      paste0("'k' (= %d) must be <= n - 1 where n = %d sequences. ",
+             "Either reduce k or supply more sequences (need at least %d)."),
+      k, n, k + 1L
+    ), call. = FALSE)
+  }
 
   dissimilarity <- match.arg(dissimilarity, .clustering_metrics)
   method <- match.arg(method, .clustering_methods)
@@ -646,6 +671,14 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
 
   # --- Encode sequences ---
   enc <- .encode_sequences(data, na_syms)
+
+  if (enc$n_states == 0L) {
+    stop("No observed sequence states were found after applying na_syms = ",
+         sprintf("c(%s)", paste(shQuote(na_syms), collapse = ", ")),
+         ". Check that the input data contains at least one non-missing ",
+         "state cell, or adjust na_syms to exclude symbols that should ",
+         "be treated as observed states.", call. = FALSE)
+  }
 
   # --- Compute distance matrix ---
   use_stringdist <- requireNamespace("stringdist", quietly = TRUE) &&
@@ -1540,12 +1573,17 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #'   or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.
 #' @param dissimilarity Character. Distance metric for sequence clustering
 #'   (ignored when \code{cluster_by = "mmm"}). Default: \code{"hamming"}.
-#' @param ... Passed to \code{\link{build_network}}. When
-#'   \code{cluster_by = "mmm"}, recognised \code{\link{build_mmm}} arguments
-#'   (\code{n_starts}, \code{max_iter}, \code{tol}, \code{smooth},
-#'   \code{seed}, \code{covariates}) are intercepted and forwarded to
-#'   \code{build_mmm()} so a single call controls both the MMM fit and the
-#'   per-cluster network estimation.
+#' @param ... Routed to two stages. For distance clustering
+#'   (\code{cluster_by != "mmm"}), \code{\link{build_clusters}} arguments
+#'   \code{na_syms}, \code{weighted}, \code{lambda}, \code{seed}, \code{q},
+#'   \code{p}, and \code{covariates} are intercepted and forwarded to the
+#'   clusterer; everything else flows to \code{\link{build_network}}. When
+#'   \code{cluster_by = "mmm"}, the recognised \code{\link{build_mmm}}
+#'   arguments (\code{n_starts}, \code{max_iter}, \code{tol}, \code{smooth},
+#'   \code{seed}, \code{covariates}) are intercepted instead, and the rest
+#'   flows to \code{build_network}. In both modes, when \code{data} is a
+#'   \code{netobject}, its \code{build_args} are merged into the
+#'   \code{build_network} side (caller's explicit values take precedence).
 #' @return A \code{netobject_group}.
 #' @seealso \code{\link{build_clusters}}, \code{\link{cluster_mmm}},
 #'   \code{\link{build_network}}
@@ -1575,17 +1613,11 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' @export
 cluster_network <- function(data, k, cluster_by = "pam",
                              dissimilarity = "hamming", ...) {
-  dots <- list(...)
+  caller_dots <- list(...)
 
-  # Inherit build_args and method from input netobject when not explicitly set
+  # Coerce cograph_network to netobject so the build_args lift below works.
   if (inherits(data, "cograph_network") && !inherits(data, "netobject")) {
     data <- .as_netobject(data)
-  }
-  if (inherits(data, "netobject")) {
-    if (!is.null(data$build_args))
-      dots <- modifyList(data$build_args, dots)
-    if (is.null(dots$method))
-      dots$method <- data$method
   }
 
   if (identical(cluster_by, "mmm")) {
@@ -1595,13 +1627,39 @@ cluster_network <- function(data, k, cluster_by = "pam",
     # through to build_network() unchanged.
     mmm_arg_names  <- c("n_starts", "max_iter", "tol", "smooth",
                         "seed", "covariates")
-    mmm_args       <- dots[intersect(names(dots), mmm_arg_names)]
-    build_dots     <- dots[setdiff(names(dots), mmm_arg_names)]
+    mmm_args   <- caller_dots[intersect(names(caller_dots), mmm_arg_names)]
+    build_dots <- caller_dots[setdiff(names(caller_dots), mmm_arg_names)]
+    if (inherits(data, "netobject")) {
+      if (!is.null(data$build_args))
+        build_dots <- modifyList(data$build_args, build_dots)
+      if (is.null(build_dots$method))
+        build_dots$method <- data$method
+    }
     mmm_fit <- do.call(build_mmm, c(list(data = data, k = k), mmm_args))
     return(do.call(build_network, c(list(data = mmm_fit), build_dots)))
   }
 
-  cls <- build_clusters(data, k = k, method = cluster_by,
-                        dissimilarity = dissimilarity)
-  do.call(build_network, c(list(data = cls), dots))
+  # Split caller's `...` into build_clusters() args vs build_network() args.
+  # Without this split, weighted/lambda/seed/q/p/na_syms/covariates are
+  # silently dropped because they reach build_network() instead of the
+  # clusterer (audit_clustering finding #1). Splitting on caller_dots only —
+  # never on data$build_args — keeps network-history args (e.g. an `atna`
+  # net's `lambda` decay) routed to build_network where they belong.
+  cluster_arg_names <- c("na_syms", "weighted", "lambda", "seed",
+                         "q", "p", "covariates")
+  cluster_args <- caller_dots[intersect(names(caller_dots), cluster_arg_names)]
+  build_dots   <- caller_dots[setdiff(names(caller_dots), cluster_arg_names)]
+
+  if (inherits(data, "netobject")) {
+    if (!is.null(data$build_args))
+      build_dots <- modifyList(data$build_args, build_dots)
+    if (is.null(build_dots$method))
+      build_dots$method <- data$method
+  }
+
+  cls <- do.call(build_clusters,
+                 c(list(data = data, k = k, method = cluster_by,
+                        dissimilarity = dissimilarity),
+                   cluster_args))
+  do.call(build_network, c(list(data = cls), build_dots))
 }

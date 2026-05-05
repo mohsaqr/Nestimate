@@ -21,12 +21,17 @@ or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.}
 \item{dissimilarity}{Character. Distance metric for sequence clustering
 (ignored when \code{cluster_by = "mmm"}). Default: \code{"hamming"}.}
 
-\item{...}{Passed to \code{\link{build_network}}. When
-\code{cluster_by = "mmm"}, recognised \code{\link{build_mmm}} arguments
-(\code{n_starts}, \code{max_iter}, \code{tol}, \code{smooth},
-\code{seed}, \code{covariates}) are intercepted and forwarded to
-\code{build_mmm()} so a single call controls both the MMM fit and the
-per-cluster network estimation.}
+\item{...}{Routed to two stages. For distance clustering
+(\code{cluster_by != "mmm"}), \code{\link{build_clusters}} arguments
+\code{na_syms}, \code{weighted}, \code{lambda}, \code{seed}, \code{q},
+\code{p}, and \code{covariates} are intercepted and forwarded to the
+clusterer; everything else flows to \code{\link{build_network}}. When
+\code{cluster_by = "mmm"}, the recognised \code{\link{build_mmm}}
+arguments (\code{n_starts}, \code{max_iter}, \code{tol}, \code{smooth},
+\code{seed}, \code{covariates}) are intercepted instead, and the rest
+flows to \code{build_network}. In both modes, when \code{data} is a
+\code{netobject}, its \code{build_args} are merged into the
+\code{build_network} side (caller's explicit values take precedence).}
 }
 \value{
 A \code{netobject_group}.

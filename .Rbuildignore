@@ -17,6 +17,7 @@
 ^Rplots\.pdf$
 ^tests/testthat/Rplots\.pdf$
 ^\.claude$
+^codex_docs$
 ^cran-comments\.md$
 ^data-raw$
 ^\.DS_Store$

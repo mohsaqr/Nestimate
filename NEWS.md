@@ -1,4 +1,73 @@
-# Nestimate (development)
+# Nestimate 0.5.1
+
+## Audit follow-up (clustering + MCML)
+Followed `codex_docs/audit_clustering` and `codex_docs/audit_mcml`
+recommendations across two modules. Eleven of thirteen findings
+addressed; two deferred pending design decisions on numeric semantics
+(`directed = FALSE` raw-data MCML, MMM first-non-NA initial state).
+
+### Bug fixes
+* `cluster_network()` now forwards distance-clustering arguments
+  (`na_syms`, `weighted`, `lambda`, `seed`, `q`, `p`, `covariates`)
+  to `build_clusters()` instead of silently passing them to
+  `build_network()`. The split runs on caller `...` only — netobject
+  `build_args` continue to flow only to the `build_network()` step,
+  protecting attention-method (`atna`) network history from being
+  re-routed to weighted Hamming. (audit_clustering #1)
+* `.auto_detect_clusters()` (used by `build_mcml()` and
+  `cluster_summary()`) now requires `node_groups` to carry a node
+  identifier column when shaped as a data.frame, or be a named atomic
+  vector keyed by node label. Previously, a bare `cluster`-only
+  data.frame was read positionally — silently mis-assigning nodes
+  whenever `node_groups` rows were in a different order than `x$nodes`.
+  (audit_mcml #1)
+* `build_clusters()` now rejects all-missing input early with a clear
+  message instead of failing indirectly downstream in pam/hclust.
+  (audit_clustering #4)
+
+### New parameters
+* `compare_mmm(return_fits = FALSE)` — when `TRUE`, the fitted
+  `net_mmm` models are attached as `attr(result, "fits")` keyed by
+  `k`, so users can pick the chosen model without re-running EM.
+  Default behaviour unchanged. (audit_clustering #6)
+
+### Improvements
+* `build_clusters()` validation messages now name the offending
+  argument (`"'k' must be at least 2 (got k = 1)"`) rather than
+  dumping the failing predicate. Top-level type checks switched to
+  named-condition `stopifnot()` for the same reason.
+  (audit_clustering #2)
+
+### Documentation
+* `summary.mcml()` roxygen corrected — was claiming a printing side
+  effect that doesn't exist. (audit_mcml #5)
+* `build_mcml()` `clusters = "<col>"` mode now documents its narrow
+  contract: assigns each row's group label to both endpoints, so it
+  only makes sense for within-group edge lists. (audit_mcml #2)
+* `build_mcml()` `method` parameter doc now steers raw sequence /
+  event-log inputs to `"sum"`, since the function counts observed
+  transitions. Other methods are for weighted edge lists or
+  pre-existing matrices. (audit_mcml #4)
+* `as_tna.mcml()` "Excluded Clusters" section corrected — drop emits
+  a `warning()` (was claimed silent) and only fires for `relative`
+  method (was claimed unconditional). (audit_mcml #6)
+* `build_clusters()` `na_syms` doc adds an explicit "Missing-value
+  distance rule" subsection: NA becomes a comparable sentinel state,
+  not pairwise deletion. (audit_clustering #3)
+* `build_mmm()` adds an "Initial states" section explaining
+  first-column-verbatim init and that build_mmm does NOT honor
+  build_clusters-style `na_syms` — only actual `NA` cells become NA
+  inits. (audit_clustering #5, doc-only path)
+
+### Tests
+* +12 new tests pinning the corrected contracts and the documented
+  edge cases (misordered `node_groups` alignment, label propagation
+  through `state_distribution()`, `as_tna.mcml()` drop-warning
+  fixture, MMM first-column NA behaviour, and the four-way
+  `cluster_network()` arg-routing contract). Full sweep:
+  1628 / 1628 pass, 0 fail.
+
+# Nestimate 0.5.0
 
 ## Bug fixes
 * `.extract_edges_from_matrix()` no longer drops the diagonal. Netobjects

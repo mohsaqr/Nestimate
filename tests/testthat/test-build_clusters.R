@@ -35,13 +35,39 @@ make_data_with_na <- function(n = 30, k = 20, n_states = 3, seed = 42) {
 
 test_that("build_clusters validates inputs", {
   df <- make_test_data(n = 20, k = 10)
-  expect_error(build_clusters(df, k = 1), "k >= 2")
-  expect_error(build_clusters(df, k = 20), "k <= n - 1")
+  # audit_clustering #2: explicit messages instead of bare predicate dump.
+  expect_error(build_clusters(df, k = 1), "must be at least 2")
+  expect_error(build_clusters(df, k = 20), "must be <= n - 1")
   expect_error(build_clusters(df, k = 2, dissimilarity = "invalid"))
   expect_error(build_clusters(df, k = 2, method = "invalid"))
   expect_error(build_clusters(df, k = 2, dissimilarity = "lv", weighted = TRUE),
                "Weighting is only supported")
   expect_error(build_clusters("not a df", k = 2))
+})
+
+test_that("build_clusters rejects all-missing input early (audit #4)", {
+  # Every cell is a configured NA symbol, so .encode_sequences() finds 0
+  # observed states. Without the early check the failure would be indirect
+  # (downstream pam/hclust crash on a degenerate distance matrix).
+  df <- data.frame(
+    V1 = c("*", "*", "*"),
+    V2 = c("%", "%", "%"),
+    V3 = c("*", "%", "*"),
+    stringsAsFactors = FALSE
+  )
+  expect_error(build_clusters(df, k = 2),
+               "No observed sequence states were found")
+})
+
+test_that("build_clusters error messages name the offending argument", {
+  # audit_clustering #2: failures should tell the user what to fix.
+  df <- make_test_data(n = 20, k = 10)
+  expect_error(build_clusters(df, k = "two"),
+               "'k' must be a single numeric value")
+  expect_error(build_clusters(df, k = 2, na_syms = 42),
+               "'na_syms' must be a character vector")
+  expect_error(build_clusters(df, k = 2, weighted = "yes"),
+               "'weighted' must be a single logical")
 })
 
 # ==============================================================================
@@ -1077,6 +1103,67 @@ test_that("cluster_network from netobject inherits build_args (L1438-1443)", {
   net <- build_network(data, method = "relative")
   grp <- cluster_network(net, k = 2)
   expect_true(inherits(grp, "netobject_group"))
+})
+
+# ------------------------------------------------------------------
+# audit_clustering finding #1: cluster_network() must forward
+# build_clusters() args (weighted, lambda, seed, q, p, na_syms,
+# covariates) instead of silently passing them to build_network().
+# ------------------------------------------------------------------
+
+test_that("cluster_network forwards weighted+lambda to build_clusters", {
+  data <- make_test_data(n = 30, k = 6, n_states = 3, seed = 11)
+  grp <- cluster_network(data, k = 2, weighted = TRUE, lambda = 2.5)
+  cls <- attr(grp, "clustering")
+  expect_true(inherits(cls, "net_clustering"))
+  expect_true(cls$weighted)
+  expect_equal(cls$lambda, 2.5)
+})
+
+test_that("cluster_network forwards seed and yields reproducible assignments", {
+  data <- make_test_data(n = 30, k = 6, n_states = 3, seed = 12)
+  grp1 <- cluster_network(data, k = 2, seed = 99L)
+  grp2 <- cluster_network(data, k = 2, seed = 99L)
+  cls1 <- attr(grp1, "clustering")
+  cls2 <- attr(grp2, "clustering")
+  expect_equal(cls1$seed, 99L)
+  expect_equal(cls1$assignments, cls2$assignments)
+})
+
+test_that("cluster_network forwards covariates to build_clusters", {
+  skip_if_not_installed("nnet")
+  data <- make_test_data(n = 40, k = 6, n_states = 3, seed = 13)
+  cov_df <- data.frame(grp = factor(rep(c("x", "y"), each = 20)))
+  grp <- cluster_network(data, k = 2, covariates = cov_df)
+  cls <- attr(grp, "clustering")
+  expect_false(is.null(cls$covariates))
+})
+
+test_that("cluster_network still routes build_network args to the network step", {
+  # Regression guard: the new arg-split must NOT pull build_network params
+  # (method, threshold, scaling) into build_clusters(). If a build_network
+  # arg leaked into the cluster step, build_clusters() would either ignore
+  # it (silently dropping the user intent) or error on an unknown arg.
+  data <- make_test_data(n = 30, k = 6, n_states = 3, seed = 14)
+  grp <- cluster_network(data, k = 2, method = "frequency")
+  expect_true(inherits(grp, "netobject_group"))
+  expect_equal(grp[[1]]$method, "frequency")
+  expect_equal(grp[[2]]$method, "frequency")
+})
+
+test_that("cluster_network preserves build_args when input is a netobject", {
+  # Caller dots should still flow to build_clusters; netobject build_args
+  # should still flow to build_network (caller wins on conflicts). This
+  # locks in the contract that the split operates on caller dots only,
+  # not on build_args.
+  data <- make_test_data(n = 30, k = 6, n_states = 3, seed = 15)
+  net <- build_network(data, method = "frequency")
+  grp <- cluster_network(net, k = 2, weighted = TRUE, lambda = 1.5)
+  cls <- attr(grp, "clustering")
+  expect_true(cls$weighted)
+  expect_equal(cls$lambda, 1.5)
+  # Inherited method survives
+  expect_equal(grp[[1]]$method, "frequency")
 })
 
 # ---- Branch-matrix coverage (task #17) ----

@@ -74,14 +74,20 @@ tna::centralities(tna_models$clusters$ClusterA)
 
 \subsection{Excluded Clusters}{
 
-A within-cluster tna cannot be created when:
-\itemize{
-\item The cluster has only 1 node (no internal transitions possible)
-\item Some nodes in the cluster have no outgoing edges (row sums to 0)
-}
+A within-cluster network is dropped only when row-normalisation would
+fail. Specifically, when the recorded \code{net_method} is
+\code{"relative"} (row-stochastic transitions) and any node in the
+cluster has zero outgoing weight, that cluster is excluded from
+\code{$clusters} and a \code{warning()} is emitted listing the dropped
+cluster names. For \code{net_method = "frequency"} (raw counts), a
+zero-row node is a legitimate sink and the cluster is retained.
+The macro / between-cluster network always includes every cluster
+regardless of the per-cluster drop decisions.
 
-These clusters are silently excluded from \code{$clusters}. The between-cluster
-model still includes all clusters.
+If a cluster you expect to see is missing from the returned
+\code{$clusters}, check the warning output and consider building with
+\code{type = "raw"} (which carries through to a frequency-method
+netobject and skips the drop) or inspect \code{rowSums(x$clusters[[cl]]$weights)}.
 }
 }
 \examples{

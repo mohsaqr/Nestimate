@@ -1,6 +1,6 @@
 Package: Nestimate
 Title: Network Estimation, Bootstrap, and Higher-Order Analysis
-Version: 0.5.0
+Version: 0.5.1
 Authors@R: c(
     person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
     person("Sonsoles", "López-Pernas", email = "sonsoles.lopez@uef.fi", role = "aut")
@@ -50,8 +50,6 @@ Suggests:
     tna,
     reticulate,
     jsonlite
-Remotes:
-    sonsoleslp/cograph
 Config/testthat/edition: 3
 Depends: 
     R (>= 4.1.0)

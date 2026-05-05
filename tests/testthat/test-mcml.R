@@ -421,6 +421,11 @@ test_that(".auto_detect_clusters finds cluster from nodes$cluster column (L650-6
 })
 
 test_that(".auto_detect_clusters falls back to node_groups (L660-664)", {
+  # audit_mcml #1: node_groups must carry a node identifier column so the
+  # cluster column is aligned by label rather than by row order. Updated
+  # from the previous shape (cluster-only data.frame) which silently
+  # assumed row order matched x$nodes — a real corruption hazard for
+  # externally constructed netobjects.
   mat <- matrix(0, 3, 3, dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
   net <- structure(
     list(
@@ -430,7 +435,8 @@ test_that(".auto_detect_clusters falls back to node_groups (L660-664)", {
                          x = NA_real_, y = NA_real_,
                          stringsAsFactors = FALSE),
       data = NULL,
-      node_groups = data.frame(cluster = c("G1", "G1", "G2"),
+      node_groups = data.frame(node    = c("A", "B", "C"),
+                               cluster = c("G1", "G1", "G2"),
                                stringsAsFactors = FALSE)
     ),
     class = c("netobject", "cograph_network")
@@ -983,4 +989,136 @@ test_that("sequence input does NOT emit the edgelist bootstrap warning", {
   expect_no_warning(
     bootstrap_network(tnas$macro, iter = 10)
   )
+})
+
+# ============================================
+# audit_mcml #1: .auto_detect_clusters() must align by node label, not
+# by row order, when reading from x$node_groups. Misordered node_groups
+# previously corrupted assignments silently.
+# ============================================
+
+test_that(".auto_detect_clusters aligns node_groups by label, not row order", {
+  # Build a simple netobject by hand. nodes are A,B,C,D; node_groups is
+  # supplied in REVERSE order (D,C,B,A). Positional read would assign
+  # cluster G2 to A and G1 to D — a corruption. Label-aligned read must
+  # produce the original A->G1, B->G1, C->G2, D->G2 mapping.
+  mat <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  mat[1,2] <- mat[2,3] <- mat[3,4] <- mat[4,1] <- 1
+  net <- list(
+    weights = mat,
+    nodes = data.frame(id = 1:4, label = LETTERS[1:4], name = LETTERS[1:4],
+                       stringsAsFactors = FALSE),
+    edges = data.frame(from = c(1,2,3,4), to = c(2,3,4,1), weight = 1),
+    directed = TRUE,
+    node_groups = data.frame(
+      node    = c("D", "C", "B", "A"),  # REVERSED w.r.t. nodes
+      cluster = c("G2", "G2", "G1", "G1"),
+      stringsAsFactors = FALSE
+    )
+  )
+  class(net) <- c("netobject", "cograph_network")
+
+  clusters <- Nestimate:::.auto_detect_clusters(net)
+  expect_equal(unname(clusters), c("G1", "G1", "G2", "G2"))
+})
+
+test_that(".auto_detect_clusters errors clearly when node_groups lacks node column", {
+  mat <- matrix(0, 3, 3, dimnames = list(LETTERS[1:3], LETTERS[1:3]))
+  mat[1,2] <- mat[2,3] <- mat[3,1] <- 1
+  net <- list(
+    weights = mat,
+    nodes = data.frame(id = 1:3, label = LETTERS[1:3], name = LETTERS[1:3],
+                       stringsAsFactors = FALSE),
+    edges = data.frame(from = c(1,2,3), to = c(2,3,1), weight = 1),
+    directed = TRUE,
+    node_groups = data.frame(cluster = c("G1", "G1", "G2"),
+                             stringsAsFactors = FALSE)
+  )
+  class(net) <- c("netobject", "cograph_network")
+  expect_error(Nestimate:::.auto_detect_clusters(net),
+               "must include a node identifier column")
+})
+
+# ============================================
+# audit_mcml #7: label propagation — cross-module test that MCML labels
+# survive into state_distribution() / plot_state_frequencies().
+# ============================================
+
+test_that("MCML labels propagate to state_distribution()", {
+  seq_df <- data.frame(
+    t1 = c("a1", "a2", "b1", "b2"),
+    t2 = c("a2", "a1", "b2", "b1"),
+    t3 = c("a1", "a1", "b1", "b2"),
+    stringsAsFactors = FALSE
+  )
+  clusters <- list(A = c("a1", "a2"), B = c("b1", "b2"))
+  labels <- c(a1 = "Activity-1", a2 = "Activity-2",
+              b1 = "Behavior-1", b2 = "Behavior-2")
+  mc <- build_mcml(seq_df, clusters, labels = labels)
+  sd <- state_distribution(mc)
+  # The tidy data frame should carry the user-supplied labels in the
+  # state column rather than the raw a1/a2/... names.
+  expect_true(any(grepl("Activity|Behavior", sd$state)))
+})
+
+# ============================================
+# audit_mcml gap: edge-list `clusters = "<colname>"` mode assigns the
+# row's group to BOTH endpoints. Pin the expected behaviour so the
+# documented limitation can't silently drift. With from-side and to-side
+# in different groups the resulting node lookup picks one of them per
+# node (depending on which row writes to it last), which is exactly the
+# narrow contract documented in build_mcml()'s `clusters` param.
+# ============================================
+
+test_that("edge-list clusters-by-column reflects documented narrow contract", {
+  # Edge list where every row tags both endpoints with the same group —
+  # the supported case — produces correctly-aligned cluster assignments.
+  edges_clean <- data.frame(
+    from  = c("A", "B", "C", "D"),
+    to    = c("B", "A", "D", "C"),
+    weight = 1,
+    grp   = c("G1", "G1", "G2", "G2"),
+    stringsAsFactors = FALSE
+  )
+  mc <- build_mcml(edges_clean, clusters = "grp")
+  members <- mc$cluster_members
+  expect_setequal(members$G1, c("A", "B"))
+  expect_setequal(members$G2, c("C", "D"))
+})
+
+# ============================================
+# audit_mcml #6 gap: as_tna.mcml() must drop relative-method clusters
+# whose within-matrix has zero row sums (cannot row-normalise) and warn
+# clearly. Deterministic fixture: a 4-node mcml where one cluster has
+# an absorbing-only row (all-zero outgoing weights).
+# ============================================
+
+test_that("as_tna.mcml drops zero-row-sum clusters and warns", {
+  # Drop only fires when net_method == "relative" (i.e. sequence/edgelist
+  # input with type = "tna"). cluster_summary() on a matrix produces
+  # frequency-method results where a zero row is a legitimate sink and
+  # is kept. So we need a sequence-derived mcml whose within-cluster
+  # row-normalisation would divide by zero.
+  #
+  # Construction: in cluster G2 = {b1, b2}, node b1 only transitions OUT
+  # of the cluster (b1 -> a1), never within. Its within-G2 row sums to
+  # zero, triggering the drop.
+  seq_df <- data.frame(
+    t1 = c("b2", "b2", "a1", "a2"),
+    t2 = c("b1", "b1", "a2", "a1"),  # b1 only appears as transition target
+    t3 = c("a1", "a2", "a1", "a2"),  # ... and only transitions out (b1 -> a1)
+    t4 = c("a2", "a1", "a2", "a1"),
+    stringsAsFactors = FALSE
+  )
+  clusters <- list(G1 = c("a1", "a2"), G2 = c("b1", "b2"))
+  mc <- build_mcml(seq_df, clusters, type = "tna")
+
+  # Sanity: the within-G2 row for b1 has zero sum.
+  w_g2 <- mc$clusters$G2$weights
+  zero_rows <- rownames(w_g2)[rowSums(w_g2) == 0]
+  expect_true(length(zero_rows) >= 1L)
+
+  expect_warning(out <- as_tna(mc), "Dropped clusters with zero row sums")
+  expect_false("G2" %in% names(out))
+  expect_true("macro" %in% names(out))
 })

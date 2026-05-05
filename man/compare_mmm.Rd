@@ -4,18 +4,26 @@
 \alias{compare_mmm}
 \title{Compare MMM fits across different k}
 \usage{
-compare_mmm(data, k = 2:5, ...)
+compare_mmm(data, k = 2:5, return_fits = FALSE, ...)
 }
 \arguments{
 \item{data}{Data frame, netobject, or tna model.}
 
 \item{k}{Integer vector of component counts. Default: 2:5.}
 
+\item{return_fits}{Logical. When \code{TRUE} the fitted models are
+retained on the result via \code{attr(result, "fits")} (a list of
+\code{net_mmm} objects, named by \code{k}), so the user can pick
+the chosen model without re-running the EM. Default \code{FALSE}
+keeps the historical lightweight return shape — only the comparison
+table is allocated.}
+
 \item{...}{Arguments passed to \code{\link{build_mmm}}.}
 }
 \value{
 A \code{mmm_compare} data frame with BIC, AIC, ICL, AvePP,
-entropy per k.
+entropy per k. When \code{return_fits = TRUE}, the fitted models are
+attached as \code{attr(result, "fits")}.
 }
 \description{
 Compare MMM fits across different k
@@ -32,6 +40,11 @@ seqs <- data.frame(
 )
 comp <- compare_mmm(seqs, k = 2:3, seed = 42)
 print(comp)
+
+# Retain fits to avoid a re-fit after picking the BIC-min model.
+comp_with_fits <- compare_mmm(seqs, k = 2:3, seed = 42, return_fits = TRUE)
+best_k <- comp_with_fits$k[which.min(comp_with_fits$BIC)]
+best_fit <- attr(comp_with_fits, "fits")[[as.character(best_k)]]
 }
 
 }

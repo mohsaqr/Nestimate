@@ -377,6 +377,23 @@
 #' summary(mmm)
 #' }
 #'
+#' @section Initial states:
+#' The first sequence column has special status: it is read directly as
+#' the per-sequence initial state (\code{init_state[i] <-
+#' match(raw_data[i, state_cols[1L]], states)}). The function does
+#' \strong{not} scan forward to the first non-missing position, and it
+#' does not apply any \code{na_syms}-style symbol conversion (unlike
+#' \code{\link{build_clusters}}). The state vocabulary is built from the
+#' unique non-\code{NA} values across all columns, so if your data uses
+#' a sentinel character such as \code{"*"} or \code{"\%"} for missing
+#' cells, that sentinel becomes a real state and the first column reads
+#' it as a valid initial state. If you want padded leading missings to
+#' be treated as missing, recode them to \code{NA} before calling
+#' \code{build_mmm()} (then \code{match()} returns \code{NA}, which the
+#' EM treats as an uninformative initial distribution), or left-trim the
+#' leading missings so each sequence's first column carries an observed
+#' state.
+#'
 #' @seealso \code{\link{compare_mmm}}, \code{\link{build_network}}
 #'
 #' @export
@@ -460,7 +477,11 @@ build_mmm <- function(data,
   N <- nrow(counts)
   K2 <- n_states * n_states
 
-  # Extract initial states (first non-NA state per sequence)
+  # Extract initial states from the FIRST sequence column. We do NOT scan
+  # forward to the first non-NA position — see "Initial states" section in
+  # the build_mmm() roxygen for the rationale and a workaround for
+  # left-padded sequences. NA values here are treated downstream as an
+  # uninformative initial distribution.
   state_cols <- .select_state_cols(raw_data, id = NULL, cols = NULL)
   first_col <- as.character(raw_data[[state_cols[1L]]])
   init_state <- match(first_col, states)
@@ -659,10 +680,17 @@ build_mmm <- function(data,
 #'
 #' @param data Data frame, netobject, or tna model.
 #' @param k Integer vector of component counts. Default: 2:5.
+#' @param return_fits Logical. When \code{TRUE} the fitted models are
+#'   retained on the result via \code{attr(result, "fits")} (a list of
+#'   \code{net_mmm} objects, named by \code{k}), so the user can pick
+#'   the chosen model without re-running the EM. Default \code{FALSE}
+#'   keeps the historical lightweight return shape — only the comparison
+#'   table is allocated.
 #' @param ... Arguments passed to \code{\link{build_mmm}}.
 #'
 #' @return A \code{mmm_compare} data frame with BIC, AIC, ICL, AvePP,
-#'   entropy per k.
+#'   entropy per k. When \code{return_fits = TRUE}, the fitted models are
+#'   attached as \code{attr(result, "fits")}.
 #'
 #' @examples
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
@@ -676,26 +704,38 @@ build_mmm <- function(data,
 #' )
 #' comp <- compare_mmm(seqs, k = 2:3, seed = 42)
 #' print(comp)
+#'
+#' # Retain fits to avoid a re-fit after picking the BIC-min model.
+#' comp_with_fits <- compare_mmm(seqs, k = 2:3, seed = 42, return_fits = TRUE)
+#' best_k <- comp_with_fits$k[which.min(comp_with_fits$BIC)]
+#' best_fit <- attr(comp_with_fits, "fits")[[as.character(best_k)]]
 #' }
 #'
 #' @export
-compare_mmm <- function(data, k = 2:5, ...) {
-  results <- lapply(k, function(m) {
-    fit <- build_mmm(data, k = m, ...)
+compare_mmm <- function(data, k = 2:5, return_fits = FALSE, ...) {
+  stopifnot("'return_fits' must be a single logical" =
+              is.logical(return_fits) && length(return_fits) == 1L)
+  fits <- lapply(k, function(m) build_mmm(data, k = m, ...))
+  rows <- lapply(seq_along(k), function(i) {
+    fit <- fits[[i]]
     data.frame(
-      k = m,
+      k              = k[i],
       log_likelihood = fit$log_likelihood,
-      AIC = fit$AIC,
-      BIC = fit$BIC,
-      ICL = fit$ICL,
-      AvePP = fit$quality$avepp_overall,
-      Entropy = fit$quality$entropy,
-      converged = fit$converged,
+      AIC            = fit$AIC,
+      BIC            = fit$BIC,
+      ICL            = fit$ICL,
+      AvePP          = fit$quality$avepp_overall,
+      Entropy        = fit$quality$entropy,
+      converged      = fit$converged,
       stringsAsFactors = FALSE
     )
   })
-  result <- do.call(rbind, results)
+  result <- do.call(rbind, rows)
   class(result) <- c("mmm_compare", "data.frame")
+  if (return_fits) {
+    names(fits) <- as.character(k)
+    attr(result, "fits") <- fits
+  }
   result
 }
 

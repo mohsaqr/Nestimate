@@ -58,6 +58,25 @@ Discovers latent subgroups with different transition dynamics using
 Expectation-Maximization. Each mixture component has its own transition
 matrix. Sequences are probabilistically assigned to components.
 }
+\section{Initial states}{
+
+The first sequence column has special status: it is read directly as
+the per-sequence initial state (\code{init_state[i] <-
+match(raw_data[i, state_cols[1L]], states)}). The function does
+\strong{not} scan forward to the first non-missing position, and it
+does not apply any \code{na_syms}-style symbol conversion (unlike
+\code{\link{build_clusters}}). The state vocabulary is built from the
+unique non-\code{NA} values across all columns, so if your data uses
+a sentinel character such as \code{"*"} or \code{"\%"} for missing
+cells, that sentinel becomes a real state and the first column reads
+it as a valid initial state. If you want padded leading missings to
+be treated as missing, recode them to \code{NA} before calling
+\code{build_mmm()} (then \code{match()} returns \code{NA}, which the
+EM treats as an uninformative initial distribution), or left-trim the
+leading missings so each sequence's first column carries an observed
+state.
+}
+
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))

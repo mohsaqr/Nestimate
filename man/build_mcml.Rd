@@ -51,13 +51,25 @@ extracted from the data.
 Example: \code{c("A","A","B","B")}}
 \item{column name string}{For edge list data.frames, the name of a
 column containing cluster labels. The mapping is built from unique
-(node, group) pairs in both from and to columns.}
+(node, group) pairs in both from and to columns. \strong{Limitation:}
+this mode assigns the row's group label to \emph{both} endpoints, so
+it only makes sense for edge lists where source and target nodes
+always share the same group (within-group edges only). For general
+edge lists where a single node may be source in some rows and target
+in others, or where source and target belong to different groups,
+pass an explicit named list (\code{list(G1 = c("N1","N2"), ...)})
+or a two-column data frame \code{data.frame(node, group)} instead.}
 \item{NULL}{Auto-detect from \code{netobject$nodes} or
 \code{$node_groups} (same logic as \code{\link{cluster_summary}}).}
 }}
 
 \item{method}{Aggregation method for combining edge weights: "sum", "mean",
-"median", "max", "min", "density", "geomean". Default "sum".}
+"median", "max", "min", "density", "geomean". Default "sum". For raw
+sequence/event-log inputs the function is counting observed transitions,
+so \code{"sum"} is the only interpretation that preserves the count
+semantics — the other methods are useful when aggregating
+weighted edge lists or pre-existing weight matrices, where each row
+already represents a measurement rather than a single observation.}
 
 \item{type}{Post-processing: "tna" (row-normalize), "cooccurrence"
 (symmetrize), "semi_markov", or "raw". Default "tna".}

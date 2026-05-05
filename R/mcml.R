@@ -568,13 +568,25 @@ cluster_summary <- function(x,
 #'       Example: \code{c("A","A","B","B")}}
 #'     \item{column name string}{For edge list data.frames, the name of a
 #'       column containing cluster labels. The mapping is built from unique
-#'       (node, group) pairs in both from and to columns.}
+#'       (node, group) pairs in both from and to columns. \strong{Limitation:}
+#'       this mode assigns the row's group label to \emph{both} endpoints, so
+#'       it only makes sense for edge lists where source and target nodes
+#'       always share the same group (within-group edges only). For general
+#'       edge lists where a single node may be source in some rows and target
+#'       in others, or where source and target belong to different groups,
+#'       pass an explicit named list (\code{list(G1 = c("N1","N2"), ...)})
+#'       or a two-column data frame \code{data.frame(node, group)} instead.}
 #'     \item{NULL}{Auto-detect from \code{netobject$nodes} or
 #'       \code{$node_groups} (same logic as \code{\link{cluster_summary}}).}
 #'   }
 #'
 #' @param method Aggregation method for combining edge weights: "sum", "mean",
-#'   "median", "max", "min", "density", "geomean". Default "sum".
+#'   "median", "max", "min", "density", "geomean". Default "sum". For raw
+#'   sequence/event-log inputs the function is counting observed transitions,
+#'   so \code{"sum"} is the only interpretation that preserves the count
+#'   semantics — the other methods are useful when aggregating
+#'   weighted edge lists or pre-existing weight matrices, where each row
+#'   already represents a measurement rather than a single observation.
 #' @param type Post-processing: "tna" (row-normalize), "cooccurrence"
 #'   (symmetrize), "semi_markov", or "raw". Default "tna".
 #' @param directed Logical. Treat as directed network? Default TRUE.
@@ -769,6 +781,9 @@ build_mcml <- function(x,
 #' Auto-detect clusters from netobject
 #' @keywords internal
 .auto_detect_clusters <- function(x) {
+  # Prefer x$nodes-embedded cluster column. x$nodes is the canonical node
+  # table — if it carries a cluster column, the row order is by definition
+  # aligned with the weight matrix, so positional use is safe.
   clusters <- NULL
   if (!is.null(x$nodes)) {
     cluster_cols <- c("clusters", "cluster", "groups", "group")
@@ -779,13 +794,63 @@ build_mcml <- function(x,
       }
     }
   }
+
+  # Fall back to x$node_groups, but require explicit label alignment.
+  # audit_mcml #1: node_groups was previously read positionally, which
+  # silently mis-assigned nodes whenever the rows were in a different
+  # order than x$nodes (a common case for externally constructed
+  # netobjects). The accepted shapes are now:
+  #   * data.frame with a node identifier column AND a cluster column
+  #   * named character/factor vector (names = node labels, values = cluster)
   if (is.null(clusters) && !is.null(x$node_groups)) {
     ng <- x$node_groups
-    cluster_col <- intersect(c("cluster", "group", "layer"), names(ng))
-    if (length(cluster_col) > 0) {
-      clusters <- ng[[cluster_col[1]]]
+
+    target_labels <- if (!is.null(x$nodes) && "label" %in% names(x$nodes)) {
+      as.character(x$nodes$label)
+    } else if (!is.null(rownames(x$weights))) {
+      rownames(x$weights)
+    } else {
+      stop("Cannot align node_groups: x$nodes$label and ",
+           "rownames(x$weights) are both unavailable.", call. = FALSE)
     }
+
+    if (is.data.frame(ng)) {
+      cluster_col <- intersect(c("cluster", "group", "layer"), names(ng))
+      if (length(cluster_col) == 0L) {
+        stop("'node_groups' data.frame is missing a recognised cluster ",
+             "column (one of: cluster, group, layer).", call. = FALSE)
+      }
+      node_col <- intersect(c("node", "name", "label", "id"), names(ng))
+      if (length(node_col) == 0L) {
+        stop("'node_groups' must include a node identifier column ",
+             "(one of: node, name, label, id) so cluster assignments can ",
+             "be aligned with x$nodes by label rather than by row order. ",
+             "Add the column or pass clusters explicitly as a named list ",
+             "or vector.", call. = FALSE)
+      }
+      lookup <- setNames(as.character(ng[[cluster_col[1L]]]),
+                         as.character(ng[[node_col[1L]]]))
+    } else if (is.atomic(ng) && !is.null(names(ng))) {
+      lookup <- setNames(as.character(ng), names(ng))
+    } else {
+      stop("'node_groups' must be a data.frame with node + cluster ",
+           "columns, or a named atomic vector keyed by node label. ",
+           "Unnamed vectors cannot be safely aligned to x$nodes.",
+           call. = FALSE)
+    }
+
+    missing_nodes <- setdiff(target_labels, names(lookup))
+    if (length(missing_nodes) > 0L) {
+      stop(sprintf(
+        paste0("node_groups is missing cluster assignments for %d node(s) ",
+               "present in x$nodes/weights: %s"),
+        length(missing_nodes),
+        paste(utils::head(missing_nodes, 5L), collapse = ", ")
+      ), call. = FALSE)
+    }
+    clusters <- unname(lookup[target_labels])
   }
+
   if (is.null(clusters)) {
     stop("No clusters found in netobject. ",
          "Add a 'clusters' column to nodes or provide clusters argument.",
@@ -1347,14 +1412,20 @@ build_mcml <- function(x,
 #'
 #' ## Excluded Clusters
 #'
-#' A within-cluster tna cannot be created when:
-#' \itemize{
-#'   \item The cluster has only 1 node (no internal transitions possible)
-#'   \item Some nodes in the cluster have no outgoing edges (row sums to 0)
-#' }
+#' A within-cluster network is dropped only when row-normalisation would
+#' fail. Specifically, when the recorded \code{net_method} is
+#' \code{"relative"} (row-stochastic transitions) and any node in the
+#' cluster has zero outgoing weight, that cluster is excluded from
+#' \code{$clusters} and a \code{warning()} is emitted listing the dropped
+#' cluster names. For \code{net_method = "frequency"} (raw counts), a
+#' zero-row node is a legitimate sink and the cluster is retained.
+#' The macro / between-cluster network always includes every cluster
+#' regardless of the per-cluster drop decisions.
 #'
-#' These clusters are silently excluded from \code{$clusters}. The between-cluster
-#' model still includes all clusters.
+#' If a cluster you expect to see is missing from the returned
+#' \code{$clusters}, check the warning output and consider building with
+#' \code{type = "raw"} (which carries through to a frequency-method
+#' netobject and skips the drop) or inspect \code{rowSums(x$clusters[[cl]]$weights)}.
 #'
 #' @export
 #' @seealso
@@ -1597,7 +1668,11 @@ print.mcml <- function(x, ...) {
 #'
 #' @return A tidy data frame with one row per cluster and columns
 #'   \code{cluster}, \code{size}, \code{within_total}, \code{between_out},
-#'   \code{between_in}. Prints the full object to the console as a side effect.
+#'   \code{between_in}. For undirected macro networks the in/out split is
+#'   not meaningful, so \code{between_out} reports total incident weight
+#'   and \code{between_in} is \code{NA}. The data frame is returned
+#'   silently \emph{without} printing the full object — call
+#'   \code{print(object)} explicitly if you want the verbose dump.
 #'
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))

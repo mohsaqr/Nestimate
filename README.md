@@ -12,17 +12,17 @@ Nestimate is a comprehensive R package for estimating, validating, and comparing
 
 ### Full tutorials
 
-- [Network Estimation & Visualization](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-nestimate.html)
-- [Higher-Order & Simplicial Complexes](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-simplicial.html)
-- [Multi-Cluster Multi-Level (MCML)](https://mohsaqr.github.io/Nestimate/articles/cograph-tutorial-mcml.html)
+- [Network Estimation & Visualization](https://saqr.me/Nestimate/articles/cograph-tutorial-nestimate.html)
+- [Higher-Order & Simplicial Complexes](https://saqr.me/Nestimate/articles/cograph-tutorial-simplicial.html)
+- [Multi-Cluster Multi-Level (MCML)](https://saqr.me/Nestimate/articles/cograph-tutorial-mcml.html)
 
 ### Quick guides
 
-- [Transition Networks](https://mohsaqr.github.io/Nestimate/articles/transition-networks.html)
-- [Sequence Plots & Comparison](https://mohsaqr.github.io/Nestimate/articles/sequence-plots.html)
-- [Clustering & Multi-Level Analysis](https://mohsaqr.github.io/Nestimate/articles/clustering.html)
-- [Markov Stability](https://mohsaqr.github.io/Nestimate/articles/markov-stability.html)
-- [Sequence Pattern Comparison](https://mohsaqr.github.io/Nestimate/articles/sequence-comparison.html)
+- [Transition Networks](https://saqr.me/Nestimate/articles/transition-networks.html)
+- [Sequence Plots & Comparison](https://saqr.me/Nestimate/articles/sequence-plots.html)
+- [Clustering & Multi-Level Analysis](https://saqr.me/Nestimate/articles/clustering.html)
+- [Markov Stability](https://saqr.me/Nestimate/articles/markov-stability.html)
+- [Sequence Pattern Comparison](https://saqr.me/Nestimate/articles/sequence-comparison.html)
 
 
 ## Installation
@@ -367,9 +367,9 @@ boot_gl <- boot_glasso(net_pna, iter = 1000)
 
 ## Documentation
 
-- [Transition Networks](https://mohsaqr.github.io/Nestimate/articles/transition-networks.html)
-- [Clustering & Multilevel](https://mohsaqr.github.io/Nestimate/articles/clustering.html)
-- [Full Reference](https://mohsaqr.github.io/Nestimate/reference/)
+- [Transition Networks](https://saqr.me/Nestimate/articles/transition-networks.html)
+- [Clustering & Multilevel](https://saqr.me/Nestimate/articles/clustering.html)
+- [Full Reference](https://saqr.me/Nestimate/reference/)
 
 ## Citation
 

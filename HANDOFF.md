@@ -1,194 +1,208 @@
-# Session Handoff — 2026-05-04
+# Session Handoff — 2026-05-05
+
+## CRAN preparation (post-audit)
+
+After the audit-driven fix sweep, prepared the package for CRAN
+submission and verified pkgdown rebuild.
+
+- **DESCRIPTION**: bumped `Version: 0.5.0 -> 0.5.1`. Removed
+  `Remotes: sonsoleslp/cograph` (CRAN-incompatible field; cograph
+  graduated to CRAN at 2.1.1, the GitHub remote is no longer needed).
+- **NEWS.md**: added `# Nestimate 0.5.1` entry above the now-released
+  0.5.0 section (the previous "(development)" heading was renamed to
+  "0.5.0" since v0.5.0 was already tagged in git but never had a
+  versioned NEWS entry). The 0.5.1 entry contains the full audit-fix
+  changelog.
+- **README.md + `_pkgdown.yml`**: replaced 12 `mohsaqr.github.io/Nestimate/`
+  URLs with `saqr.me/Nestimate/` — the GitHub Pages URLs were 200-OK
+  but redirected, which CRAN's URL check now flags as a NOTE.
+- **`.Rbuildignore`**: added `^codex_docs$` so the audit reports stay
+  out of the package tarball.
+- **`inst/WORDLIST`**: added British-English variants used in the new
+  audit-driven docs (`behaviour`, `clusterer`, `normalisation`,
+  `normalises`, `recognised`, `Unmapped`).
+- **`R CMD check --as-cran`**: clean. 0 errors, 0 warnings, 1
+  environmental NOTE (`unable to verify current time` — local-clock
+  side-effect, ignored by CRAN's submission machines). The check
+  exercises both regular examples (9s/10s OK) and `--run-donttest`
+  examples (25s/26s OK), the full testthat suite (10s/13s OK),
+  vignette re-build (8s/10s OK).
+- **pkgdown**: site builds successfully via
+  `pkgdown::clean_site(force = TRUE); pkgdown::build_site(...)` after
+  installing two missing transitive deps (Bioconductor `graph` and
+  `RBGL` — pulled in by the `cograph -> gimme/lavaan` chain when
+  pkgdown loads the namespace for S3 method overrides). Quarto must
+  be on PATH (RStudio's bundled quarto at
+  `/Applications/RStudio.app/Contents/Resources/app/quarto/bin`
+  works). Verified all audit-driven roxygen edits made it into the
+  rendered HTML (`compare_mmm` `return_fits`, `build_mmm` "Initial
+  states" section, `build_mcml` `Limitation:` note on edge-list
+  cluster column, `build_clusters` "Missing-value distance rule"
+  subsection, `summary.mcml` corrected return doc, `as_tna.mcml`
+  corrected drop warning).
+- **Final regression sweep**: 1628 / 1628 pass, 0 fail. Same 9
+  pre-existing skips and 5 pre-existing warnings as throughout the
+  session.
 
 ## Completed
 
-### A. Switched local branch from `dev` → `main`
-- `dev` was 0/0 with `origin/dev`; `origin/main` was 26 commits ahead.
-- Stashed 21 dirty files, switched, fast-forwarded `main` to `origin/main`,
-  popped stash. Conflicts in `DESCRIPTION`, `R/mcml.R`, `man/as_tna.Rd`
-  resolved to **upstream side** (the stashed dev edits are still preserved
-  in `git stash list`, not dropped).
+Worked the codex audits (`codex_docs/audit_clustering` and
+`codex_docs/audit_mcml`) end to end across 11 of 13 findings, organised
+into 5 risk-ordered stages plus a deferred bucket. Two findings are
+explicitly waiting on user direction (mcml #3, clustering #5 numeric
+variant) — see "Open Issues / Deferred" below.
 
-### B. New chi-square mosaic surface — `mosaic_plot()`
-- New file region in `R/plot_state_frequencies.R:326-700`.
-- S3 generic with methods for `netobject`, `netobject_group`, `table`,
-  `matrix`, `default`. Vectorized port of `tna::plot_mosaic_` with
-  `chisq.test()$stdres` fill, diverging palette, marimekko geometry.
-- Tests in `tests/testthat/test-mosaic_plot.R` (10 tests, including a
-  byte-for-byte ggplot-build comparison vs `tna::plot_mosaic` when
-  `residuals = "asymptotic"` and `range = c(-4, 4)`).
-- Equivalence suite in `local_testing_and_equivalence/test-equiv-mosaic.R`
-  (gated by `NESTIMATE_EQUIV_TESTS=true`): 51 cases, max area delta vs
-  vcd math = 1.67e-16, max coord delta vs tna = exactly 0.
-- Permutation-based residuals are the **default** (`residuals = "permutation"`,
-  `n_perm = 500`). Asymptotic via `residuals = "asymptotic"`. New `range`,
-  `top_angle`, `left_angle`, `seed` args.
+### Stage 0 — `cluster_network()` arg forwarding (audit_clustering #1)
+- `R/cluster_data.R`: `cluster_network()` distance branch now splits
+  caller `...` between `build_clusters()` args (`na_syms`, `weighted`,
+  `lambda`, `seed`, `q`, `p`, `covariates`) and `build_network()` args.
+  Split runs on caller dots only; `data$build_args` is merged into the
+  build_network side after, so attention-method (`atna`) netobjects'
+  `lambda` decay isn't stolen for weighted Hamming.
+- 5 new regression tests pinning the four-way contract.
 
-### C. Redo of `plot_state_frequencies()` for consistency + tidy output
-- Plan file at `~/.claude/plans/great-now-re-do-the-elegant-turing.md`.
-- Four duplicated dispatch methods collapsed to one-liners forwarding to a
-  shared `.plot_state_frequencies_impl()` worker.
-- New return type: **`state_freq` S3 class** (`$plot`, `$table`, `$style`,
-  `$metric`, `$source_class`). Methods: `print` (tabular console output via
-  `.cluster_table_lines()` + `.fmt_size_pct()`, followed by chart render),
-  `plot` (chart only), `as.data.frame` (table only).
-- New exported generic **`state_distribution(x)`** wraps the four internal
-  `.freq_df_*()` extractors so users can pull the tidy
-  `(group, state, count, proportion)` frame without going through the plot
-  pipeline.
-- `style = "mosaic"` and `style = "residual"` removed from
-  `plot_state_frequencies()` — now strictly `c("marimekko", "bars")`.
-  171 lines of dead `.plot_state_residuals()` deleted. Mosaics live only in
-  `mosaic_plot()` (don't mix).
-- Tests: 49 passing in `tests/testthat/test-plot_state_frequencies.R`,
-  including new ones for `state_freq` shape, `as.data.frame()` round-trip,
-  `print` header, `state_distribution()` column shape.
+### Stage A — pure documentation (5 doc fixes)
+- `R/mcml.R`: corrected stale `summary.mcml()` roxygen (audit_mcml #5),
+  documented edge-list `clusters = "<col>"` narrow contract
+  (audit_mcml #2), steered `method` doc toward `"sum"` for raw inputs
+  (audit_mcml #4), corrected `as_tna.mcml()` "Excluded Clusters"
+  section to match the actual warning behaviour (audit_mcml #6).
+- `R/cluster_data.R`: documented NA-as-sentinel distance rule under
+  `na_syms` (audit_clustering #3).
+- `R/mmm.R`: added "Initial states" section to `build_mmm()` roxygen
+  (audit_clustering #5 doc-only path).
 
-### D. Smart legend behaviour
-- New `legend = "auto"` default that resolves per style + class:
-  - `style = "bars"` → `"none"` (y-axis already lists every state)
-  - `style = "marimekko"` + `htna`/`mcml` → `"per_facet"`
-  - `style = "marimekko"` + `netobject`/`netobject_group` → `"bottom"`
-- New shared-vocabulary detector (`.vocab_is_shared()`): when every group
-  has the same state set, `"per_facet"` auto-demotes to `"bottom"`.
-- Per-panel legend placement inside `.plot_per_facet_grid()`: `"right"` for
-  ≤2 panels (htna AI/Human), `"bottom"` for 3+ panels.
-- Bar-label `expand` bumped 0.18 → 0.28 so inline `26.6%`-style labels do
-  not get truncated on faceted bars.
+### Stage B — additive input validation (2 fixes)
+- `R/cluster_data.R`: `build_clusters()` now rejects all-missing input
+  early (audit_clustering #4) and uses kinder named-condition stopifnot
+  + explicit `stop()` for k-range checks (audit_clustering #2). Updated
+  one existing test for new error text; +3 new tests.
 
-### E. Combine + ncol heuristic for many-panel layouts
-- `combine = "auto"` default: 1-3 panels combine into one gtable, 4+
-  panels return as a list of ggplots so each renders at the chunk's full
-  `fig.width`/`fig.height`.
-- `ncol` heuristic uses 2 columns for 3+ panels (was 3) when combined.
+### Stage C — small contract fix + label propagation (2 fixes)
+- `R/mcml.R`: `.auto_detect_clusters()` requires `node_groups` to carry
+  a node identifier column (data.frame) or be a named atomic vector
+  keyed by node label (audit_mcml #1). Unnamed bare vectors rejected
+  with a clear error. Existing test that pinned the buggy positional
+  read updated to the new contract; +3 new tests including the
+  misordered-input alignment proof and a label-propagation test through
+  `state_distribution()` (audit_mcml #7).
 
-### F. Fit-aware tile labels
-- New `.geom_fit_label()` helper routes to `ggfittext::geom_fit_text()`
-  when `ggfittext` (added to Suggests) is available; falls back to
-  `geom_text` at midpoint otherwise.
-- Per-row `angle` aesthetic passed in: tall narrow tiles get text rotated
-  90°, wide flat tiles stay 0°. `min.size = 1`, `padding = 0.6 mm`,
-  `reflow = TRUE`.
-- Percent formatting: `%.0f%%` → `%.1f%%` everywhere.
+### Stage D — additive feature (1 fix)
+- `R/mmm.R`: `compare_mmm(return_fits = FALSE)` new arg
+  (audit_clustering #6). When TRUE, fits attached as
+  `attr(result, "fits")` keyed by k. Default behaviour unchanged.
+  +4 tests.
 
-### G. Abbreviation
-- New `abbreviate` arg in the worker. `FALSE` (default) shows full names;
-  `TRUE` uses `base::abbreviate(minlength = 3)` (collision-aware); a
-  positive integer sets the target minlength.
-- Applied at the top of the worker by mutating `freq_df$state` and
-  re-aggregating, so the abbreviated names propagate to tile labels,
-  legend, and the returned `$table`.
-
-### H. Unified house default sizes
-- `theme_minimal(base_size = 12)` everywhere (was 11/12/13 drift).
-- `label_size = 3.5` default (was 3) in `plot_state_frequencies` +
-  `plot_mosaic`.
-- Tile/rect borders `linewidth = 0.4` (was 0.3/0.5/0.6 drift).
-- `theme_classic()` in `mosaic_plot` switched to `theme_minimal(12)`.
-- Files touched: `R/plot_state_frequencies.R`, `R/chain_structure.R`,
-  `R/boot_glasso.R`, `R/sequence_compare.R`, `R/simplicial.R`,
-  `R/cluster_choice.R`, `R/cluster_data.R`, `R/mmm.R`,
-  `R/centrality_stability.R`, `R/association_rules.R`.
-
-### I. Label rotation defaults (mosaic_plot)
-- `mosaic_plot.netobject` and `mosaic_plot.netobject_group` defaults:
-  - `top_angle = 90` (x-axis labels vertical)
-  - `left_angle = 0` (y-axis labels horizontal)
-- 90° on top fits long state names into narrow column widths; 0° on left
-  lets each label sit in its row without colliding with adjacent rows
-  (rotated y-labels of long words exceed thin-row heights and overlap).
-- These defaults churned mid-session (90/90, 180/180) before reverting to
-  the established 90/0 convention.
-
-### J. Tutorial rewrite
-- `Tutorial_docs/tutorial_plot_state_frequencies.Rmd` restructured into
-  **Part 1: Defaults** (one chunk per input class, no extra args),
-  **Part 2: Customization** (one knob at a time), **Part 3: `mosaic_plot()`
-  companion** using only netobjects (no contingency reshape). Renders
-  cleanly to ~3 MB HTML.
+### Stage E — test gaps (no code change)
+- `tests/testthat/test-mmm.R`: pinned first-column-NA init_state
+  behavior and sentinel-character-as-real-state behavior. The first
+  test caught a doc inaccuracy I'd written and was corrected in real
+  time.
+- `tests/testthat/test-mcml.R`: pinned the documented narrow contract
+  for edge-list cluster-column input, and added a deterministic fixture
+  that triggers the `as_tna.mcml()` drop warning (sequence input where
+  one cluster has a node with no in-cluster outgoing transitions).
 
 ## Current State
 
-- 49/49 tests passing in `test-plot_state_frequencies.R`.
-- 10/10 tests passing in `test-mosaic_plot.R`.
-- Equivalence tests (gated) all green: byte-for-byte tna match,
-  machine-precision area equality with vcd's mosaic math.
-- `devtools::document()` clean (one unrelated `chain_structure.R` link
-  warning that pre-dates this session).
-- Tutorial HTML rendered fresh on 2026-05-04.
-- Branch: `main`, fast-forwarded to `origin/main`, **uncommitted changes**
-  in the working tree.
+- Full testthat sweep: **1628 / 1628 pass, 0 fail, 9 skip, 5 warnings**.
+  All skips and warnings pre-existing and unchanged from session start
+  (gimme/hypa/link_prediction empty test stubs, mmm/simplicial
+  missing-package branches, casedrop_reliability zero-variance edge
+  vectors). Net +12 tests over the audit baseline of 1616.
+- Files changed: 4 R modules (`cluster_data.R`, `mcml.R`, `mmm.R`),
+  7 regenerated man pages (`as_tna.Rd`, `build_clusters.Rd`,
+  `build_mcml.Rd`, `build_mmm.Rd`, `cluster_network.Rd`,
+  `compare_mmm.Rd`, `summary.mcml.Rd`), 3 test files
+  (`test-build_clusters.R`, `test-mcml.R`, `test-mmm.R`), and this
+  HANDOFF.md.
+- `LEARNINGS.md` and `CHANGES.md` updated on disk (gitignored, won't
+  appear in git status — by project convention they're session
+  journals).
+- No git commit made (per project convention — only on explicit
+  request).
+
+## Open Issues / Deferred
+
+Two findings need an explicit user decision before code can move:
+
+**audit_mcml #3 — `directed = FALSE` raw-data semantics.** Currently:
+- `cluster_summary()` (matrix path) symmetrizes the input matrix when
+  `directed = FALSE`.
+- `build_mcml()` raw data path does NOT apply symmetrisation before
+  row-normalisation when `directed = FALSE`.
+- `.process_weights()` accepts `directed` but doesn't actually use it.
+
+The two coherent contracts are:
+- **(a) Make raw paths symmetrise too.** Adds an extra step before
+  normalisation; produces a symmetric within matrix that's then
+  row-normalised. Numeric change for any existing caller using
+  `directed = FALSE` on raw data — though there might be none, since
+  the current behaviour is a silent no-op.
+- **(b) Document `directed = FALSE` as matrix-aggregation-only.**
+  Steer raw-data users to `type = "cooccurrence"` for undirected
+  summaries. No numeric change. Lighter touch but leaves the contract
+  fragmented.
+
+**audit_clustering #5 — MMM first-column initial state (numeric
+variant).** Doc-only path is already done in Stage A. The numeric
+variant would change `init_state` extraction from "first column
+verbatim" to "first non-NA column per sequence". Effect:
+- Sequences whose first column is NA would enter EM with a real init
+  rather than NA.
+- Could change EM convergence trajectories on real data, especially
+  ESM/EMA panels with leading missings.
+- Need a deliberate decision because the change is invisible from
+  outside (no API change), but downstream BIC/AIC/posteriors shift.
+
+Both are implementable in a small follow-up PR. They're called out in
+the codex audit reports themselves; no extra context required.
 
 ## Key Decisions
 
-1. **`mosaic_plot()` and `plot_state_frequencies()` stay strictly
-   separate.** No `style = "mosaic"` in `plot_state_frequencies`. No
-   `mosaic_plot.data.frame` that auto-detects the state_distribution
-   shape. The two answer different statistical questions and the user
-   explicitly rejected mixing them.
-2. **`state_freq` is a list class, not a data.frame subclass.** Mirrors
-   `net_cluster_diagnostics`, not `cluster_choice`. Plot and table are
-   peers; `as.data.frame()` is the explicit handoff.
-3. **`print.state_freq` renders both** the tidy table to stdout AND the
-   chart to the active graphics device. Diverges from `print.net_clustering`
-   (numbers only) but matches user intent ("info beside the plot").
-4. **Permutation residuals as the mosaic default.** User asked for
-   robustness on sparse tables. `residuals = "asymptotic"` retained for
-   tna byte-equivalence.
-5. **Suggests trim from upstream main was kept** during conflict
-   resolution. Stashed-side additions (`NetworkComparisonTest`, `arules`,
-   `jsonlite`) discarded per user's "be on main / main is canonical"
-   stance. Stash retrievable via `git stash list`.
-6. **`ggfittext` added to Suggests, not Imports.** Tile-label fit-aware
-   behaviour is a soft enhancement; fallback path keeps plots rendering.
+- **Risk-ordered staging.** Documentation first, additive checks
+  second, contract changes third, additive features fourth, test gaps
+  fifth. Each stage ran the full sweep before moving on. This caught
+  one doc inaccuracy in Stage E that wouldn't have surfaced with a
+  bottom-up "fix everything then test" approach.
+- **Rejected the named-vector-with-cluster-col-name path in
+  `.auto_detect_clusters()`.** A "named vector" already uses names() for
+  node labels — there's no separate "cluster column" concept for that
+  shape. Restructured the function to dispatch on `is.data.frame()` /
+  `is.atomic()` first, then use the right accessor in each branch.
+- **Updated rather than preserved a pre-existing test that pinned the
+  bug.** The audit explicitly identified the positional `node_groups`
+  read as the bug; a test that asserted it kept working was a
+  regression-locking test for the bug. Adjusting that test to the new
+  contract is the right move; preserving it via a back-compat shim
+  would have re-introduced the corruption hazard.
+- **Attached fits as an attribute, not a column.** `compare_mmm()`'s
+  return is a data.frame subclass with public fields users index by
+  name. Adding fits as a list-column or new field would have required
+  every existing consumer to ignore the new column. An attribute is
+  invisible by default and explicit when wanted via `attr(comp,
+  "fits")[[k]]`.
 
-## Open Issues
+## Next Steps
 
-1. **mcml tutorial chunk uses absolute `/Users/.../Downloads` paths** for
-   `Interactions` / `Nodesin`. Not portable.
-2. **Stashed dev edits not yet decided.** `git stash list` retains the
-   pre-switch dev WIP — drop, apply selectively, or commit to side branch.
-3. **`mosaic_plot.netobject_group`** facets via `gridExtra::arrangeGrob`
-   when available; gets cramped at 5+ groups. Could lift the
-   `combine = "auto"` heuristic from `plot_state_frequencies` here too.
-4. **One pre-existing roxygen warning** in `R/chain_structure.R:67`
-   (`@description Could not resolve link to topic "i, i"`).
-5. **Tutorial Rmd uses `devtools::load_all(here::here())`** instead of
-   `library(Nestimate)`. Works in dev; would need switching if shipped as
-   a package vignette.
-
-## Next Steps (priority-ordered for revision)
-
-1. **HIGH — Replace mcml tutorial absolute path** with a bundled dataset
-   or `system.file()` example so the rendered tutorial is reproducible.
-2. **HIGH — Decide on the stash.** `git stash list` → drop the dev WIP if
-   superseded, or `git stash branch` if any edits should be revived.
-3. **MEDIUM — Commit this session's changes** in logical chunks:
-   - chore: switch local branch to main, resolve conflicts
-   - feat(mosaic): add `mosaic_plot()` chi-square mosaic + tests
-   - refactor(plot_state_frequencies): collapse dispatch, add `state_freq`
-     class, export `state_distribution()`
-   - feat: legend "auto", abbreviation, fit-aware labels, shared-vocab
-     demote
-   - style: unify house default sizes
-   - docs: rewrite tutorial defaults-first
-4. **MEDIUM — Run `R CMD check --as-cran`** before pushing. New exports,
-   dropped style options, and `state_freq` S3 methods need a clean pass.
-5. **MEDIUM — Extend `mosaic_plot.netobject_group`** with `combine = "auto"`
-   mirroring `plot_state_frequencies`.
-6. **LOW — Add `print.nestimate_facet_list` knit_print wrapper** so each
-   ggplot in the list renders inline at the chunk's `fig.width` /
-   `fig.height` under all knitr versions.
-7. **LOW — Document the unified house defaults** in CLAUDE.md or a
-   constants file so future plot helpers pick them up automatically.
+1. Review this PR — 14 file changes, ~700 lines added, ~250 removed
+   (including the HANDOFF rewrite). The substantive surface is the
+   three R files and three test files; the man pages are regenerated
+   from roxygen.
+2. Decide on the two deferred findings (mcml #3, clustering #5
+   numeric). If yes → I'll implement in one follow-up. If no → they
+   stay documented and that's fine.
+3. Commit when satisfied. No git operations performed in this session.
 
 ## Context
 
-- Working dir: `/Users/mohammedsaqr/Documents/Github/Nestimate`
-- Branch: `main` (synced with `origin/main`)
-- Today: 2026-05-04
-- Stashed work pending review: `git stash list`
-- Tutorial preview: `Tutorial_docs/tutorial_plot_state_frequencies.html`
-- Plan file: `~/.claude/plans/great-now-re-do-the-elegant-turing.md`
-- ggfittext is now in Suggests; install with `install.packages("ggfittext")`
-  for fit-aware tile labels.
+- Branch: `main`. All changes are bug fixes / docs / tests / one
+  additive feature with default-off behaviour. Appropriate for `main`
+  per local convention.
+- Tools: `devtools::test()`, `devtools::document()`. R 4.4 / testthat
+  edition 3. `NOT_CRAN=true` env var required to actually run cluster
+  tests (file gated by `skip_on_cran()`).
+- No external package dependencies added or removed.
+- Audit reports for reference:
+  `codex_docs/audit_clustering/report.Rmd`
+  `codex_docs/audit_mcml/report.Rmd`.
