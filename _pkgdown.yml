@@ -5,8 +5,18 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, articles, news]
+    left: [intro, reference, articles, tutorials, news]
     right: [search, github]
+  components:
+    tutorials:
+      text: Tutorials
+      menu:
+      - text: Model assessment for transition networks
+        href: articles/tutorial_model_assessment.html
+      - text: Testing the Markov order of coded sequences
+        href: articles/tutorial_markov_order.html
+      - text: Higher-Order Network Analysis
+        href: articles/higher-order-networks.html
 reference:
   - title: Network Estimation
     desc: Core functions for building networks from data
