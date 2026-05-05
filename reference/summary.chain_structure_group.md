@@ -4,7 +4,7 @@ Produces a single tidy data.frame with one row per (group, state)
 combination, combining classification, persistence, sojourn, and – when
 applicable – stationary or mean-absorption-time columns. Useful for
 side-by-side reporting of
-[`chain_structure()`](https://mohsaqr.github.io/Nestimate/reference/chain_structure.md)
+[`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.md)
 across the members of a `netobject_group`.
 
 ## Usage

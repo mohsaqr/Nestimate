@@ -176,8 +176,8 @@ correlation networks.
 
 ## See also
 
-[`plot_mosaic`](https://mohsaqr.github.io/Nestimate/reference/plot_mosaic.md)
-for the lower-level data.frame primitive.
+[`plot_mosaic`](https://saqr.me/Nestimate/reference/plot_mosaic.md) for
+the lower-level data.frame primitive.
 
 ## Examples
 

@@ -72,7 +72,7 @@ columns, skipping any `NA` values.
 
 ## See also
 
-[`convert_sequence_format`](https://mohsaqr.github.io/Nestimate/reference/convert_sequence_format.md)
+[`convert_sequence_format`](https://saqr.me/Nestimate/reference/convert_sequence_format.md)
 for converting to other representations (frequency counts, one-hot, edge
 lists).
 

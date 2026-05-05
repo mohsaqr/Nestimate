@@ -16,7 +16,7 @@ mogen_transitions(x, order = NULL, min_count = 1L)
 - x:
 
   A `net_mogen` object from
-  [`build_mogen()`](https://mohsaqr.github.io/Nestimate/reference/build_mogen.md).
+  [`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md).
 
 - order:
 

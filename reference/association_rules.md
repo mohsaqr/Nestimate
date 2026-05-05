@@ -127,8 +127,8 @@ rules. In *Proc. 20th VLDB Conference*, 487–499.
 
 ## See also
 
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-[`predict_links`](https://mohsaqr.github.io/Nestimate/reference/predict_links.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`predict_links`](https://saqr.me/Nestimate/reference/predict_links.md)
 
 ## Examples
 

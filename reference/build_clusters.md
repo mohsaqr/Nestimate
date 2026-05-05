@@ -39,7 +39,7 @@ build_clusters(
   netobject
 
   :   A network object from
-      [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+      [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
       Extracts the stored sequence data. Only valid for sequence-based
       methods (relative, frequency, co_occurrence, attention).
 
@@ -74,6 +74,17 @@ build_clusters(
 
   Character vector. Symbols treated as missing values. Default:
   `c("*", "%")`.
+
+  **Missing-value distance rule:** after symbols are converted to `NA`,
+  missing values are encoded as a single comparable sentinel state —
+  *not* pairwise-deleted. Two missing values in the same position match
+  (distance contribution 0); a missing value paired with any observed
+  state mismatches (distance contribution 1 for Hamming, etc.). This is
+  the conventional behaviour for aligned sequence matrices because
+  pairwise deletion would change the effective length of every pair and
+  break the metric. If you want pairwise deletion or a different
+  missing-value semantic, drop or recode the missing cells before
+  passing the data in.
 
 - weighted:
 

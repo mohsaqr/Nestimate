@@ -9,7 +9,7 @@ comparability.
 For transition methods (`"relative"`, `"frequency"`, `"co_occurrence"`),
 uses pre-computed per-sequence count matrices for fast resampling (same
 infrastructure as
-[`bootstrap_network`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md)).
+[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)).
 
 ## Usage
 
@@ -28,7 +28,7 @@ network_reliability(
 - ...:
 
   One or more `netobject`s (from
-  [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)).
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
   If unnamed, each model is auto-named from its `$method`. A
   `netobject_group` is flattened into its constituent models.
 
@@ -83,8 +83,8 @@ An object of class `"net_reliability"` containing:
 
 ## See also
 
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-[`bootstrap_network`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
 
 ## Examples
 

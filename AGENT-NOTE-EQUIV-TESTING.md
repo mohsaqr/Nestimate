@@ -53,11 +53,11 @@ divergence point.
 
 #### Priority 2: Bootstrap & permutation
 
-- [`bootstrap_network()`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md)
+- [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
   → verify CI bounds contain true edge weights at stated coverage
 - `permutation_test()` → verify p-values against manual permutation
   distribution
-- [`boot_glasso()`](https://mohsaqr.github.io/Nestimate/reference/boot_glasso.md)
+- [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)
   → verify against
   [`qgraph::EBICglasso()`](https://rdrr.io/pkg/qgraph/man/EBICglasso.html)
   on bootstrap samples
@@ -65,36 +65,36 @@ divergence point.
 
 #### Priority 3: Higher-order methods
 
-- [`build_hon()`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md)
-  → verify HON adjacency against manual state-space expansion
-- [`build_hypa()`](https://mohsaqr.github.io/Nestimate/reference/build_hypa.md)
-  → verify p-values against manual multi-hypergeometric formula
-- [`build_honem()`](https://mohsaqr.github.io/Nestimate/reference/build_honem.md)
+- [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md) →
+  verify HON adjacency against manual state-space expansion
+- [`build_hypa()`](https://saqr.me/Nestimate/reference/build_hypa.md) →
+  verify p-values against manual multi-hypergeometric formula
+- [`build_honem()`](https://saqr.me/Nestimate/reference/build_honem.md)
   → verify embedding dimensions against manual matrix factorization
 - Ground truth: manual formula implementation with explicit loops
 
 #### Priority 4: Specialized models
 
-- [`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md)
+- [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
   → verify temporal/contemporaneous/between matrices against
   [`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) directly
-- [`build_gimme()`](https://mohsaqr.github.io/Nestimate/reference/build_gimme.md)
+- [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
   → verify against
   [`gimme::gimme()`](https://rdrr.io/pkg/gimme/man/gimmeSEM.html)
   directly
-- [`association_rules()`](https://mohsaqr.github.io/Nestimate/reference/association_rules.md)
+- [`association_rules()`](https://saqr.me/Nestimate/reference/association_rules.md)
   → verify against
   [`arules::apriori()`](https://rdrr.io/pkg/arules/man/apriori.html)
   (test file exists but may not do numerical equiv)
-- [`predict_links()`](https://mohsaqr.github.io/Nestimate/reference/predict_links.md)
+- [`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.md)
   → verify link prediction scores against manual formula
 - Ground truth: direct calls to wrapped packages
 
 #### Priority 5: Utility functions
 
-- [`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md)
+- [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
   CS coefficient → verify against manual case-dropping bootstrap
-- [`cluster_data()`](https://mohsaqr.github.io/Nestimate/reference/cluster_data.md)
+- [`cluster_data()`](https://saqr.me/Nestimate/reference/cluster_data.md)
   → verify cluster assignments against `igraph::cluster_*()` directly
 - `prepare_data()` → verify sequence parsing against manual state
   extraction

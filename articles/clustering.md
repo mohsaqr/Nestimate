@@ -77,7 +77,7 @@ is defined using a distance metric that quantifies how different two
 sequences are.
 
 To implement this method using `Nestimate`, we can use the
-[`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)
+[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
 function, which takes either raw sequence data or a network object such
 as the `net` object that we estimated (which also contains the original
 sequences in `$data`):
@@ -258,7 +258,7 @@ clust_complete$silhouette
 
 ### Choosing k, dissimilarity, and method
 
-[`cluster_choice()`](https://mohsaqr.github.io/Nestimate/reference/cluster_choice.md)
+[`cluster_choice()`](https://saqr.me/Nestimate/reference/cluster_choice.md)
 sweeps any combination of `k`, `dissimilarity`, and `method` in a single
 call and returns one row per configuration with silhouette, mean
 within-cluster distance, and cluster-size balance. Pass a vector to any
@@ -367,7 +367,7 @@ summary(clust)
 ### Validating the choice with `cluster_diagnostics()`
 
 Once a clustering is fit,
-[`cluster_diagnostics()`](https://mohsaqr.github.io/Nestimate/reference/cluster_diagnostics.md)
+[`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
 returns a uniform diagnostic surface that works for both distance-based
 fits (`net_clustering`) and model-based fits (`net_mmm`,
 `net_mmm_clustering`). The print method shows per-cluster size, mean
@@ -406,8 +406,8 @@ sequences are assigned to the cluster whose transition structure best
 matches their observed behavior.
 
 To implement MMM, we can use
-[`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md),
-which returns a `net_mmm` object with full model details:
+[`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md), which
+returns a `net_mmm` object with full model details:
 
 ``` r
 
@@ -441,7 +441,7 @@ summary(mmm_fit)
 The `net_mmm` object contains posterior probabilities, model fit
 statistics (BIC, AIC, ICL), and per-cluster transition matrices in
 `$models`.
-[`cluster_diagnostics()`](https://mohsaqr.github.io/Nestimate/reference/cluster_diagnostics.md)
+[`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
 works on it too, with MMM-specific columns (mixing share, average
 posterior probability, per-cluster classification error):
 
@@ -479,8 +479,8 @@ building that both return `netobject_group`:
 
 | Function | Clustering method | Returns |
 |----|----|----|
-| [`cluster_network()`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md) | Distance-based (Hamming, LCS, etc.) | `netobject_group` |
-| [`cluster_mmm()`](https://mohsaqr.github.io/Nestimate/reference/cluster_mmm.md) | Model-based (MMM) | `netobject_group` |
+| [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md) | Distance-based (Hamming, LCS, etc.) | `netobject_group` |
+| [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md) | Model-based (MMM) | `netobject_group` |
 
 ### Using `cluster_network()` (distance-based)
 
@@ -532,7 +532,7 @@ grp_dist[[1]]$weights[1:3, 1:3]
 ### Visualizing Clustered Sequences
 
 Both `netobject_group` results can be passed directly to
-[`sequence_plot()`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md)
+[`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
 for visualization:
 
 ``` r
@@ -554,9 +554,9 @@ cluster](clustering_files/figure-html/cluster-seqplot-mmm-1.png)
 ### Converting `build_clusters()` to networks
 
 If you used
-[`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)
+[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
 directly, you can convert to `netobject_group` via
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md):
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md):
 
 ``` r
 

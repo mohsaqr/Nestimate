@@ -71,7 +71,7 @@ this one; reflects accessibility (attractor strength).
 
 ## See also
 
-[`passage_time`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+[`passage_time`](https://saqr.me/Nestimate/reference/passage_time.md)
 
 ## Examples
 

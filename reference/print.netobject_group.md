@@ -2,15 +2,14 @@
 
 Compact summary of a `netobject_group`. Header surfaces the source (a
 clustering attached by
-[`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
-or
-[`cluster_mmm`](https://mohsaqr.github.io/Nestimate/reference/cluster_mmm.md),
+[`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
+or [`cluster_mmm`](https://saqr.me/Nestimate/reference/cluster_mmm.md),
 or a plain split by `group_col`). The per-group table carries node and
 edge counts, weight range, and – when a clustering attribute is present
 – N and percentage of sequences per cluster (matching the layout used by
-[`print.net_clustering`](https://mohsaqr.github.io/Nestimate/reference/print.net_clustering.md)
+[`print.net_clustering`](https://saqr.me/Nestimate/reference/print.net_clustering.md)
 and
-[`print.net_mmm`](https://mohsaqr.github.io/Nestimate/reference/print.net_mmm.md)).
+[`print.net_mmm`](https://saqr.me/Nestimate/reference/print.net_mmm.md)).
 
 ## Usage
 

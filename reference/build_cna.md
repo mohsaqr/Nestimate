@@ -19,17 +19,17 @@ build_cna(data, ...)
 - ...:
 
   Additional arguments passed to
-  [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
 
 ## Value
 
 A `netobject` (see
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)).
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
 
 ## See also
 
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-[`cooccurrence`](https://mohsaqr.github.io/Nestimate/reference/cooccurrence.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`cooccurrence`](https://saqr.me/Nestimate/reference/cooccurrence.md)
 for delimited-field, bipartite, and other non-sequence co-occurrence
 formats.
 

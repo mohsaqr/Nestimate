@@ -15,8 +15,8 @@ build_honem(hon, dim = 32L, max_power = 10L)
 - hon:
 
   A `net_hon` object from
-  [`build_hon`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md),
-  or a square weighted adjacency matrix.
+  [`build_hon`](https://saqr.me/Nestimate/reference/build_hon.md), or a
+  square weighted adjacency matrix.
 
 - dim:
 

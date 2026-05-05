@@ -119,7 +119,7 @@ The input `object` invisibly.
 The construction follows Burgio, Matamalas, Gomez & Arenas (2020) on
 simplicial / hypergraph contagion. For each k-clique with k \>= 3 found
 in the underlying graph (via
-[`build_simplicial()`](https://mohsaqr.github.io/Nestimate/reference/build_simplicial.md)),
+[`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md)),
 an independent Bernoulli(`p`) trial decides whether that clique becomes
 a k-hyperedge. Underlying pairwise edges are always retained when
 `include_pairwise = TRUE`, so the resulting hypergraph contains both the
@@ -143,9 +143,9 @@ networks to hypergraphs. *Entropy* 22(7), 744.
 
 ## See also
 
-[`build_simplicial()`](https://mohsaqr.github.io/Nestimate/reference/build_simplicial.md)
+[`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md)
 (underlying clique enumeration),
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
 
 ## Examples
 

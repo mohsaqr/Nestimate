@@ -1,7 +1,7 @@
 # Bootstrap a Network Estimate
 
 Non-parametric bootstrap for any network estimated by
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
 Works with all built-in methods (transition and association) as well as
 custom registered estimators.
 
@@ -10,7 +10,7 @@ uses a fast pre-computation strategy: per-sequence count matrices are
 computed once, and each bootstrap iteration only resamples sequences via
 `colSums` (C-level) plus lightweight post-processing. Data must be in
 wide format for transition bootstrap; use
-[`convert_sequence_format`](https://mohsaqr.github.io/Nestimate/reference/convert_sequence_format.md)
+[`convert_sequence_format`](https://saqr.me/Nestimate/reference/convert_sequence_format.md)
 to convert long-format data first.
 
 For association methods (`"cor"`, `"pcor"`, `"glasso"`, and custom
@@ -37,7 +37,7 @@ bootstrap_network(
 - x:
 
   A `netobject` from
-  [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
   The data, method, params, scaling, threshold, and level are all
   extracted from this object.
 
@@ -136,9 +136,9 @@ An object of class `"net_bootstrap"` containing:
 
 ## See also
 
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-[`print.net_bootstrap`](https://mohsaqr.github.io/Nestimate/reference/print.net_bootstrap.md),
-[`summary.net_bootstrap`](https://mohsaqr.github.io/Nestimate/reference/summary.net_bootstrap.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`print.net_bootstrap`](https://saqr.me/Nestimate/reference/print.net_bootstrap.md),
+[`summary.net_bootstrap`](https://saqr.me/Nestimate/reference/summary.net_bootstrap.md)
 
 ## Examples
 

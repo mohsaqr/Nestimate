@@ -196,8 +196,7 @@ A `cluster_summary` object (S3 class) containing:
 ## Details
 
 This is the core function for Multi-Cluster Multi-Level (MCML) analysis.
-Use
-[`as_tna()`](https://mohsaqr.github.io/Nestimate/reference/as_tna.md) to
+Use [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) to
 convert results to tna objects for further analysis with the tna
 package.
 
@@ -233,15 +232,15 @@ The `macro$weights` matrix has clusters as both rows and columns:
 Rows are NOT normalized. Entries are elementwise aggregates produced by
 `method`. If the caller wants probabilities, they should normalize
 downstream (e.g. via
-[`as_tna()`](https://mohsaqr.github.io/Nestimate/reference/as_tna.md)).
-Mixing an arithmetic aggregation with row-normalization here (the old
+[`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md)). Mixing an
+arithmetic aggregation with row-normalization here (the old
 `type = "tna"` combined with `method = "min"` / `"mean"` etc.) produces
 numbers that sum to 1 per row but are not a probability distribution
 over any process; that silently-wrong combination is why `type` was
 removed from the matrix path. The sequence and edgelist paths of
-[`build_mcml()`](https://mohsaqr.github.io/Nestimate/reference/build_mcml.md)
-keep `type`, where the aggregation is always counts and the
-post-processing chooses between well-defined network constructions.
+[`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md) keep
+`type`, where the aggregation is always counts and the post-processing
+chooses between well-defined network constructions.
 
 ### Choosing method
 
@@ -255,8 +254,8 @@ post-processing chooses between well-defined network constructions.
 
 ## See also
 
-[`as_tna()`](https://mohsaqr.github.io/Nestimate/reference/as_tna.md) to
-convert results to tna objects,
+[`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) to convert
+results to tna objects,
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for two-layer
 visualization, [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
 for flat cluster visualization

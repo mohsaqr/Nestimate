@@ -52,9 +52,9 @@ other network tools.
 
 ## See also
 
-[`extract_transition_matrix`](https://mohsaqr.github.io/Nestimate/reference/extract_transition_matrix.md)
+[`extract_transition_matrix`](https://saqr.me/Nestimate/reference/extract_transition_matrix.md)
 for the full matrix,
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
 for network estimation.
 
 ## Examples

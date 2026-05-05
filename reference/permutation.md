@@ -1,7 +1,7 @@
 # Permutation Test for Network Comparison
 
 Compares two networks estimated by
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
 using a permutation test. Works with all built-in methods (transition
 and association) as well as custom registered estimators. The test
 shuffles which observations belong to which group, re-estimates
@@ -36,12 +36,12 @@ permutation(
 - x:
 
   A `netobject` (from
-  [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)).
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
 
 - y:
 
   A `netobject` (from
-  [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)).
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
   Must use the same method and have the same nodes as `x`.
 
 - iter:
@@ -127,10 +127,10 @@ An object of class `"net_permutation"` containing:
 
 ## See also
 
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-[`bootstrap_network`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md),
-[`print.net_permutation`](https://mohsaqr.github.io/Nestimate/reference/print.net_permutation.md),
-[`summary.net_permutation`](https://mohsaqr.github.io/Nestimate/reference/summary.net_permutation.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+[`print.net_permutation`](https://saqr.me/Nestimate/reference/print.net_permutation.md),
+[`summary.net_permutation`](https://saqr.me/Nestimate/reference/summary.net_permutation.md)
 
 ## Examples
 

@@ -55,8 +55,8 @@ build_simplicial(
 - ...:
 
   Additional arguments passed to
-  [`build_hon()`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md)
-  when `x` is a `tna`/`netobject` with `type = "pathway"`.
+  [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md) when
+  `x` is a `tna`/`netobject` with `type = "pathway"`.
 
 ## Value
 
@@ -64,10 +64,10 @@ A `simplicial_complex` object.
 
 ## See also
 
-[`betti_numbers`](https://mohsaqr.github.io/Nestimate/reference/betti_numbers.md),
-[`persistent_homology`](https://mohsaqr.github.io/Nestimate/reference/persistent_homology.md),
-[`simplicial_degree`](https://mohsaqr.github.io/Nestimate/reference/simplicial_degree.md),
-[`q_analysis`](https://mohsaqr.github.io/Nestimate/reference/q_analysis.md)
+[`betti_numbers`](https://saqr.me/Nestimate/reference/betti_numbers.md),
+[`persistent_homology`](https://saqr.me/Nestimate/reference/persistent_homology.md),
+[`simplicial_degree`](https://saqr.me/Nestimate/reference/simplicial_degree.md),
+[`q_analysis`](https://saqr.me/Nestimate/reference/q_analysis.md)
 
 ## Examples
 

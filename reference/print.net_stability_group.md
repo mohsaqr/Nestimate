@@ -14,7 +14,7 @@ print(x, ...)
 - x:
 
   A `net_stability_group` (returned by
-  [`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md)
+  [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
   when called on a `netobject_group` or an `mcml`).
 
 - ...:

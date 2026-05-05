@@ -2,9 +2,9 @@
 
 Prints a uniform header, family-specific quality / IC line, and a
 per-cluster table. Layout matches
-[`print.net_clustering`](https://mohsaqr.github.io/Nestimate/reference/print.net_clustering.md)
+[`print.net_clustering`](https://saqr.me/Nestimate/reference/print.net_clustering.md)
 and
-[`print.net_mmm`](https://mohsaqr.github.io/Nestimate/reference/print.net_mmm.md).
+[`print.net_mmm`](https://saqr.me/Nestimate/reference/print.net_mmm.md).
 
 ## Usage
 

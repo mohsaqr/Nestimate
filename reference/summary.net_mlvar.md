@@ -14,7 +14,7 @@ summary(object, ...)
 - object:
 
   A `net_mlvar` object returned by
-  [`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md).
+  [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md).
 
 - ...:
 

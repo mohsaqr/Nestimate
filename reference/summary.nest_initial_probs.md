@@ -14,7 +14,7 @@ summary(object, ...)
 - object:
 
   A `nest_initial_probs` named numeric vector returned by
-  [`extract_initial_probs`](https://mohsaqr.github.io/Nestimate/reference/extract_initial_probs.md).
+  [`extract_initial_probs`](https://saqr.me/Nestimate/reference/extract_initial_probs.md).
 
 - ...:
 

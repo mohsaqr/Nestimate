@@ -4,7 +4,7 @@ Draws how state proportions (or counts) evolve across time points. For
 each time column, tabulates how many sequences are in each state and
 renders the result as a stacked area (default) or stacked bar chart.
 Accepts the same inputs as
-[`sequence_plot`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md).
+[`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md).
 
 ## Usage
 
@@ -43,7 +43,7 @@ distribution_plot(
 - x:
 
   Wide-format sequence data. Accepts the same inputs as
-  [`sequence_plot`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md):
+  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md):
   `data.frame`, `matrix`, `netobject`, `net_clustering`,
   `netobject_group`, `net_mmm`, or `tna`. When clustering info is
   available, one panel is drawn per cluster.
@@ -82,7 +82,7 @@ distribution_plot(
 - width, height:
 
   Optional device dimensions. See
-  [`sequence_plot`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md).
+  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md).
 
 - main:
 
@@ -150,8 +150,8 @@ Invisibly, a list with `counts`, `proportions`, `levels`, `palette`, and
 
 ## See also
 
-[`sequence_plot`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md),
-[`build_clusters`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)
+[`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md),
+[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
 
 ## Examples
 

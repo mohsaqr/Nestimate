@@ -8,12 +8,12 @@ library(Nestimate)
 Nestimate provides two functions for Markov-chain stability analysis of
 transition networks:
 
-- **[`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)**
+- **[`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)**
   – computes the full matrix of mean first passage times (MFPT). Entry
   M\[i, j\] is the expected number of steps to travel from state *i* to
   state *j* for the first time. The diagonal equals the mean recurrence
   time 1/pi.
-- **[`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)**
+- **[`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)**
   – computes per-state stability metrics: persistence, stationary
   probability, return time, sojourn time, and mean accessibility.
 

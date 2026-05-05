@@ -11,12 +11,12 @@ scaling) on any of the functions below, the downstream parity suite will
 break.
 
 **Pinned functions (scalar / `netobject` input):** -
-[`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md) -
-[`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md) -
-[`markov_order_test()`](https://mohsaqr.github.io/Nestimate/reference/markov_order_test.md) -
-[`network_reliability()`](https://mohsaqr.github.io/Nestimate/reference/network_reliability.md) -
-[`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md) -
-[`casedrop_reliability()`](https://mohsaqr.github.io/Nestimate/reference/casedrop_reliability.md)
+[`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md) -
+[`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md) -
+[`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md) -
+[`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md) -
+[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md) -
+[`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
 
 **Pending parity target (`netobject_group` input):** The
 `.netobject_group` S3 methods that fan these functions out over a named

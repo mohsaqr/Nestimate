@@ -2,7 +2,7 @@
 
 Register a custom or built-in network estimator function by name.
 Estimators registered here can be used by
-[`estimate_network`](https://mohsaqr.github.io/Nestimate/reference/estimate_network.md)
+[`estimate_network`](https://saqr.me/Nestimate/reference/estimate_network.md)
 via the `method` parameter.
 
 ## Usage
@@ -39,10 +39,10 @@ Invisible `NULL`.
 
 ## See also
 
-[`get_estimator`](https://mohsaqr.github.io/Nestimate/reference/get_estimator.md),
-[`list_estimators`](https://mohsaqr.github.io/Nestimate/reference/list_estimators.md),
-[`remove_estimator`](https://mohsaqr.github.io/Nestimate/reference/remove_estimator.md),
-[`estimate_network`](https://mohsaqr.github.io/Nestimate/reference/estimate_network.md)
+[`get_estimator`](https://saqr.me/Nestimate/reference/get_estimator.md),
+[`list_estimators`](https://saqr.me/Nestimate/reference/list_estimators.md),
+[`remove_estimator`](https://saqr.me/Nestimate/reference/remove_estimator.md),
+[`estimate_network`](https://saqr.me/Nestimate/reference/estimate_network.md)
 
 ## Examples
 

@@ -258,9 +258,9 @@ The function works as follows:
 
 ## See also
 
-[`register_estimator`](https://mohsaqr.github.io/Nestimate/reference/register_estimator.md),
-[`list_estimators`](https://mohsaqr.github.io/Nestimate/reference/list_estimators.md),
-[`bootstrap_network`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md)
+[`register_estimator`](https://saqr.me/Nestimate/reference/register_estimator.md),
+[`list_estimators`](https://saqr.me/Nestimate/reference/list_estimators.md),
+[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
 
 ## Examples
 

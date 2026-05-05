@@ -60,8 +60,8 @@ A tidy `data.frame` with one row per actor and columns:
 
 ## See also
 
-[`mark_terminal_state()`](https://mohsaqr.github.io/Nestimate/reference/mark_terminal_state.md),
-[`chain_structure()`](https://mohsaqr.github.io/Nestimate/reference/chain_structure.md)
+[`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md),
+[`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.md)
 
 ## Examples
 

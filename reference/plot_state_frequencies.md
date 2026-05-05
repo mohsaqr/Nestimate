@@ -113,7 +113,7 @@ plot_state_frequencies(x, ...)
   - `"bars"` – horizontal bars sorted by frequency, faceted per group.
 
   For chi-square mosaics of a (group x state) contingency table, use
-  [`mosaic_plot`](https://mohsaqr.github.io/Nestimate/reference/mosaic_plot.md)
+  [`mosaic_plot`](https://saqr.me/Nestimate/reference/mosaic_plot.md)
   directly – it is kept as a separate function with its own dispatch
   surface.
 

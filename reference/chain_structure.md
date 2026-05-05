@@ -18,14 +18,14 @@ chain_structure(x, normalize = TRUE, tol = 1e-10)
 
   A `netobject`, `cograph_network`, `tna` model, transition matrix, or
   sequence data.frame (passed through
-  [`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
   with `method = "relative"`).
 
 - normalize:
 
   Logical. If `TRUE` (default), rows of the transition matrix are
   renormalized to sum to 1 before analysis (see
-  [`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+  [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)
   for the same convention).
 
 - tol:
@@ -111,9 +111,9 @@ A `chain_structure` object: a list with elements
 
 Built specifically as a diagnostic to run *before* trusting the output
 of
-[`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+[`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)
 or
-[`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md).
+[`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md).
 Both implicitly assume a regular chain (irreducible + aperiodic) so that
 the stationary distribution is unique and meaningful. Use `is_regular`
 to check.
@@ -130,9 +130,9 @@ Norris, J. R. (1997). *Markov Chains*. Cambridge University Press.
 
 ## See also
 
-[`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md),
-[`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md),
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md),
+[`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md),
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
 
 ## Examples
 

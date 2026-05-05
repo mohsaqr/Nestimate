@@ -3,7 +3,7 @@
 Fits a mixture of Markov chains to sequence data and returns a
 `netobject_group` containing per-cluster transition networks. This is
 the MMM equivalent of
-[`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
+[`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
 (which uses distance-based clustering); both functions share the
 `cluster_by = ...` surface argument so the call shape stays uniform
 across clustering families.
@@ -61,9 +61,9 @@ cluster_mmm(
   Optional. Covariates integrated into the EM algorithm to model
   covariate-dependent mixing proportions. Accepts formula, character
   vector, string, or data.frame (same forms as
-  [`build_clusters`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)).
+  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)).
   Unlike the post-hoc analysis in
-  [`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md),
+  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md),
   these covariates directly influence cluster membership during
   estimation. Requires the nnet package.
 
@@ -71,9 +71,9 @@ cluster_mmm(
 
   Character. Accepted only as `"mmm"` (the default). Present so
   `cluster_mmm()` and
-  [`cluster_network()`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
+  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
   share the same call shape; any other value raises an error pointing at
-  [`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md).
+  [`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md).
 
 - ...:
 
@@ -113,23 +113,22 @@ MMM-specific information is stored in `attr(, "clustering")` (class
 - data:
 
   The full N-row sequence frame, matching `$assignments` – so
-  [`sequence_plot`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md)
+  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md)
   and
-  [`distribution_plot`](https://mohsaqr.github.io/Nestimate/reference/distribution_plot.md)
+  [`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md)
   can recover both.
 
 ## Details
 
 For the full `net_mmm` object with posterior probabilities, model fit
 statistics, and S3 methods, use
-[`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
-instead.
+[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md) instead.
 
 ## See also
 
-[`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
-for the full MMM object,
-[`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
+[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md) for the
+full MMM object,
+[`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
 for distance-based clustering
 
 ## Examples

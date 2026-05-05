@@ -183,7 +183,7 @@ An S3 object of class `"net_gimme"` containing:
 
 ## See also
 
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
 
 ## Examples
 

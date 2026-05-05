@@ -167,9 +167,9 @@ the American Society for Information Science and Technology*, 60(8),
 
 ## See also
 
-[`build_cna`](https://mohsaqr.github.io/Nestimate/reference/build_cna.md)
-for sequence-positional co-occurrence via
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+[`build_cna`](https://saqr.me/Nestimate/reference/build_cna.md) for
+sequence-positional co-occurrence via
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
 
 ## Examples
 

@@ -1,7 +1,7 @@
 # Structural measures for a hypergraph
 
 Computes a comprehensive structural-statistics suite for a
-[net_hypergraph](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md):
+[net_hypergraph](https://saqr.me/Nestimate/reference/build_hypergraph.md):
 node-level, hyperedge-level, and global measures. All measures are
 derived in a few BLAS calls on the incidence matrix.
 
@@ -19,9 +19,9 @@ print(x, ...)
 - hg:
 
   A `net_hypergraph` (from
-  [`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+  [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
   or
-  [`bipartite_groups()`](https://mohsaqr.github.io/Nestimate/reference/bipartite_groups.md)).
+  [`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md)).
 
 - x:
 
@@ -136,9 +136,9 @@ and generative models of real-world hypergraphs. arXiv:2006.07060.
 
 ## See also
 
-[`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md),
-[`bipartite_groups()`](https://mohsaqr.github.io/Nestimate/reference/bipartite_groups.md),
-[`clique_expansion()`](https://mohsaqr.github.io/Nestimate/reference/clique_expansion.md).
+[`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md),
+[`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md),
+[`clique_expansion()`](https://saqr.me/Nestimate/reference/clique_expansion.md).
 
 ## Examples
 

@@ -87,8 +87,8 @@ A data frame in the requested format:
 
 ## See also
 
-[`frequencies`](https://mohsaqr.github.io/Nestimate/reference/frequencies.md)
-for building transition frequency matrices.
+[`frequencies`](https://saqr.me/Nestimate/reference/frequencies.md) for
+building transition frequency matrices.
 
 ## Examples
 

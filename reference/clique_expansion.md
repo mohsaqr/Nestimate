@@ -1,12 +1,12 @@
 # Clique expansion of a hypergraph
 
 Projects a
-[net_hypergraph](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+[net_hypergraph](https://saqr.me/Nestimate/reference/build_hypergraph.md)
 to a standard pairwise
-[netobject](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
-(the *clique expansion* — also called the "downgrade" of a hypergraph to
-a dyadic graph). Each hyperedge of size k contributes 1 (or its weight)
-to every pair of its members. The resulting edge weight `W[i, j]` equals
+[netobject](https://saqr.me/Nestimate/reference/build_network.md) (the
+*clique expansion* — also called the "downgrade" of a hypergraph to a
+dyadic graph). Each hyperedge of size k contributes 1 (or its weight) to
+every pair of its members. The resulting edge weight `W[i, j]` equals
 the number of hyperedges containing both `i` and `j` (binary incidence)
 or the sum of incidence products (weighted incidence).
 
@@ -21,15 +21,15 @@ clique_expansion(hg, weighted = TRUE)
 - hg:
 
   A `net_hypergraph` object as returned by
-  [`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+  [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
   or
-  [`bipartite_groups()`](https://mohsaqr.github.io/Nestimate/reference/bipartite_groups.md).
+  [`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md).
 
 - weighted:
 
   Logical. If `TRUE` (default), use the hypergraph's incidence values
   directly (so weighted hypergraphs from
-  [`bipartite_groups()`](https://mohsaqr.github.io/Nestimate/reference/bipartite_groups.md)
+  [`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md)
   produce weighted projections). If `FALSE`, binarise the incidence
   first so `W[i, j]` is just the count of shared hyperedges.
 
@@ -45,7 +45,7 @@ The clique expansion is the standard "loss-y but lossless-on-pairwise"
 projection: it preserves *which pairs co-occurred* and *how often* but
 discards the higher-order grouping. Comparing `clique_expansion(hg)` to
 a directly-estimated pairwise network (e.g. via
-[`cooccurrence()`](https://mohsaqr.github.io/Nestimate/reference/cooccurrence.md)
+[`cooccurrence()`](https://saqr.me/Nestimate/reference/cooccurrence.md)
 on the same data) quantifies how much information was carried by the
 hyperedge structure.
 
@@ -53,7 +53,7 @@ Computed in one BLAS call via `tcrossprod(incidence)`; runs in
 `O(n_nodes^2 * n_hyperedges)` time, fast for typical sizes.
 
 Closes the I/O cycle: event data -\>
-[`bipartite_groups()`](https://mohsaqr.github.io/Nestimate/reference/bipartite_groups.md)
+[`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md)
 -\> `clique_expansion()` -\> any function that accepts a `netobject`
 (centrality, bootstrap, clustering, plotting via cograph).
 
@@ -70,9 +70,9 @@ Tian, Y., & Zafarani, R. (2024). Higher-order network analysis methods.
 
 ## See also
 
-[`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md),
-[`bipartite_groups()`](https://mohsaqr.github.io/Nestimate/reference/bipartite_groups.md),
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+[`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md),
+[`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md),
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
 
 ## Examples
 

@@ -43,9 +43,9 @@ sum to 1.
 
 ## See also
 
-[`extract_initial_probs`](https://mohsaqr.github.io/Nestimate/reference/extract_initial_probs.md)
+[`extract_initial_probs`](https://saqr.me/Nestimate/reference/extract_initial_probs.md)
 for extracting initial probabilities,
-[`extract_edges`](https://mohsaqr.github.io/Nestimate/reference/extract_edges.md)
+[`extract_edges`](https://saqr.me/Nestimate/reference/extract_edges.md)
 for extracting an edge list.
 
 ## Examples

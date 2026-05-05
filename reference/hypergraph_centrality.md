@@ -1,7 +1,7 @@
 # Hypergraph eigenvector centralities
 
 Computes one or more eigenvector-style centralities on a
-[net_hypergraph](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md):
+[net_hypergraph](https://saqr.me/Nestimate/reference/build_hypergraph.md):
 *clique-motif* (CEC), *Z-eigenvector* (ZEC), and *H-eigenvector* (HEC).
 Each variant captures influence differently — CEC flattens group
 structure via clique expansion, while ZEC and HEC propagate through the
@@ -24,9 +24,9 @@ hypergraph_centrality(
 - hg:
 
   A `net_hypergraph` (from
-  [`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+  [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
   or
-  [`bipartite_groups()`](https://mohsaqr.github.io/Nestimate/reference/bipartite_groups.md)).
+  [`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md)).
 
 - type:
 
@@ -61,7 +61,7 @@ pairwise graph \\W\\ where \\W\_{ij} = \|\\e : i, j \in e\\\|\\ and
 returns the leading eigenvector of \\W\\. Equivalent to running
 [`igraph::eigen_centrality()`](https://r.igraph.org/reference/eigen_centrality.html)
 on
-[`clique_expansion()`](https://mohsaqr.github.io/Nestimate/reference/clique_expansion.md)
+[`clique_expansion()`](https://saqr.me/Nestimate/reference/clique_expansion.md)
 output.
 
 **Z-eigenvector centrality (ZEC)**: solves the linear eigen-equation on
@@ -93,9 +93,9 @@ Journal on Mathematics of Data Science* 1(2), 293-312. arXiv:1807.09644.
 
 ## See also
 
-[`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md),
-[`clique_expansion()`](https://mohsaqr.github.io/Nestimate/reference/clique_expansion.md),
-[`hypergraph_measures()`](https://mohsaqr.github.io/Nestimate/reference/hypergraph_measures.md).
+[`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md),
+[`clique_expansion()`](https://saqr.me/Nestimate/reference/clique_expansion.md),
+[`hypergraph_measures()`](https://saqr.me/Nestimate/reference/hypergraph_measures.md).
 
 ## Examples
 

@@ -33,7 +33,7 @@ centrality_stability(
 - x:
 
   A `netobject` from
-  [`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md).
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
 
 - measures:
 
@@ -124,8 +124,8 @@ An object of class `"net_stability"` containing:
 
 ## See also
 
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-[`network_reliability`](https://mohsaqr.github.io/Nestimate/reference/network_reliability.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`network_reliability`](https://saqr.me/Nestimate/reference/network_reliability.md)
 
 ## Examples
 

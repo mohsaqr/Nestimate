@@ -3,7 +3,7 @@
 Replaces every cell after each row's last observed state with the label
 given by `state`, leaving non-terminal NAs untouched. The result, passed
 to
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
 yields a Markov chain in which the marked state is **absorbing** by
 construction (`P[state, state] = 1`).
 
@@ -42,18 +42,18 @@ absorbing because every cell after the actor's last observed step has
 been set to `state` — the chain stays there forever once entered.
 
 Use
-[`chain_structure()`](https://mohsaqr.github.io/Nestimate/reference/chain_structure.md)
+[`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.md)
 on the result to compute mean absorption time, absorption probabilities,
 and per-state classification. Note that
-[`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)
+[`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
 is *not* the right summary for absorbing chains; its stationary
 distribution will collapse to the absorbing state.
 
 ## See also
 
-[`actor_endpoints()`](https://mohsaqr.github.io/Nestimate/reference/actor_endpoints.md),
-[`chain_structure()`](https://mohsaqr.github.io/Nestimate/reference/chain_structure.md),
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`actor_endpoints()`](https://saqr.me/Nestimate/reference/actor_endpoints.md),
+[`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.md),
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
 
 ## Examples
 

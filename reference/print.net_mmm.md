@@ -3,7 +3,7 @@
 Compact summary of a Mixed Markov Model fit. Header carries dimensions
 and information criteria; cluster table carries N, mixing share, and
 per-cluster average posterior probability (AvePP). Layout matches
-[`print.net_clustering`](https://mohsaqr.github.io/Nestimate/reference/print.net_clustering.md)
+[`print.net_clustering`](https://saqr.me/Nestimate/reference/print.net_clustering.md)
 so distance- and model-based clusterings can be compared at a glance.
 
 ## Usage

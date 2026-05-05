@@ -62,9 +62,9 @@ indices.
 
 ## See also
 
-[`wide_to_long`](https://mohsaqr.github.io/Nestimate/reference/wide_to_long.md)
+[`wide_to_long`](https://saqr.me/Nestimate/reference/wide_to_long.md)
 for the reverse conversion,
-[`prepare_for_tna`](https://mohsaqr.github.io/Nestimate/reference/prepare_for_tna.md)
+[`prepare_for_tna`](https://saqr.me/Nestimate/reference/prepare_for_tna.md)
 for preparing data for TNA analysis.
 
 ## Examples

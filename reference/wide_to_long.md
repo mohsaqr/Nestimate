@@ -70,9 +70,9 @@ analyses.
 
 ## See also
 
-[`long_to_wide`](https://mohsaqr.github.io/Nestimate/reference/long_to_wide.md)
+[`long_to_wide`](https://saqr.me/Nestimate/reference/long_to_wide.md)
 for the reverse conversion,
-[`prepare_for_tna`](https://mohsaqr.github.io/Nestimate/reference/prepare_for_tna.md)
+[`prepare_for_tna`](https://saqr.me/Nestimate/reference/prepare_for_tna.md)
 for preparing data for TNA analysis.
 
 ## Examples

@@ -171,7 +171,7 @@ states. The HON analysis below detects these local patterns.
 
 ### Second-order transition matrix
 
-[`mogen_transitions()`](https://mohsaqr.github.io/Nestimate/reference/mogen_transitions.md)
+[`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md)
 extracts the transitions at a given order, showing which two-step
 contexts lead to different outcomes:
 
@@ -648,14 +648,14 @@ verify_simplicial(net$weights, threshold = 0.05)
 
 | Step | Method | Function | What it reveals |
 |----|----|----|----|
-| 1 | **TNA** | [`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md) | First-order transition structure |
-| 2 | **MOGen** | [`build_mogen()`](https://mohsaqr.github.io/Nestimate/reference/build_mogen.md) | Whether higher-order is needed |
-| 3 | **HON** | [`build_hon()`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md) | Where sequential context changes transitions |
-| 4 | **HYPA** | [`build_hypa()`](https://mohsaqr.github.io/Nestimate/reference/build_hypa.md) | Which paths are anomalously frequent or rare |
+| 1 | **TNA** | [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md) | First-order transition structure |
+| 2 | **MOGen** | [`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md) | Whether higher-order is needed |
+| 3 | **HON** | [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md) | Where sequential context changes transitions |
+| 4 | **HYPA** | [`build_hypa()`](https://saqr.me/Nestimate/reference/build_hypa.md) | Which paths are anomalously frequent or rare |
 | 5 | **Visualization** | [`plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html) | Blob diagrams of pathways |
-| 6 | **Simplicial** | [`build_simplicial()`](https://mohsaqr.github.io/Nestimate/reference/build_simplicial.md) | Topological structure |
-| 7 | **Persistence** | [`persistent_homology()`](https://mohsaqr.github.io/Nestimate/reference/persistent_homology.md) | Robustness across scales |
-| 8 | **Q-analysis** | [`q_analysis()`](https://mohsaqr.github.io/Nestimate/reference/q_analysis.md) | Multi-level connectivity |
+| 6 | **Simplicial** | [`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md) | Topological structure |
+| 7 | **Persistence** | [`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md) | Robustness across scales |
+| 8 | **Q-analysis** | [`q_analysis()`](https://saqr.me/Nestimate/reference/q_analysis.md) | Multi-level connectivity |
 
 The key progression:
 

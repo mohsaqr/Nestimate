@@ -62,7 +62,7 @@ wtna(
 ## Value
 
 For `method = "transition"` or `"cooccurrence"`: a `netobject` (see
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)).
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
 
 For `method = "both"`: a `wtna_mixed` object with elements `$transition`
 and `$cooccurrence`, each a `netobject`.
@@ -86,8 +86,8 @@ group and summed.
 
 ## See also
 
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md),
-[`prepare_onehot`](https://mohsaqr.github.io/Nestimate/reference/prepare_onehot.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`prepare_onehot`](https://saqr.me/Nestimate/reference/prepare_onehot.md)
 
 ## Examples
 

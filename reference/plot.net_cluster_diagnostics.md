@@ -1,11 +1,10 @@
 # Plot Method for net_cluster_diagnostics
 
 Delegates to the original clustering object's plot method
-([`plot.net_clustering`](https://mohsaqr.github.io/Nestimate/reference/plot.net_clustering.md)
+([`plot.net_clustering`](https://saqr.me/Nestimate/reference/plot.net_clustering.md)
 for distance-based diagnostics,
-[`plot.net_mmm_clustering`](https://mohsaqr.github.io/Nestimate/reference/plot.net_mmm_clustering.md)
-or
-[`plot.net_mmm`](https://mohsaqr.github.io/Nestimate/reference/plot.net_mmm.md)
+[`plot.net_mmm_clustering`](https://saqr.me/Nestimate/reference/plot.net_mmm_clustering.md)
+or [`plot.net_mmm`](https://saqr.me/Nestimate/reference/plot.net_mmm.md)
 for model-based). The diagnostics object itself stores no plot geometry
 – it just keeps a reference to the source so the existing visual layer
 is reused.

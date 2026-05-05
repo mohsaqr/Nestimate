@@ -149,9 +149,9 @@ Katz, L. (1953). A new status index derived from sociometric analysis.
 
 ## See also
 
-[`evaluate_links`](https://mohsaqr.github.io/Nestimate/reference/evaluate_links.md)
+[`evaluate_links`](https://saqr.me/Nestimate/reference/evaluate_links.md)
 for prediction evaluation,
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
 for network estimation.
 
 ## Examples

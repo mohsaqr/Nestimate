@@ -22,7 +22,7 @@ as_tna(x)
 - x:
 
   A `cluster_summary` object created by
-  [`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md).
+  [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
   The aggregated weights are passed to
   [`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md), which
   row-normalises them as needed.
@@ -81,18 +81,24 @@ an error with installation instructions.
 
 ### Excluded Clusters
 
-A within-cluster tna cannot be created when:
+A within-cluster network is dropped only when row-normalisation would
+fail. Specifically, when the recorded `net_method` is `"relative"`
+(row-stochastic transitions) and any node in the cluster has zero
+outgoing weight, that cluster is excluded from `$clusters` and a
+[`warning()`](https://rdrr.io/r/base/warning.html) is emitted listing
+the dropped cluster names. For `net_method = "frequency"` (raw counts),
+a zero-row node is a legitimate sink and the cluster is retained. The
+macro / between-cluster network always includes every cluster regardless
+of the per-cluster drop decisions.
 
-- The cluster has only 1 node (no internal transitions possible)
-
-- Some nodes in the cluster have no outgoing edges (row sums to 0)
-
-These clusters are silently excluded from `$clusters`. The
-between-cluster model still includes all clusters.
+If a cluster you expect to see is missing from the returned `$clusters`,
+check the warning output and consider building with `type = "raw"`
+(which carries through to a frequency-method netobject and skips the
+drop) or inspect `rowSums(x$clusters[[cl]]$weights)`.
 
 ## See also
 
-[`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md)
+[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
 to create the input object,
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
 visualization without conversion,

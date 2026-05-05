@@ -3,7 +3,7 @@
 Clusters the data using the specified algorithm, then calls
 build_network on each cluster subset."><meta property="og:description" content="Combines sequence clustering and network estimation into a single call.
 Clusters the data using the specified algorithm, then calls
-build_network on each cluster subset."><meta property="og:image" content="https://mohsaqr.github.io/Nestimate/logo.svg"></head><body>
+build_network on each cluster subset."><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -11,7 +11,7 @@ build_network on each cluster subset."><meta property="og:image" content="https:
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,12 +84,17 @@ or <code>"mmm"</code> for Mixed Markov Model clustering. Default: <code>"pam"</c
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to <code><a href="build_network.html">build_network</a></code>. When
-<code>cluster_by = "mmm"</code>, recognised <code><a href="build_mmm.html">build_mmm</a></code> arguments
-(<code>n_starts</code>, <code>max_iter</code>, <code>tol</code>, <code>smooth</code>,
-<code>seed</code>, <code>covariates</code>) are intercepted and forwarded to
-<code><a href="build_mmm.html">build_mmm()</a></code> so a single call controls both the MMM fit and the
-per-cluster network estimation.</p></dd>
+<dd><p>Routed to two stages. For distance clustering
+(<code>cluster_by != "mmm"</code>), <code><a href="build_clusters.html">build_clusters</a></code> arguments
+<code>na_syms</code>, <code>weighted</code>, <code>lambda</code>, <code>seed</code>, <code>q</code>,
+<code>p</code>, and <code>covariates</code> are intercepted and forwarded to the
+clusterer; everything else flows to <code><a href="build_network.html">build_network</a></code>. When
+<code>cluster_by = "mmm"</code>, the recognised <code><a href="build_mmm.html">build_mmm</a></code>
+arguments (<code>n_starts</code>, <code>max_iter</code>, <code>tol</code>, <code>smooth</code>,
+<code>seed</code>, <code>covariates</code>) are intercepted instead, and the rest
+flows to <code>build_network</code>. In both modes, when <code>data</code> is a
+<code>netobject</code>, its <code>build_args</code> are merged into the
+<code>build_network</code> side (caller's explicit values take precedence).</p></dd>
 
 </dl></div>
     <div class="section level2">

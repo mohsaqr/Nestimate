@@ -3,7 +3,7 @@
 Expectation-Maximization. Each mixture component has its own transition
 matrix. Sequences are probabilistically assigned to components."><meta property="og:description" content="Discovers latent subgroups with different transition dynamics using
 Expectation-Maximization. Each mixture component has its own transition
-matrix. Sequences are probabilistically assigned to components."><meta property="og:image" content="https://mohsaqr.github.io/Nestimate/logo.svg"></head><body>
+matrix. Sequences are probabilistically assigned to components."><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -11,7 +11,7 @@ matrix. Sequences are probabilistically assigned to components."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -138,6 +138,26 @@ membership during estimation. Requires the <span class="pkg">nnet</span> package
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="initial-states">Initial states<a class="anchor" aria-label="anchor" href="#initial-states"></a></h2>
+
+
+<p>The first sequence column has special status: it is read directly as
+the per-sequence initial state (<code>init_state[i] &lt;-
+match(raw_data[i, state_cols[1L]], states)</code>). The function does
+<strong>not</strong> scan forward to the first non-missing position, and it
+does not apply any <code>na_syms</code>-style symbol conversion (unlike
+<code><a href="build_clusters.html">build_clusters</a></code>). The state vocabulary is built from the
+unique non-<code>NA</code> values across all columns, so if your data uses
+a sentinel character such as <code>"*"</code> or <code>"%"</code> for missing
+cells, that sentinel becomes a real state and the first column reads
+it as a valid initial state. If you want padded leading missings to
+be treated as missing, recode them to <code>NA</code> before calling
+<code>build_mmm()</code> (then <code><a href="https://rdrr.io/r/base/match.html" class="external-link">match()</a></code> returns <code>NA</code>, which the
+EM treats as an uninformative initial distribution), or left-trim the
+leading missings so each sequence's first column carries an observed
+state.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="compare_mmm.html">compare_mmm</a></code>, <code><a href="build_network.html">build_network</a></code></p></div>

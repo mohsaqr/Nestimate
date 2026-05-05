@@ -14,7 +14,7 @@ summary(object, ...)
 - object:
 
   A `nest_transition_counts` matrix returned by
-  [`frequencies()`](https://mohsaqr.github.io/Nestimate/reference/frequencies.md).
+  [`frequencies()`](https://saqr.me/Nestimate/reference/frequencies.md).
 
 - ...:
 

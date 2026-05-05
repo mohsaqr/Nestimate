@@ -75,7 +75,7 @@ rows contribute zero per-row entropy. The chain need not be irreducible;
 \\\pi\\ is computed from the eigendecomposition of \\P^\top\\ as
 elsewhere in the package. For non-ergodic chains the returned \\\pi\\ is
 one stationary distribution among many - interpret with the help of
-[`chain_structure`](https://mohsaqr.github.io/Nestimate/reference/chain_structure.md).
+[`chain_structure`](https://saqr.me/Nestimate/reference/chain_structure.md).
 
 The relation \\h(P) \leq H(\pi)\\ holds with equality iff successive
 states are independent. The deficit \\H(\pi) - h(P)\\ is reported as
@@ -91,10 +91,10 @@ System Technical Journal*, 27, 379-423.
 
 ## See also
 
-[`markov_stability`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md),
-[`passage_time`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md),
-[`markov_order_test`](https://mohsaqr.github.io/Nestimate/reference/markov_order_test.md),
-[`chain_structure`](https://mohsaqr.github.io/Nestimate/reference/chain_structure.md)
+[`markov_stability`](https://saqr.me/Nestimate/reference/markov_stability.md),
+[`passage_time`](https://saqr.me/Nestimate/reference/passage_time.md),
+[`markov_order_test`](https://saqr.me/Nestimate/reference/markov_order_test.md),
+[`chain_structure`](https://saqr.me/Nestimate/reference/chain_structure.md)
 
 ## Examples
 

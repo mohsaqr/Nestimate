@@ -5,7 +5,7 @@ Compare MMM fits across different k
 ## Usage
 
 ``` r
-compare_mmm(data, k = 2:5, ...)
+compare_mmm(data, k = 2:5, return_fits = FALSE, ...)
 ```
 
 ## Arguments
@@ -18,14 +18,24 @@ compare_mmm(data, k = 2:5, ...)
 
   Integer vector of component counts. Default: 2:5.
 
+- return_fits:
+
+  Logical. When `TRUE` the fitted models are retained on the result via
+  `attr(result, "fits")` (a list of `net_mmm` objects, named by `k`), so
+  the user can pick the chosen model without re-running the EM. Default
+  `FALSE` keeps the historical lightweight return shape — only the
+  comparison table is allocated.
+
 - ...:
 
   Arguments passed to
-  [`build_mmm`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md).
+  [`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md).
 
 ## Value
 
 A `mmm_compare` data frame with BIC, AIC, ICL, AvePP, entropy per k.
+When `return_fits = TRUE`, the fitted models are attached as
+`attr(result, "fits")`.
 
 ## Examples
 
@@ -57,5 +67,10 @@ print(comp)
 #>  best   
 #>  <-- BIC
 #>         
+
+# Retain fits to avoid a re-fit after picking the BIC-min model.
+comp_with_fits <- compare_mmm(seqs, k = 2:3, seed = 42, return_fits = TRUE)
+best_k <- comp_with_fits$k[which.min(comp_with_fits$BIC)]
+best_fit <- attr(comp_with_fits, "fits")[[as.character(best_k)]]
 # }
 ```

@@ -115,8 +115,8 @@ Springer-Verlag.
 
 ## See also
 
-[`markov_stability`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md),
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`markov_stability`](https://saqr.me/Nestimate/reference/markov_stability.md),
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
 
 ## Examples
 

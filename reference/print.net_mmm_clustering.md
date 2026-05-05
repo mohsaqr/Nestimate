@@ -1,10 +1,10 @@
 # Print Method for MMM Clustering Attribute
 
 Prints the clustering metadata that
-[`cluster_mmm`](https://mohsaqr.github.io/Nestimate/reference/cluster_mmm.md)
+[`cluster_mmm`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
 attaches to its `netobject_group` return value
 (`attr(grp, "clustering")`). Layout mirrors
-[`print.net_clustering`](https://mohsaqr.github.io/Nestimate/reference/print.net_clustering.md):
+[`print.net_clustering`](https://saqr.me/Nestimate/reference/print.net_clustering.md):
 a one-line dimension header, a quality line with AvePP / entropy /
 classification error, information criteria, and a per-cluster table.
 

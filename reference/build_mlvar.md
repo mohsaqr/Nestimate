@@ -95,7 +95,7 @@ stored as attributes. Each element is a standard
 `c("netobject", "cograph_network")`, so `cograph::splot(fit$temporal)`
 plots directly through the standard cograph dispatch and existing
 `netobject_group` dispatch (e.g. `centrality()`,
-[`bootstrap_network()`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md))
+[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md))
 iterates over all three networks automatically. Structure:
 
 - `fit$temporal`:
@@ -117,7 +117,7 @@ iterates over all three networks automatically. Structure:
   `method = "mlvar_between"`, `directed = FALSE`.
 
 - `attr(fit, "coefs")` /
-  [`coefs()`](https://mohsaqr.github.io/Nestimate/reference/coefs.md):
+  [`coefs()`](https://saqr.me/Nestimate/reference/coefs.md):
 
   Tidy `data.frame` with one row per `(outcome, predictor)` pair and
   columns `outcome`, `predictor`, `beta`, `se`, `t`, `p`, `ci_lower`,
@@ -142,7 +142,7 @@ iterates over all three networks automatically. Structure:
 
 ## See also
 
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
 
 ## Examples
 

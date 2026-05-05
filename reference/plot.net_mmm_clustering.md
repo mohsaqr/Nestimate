@@ -2,11 +2,10 @@
 
 Plot routines for the MMM clustering metadata attached to a
 `netobject_group` by
-[`cluster_mmm`](https://mohsaqr.github.io/Nestimate/reference/cluster_mmm.md)
-(or
-[`cluster_network`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
+[`cluster_mmm`](https://saqr.me/Nestimate/reference/cluster_mmm.md) (or
+[`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
 with `cluster_by = "mmm"`). Mirrors the type-driven surface of
-[`plot.net_clustering`](https://mohsaqr.github.io/Nestimate/reference/plot.net_clustering.md)
+[`plot.net_clustering`](https://saqr.me/Nestimate/reference/plot.net_clustering.md)
 but covers only the metrics the EM fit produces – there is no distance
 matrix on an MMM clustering, so `"silhouette"` / `"mds"` / `"heatmap"`
 aren't defined here and the dispatcher raises a clear error if you ask
@@ -30,7 +29,7 @@ plot(x, type = c("posterior", "covariates", "predictors"), ...)
   Character. One of `"posterior"` (default; histogram of max posterior
   probability per sequence, coloured by cluster), `"covariates"` or its
   alias `"predictors"` (covariate forest plot when
-  [`cluster_mmm()`](https://mohsaqr.github.io/Nestimate/reference/cluster_mmm.md)
+  [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
   was run with `covariates`).
 
 - ...:

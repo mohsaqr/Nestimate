@@ -2,7 +2,7 @@
 
 Converts binary indicator (one-hot) data into the wide sequence format
 expected by
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
 and [`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md).
 Each binary column represents a state; rows where the value is 1 are
 marked with the column name. Supports optional windowed aggregation.
@@ -70,7 +70,7 @@ each cell contains a state name or NA. Attributes `windowed`,
 
 ## See also
 
-[`action_to_onehot`](https://mohsaqr.github.io/Nestimate/reference/action_to_onehot.md)
+[`action_to_onehot`](https://saqr.me/Nestimate/reference/action_to_onehot.md)
 for the reverse conversion.
 
 ## Examples

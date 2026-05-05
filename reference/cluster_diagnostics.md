@@ -21,9 +21,9 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 
   A `net_clustering`, `net_mmm`, `netobject_group` (with
   `attr(, "clustering")` attached by
-  [`cluster_network()`](https://mohsaqr.github.io/Nestimate/reference/cluster_network.md)
+  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
   or
-  [`cluster_mmm()`](https://mohsaqr.github.io/Nestimate/reference/cluster_mmm.md)),
+  [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)),
   or `net_mmm_clustering`.
 
 - ...:
@@ -77,10 +77,10 @@ The returned object carries:
 
 ## See also
 
-[`print.net_cluster_diagnostics`](https://mohsaqr.github.io/Nestimate/reference/print.net_cluster_diagnostics.md),
-[`plot.net_cluster_diagnostics`](https://mohsaqr.github.io/Nestimate/reference/plot.net_cluster_diagnostics.md),
-[`compare_mmm`](https://mohsaqr.github.io/Nestimate/reference/compare_mmm.md)
-for k-sweep model selection (MMM only).
+[`print.net_cluster_diagnostics`](https://saqr.me/Nestimate/reference/print.net_cluster_diagnostics.md),
+[`plot.net_cluster_diagnostics`](https://saqr.me/Nestimate/reference/plot.net_cluster_diagnostics.md),
+[`compare_mmm`](https://saqr.me/Nestimate/reference/compare_mmm.md) for
+k-sweep model selection (MMM only).
 
 ## Examples
 

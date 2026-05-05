@@ -2,7 +2,7 @@
 
 Returns a single data.frame with one row per state, combining every
 per-state metric
-[`chain_structure()`](https://mohsaqr.github.io/Nestimate/reference/chain_structure.md)
+[`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.md)
 computes. Always includes `state`, `classification`, `period`,
 `return_probability` (the diagonal of the hitting matrix) and
 `persistence` (the diagonal of the transition matrix); adds `sojourn`

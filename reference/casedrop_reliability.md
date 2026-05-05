@@ -148,7 +148,7 @@ A `ggplot` object.
 ## Details
 
 Complements
-[`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md):
+[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md):
 that function asks whether centrality *rankings* are stable; this one
 asks whether the *edge-weight structure itself* is stable. For
 MCML-derived networks where each row of `$data` is one transition, this
@@ -178,8 +178,8 @@ Research Methods* 50(1), 195-212.
 
 ## See also
 
-[`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md),
-[`bootstrap_network()`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md).
+[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md),
+[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md).
 
 ## Examples
 

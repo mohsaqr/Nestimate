@@ -35,7 +35,7 @@ sort(unique(as.vector(trajectories)), na.last = NA)
 #> [1] "Active"     "Average"    "Disengaged"
 ```
 
-[`sequence_plot()`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md)
+[`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
 is the single entry point for three views of this data:
 
 | `type` | What it shows | Uses dendrogram? | Facets? |
@@ -84,7 +84,7 @@ sequence_plot(trajectories, sort = "start",
 ![](sequence-plots_files/figure-html/h-start-1.png)
 
 Available sorts: `lcs` (default), `frequency`, `start`, `end`, plus any
-[`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)
+[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
 distance — `hamming`, `osa`, `lv`, `dl`, `qgram`, `cosine`, `jaccard`,
 `jw`.
 

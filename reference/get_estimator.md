@@ -20,8 +20,8 @@ A list with elements `fn`, `description`, `directed`.
 
 ## See also
 
-[`register_estimator`](https://mohsaqr.github.io/Nestimate/reference/register_estimator.md),
-[`list_estimators`](https://mohsaqr.github.io/Nestimate/reference/list_estimators.md)
+[`register_estimator`](https://saqr.me/Nestimate/reference/register_estimator.md),
+[`list_estimators`](https://saqr.me/Nestimate/reference/list_estimators.md)
 
 ## Examples
 

@@ -1,12 +1,145 @@
 # Changelog
 
+## Nestimate 0.5.1
+
+### Audit follow-up (clustering + MCML)
+
+Followed `codex_docs/audit_clustering` and `codex_docs/audit_mcml`
+recommendations across two modules. Eleven of thirteen findings
+addressed; two deferred pending design decisions on numeric semantics
+(`directed = FALSE` raw-data MCML, MMM first-non-NA initial state).
+
+#### Bug fixes
+
+- [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+  now forwards distance-clustering arguments (`na_syms`, `weighted`,
+  `lambda`, `seed`, `q`, `p`, `covariates`) to
+  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  instead of silently passing them to
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
+  The split runs on caller `...` only — netobject `build_args` continue
+  to flow only to the
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+  step, protecting attention-method (`atna`) network history from being
+  re-routed to weighted Hamming. (audit_clustering
+  [\#1](https://github.com/mohsaqr/Nestimate/issues/1))
+- [`.auto_detect_clusters()`](https://saqr.me/Nestimate/reference/dot-auto_detect_clusters.md)
+  (used by
+  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+  and
+  [`cluster_summary()`](https://saqr.me/Nestimate/reference/cluster_summary.md))
+  now requires `node_groups` to carry a node identifier column when
+  shaped as a data.frame, or be a named atomic vector keyed by node
+  label. Previously, a bare `cluster`-only data.frame was read
+  positionally — silently mis-assigning nodes whenever `node_groups`
+  rows were in a different order than `x$nodes`. (audit_mcml
+  [\#1](https://github.com/mohsaqr/Nestimate/issues/1))
+- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  now rejects all-missing input early with a clear message instead of
+  failing indirectly downstream in pam/hclust. (audit_clustering
+  [\#4](https://github.com/mohsaqr/Nestimate/issues/4))
+
+#### New parameters
+
+- `compare_mmm(return_fits = FALSE)` — when `TRUE`, the fitted `net_mmm`
+  models are attached as `attr(result, "fits")` keyed by `k`, so users
+  can pick the chosen model without re-running EM. Default behaviour
+  unchanged. (audit_clustering
+  [\#6](https://github.com/mohsaqr/Nestimate/issues/6))
+
+#### Improvements
+
+- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  validation messages now name the offending argument
+  (`"'k' must be at least 2 (got k = 1)"`) rather than dumping the
+  failing predicate. Top-level type checks switched to named-condition
+  [`stopifnot()`](https://rdrr.io/r/base/stopifnot.html) for the same
+  reason. (audit_clustering
+  [\#2](https://github.com/mohsaqr/Nestimate/issues/2))
+
+#### Documentation
+
+- [`summary.mcml()`](https://saqr.me/Nestimate/reference/summary.mcml.md)
+  roxygen corrected — was claiming a printing side effect that doesn’t
+  exist. (audit_mcml
+  [\#5](https://github.com/mohsaqr/Nestimate/issues/5))
+- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+  `clusters = "<col>"` mode now documents its narrow contract: assigns
+  each row’s group label to both endpoints, so it only makes sense for
+  within-group edge lists. (audit_mcml
+  [\#2](https://github.com/mohsaqr/Nestimate/issues/2))
+- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+  `method` parameter doc now steers raw sequence / event-log inputs to
+  `"sum"`, since the function counts observed transitions. Other methods
+  are for weighted edge lists or pre-existing matrices. (audit_mcml
+  [\#4](https://github.com/mohsaqr/Nestimate/issues/4))
+- [`as_tna.mcml()`](https://saqr.me/Nestimate/reference/as_tna.md)
+  “Excluded Clusters” section corrected — drop emits a
+  [`warning()`](https://rdrr.io/r/base/warning.html) (was claimed
+  silent) and only fires for `relative` method (was claimed
+  unconditional). (audit_mcml
+  [\#6](https://github.com/mohsaqr/Nestimate/issues/6))
+- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  `na_syms` doc adds an explicit “Missing-value distance rule”
+  subsection: NA becomes a comparable sentinel state, not pairwise
+  deletion. (audit_clustering
+  [\#3](https://github.com/mohsaqr/Nestimate/issues/3))
+- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) adds
+  an “Initial states” section explaining first-column-verbatim init and
+  that build_mmm does NOT honor build_clusters-style `na_syms` — only
+  actual `NA` cells become NA inits. (audit_clustering
+  [\#5](https://github.com/mohsaqr/Nestimate/issues/5), doc-only path)
+
+#### Tests
+
+- +12 new tests pinning the corrected contracts and the documented edge
+  cases (misordered `node_groups` alignment, label propagation through
+  [`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.md),
+  [`as_tna.mcml()`](https://saqr.me/Nestimate/reference/as_tna.md)
+  drop-warning fixture, MMM first-column NA behaviour, and the four-way
+  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+  arg-routing contract). Full sweep: 1628 / 1628 pass, 0 fail.
+
+## Nestimate 0.5.0
+
+### Bug fixes
+
+- `.extract_edges_from_matrix()` no longer drops the diagonal.
+  Netobjects built via `.wrap_netobject()` (and therefore everything
+  from
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
+  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md),
+  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+  [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md),
+  [`wtna()`](https://saqr.me/Nestimate/reference/wtna.md),
+  [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md)) now have
+  `$edges` containing every non-zero matrix entry, including self-loops.
+  Previously `$weights` and `$edges` were silently inconsistent on any
+  matrix with a non-zero diagonal, causing downstream consumers
+  (e.g. [`cograph::centrality()`](https://sonsoles.me/cograph/reference/centrality.html)
+  on an MCML macro) to under-count node degree by 2.
+
+### New features
+
+- [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  — native S3 generic for state-frequency plots across `netobject`,
+  `netobject_group`, `mcml`, and `htna`. Defaults to a marimekko
+  (mosaic) layout where column widths reflect per-group totals and
+  segment heights reflect within-group state proportions; also supports
+  a colored-bars style and a per-group faceted marimekko. Uses the
+  package Okabe-Ito palette throughout.
+- [`plot_mosaic()`](https://saqr.me/Nestimate/reference/plot_mosaic.md)
+  — exported low-level marimekko primitive built on `geom_rect()` with
+  cumulative-width / cumulative-height geometry. Reusable for any tidy
+  `data.frame(group, state, weight)` input.
+
 ## Nestimate 0.4.4
 
 ### Bug fixes
 
-- [`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md)
+- [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)
   and
-  [`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)
+  [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
   now raise an explicit error naming the dead state when a
   transition-matrix row sums to zero, instead of silently propagating
   `NaN` through `eigen`/`solve`. Zero rows mean the chain is not
@@ -17,8 +150,8 @@
   netobject’s `$data` slot is a numeric matrix (not a data.frame). Any
   downstream caller that row-subsetted `$data` and re-invoked the
   estimator
-  ([`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md),
-  [`bootstrap_network()`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md),
+  ([`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md),
+  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
   `reliability()`) was silently producing NULL centralities caught by
   `tryCatch`, which surfaced as an “all centrality measures have zero
   variance” warning or all-`NaN` correlations. The matrix branch now
@@ -29,7 +162,7 @@
 
 ### New parameters
 
-- [`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+- [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
   gains `state_cols` and `metadata_cols` parameters (both default
   `NULL`). Explicit overrides for the state-vs-metadata column
   classifier, which previously used a “values-in-nodes” heuristic that
@@ -51,8 +184,8 @@
 
 ### Documentation
 
-- [`wtna()`](https://mohsaqr.github.io/Nestimate/reference/wtna.md)
-  `@param type` now flags that `type = "relative"` combined with
+- [`wtna()`](https://saqr.me/Nestimate/reference/wtna.md) `@param type`
+  now flags that `type = "relative"` combined with
   `method = "cooccurrence"` produces an asymmetric matrix (conditional
   co-occurrence given row state), not a symmetric undirected weight
   matrix. Use `type = "frequency"` if symmetric counts are required.
@@ -122,53 +255,52 @@ CRAN release: 2026-04-20
 
 ### New functions
 
-- [`build_mlvar()`](https://mohsaqr.github.io/Nestimate/reference/build_mlvar.md)
+- [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
   — multilevel VAR networks from ESM/EMA panel data. Estimates temporal
   (directed), contemporaneous (undirected), and between-subjects
   (undirected) networks matching
   [`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) at
   machine precision.
-- [`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
-  /
-  [`compare_mmm()`](https://mohsaqr.github.io/Nestimate/reference/compare_mmm.md)
+- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) /
+  [`compare_mmm()`](https://saqr.me/Nestimate/reference/compare_mmm.md)
   — mixture of Markov models via EM, with BIC/AIC/ICL model selection
   and optional covariate regression.
-- [`cooccurrence()`](https://mohsaqr.github.io/Nestimate/reference/cooccurrence.md)
+- [`cooccurrence()`](https://saqr.me/Nestimate/reference/cooccurrence.md)
   — standalone co-occurrence network builder supporting 6 input formats
   and 8 similarity methods.
-- [`sequence_compare()`](https://mohsaqr.github.io/Nestimate/reference/sequence_compare.md)
+- [`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.md)
   — k-gram pattern comparison across groups with optional permutation
   testing.
-- [`sequence_plot()`](https://mohsaqr.github.io/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
   /
-  [`distribution_plot()`](https://mohsaqr.github.io/Nestimate/reference/distribution_plot.md)
+  [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md)
   — base-R sequence index and state distribution plots with clustering
   integration.
-- [`build_simplicial()`](https://mohsaqr.github.io/Nestimate/reference/build_simplicial.md),
-  [`persistent_homology()`](https://mohsaqr.github.io/Nestimate/reference/persistent_homology.md),
-  [`q_analysis()`](https://mohsaqr.github.io/Nestimate/reference/q_analysis.md)
-  — topological analysis of networks via simplicial complexes.
-- [`nct()`](https://mohsaqr.github.io/Nestimate/reference/nct.md) —
-  Network Comparison Test matching
+- [`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md),
+  [`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md),
+  [`q_analysis()`](https://saqr.me/Nestimate/reference/q_analysis.md) —
+  topological analysis of networks via simplicial complexes.
+- [`nct()`](https://saqr.me/Nestimate/reference/nct.md) — Network
+  Comparison Test matching
   [`NetworkComparisonTest::NCT()`](https://rdrr.io/pkg/NetworkComparisonTest/man/NCT.html)
   at machine precision.
-- [`build_gimme()`](https://mohsaqr.github.io/Nestimate/reference/build_gimme.md)
+- [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
   — group iterative mean estimation for idiographic networks via lavaan.
-- [`passage_time()`](https://mohsaqr.github.io/Nestimate/reference/passage_time.md),
-  [`markov_stability()`](https://mohsaqr.github.io/Nestimate/reference/markov_stability.md)
+- [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md),
+  [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
   — Markov chain passage times and stability analysis.
-- [`predict_links()`](https://mohsaqr.github.io/Nestimate/reference/predict_links.md)
+- [`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.md)
   /
-  [`evaluate_links()`](https://mohsaqr.github.io/Nestimate/reference/evaluate_links.md)
+  [`evaluate_links()`](https://saqr.me/Nestimate/reference/evaluate_links.md)
   — link prediction with 6 structural similarity methods.
-- [`association_rules()`](https://mohsaqr.github.io/Nestimate/reference/association_rules.md)
+- [`association_rules()`](https://saqr.me/Nestimate/reference/association_rules.md)
   — Apriori association rule mining from sequences or binary matrices.
-- [`predictability()`](https://mohsaqr.github.io/Nestimate/reference/predictability.md)
+- [`predictability()`](https://saqr.me/Nestimate/reference/predictability.md)
   — node predictability for glasso/pcor/cor networks.
-- [`build_hon()`](https://mohsaqr.github.io/Nestimate/reference/build_hon.md),
-  [`build_honem()`](https://mohsaqr.github.io/Nestimate/reference/build_honem.md),
-  [`build_hypa()`](https://mohsaqr.github.io/Nestimate/reference/build_hypa.md),
-  [`build_mogen()`](https://mohsaqr.github.io/Nestimate/reference/build_mogen.md)
+- [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md),
+  [`build_honem()`](https://saqr.me/Nestimate/reference/build_honem.md),
+  [`build_hypa()`](https://saqr.me/Nestimate/reference/build_hypa.md),
+  [`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md)
   — higher-order network methods (HON, HONEM, HYPA, MOGen) now
   `cograph_network`-compatible.
 
@@ -183,11 +315,10 @@ CRAN release: 2026-04-20
 
 ### API
 
-- [`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md),
-  [`network_reliability()`](https://mohsaqr.github.io/Nestimate/reference/network_reliability.md),
-  [`permutation()`](https://mohsaqr.github.io/Nestimate/reference/permutation.md),
-  and
-  [`prepare()`](https://mohsaqr.github.io/Nestimate/reference/prepare.md)
+- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md),
+  [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md),
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
+  and [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md)
   replace earlier internal names for consistency with the `build_*`
   naming convention.
 - `mgm` estimator added (`method = "mgm"`) for mixed continuous +
@@ -197,8 +328,8 @@ CRAN release: 2026-04-20
 
 ### Bug fixes
 
-- [`build_mmm()`](https://mohsaqr.github.io/Nestimate/reference/build_mmm.md)
-  no longer crashes on platforms where
+- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) no
+  longer crashes on platforms where
   [`parallel::detectCores()`](https://rdrr.io/r/parallel/detectCores.html)
   returns `NA` (macOS ARM64 CRAN check failure).
 - `gimme` convergence filter now correctly handles all typed `NA`
@@ -232,13 +363,13 @@ CRAN release: 2026-04-20
   `$over`, `$under`, `$n_over`, `$n_under` fields to `net_hypa` objects.
   Scores are now pre-sorted with anomalous paths first.
 - HYPA:
-  [`summary.net_hypa()`](https://mohsaqr.github.io/Nestimate/reference/summary.net_hypa.md)
+  [`summary.net_hypa()`](https://saqr.me/Nestimate/reference/summary.net_hypa.md)
   now shows over/under-represented paths separately with a configurable
   `n` parameter.
-- [`pathways.netobject()`](https://mohsaqr.github.io/Nestimate/reference/pathways.md):
+- [`pathways.netobject()`](https://saqr.me/Nestimate/reference/pathways.md):
   New S3 method to extract higher-order pathways directly from a
   netobject (builds HON or HYPA internally).
-- [`path_counts()`](https://mohsaqr.github.io/Nestimate/reference/path_counts.md):
+- [`path_counts()`](https://saqr.me/Nestimate/reference/path_counts.md):
   Now handles NAs in trajectories by stripping them before k-gram
   counting.
 
@@ -251,9 +382,9 @@ CRAN release: 2026-04-20
 - Reduced hard dependencies from 6 to 4 Imports (ggplot2, glasso,
   data.table, cluster).
 - Removed igraph from Imports —
-  [`centrality_stability()`](https://mohsaqr.github.io/Nestimate/reference/centrality_stability.md)
+  [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
   and
-  [`boot_glasso()`](https://mohsaqr.github.io/Nestimate/reference/boot_glasso.md)
+  [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)
   now accept a `centrality_fn` parameter for external centrality
   computation.
 - Removed tna from Imports — moved to Suggests (only used for input
@@ -276,14 +407,14 @@ CRAN release: 2026-04-20
 
 - Initial release. Split from Saqrlab v0.3.0.
 - Core estimation via
-  [`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
   with 8 built-in estimators.
 - Bootstrap inference
-  ([`bootstrap_network()`](https://mohsaqr.github.io/Nestimate/reference/bootstrap_network.md)),
+  ([`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)),
   permutation testing
-  ([`permutation()`](https://mohsaqr.github.io/Nestimate/reference/permutation.md)),
+  ([`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)),
   EBICglasso bootstrap
-  ([`boot_glasso()`](https://mohsaqr.github.io/Nestimate/reference/boot_glasso.md)).
+  ([`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)).
 - Higher-order networks: HON, HONEM, HYPA, MOGen.
 - GIMME, MCML, multilevel VAR, graphical VAR.
 - Temporal network analysis and velocity TNA.

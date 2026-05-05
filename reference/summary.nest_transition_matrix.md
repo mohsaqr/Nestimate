@@ -14,7 +14,7 @@ summary(object, ...)
 - object:
 
   A `nest_transition_matrix` returned by
-  [`extract_transition_matrix`](https://mohsaqr.github.io/Nestimate/reference/extract_transition_matrix.md).
+  [`extract_transition_matrix`](https://saqr.me/Nestimate/reference/extract_transition_matrix.md).
 
 - ...:
 

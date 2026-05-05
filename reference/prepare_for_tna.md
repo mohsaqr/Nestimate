@@ -86,8 +86,8 @@ This function performs several preparations:
 
 ## See also
 
-[`wide_to_long`](https://mohsaqr.github.io/Nestimate/reference/wide_to_long.md),
-[`long_to_wide`](https://mohsaqr.github.io/Nestimate/reference/long_to_wide.md)
+[`wide_to_long`](https://saqr.me/Nestimate/reference/wide_to_long.md),
+[`long_to_wide`](https://saqr.me/Nestimate/reference/long_to_wide.md)
 for format conversions.
 
 ## Examples

@@ -3,7 +3,7 @@
 Builds a Multi-Cluster Multi-Level (MCML) model from raw transition data
 (edge lists or sequences) by recoding node labels to cluster labels and
 counting actual transitions. Unlike
-[`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md)
+[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
 which aggregates a pre-computed weight matrix, this function works from
 the original transition data to produce the TRUE Markov chain over
 cluster states.
@@ -49,13 +49,13 @@ build_mcml(
 
   :   If `x$data` is non-NULL, uses sequence path on the raw data.
       Otherwise falls back to
-      [`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md).
+      [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
 
   netobject
 
   :   If `x$data` is non-NULL, detects edge list vs sequence data.
       Otherwise falls back to
-      [`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md).
+      [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
 
   cluster_summary
 
@@ -64,7 +64,7 @@ build_mcml(
   square numeric matrix
 
   :   Falls back to
-      [`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md).
+      [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
 
   non-square or character matrix
 
@@ -95,18 +95,30 @@ build_mcml(
 
   :   For edge list data.frames, the name of a column containing cluster
       labels. The mapping is built from unique (node, group) pairs in
-      both from and to columns.
+      both from and to columns. **Limitation:** this mode assigns the
+      row's group label to *both* endpoints, so it only makes sense for
+      edge lists where source and target nodes always share the same
+      group (within-group edges only). For general edge lists where a
+      single node may be source in some rows and target in others, or
+      where source and target belong to different groups, pass an
+      explicit named list (`list(G1 = c("N1","N2"), ...)`) or a
+      two-column data frame `data.frame(node, group)` instead.
 
   NULL
 
   :   Auto-detect from `netobject$nodes` or `$node_groups` (same logic
       as
-      [`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md)).
+      [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)).
 
 - method:
 
   Aggregation method for combining edge weights: "sum", "mean",
-  "median", "max", "min", "density", "geomean". Default "sum".
+  "median", "max", "min", "density", "geomean". Default "sum". For raw
+  sequence/event-log inputs the function is counting observed
+  transitions, so `"sum"` is the only interpretation that preserves the
+  count semantics — the other methods are useful when aggregating
+  weighted edge lists or pre-existing weight matrices, where each row
+  already represents a measurement rather than a single observation.
 
 - type:
 
@@ -125,9 +137,9 @@ build_mcml(
 
   Long-format event-log shortcut. When `action` is supplied on a
   data.frame input, the data is passed through
-  [`prepare()`](https://mohsaqr.github.io/Nestimate/reference/prepare.md)
-  to derive a wide sequence, which is then routed to the existing
-  sequence path. Behaves identically to
+  [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) to
+  derive a wide sequence, which is then routed to the existing sequence
+  path. Behaves identically to
   `prepare(...) |> build_network() |> build_mcml()`.
 
 - labels:
@@ -143,12 +155,12 @@ build_mcml(
 A `cluster_summary` object with `meta$source = "transitions"`, fully
 compatible with
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-[`as_tna()`](https://mohsaqr.github.io/Nestimate/reference/as_tna.md),
-and [`plot()`](https://rdrr.io/r/graphics/plot.default.html).
+[`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md), and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html).
 
 ## See also
 
-[`cluster_summary`](https://mohsaqr.github.io/Nestimate/reference/cluster_summary.md)
+[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
 for matrix-based aggregation, `net_as_tna()` to convert to tna objects,
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
 visualization

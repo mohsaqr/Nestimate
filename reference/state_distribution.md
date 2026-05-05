@@ -2,7 +2,7 @@
 
 Returns a tidy `data.frame(group, state, count, proportion)` with one
 row per (group, state) cell. Companion to
-[`state_frequencies`](https://mohsaqr.github.io/Nestimate/reference/state_frequencies.md)
+[`state_frequencies`](https://saqr.me/Nestimate/reference/state_frequencies.md)
 (which counts unique states in raw sequence input);
 `state_distribution()` pulls the same shape of frame from a fitted
 Nestimate object so analyses don't have to reach for the underlying
@@ -52,7 +52,7 @@ A `data.frame` with columns `group` (character), `state` (character),
 ## Details
 
 Used internally by
-[`plot_state_frequencies`](https://mohsaqr.github.io/Nestimate/reference/plot_state_frequencies.md)
+[`plot_state_frequencies`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
 as the data layer behind every chart, and surfaced as the `$table` slot
 of the returned `state_freq` object.
 

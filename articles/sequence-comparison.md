@@ -44,7 +44,7 @@ print(table(dat$half))
 
 ## 3. Build the grouped network
 
-[`build_network()`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
 is the canonical entry point. Passing `group = "half"` produces a
 `netobject_group` with one netobject per half. Each netobject’s `$data`
 field holds the session-half sequences.
@@ -68,7 +68,7 @@ net
 
 ## 4. Compare patterns between early and late
 
-[`sequence_compare()`](https://mohsaqr.github.io/Nestimate/reference/sequence_compare.md)
+[`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.md)
 accepts a `netobject_group` directly — group labels are read from the
 list names, no separate `group` argument needed. Pattern lengths 3–5,
 minimum frequency 25, chi-square test with FDR correction.

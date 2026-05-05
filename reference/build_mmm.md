@@ -55,9 +55,9 @@ build_mmm(
   Optional. Covariates integrated into the EM algorithm to model
   covariate-dependent mixing proportions. Accepts formula, character
   vector, string, or data.frame (same forms as
-  [`build_clusters`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md)).
+  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)).
   Unlike the post-hoc analysis in
-  [`build_clusters()`](https://mohsaqr.github.io/Nestimate/reference/build_clusters.md),
+  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md),
   these covariates directly influence cluster membership during
   estimation. Requires the nnet package.
 
@@ -98,10 +98,29 @@ An object of class `net_mmm` with components:
 
   Character vector of state names.
 
+## Initial states
+
+The first sequence column has special status: it is read directly as the
+per-sequence initial state
+(`init_state[i] <- match(raw_data[i, state_cols[1L]], states)`). The
+function does **not** scan forward to the first non-missing position,
+and it does not apply any `na_syms`-style symbol conversion (unlike
+[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)).
+The state vocabulary is built from the unique non-`NA` values across all
+columns, so if your data uses a sentinel character such as `"*"` or
+`"%"` for missing cells, that sentinel becomes a real state and the
+first column reads it as a valid initial state. If you want padded
+leading missings to be treated as missing, recode them to `NA` before
+calling `build_mmm()` (then
+[`match()`](https://rdrr.io/r/base/match.html) returns `NA`, which the
+EM treats as an uninformative initial distribution), or left-trim the
+leading missings so each sequence's first column carries an observed
+state.
+
 ## See also
 
-[`compare_mmm`](https://mohsaqr.github.io/Nestimate/reference/compare_mmm.md),
-[`build_network`](https://mohsaqr.github.io/Nestimate/reference/build_network.md)
+[`compare_mmm`](https://saqr.me/Nestimate/reference/compare_mmm.md),
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
 
 ## Examples
 

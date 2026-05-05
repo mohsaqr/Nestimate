@@ -1,7 +1,7 @@
 # Hypergraph from bipartite group / event data
 
 Constructs a
-[net_hypergraph](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+[net_hypergraph](https://saqr.me/Nestimate/reference/build_hypergraph.md)
 from long-format event data in which each row records a `player`
 participating in a `group` (a session, team, project, transaction, or
 any group context). Each unique group becomes one hyperedge spanning the
@@ -40,7 +40,7 @@ bipartite_groups(data, player, group, weight = NULL)
 ## Value
 
 A `net_hypergraph` object with the same structure produced by
-[`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+[`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
 (`hyperedges`, `incidence`, `nodes`, `n_nodes`, `n_hyperedges`,
 `size_distribution`, `params`). The `params` list records
 `source = "bipartite_groups"` and the original column names.
@@ -54,7 +54,7 @@ edges AB, AC, BC. This avoids information loss when group interactions
 are the primary unit of analysis (Perc et al. 2013).
 
 Unlike
-[`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+[`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
 (which derives hyperedges from a network's clique structure),
 `bipartite_groups()` takes group memberships directly. The two functions
 are complementary:
@@ -62,7 +62,7 @@ are complementary:
 - `bipartite_groups()` — when group membership is observed (sessions,
   transactions, co-authorships).
 
-- [`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+- [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
   — when only pairwise interactions are observed and triadic structure
   must be inferred from triangles.
 
@@ -88,7 +88,7 @@ populations: a review. *Journal of the Royal Society Interface* 10(80),
 
 ## See also
 
-[`build_hypergraph()`](https://mohsaqr.github.io/Nestimate/reference/build_hypergraph.md)
+[`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
 for the clique-based constructor.
 
 ## Examples
