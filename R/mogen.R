@@ -601,14 +601,23 @@ print.net_mogen <- function(x, ...) {
   cat(sprintf("  Paths:          %d (%d observations)\n",
               x$n_paths, x$n_observations))
 
-  ic <- if (x$criterion == "bic") x$bic else x$aic
-  ic_name <- toupper(x$criterion)
-  if (x$criterion == "lrt") {
-    ic <- x$aic
-    ic_name <- "AIC"
+  aic_min <- which.min(x$aic) - 1L
+  bic_min <- which.min(x$bic) - 1L
+
+  fmt_ic <- function(vals, opt_idx) {
+    parts <- sprintf("%.1f", vals)
+    parts[opt_idx] <- paste0(parts[opt_idx], "*")
+    paste(parts, collapse = " | ")
   }
-  cat(sprintf("  %s:           %s\n", ic_name,
-              paste(sprintf("%.1f", ic), collapse = " | ")))
+
+  cat(sprintf("  AIC:            %s\n", fmt_ic(x$aic, aic_min + 1L)))
+  cat(sprintf("  BIC:            %s\n", fmt_ic(x$bic, bic_min + 1L)))
+  if (aic_min == bic_min) {
+    cat(sprintf("  (* = minimum;  AIC and BIC agree on order %d)\n", aic_min))
+  } else {
+    cat(sprintf("  (* = minimum;  AIC favors order %d, BIC favors order %d)\n",
+                aic_min, bic_min))
+  }
   invisible(x)
 }
 
@@ -638,8 +647,15 @@ print.net_mogen <- function(x, ...) {
 summary.net_mogen <- function(object, ...) {
   cat("Multi-Order Generative Model (MOGen) Summary\n\n")
   cat(sprintf("  States: %s\n", paste(object$states, collapse = ", ")))
-  cat(sprintf("  Paths: %d | Observations: %d\n\n",
+  cat(sprintf("  Paths: %d | Observations: %d\n",
               object$n_paths, object$n_observations))
+
+  aic_min <- which.min(object$aic) - 1L
+  bic_min <- which.min(object$bic) - 1L
+  cat(sprintf("  Best by AIC: order %d  |  Best by BIC: order %d\n",
+              aic_min, bic_min))
+  cat(sprintf("  Selected:    order %d (by %s)\n\n",
+              object$optimal_order, object$criterion))
 
   res <- data.frame(
     order     = object$orders,
@@ -650,12 +666,15 @@ summary.net_mogen <- function(object, ...) {
     bic       = round(object$bic, 2),
     stringsAsFactors = FALSE
   )
-  best <- object$optimal_order + 1L
-  res$selected <- ""
-  res$selected[best] <- "<--"
 
-  cat(sprintf("  Optimal order: %d (by %s)\n\n", object$optimal_order,
-              object$criterion))
+  res$best <- ""
+  res$best[aic_min + 1L] <- "AIC"
+  res$best[bic_min + 1L] <- if (res$best[bic_min + 1L] == "") "BIC" else
+    paste0(res$best[bic_min + 1L], "+BIC")
+  sel_idx <- object$optimal_order + 1L
+  res$selected <- ""
+  res$selected[sel_idx] <- "<--"
+
   res
 }
 
