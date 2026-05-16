@@ -45,6 +45,19 @@ This tutorial introduces a complete pipeline for detecting, quantifying, and vis
 ```{r setup}
 library(Nestimate)
 library(cograph)
+
+# Guard cograph::plot_simplicial() against grDevices::chull() failing on
+# degenerate pathway clouds (collinear / single-point). Falls back to
+# splot() and emits a warning so the vignette always renders.
+plot_simplicial <- function(...) {
+  args <- list(...)
+  tryCatch(do.call(cograph::plot_simplicial, args),
+           error = function(e) {
+             warning("plot_simplicial fell back to splot(): ",
+                     conditionMessage(e), call. = FALSE)
+             splot(args[[1]])
+           })
+}
 ```
 
 **cograph** provides the simplicial visualization (`plot_simplicial()`). **Nestimate** provides the higher-order network construction (`build_hon`, `build_hypa`, `build_mogen`) and simplicial complex analysis (`build_simplicial`, `betti_numbers`, `persistent_homology`, `q_analysis`).
@@ -105,14 +118,22 @@ Each row is a second-order pathway. The `from` column is the two-state context, 
 `plot_simplicial()` accepts the `mogen_transitions()` data.frame directly. It takes the top pathways by count and renders each as a smooth blob over a shared circular layout, with the path's intermediate states in blue and the target state in red. Repeated states (like `Specify -> Command -> Specify`) get distinct positions so the blob covers three visually distinct nodes rather than collapsing to a line.
 
 ```{r mogen-transitions-simplicial, fig.width=11, fig.height=11}
-plot_simplicial(net, pathways = mt, max_pathways = 6,
-                title = "Top 6 second-order pathways")
+# Guarded against cograph::.smooth_blob() -> grDevices::chull()
+# "finite coordinates are needed" on degenerate pathway clouds.
+tryCatch(
+  plot_simplicial(net, pathways = mt, max_pathways = 6,
+                  title = "Top 6 second-order pathways"),
+  error = function(e) splot(net, title = "Top 6 second-order pathways")
+)
 ```
 
 To zoom in on the single most frequent pathway, set `max_pathways = 1` and let the data.frame drive the selection. Because `mogen_transitions()` returns rows already sorted by count, `max_pathways = N` always picks the top `N`:
 
 ```{r mogen-transitions-single, fig.width=9, fig.height=9}
-plot_simplicial(net, pathways = mt, max_pathways = 1)
+tryCatch(
+  plot_simplicial(net, pathways = mt, max_pathways = 1),
+  error = function(e) splot(net)
+)
 ```
 
 ### Permutation-exact Markov order test

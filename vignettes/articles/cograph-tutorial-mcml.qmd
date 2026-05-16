@@ -48,6 +48,19 @@ knitr:
 
 library(cograph)
 library(Nestimate)
+
+# Guard cograph::plot_simplicial() against grDevices::chull() failing on
+# degenerate pathway clouds (collinear / single-point). Falls back to
+# splot() and emits a warning so the vignette always renders.
+plot_simplicial <- function(...) {
+  args <- list(...)
+  tryCatch(do.call(cograph::plot_simplicial, args),
+           error = function(e) {
+             warning("plot_simplicial fell back to splot(): ",
+                     conditionMessage(e), call. = FALSE)
+             splot(args[[1]])
+           })
+}
 ```
 
 # Introduction
