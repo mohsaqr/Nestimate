@@ -61,6 +61,9 @@ reference:
       - boot_glasso
       - permutation
       - nct
+      - compare_model
+      - compare_model.netobject_group
+      - rename_models
 
   - title: Reliability & Stability
     desc: Assess reliability and stability of network estimates
