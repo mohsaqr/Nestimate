@@ -44,6 +44,14 @@ jobs:
           extra-packages: any::pkgdown, any::quarto, local::.
           needs: website
 
+      - name: Render articles verbosely (surface quarto errors)
+        run: |
+          # build_site_github_pages calls build_articles with quiet = TRUE,
+          # which swallows quarto stderr. Run articles first with quiet = FALSE
+          # so any qmd render failure shows the real error in the CI log.
+          pkgdown::build_articles(quiet = FALSE)
+        shell: Rscript {0}
+
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE, clean = TRUE)
         shell: Rscript {0}
