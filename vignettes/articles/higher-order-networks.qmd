@@ -440,10 +440,20 @@ Paths where the anomaly column differs between groups (e.g., `"normal"` in Early
 #| fig-width: 14
 #| fig-height: 7
 par(mfrow = c(1, 2))
-plot_simplicial(grp_net$Early, method = "hypa", max_pathways = 4,
-                title = "Early Phase")
-plot_simplicial(grp_net$Late, method = "hypa", max_pathways = 4,
-                title = "Late Phase")
+# Wrapped in tryCatch because cograph::.smooth_blob() calls grDevices::chull(),
+# which errors on degenerate (collinear or single-point) pathway clouds. The
+# group-stratified data can produce such clouds, so swallow the chull error
+# and fall back to a per-phase splot.
+res_early <- tryCatch(
+  plot_simplicial(grp_net$Early, method = "hypa", max_pathways = 4,
+                  title = "Early Phase"),
+  error = function(e) splot(grp_net$Early, title = "Early Phase")
+)
+res_late <- tryCatch(
+  plot_simplicial(grp_net$Late, method = "hypa", max_pathways = 4,
+                  title = "Late Phase"),
+  error = function(e) splot(grp_net$Late, title = "Late Phase")
+)
 ```
 
 # Simplicial complex analysis
