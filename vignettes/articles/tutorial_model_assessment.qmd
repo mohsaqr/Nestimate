@@ -1,6 +1,16 @@
 ---
 title: "Tutorial: Model assessment for transition networks"
 subtitle: "Split-half reliability, case-dropping stability, and Markov-order adequacy"
+author:
+  - name: Mohammed Saqr
+    url: https://saqr.me
+    affiliation: University of Eastern Finland
+  - name: Sonsoles López-Pernas
+    url: https://sonsoles.me
+    affiliation: University of Eastern Finland
+  - name: Kamila Misiejuk
+    url: https://kamilamisiejuk.com
+    affiliation: FernUniversität in Hagen, Germany
 format:
   html:
     toc: true

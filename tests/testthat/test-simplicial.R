@@ -112,23 +112,57 @@ test_that("build_simplicial on matrix without rownames assigns V-names", {
 
 
 # =========================================================================
-# build_simplicial — VR type is not implemented (A04-F01)
+# build_simplicial — VR type is a genuine Vietoris-Rips filtration
 #
-# A genuine metric Vietoris-Rips filtration is not built by this package.
-# type = "vr" used to silently alias "clique"; it must now error cleanly
-# instead of returning a clique complex mislabelled as Vietoris-Rips.
+# Historical note: A04-F01 audit caught that type = "vr" silently aliased
+# "clique" and forced it to error. With the boundary-matrix PH backend, VR
+# is now a real metric filtration: input is interpreted as a distance
+# matrix, k-simplex enters at max pairwise distance in σ. These tests
+# verify VR is genuinely distinct from clique (no silent alias regression).
 # =========================================================================
 
-test_that("build_simplicial type='vr' errors instead of aliasing clique", {
+test_that("build_simplicial type='vr' returns a VR complex with filtration", {
+  # 4-cycle as a distance matrix: short edges form the cycle.
+  d <- matrix(0, 4, 4)
+  d[cbind(c(1,2,3,4,1,2,3,4), c(2,3,4,1,2,3,4,1))] <- c(0.1, 0.2, 0.3, 0.4,
+                                                          0.1, 0.2, 0.3, 0.4)
+  rownames(d) <- colnames(d) <- paste0("v", 1:4)
+  sc <- build_simplicial(d, type = "vr", max_scale = 0.5)
+  expect_s3_class(sc, "simplicial_complex")
+  expect_identical(sc$type, "vr")
+  expect_true(is.numeric(sc$filtration))
+  expect_equal(length(sc$filtration), length(sc$simplices))
+  # vertices enter at 0
+  vert_idx <- which(vapply(sc$simplices, length, integer(1)) == 1L)
+  expect_true(all(sc$filtration[vert_idx] == 0))
+})
+
+test_that("type='vr' is genuinely distinct from type='clique'", {
+  # On a similarity-weighted graph, the VR complex on (1 - weight) and the
+  # clique complex on the original weights have different simplex counts
+  # because the "max distance" rule and the "min similarity" rule order the
+  # same simplices differently when the input contains a mix of weights.
   mat <- .make_sc_mat()
-  expect_error(
-    build_simplicial(mat, type = "vr", threshold = 0.3),
-    "not implemented"
-  )
-  expect_error(
-    build_simplicial(mat, type = "rips", threshold = 0.3),
-    "not implemented"
-  )
+  d <- 1 - abs(mat)
+  diag(d) <- 0
+  sc_vr     <- build_simplicial(d,   type = "vr",     max_scale = 0.95)
+  sc_clique <- build_simplicial(mat, type = "clique", threshold = 0.05)
+  expect_identical(sc_vr$type,     "vr")
+  expect_identical(sc_clique$type, "clique")
+  # filtration attached on VR, not on clique
+  expect_true(is.numeric(sc_vr$filtration))
+  expect_null(sc_clique$filtration)
+})
+
+test_that("type='rips' is an alias for 'vr'", {
+  d <- matrix(c(0, 0.2, 0.3,
+                0.2, 0, 0.4,
+                0.3, 0.4, 0), 3, 3, byrow = TRUE)
+  rownames(d) <- colnames(d) <- c("A","B","C")
+  sc1 <- build_simplicial(d, type = "vr",   max_scale = 0.5)
+  sc2 <- build_simplicial(d, type = "rips", max_scale = 0.5)
+  expect_identical(sc1$type, sc2$type)
+  expect_equal(length(sc1$simplices), length(sc2$simplices))
 })
 
 

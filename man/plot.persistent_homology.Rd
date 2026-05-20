@@ -20,8 +20,10 @@ A grid grob (invisibly) when \code{combined = TRUE}; a named list
 of two ggplots when \code{combined = FALSE}.
 }
 \description{
-Two panels: Betti curve (threshold vs Betti number) and heuristic
-persistence diagram (birth vs death) derived from Betti-count changes.
+Two panels: Betti curve (threshold vs Betti number) and persistence
+diagram (birth vs death). Persistence pairs come from full boundary-
+matrix reduction; essential classes are shown at the filtration boundary
+(\code{death = 0} in clique mode, \code{death = max_scale} in VR mode).
 }
 \examples{
 \donttest{

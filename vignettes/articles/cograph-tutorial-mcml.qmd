@@ -8,6 +8,9 @@ author:
   - name: Sonsoles López-Pernas
     url: https://sonsoles.me
     affiliation: University of Eastern Finland
+  - name: Kamila Misiejuk
+    url: https://kamilamisiejuk.com
+    affiliation: FernUniversität in Hagen, Germany
 citation:
   type: article
   author:

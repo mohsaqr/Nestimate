@@ -25,18 +25,22 @@
 #'     pathway from a \code{net_hon} or \code{net_hypa} becomes a simplex.
 #' }
 #'
-#' A metric Vietoris-Rips filtration is \strong{not implemented}; passing
-#' \code{type = "vr"} (or \code{"rips"}) raises an error rather than silently
-#' returning a clique complex.
+#' For \code{type = "vr"} (or alias \code{"rips"}), the input is treated as
+#' a non-negative distance / dissimilarity matrix and a Vietoris-Rips
+#' filtration is constructed: each k-simplex \eqn{\sigma} enters at
+#' \eqn{\max_{(i,j) \in \sigma} d(i,j)}. Use \code{max_scale} to cap the
+#' filtration diameter; edges with \code{d(i,j) > max_scale} are excluded.
+#' Filtration values are attached as \code{$filtration} on the returned
+#' object so \code{persistent_homology()} can read them directly.
 #'
 #' @param x A square matrix, \code{tna}, \code{netobject},
 #'   \code{net_hon}, \code{net_hypa}, or \code{net_mogen}.
-#' @param type Construction type: \code{"clique"} (default) or
-#'   \code{"pathway"}. \code{"vr"} / \code{"rips"} are accepted by
-#'   \code{match.arg} but not implemented and will error.
-#' @param threshold Minimum non-zero absolute edge weight to include an edge
-#'   (default 0). Must be a single non-negative number. Edges below this are
-#'   ignored; zero-weight non-edges are never included.
+#' @param type Construction type: \code{"clique"} (default), \code{"pathway"},
+#'   or \code{"vr"} (alias \code{"rips"}).
+#' @param threshold For \code{type = "clique"}: minimum non-zero absolute
+#'   edge weight to include an edge (default 0). Edges below this are
+#'   ignored; zero-weight non-edges are never included. Ignored for
+#'   \code{type = "vr"} — use \code{max_scale} instead.
 #' @param max_dim Maximum simplex dimension (default 10). Must be a single
 #'   non-negative integer. A k-simplex has k+1 nodes.
 #' @param max_pathways For \code{type = "pathway"}: maximum number of
@@ -46,10 +50,14 @@
 #'   include: \code{"all"} (default), \code{"over"}, or \code{"under"}.
 #'   Under-represented HYPA paths are ranked by smallest observed/expected
 #'   ratio; over-represented paths are ranked by largest ratio.
+#' @param max_scale For \code{type = "vr"}: maximum edge length to include
+#'   in the filtration. \code{NULL} (default) uses \code{max(d)}.
 #' @param ... Additional arguments passed to \code{build_hon()} when
 #'   \code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.
 #'
-#' @return A \code{simplicial_complex} object.
+#' @return A \code{simplicial_complex} object. For \code{type = "vr"} an
+#'   additional \code{$filtration} numeric vector is attached (parallel to
+#'   \code{$simplices}).
 #'
 #' @examples
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
@@ -58,13 +66,19 @@
 #' print(sc)
 #' betti_numbers(sc)
 #'
+#' # Vietoris-Rips on a distance matrix:
+#' d <- 1 - mat
+#' diag(d) <- 0
+#' sc_vr <- build_simplicial(d, type = "vr", max_scale = 0.6)
+#'
 #' @seealso \code{\link{betti_numbers}}, \code{\link{persistent_homology}},
 #'   \code{\link{simplicial_degree}}, \code{\link{q_analysis}}
 #'
 #' @export
 build_simplicial <- function(x, type = "clique", threshold = 0,
                               max_dim = 10L, max_pathways = NULL,
-                              anomaly = c("all", "over", "under"), ...) {
+                              anomaly = c("all", "over", "under"),
+                              max_scale = NULL, ...) {
   type <- match.arg(type, c("clique", "pathway", "vr", "rips"))
   anomaly <- match.arg(anomaly)
   stopifnot(
@@ -75,11 +89,13 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
   )
 
   if (type == "vr" || type == "rips") {
-    stop("type = \"vr\" (Vietoris-Rips) is not implemented. A genuine ",
-         "metric Vietoris-Rips filtration requires a distance-ball graph, ",
-         "which this package does not build. Use type = \"clique\" for a ",
-         "clique complex or type = \"pathway\" for a pathway complex.",
-         call. = FALSE)
+    d <- .sc_extract_matrix(x)
+    fc <- .filter_vr_complex(d, max_dim = max_dim, max_scale = max_scale)
+    sc <- .make_simplicial_complex(fc$simplices, fc$nodes, "vr")
+    # Reorder filtration to match the simplex order in sc$simplices.
+    sc$filtration <- .align_filtration(fc, sc)
+    sc$max_scale <- fc$max_w
+    return(sc)
   }
 
   if (type == "pathway") {
@@ -89,6 +105,20 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 
   mat <- .sc_extract_matrix(x)
   .build_simplicial_clique(mat, threshold, max_dim)
+}
+
+#' @noRd
+.align_filtration <- function(fc, sc) {
+  # .make_simplicial_complex may reorder simplices and add isolated vertices;
+  # re-key the filtration vector to match sc$simplices order.
+  fc_keys <- fc$key
+  sc_keys <- vapply(sc$simplices, function(s) paste(sort(s), collapse = ","),
+                    character(1))
+  out <- numeric(length(sc_keys))
+  m <- match(sc_keys, fc_keys)
+  out[!is.na(m)] <- fc$filt_asc[m[!is.na(m)]]
+  out[is.na(m)] <- 0  # isolated vertices added by .make_simplicial_complex
+  out
 }
 
 # =========================================================================
@@ -458,33 +488,327 @@ euler_characteristic <- function(sc) {
 
 # =========================================================================
 # Persistent homology
+#
+# Algorithm: full boundary-matrix reduction over Z/2 (Edelsbrunner, Letscher
+# & Zomorodian 2000). Filtered complex is built once at full graph;
+# filtration values are assigned per simplex (vertices at 0, k-simplex at
+# max_w - min edge weight in σ for the clique filtration; max pairwise
+# distance in σ for the VR filtration). Persistence pairs are read off the
+# reduction directly — the previous Betti-difference heuristic that mispaired
+# features born/dying between adjacent grid steps is gone.
 # =========================================================================
+
+#' @noRd
+.filter_clique_complex <- function(mat, max_dim = 3L) {
+  # Clique filtration in similarity (descending) semantics.
+  # filt_asc(σ) = max_w - min(edge weights in σ), vertex = 0.
+  # So a high-weight simplex has a small filt_asc (enters early in ascending).
+  n <- nrow(mat)
+  nodes <- rownames(mat) %||% paste0("V", seq_len(n))
+  max_w <- max(mat)
+
+  adj <- mat > 0
+  diag(adj) <- FALSE
+
+  if (!any(adj)) {
+    simps <- as.list(seq_len(n))
+    return(list(
+      simplices = simps, dim = integer(n), filt_asc = numeric(n),
+      key = as.character(seq_len(n)), nodes = nodes,
+      max_filt = 0, max_w = max_w, mode = "clique"
+    ))
+  }
+
+  all_simp <- .find_all_cliques(adj, max_dim)
+  dims <- vapply(all_simp, function(s) length(s) - 1L, integer(1))
+  filt <- vapply(seq_along(all_simp), function(j) {
+    s <- all_simp[[j]]
+    if (length(s) == 1L) return(0)
+    pairs <- utils::combn(s, 2L)
+    max_w - min(mat[cbind(pairs[1L, ], pairs[2L, ])])
+  }, numeric(1))
+
+  ord <- order(filt, dims)
+  simplices <- all_simp[ord]
+  dims <- dims[ord]
+  filt <- filt[ord]
+  keys <- vapply(simplices, function(s) paste(s, collapse = ","), character(1))
+
+  list(
+    simplices = simplices, dim = dims, filt_asc = filt,
+    key = keys, nodes = nodes,
+    max_filt = if (length(filt) > 0L) max(filt) else 0,
+    max_w = max_w, mode = "clique"
+  )
+}
+
+#' @noRd
+.filter_vr_complex <- function(d, max_dim = 3L, max_scale = NULL) {
+  # Vietoris-Rips filtration on a non-negative distance matrix.
+  # filt(σ) = max pairwise distance in σ; vertex = 0.
+  stopifnot(is.matrix(d), nrow(d) == ncol(d))
+  n <- nrow(d)
+  nodes <- rownames(d) %||% paste0("V", seq_len(n))
+  d <- pmax(d, t(d))
+  diag(d) <- 0
+  if (any(d < 0, na.rm = TRUE)) {
+    stop("VR filtration requires a non-negative distance matrix.",
+         call. = FALSE)
+  }
+  finite_d <- d
+  finite_d[!is.finite(finite_d)] <- NA_real_
+  cap <- if (is.null(max_scale)) {
+    if (all(is.na(finite_d))) 0 else max(finite_d, na.rm = TRUE)
+  } else {
+    stopifnot(is.numeric(max_scale), length(max_scale) == 1L,
+              !is.na(max_scale), max_scale >= 0)
+    max_scale
+  }
+
+  # Edges within cap. d(i,j) == 0 for i != j is a valid pseudometric case
+  # (duplicate points / equivalence classes), so include zero-distance
+  # off-diagonal edges and rely on diag(adj) <- FALSE to exclude self-loops.
+  adj <- !is.na(finite_d) & finite_d >= 0 & finite_d <= cap
+  diag(adj) <- FALSE
+
+  all_simp <- .find_all_cliques(adj, max_dim)
+  dims <- vapply(all_simp, function(s) length(s) - 1L, integer(1))
+  filt <- vapply(seq_along(all_simp), function(j) {
+    s <- all_simp[[j]]
+    if (length(s) == 1L) return(0)
+    pairs <- utils::combn(s, 2L)
+    max(d[cbind(pairs[1L, ], pairs[2L, ])])
+  }, numeric(1))
+
+  ord <- order(filt, dims)
+  simplices <- all_simp[ord]
+  dims <- dims[ord]
+  filt <- filt[ord]
+  keys <- vapply(simplices, function(s) paste(s, collapse = ","), character(1))
+
+  list(
+    simplices = simplices, dim = dims, filt_asc = filt,
+    key = keys, nodes = nodes,
+    max_filt = if (length(filt) > 0L) max(filt) else 0,
+    max_w = cap, mode = "vr"
+  )
+}
+
+#' @noRd
+.fc_from_filtered_complex <- function(sc, max_dim = 3L, max_scale = NULL) {
+  # Convert a simplicial_complex with attached $filtration into the internal
+  # filtered-complex shape consumed by .persistence_pairs_z2(). Honors max_dim
+  # by dropping simplices above that dimension and re-orders by (filt, dim) so
+  # boundary reduction is well-defined.
+  stopifnot(inherits(sc, "simplicial_complex"),
+            !is.null(sc$filtration),
+            length(sc$filtration) == length(sc$simplices))
+  simplices <- sc$simplices
+  filt <- as.numeric(sc$filtration)
+  dims <- vapply(simplices, function(s) length(s) - 1L, integer(1))
+
+  # Drop above max_dim
+  keep <- dims <= max_dim
+  simplices <- simplices[keep]
+  filt <- filt[keep]
+  dims <- dims[keep]
+
+  # Apply max_scale cap if requested (and the complex is a VR build)
+  mode <- if (identical(sc$type, "vr")) "vr" else "clique"
+  if (!is.null(max_scale)) {
+    stopifnot(is.numeric(max_scale), length(max_scale) == 1L,
+              !is.na(max_scale), max_scale >= 0)
+    keep <- filt <= max_scale
+    simplices <- simplices[keep]
+    filt <- filt[keep]
+    dims <- dims[keep]
+  }
+
+  # Order by (filt asc, dim asc) so faces precede cofaces at the same filt
+  ord <- order(filt, dims)
+  simplices <- simplices[ord]
+  filt <- filt[ord]
+  dims <- dims[ord]
+  keys <- vapply(simplices, function(s) paste(sort(s), collapse = ","),
+                 character(1))
+
+  max_w <- if (mode == "vr") {
+    if (!is.null(sc$max_scale)) sc$max_scale
+    else if (length(filt) > 0L) max(filt) else 0
+  } else {
+    if (length(filt) > 0L) max(filt) else 0
+  }
+
+  list(
+    simplices = simplices, dim = dims, filt_asc = filt,
+    key = keys, nodes = sc$nodes,
+    max_filt = if (length(filt) > 0L) max(filt) else 0,
+    max_w = max_w, mode = mode
+  )
+}
+
+#' @noRd
+.persistence_pairs_z2 <- function(fc) {
+  # Standard left-to-right boundary-matrix reduction over Z/2.
+  # The j-loop is sequential by construction (column j depends on reduced
+  # columns 1..j-1) — this is the package's second documented for-loop
+  # exception alongside the permutation loop in sequence_compare.R.
+  simplices <- fc$simplices
+  dims <- fc$dim
+  keys <- fc$key
+  filt <- fc$filt_asc
+  N <- length(simplices)
+
+  if (N == 0L) {
+    empty <- data.frame(dimension = integer(0), birth = numeric(0),
+                        death = numeric(0), persistence = numeric(0),
+                        stringsAsFactors = FALSE)
+    return(list(pairs = empty, essential = empty))
+  }
+
+  key_to_idx <- setNames(seq_len(N), keys)
+
+  # Boundary columns: k-simplex (k>=1) has (k+1) (k-1)-faces.
+  D <- lapply(seq_len(N), function(j) {
+    if (dims[j] < 1L) return(integer(0))
+    s <- simplices[[j]]
+    face_keys <- vapply(seq_along(s), function(i) {
+      paste(s[-i], collapse = ",")
+    }, character(1))
+    sort.int(as.integer(key_to_idx[face_keys]))
+  })
+
+  low_to_col <- integer(N) # low_to_col[r] = column j with low(j)=r, 0 if none
+  paired_b <- integer(0L)
+  paired_d <- integer(0L)
+
+  for (j in seq_len(N)) {
+    col <- D[[j]]
+    while (length(col) > 0L) {
+      l <- col[length(col)]
+      i <- low_to_col[l]
+      if (i == 0L) break
+      # XOR with D[[i]]: symmetric difference of sorted integer vectors
+      col <- sort.int(c(setdiff(col, D[[i]]), setdiff(D[[i]], col)))
+    }
+    D[[j]] <- col
+    if (length(col) > 0L) {
+      l <- col[length(col)]
+      low_to_col[l] <- j
+      paired_b <- c(paired_b, l)
+      paired_d <- c(paired_d, j)
+    }
+  }
+
+  essential_idx <- setdiff(seq_len(N), c(paired_b, paired_d))
+
+  pairs_df <- if (length(paired_b) == 0L) {
+    data.frame(dimension = integer(0), birth = numeric(0),
+               death = numeric(0), persistence = numeric(0),
+               stringsAsFactors = FALSE)
+  } else {
+    data.frame(
+      dimension = dims[paired_b],
+      birth = filt[paired_b],
+      death = filt[paired_d],
+      persistence = filt[paired_d] - filt[paired_b],
+      stringsAsFactors = FALSE
+    )
+  }
+  pairs_df <- pairs_df[pairs_df$persistence > 0, , drop = FALSE]
+
+  essential_df <- if (length(essential_idx) == 0L) {
+    data.frame(dimension = integer(0), birth = numeric(0),
+               death = numeric(0), persistence = numeric(0),
+               stringsAsFactors = FALSE)
+  } else {
+    data.frame(
+      dimension = dims[essential_idx],
+      birth = filt[essential_idx],
+      death = Inf, persistence = Inf,
+      stringsAsFactors = FALSE
+    )
+  }
+  list(pairs = pairs_df, essential = essential_df)
+}
+
+#' @noRd
+.betti_curve_from_pairs <- function(pers, thresholds, max_dim, mode) {
+  grid <- expand.grid(threshold = thresholds, dimension = 0:max_dim,
+                      KEEP.OUT.ATTRS = FALSE)
+  if (nrow(pers) == 0L) {
+    grid$betti <- 0L
+    return(grid[, c("threshold", "dimension", "betti")])
+  }
+  # Clique mode: descending thresholds; alive at t iff birth >= t AND death < t.
+  # VR mode: ascending thresholds; alive at t iff birth <= t AND death > t.
+  alive_per_row <- if (mode == "clique") {
+    vapply(seq_len(nrow(grid)), function(k) {
+      t <- grid$threshold[k]
+      sub <- pers[pers$dimension == grid$dimension[k], , drop = FALSE]
+      sum(sub$birth >= t & sub$death < t)
+    }, integer(1))
+  } else {
+    vapply(seq_len(nrow(grid)), function(k) {
+      t <- grid$threshold[k]
+      sub <- pers[pers$dimension == grid$dimension[k], , drop = FALSE]
+      sum(sub$birth <= t & sub$death > t)
+    }, integer(1))
+  }
+  grid$betti <- alive_per_row
+  grid[, c("threshold", "dimension", "betti")]
+}
 
 #' Persistent Homology
 #'
 #' @description
-#' Builds clique complexes at decreasing inclusive weight thresholds and
-#' records the Betti curve. The returned persistence table is a heuristic
-#' pairing derived from changes in Betti counts across the threshold grid; it
-#' is not a full boundary-matrix persistent homology decomposition of
-#' individual homology classes.
+#' Computes persistent homology via full boundary-matrix reduction over
+#' \eqn{\mathbb{Z}/2} (Edelsbrunner, Letscher & Zomorodian 2000). The
+#' returned persistence diagram pairs each k-dimensional homology class
+#' to the simplex whose addition creates it (birth) and the simplex whose
+#' addition destroys it (death). Essential classes — those never killed —
+#' are reported with \code{death = 0} in clique mode (similarity scale,
+#' descending) and \code{death = Inf} in VR mode (distance scale, ascending).
 #'
-#' @param x A square matrix, \code{tna}, or \code{netobject}.
-#' @param n_steps Number of filtration steps (default 20). Must be a single
-#'   positive integer.
-#' @param max_dim Maximum simplex dimension to track (default 3). Must be a
-#'   single non-negative integer.
+#' Two filtration modes are supported:
+#' \describe{
+#'   \item{\code{type = "clique"}}{Weighted clique filtration. Input is
+#'     treated as a similarity matrix; high-weight simplices appear early.
+#'     For each k-simplex \eqn{\sigma}, the filtration value is
+#'     \eqn{\min_{(i,j) \in \sigma}\,|w(i,j)|}. Thresholds run high to low.}
+#'   \item{\code{type = "vr"}}{Vietoris-Rips filtration on a non-negative
+#'     distance matrix. For each k-simplex \eqn{\sigma}, the filtration
+#'     value is \eqn{\max_{(i,j) \in \sigma}\,d(i,j)}. Thresholds run low
+#'     to high. Use \code{max_scale} to cap the filtration diameter.}
+#' }
+#'
+#' @param x A square matrix, \code{tna}, or \code{netobject}. For
+#'   \code{type = "vr"}, must be a non-negative distance matrix.
+#' @param n_steps Number of grid points for the reported Betti curve
+#'   (default 20). The persistence diagram itself is exact — it does not
+#'   depend on \code{n_steps}.
+#' @param max_dim Maximum simplex dimension to track (default 3).
+#' @param type Filtration: \code{"clique"} (default, similarity-weighted)
+#'   or \code{"vr"} (Vietoris-Rips on distances).
+#' @param max_scale For \code{type = "vr"} only: cap on edge length. Edges
+#'   with \code{d(i,j) > max_scale} are excluded. \code{NULL} (default)
+#'   uses \code{max(d)}.
 #'
 #' @return A \code{persistent_homology} object with:
 #' \describe{
 #'   \item{betti_curve}{Data frame: \code{threshold}, \code{dimension},
-#'     \code{betti} at each filtration step.}
+#'     \code{betti}.}
 #'   \item{persistence}{Data frame of birth-death pairs:
 #'     \code{dimension}, \code{birth}, \code{death}, \code{persistence}.
-#'     These intervals summarize Betti-count changes across the sampled
-#'     thresholds.}
-#'   \item{thresholds}{Numeric vector of filtration thresholds.}
+#'     Sorted by descending persistence.}
+#'   \item{thresholds}{Numeric vector of grid thresholds.}
+#'   \item{mode}{Either \code{"clique"} or \code{"vr"}.}
 #' }
+#'
+#' @references
+#' Edelsbrunner, H., Letscher, D., & Zomorodian, A. (2000). Topological
+#' persistence and simplification. \emph{Discrete & Computational Geometry}
+#' \strong{28}, 511-533.
 #'
 #' @examples
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
@@ -493,103 +817,90 @@ euler_characteristic <- function(sc) {
 #' print(ph)
 #'
 #' @export
-persistent_homology <- function(x, n_steps = 20L, max_dim = 3L) {
+persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
+                                type = "clique", max_scale = NULL) {
   stopifnot(
     is.numeric(n_steps), length(n_steps) == 1L,
     !is.na(n_steps), n_steps >= 1L, n_steps == as.integer(n_steps),
     is.numeric(max_dim), length(max_dim) == 1L,
     !is.na(max_dim), max_dim >= 0, max_dim == as.integer(max_dim)
   )
-  mat <- .sc_extract_matrix(x)
-  mat <- abs(mat)
-  mat <- pmax(mat, t(mat))
-  diag(mat) <- 0
+  type <- match.arg(type, c("clique", "vr"))
 
-  max_w <- max(mat)
-  if (max_w == 0) {
-    stop("All weights are zero; cannot build filtration.", call. = FALSE)
-  }
-  thresholds <- seq(max_w, max_w * 0.01, length.out = n_steps)
-
-  rows <- list()
-  for (i in seq_along(thresholds)) {
-    sc <- .build_simplicial_clique(mat, threshold = thresholds[i],
-                                    max_dim = max_dim, inclusive = TRUE)
-    b <- betti_numbers(sc)
-    b_by_dim <- integer(max_dim + 1L)
-    b_dim <- as.integer(sub("^b", "", names(b)))
-    keep <- b_dim <= max_dim
-    b_by_dim[b_dim[keep] + 1L] <- as.integer(b[keep])
-
-    for (j in seq_along(b_by_dim)) {
-      rows[[length(rows) + 1L]] <- data.frame(
-        threshold = thresholds[i],
-        dimension = j - 1L,
-        betti = b_by_dim[j],
-        stringsAsFactors = FALSE
-      )
+  # Filtered-complex handoff: build_simplicial(type = "vr") attaches a
+  # $filtration vector. Consume it directly instead of rebuilding from a
+  # matrix — this is the workflow advertised by the build_simplicial docs.
+  if (inherits(x, "simplicial_complex") && !is.null(x$filtration)) {
+    fc <- .fc_from_filtered_complex(x, max_dim = max_dim,
+                                    max_scale = max_scale)
+  } else if (type == "vr") {
+    d <- if (is.matrix(x)) x else .sc_extract_matrix(x)
+    fc <- .filter_vr_complex(d, max_dim = max_dim, max_scale = max_scale)
+    if (fc$max_w == 0 && fc$max_filt == 0 &&
+        all(fc$dim == 0L)) {
+      stop("All distances are zero or excluded; cannot build filtration.",
+           call. = FALSE)
     }
+  } else {
+    mat <- .sc_extract_matrix(x)
+    mat <- abs(mat)
+    mat <- pmax(mat, t(mat))
+    diag(mat) <- 0
+    if (max(mat) == 0) {
+      stop("All weights are zero; cannot build filtration.", call. = FALSE)
+    }
+    fc <- .filter_clique_complex(mat, max_dim = max_dim)
   }
 
-  betti_curve <- do.call(rbind, rows)
-  rownames(betti_curve) <- NULL
-  persistence <- .extract_persistence(betti_curve, thresholds)
+  red <- .persistence_pairs_z2(fc)
+
+  # Translate to user-facing scale and assemble persistence table
+  if (fc$mode == "clique") {
+    max_w <- fc$max_w
+    pairs <- red$pairs
+    if (nrow(pairs) > 0L) {
+      bd_asc <- pairs$birth
+      dd_asc <- pairs$death
+      pairs$birth <- max_w - bd_asc
+      pairs$death <- max_w - dd_asc
+      pairs$persistence <- pairs$birth - pairs$death
+    }
+    ess <- red$essential
+    if (nrow(ess) > 0L) {
+      ess$birth <- max_w - ess$birth
+      ess$death <- 0
+      ess$persistence <- ess$birth
+    }
+    thresholds <- seq(max_w, max_w * 0.01, length.out = n_steps)
+  } else {
+    pairs <- red$pairs
+    ess <- red$essential
+    # Keep essential death = Inf so the Betti curve correctly counts them as
+    # alive at the final threshold (death > t holds for any finite t). The
+    # plot path caps Inf at max_filt for display.
+    if (nrow(ess) > 0L) {
+      ess$persistence <- Inf
+    }
+    thresholds <- seq(0, max(fc$max_filt, .Machine$double.eps),
+                      length.out = n_steps)
+  }
+
+  persistence <- rbind(pairs, ess)
+  persistence <- persistence[order(-persistence$persistence), , drop = FALSE]
+  rownames(persistence) <- NULL
+
+  # Drop dimensions above max_dim (defensive)
+  persistence <- persistence[persistence$dimension <= max_dim, , drop = FALSE]
+
+  betti_curve <- .betti_curve_from_pairs(persistence, thresholds, max_dim,
+                                         fc$mode)
 
   structure(list(
     betti_curve = betti_curve,
     persistence = persistence,
-    thresholds = thresholds
+    thresholds = thresholds,
+    mode = fc$mode
   ), class = "persistent_homology")
-}
-
-#' @noRd
-.extract_persistence <- function(betti_curve, thresholds) {
-  dims <- sort(unique(betti_curve$dimension))
-  pairs <- list()
-
-  for (d in dims) {
-    sub <- betti_curve[betti_curve$dimension == d, ]
-    sub <- sub[order(sub$threshold, decreasing = TRUE), ]
-    bettis <- sub$betti
-    thresh <- sub$threshold
-    active <- integer(0)
-    prev_b <- 0L
-
-    for (i in seq_along(bettis)) {
-      curr_b <- bettis[i]
-      if (curr_b > prev_b) {
-        active <- c(active, rep(i, curr_b - prev_b))
-      } else if (curr_b < prev_b) {
-        n_dead <- prev_b - curr_b
-        for (j in seq_len(min(n_dead, length(active)))) {
-          born_at <- active[length(active)]
-          active <- active[-length(active)]
-          pairs[[length(pairs) + 1L]] <- data.frame(
-            dimension = d, birth = thresh[born_at],
-            death = thresh[i], stringsAsFactors = FALSE
-          )
-        }
-      }
-      prev_b <- curr_b
-    }
-    for (born_at in active) {
-      pairs[[length(pairs) + 1L]] <- data.frame(
-        dimension = d, birth = thresh[born_at],
-        death = 0, stringsAsFactors = FALSE
-      )
-    }
-  }
-
-  if (length(pairs) == 0L) { # nocov start
-    return(data.frame(dimension = integer(0), birth = numeric(0),
-                      death = numeric(0), persistence = numeric(0),
-                      stringsAsFactors = FALSE)) # nocov end
-  }
-
-  result <- do.call(rbind, pairs)
-  result$persistence <- result$birth - result$death
-  rownames(result) <- NULL
-  result[order(-result$persistence), ]
 }
 
 # =========================================================================
@@ -840,7 +1151,8 @@ verify_simplicial <- function(mat, threshold = 0) {
 #' @export
 print.simplicial_complex <- function(x, ...) {
   labels <- c("clique" = "Clique Complex",
-              "pathway" = "Pathway Complex")
+              "pathway" = "Pathway Complex",
+              "vr"      = "Vietoris-Rips Complex")
   cat(labels[x$type] %||% "Simplicial Complex", "\n")
 
   betti <- .compute_betti(x)
@@ -1073,8 +1385,10 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
 
 #' Plot Persistent Homology
 #'
-#' Two panels: Betti curve (threshold vs Betti number) and heuristic
-#' persistence diagram (birth vs death) derived from Betti-count changes.
+#' Two panels: Betti curve (threshold vs Betti number) and persistence
+#' diagram (birth vs death). Persistence pairs come from full boundary-
+#' matrix reduction; essential classes are shown at the filtration boundary
+#' (\code{death = 0} in clique mode, \code{death = max_scale} in VR mode).
 #'
 #' @param x A \code{persistent_homology} object.
 #' @param combined When `TRUE` (default), the two panels are stitched
@@ -1117,6 +1431,20 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
 
   # --- Panel 2: Persistence diagram ---
   pers <- x$persistence[x$persistence$persistence > 0, ]
+  # Cap both Inf death and Inf persistence for display (essential VR classes).
+  # ggplot's continuous size scale drops Inf-valued rows, which would silently
+  # erase essential features (e.g., the surviving H_0 in VR mode). Cap to the
+  # finite max so every row renders.
+  inf_death <- !is.finite(pers$death)
+  inf_pers  <- !is.finite(pers$persistence)
+  if (any(inf_death) || any(inf_pers)) {
+    finite_max <- max(c(pers$birth,
+                        pers$death[!inf_death],
+                        pers$persistence[!inf_pers],
+                        x$thresholds), na.rm = TRUE)
+    pers$death[inf_death]      <- finite_max
+    pers$persistence[inf_pers] <- finite_max
+  }
 
   if (nrow(pers) > 0L) {
     pers$dim_label <- factor(paste0("B", pers$dimension))
@@ -1131,8 +1459,8 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
       ggplot2::scale_size_continuous(range = c(1.5, 6), guide = "none") +
       ggplot2::scale_color_brewer(palette = "Set1") +
       ggplot2::coord_equal(xlim = c(0, lim), ylim = c(0, lim)) +
-      ggplot2::labs(title = "Heuristic Persistence Diagram",
-                    subtitle = "Intervals derived from Betti-count changes",
+      ggplot2::labs(title = "Persistence Diagram",
+                    subtitle = "Boundary-matrix reduction over Z/2",
                     x = "Birth", y = "Death", color = NULL) +
       .sc_theme() +
       ggplot2::theme(legend.position = "top")

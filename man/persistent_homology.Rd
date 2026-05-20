@@ -4,35 +4,63 @@
 \alias{persistent_homology}
 \title{Persistent Homology}
 \usage{
-persistent_homology(x, n_steps = 20L, max_dim = 3L)
+persistent_homology(
+  x,
+  n_steps = 20L,
+  max_dim = 3L,
+  type = "clique",
+  max_scale = NULL
+)
 }
 \arguments{
-\item{x}{A square matrix, \code{tna}, or \code{netobject}.}
+\item{x}{A square matrix, \code{tna}, or \code{netobject}. For
+\code{type = "vr"}, must be a non-negative distance matrix.}
 
-\item{n_steps}{Number of filtration steps (default 20). Must be a single
-positive integer.}
+\item{n_steps}{Number of grid points for the reported Betti curve
+(default 20). The persistence diagram itself is exact — it does not
+depend on \code{n_steps}.}
 
-\item{max_dim}{Maximum simplex dimension to track (default 3). Must be a
-single non-negative integer.}
+\item{max_dim}{Maximum simplex dimension to track (default 3).}
+
+\item{type}{Filtration: \code{"clique"} (default, similarity-weighted)
+or \code{"vr"} (Vietoris-Rips on distances).}
+
+\item{max_scale}{For \code{type = "vr"} only: cap on edge length. Edges
+with \code{d(i,j) > max_scale} are excluded. \code{NULL} (default)
+uses \code{max(d)}.}
 }
 \value{
 A \code{persistent_homology} object with:
 \describe{
 \item{betti_curve}{Data frame: \code{threshold}, \code{dimension},
-\code{betti} at each filtration step.}
+\code{betti}.}
 \item{persistence}{Data frame of birth-death pairs:
 \code{dimension}, \code{birth}, \code{death}, \code{persistence}.
-These intervals summarize Betti-count changes across the sampled
-thresholds.}
-\item{thresholds}{Numeric vector of filtration thresholds.}
+Sorted by descending persistence.}
+\item{thresholds}{Numeric vector of grid thresholds.}
+\item{mode}{Either \code{"clique"} or \code{"vr"}.}
 }
 }
 \description{
-Builds clique complexes at decreasing inclusive weight thresholds and
-records the Betti curve. The returned persistence table is a heuristic
-pairing derived from changes in Betti counts across the threshold grid; it
-is not a full boundary-matrix persistent homology decomposition of
-individual homology classes.
+Computes persistent homology via full boundary-matrix reduction over
+\eqn{\mathbb{Z}/2} (Edelsbrunner, Letscher & Zomorodian 2000). The
+returned persistence diagram pairs each k-dimensional homology class
+to the simplex whose addition creates it (birth) and the simplex whose
+addition destroys it (death). Essential classes — those never killed —
+are reported with \code{death = 0} in clique mode (similarity scale,
+descending) and \code{death = Inf} in VR mode (distance scale, ascending).
+
+Two filtration modes are supported:
+\describe{
+\item{\code{type = "clique"}}{Weighted clique filtration. Input is
+treated as a similarity matrix; high-weight simplices appear early.
+For each k-simplex \eqn{\sigma}, the filtration value is
+\eqn{\min_{(i,j) \in \sigma}\,|w(i,j)|}. Thresholds run high to low.}
+\item{\code{type = "vr"}}{Vietoris-Rips filtration on a non-negative
+distance matrix. For each k-simplex \eqn{\sigma}, the filtration
+value is \eqn{\max_{(i,j) \in \sigma}\,d(i,j)}. Thresholds run low
+to high. Use \code{max_scale} to cap the filtration diameter.}
+}
 }
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
@@ -40,4 +68,9 @@ colnames(mat) <- rownames(mat) <- c("A","B","C")
 ph <- persistent_homology(mat, n_steps = 10)
 print(ph)
 
+}
+\references{
+Edelsbrunner, H., Letscher, D., & Zomorodian, A. (2000). Topological
+persistence and simplification. \emph{Discrete & Computational Geometry}
+\strong{28}, 511-533.
 }

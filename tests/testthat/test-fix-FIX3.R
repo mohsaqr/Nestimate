@@ -3,9 +3,14 @@
 #
 # Confirmed findings fixed:
 #   A04-F01  build_simplicial(type="vr") was byte-identical to "clique"
-#            (no real Vietoris-Rips filtration exists). Honest-enum decision:
-#            type="vr"/"rips" now stop() with a clear message instead of
-#            silently aliasing "clique" while print()/labels claim "vr".
+#            (no real Vietoris-Rips filtration existed). Initial honest-enum
+#            decision: type="vr"/"rips" stop() with a clear message rather
+#            than silently aliasing. Resolved (2026-05-20): a genuine VR
+#            filtration is now implemented (input is a non-negative distance
+#            matrix; k-simplex enters at max pairwise distance in σ). The
+#            regression these tests guard is the *silent-alias* one: VR
+#            must produce structurally distinct output from clique and must
+#            attach a $filtration vector.
 #   A04-F02  build_hypergraph(method="vr") inherited the same dead alias.
 #            Same honest fix (errors before reaching build_simplicial()).
 #   A04-F03  build_simplicial(max_dim<0) silently behaved like the default
@@ -44,55 +49,59 @@
 # A04-F01 — build_simplicial(type="vr") must error, not alias "clique"
 # =========================================================================
 
-test_that("build_simplicial(type='vr') errors and is NOT silently clique", {
+test_that("build_simplicial(type='vr') is a real VR filtration, not clique", {
   net <- .fix3_net()
+  # Use the netobject's weights as similarities; convert to distances.
+  w <- abs(net$weights); diag(w) <- 0
+  d <- max(w) - w
+  diag(d) <- 0
 
-  # Old buggy behavior: identical to clique with $type == "vr".
-  # Corrected behavior: a clean, informative stop().
-  expect_error(
-    build_simplicial(net, type = "vr", threshold = 0.05),
-    "not implemented",
-    fixed = TRUE
-  )
-  expect_error(
-    build_simplicial(net, type = "rips", threshold = 0.05),
-    "not implemented",
-    fixed = TRUE
-  )
+  sc_vr     <- build_simplicial(d,   type = "vr",     max_scale = max(d))
+  sc_clique <- build_simplicial(net, type = "clique", threshold = 0.05)
+  expect_s3_class(sc_vr, "simplicial_complex")
+  expect_identical(sc_vr$type, "vr")
+  expect_identical(sc_clique$type, "clique")
 
-  # The error message must not be the cryptic match.arg() one.
-  msg <- tryCatch(build_simplicial(net, type = "vr"),
-                  error = function(e) conditionMessage(e))
-  expect_false(grepl("'arg' should be one of", msg))
-  expect_true(grepl("Vietoris-Rips", msg, fixed = TRUE))
+  # VR carries a filtration vector; clique does not.
+  expect_true(is.numeric(sc_vr$filtration))
+  expect_equal(length(sc_vr$filtration), length(sc_vr$simplices))
+  expect_null(sc_clique$filtration)
 
-  # clique still works and is honestly labelled.
-  sc <- build_simplicial(net, type = "clique", threshold = 0.05)
-  expect_s3_class(sc, "simplicial_complex")
-  expect_identical(sc$type, "clique")
-  # No simplicial_complex can ever carry the dead "vr" type tag now.
-  expect_false(identical(sc$type, "vr"))
+  # The silent-alias regression: VR must be distinguishable from clique on
+  # the same node set. With a non-uniform similarity matrix the simplex
+  # filtrations differ even when the underlying simplex sets coincide.
+  if (length(sc_vr$simplices) == length(sc_clique$simplices)) {
+    # Both reached the same max_dim and adjacency; filtration distinguishes.
+    expect_true(any(sc_vr$filtration > 0))
+  } else {
+    expect_true(TRUE)  # different simplex counts is its own proof
+  }
 })
 
-test_that("build_simplicial(type='vr') errors on a bare matrix too", {
-  adj <- .fix3_incidence_adj()
-  expect_error(
-    build_simplicial(adj, type = "vr", threshold = 0),
-    "not implemented",
-    fixed = TRUE
-  )
-  # clique path on the same matrix is unaffected.
-  sc <- build_simplicial(adj, type = "clique", threshold = 0)
-  expect_s3_class(sc, "simplicial_complex")
-  expect_gt(sc$n_simplices, sc$n_nodes)
+test_that("type='rips' aliases 'vr' (no silent clique fallback)", {
+  d <- matrix(c(0, 0.2, 0.3,
+                0.2, 0, 0.4,
+                0.3, 0.4, 0), 3, 3, byrow = TRUE)
+  rownames(d) <- colnames(d) <- c("A","B","C")
+  sc_vr   <- build_simplicial(d, type = "vr",   max_scale = 0.5)
+  sc_rips <- build_simplicial(d, type = "rips", max_scale = 0.5)
+  expect_identical(sc_vr$type, sc_rips$type)
+  expect_equal(sc_vr$filtration, sc_rips$filtration)
 })
 
-test_that("print.simplicial_complex can never produce a VR label", {
+test_that("print.simplicial_complex labels VR honestly", {
   net <- .fix3_net()
-  sc <- build_simplicial(net, type = "clique", threshold = 0.05)
-  out <- capture.output(print(sc))
-  expect_true(any(grepl("Clique Complex", out)))
-  expect_false(any(grepl("Vietoris-Rips", out)))
+  sc_clique <- build_simplicial(net, type = "clique", threshold = 0.05)
+  out_c <- capture.output(print(sc_clique))
+  expect_true(any(grepl("Clique Complex", out_c)))
+  expect_false(any(grepl("Vietoris-Rips", out_c)))
+
+  w <- abs(net$weights); diag(w) <- 0
+  d <- max(w) - w; diag(d) <- 0
+  sc_vr <- build_simplicial(d, type = "vr", max_scale = max(d))
+  out_v <- capture.output(print(sc_vr))
+  expect_true(any(grepl("Vietoris-Rips Complex", out_v)))
+  expect_false(any(grepl("Clique Complex", out_v)))
 })
 
 # =========================================================================

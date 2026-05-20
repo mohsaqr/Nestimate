@@ -1,5 +1,15 @@
 ---
 title: "Network Estimation and Analysis with Nestimate"
+author:
+  - name: Mohammed Saqr
+    url: https://saqr.me
+    affiliation: University of Eastern Finland
+  - name: Sonsoles López-Pernas
+    url: https://sonsoles.me
+    affiliation: University of Eastern Finland
+  - name: Kamila Misiejuk
+    url: https://kamilamisiejuk.com
+    affiliation: FernUniversität in Hagen, Germany
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Network Estimation and Analysis with Nestimate}
