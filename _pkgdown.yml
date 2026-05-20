@@ -89,6 +89,8 @@ reference:
     contents:
       - build_simplicial
       - persistent_homology
+      - bottleneck_distance
+      - persistence_landscape
       - q_analysis
       - betti_numbers
       - euler_characteristic
