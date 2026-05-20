@@ -14,6 +14,21 @@
 
 # --- shared fixtures -------------------------------------------------------
 
+# Source-tree paths used by the A03-F01/F03/F04 introspection tests.
+# Under R CMD check on the installed package, R/ is NOT present in the
+# install tree — these tests are intended for the dev source tree only.
+.fix5_src_path <- function(file) {
+  p <- testthat::test_path("..", "..", "R", file)
+  if (file.exists(p)) p else NULL
+}
+.fix5_skip_unless_source <- function(file) {
+  if (is.null(.fix5_src_path(file))) {
+    testthat::skip(paste("Source-tree introspection test:",
+                          file, "not present in install"))
+  }
+  .fix5_src_path(file)
+}
+
 .fix5_grl_seqs <- local({
   s <- split(group_regulation_long$Action, group_regulation_long$Actor)
   s <- s[lengths(s) >= 6 & lengths(s) <= 15]
@@ -29,7 +44,7 @@
 # --- A03-F01: build_hypa documentation contract ----------------------------
 
 test_that("A03-F01: build_hypa has its own complete, correct roxygen", {
-  hypa_src <- readLines(test_path("..", "..", "R", "hypa.R"))
+  hypa_src <- readLines(.fix5_skip_unless_source("hypa.R"))
 
   # Locate the build_hypa definition and the roxygen block directly above it.
   def_line <- grep("^build_hypa <- function\\(", hypa_src)
@@ -59,7 +74,7 @@ test_that("A03-F01: build_hypa has its own complete, correct roxygen", {
 })
 
 test_that("A03-F01: .hypa_one_order roxygen is internal and accurate", {
-  hypa_src <- readLines(test_path("..", "..", "R", "hypa.R"))
+  hypa_src <- readLines(.fix5_skip_unless_source("hypa.R"))
   def_line <- grep("^\\.hypa_one_order <- function\\(", hypa_src)
   expect_length(def_line, 1L)
 
@@ -152,7 +167,9 @@ test_that("A03-F03: summary.net_hon/.net_mogen/.net_honem return data.frames", {
 
   # @return text must no longer claim "input object, invisibly".
   for (f in c("hon.R", "mogen.R", "honem.R")) {
-    src <- paste(readLines(test_path("..", "..", "R", f)), collapse = "\n")
+    src_path <- .fix5_src_path(f)
+    if (is.null(src_path)) next  # installed-package context: skip introspection
+    src <- paste(readLines(src_path), collapse = "\n")
     blocks <- regmatches(
       src,
       gregexpr("#' Summary Method for net_[a-z]+.*?@return[^\n]*", src))[[1]]
@@ -170,7 +187,7 @@ test_that("A03-F04: build_hon $nodes is a data.frame and @return says so", {
   expect_s3_class(hon$nodes, "data.frame")
   expect_setequal(names(hon$nodes), c("id", "label", "name"))
 
-  hon_src <- paste(readLines(test_path("..", "..", "R", "hon.R")),
+  hon_src <- paste(readLines(.fix5_skip_unless_source("hon.R")),
                    collapse = "\n")
   expect_false(grepl("Character vector of HON node names", hon_src,
                       fixed = TRUE))

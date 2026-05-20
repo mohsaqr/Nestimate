@@ -125,7 +125,8 @@ test_that("build_hypa handles k=1 (first-order)", {
 
 test_that("build_hypa rejects invalid input", {
   expect_error(build_hypa(42), "data.frame or list")
-  expect_error(build_hypa(list(c("A", "B")), k = 0L), "k.*must be >= 1")
+  # `k` is deprecated; the validator reports against the canonical `order`.
+  expect_error(build_hypa(list(c("A", "B")), k = 0L), "integers >= 1")
   expect_error(build_hypa(list(c("A", "B")), alpha = 0.6),
                "alpha.*must be in")
 })
@@ -200,6 +201,8 @@ test_that("summary.net_hypa returns direction-specific tail probability", {
     scores = scores,
     over = scores[scores$anomaly == "over", , drop = FALSE],
     under = scores[scores$anomaly == "under", , drop = FALSE],
+    # canonical slot is $order (post HYPA refactor); $k is the deprecated alias
+    order = 2L,
     k = 2L,
     nodes = data.frame(label = LETTERS[1:6], stringsAsFactors = FALSE),
     n_edges = nrow(scores),
@@ -246,7 +249,7 @@ test_that("build_hypa stops when no edges at requested order k", {
   # k=3 requires 4-grams; trajectories of length 3 produce only 1-grams (k=1)
   # and 2-grams (k=2) but not 3-grams as transitions
   trajs <- list(c("A", "B", "C"), c("B", "C", "D"))
-  expect_error(build_hypa(trajs, k = 3L), "No edges at order")
+  expect_error(build_hypa(trajs, k = 3L), "No edges at")
 })
 
 # --- summary.net_hypa with anomalies displays anomalous paths ---
