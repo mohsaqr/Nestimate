@@ -52,7 +52,7 @@ row-stochastic matrix, or a raw wide sequence data frame.
 ## Data
 
 `trajectories` contains 138 learners recorded at 15 time-steps each with three
-engagement states: Active, Average, and Disengaged.
+engagement states: *Active*, *Average*, and *Disengaged*.
 
 ```{r}
 dim(trajectories)
@@ -63,7 +63,7 @@ table(as.vector(trajectories), useNA = "always")
 
 ## Selecting mostly-active learners
 
-We keep learners who were Active **more than half the time** (> 7 of 15 steps).
+We keep learners who were *Active* **more than half the time** (> 7 of 15 steps).
 
 ```{r}
 sub <- trajectories[rowSums(trajectories == "Active", na.rm = TRUE) > 7, ]
@@ -73,6 +73,10 @@ nrow(sub)
 ---
 
 ## Sequence plots
+
+`sequence_plot()` visualises action trajectories across sessions. With `type = "heatmap"` (the default), rows represent individual actors and columns represent time steps, producing a dense carpet plot reordered by a dendrogram. With `type = "index"`, rows are separated by thin gaps and can be faceted via `ncol` and `nrow`, or grouped using `group` or a `net_clustering` object. With `type = "distribution"`, state proportions (or counts) are tracked across time steps and rendered as a stacked area or bar chart.
+
+Below we plot the full dataset and a subset restricted to students with 7 or more time points (mostly-active students) using `type = "heatmap"`.
 
 ```{r fig.height=7}
 sequence_plot(trajectories, type = "heatmap")
@@ -86,6 +90,8 @@ sequence_plot(sub, type = "heatmap")
 
 ## Transition networks
 
+Transition networks summarise how likely each state is to be followed by another, with edge weights representing the probability of moving from one state to the next. Here we build networks for both the full sample and the active subgroup to compare how transition structure differs across groups.
+
 ```{r}
 net_all <- build_network(trajectories, method = "relative")
 net_sub <- build_network(sub, method = "relative")
@@ -94,12 +100,14 @@ round(net_all$weights, 3)
 round(net_sub$weights, 3)
 ```
 
-In the mostly-active group nearly every state transitions predominantly back
-to Active, and the probability of entering Disengaged is almost zero.
+In the mostly-active student group nearly every state transitions predominantly back
+to *Active*, and the probability of entering *Disengaged* is almost zero.
 
 ---
 
 ## Mean First Passage Times
+
+`passage_time()` computes how long it takes, on average, to reach one state from another. Each value in the matrix is the expected number of steps to arrive at a given state for the first time, starting from another. 
 
 ```{r}
 pt_all <- passage_time(net_all)
@@ -126,8 +134,8 @@ plot(pt_all, title = "Full sample (n = 138)")
 plot(pt_sub, title = "Mostly-active learners (n = 42)")
 ```
 
-In the mostly-active heatmap the Active column is uniformly dark (quickly
-reachable from any state) and the Disengaged column is uniformly pale
+In the mostly-active heatmap the *Active* column is uniformly dark (quickly
+reachable from any state) and the *Disengaged* column is uniformly pale
 (nearly unreachable).
 
 ---
@@ -143,12 +151,15 @@ data.frame(
 )
 ```
 
-In the mostly-active group ~79% of long-run time is spent Active (vs 37% in
+In the mostly-active group ~79% of long-run time is spent *Active* (vs 37% in
 the full sample).
 
 ---
 
 ## Markov Stability
+
+`markov_stability()` summarises how stable and accessible each state is within a transition network, computing five per-state metrics: persistence (self-loop probability), stationary distribution, mean recurrence time, sojourn time, and mean accessibility to and from other states.
+
 
 ```{r}
 ms_all <- markov_stability(net_all)
@@ -169,6 +180,8 @@ The `stability` data frame contains:
 | `avg_time_to_others` | Mean MFPT leaving this state to all others |
 | `avg_time_from_others` | Mean MFPT from all other states arriving here |
 
+Plotting the stability metrics as bar charts allows for a quick visual comparison between the full sample and the mostly-active subgroup.
+
 ```{r fig.height=6}
 plot(ms_all, title = "Full sample")
 ```
@@ -176,10 +189,6 @@ plot(ms_all, title = "Full sample")
 ```{r fig.height=6}
 plot(ms_sub, title = "Mostly-active learners")
 ```
-
-Active leads on persistence (0.81) and sojourn time (5.3 steps) -- once a
-learner is active they stay active. Average has the lowest
-`avg_time_from_others` (1.6 steps) -- the most accessible hub state.
-Disengaged has `avg_time_from_others` of ~39 steps -- effectively unreachable.
+In the mostly-active subgroup, `Active` dominates: it has the highest persistence (0.82) and sojourn time (5.53 steps), meaning learners who enter this state tend to remain there. In the full sample, `Average` is the most reachable state, with an `avg_time_from_others` of just 3.20 steps, but this rises sharply in the mostly-active subgroup (6.20 steps) as `Active` absorbs most transitions. `Disengaged` is effectively unreachable in the mostly-active subgroup, with an `avg_time_from_others` of 51.64 steps and a stationary probability of just 0.024, compared to 0.185 in the full sample.
 
 ---
