@@ -33,7 +33,7 @@ Clusters represent subgroups within the data that share similar patterns. Such p
 
 ## Data
 
-To illustrate clustering, we will use the `human_long` dataset, which contains 10,796 coded human interactions from 429 human-AI pair programming sessions across 34 projects. Each row represents a single interaction event with a timestamp, session identifier, and action label.
+To illustrate clustering, we will use the `human_long` dataset, which contains **10,796 coded interactions across 429 human-AI pair programming sessions and 34 projects**. Each row represents a single coded action: `code` captures what kind of action occurred, taking one of 9 values (`Specify`, `Command`, `Interrupt`, `Verify`, `Frustrate`, `Inquire`, `Correct`, `Request`, `Refine`) that become the network nodes, `session_id` identifies who did it (defining the separate sequences for each actor), and `timestamp` records when (used to order actions chronologically within each session). `cluster` further groups these codes into three broad behavioural categories: `Directive`, `Metacognitive`, and `Evaluative`.
 
 ```{r data}
 library(cograph)
@@ -56,7 +56,7 @@ net <- build_network(human_long,
 
 Dissimilarity-based clustering groups units of analysis (in our case, sessions, since that is what we provided as `actor`) by directly comparing their observed sequences. In our case, each session is represented by its sequence of actions, and similarity between sessions is defined using a distance metric that quantifies how different two sequences are.
 
-To implement this method using `Nestimate`, we can use the `build_clusters()` function, which takes either  raw sequence data or a network object such as the `net` object that we estimated (which also contains the original sequences in `$data`):
+To implement this method using `Nestimate`, we can use the `build_clusters()` function, which takes either  raw sequence data or a network object such as the `net` object that we estimated (which also contains the original sequences in `clust$data`):
 
 ```{r cluster-basic}
 clust <- build_clusters(net, k = 3)
@@ -198,7 +198,7 @@ plot(ch_d, type = "tradeoff", abbrev = TRUE)
 
 Higher silhouette indicates better-defined clusters. The `<-- best` marker in the printed table is the silhouette-max row; `summary(ch)$best` returns it programmatically. We select `ward.D2` with 2 clusters here.
 
-```{r}
+```{r cluster-summary}
 clust <- build_clusters(net, k = 2, method = "ward.D2", seed = 42)
 summary(clust)
 ```
@@ -226,12 +226,12 @@ plot(diag, type = "silhouette")
 Instead of clustering sequences based on how similar they are to one another, we can cluster them together based on their transition dynamics. Mixture Markov models (MMM) fit separate Markov models, and sequences are assigned to the cluster whose transition structure best matches their observed behavior.
 
 To implement MMM, we can use `build_mmm()`, which returns a `net_mmm` object with full model details:
-```{r}
+```{r build_mmm}
 mmm_fit <- build_mmm(net, k = 2)
 summary(mmm_fit)
 ```
 
-The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and per-cluster transition matrices in `$models`. `cluster_diagnostics()` works on it too, with MMM-specific columns (mixing share, average posterior probability, per-cluster classification error):
+The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and per-cluster transition matrices in `mmm_fit$models`. `cluster_diagnostics()` works on it too, with MMM-specific columns (mixing share, average posterior probability, per-cluster classification error):
 
 ```{r mmm-diagnostics}
 diag_mmm <- cluster_diagnostics(mmm_fit)
@@ -310,7 +310,7 @@ grp_mmm
 
 Both return a `netobject_group` — a list of `netobject`s with clustering info accessible via `attr(, "clustering")`:
 
-```{r}
+```{r cluster-assignments}
 # Access cluster assignments
 attr(grp_dist, "clustering")$assignments[1:10]
 attr(grp_mmm, "clustering")$assignments[1:10]
@@ -322,7 +322,7 @@ grp_dist[[1]]$weights[1:3, 1:3]
 ### Comparing Clusters
 
 We can compare which transition probabilities differ significantly among clusters using permutation testing:
-```{r}
+```{r clustering-permutation}
 comparison <- permutation(grp_dist, iter = 100)
 ```
 
