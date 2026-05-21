@@ -40,7 +40,7 @@ set.seed(20260413)
 
 ## 1. The dataset
 
-`human_ai_long` is a bundled dataset in `Nestimate` containing coded action sequences from **429 human-AI coding sessions across 34 projects**. Every row is a single action taken during a session with a `cluster` label grouping actions into six broad types: `Action`, `Communication`, `Directive`, `Evaluative`, `Metacognitive`, `Repair`.
+`human_long` is a bundled example dataset in `Nestimate` containing coded action sequences from **429 human-AI coding sessions across 34 projects**. It uses long format, where each row represents a single coded action: `code` captures what kind of action occurred, taking one of 9 values (`Specify`, `Command`, `Interrupt`, `Verify`, `Frustrate`, `Inquire`, `Correct`, `Request`, `Refine`), while `cluster` further groups these codes into three broad behavioural categories: `Directive`, `Metacognitive`, and `Evaluative`. `session_id` defines the separate sequences for each actor, and `timestamp` is used to order actions chronologically within each session.
 
 ```{r load}
 data(human_long, package = "Nestimate")
@@ -61,7 +61,7 @@ table(dat$half)
 
 ## 3. Build the grouped network
 
-`build_network()` is the canonical entry point. Passing `group = "half"` produces a `netobject_group` with one netobject per half. Each netobject's `$data` field holds the session-half sequences.
+`build_network()` is the canonical entry point. Passing `group = "half"` produces a `netobject_group` with one netobject per half. Each netobject's `net$data` field holds the session-half sequences.
 
 ```{r build}
 net <- build_network(
@@ -99,7 +99,7 @@ $$\text{stdres}_{ij} = \frac{O_{ij} - E_{ij}}{\sqrt{E_{ij} \cdot (1 - r_i/N) \cd
 
 ## 5. Pyramid plot
 
-Back-to-back bars with residual labels inside each segment. Both sides use the same standardized-residual color scale.
+A pyramid plot displays two groups as back-to-back horizontal bars, with standardised residuals shown as labels inside each segment and a shared color scale indicating over- or under-representation. This style requires exactly two groups.
 
 ```{r pyramid}
 plot(res, style = "pyramid", show_residuals = TRUE)
@@ -107,7 +107,7 @@ plot(res, style = "pyramid", show_residuals = TRUE)
 
 ## 6. Heatmap
 
-Same top patterns, same color scale, alternative layout. Works for any number of groups (pyramid requires exactly 2).
+A heatmap shows the same top patterns and color scale as the other styles but arranges them in a grid layout, making it easier to compare patterns across many groups at once. Unlike the pyramid plot, the heatmap works for any number of groups.
 
 ```{r heatmap}
 plot(res, style = "heatmap")
