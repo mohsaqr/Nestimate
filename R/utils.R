@@ -191,6 +191,8 @@ utils::globalVariables(c(
   ".", ":=", ".I", ".SD", ".N",
   "cr_lower", "cr_upper", "effect_size", "sig",
   "from", "to", "value", "run_id", "setting_name",
+  # ggplot2 NSE: density is a computed stat from geom_histogram(after_stat(density))
+  "density",
   # Metrics
   "TP", "TN", "FP", "FN", "Sensitivity", "Specificity", "FPR", "FNR",
   "Accuracy", "MCC", "mcc_denom_sq", "Metric", "Value",

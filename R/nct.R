@@ -71,18 +71,13 @@ nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
   p  <- ncol(data1)
   dataall <- rbind(data1, data2)
 
-  # Estimator: nearPD symmetrization + EBIC-glasso. When qgraph is available
-  # use the same EBICglasso implementation as NetworkComparisonTest::NCT().
-  # The package's internal path remains a dependency-light fallback.
+  # Estimator: nearPD symmetrization + EBIC-glasso using the package's
+  # internal lambda-path + EBIC selector (matches qgraph::EBICglasso to
+  # numerical tolerance; verified in local_testing_and_equivalence/).
   est <- function(x) {
     cor_x <- stats::cor(x)
     cor_x <- as.matrix(Matrix::nearPD(cor_x, corr = TRUE)$mat)
     cor_x <- (cor_x + t(cor_x)) / 2
-    if (requireNamespace("qgraph", quietly = TRUE)) {
-      return(suppressWarnings(suppressMessages(
-        qgraph::EBICglasso(cor_x, nrow(x), gamma = gamma)
-      )))
-    }
     lambda_path <- .compute_lambda_path(cor_x, nlambda = 100L,
                                           lambda.min.ratio = 0.01)
     selected <- .select_ebic(cor_x, lambda_path,

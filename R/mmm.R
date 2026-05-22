@@ -463,7 +463,7 @@ build_mmm <- function(data,
                       smooth = 0.01,
                       seed = NULL,
                       covariates = NULL,
-                      estimator = c("firth", "multinom", "chisq")) {
+                      estimator = c("auto", "firth", "multinom", "chisq")) {
 
   estimator <- match.arg(estimator)
   stopifnot(
@@ -1005,6 +1005,10 @@ summary.net_mmm <- function(object, ...) {
 #'
 #' @param x A \code{net_mmm} object.
 #' @param type Character. Plot type: \code{"posterior"} (default) or \code{"covariates"}.
+#' @param combined Logical. For \code{type = "covariates"} only: when
+#'   \code{TRUE} (default), covariate forest panels are combined into a
+#'   single faceted plot; when \code{FALSE}, a list of separate ggplots
+#'   is returned.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
 #'
 #' @return A \code{ggplot} object, invisibly.
@@ -1302,7 +1306,7 @@ plot.mmm_compare <- function(x, ...) {
 cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
                         tol = 1e-6, smooth = 0.01, seed = NULL,
                         covariates = NULL,
-                        estimator = c("firth", "multinom", "chisq"),
+                        estimator = c("auto", "firth", "multinom", "chisq"),
                         cluster_by = "mmm", ...) {
   estimator <- match.arg(estimator)
   dots <- list(...)
@@ -1414,6 +1418,10 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
 #'   max posterior probability per sequence, coloured by cluster),
 #'   \code{"covariates"} or its alias \code{"predictors"} (covariate
 #'   forest plot when \code{cluster_mmm()} was run with \code{covariates}).
+#' @param combined Logical. For \code{type} in \code{"covariates"} or
+#'   \code{"predictors"} only: when \code{TRUE} (default), forest panels
+#'   are combined into a single faceted plot; when \code{FALSE}, a list
+#'   of separate ggplots is returned.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
 #' @return A \code{ggplot} object, invisibly.
 #'

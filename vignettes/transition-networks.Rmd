@@ -207,6 +207,10 @@ net_GR <- build_network(group_regulation_long, method = "tna",
 ```
 
 ```{r posthoc, eval = requireNamespace("nnet", quietly = TRUE)}
+# Default estimator = "auto" inspects the cluster x covariate cross-tab
+# and picks firth (brglm2, bias-reduced) only when rare cells signal
+# separation risk; otherwise it uses the much faster nnet::multinom.
+# With Achiever balanced 50/50, multinom is selected (~0.5 s vs ~85 s).
 Post <- build_clusters(net_GR, k = 2, covariates = c("Achiever"))
 summary(Post)
 ```

@@ -19,6 +19,11 @@ max posterior probability per sequence, coloured by cluster),
 \code{"covariates"} or its alias \code{"predictors"} (covariate
 forest plot when \code{cluster_mmm()} was run with \code{covariates}).}
 
+\item{combined}{Logical. For \code{type} in \code{"covariates"} or
+\code{"predictors"} only: when \code{TRUE} (default), forest panels
+are combined into a single faceted plot; when \code{FALSE}, a list
+of separate ggplots is returned.}
+
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{

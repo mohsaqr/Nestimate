@@ -45,3 +45,6 @@
 ^vignettes/articles$
 ^vignettes/\.quarto
 ^vignettes/_archive$
+^audit_codex$
+^audit_folder$
+^proc$

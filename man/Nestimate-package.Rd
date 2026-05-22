@@ -25,6 +25,7 @@ Useful links:
 Authors:
 \itemize{
   \item Sonsoles López-Pernas \email{sonsoles.lopez@uef.fi}
+  \item Kamila Misiejuk
 }
 
 }

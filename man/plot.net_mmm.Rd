@@ -11,6 +11,11 @@
 
 \item{type}{Character. Plot type: \code{"posterior"} (default) or \code{"covariates"}.}
 
+\item{combined}{Logical. For \code{type = "covariates"} only: when
+\code{TRUE} (default), covariate forest panels are combined into a
+single faceted plot; when \code{FALSE}, a list of separate ggplots
+is returned.}
+
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{

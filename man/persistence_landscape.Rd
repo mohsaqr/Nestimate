@@ -13,7 +13,7 @@ columns \code{dimension}, \code{birth}, \code{death}.}
 \item{k_max}{Maximum landscape index to compute (default 5). Must be a
 single positive integer.}
 
-\item{dimension}{Integer scalar — which homology dimension to compute
+\item{dimension}{Integer scalar -- which homology dimension to compute
 the landscape for. Default 1.}
 
 \item{t_grid}{Numeric vector of evaluation points. \code{NULL} (default)

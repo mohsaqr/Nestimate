@@ -25,6 +25,7 @@ mosaic_plot(x, ...)
   residuals = c("permutation", "asymptotic"),
   n_perm = 500L,
   seed = NULL,
+  values = FALSE,
   ...
 )
 
@@ -38,6 +39,7 @@ mosaic_plot(x, ...)
   residuals = c("permutation", "asymptotic"),
   n_perm = 500L,
   seed = NULL,
+  values = FALSE,
   ...
 )
 
@@ -53,6 +55,7 @@ mosaic_plot(x, ...)
   n_perm = 500L,
   seed = NULL,
   ncol = 2L,
+  values = FALSE,
   ...
 )
 
@@ -67,6 +70,7 @@ mosaic_plot(x, ...)
   n_perm = 500L,
   seed = NULL,
   ncol = 2L,
+  values = FALSE,
   ...
 )
 
@@ -80,6 +84,7 @@ mosaic_plot(x, ...)
   residuals = c("permutation", "asymptotic"),
   n_perm = 500L,
   seed = NULL,
+  values = FALSE,
   ...
 )
 
@@ -127,6 +132,12 @@ Default 500; use \code{>= 1000} for stable tail estimates.}
 \item{seed}{Optional integer seed for the permutation RNG. Use for
 reproducible plots; ignored when \code{residuals = "asymptotic"}.}
 
+\item{values}{Logical. When \code{TRUE}, overlay each cell's standardized
+residual as a numeric label (one decimal). Text colour switches to
+white on saturated cells (|stdres| > 1.5) and dark grey otherwise.
+Default \code{FALSE} -- the colour bar legend already conveys the
+sign and magnitude.}
+
 \item{level}{For \code{mcml} only. \code{"macro"} (default) draws a
 single mosaic of \code{x$macro$weights} (the cluster-by-cluster
 aggregate); \code{"clusters"} draws one mosaic per cluster from
@@ -134,12 +145,6 @@ aggregate); \code{"clusters"} draws one mosaic per cluster from
 
 \item{ncol}{For \code{netobject_group}: number of columns in the small-
 multiples layout. Default 2.}
-
-\item{values}{Logical. When \code{TRUE}, overlay each cell's standardized
-residual as a numeric label (one decimal). Text colour switches to
-white on saturated cells (|stdres| > 1.5) and dark grey otherwise.
-Default \code{FALSE} -- the colour bar legend already conveys the
-sign and magnitude.}
 }
 \value{
 A \code{ggplot} object (or a \code{gtable} from

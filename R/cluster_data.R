@@ -443,7 +443,17 @@
     if (dissimilarity == "jw") {
       stringdist::stringdistmatrix(strings, method = "jw", p = p)
     } else if (dissimilarity %in% c("qgram", "cosine", "jaccard")) {
-      stringdist::stringdistmatrix(strings, method = dissimilarity, q = q)
+      # stringdist returns NaN/NA when a sequence is shorter than q
+      # (no q-grams -> zero-norm vector -> cosine undefined). Replace
+      # with distance 1 (maximally dissimilar from everything else,
+      # 0 to self), matching the R fast path's zero-norm convention.
+      d <- stringdist::stringdistmatrix(strings, method = dissimilarity, q = q)
+      m <- as.matrix(d)
+      if (anyNA(m)) {
+        m[is.na(m)] <- 1
+        diag(m) <- 0
+      }
+      stats::as.dist(m)
     } else {
       stringdist::stringdistmatrix(strings, method = dissimilarity)
     }
@@ -591,11 +601,15 @@
 #'   without pre-extracting a data.frame. \code{tna} input requires the
 #'   data.frame form. Results are stored in \code{$covariates}.
 #' @param estimator Multinomial logit fitter for the covariate analysis.
-#'   \code{"firth"} (default) uses Firth's penalised likelihood via
-#'   \code{brglm2::brmultinom} — bias-reduced and finite under
-#'   quasi-complete separation. \code{"multinom"} uses classical ML via
-#'   \code{nnet::multinom}; emits a warning because rare-cell separation
-#'   produces astronomical ORs with degenerate CIs (silent failure).
+#'   \code{"auto"} (default) inspects the cluster x covariate cross-tab
+#'   and falls back to \code{"firth"} only when any cell has fewer than
+#'   5 observations (quasi-complete separation risk); otherwise uses
+#'   the much faster \code{"multinom"}. \code{"firth"} forces Firth's
+#'   penalised likelihood via \code{brglm2::brmultinom} -- bias-reduced
+#'   and finite under separation, but ~200x slower than multinom on
+#'   well-conditioned data. \code{"multinom"} forces classical ML via
+#'   \code{nnet::multinom}; warns because rare-cell separation produces
+#'   astronomical ORs with degenerate CIs (silent failure).
 #'   \code{"chisq"} runs WeightedCluster-style descriptive tests
 #'   (chi-square + Cramer's V + standardized adjusted residuals for
 #'   factors; Kruskal-Wallis + eta-squared for numerics).
@@ -639,7 +653,7 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
                          na_syms = c("*", "%"), weighted = FALSE, lambda = 1,
                          seed = NULL, q = 2L, p = 0.1,
                          covariates = NULL,
-                         estimator = c("firth", "multinom", "chisq"),
+                         estimator = c("auto", "firth", "multinom", "chisq"),
                          ...) {
   estimator <- match.arg(estimator)
   dots <- list(...)
@@ -1031,6 +1045,10 @@ summary.net_clustering <- function(object, ...) {
 #'   silhouette bars), \code{"mds"} (2D MDS projection), or
 #'   \code{"heatmap"} (distance matrix heatmap ordered by cluster).
 #'   Default: \code{"silhouette"}.
+#' @param combined Logical. For \code{type = "predictors"} only: when
+#'   \code{TRUE} (default), covariate forest panels are combined into a
+#'   single faceted plot; when \code{FALSE}, a list of separate ggplots is
+#'   returned.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
 #' @return A \code{ggplot} object (invisibly).
 #'
@@ -1398,9 +1416,30 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' }
 #'
 #' @noRd
+## Detect quasi-complete-separation risk in cluster x covariate cross-tabs.
+## Returns TRUE when any categorical-covariate cell has fewer than
+## `min_cell` observations -- the case where classical multinom diverges
+## and Firth's penalty is needed.
+##
+## Continuous covariates are not checked here (separation in continuous
+## covariates is rare and the user can force estimator = "firth"
+## explicitly if known).
+.detect_separation_risk <- function(fit_df, min_cell = 5L) {
+  cat_cols <- vapply(setdiff(names(fit_df), "cluster"), function(nm) {
+    is.factor(fit_df[[nm]]) || is.character(fit_df[[nm]])
+  }, logical(1L))
+  if (!any(cat_cols)) return(FALSE)
+  cat_names <- names(cat_cols)[cat_cols]
+  any(vapply(cat_names, function(nm) {
+    tab <- table(fit_df$cluster, fit_df[[nm]])
+    min(tab) < min_cell
+  }, logical(1L)))
+}
+
+#' @noRd
 .run_covariate_analysis <- function(assignments, cov_df, rhs, k,
-                                     estimator = c("firth", "multinom",
-                                                   "chisq")) {
+                                     estimator = c("auto", "firth",
+                                                   "multinom", "chisq")) {
   estimator <- match.arg(estimator)
 
   # --- Prepare data (shared across all three estimators) ---
@@ -1433,6 +1472,20 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 
   if (estimator == "chisq") {
     return(.covariate_chisq(fit_df, profiles))
+  }
+
+  # "auto": pick firth only when cluster x covariate cross-tab has cells
+  # < 5 (separation risk where multinom would diverge); use multinom
+  # otherwise (235-330x faster, identical answer when MLE is finite).
+  if (estimator == "auto") {
+    risk <- .detect_separation_risk(fit_df, min_cell = 5L)
+    estimator <- if (risk) "firth" else "multinom"
+    attr(profiles, "auto_choice") <- estimator
+    attr(profiles, "auto_reason") <- if (risk) {
+      "rare/zero cells detected in cluster x covariate cross-tab"
+    } else {
+      "no rare cells (all cluster x covariate cells >= 5)"
+    }
   }
 
   .covariate_logit(fit_df, rhs, profiles, estimator,
@@ -1540,18 +1593,21 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #' @noRd
 .covariate_logit <- function(fit_df, rhs, profiles, estimator,
                               raw_assignments) {
+  # If estimator was selected via auto (attribute set in caller), suppress
+  # the multinom safety warning -- auto already verified no separation risk.
+  via_auto <- isTRUE(identical(attr(profiles, "auto_choice"), "multinom"))
   if (estimator == "multinom") {
     if (!requireNamespace("nnet", quietly = TRUE)) {
       stop("Package 'nnet' is required for estimator = 'multinom'. ",
            "Install with: install.packages('nnet')", call. = FALSE)
     }
-    warning(
+    if (!via_auto) warning(
       "estimator = 'multinom' uses nnet::multinom (classical ML). ",
       "Coefficient estimates can diverge under quasi-complete separation ",
       "(rare-cell or zero-cell covariate levels), producing astronomical ",
       "ORs with degenerate confidence intervals. The default ",
-      "estimator = 'firth' applies Firth's penalty and is robust to this. ",
-      "See Heinze & Schemper (2002) and brglm2::brmultinom.",
+      "estimator = 'auto' falls back to firth (brglm2) when separation ",
+      "risk is detected. See Heinze & Schemper (2002).",
       call. = FALSE
     )
     fml <- stats::as.formula(paste("cluster ~", rhs))

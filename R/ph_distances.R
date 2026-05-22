@@ -2,7 +2,7 @@
 #
 # bottleneck_distance() and persistence_landscape() take persistent_homology
 # objects produced by persistent_homology() and operate on the persistence
-# diagram only — the boundary-matrix reduction lives in simplicial.R.
+# diagram only -- the boundary-matrix reduction lives in simplicial.R.
 
 # =========================================================================
 # Bottleneck distance
@@ -110,7 +110,7 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
     return(ess_cost)
   }
 
-  # Candidate ε values: pairwise distances + diagonal projections.
+  # Candidate eps values: pairwise distances + diagonal projections.
   fin_cost <- .bottleneck_finite(fin1, fin2, tol = tol)
   max(ess_cost, fin_cost)
 }
@@ -127,7 +127,7 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
   if (n1 == 0L) return(max(abs(p2[, "death"] - p2[, "birth"]) / 2))
   if (n2 == 0L) return(max(abs(p1[, "death"] - p1[, "birth"]) / 2))
 
-  # Pairwise L_inf distances p1 × p2
+  # Pairwise L_inf distances p1 x p2
   d_p1_p2 <- pmax(
     abs(outer(p1[, "birth"], p2[, "birth"], "-")),
     abs(outer(p1[, "death"], p2[, "death"], "-"))
@@ -138,7 +138,7 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 
   if (.bottleneck_feasible(p1, p2, d_p1_p2, d_p1_diag, d_p2_diag,
                             candidates[length(candidates)] + tol)) {
-    # find smallest ε via binary search
+    # find smallest eps via binary search
     lo <- 1L; hi <- length(candidates)
     while (lo < hi) {
       mid <- (lo + hi) %/% 2L
@@ -161,10 +161,10 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
   # Left: rows 1..n1 = p1 points, rows n1+1..n1+n2 = diagonal copies of p2
   # Right: cols 1..n2 = p2 points, cols n2+1..n2+n1 = diagonal copies of p1
   # Edges:
-  #   p1[i] → p2[j]            if d_p1_p2[i,j] <= eps
-  #   p1[i] → diag(p1[i])      if d_p1_diag[i] <= eps  (col n2 + i)
-  #   diag(p2[j]) → p2[j]      if d_p2_diag[j] <= eps  (row n1 + j → col j)
-  #   diag(p2[j]) → diag(p1[i]) always (cost 0)        (row n1+j → col n2+i)
+  #   p1[i] -> p2[j]            if d_p1_p2[i,j] <= eps
+  #   p1[i] -> diag(p1[i])      if d_p1_diag[i] <= eps  (col n2 + i)
+  #   diag(p2[j]) -> p2[j]      if d_p2_diag[j] <= eps  (row n1 + j -> col j)
+  #   diag(p2[j]) -> diag(p1[i]) always (cost 0)        (row n1+j -> col n2+i)
   n1 <- nrow(p1); n2 <- nrow(p2)
   adj <- matrix(FALSE, n1 + n2, n1 + n2)
   if (n1 > 0L && n2 > 0L) adj[seq_len(n1), seq_len(n2)] <- d_p1_p2 <= eps
@@ -189,7 +189,7 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 #' @noRd
 .kuhn_match_size <- function(adj) {
   # Kuhn bipartite cardinality matching via DFS augmenting paths.
-  # Sequential by construction (augmenting paths mutate match state) —
+  # Sequential by construction (augmenting paths mutate match state) --
   # same for-loop exception class as the boundary-matrix reduction.
   n_l <- nrow(adj); n_r <- ncol(adj)
   if (n_l == 0L || n_r == 0L) return(0L)
@@ -237,7 +237,7 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 #'   columns \code{dimension}, \code{birth}, \code{death}.
 #' @param k_max Maximum landscape index to compute (default 5). Must be a
 #'   single positive integer.
-#' @param dimension Integer scalar — which homology dimension to compute
+#' @param dimension Integer scalar -- which homology dimension to compute
 #'   the landscape for. Default 1.
 #' @param t_grid Numeric vector of evaluation points. \code{NULL} (default)
 #'   uses an even grid of 200 points covering the union of pair intervals.
@@ -294,7 +294,7 @@ persistence_landscape <- function(ph, k_max = 5L, dimension = 1L,
   }
 
   bd <- as.matrix(sub[, c("birth", "death")])
-  # Normalize orientation: birth ≤ death (some conventions store the other way)
+  # Normalize orientation: birth <= death (some conventions store the other way)
   bd <- t(apply(bd, 1L, function(row) c(min(row), max(row))))
 
   if (is.null(t_grid)) {
@@ -315,7 +315,7 @@ persistence_landscape <- function(ph, k_max = 5L, dimension = 1L,
     k_eff <- min(k_max, length(v))
     c(v[seq_len(k_eff)], rep(0, k_max - k_eff))
   }, numeric(k_max))
-  # lambda is k_max x n_t — flatten ROW-MAJOR so values align with the
+  # lambda is k_max x n_t -- flatten ROW-MAJOR so values align with the
   # (k, t) iteration order below.
   dim(lambda) <- c(k_max, n_t)
 
@@ -376,7 +376,7 @@ print.persistence_landscape <- function(x, ...) {
 plot.persistence_landscape <- function(x, ...) {
   df <- x$landscape
   df$k <- factor(df$k, levels = seq_len(x$k_max),
-                 labels = paste0("λ", seq_len(x$k_max)))
+                 labels = paste0("\u03bb", seq_len(x$k_max)))
   ggplot2::ggplot(df, ggplot2::aes(x = t, y = value, color = k)) +
     ggplot2::geom_line(linewidth = 0.9) +
     ggplot2::labs(

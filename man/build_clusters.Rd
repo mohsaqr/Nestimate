@@ -16,7 +16,7 @@ build_clusters(
   q = 2L,
   p = 0.1,
   covariates = NULL,
-  estimator = c("firth", "multinom", "chisq"),
+  estimator = c("auto", "firth", "multinom", "chisq"),
   ...
 )
 }
@@ -100,11 +100,15 @@ without pre-extracting a data.frame. \code{tna} input requires the
 data.frame form. Results are stored in \code{$covariates}.}
 
 \item{estimator}{Multinomial logit fitter for the covariate analysis.
-\code{"firth"} (default) uses Firth's penalised likelihood via
-\code{brglm2::brmultinom} — bias-reduced and finite under
-quasi-complete separation. \code{"multinom"} uses classical ML via
-\code{nnet::multinom}; emits a warning because rare-cell separation
-produces astronomical ORs with degenerate CIs (silent failure).
+\code{"auto"} (default) inspects the cluster x covariate cross-tab
+and falls back to \code{"firth"} only when any cell has fewer than
+5 observations (quasi-complete separation risk); otherwise uses
+the much faster \code{"multinom"}. \code{"firth"} forces Firth's
+penalised likelihood via \code{brglm2::brmultinom} -- bias-reduced
+and finite under separation, but ~200x slower than multinom on
+well-conditioned data. \code{"multinom"} forces classical ML via
+\code{nnet::multinom}; warns because rare-cell separation produces
+astronomical ORs with degenerate CIs (silent failure).
 \code{"chisq"} runs WeightedCluster-style descriptive tests
 (chi-square + Cramer's V + standardized adjusted residuals for
 factors; Kruskal-Wallis + eta-squared for numerics).}

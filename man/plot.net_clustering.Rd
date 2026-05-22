@@ -19,6 +19,11 @@ silhouette bars), \code{"mds"} (2D MDS projection), or
 \code{"heatmap"} (distance matrix heatmap ordered by cluster).
 Default: \code{"silhouette"}.}
 
+\item{combined}{Logical. For \code{type = "predictors"} only: when
+\code{TRUE} (default), covariate forest panels are combined into a
+single faceted plot; when \code{FALSE}, a list of separate ggplots is
+returned.}
+
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{

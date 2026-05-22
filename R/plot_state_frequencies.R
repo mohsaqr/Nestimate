@@ -421,12 +421,13 @@ mosaic_plot.netobject <- function(x,
                                   residuals = c("permutation", "asymptotic"),
                                   n_perm = 500L,
                                   seed = NULL,
+                                  values = FALSE,
                                   ...) {
   .mosaic_plot_impl(x, source_class = "netobject",
                     xlab = xlab, ylab = ylab, range = range,
                     top_angle = top_angle, left_angle = left_angle,
                     residuals = match.arg(residuals),
-                    n_perm = n_perm, seed = seed, ...)
+                    n_perm = n_perm, seed = seed, values = values, ...)
 }
 
 #' @export
@@ -440,12 +441,13 @@ mosaic_plot.htna <- function(x,
                              residuals = c("permutation", "asymptotic"),
                              n_perm = 500L,
                              seed = NULL,
+                             values = FALSE,
                              ...) {
   .mosaic_plot_impl(x, source_class = "htna",
                     xlab = xlab, ylab = ylab, range = range,
                     top_angle = top_angle, left_angle = left_angle,
                     residuals = match.arg(residuals),
-                    n_perm = n_perm, seed = seed, ...)
+                    n_perm = n_perm, seed = seed, values = values, ...)
 }
 
 #' @export
@@ -461,6 +463,7 @@ mosaic_plot.mcml <- function(x,
                              n_perm = 500L,
                              seed = NULL,
                              ncol = 2L,
+                             values = FALSE,
                              ...) {
   .mosaic_plot_check_unused_dots("mosaic_plot.mcml", ...)
   .mosaic_plot_impl(x, source_class = "mcml",
@@ -468,7 +471,8 @@ mosaic_plot.mcml <- function(x,
                     xlab = xlab, ylab = ylab, range = range,
                     top_angle = top_angle, left_angle = left_angle,
                     residuals = match.arg(residuals),
-                    n_perm = n_perm, seed = seed, ncol = ncol, ...)
+                    n_perm = n_perm, seed = seed, ncol = ncol,
+                    values = values, ...)
 }
 
 .mosaic_plot_check_unused_dots <- function(method, ...) {
@@ -499,12 +503,14 @@ mosaic_plot.netobject_group <- function(x,
                                         n_perm = 500L,
                                         seed = NULL,
                                         ncol = 2L,
+                                        values = FALSE,
                                         ...) {
   .mosaic_plot_impl(x, source_class = "netobject_group",
                     xlab = xlab, ylab = ylab, range = range,
                     top_angle = top_angle, left_angle = left_angle,
                     residuals = match.arg(residuals),
-                    n_perm = n_perm, seed = seed, ncol = ncol, ...)
+                    n_perm = n_perm, seed = seed, ncol = ncol,
+                    values = values, ...)
 }
 
 #' @export
@@ -518,11 +524,12 @@ mosaic_plot.table <- function(x,
                               residuals = c("permutation", "asymptotic"),
                               n_perm = 500L,
                               seed = NULL,
+                              values = FALSE,
                               ...) {
   .mosaic_plot_tab(x, xlab = xlab, ylab = ylab, range = range,
                    top_angle = top_angle, left_angle = left_angle,
                    residuals = match.arg(residuals),
-                   n_perm = n_perm, seed = seed)
+                   n_perm = n_perm, seed = seed, values = values)
 }
 
 #' @export
