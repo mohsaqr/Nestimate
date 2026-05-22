@@ -512,6 +512,10 @@ net_GR <- build_network(group_regulation_long, method = "tna",
 
 ``` r
 
+# Default estimator = "auto" inspects the cluster x covariate cross-tab
+# and picks firth (brglm2, bias-reduced) only when rare cells signal
+# separation risk; otherwise it uses the much faster nnet::multinom.
+# With Achiever balanced 50/50, multinom is selected (~0.5 s vs ~85 s).
 Post <- build_clusters(net_GR, k = 2, covariates = c("Achiever"))
 summary(Post)
 #> Sequence Clustering Summary
@@ -531,7 +535,7 @@ summary(Post)
 #>  1        982 504 (51%)          478 (49%)        
 #>  2       1018 496 (49%)          522 (51%)        
 #> 
-#> Predictors of Membership (estimator = firth, reference: Cluster 1):
+#> Predictors of Membership (estimator = multinom, reference: Cluster 1):
 #>  Cluster Variable    OR   95% CI       p     Sig
 #>  2       AchieverLow 1.11 [0.93, 1.32] 0.245    
 #> 

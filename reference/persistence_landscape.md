@@ -28,7 +28,7 @@ persistence_landscape(ph, k_max = 5L, dimension = 1L, t_grid = NULL)
 
 - dimension:
 
-  Integer scalar — which homology dimension to compute the landscape
+  Integer scalar – which homology dimension to compute the landscape
   for. Default 1.
 
 - t_grid:

@@ -19,6 +19,12 @@ plot(x, type = c("posterior", "covariates"), combined = TRUE, ...)
 
   Character. Plot type: `"posterior"` (default) or `"covariates"`.
 
+- combined:
+
+  Logical. For `type = "covariates"` only: when `TRUE` (default),
+  covariate forest panels are combined into a single faceted plot; when
+  `FALSE`, a list of separate ggplots is returned.
+
 - ...:
 
   Unsupported. Supplying unused arguments raises an error.

@@ -15,7 +15,7 @@ distance computation for 100-1000x speedup on edit distances."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@ distance computation for 100-1000x speedup on edit distances.</p>
 <span>  q <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>  p <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  estimator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"firth"</span>, <span class="st">"multinom"</span>, <span class="st">"chisq"</span><span class="op">)</span>,</span>
+<span>  estimator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"firth"</span>, <span class="st">"multinom"</span>, <span class="st">"chisq"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -197,11 +197,15 @@ data.frame form. Results are stored in <code>$covariates</code>.</p></dd>
 
 <dt id="arg-estimator">estimator<a class="anchor" aria-label="anchor" href="#arg-estimator"></a></dt>
 <dd><p>Multinomial logit fitter for the covariate analysis.
-<code>"firth"</code> (default) uses Firth's penalised likelihood via
-<code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom</a></code> — bias-reduced and finite under
-quasi-complete separation. <code>"multinom"</code> uses classical ML via
-<code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-link">nnet::multinom</a></code>; emits a warning because rare-cell separation
-produces astronomical ORs with degenerate CIs (silent failure).
+<code>"auto"</code> (default) inspects the cluster x covariate cross-tab
+and falls back to <code>"firth"</code> only when any cell has fewer than
+5 observations (quasi-complete separation risk); otherwise uses
+the much faster <code>"multinom"</code>. <code>"firth"</code> forces Firth's
+penalised likelihood via <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom</a></code> – bias-reduced
+and finite under separation, but ~200x slower than multinom on
+well-conditioned data. <code>"multinom"</code> forces classical ML via
+<code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-link">nnet::multinom</a></code>; warns because rare-cell separation produces
+astronomical ORs with degenerate CIs (silent failure).
 <code>"chisq"</code> runs WeightedCluster-style descriptive tests
 (chi-square + Cramer's V + standardized adjusted residuals for
 factors; Kruskal-Wallis + eta-squared for numerics).</p></dd>

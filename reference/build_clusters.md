@@ -21,7 +21,7 @@ build_clusters(
   q = 2L,
   p = 0.1,
   covariates = NULL,
-  estimator = c("firth", "multinom", "chisq"),
+  estimator = c("auto", "firth", "multinom", "chisq"),
   ...
 )
 ```
@@ -148,13 +148,16 @@ build_clusters(
 
 - estimator:
 
-  Multinomial logit fitter for the covariate analysis. `"firth"`
-  (default) uses Firth's penalised likelihood via
+  Multinomial logit fitter for the covariate analysis. `"auto"`
+  (default) inspects the cluster x covariate cross-tab and falls back to
+  `"firth"` only when any cell has fewer than 5 observations
+  (quasi-complete separation risk); otherwise uses the much faster
+  `"multinom"`. `"firth"` forces Firth's penalised likelihood via
   [`brglm2::brmultinom`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
-  — bias-reduced and finite under quasi-complete separation.
-  `"multinom"` uses classical ML via
-  [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html); emits
-  a warning because rare-cell separation produces astronomical ORs with
+  – bias-reduced and finite under separation, but ~200x slower than
+  multinom on well-conditioned data. `"multinom"` forces classical ML
+  via [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html);
+  warns because rare-cell separation produces astronomical ORs with
   degenerate CIs (silent failure). `"chisq"` runs WeightedCluster-style
   descriptive tests (chi-square + Cramer's V + standardized adjusted
   residuals for factors; Kruskal-Wallis + eta-squared for numerics).

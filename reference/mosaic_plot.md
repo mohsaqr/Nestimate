@@ -26,6 +26,7 @@ mosaic_plot(
   residuals = c("permutation", "asymptotic"),
   n_perm = 500L,
   seed = NULL,
+  values = FALSE,
   ...
 )
 
@@ -40,6 +41,7 @@ mosaic_plot(
   residuals = c("permutation", "asymptotic"),
   n_perm = 500L,
   seed = NULL,
+  values = FALSE,
   ...
 )
 
@@ -56,6 +58,7 @@ mosaic_plot(
   n_perm = 500L,
   seed = NULL,
   ncol = 2L,
+  values = FALSE,
   ...
 )
 
@@ -71,6 +74,7 @@ mosaic_plot(
   n_perm = 500L,
   seed = NULL,
   ncol = 2L,
+  values = FALSE,
   ...
 )
 
@@ -85,6 +89,7 @@ mosaic_plot(
   residuals = c("permutation", "asymptotic"),
   n_perm = 500L,
   seed = NULL,
+  values = FALSE,
   ...
 )
 
@@ -145,6 +150,14 @@ mosaic_plot(x, ...)
   Optional integer seed for the permutation RNG. Use for reproducible
   plots; ignored when `residuals = "asymptotic"`.
 
+- values:
+
+  Logical. When `TRUE`, overlay each cell's standardized residual as a
+  numeric label (one decimal). Text colour switches to white on
+  saturated cells (\|stdres\| \> 1.5) and dark grey otherwise. Default
+  `FALSE` – the colour bar legend already conveys the sign and
+  magnitude.
+
 - level:
 
   For `mcml` only. `"macro"` (default) draws a single mosaic of
@@ -156,14 +169,6 @@ mosaic_plot(x, ...)
 
   For `netobject_group`: number of columns in the small- multiples
   layout. Default 2.
-
-- values:
-
-  Logical. When `TRUE`, overlay each cell's standardized residual as a
-  numeric label (one decimal). Text colour switches to white on
-  saturated cells (\|stdres\| \> 1.5) and dark grey otherwise. Default
-  `FALSE` – the colour bar legend already conveys the sign and
-  magnitude.
 
 ## Value
 

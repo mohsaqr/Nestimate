@@ -31,3 +31,5 @@ Useful links:
 Authors:
 
 - Sonsoles López-Pernas <sonsoles.lopez@uef.fi>
+
+- Kamila Misiejuk

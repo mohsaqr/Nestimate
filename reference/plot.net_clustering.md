@@ -26,6 +26,12 @@ plot(
   bars), `"mds"` (2D MDS projection), or `"heatmap"` (distance matrix
   heatmap ordered by cluster). Default: `"silhouette"`.
 
+- combined:
+
+  Logical. For `type = "predictors"` only: when `TRUE` (default),
+  covariate forest panels are combined into a single faceted plot; when
+  `FALSE`, a list of separate ggplots is returned.
+
 - ...:
 
   Unsupported. Supplying unused arguments raises an error.

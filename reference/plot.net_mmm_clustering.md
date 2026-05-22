@@ -37,6 +37,12 @@ plot(
   [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
   was run with `covariates`).
 
+- combined:
+
+  Logical. For `type` in `"covariates"` or `"predictors"` only: when
+  `TRUE` (default), forest panels are combined into a single faceted
+  plot; when `FALSE`, a list of separate ggplots is returned.
+
 - ...:
 
   Unsupported. Supplying unused arguments raises an error.

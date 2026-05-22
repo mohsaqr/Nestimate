@@ -16,7 +16,7 @@ build_mmm(
   smooth = 0.01,
   seed = NULL,
   covariates = NULL,
-  estimator = c("firth", "multinom", "chisq")
+  estimator = c("auto", "firth", "multinom", "chisq")
 )
 ```
 

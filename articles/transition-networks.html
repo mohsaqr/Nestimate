@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -593,7 +593,11 @@ achievers.</p>
 <span>                        action <span class="op">=</span> <span class="st">"Action"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>,</span>
 <span>                        time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">Post</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net_GR</span>, k <span class="op">=</span> <span class="fl">2</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Achiever"</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Default estimator = "auto" inspects the cluster x covariate cross-tab</span></span>
+<span><span class="co"># and picks firth (brglm2, bias-reduced) only when rare cells signal</span></span>
+<span><span class="co"># separation risk; otherwise it uses the much faster nnet::multinom.</span></span>
+<span><span class="co"># With Achiever balanced 50/50, multinom is selected (~0.5 s vs ~85 s).</span></span>
+<span><span class="va">Post</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net_GR</span>, k <span class="op">=</span> <span class="fl">2</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Achiever"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">Post</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Sequence Clustering Summary</span></span>
 <span><span class="co">#&gt;   Method:        pam </span></span>
@@ -612,7 +616,7 @@ achievers.</p>
 <span><span class="co">#&gt;  1        982 504 (51%)          478 (49%)        </span></span>
 <span><span class="co">#&gt;  2       1018 496 (49%)          522 (51%)        </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Predictors of Membership (estimator = firth, reference: Cluster 1):</span></span>
+<span><span class="co">#&gt; Predictors of Membership (estimator = multinom, reference: Cluster 1):</span></span>
 <span><span class="co">#&gt;  Cluster Variable    OR   95% CI       p     Sig</span></span>
 <span><span class="co">#&gt;  2       AchieverLow 1.11 [0.93, 1.32] 0.245    </span></span>
 <span><span class="co">#&gt; </span></span>

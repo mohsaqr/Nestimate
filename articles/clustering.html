@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -620,7 +620,9 @@ explains each sequence’s transitions.</p>
 <p>Combines <code><a href="../reference/build_clusters.html">build_clusters()</a></code> + <code><a href="../reference/build_network.html">build_network()</a></code>
 into one call.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">grp_dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_network.html">cluster_network</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>, cluster_by <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co">## `cograph::cluster_network()` also exists with a different signature</span></span>
+<span><span class="co">## (matrix aggregation); qualify with `Nestimate::` to avoid masking.</span></span>
+<span><span class="va">grp_dist</span> <span class="op">&lt;-</span> <span class="fu">Nestimate</span><span class="fu">::</span><span class="fu"><a href="../reference/cluster_network.html">cluster_network</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>, cluster_by <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
 <span><span class="va">grp_dist</span></span>
 <span><span class="co">#&gt; Group Networks (2 clusters via ward.D2 / hamming)</span></span>
 <span><span class="co">#&gt; </span></span>

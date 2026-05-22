@@ -551,7 +551,9 @@ into one call.
 
 ``` r
 
-grp_dist <- cluster_network(net, k = 2, cluster_by = "ward.D2")
+## `cograph::cluster_network()` also exists with a different signature
+## (matrix aggregation); qualify with `Nestimate::` to avoid masking.
+grp_dist <- Nestimate::cluster_network(net, k = 2, cluster_by = "ward.D2")
 grp_dist
 #> Group Networks (2 clusters via ward.D2 / hamming)
 #> 
