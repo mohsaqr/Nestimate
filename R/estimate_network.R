@@ -171,8 +171,10 @@ build_glasso <- function(data, ...) {
 #' @seealso \code{\link{build_network}}
 #' @examples
 #' \donttest{
-#' bin_data <- data.frame(matrix(rbinom(200, 1, 0.5), ncol = 5))
-#' net <- build_ising(bin_data)
+#' if (requireNamespace("glmnet", quietly = TRUE)) {
+#'   bin_data <- data.frame(matrix(rbinom(200, 1, 0.5), ncol = 5))
+#'   net <- build_ising(bin_data)
+#' }
 #' }
 #' @export
 build_ising <- function(data, ...) {

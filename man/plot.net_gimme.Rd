@@ -28,6 +28,7 @@ The input object, invisibly.
 Plot Method for net_gimme
 }
 \examples{
+\dontshow{if (requireNamespace("lavaan", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 set.seed(1)
 panel <- data.frame(
@@ -38,5 +39,5 @@ panel <- data.frame(
 gm <- build_gimme(panel, vars = c("A","B","C"), id = "id", time = "t")
 plot(gm, type = "temporal")
 }
-
+\dontshow{\}) # examplesIf}
 }

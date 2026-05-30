@@ -114,6 +114,7 @@ Uses \code{lavaan} for SEM estimation and modification indices.
 Accepts a single data frame with an ID column (not CSV directories).
 }
 \examples{
+\dontshow{if (requireNamespace("lavaan", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 # Create simple panel data (3 subjects, 4 variables, 50 time points).
 set.seed(42)
@@ -126,7 +127,7 @@ panel <- do.call(rbind, rows)
 res <- build_gimme(panel, vars = vars, id = "id")
 print(res)
 }
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link{build_network}}

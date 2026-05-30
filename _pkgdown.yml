@@ -43,6 +43,8 @@ reference:
       - bipartite_groups
       - clique_expansion
       - hypergraph_centrality
+      - build_hypergraph
+      - hypergraph_measures
 
   - title: Markov Analysis
     desc: Order, structure, entropy, and stability of Markov chains
@@ -64,17 +66,20 @@ reference:
       - compare_model
       - compare_model.netobject_group
       - rename_models
+      - magnitude_difference
 
   - title: Reliability & Stability
     desc: Assess reliability and stability of network estimates
     contents:
       - network_reliability
+      - casedrop_reliability
       - centrality_stability
 
   - title: Clustering & Grouping
     desc: Cluster-based and multilevel network analysis
     contents:
       - build_clusters
+      - cluster_data
       - cluster_choice
       - cluster_diagnostics
       - cluster_summary

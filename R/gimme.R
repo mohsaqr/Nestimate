@@ -73,7 +73,7 @@
 #'   \item{\code{config}}{List of configuration parameters.}
 #' }
 #'
-#' @examples
+#' @examplesIf requireNamespace("lavaan", quietly = TRUE)
 #' \donttest{
 #' # Create simple panel data (3 subjects, 4 variables, 50 time points).
 #' set.seed(42)
@@ -981,7 +981,7 @@ build_gimme <- function(data,
 #'
 #' @return The input object, invisibly.
 #'
-#' @examples
+#' @examplesIf requireNamespace("lavaan", quietly = TRUE)
 #' \donttest{
 #' set.seed(1)
 #' panel <- data.frame(
@@ -1029,7 +1029,7 @@ print.net_gimme <- function(x, ...) {
 #'
 #' @return The input object, invisibly.
 #'
-#' @examples
+#' @examplesIf requireNamespace("lavaan", quietly = TRUE)
 #' \donttest{
 #' set.seed(1)
 #' panel <- data.frame(
@@ -1094,7 +1094,7 @@ summary.net_gimme <- function(object, ...) {
 #'
 #' @return The input object, invisibly.
 #'
-#' @examples
+#' @examplesIf requireNamespace("lavaan", quietly = TRUE)
 #' \donttest{
 #' set.seed(1)
 #' panel <- data.frame(

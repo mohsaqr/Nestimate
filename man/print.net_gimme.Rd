@@ -18,6 +18,7 @@ The input object, invisibly.
 Print Method for net_gimme
 }
 \examples{
+\dontshow{if (requireNamespace("lavaan", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 set.seed(1)
 panel <- data.frame(
@@ -28,5 +29,5 @@ panel <- data.frame(
 gm <- build_gimme(panel, vars = c("A","B","C"), id = "id", time = "t")
 print(gm)
 }
-
+\dontshow{\}) # examplesIf}
 }

@@ -1,3 +1,29 @@
+# Nestimate 0.6.0
+
+## New features
+
+* `magnitude_difference()` compares the frequency (FTNA) and probability
+  (TNA) views of a transition network and quantifies the per-edge
+  discrepancy on a common scale, with five metrics, four scalings, and two
+  polar `plot()` portraits (stacked and circular).
+* Full persistent homology with a Vietoris-Rips filtration
+  (`persistent_homology()`, `build_simplicial(type = "vr")`) plus diagram
+  tools `bottleneck_distance()` and `persistence_landscape()`.
+* Network comparison: `compare_model()` (with `netobject_group` dispatch),
+  `summary.netobject()`, `plot.net_comparison()`, and `rename_models()` for
+  relabelling grouped network objects.
+
+## Documentation
+
+* The pkgdown reference index now lists every exported function;
+  `magnitude_difference()`, `casedrop_reliability()`, `build_hypergraph()`,
+  `hypergraph_measures()`, and `cluster_data()` were previously absent.
+
+## Packaging
+
+* Removed the `Remotes:` field; `cograph` and `tna` are available from CRAN,
+  so no non-CRAN source pin is needed.
+
 # Nestimate 0.5.1
 
 ## Audit follow-up (clustering + MCML)

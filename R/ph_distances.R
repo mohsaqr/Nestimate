@@ -375,10 +375,15 @@ print.persistence_landscape <- function(x, ...) {
 #' @export
 plot.persistence_landscape <- function(x, ...) {
   df <- x$landscape
-  df$k <- factor(df$k, levels = seq_len(x$k_max),
-                 labels = paste0("\u03bb", seq_len(x$k_max)))
+  df$k <- factor(df$k, levels = seq_len(x$k_max))
+  # Render legend labels via plotmath (lambda[k]) rather than a literal
+  # Unicode "lambda" string: the latter is drawn by the graphics device font
+  # and fails to transcode in non-UTF-8 check locales ("conversion failure
+  # ... in 'mbcsToSbcs'"). plotmath uses R's symbol-font tables instead.
+  lambda_labels <- parse(text = paste0("lambda[", seq_len(x$k_max), "]"))
   ggplot2::ggplot(df, ggplot2::aes(x = t, y = value, color = k)) +
     ggplot2::geom_line(linewidth = 0.9) +
+    ggplot2::scale_color_discrete(labels = lambda_labels) +
     ggplot2::labs(
       title = sprintf("Persistence Landscape (dimension %d)", x$dimension),
       subtitle = sprintf("Bubenik 2015; top %d landscape functions", x$k_max),
