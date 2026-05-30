@@ -204,9 +204,12 @@ print.magnitude_difference <- function(x, ...) {
 
 # --- diverging palette for the circular (chord) plot ----------------------
 # Okabe-Ito blue <-> vermillion, with light/dark anchors.
-.magdiff_blue_dark   <- "#003D63"; .magdiff_blue        <- "#0072B2"
-.magdiff_blue_pale   <- "#B4D5EC"; .magdiff_orange      <- "#D55E00"
-.magdiff_orange_dark <- "#9C3A00"; .magdiff_orange_pale <- "#FAD7B4"
+.magdiff_blue_dark   <- "#003D63"
+.magdiff_blue        <- "#0072B2"
+.magdiff_blue_pale   <- "#B4D5EC"
+.magdiff_orange      <- "#D55E00"
+.magdiff_orange_dark <- "#9C3A00"
+.magdiff_orange_pale <- "#FAD7B4"
 
 .magdiff_circular <- function(ed, value_col = "signed", abs_col = "value",
                               title = NULL,

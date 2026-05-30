@@ -47,11 +47,7 @@ Suggests:
     ggfittext,
     knitr,
     rmarkdown,
-    pkgdown,
-    quarto,
-    tna,
-    reticulate,
-    jsonlite
+    tna
 Config/testthat/edition: 3
 Depends:
     R (>= 4.1.0)
