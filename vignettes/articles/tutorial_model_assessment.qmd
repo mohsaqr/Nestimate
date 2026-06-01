@@ -21,11 +21,6 @@ execute:
   message: false
 ---
 
-
-# Tutorial: Model assessment for transition networks
-
-### Split-half reliability, case-dropping stability, and Markov-order adequacy
-
 ```{r}
 library(Nestimate)
 ```
@@ -34,9 +29,9 @@ library(Nestimate)
 
 A fitted transition network summarises a lot of sequence data into a small matrix of edge weights. Before interpreting any result drawn from that matrix — a centrality ranking, a pathway, a difference between two groups — you need to know how much of the matrix is signal and how much is an artefact of this particular sample. Four complementary analyses answer that question from different angles.
 
-- **Split-half reliability.** If I randomly split my cases into two halves and estimate the network on each half, do the two networks agree? This is the classical internal-consistency check (Epskamp, Borsboom & Fried, 2018).
+- **Split-half reliability.** If I randomly split my cases into two halves and estimate the network on each half, do the two networks agree? This is the classical internal-consistency check (Epskampet al., 2018).
 - **Edge-weight case-dropping stability.** If I drop a fraction of my cases and re-estimate the network, do the same edges keep roughly the same weights? This asks whether the *map* of connections is stable.
-- **Centrality case-dropping stability.** Same case-dropping procedure, but now we ask whether the *ranking* of nodes by centrality is preserved. The formal summary is the CS-coefficient (Epskamp, Borsboom & Fried, 2018).
+- **Centrality case-dropping stability.** Same case-dropping procedure, but now we ask whether the *ranking* of nodes by centrality is preserved. The formal summary is the CS-coefficient (Epskampet et al., 2018).
 - **Markov-order adequacy.** The transition network assumes that the next state depends only on the current state. Does the data actually respect that assumption, or is history beyond one step carrying information?
 
 Each of the four functions below answers one question. Run them together when you need all four answers; run just the relevant one when you only need one. None of them replaces the others.
@@ -45,7 +40,7 @@ Each of the four functions below answers one question. Run them together when yo
 
 ## The data
 
-`ai_long` contains coded actions from AI-side turns in a human–AI vibe-coding study. Each row is one action, tagged with the session it belongs to and a timestamp.
+`ai_long` is a bundled example dataset in `Nestimate` containing **8,551 coded actions from AI-side turns** across a human–AI vibe-coding study. Each row represents a single action, tagged with `session_id` and `timestamp`, and `code` indicates one of 8 actions (`Delegate`, `Plan`, `Execute`, `Investigate`, `Repair`, `Ask`, `Explain`, `Report`).
 
 ```{r}
 data(ai_long)
@@ -56,8 +51,7 @@ head(ai_long, 3)
 ```{r}
 table(ai_long$code)
 ```
-
-Eight codes, 8,551 actions, spread over several hundred sessions. The most common actions are `Execute` and `Investigate`; `Ask` and `Report` are rare. That imbalance is one reason we want stability checks — rare codes produce unreliable edges because there are few observations of them.
+The most common actions are `Execute` and `Investigate`; `Ask` and `Report` are rare. That imbalance is one reason we want stability checks — rare codes produce unreliable edges because there are few observations of them.
 
 ------------------------------------------------------------------------
 
@@ -116,7 +110,7 @@ edge_stab
 
 The printed summary reports the **CS-coefficient** — the largest drop proportion at which the correlation with the original network stays above 0.7 in at least 95% of iterations. A CS-coefficient of 0.75 means we can drop up to three-quarters of sessions and still recover essentially the same edge map; a CS-coefficient of 0.1 means dropping even 10% of sessions changes the edge map materially. Epskamp, Borsboom and Fried (2018) recommend interpreting CS \> 0.5 as “very stable”, 0.25–0.5 as “moderate”, and below 0.25 as “do not interpret”.
 
-The `$summary` data frame gives the mean correlation at each drop proportion, which is useful for seeing *where* the stability breaks down rather than just the single summary.
+The `edge_stab$summary` data frame gives the mean correlation at each drop proportion, which is useful for seeing *where* the stability breaks down rather than just the single summary.
 
 ```{r}
 edge_stab$summary
@@ -220,7 +214,7 @@ When reporting a transition-network analysis in a paper, all four numbers (optim
 
 ## References
 
-Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. *Behavior Research Methods*, 50(1), 195–212.
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. *Behavior Research Methods*, *50*(1), 195–212.
 
 Saqr, M. (2026). Human–AI vibe coding interaction study. <https://saqr.me/blog/2026/human-ai-interaction-cograph/>
 
