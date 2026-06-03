@@ -13,6 +13,7 @@ cluster_mmm(
   smooth = 0.01,
   seed = NULL,
   covariates = NULL,
+  covariate_effect = c("em", "posthoc"),
   estimator = c("auto", "firth", "multinom", "chisq"),
   cluster_by = "mmm",
   ...
@@ -47,14 +48,26 @@ character vector, formula, or data.frame (same forms as
 \code{build_mmm(net, k = 3, covariates = "session_label")}.
 Unlike the post-hoc analysis in \code{build_clusters()}, these
 covariates directly influence cluster membership during EM
-estimation.}
+estimation (see \code{covariate_effect}).}
+
+\item{covariate_effect}{How \code{covariates} enter the model.
+\code{"em"} (default) folds them into the EM as covariate-dependent
+mixing proportions, so they shape the cluster fit itself (and rows
+with missing covariates are dropped before fitting). \code{"posthoc"}
+fits a plain mixture on every sequence and uses the covariates only
+for the after-fit multinomial logit, so covariate values --- and
+their missingness --- never change which clusters are found. Ignored
+when \code{covariates} is \code{NULL}.}
 
 \item{estimator}{Multinomial fitter for the post-hoc covariate
-analysis (does not affect EM): \code{"firth"} (default, via
-\code{brglm2::brmultinom}; finite under separation),
-\code{"multinom"} (\code{nnet::multinom}; warns about separation
-risk), or \code{"chisq"} (descriptive tests, no logit). See
-\code{\link{build_clusters}} for full details.}
+analysis (does not affect EM): \code{"auto"} (default) inspects the
+cluster x covariate cross-tab and falls back to \code{"firth"} only
+when any cell has fewer than 5 observations (separation risk),
+otherwise the much faster \code{"multinom"}; \code{"firth"} forces
+Firth's penalised likelihood via \code{brglm2::brmultinom} (finite
+under separation); \code{"multinom"} forces \code{nnet::multinom}
+(warns about separation risk); \code{"chisq"} runs descriptive
+tests (no logit). See \code{\link{build_clusters}} for full details.}
 
 \item{cluster_by}{Character. Accepted only as \code{"mmm"} (the
 default). Present so \code{cluster_mmm()} and \code{cluster_network()}

@@ -1552,6 +1552,52 @@ test_that("transition estimators support begin/end states and concat", {
   expect_equal(concat$weights["C", "A"], 0.5)
 })
 
+test_that("start/end are the public surface for begin_state/end_state", {
+  seqs <- data.frame(
+    V1 = c("A", "A", "B"),
+    V2 = c("B", "C", "C"),
+    V3 = c("C", "C", NA)
+  )
+  # start=TRUE / end=TRUE use default labels
+  d1 <- build_network(seqs, method = "relative", start = TRUE, end = TRUE)
+  expect_true(all(c("Start", "End") %in% rownames(d1$weights)))
+  expect_equal(d1$initial[["Start"]], 1)
+  # Start is a pure source (no incoming), End a pure sink (no outgoing/self-loop)
+  expect_equal(unname(colSums(d1$weights)["Start"]), 0)
+  expect_equal(unname(rowSums(d1$weights)["End"]), 0)
+
+  # string labels, and equivalence to the low-level begin_state/end_state path
+  pub <- build_network(seqs, method = "relative", start = "BEGIN", end = "END")
+  low <- build_network(seqs, method = "relative",
+                       begin_state = "BEGIN", end_state = "END")
+  expect_equal(pub$weights, low$weights)
+
+  # FALSE adds nothing
+  none <- build_network(seqs, method = "relative", start = FALSE, end = FALSE)
+  expect_false(any(c("Start", "End") %in% rownames(none$weights)))
+})
+
+test_that("start/end error on non-transition methods and bad values", {
+  num <- data.frame(a = rnorm(20), b = rnorm(20), c = rnorm(20))
+  expect_error(build_network(num, method = "cor", start = TRUE),
+               "only supported for the transition methods")
+  expect_error(build_network(num, method = "glasso", end = "X"),
+               "only supported for the transition methods")
+  seqs <- data.frame(V1 = c("A", "B"), V2 = c("B", "C"))
+  expect_error(build_network(seqs, method = "relative", start = 1:3),
+               "single non-empty string")
+})
+
+test_that("build_tna/ftna/atna/cna surface start/end", {
+  seqs <- data.frame(V1 = c("A", "A", "B"), V2 = c("B", "C", "C"),
+                     V3 = c("C", "C", NA))
+  for (f in list(build_tna, build_ftna, build_atna, build_cna)) {
+    net <- f(seqs, start = "S", end = "E")
+    expect_true(all(c("S", "E") %in% rownames(net$weights)),
+                info = "wrapper should forward start/end")
+  }
+})
+
 test_that("transition matrix input matches tna-style handling", {
   m <- matrix(c(1, 2, 3, 4), 2, 2,
               dimnames = list(c("A", "B"), c("A", "B")))

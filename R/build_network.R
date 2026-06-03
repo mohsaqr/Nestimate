@@ -29,12 +29,28 @@
 #'   composability feature: downstream functions like bootstrap or grid search
 #'   can store and replay the full params list without knowing method internals.
 #'   Transition estimators accept tna-style sequence options such as
-#'   \code{weighted}, \code{begin_state}, \code{end_state}, and \code{concat}.
+#'   \code{weighted} and \code{concat} (and the low-level \code{begin_state}
+#'   / \code{end_state}, of which \code{start} / \code{end} are the public
+#'   form -- see those arguments).
 #'   Column-like entries in \code{params} (\code{action}, \code{id},
 #'   \code{id_col}, \code{time}, \code{session}, \code{order}, \code{codes},
 #'   and \code{group}) are resolved before format detection and must name
 #'   existing columns. If the same column role is supplied both directly and
 #'   through \code{params}, the names must agree.
+#' @param start Boundary marker prepended to every sequence as an explicit
+#'   start state (a pure source: no incoming edges, every sequence's first
+#'   transition is \code{start -> first_observed}). \code{FALSE} (default)
+#'   adds nothing; \code{TRUE} uses the label \code{"Start"}; a single string
+#'   uses that string as the label. Only valid for the transition methods
+#'   (\code{relative}, \code{frequency}, \code{co_occurrence},
+#'   \code{attention}); errors otherwise.
+#' @param end Boundary marker placed in the single cell after each sequence's
+#'   last observed (non-\code{NA}) state, as an explicit terminal state (a
+#'   pure sink: no outgoing edges, no self-loop -- distinct from
+#'   \code{\link{mark_terminal_state}}, which fills all trailing NAs into an
+#'   absorbing state). \code{FALSE} (default) adds nothing; \code{TRUE} uses
+#'   the label \code{"End"}; a single string uses that string as the label.
+#'   Same method restriction as \code{start}.
 #' @param labels Optional name -> label remap applied after construction.
 #'   Accepts a 2-column data.frame \code{(name, label)}, a named character
 #'   vector \code{c(name = "label")}, or a named list. Rewrites
@@ -188,6 +204,8 @@ build_network <- function(data,
                           predictability = TRUE,
                           state_cols = NULL,
                           metadata_cols = NULL,
+                          start = FALSE,
+                          end = FALSE,
                           params = list(),
                           labels = NULL,
                           ...) {
@@ -346,6 +364,33 @@ build_network <- function(data,
 
   # Resolve method aliases early (needed for format detection)
   method <- .resolve_method_alias(method)
+
+  # ---- start/end boundary markers ----
+  # Public surface for the internal begin_state/end_state transition options.
+  # TRUE inserts a default-labelled marker; a single string uses that label;
+  # FALSE/NULL inserts nothing. `start` prepends one token to every sequence
+  # (a pure source); `end` places one token right after each sequence's last
+  # observed state (a pure sink). Only the transition estimators honour these,
+  # so anything else errors loudly rather than silently ignoring the request.
+  .resolve_boundary <- function(x, default_label, arg) {
+    if (is.null(x) || isFALSE(x)) return(NULL)
+    if (isTRUE(x)) return(default_label)
+    if (is.character(x) && length(x) == 1L && !is.na(x) && nzchar(x)) return(x)
+    stop("`", arg, "` must be TRUE/FALSE or a single non-empty string label.",
+         call. = FALSE)
+  }
+  begin_label <- .resolve_boundary(start, "Start", "start")
+  end_label   <- .resolve_boundary(end,   "End",   "end")
+  if (!is.null(begin_label) || !is.null(end_label)) {
+    boundary_methods <- c("relative", "frequency", "co_occurrence", "attention")
+    if (!method %in% boundary_methods) {
+      stop("`start`/`end` boundary markers are only supported for the ",
+           "transition methods (", paste(boundary_methods, collapse = ", "),
+           "); got method = \"", method, "\".", call. = FALSE)
+    }
+    if (!is.null(begin_label)) params$begin_state <- begin_label
+    if (!is.null(end_label))   params$end_state   <- end_label
+  }
 
   if (is.data.frame(data)) {
     canonical <- .canonicalize_build_network_params(

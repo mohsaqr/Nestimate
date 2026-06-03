@@ -27,7 +27,9 @@ function (e.g. \code{list(gamma = 0.5)} for glasso, or
 composability feature: downstream functions like bootstrap or grid search
 can store and replay the full params list without knowing method internals.
 Transition estimators accept tna-style sequence options such as
-\code{weighted}, \code{begin_state}, \code{end_state}, and \code{concat}.
+\code{weighted} and \code{concat} (and the low-level \code{begin_state}
+/ \code{end_state}, of which \code{start} / \code{end} are the public
+form -- see those arguments).
 Column-like entries in \code{params} (\code{action}, \code{id},
 \code{id_col}, \code{time}, \code{session}, \code{order}, \code{codes},
 and \code{group}) are resolved before format detection and must name

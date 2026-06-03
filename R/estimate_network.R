@@ -53,8 +53,8 @@ estimate_network <- function(data,
 #' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 #' net <- build_tna(seqs)
 #' @export
-build_tna <- function(data, ...) {
-  build_network(data, method = "relative", ...)
+build_tna <- function(data, start = FALSE, end = FALSE, ...) {
+  build_network(data, method = "relative", start = start, end = end, ...)
 }
 
 #' Build a Frequency Transition Network (FTNA)
@@ -70,8 +70,8 @@ build_tna <- function(data, ...) {
 #' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 #' net <- build_ftna(seqs)
 #' @export
-build_ftna <- function(data, ...) {
-  build_network(data, method = "frequency", ...)
+build_ftna <- function(data, start = FALSE, end = FALSE, ...) {
+  build_network(data, method = "frequency", start = start, end = end, ...)
 }
 
 #' Build an Attention-Weighted Transition Network (ATNA)
@@ -87,8 +87,8 @@ build_ftna <- function(data, ...) {
 #' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 #' net <- build_atna(seqs)
 #' @export
-build_atna <- function(data, ...) {
-  build_network(data, method = "attention", ...)
+build_atna <- function(data, start = FALSE, end = FALSE, ...) {
+  build_network(data, method = "attention", start = start, end = end, ...)
 }
 
 #' Build a Co-occurrence Network (CNA)
@@ -105,8 +105,8 @@ build_atna <- function(data, ...) {
 #' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 #' net <- build_cna(seqs)
 #' @export
-build_cna <- function(data, ...) {
-  build_network(data, method = "co_occurrence", ...)
+build_cna <- function(data, start = FALSE, end = FALSE, ...) {
+  build_network(data, method = "co_occurrence", start = start, end = end, ...)
 }
 
 #' Build a Correlation Network

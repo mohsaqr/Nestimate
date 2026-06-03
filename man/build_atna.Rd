@@ -4,11 +4,27 @@
 \alias{build_atna}
 \title{Build an Attention-Weighted Transition Network (ATNA)}
 \usage{
-build_atna(data, ...)
+build_atna(data, start = FALSE, end = FALSE, ...)
 }
 \arguments{
 \item{data}{Data frame (sequences or per-observation frequencies) or a
 square symmetric matrix (correlation or covariance).}
+
+\item{start}{Boundary marker prepended to every sequence as an explicit
+start state (a pure source: no incoming edges, every sequence's first
+transition is \code{start -> first_observed}). \code{FALSE} (default)
+adds nothing; \code{TRUE} uses the label \code{"Start"}; a single string
+uses that string as the label. Only valid for the transition methods
+(\code{relative}, \code{frequency}, \code{co_occurrence},
+\code{attention}); errors otherwise.}
+
+\item{end}{Boundary marker placed in the single cell after each sequence's
+last observed (non-\code{NA}) state, as an explicit terminal state (a
+pure sink: no outgoing edges, no self-loop -- distinct from
+\code{\link{mark_terminal_state}}, which fills all trailing NAs into an
+absorbing state). \code{FALSE} (default) adds nothing; \code{TRUE} uses
+the label \code{"End"}; a single string uses that string as the label.
+Same method restriction as \code{start}.}
 
 \item{...}{Additional arguments passed to \code{\link{build_network}}.}
 }

@@ -24,6 +24,8 @@ build_network(
   predictability = TRUE,
   state_cols = NULL,
   metadata_cols = NULL,
+  start = FALSE,
+  end = FALSE,
   params = list(),
   labels = NULL,
   ...
@@ -114,13 +116,31 @@ columns to force into the \code{$metadata} slot. The remaining columns
 are auto-detected as state via the values-in-nodes rule. Cannot overlap
 with \code{state_cols}. Default: \code{NULL}.}
 
+\item{start}{Boundary marker prepended to every sequence as an explicit
+start state (a pure source: no incoming edges, every sequence's first
+transition is \code{start -> first_observed}). \code{FALSE} (default)
+adds nothing; \code{TRUE} uses the label \code{"Start"}; a single string
+uses that string as the label. Only valid for the transition methods
+(\code{relative}, \code{frequency}, \code{co_occurrence},
+\code{attention}); errors otherwise.}
+
+\item{end}{Boundary marker placed in the single cell after each sequence's
+last observed (non-\code{NA}) state, as an explicit terminal state (a
+pure sink: no outgoing edges, no self-loop -- distinct from
+\code{\link{mark_terminal_state}}, which fills all trailing NAs into an
+absorbing state). \code{FALSE} (default) adds nothing; \code{TRUE} uses
+the label \code{"End"}; a single string uses that string as the label.
+Same method restriction as \code{start}.}
+
 \item{params}{Named list. Method-specific parameters passed to the estimator
 function (e.g. \code{list(gamma = 0.5)} for glasso, or
 \code{list(format = "wide")} for transition methods). This is the key
 composability feature: downstream functions like bootstrap or grid search
 can store and replay the full params list without knowing method internals.
 Transition estimators accept tna-style sequence options such as
-\code{weighted}, \code{begin_state}, \code{end_state}, and \code{concat}.
+\code{weighted} and \code{concat} (and the low-level \code{begin_state}
+/ \code{end_state}, of which \code{start} / \code{end} are the public
+form -- see those arguments).
 Column-like entries in \code{params} (\code{action}, \code{id},
 \code{id_col}, \code{time}, \code{session}, \code{order}, \code{codes},
 and \code{group}) are resolved before format detection and must name

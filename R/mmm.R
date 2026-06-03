@@ -394,13 +394,24 @@
 #'   \code{build_mmm(net, k = 3, covariates = "session_label")}.
 #'   Unlike the post-hoc analysis in \code{build_clusters()}, these
 #'   covariates directly influence cluster membership during EM
-#'   estimation.
+#'   estimation (see \code{covariate_effect}).
+#' @param covariate_effect How \code{covariates} enter the model.
+#'   \code{"em"} (default) folds them into the EM as covariate-dependent
+#'   mixing proportions, so they shape the cluster fit itself (and rows
+#'   with missing covariates are dropped before fitting). \code{"posthoc"}
+#'   fits a plain mixture on every sequence and uses the covariates only
+#'   for the after-fit multinomial logit, so covariate values --- and
+#'   their missingness --- never change which clusters are found. Ignored
+#'   when \code{covariates} is \code{NULL}.
 #' @param estimator Multinomial fitter for the post-hoc covariate
-#'   analysis (does not affect EM): \code{"firth"} (default, via
-#'   \code{brglm2::brmultinom}; finite under separation),
-#'   \code{"multinom"} (\code{nnet::multinom}; warns about separation
-#'   risk), or \code{"chisq"} (descriptive tests, no logit). See
-#'   \code{\link{build_clusters}} for full details.
+#'   analysis (does not affect EM): \code{"auto"} (default) inspects the
+#'   cluster x covariate cross-tab and falls back to \code{"firth"} only
+#'   when any cell has fewer than 5 observations (separation risk),
+#'   otherwise the much faster \code{"multinom"}; \code{"firth"} forces
+#'   Firth's penalised likelihood via \code{brglm2::brmultinom} (finite
+#'   under separation); \code{"multinom"} forces \code{nnet::multinom}
+#'   (warns about separation risk); \code{"chisq"} runs descriptive
+#'   tests (no logit). See \code{\link{build_clusters}} for full details.
 #'
 #' @return An object of class \code{net_mmm} with components:
 #'   \describe{
@@ -463,9 +474,11 @@ build_mmm <- function(data,
                       smooth = 0.01,
                       seed = NULL,
                       covariates = NULL,
+                      covariate_effect = c("em", "posthoc"),
                       estimator = c("auto", "firth", "multinom", "chisq")) {
 
   estimator <- match.arg(estimator)
+  covariate_effect <- match.arg(covariate_effect)
   stopifnot(
     "'k' must be a single numeric value" = is.numeric(k) && length(k) == 1L,
     "'n_starts' must be a single numeric value" =
@@ -569,8 +582,12 @@ build_mmm <- function(data,
   first_col <- as.character(raw_data[[state_cols[1L]]])
   init_state <- match(first_col, states)
 
-  # Handle covariate NAs: subset counts, init_state, cov_df
-  if (!is.null(cov_df)) {
+  # Handle covariate NAs: subset counts, init_state, cov_df. Done only in
+  # "em" mode, so covariate missingness never changes which sequences get
+  # clustered when covariates are meant to be post-hoc only. In "posthoc"
+  # mode the after-fit logit (.run_covariate_analysis) does its own
+  # complete-case subsetting on the full data instead.
+  if (!is.null(cov_df) && covariate_effect == "em") {
     complete <- stats::complete.cases(cov_df)
     n_dropped <- sum(!complete)
     if (n_dropped > 0L) {
@@ -585,6 +602,11 @@ build_mmm <- function(data,
       N <- nrow(counts)
     }
   }
+
+  # em_cov_df is the covariate matrix the EM actually sees (covariate-
+  # dependent mixing); NULL in "posthoc" mode so the mixture is plain.
+  # cov_df remains the full set handed to the post-hoc covariate analysis.
+  em_cov_df <- if (covariate_effect == "em") cov_df else NULL
 
   stopifnot("Need more sequences than components" = N > k)
 
@@ -648,12 +670,12 @@ build_mmm <- function(data,
   for (idx in refine_idx) {
     if (is.null(screen_results[[idx]])) next
     # Always refine when covariates present (screen ran without them)
-    if (screen_results[[idx]]$converged && is.null(cov_df)) {
+    if (screen_results[[idx]]$converged && is.null(em_cov_df)) {
       run <- screen_results[[idx]]
     } else {
       run <- .mmm_em(counts, init_state, k, max_iter, tol, smooth, n_states,
                      init_posterior = screen_results[[idx]]$posterior,
-                     from_ind = from_ind, cov_df = cov_df)
+                     from_ind = from_ind, cov_df = em_cov_df)
     }
     if (run$ll > best$ll) best <- run
   }
@@ -663,7 +685,7 @@ build_mmm <- function(data,
   if (is.null(best$P_all)) {
     run <- .mmm_em(counts, init_state, k, max_iter, tol, smooth, n_states,
                    init_posterior = inits[[1L]], from_ind = from_ind,
-                   cov_df = cov_df)
+                   cov_df = em_cov_df)
     if (!is.null(run)) best <- run
   }
   if (is.null(best$P_all)) {
@@ -721,21 +743,23 @@ build_mmm <- function(data,
   # ---- Information criteria ----
   n_params <- k * n_states * (n_states - 1L) +
               k * (n_states - 1L) +
-              if (is.null(cov_df)) (k - 1L) else (k - 1L) * (ncol(cov_df) + 1L)
+              if (is.null(em_cov_df)) (k - 1L) else (k - 1L) * (ncol(em_cov_df) + 1L)
   BIC_val <- -2 * best$ll + n_params * log(N)
   AIC_val <- -2 * best$ll + 2 * n_params
   ICL_val <- BIC_val + 2 * quality$class_entropy
 
   # ---- Covariate output ----
   cov_result <- NULL
-  if (!is.null(cov_df) && !is.null(best$cov_beta)) {
-    # Run final nnet::multinom once for SEs and proper inference
+  if (!is.null(cov_df)) {
+    # Post-hoc multinomial logit for SEs / ORs. Runs in both modes: in
+    # "em" mode it describes the covariate-dependent mixing the EM fit; in
+    # "posthoc" mode it is the only place covariates enter at all.
     cov_result <- .run_covariate_analysis(
       assignments, cov_df, paste(names(cov_df), collapse = " + "), k,
       estimator = estimator
     )
-    # Store EM-estimated beta
-    cov_result$beta <- best$cov_beta
+    # Store EM-estimated mixing beta when the EM produced one (em mode only).
+    if (!is.null(best$cov_beta)) cov_result$beta <- best$cov_beta
   }
 
   structure(list(
@@ -1306,9 +1330,11 @@ plot.mmm_compare <- function(x, ...) {
 cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
                         tol = 1e-6, smooth = 0.01, seed = NULL,
                         covariates = NULL,
+                        covariate_effect = c("em", "posthoc"),
                         estimator = c("auto", "firth", "multinom", "chisq"),
                         cluster_by = "mmm", ...) {
   estimator <- match.arg(estimator)
+  covariate_effect <- match.arg(covariate_effect)
   dots <- list(...)
   if (length(dots) > 0L) {
     dot_names <- names(dots)
@@ -1329,6 +1355,7 @@ cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
   mmm <- build_mmm(data = data, k = k, n_starts = n_starts,
                    max_iter = max_iter, tol = tol, smooth = smooth,
                    seed = seed, covariates = covariates,
+                   covariate_effect = covariate_effect,
                    estimator = estimator)
 
   grp <- mmm$models

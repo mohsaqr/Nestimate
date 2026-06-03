@@ -481,6 +481,58 @@ test_that("param count increases with covariates", {
   expect_true(mmm_cov$n_params > mmm_plain$n_params)
 })
 
+test_that("covariate_effect='posthoc' leaves the clustering untouched", {
+  sim <- .make_mmm_cov_data(n = 80, seed = 11)
+  seq_only <- sim$data[, grep("^T", names(sim$data))]
+  plain <- build_mmm(seq_only, k = 2, n_starts = 5, seed = 11)
+  ph    <- build_mmm(sim$data, k = 2, n_starts = 5, seed = 11,
+                     covariates = "Age", covariate_effect = "posthoc")
+  # posthoc covariates must NOT change the fit vs a plain mixture
+  expect_identical(ph$assignments, plain$assignments)
+  expect_equal(ph$log_likelihood, plain$log_likelihood)
+  # plain mixing params (k-1), not (k-1)*(p+1)
+  expect_equal(ph$n_params, plain$n_params)
+  # but the post-hoc logit still ran
+  expect_true(is.data.frame(ph$covariates$coefficients))
+  # no EM mixing beta in posthoc mode
+  expect_null(ph$covariates$beta)
+})
+
+test_that("covariate_effect='em' (default) differs from posthoc on params", {
+  sim <- .make_mmm_cov_data(n = 80, seed = 11)
+  em <- build_mmm(sim$data, k = 2, n_starts = 5, seed = 11,
+                  covariates = "Age")  # default em
+  ph <- build_mmm(sim$data, k = 2, n_starts = 5, seed = 11,
+                  covariates = "Age", covariate_effect = "posthoc")
+  expect_equal(em$n_params, ph$n_params + 1L)  # extra (k-1)*p mixing params
+  expect_true(!is.null(em$covariates$beta))
+  expect_null(ph$covariates$beta)
+})
+
+test_that("covariate_effect is validated and inert without covariates", {
+  sim <- .make_mmm_cov_data(n = 60, seed = 3)
+  seq_only <- sim$data[, grep("^T", names(sim$data))]
+  expect_error(build_mmm(seq_only, k = 2, n_starts = 2,
+                         covariate_effect = "nonsense"))
+  # no covariates: both modes produce the identical fit
+  a <- build_mmm(seq_only, k = 2, n_starts = 3, seed = 5,
+                 covariate_effect = "em")
+  b <- build_mmm(seq_only, k = 2, n_starts = 3, seed = 5,
+                 covariate_effect = "posthoc")
+  expect_identical(a$assignments, b$assignments)
+  expect_null(a$covariates)
+  expect_null(b$covariates)
+})
+
+test_that("cluster_mmm forwards covariate_effect", {
+  sim <- .make_mmm_cov_data(n = 70, seed = 8)
+  grp <- cluster_mmm(sim$data, k = 2, n_starts = 4, seed = 8,
+                     covariates = "Age", covariate_effect = "posthoc")
+  expect_s3_class(grp, "netobject_group")
+  ci <- attr(grp, "clustering")
+  expect_true(is.data.frame(ci$covariates$coefficients))
+})
+
 test_that("print and summary show covariates", {
   sim <- .make_mmm_cov_data(n = 60)
   mmm <- build_mmm(sim$data, k = 2, n_starts = 3, seed = 42,
