@@ -1606,15 +1606,22 @@ test_that("transition matrix input matches tna-style handling", {
   expect_equal(net$weights["B", ], c(A = 1 / 3, B = 2 / 3))
 })
 
-test_that("transition scaling ranks and minmax scales the full matrix", {
+test_that("transition scaling ranks only non-zero edges (structural zeros preserved)", {
   seqs <- data.frame(
     V1 = c("A", "A", "B"),
     V2 = c("B", "C", "C"),
     V3 = c("C", "C", NA)
   )
+  # Raw frequency: A->B=1, A->C=1, B->C=2, C->C=1 (4 non-zero edges).
+  # Rank scaling preserves structural zeros and ranks ONLY the non-zero
+  # edges: rank(c(1,1,2,1), "average") = c(2,2,4,2). The unobserved A->A
+  # (a structural zero on the diagonal) must stay 0 — never ranked.
   ranked <- build_network(seqs, method = "frequency", scaling = "rank")
-  expect_equal(ranked$weights["A", "A"], 3)
-  expect_equal(ranked$weights["B", "C"], 9)
+  expect_equal(ranked$weights["A", "A"], 0)   # structural zero preserved
+  expect_equal(ranked$weights["B", "C"], 4)   # largest count -> top rank
+  expect_equal(ranked$weights["A", "B"], 2)   # tied minimum -> average rank
+  expect_equal(sum(ranked$weights == 0), sum(build_network(seqs,
+               method = "frequency")$weights == 0))  # zero pattern unchanged
 
   scaled <- build_network(seqs, method = "frequency", scaling = "minmax")
   expect_equal(scaled$weights["A", "A"], 0)
