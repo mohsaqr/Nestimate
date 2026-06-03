@@ -28,6 +28,8 @@ build_network(
   predictability = TRUE,
   state_cols = NULL,
   metadata_cols = NULL,
+  start = FALSE,
+  end = FALSE,
   params = list(),
   labels = NULL,
   ...
@@ -148,6 +150,25 @@ build_network(
   via the values-in-nodes rule. Cannot overlap with `state_cols`.
   Default: `NULL`.
 
+- start:
+
+  Boundary marker prepended to every sequence as an explicit start state
+  (a pure source: no incoming edges, every sequence's first transition
+  is `start -> first_observed`). `FALSE` (default) adds nothing; `TRUE`
+  uses the label `"Start"`; a single string uses that string as the
+  label. Only valid for the transition methods (`relative`, `frequency`,
+  `co_occurrence`, `attention`); errors otherwise.
+
+- end:
+
+  Boundary marker placed in the single cell after each sequence's last
+  observed (non-`NA`) state, as an explicit terminal state (a pure sink:
+  no outgoing edges, no self-loop – distinct from
+  [`mark_terminal_state`](https://saqr.me/Nestimate/reference/mark_terminal_state.md),
+  which fills all trailing NAs into an absorbing state). `FALSE`
+  (default) adds nothing; `TRUE` uses the label `"End"`; a single string
+  uses that string as the label. Same method restriction as `start`.
+
 - params:
 
   Named list. Method-specific parameters passed to the estimator
@@ -156,11 +177,13 @@ build_network(
   composability feature: downstream functions like bootstrap or grid
   search can store and replay the full params list without knowing
   method internals. Transition estimators accept tna-style sequence
-  options such as `weighted`, `begin_state`, `end_state`, and `concat`.
-  Column-like entries in `params` (`action`, `id`, `id_col`, `time`,
-  `session`, `order`, `codes`, and `group`) are resolved before format
-  detection and must name existing columns. If the same column role is
-  supplied both directly and through `params`, the names must agree.
+  options such as `weighted` and `concat` (and the low-level
+  `begin_state` / `end_state`, of which `start` / `end` are the public
+  form – see those arguments). Column-like entries in `params`
+  (`action`, `id`, `id_col`, `time`, `session`, `order`, `codes`, and
+  `group`) are resolved before format detection and must name existing
+  columns. If the same column role is supplied both directly and through
+  `params`, the names must agree.
 
 - labels:
 

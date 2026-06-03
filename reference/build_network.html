@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,6 +77,8 @@ estimator registry, so custom estimators can also be used.</p>
 <span>  predictability <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  state_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  metadata_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  start <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  end <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -209,6 +211,26 @@ are auto-detected as state via the values-in-nodes rule. Cannot overlap
 with <code>state_cols</code>. Default: <code>NULL</code>.</p></dd>
 
 
+<dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
+<dd><p>Boundary marker prepended to every sequence as an explicit
+start state (a pure source: no incoming edges, every sequence's first
+transition is <code>start -&gt; first_observed</code>). <code>FALSE</code> (default)
+adds nothing; <code>TRUE</code> uses the label <code>"Start"</code>; a single string
+uses that string as the label. Only valid for the transition methods
+(<code>relative</code>, <code>frequency</code>, <code>co_occurrence</code>,
+<code>attention</code>); errors otherwise.</p></dd>
+
+
+<dt id="arg-end">end<a class="anchor" aria-label="anchor" href="#arg-end"></a></dt>
+<dd><p>Boundary marker placed in the single cell after each sequence's
+last observed (non-<code>NA</code>) state, as an explicit terminal state (a
+pure sink: no outgoing edges, no self-loop – distinct from
+<code><a href="mark_terminal_state.html">mark_terminal_state</a></code>, which fills all trailing NAs into an
+absorbing state). <code>FALSE</code> (default) adds nothing; <code>TRUE</code> uses
+the label <code>"End"</code>; a single string uses that string as the label.
+Same method restriction as <code>start</code>.</p></dd>
+
+
 <dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
 <dd><p>Named list. Method-specific parameters passed to the estimator
 function (e.g. <code>list(gamma = 0.5)</code> for glasso, or
@@ -216,7 +238,9 @@ function (e.g. <code>list(gamma = 0.5)</code> for glasso, or
 composability feature: downstream functions like bootstrap or grid search
 can store and replay the full params list without knowing method internals.
 Transition estimators accept tna-style sequence options such as
-<code>weighted</code>, <code>begin_state</code>, <code>end_state</code>, and <code>concat</code>.
+<code>weighted</code> and <code>concat</code> (and the low-level <code>begin_state</code>
+/ <code>end_state</code>, of which <code>start</code> / <code>end</code> are the public
+form – see those arguments).
 Column-like entries in <code>params</code> (<code>action</code>, <code>id</code>,
 <code>id_col</code>, <code>time</code>, <code>session</code>, <code>order</code>, <code>codes</code>,
 and <code>group</code>) are resolved before format detection and must name

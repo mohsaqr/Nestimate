@@ -1,5 +1,48 @@
 # Changelog
 
+## Nestimate 0.6.0
+
+CRAN release: 2026-05-31
+
+### New features
+
+- [`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+  compares the frequency (FTNA) and probability (TNA) views of a
+  transition network and quantifies the per-edge discrepancy on a common
+  scale, with five metrics, four scalings, and two polar
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) portraits
+  (stacked and circular).
+- Full persistent homology with a Vietoris-Rips filtration
+  ([`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md),
+  `build_simplicial(type = "vr")`) plus diagram tools
+  [`bottleneck_distance()`](https://saqr.me/Nestimate/reference/bottleneck_distance.md)
+  and
+  [`persistence_landscape()`](https://saqr.me/Nestimate/reference/persistence_landscape.md).
+- Network comparison:
+  [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md)
+  (with `netobject_group` dispatch),
+  [`summary.netobject()`](https://saqr.me/Nestimate/reference/summary.netobject.md),
+  [`plot.net_comparison()`](https://saqr.me/Nestimate/reference/plot.net_comparison.md),
+  and
+  [`rename_models()`](https://saqr.me/Nestimate/reference/rename_models.md)
+  for relabelling grouped network objects.
+
+### Documentation
+
+- The pkgdown reference index now lists every exported function;
+  [`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md),
+  [`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.md),
+  [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md),
+  [`hypergraph_measures()`](https://saqr.me/Nestimate/reference/hypergraph_measures.md),
+  and
+  [`cluster_data()`](https://saqr.me/Nestimate/reference/cluster_data.md)
+  were previously absent.
+
+### Packaging
+
+- Removed the `Remotes:` field; `cograph` and `tna` are available from
+  CRAN, so no non-CRAN source pin is needed.
+
 ## Nestimate 0.5.1
 
 ### Audit follow-up (clustering + MCML)

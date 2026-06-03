@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,24 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="nestimate-060">Nestimate 0.6.0<a class="anchor" aria-label="anchor" href="#nestimate-060"></a></h2><p class="text-muted">CRAN release: 2026-05-31</p>
+<div class="section level3">
+<h3 id="new-features-0-6-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-6-0"></a></h3>
+<ul><li>
+<code><a href="../reference/magnitude_difference.html">magnitude_difference()</a></code> compares the frequency (FTNA) and probability (TNA) views of a transition network and quantifies the per-edge discrepancy on a common scale, with five metrics, four scalings, and two polar <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> portraits (stacked and circular).</li>
+<li>Full persistent homology with a Vietoris-Rips filtration (<code><a href="../reference/persistent_homology.html">persistent_homology()</a></code>, <code>build_simplicial(type = "vr")</code>) plus diagram tools <code><a href="../reference/bottleneck_distance.html">bottleneck_distance()</a></code> and <code><a href="../reference/persistence_landscape.html">persistence_landscape()</a></code>.</li>
+<li>Network comparison: <code><a href="../reference/compare_model.html">compare_model()</a></code> (with <code>netobject_group</code> dispatch), <code><a href="../reference/summary.netobject.html">summary.netobject()</a></code>, <code><a href="../reference/plot.net_comparison.html">plot.net_comparison()</a></code>, and <code><a href="../reference/rename_models.html">rename_models()</a></code> for relabelling grouped network objects.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-6-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-6-0"></a></h3>
+<ul><li>The pkgdown reference index now lists every exported function; <code><a href="../reference/magnitude_difference.html">magnitude_difference()</a></code>, <code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code>, <code><a href="../reference/build_hypergraph.html">build_hypergraph()</a></code>, <code><a href="../reference/hypergraph_measures.html">hypergraph_measures()</a></code>, and <code><a href="../reference/cluster_data.html">cluster_data()</a></code> were previously absent.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="packaging-0-6-0">Packaging<a class="anchor" aria-label="anchor" href="#packaging-0-6-0"></a></h3>
+<ul><li>Removed the <code>Remotes:</code> field; <code>cograph</code> and <code>tna</code> are available from CRAN, so no non-CRAN source pin is needed.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.1" id="nestimate-051">Nestimate 0.5.1<a class="anchor" aria-label="anchor" href="#nestimate-051"></a></h2>
 <div class="section level3">

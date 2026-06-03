@@ -65,6 +65,13 @@ Methods for capturing higher-order dependencies
   : Clique expansion of a hypergraph
 - [`hypergraph_centrality()`](https://saqr.me/Nestimate/reference/hypergraph_centrality.md)
   : Hypergraph eigenvector centralities
+- [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
+  [`print(`*`<net_hypergraph>`*`)`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
+  [`summary(`*`<net_hypergraph>`*`)`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
+  : Higher-order hypergraph from a network's clique structure
+- [`hypergraph_measures()`](https://saqr.me/Nestimate/reference/hypergraph_measures.md)
+  [`print(`*`<hypergraph_measures>`*`)`](https://saqr.me/Nestimate/reference/hypergraph_measures.md)
+  : Structural measures for a hypergraph
 
 ## Markov Analysis
 
@@ -113,12 +120,26 @@ Statistical inference for network estimation
 
   Rename the models of a `netobject_group`
 
+- [`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+  [`print(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+  [`plot(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+  : Magnitude difference between the frequency and probability views
+
 ## Reliability & Stability
 
 Assess reliability and stability of network estimates
 
 - [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md)
   : Split-Half Reliability for Network Estimates
+- [`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+  [`summary(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+  [`summary(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<summary.net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+  [`plot(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+  [`plot(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+  : Edge-weight Case-dropping Stability
 - [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
   : Centrality Stability Coefficient (CS-coefficient)
 
@@ -128,6 +149,8 @@ Cluster-based and multilevel network analysis
 
 - [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
   : Cluster Sequences by Dissimilarity
+- [`cluster_data()`](https://saqr.me/Nestimate/reference/cluster_data.md)
+  : Cluster sequence data (deprecated alias)
 - [`cluster_choice()`](https://saqr.me/Nestimate/reference/cluster_choice.md)
   : Cluster Choice – sweep k, dissimilarity and method
 - [`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
@@ -290,6 +313,11 @@ Print, summary, and plot methods for package classes
   [`print(`*`<hypergraph_measures>`*`)`](https://saqr.me/Nestimate/reference/hypergraph_measures.md)
   : Structural measures for a hypergraph
 
+- [`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+  [`print(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+  [`plot(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+  : Magnitude difference between the frequency and probability views
+
 - [`print(`*`<boot_glasso>`*`)`](https://saqr.me/Nestimate/reference/print.boot_glasso.md)
   : Print Method for boot_glasso
 
@@ -450,11 +478,17 @@ Print, summary, and plot methods for package classes
 
   Print method for `summary.chain_structure`.
 
+- [`print(`*`<tidy_covariates>`*`)`](https://saqr.me/Nestimate/reference/print.tidy_covariates.md)
+  : Print method for tidy covariate output
+
 - [`print(`*`<wtna_boot_mixed>`*`)`](https://saqr.me/Nestimate/reference/print.wtna_boot_mixed.md)
   : Print Method for wtna_boot_mixed
 
 - [`print(`*`<wtna_mixed>`*`)`](https://saqr.me/Nestimate/reference/print.wtna_mixed.md)
   : Print Method for wtna_mixed
+
+- [`print(`*`<wtna_perm_mixed>`*`)`](https://saqr.me/Nestimate/reference/print.wtna_perm_mixed.md)
+  : Print Method for wtna_perm_mixed
 
 - [`print(`*`<state_freq>`*`)`](https://saqr.me/Nestimate/reference/state_freq.md)
   [`plot(`*`<state_freq>`*`)`](https://saqr.me/Nestimate/reference/state_freq.md)
@@ -575,6 +609,9 @@ Print, summary, and plot methods for package classes
 
 - [`summary(`*`<wtna_boot_mixed>`*`)`](https://saqr.me/Nestimate/reference/summary.wtna_boot_mixed.md)
   : Summary Method for wtna_boot_mixed
+
+- [`summary(`*`<wtna_perm_mixed>`*`)`](https://saqr.me/Nestimate/reference/summary.wtna_perm_mixed.md)
+  : Summary Method for wtna_perm_mixed
 
 - [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
   [`plot(`*`<net_markov_stability>`*`)`](https://saqr.me/Nestimate/reference/markov_stability.md)

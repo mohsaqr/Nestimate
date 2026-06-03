@@ -87,6 +87,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/list_estimators.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/long-data.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/long_to_wide.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/magnitude_difference.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/mark_first_state.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/mark_terminal_state.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/markov_order_test.html</loc></url>
@@ -180,8 +181,10 @@
 <url><loc>https://saqr.me/Nestimate/reference/print.summary.net_path_dependence.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.summary.net_transition_entropy.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.summary_chain_structure.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.tidy_covariates.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.wtna_boot_mixed.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.wtna_mixed.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.wtna_perm_mixed.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/q_analysis.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/register_estimator.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/remove_estimator.html</loc></url>
@@ -230,6 +233,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/summary.netobject.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.netobject_group.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.wtna_boot_mixed.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/summary.wtna_perm_mixed.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/trajectories.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/transition_entropy.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/utils.html</loc></url>

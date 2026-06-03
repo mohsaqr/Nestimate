@@ -30,7 +30,7 @@ library(Nestimate)
 #> Attaching package: 'Nestimate'
 #> The following objects are masked from 'package:cograph':
 #> 
-#>     as_tna, build_mcml, cluster_network, cluster_summary
+#>     as_tna, build_mcml, cluster_summary
 data("human_long")
 head(human_long)
 #>   message_id   project   session_id  timestamp session_date      code

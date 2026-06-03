@@ -16,6 +16,7 @@ build_mmm(
   smooth = 0.01,
   seed = NULL,
   covariates = NULL,
+  covariate_effect = c("em", "posthoc"),
   estimator = c("auto", "firth", "multinom", "chisq")
 )
 ```
@@ -65,16 +66,29 @@ build_mmm(
   post-hoc analysis in
   [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md),
   these covariates directly influence cluster membership during EM
-  estimation.
+  estimation (see `covariate_effect`).
+
+- covariate_effect:
+
+  How `covariates` enter the model. `"em"` (default) folds them into the
+  EM as covariate-dependent mixing proportions, so they shape the
+  cluster fit itself (and rows with missing covariates are dropped
+  before fitting). `"posthoc"` fits a plain mixture on every sequence
+  and uses the covariates only for the after-fit multinomial logit, so
+  covariate values — and their missingness — never change which clusters
+  are found. Ignored when `covariates` is `NULL`.
 
 - estimator:
 
   Multinomial fitter for the post-hoc covariate analysis (does not
-  affect EM): `"firth"` (default, via
-  [`brglm2::brmultinom`](https://rdrr.io/pkg/brglm2/man/brmultinom.html);
-  finite under separation), `"multinom"`
-  ([`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html); warns
-  about separation risk), or `"chisq"` (descriptive tests, no logit).
+  affect EM): `"auto"` (default) inspects the cluster x covariate
+  cross-tab and falls back to `"firth"` only when any cell has fewer
+  than 5 observations (separation risk), otherwise the much faster
+  `"multinom"`; `"firth"` forces Firth's penalised likelihood via
+  [`brglm2::brmultinom`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
+  (finite under separation); `"multinom"` forces
+  [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html) (warns
+  about separation risk); `"chisq"` runs descriptive tests (no logit).
   See
   [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
   for full details.
