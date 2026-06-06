@@ -441,7 +441,9 @@ summary.net_sequence_comparison <- function(object, ...) {
 #'
 #' @param x A \code{net_sequence_comparison} object.
 #' @param top_n Integer. Show top N patterns. Default: 10.
-#' @param style Character. \code{"pyramid"} (default) or \code{"heatmap"}.
+#' @param style Character. \code{"auto"} (default) draws the back-to-back
+#'   pyramid for exactly 2 groups and the heatmap for any other number;
+#'   \code{"pyramid"} and \code{"heatmap"} force a specific style.
 #' @param sort Character. \code{"statistic"} (default) ranks patterns by test
 #'   statistic or residual magnitude. \code{"frequency"} ranks by total
 #'   occurrence count across all groups.
@@ -457,7 +459,7 @@ summary.net_sequence_comparison <- function(object, ...) {
 #' @import ggplot2
 #' @export
 plot.net_sequence_comparison <- function(x, top_n = 10L,
-                                          style = c("pyramid", "heatmap"),
+                                          style = c("auto", "pyramid", "heatmap"),
                                           sort = c("statistic", "frequency"),
                                           alpha = 0.05,
                                           show_residuals = FALSE, ...) {
@@ -469,6 +471,11 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
     message("No patterns to plot.")
     return(invisible(NULL))
   }
+
+  # Smart default: the back-to-back pyramid only makes sense for 2 groups,
+  # so anything else falls back to the heatmap automatically. An explicit
+  # style = "pyramid" on != 2 groups still errors in .sc_plot_pyramid().
+  if (style == "auto") style <- if (length(groups) == 2L) "pyramid" else "heatmap"
 
   resid_cols <- paste0("resid_", groups)
   freq_cols  <- paste0("freq_",  groups)

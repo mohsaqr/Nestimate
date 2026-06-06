@@ -26,6 +26,7 @@ mosaic_plot(x, ...)
   n_perm = 500L,
   seed = NULL,
   values = FALSE,
+  style = c("classic", "flat"),
   ...
 )
 
@@ -40,6 +41,7 @@ mosaic_plot(x, ...)
   n_perm = 500L,
   seed = NULL,
   values = FALSE,
+  style = c("classic", "flat"),
   ...
 )
 
@@ -56,6 +58,7 @@ mosaic_plot(x, ...)
   seed = NULL,
   ncol = 2L,
   values = FALSE,
+  style = c("classic", "flat"),
   ...
 )
 
@@ -71,6 +74,7 @@ mosaic_plot(x, ...)
   seed = NULL,
   ncol = 2L,
   values = FALSE,
+  style = c("classic", "flat"),
   ...
 )
 
@@ -85,6 +89,7 @@ mosaic_plot(x, ...)
   n_perm = 500L,
   seed = NULL,
   values = FALSE,
+  style = c("classic", "flat"),
   ...
 )
 
@@ -100,7 +105,8 @@ mosaic_plot(x, ...)
 so the geometry matches). Also accepts a contingency \code{table} or
 plain numeric \code{matrix} for ad-hoc plotting.}
 
-\item{...}{Ignored.}
+\item{...}{Flat styling overrides forwarded to the flat renderer when
+\code{style = "flat"} (otherwise ignored).}
 
 \item{xlab, ylab}{Axis labels. \code{NULL} (default) draws no axis title.
 Pass any string to add one.}
@@ -137,6 +143,18 @@ residual as a numeric label (one decimal). Text colour switches to
 white on saturated cells (|stdres| > 1.5) and dark grey otherwise.
 Default \code{FALSE} -- the colour bar legend already conveys the
 sign and magnitude.}
+
+\item{style}{Character. \code{"classic"} (default) draws the
+black-bordered \code{theme_minimal} mosaic with axis labels;
+\code{"flat"} draws the flat \code{theme_void} mosaic with white
+gutters, a soft background and a colour-bar legend. With
+\code{style = "flat"}, \code{values = TRUE} prints the standardized
+residual inside each tile, and extra flat styling arguments
+(\code{tile_label}, \code{col_label_side}, \code{row_label_side},
+\code{legend_position}, \code{legend_size}, \code{label_size}, ...;
+see \code{\link{mosaic_analysis}}) may be passed via \code{...}.
+Not supported for multi-panel \code{mcml} (level = "clusters"),
+which falls back to the classic faceted style.}
 
 \item{level}{For \code{mcml} only. \code{"macro"} (default) draws a
 single mosaic of \code{x$macro$weights} (the cluster-by-cluster

@@ -13,16 +13,21 @@
 or \code{"permutation"}. Default \code{"both"}.}
 
 \item{combined}{When \code{panel = "both"} and \code{combined = TRUE}
-(default), the two panels are stitched side-by-side via
-\code{gridExtra::grid.arrange}. When \code{FALSE}, returns a named
-list (\code{ic}, \code{permutation}) of ggplots. Ignored when
+(default), the two panels are drawn side-by-side. If \pkg{gridExtra}
+is installed they are arranged into a single drawable/saveable
+gtable (returned); otherwise base \code{grid} viewports draw both
+panels and a named list of the two ggplots is returned invisibly.
+When \code{FALSE}, returns that named list (\code{ic},
+\code{permutation}) without drawing. Ignored when
 \code{panel != "both"}.}
 
 \item{...}{Ignored.}
 }
 \value{
-A ggplot (single panel), a gridExtra-arranged grob (both,
-combined), or a named list of two ggplots (both, not combined).
+A ggplot (single panel); for \code{panel = "both"}, either a
+\code{gridExtra} gtable (when \pkg{gridExtra} is installed) or a
+named list of two ggplots (\code{ic}, \code{permutation}) drawn
+side-by-side and returned invisibly.
 }
 \description{
 Two-panel professional visualization:

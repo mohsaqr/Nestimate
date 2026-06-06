@@ -7,7 +7,7 @@
 \method{plot}{net_sequence_comparison}(
   x,
   top_n = 10L,
-  style = c("pyramid", "heatmap"),
+  style = c("auto", "pyramid", "heatmap"),
   sort = c("statistic", "frequency"),
   alpha = 0.05,
   show_residuals = FALSE,
@@ -19,7 +19,9 @@
 
 \item{top_n}{Integer. Show top N patterns. Default: 10.}
 
-\item{style}{Character. \code{"pyramid"} (default) or \code{"heatmap"}.}
+\item{style}{Character. \code{"auto"} (default) draws the back-to-back
+pyramid for exactly 2 groups and the heatmap for any other number;
+\code{"pyramid"} and \code{"heatmap"} force a specific style.}
 
 \item{sort}{Character. \code{"statistic"} (default) ranks patterns by test
 statistic or residual magnitude. \code{"frequency"} ranks by total

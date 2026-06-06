@@ -446,13 +446,18 @@ summary.net_markov_order <- function(object, ...) {
 #' @param panel Which panel(s) to render: \code{"both"}, \code{"ic"},
 #'   or \code{"permutation"}. Default \code{"both"}.
 #' @param combined When \code{panel = "both"} and \code{combined = TRUE}
-#'   (default), the two panels are stitched side-by-side via
-#'   \code{gridExtra::grid.arrange}. When \code{FALSE}, returns a named
-#'   list (\code{ic}, \code{permutation}) of ggplots. Ignored when
+#'   (default), the two panels are drawn side-by-side. If \pkg{gridExtra}
+#'   is installed they are arranged into a single drawable/saveable
+#'   gtable (returned); otherwise base \code{grid} viewports draw both
+#'   panels and a named list of the two ggplots is returned invisibly.
+#'   When \code{FALSE}, returns that named list (\code{ic},
+#'   \code{permutation}) without drawing. Ignored when
 #'   \code{panel != "both"}.
 #' @param ... Ignored.
-#' @return A ggplot (single panel), a gridExtra-arranged grob (both,
-#'   combined), or a named list of two ggplots (both, not combined).
+#' @return A ggplot (single panel); for \code{panel = "both"}, either a
+#'   \code{gridExtra} gtable (when \pkg{gridExtra} is installed) or a
+#'   named list of two ggplots (\code{ic}, \code{permutation}) drawn
+#'   side-by-side and returned invisibly.
 #' @inherit markov_order_test examples
 #' @export
 plot.net_markov_order <- function(x,
@@ -564,10 +569,17 @@ plot.net_markov_order <- function(x,
 
   if (!combined) return(invisible(list(ic = p_ic, permutation = p_perm)))
 
+  # Side-by-side. When gridExtra is available, return its arranged gtable (a
+  # drawable/saveable grob -- `ggsave(plot(fit))` keeps working). Otherwise
+  # fall back to base `grid` viewports (always available): both panels still
+  # render, but only a named list of the two ggplots can be returned.
   if (requireNamespace("gridExtra", quietly = TRUE)) {
-    gridExtra::grid.arrange(p_ic, p_perm, ncol = 2)
-  } else {
-    message("Install 'gridExtra' for side-by-side panels; returning IC plot.")
-    p_ic
+    return(gridExtra::grid.arrange(p_ic, p_perm, ncol = 2))
   }
+  grid::grid.newpage()
+  grid::pushViewport(grid::viewport(layout = grid::grid.layout(1L, 2L)))
+  print(p_ic,   vp = grid::viewport(layout.pos.row = 1L, layout.pos.col = 1L))
+  print(p_perm, vp = grid::viewport(layout.pos.row = 1L, layout.pos.col = 2L))
+  grid::popViewport()
+  invisible(list(ic = p_ic, permutation = p_perm))
 }
