@@ -1927,3 +1927,29 @@ test_that("as_tna.mcml preserves relative macro weights and inits while dropping
   expect_true("G1" %in% names(result))
   expect_false("G2" %in% names(result))
 })
+
+test_that("meta$directed records effective directedness, not the argument", {
+  seqs <- data.frame(
+    T1 = c("plan", "code", "debug"),
+    T2 = c("code", "debug", "plan"),
+    T3 = c("debug", "plan", "code"),
+    stringsAsFactors = FALSE
+  )
+  memb <- c(plan = 1, code = 2, debug = 2)
+
+  # cooccurrence symmetrizes regardless of directed = TRUE default
+  fit_co <- build_mcml(seqs, memb, type = "cooccurrence")
+  expect_false(fit_co$meta$directed)
+  expect_true(isSymmetric(unname(fit_co$macro$weights)))
+
+  # directed post-processing keeps directed = TRUE
+  fit_tna <- build_mcml(seqs, memb, type = "tna")
+  expect_true(fit_tna$meta$directed)
+  fit_raw <- build_mcml(seqs, memb, type = "raw")
+  expect_true(fit_raw$meta$directed)
+
+  # explicit directed = FALSE is recorded as FALSE
+  fit_undir <- build_mcml(seqs, memb, type = "raw", directed = FALSE)
+  expect_false(fit_undir$meta$directed)
+  expect_true(isSymmetric(unname(fit_undir$macro$weights)))
+})

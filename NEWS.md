@@ -1,3 +1,14 @@
+# Nestimate 0.6.4
+
+## Bug fixes
+
+* `build_mcml()` (sequence and edge-list paths) now records the
+  *effective* directedness in `$meta$directed`: `FALSE` when
+  `type = "cooccurrence"`, whose weights are symmetrized, instead of
+  echoing the `directed` argument unchanged. Renderers that auto-detect
+  directedness (e.g., `cograph::plot_mcml()` with `directed = NULL`) now
+  draw co-occurrence MCML objects as undirected networks automatically.
+
 # Nestimate 0.6.0
 
 ## New features

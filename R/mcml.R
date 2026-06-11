@@ -1444,7 +1444,10 @@ build_mcml <- function(x,
       meta = list(
         type = type,
         method = method,
-        directed = directed,
+        # Effective directedness of the stored weights: .process_weights
+        # symmetrizes for type = "cooccurrence" (and for directed = FALSE),
+        # so record what the weights ARE, not what was asked for.
+        directed = isTRUE(directed) && type != "cooccurrence",
         n_nodes = n_nodes,
         n_clusters = n_clusters,
         cluster_sizes = vapply(cluster_list, length, integer(1)),
