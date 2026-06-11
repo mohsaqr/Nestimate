@@ -54,6 +54,22 @@ This tutorial introduces a complete pipeline for detecting, quantifying, and vis
 ```{r setup}
 library(Nestimate)
 library(cograph)
+
+# Guard cograph::plot_simplicial() against grDevices::chull() failing on
+# degenerate pathway clouds (collinear / single-point), which the CRAN
+# cograph (2.1.1) hits but the dev build (>= 2.3.5) fixes in .smooth_blob().
+# Shadow the function in the knit env so all call sites fall back to
+# splot() with a warning rather than aborting the render. Package code is
+# unaffected (scope is this vignette's knit environment only).
+plot_simplicial <- function(...) {
+  args <- list(...)
+  tryCatch(do.call(cograph::plot_simplicial, args),
+           error = function(e) {
+             warning("plot_simplicial fell back to splot(): ",
+                     conditionMessage(e), call. = FALSE)
+             splot(args[[1]])
+           })
+}
 ```
 
 **cograph** provides the simplicial visualization (`plot_simplicial()`). **Nestimate** provides the higher-order network construction (`build_hon`, `build_hypa`, `build_mogen`) and simplicial complex analysis (`build_simplicial`, `betti_numbers`, `persistent_homology`, `q_analysis`).

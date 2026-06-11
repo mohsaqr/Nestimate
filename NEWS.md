@@ -1,3 +1,28 @@
+# Nestimate 0.6.5
+
+## New features
+
+* `vertex_bootstrap()` — Snijders & Borgatti (1999) vertex bootstrap for
+  network-level statistics (density, mean weight, strength centralization,
+  weighted reciprocity, plus custom `statistic_fn`). Needs only the weight
+  matrix, so it works on data-less netobjects (`build_mlvar()`
+  constituents, `as_tna(mcml)` elements, plain matrices) where
+  `bootstrap_network()` cannot run. Returns a tidy one-row-per-statistic
+  `net_vertex_bootstrap` with print/summary/plot. Self-loops are preserved
+  (diagonal carries the resampled vertex's own self-weight); undirected
+  replicates stay symmetric.
+* `vertex_compare()` — the Snijders & Borgatti two-network test the
+  vertex bootstrap was originally proposed for: z-tests and
+  normal-approximation CIs for differences in network-level statistics
+  between two networks (netobjects, matrices, or precomputed
+  `net_vertex_bootstrap` objects). Tidy `net_vertex_comparison` result
+  with print/summary/plot (forest plot of differences).
+* `bootstrap_network()` and `vertex_bootstrap()` gain
+  `ci_method = c("percentile", "basic")`: basic intervals
+  (Davison & Hinkley 1997, eq. 5.6) reflect the percentile bounds around
+  the observed estimate, correcting first-order bootstrap bias. Default
+  remains `"percentile"`.
+
 # Nestimate 0.6.4
 
 ## Bug fixes

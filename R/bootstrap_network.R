@@ -43,6 +43,14 @@
 #'   p-value. \code{"inclusive"} (default, tna-compatible) counts iterations
 #'   that meet the bound (\eqn{\le} / \eqn{\ge}); \code{"strict"} counts only
 #'   iterations strictly outside (\eqn{<} / \eqn{>}).
+#' @param ci_method Character. Method for the edge-weight confidence
+#'   intervals. \code{"percentile"} (default) uses the empirical bootstrap
+#'   quantiles (Efron). \code{"basic"} reflects those quantiles around the
+#'   observed weight, \eqn{(2\hat{\theta} - q_{1-\alpha/2},
+#'   2\hat{\theta} - q_{\alpha/2})} (Davison & Hinkley 1997, eq. 5.6),
+#'   which corrects first-order bootstrap bias but can produce bounds
+#'   outside the natural weight range near boundaries (e.g., below 0 for
+#'   transition probabilities close to 0).
 #'
 #' @return An object of class \code{"net_bootstrap"} containing:
 #' \describe{
@@ -88,8 +96,10 @@ bootstrap_network <- function(x,
                               consistency_range = c(0.75, 1.25),
                               edge_threshold = NULL,
                               seed = NULL,
-                              boundary = c("inclusive", "strict")) {
+                              boundary = c("inclusive", "strict"),
+                              ci_method = c("percentile", "basic")) {
   boundary <- match.arg(boundary)
+  ci_method <- match.arg(ci_method)
 
   # ---- wtna_mixed dispatch: bootstrap both components ----
   if (inherits(x, "wtna_mixed")) {
@@ -99,12 +109,14 @@ bootstrap_network <- function(x,
                                        ci_level = ci_level, inference = inference,
                                        consistency_range = consistency_range,
                                        edge_threshold = edge_threshold,
-                                       boundary = boundary),
+                                       boundary = boundary,
+                                       ci_method = ci_method),
       cooccurrence = bootstrap_network(x$cooccurrence, iter = iter,
                                        ci_level = ci_level, inference = inference,
                                        consistency_range = consistency_range,
                                        edge_threshold = edge_threshold,
-                                       boundary = boundary)
+                                       boundary = boundary,
+                                       ci_method = ci_method)
     )
     class(result) <- "wtna_boot_mixed"
     return(result)
@@ -122,7 +134,7 @@ bootstrap_network <- function(x,
                         inference = inference,
                         consistency_range = consistency_range,
                         edge_threshold = edge_threshold, seed = seed,
-                        boundary = boundary)
+                        boundary = boundary, ci_method = ci_method)
     })
     class(results) <- c("net_bootstrap_group", "list")
     return(results)
@@ -239,7 +251,8 @@ bootstrap_network <- function(x,
     inference = inference,
     consistency_range = consistency_range,
     edge_threshold = edge_threshold,
-    boundary = boundary
+    boundary = boundary,
+    ci_method = ci_method
   )
 
   # ---- Build summary data frame ----
@@ -293,7 +306,8 @@ bootstrap_network <- function(x,
     ci_level          = ci_level,
     inference         = inference,
     consistency_range = consistency_range,
-    edge_threshold    = edge_threshold
+    edge_threshold    = edge_threshold,
+    ci_method         = ci_method
   )
   class(result) <- "net_bootstrap"
   result
@@ -578,7 +592,8 @@ bootstrap_network <- function(x,
 .compute_bootstrap_stats <- function(boot_matrices, original_matrix, states,
                                      directed, iter, ci_level, inference,
                                      consistency_range, edge_threshold,
-                                     boundary = "inclusive") {
+                                     boundary = "inclusive",
+                                     ci_method = "percentile") {
   n_states <- length(states)
   orig_flat <- as.vector(original_matrix)
 
@@ -591,6 +606,16 @@ bootstrap_network <- function(x,
                     probs = ci_level / 2, na.rm = TRUE)
   ci_upper <- apply(boot_matrices, 2, quantile,
                     probs = 1 - ci_level / 2, na.rm = TRUE)
+
+  # Basic (Davison & Hinkley 1997, eq. 5.6) intervals: reflect the
+  # percentile bounds around the observed estimate. Corrects first-order
+  # bootstrap bias; can produce bounds outside the weight range when the
+  # observed value is near a boundary (documented behavior).
+  if (identical(ci_method, "basic")) {
+    basic_lower <- 2 * orig_flat - ci_upper
+    ci_upper <- 2 * orig_flat - ci_lower
+    ci_lower <- basic_lower
+  }
 
   # p-values via vectorized sweep
   valid_rows <- rowSums(is.na(boot_matrices)) == 0

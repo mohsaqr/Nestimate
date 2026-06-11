@@ -12,7 +12,8 @@ bootstrap_network(
   consistency_range = c(0.75, 1.25),
   edge_threshold = NULL,
   seed = NULL,
-  boundary = c("inclusive", "strict")
+  boundary = c("inclusive", "strict"),
+  ci_method = c("percentile", "basic")
 )
 }
 \arguments{
@@ -43,6 +44,15 @@ percentile of absolute original edge weights.}
 p-value. \code{"inclusive"} (default, tna-compatible) counts iterations
 that meet the bound (\eqn{\le} / \eqn{\ge}); \code{"strict"} counts only
 iterations strictly outside (\eqn{<} / \eqn{>}).}
+
+\item{ci_method}{Character. Method for the edge-weight confidence
+intervals. \code{"percentile"} (default) uses the empirical bootstrap
+quantiles (Efron). \code{"basic"} reflects those quantiles around the
+observed weight, \eqn{(2\hat{\theta} - q_{1-\alpha/2},
+  2\hat{\theta} - q_{\alpha/2})} (Davison & Hinkley 1997, eq. 5.6),
+which corrects first-order bootstrap bias but can produce bounds
+outside the natural weight range near boundaries (e.g., below 0 for
+transition probabilities close to 0).}
 }
 \value{
 An object of class \code{"net_bootstrap"} containing:
