@@ -5,7 +5,7 @@
 .Rproj.user
 *.Rproj
 tmp/
-..Rcheck/
+*.Rcheck/
 .superpowers/
 docs/
 inst/doc
