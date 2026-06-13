@@ -1,3 +1,55 @@
+# Nestimate 0.7.0
+
+## New features (experimental)
+
+* `build_mcml_pc()` — MCML aggregation for psychometric networks
+  (cor / pcor / EBICglasso). Five aggregation methods with explicitly
+  different statuses: `"average"` (descriptive block-mean; works without
+  raw data), `"composite"` (cluster scores re-estimated with the chosen
+  estimator — a genuine cluster-level network), `"loadings"` (composites
+  weighted by mean within-cluster connection strength — Nestimate's own
+  weighting, not an EGA reimplementation), `"rv"` (Escoufier's RV matrix
+  correlation between blocks), and `"canonical"` (first canonical
+  correlation — the upper bound for composite methods). Within-cluster
+  networks re-estimated by default (`within = "reestimate"`) since a
+  pcor submatrix is not the subsystem's pcor network. Item diagnostics
+  in `$loadings`: signed loadings (reverse-keyed items detected via the
+  leading eigenvector of the within-block matrix and flipped in
+  composites), cross-cluster strengths, and a `misfit` flag when an item
+  is more connected to another cluster than its own (warned). Composites
+  tolerate missing data (row-wise renormalized weighted means);
+  Composite item weights are selectable via `weighting` — ten built-in
+  schemes spanning three views of the cluster: the scale as scored
+  (`"equal"`, `"item_total"`), the network's view (`"strength"`,
+  `"eigen"`, `"closeness"`, `"betweenness"`, `"expected_influence"`,
+  `"specificity"` — the misfit margin as a weighting, zeroing items that
+  belong as much to another cluster), and the latent-variable view
+  (`"pca"`, `"factor"`); plus fully custom weighting via a named numeric
+  vector or a `function(W_block, data_block, nodes)`.
+  `aggregation = "loadings"` is the alias for composite + strength.
+  The `"factor"` weighting exposes its extraction method via
+  `fa_method`: `"ml"` (factanal), `"paf"` (iterated principal axis),
+  `"minres"` (ULS), or `"cfa"` (one-factor lavaan model; with
+  `cor_method = "polychoric"` the categorical DWLS factor model) — all
+  operating on the `cor_method`-consistent correlation structure.
+  Reverse-keyed handling works under every sign-carrying scheme
+  (item-total correlations are computed on eigen-sign-pre-oriented
+  columns so a reversed member cannot contaminate small clusters).
+  `cor_method = "polychoric"` (via lavaan) supports ordinal items;
+  `id_col` drops identifier columns so
+  `convert_sequence_format(format = "frequency")` actor-profiles feed
+  the function directly (the within-person co-occurrence view of event
+  data).
+  Returns class `mcml_pc` (macro + within netobjects, all undirected)
+  with print/summary/plot; the composite/loadings macro is a full
+  netobject, so `bootstrap_network()`, `vertex_bootstrap()`, and
+  `vertex_compare()` apply to it directly. `cograph::plot_mcml()`
+  (>= 2.3.8) renders the two-layer undirected MCML view. Experimental:
+  API and formulas may change.
+* `loading_stability()` — case-bootstrap stability of the
+  `build_mcml_pc()` composite weights (percentile CIs, sign-flip rates),
+  with print and forest-style plot.
+
 # Nestimate 0.6.5
 
 ## New features

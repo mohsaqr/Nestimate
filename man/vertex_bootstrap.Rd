@@ -22,7 +22,7 @@ builder), a \code{cograph_network}, or a square numeric weight matrix.}
 \item{iter}{Integer. Number of bootstrap replicates (default 1000).}
 
 \item{ci_level}{Numeric. Significance level for the confidence
-intervals (default 0.05 for 95\\% CIs).}
+intervals (default 0.05 for 95\% CIs).}
 
 \item{ci_method}{Character. \code{"percentile"} (default) for empirical
 quantile intervals, or \code{"basic"} for intervals reflected around

@@ -60,6 +60,8 @@ reference:
     desc: Statistical inference for network estimation
     contents:
       - bootstrap_network
+      - vertex_bootstrap
+      - vertex_compare
       - boot_glasso
       - permutation
       - nct
@@ -86,6 +88,7 @@ reference:
       - cluster_mmm
       - cluster_network
       - build_mcml
+      - build_mcml_pc
       - build_mmm
       - compare_mmm
 

@@ -50,7 +50,7 @@
 #'   builder), a \code{cograph_network}, or a square numeric weight matrix.
 #' @param iter Integer. Number of bootstrap replicates (default 1000).
 #' @param ci_level Numeric. Significance level for the confidence
-#'   intervals (default 0.05 for 95\% CIs).
+#'   intervals (default 0.05 for 95% CIs).
 #' @param ci_method Character. \code{"percentile"} (default) for empirical
 #'   quantile intervals, or \code{"basic"} for intervals reflected around
 #'   the observed value (Davison & Hinkley 1997, eq. 5.6).
