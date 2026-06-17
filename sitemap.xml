@@ -1,18 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://saqr.me/Nestimate/404.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/AGENT-NOTE-EQUIV-TESTING.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/AGENT-NOTE-JS-PARITY.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/CHANGES.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/CLAUDE.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/FEATURES.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/HANDOFF.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/LEARNINGS.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/LICENSE-text.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/Nestimate-paper.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/TODO.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/articles/articles/cograph-tutorial-mcml.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/articles/articles/higher-order-networks.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/articles/articles/tutorial_markov_order.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/clustering.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/cograph-tutorial-nestimate.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/cograph-tutorial-simplicial.html</loc></url>
@@ -28,7 +16,6 @@
 <url><loc>https://saqr.me/Nestimate/reference/Nestimate-package.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/action_to_onehot.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/actor_endpoints.html</loc></url>
-<url><loc>https://saqr.me/Nestimate/reference/as_networks.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/as_tna.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/association_rules.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/betti_numbers.html</loc></url>
