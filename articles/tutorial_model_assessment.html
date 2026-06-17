@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="tutorial_model_assessment_files/libs/quarto-html/popper.min.js"></script><script src="tutorial_model_assessment_files/libs/quarto-html/tippy.umd.min.js"></script><link href="tutorial_model_assessment_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="tutorial_model_assessment_files/libs/quarto-html/light-border.css" rel="stylesheet">
@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,10 +67,10 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.svg" class="logo" alt=""><h1>Tutorial: Model assessment for transition networks</h1>
       <p class="subtitle">Split-half reliability, case-dropping stability, and Markov-order adequacy</p>
-      <p class="author">Mohammed SaqrSonsoles López-PernasKamila Misiejuk</p>
+      <p class="author">Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk</p>
 
 
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/vignettes/articles/tutorial_model_assessment.qmd" class="external-link"><code>vignettes/articles/tutorial_model_assessment.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/HEAD/vignettes/articles/tutorial_model_assessment.qmd" class="external-link"><code>vignettes/articles/tutorial_model_assessment.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -87,9 +87,9 @@
 <div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span></code></pre></div>
 </div>
-</section><section class="level2"><h3 id="the-four-questions">The four questions<a class="anchor" aria-label="anchor" href="#the-four-questions"></a>
+</section><section class="level2"><h3 id="the-questions-to-ask">The questions to ask<a class="anchor" aria-label="anchor" href="#the-questions-to-ask"></a>
 </h3>
-<p>A fitted transition network summarises a lot of sequence data into a small matrix of edge weights. Before interpreting any result drawn from that matrix — a centrality ranking, a pathway, a difference between two groups — you need to know how much of the matrix is signal and how much is an artefact of this particular sample. Four complementary analyses answer that question from different angles.</p>
+<p>A fitted transition network summarises a lot of sequence data into a small matrix of edge weights. Before interpreting any result drawn from that matrix — a centrality ranking, a pathway, a difference between two groups — you need to know how much of the matrix is signal and how much is an artefact of this particular sample. Five complementary analyses answer that question from different angles: four ask whether the matrix is stable when the data changes, and one asks whether the probability view overstates edges that originate in rare states.</p>
 <ul>
 <li>
 <strong>Split-half reliability.</strong> If I randomly split my cases into two halves and estimate the network on each half, do the two networks agree? This is the classical internal-consistency check (Epskamp, Borsboom &amp; Fried, 2018).</li>
@@ -99,8 +99,10 @@
 <strong>Centrality case-dropping stability.</strong> Same case-dropping procedure, but now we ask whether the <em>ranking</em> of nodes by centrality is preserved. The formal summary is the CS-coefficient (Epskamp, Borsboom &amp; Fried, 2018).</li>
 <li>
 <strong>Markov-order adequacy.</strong> The transition network assumes that the next state depends only on the current state. Does the data actually respect that assumption, or is history beyond one step carrying information?</li>
+<li>
+<strong>Count versus probability.</strong> Row-normalisation turns transition counts into conditional probabilities. An edge leaving a rare state can be negligible in counts yet dominate its row in probability. Which edges does the probability view promote this way, and by how much?</li>
 </ul>
-<p>Each of the four functions below answers one question. Run them together when you need all four answers; run just the relevant one when you only need one. None of them replaces the others.</p>
+<p>Each function below answers one question. Run them together when you need the full picture; run just the relevant one when you only need one. None of them replaces the others.</p>
 <hr></section><section class="level2"><h3 id="the-data">The data<a class="anchor" aria-label="anchor" href="#the-data"></a>
 </h3>
 <p><code>ai_long</code> contains coded actions from AI-side turns in a human–AI vibe-coding study. Each row is one action, tagged with the session it belongs to and a timestamp.</p>
@@ -138,7 +140,7 @@
 <p>Eight codes, 8,551 actions, spread over several hundred sessions. The most common actions are <code>Execute</code> and <code>Investigate</code>; <code>Ask</code> and <code>Report</code> are rare. That imbalance is one reason we want stability checks — rare codes produce unreliable edges because there are few observations of them.</p>
 <hr></section><section class="level2"><h3 id="building-the-baseline-network">Building the baseline network<a class="anchor" aria-label="anchor" href="#building-the-baseline-network"></a>
 </h3>
-<p>The four assessments all work on the same network, so we estimate it once. We use the row-stochastic transition network (<code>method = "relative"</code>): each edge is the probability of going from one code to another.</p>
+<p>The stability assessments all work on the same network, so we estimate it once. We use the row-stochastic transition network (<code>method = "relative"</code>): each edge is the probability of going from one code to another.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span></span>
@@ -364,38 +366,23 @@ Model-level reliability across iterations (mean +/- sd per drop):
 <hr></section><section class="level2"><h3 id="markov-order-adequacy">Markov-order adequacy<a class="anchor" aria-label="anchor" href="#markov-order-adequacy"></a>
 </h3>
 <p><strong>Question.</strong> A transition network treats the next action as depending only on the current action. Is that assumption actually warranted for this data, or does the previous-previous action (or further back) carry information the network is throwing away?</p>
-<p><code><a href="../reference/markov_order_test.html">markov_order_test()</a></code> tests this directly. For each order <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> from 1 to <code>max_order</code>, it asks whether moving from a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-th-order Markov model to a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>k</mi><mo>+</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(k+1)</annotation></semantics></math>-th-order one explains significantly more variance in the sequence. The test statistic is the classical likelihood-ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mn>2</mn></msup><annotation encoding="application/x-tex">G^2</annotation></semantics></math> computed on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>k</mi><mo>+</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(k+1)</annotation></semantics></math>-grams, with a reference distribution built by exact within-context permutation — no parametric bootstrap, no plug-in MLE. Details are in <code><a href="../reference/markov_order_test.html">?markov_order_test</a></code>.</p>
-<p>The function wants sequences (one per unit), not a netobject. We split <code>ai_long</code> by <code>session_id</code> and keep sessions with at least three actions (the minimum needed to see a second-order transition).</p>
+<p><code><a href="../reference/markov_order_test.html">markov_order_test()</a></code> tests this directly. For each order <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> from 1 to <code>max_order</code>, it asks whether moving from a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-th-order Markov model to a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(k+1)</annotation></semantics></math>-th-order one explains significantly more variance in the sequence. The test statistic is the classical likelihood-ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mn>2</mn></msup><annotation encoding="application/x-tex">G^2</annotation></semantics></math> computed on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(k+1)</annotation></semantics></math>-grams, with a reference distribution built by exact within-context permutation — no parametric bootstrap, no plug-in MLE. Details are in <code><a href="../reference/markov_order_test.html">?markov_order_test</a></code>.</p>
+<p><code><a href="../reference/markov_order_test.html">markov_order_test()</a></code> reads the sequences straight out of the network — pass the <code>net</code> object and it pulls one sequence per session from the model.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">ai_long</span><span class="op">$</span><span class="va">code</span>, <span class="va">ai_long</span><span class="op">$</span><span class="va">session_id</span><span class="op">)</span></span>
-<span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="va">seqs</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="va">seqs</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">3L</span><span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">seqs</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 416</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="va">seqs</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-    3.0     8.0    13.0    20.5    25.0   138.0 </code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/markov_order_test.html">markov_order_test</a></span><span class="op">(</span><span class="va">seqs</span>, max_order <span class="op">=</span> <span class="fl">3L</span>, n_perm <span class="op">=</span> <span class="fl">200L</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">mo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/markov_order_test.html">markov_order_test</a></span><span class="op">(</span><span class="va">net</span>, max_order <span class="op">=</span> <span class="fl">3L</span>, n_perm <span class="op">=</span> <span class="fl">200L</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">mo</span></span></code></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Markov Order Test  [within-w permutation, n_perm = 200, alpha = 0.050]
-  416 sequences / 8530 observations / 8 states
+  503 sequences / 8535 observations / 8 states
 
   Selected order  BIC: 1   AIC: 3   permutation-LRT: 3
 
  order    loglik      AIC      BIC   df      g2 p_permutation p_asymptotic
-     0 -13321.97 26657.94 26707.30   NA      NA            NA           NA
-     1 -12217.11 24560.22 25004.45   49 2167.65   0.004975124 0.000000e+00
-     2 -11930.62 24549.24 26974.90  392  544.55   0.004975124 5.001998e-07
-     3 -11173.07 24468.14 31949.62 1470 1490.32   0.004975124 3.499674e-01
+     0 -13333.84 26681.68 26731.04   NA      NA            NA           NA
+     1 -12229.21 24584.43 25028.70   49 2161.35   0.004975124 0.000000e+00
+     2 -11952.72 24587.43 26992.14  392  524.10   0.004975124 8.704760e-06
+     3 -11196.97 24473.94 31807.95 1455 1481.24   0.004975124 3.099724e-01
  significant
           NA
         TRUE
@@ -405,14 +392,14 @@ Model-level reliability across iterations (mean +/- sd per drop):
 </div>
 <p>The <code>test_table</code> reports, for each order <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>, the log-likelihood, degrees of freedom, observed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mn>2</mn></msup><annotation encoding="application/x-tex">G^2</annotation></semantics></math> statistic, permutation p-value, and whether the increment from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k+1</annotation></semantics></math> is significant at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>0.05</mn></mrow><annotation encoding="application/x-tex">\alpha = 0.05</annotation></semantics></math>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mo</span><span class="op">$</span><span class="va">test_table</span></span></code></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  order    loglik      AIC      BIC   df        g2 p_permutation p_asymptotic
-1     0 -13321.97 26657.94 26707.30   NA        NA            NA           NA
-2     1 -12217.11 24560.22 25004.45   49 2167.6545   0.004975124 0.000000e+00
-3     2 -11930.62 24549.24 26974.90  392  544.5546   0.004975124 5.001998e-07
-4     3 -11173.07 24468.14 31949.62 1470 1490.3245   0.004975124 3.499674e-01
+1     0 -13333.84 26681.68 26731.04   NA        NA            NA           NA
+2     1 -12229.21 24584.43 25028.70   49 2161.3550   0.004975124 0.000000e+00
+3     2 -11952.72 24587.43 26992.14  392  524.0985   0.004975124 8.704760e-06
+4     3 -11196.97 24473.94 31807.95 1455 1481.2430   0.004975124 3.099724e-01
   significant
 1          NA
 2        TRUE
@@ -422,20 +409,52 @@ Model-level reliability across iterations (mean +/- sd per drop):
 </div>
 <p>Two orders to pay attention to: the <strong>permutation-selected</strong> order (smallest <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> whose increment is not significant — the highest order the data provides evidence for) and the <strong>BIC-selected</strong> order (smallest BIC, a penalised-likelihood criterion). They often agree. When they disagree — BIC says “keep it simple, order 1”, permutation says “order 2 is really different from order 1” — the correct reading is that the effect is real but small; whether to use the larger model depends on what you plan to do with it.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mo</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
-<figure><p><img src="tutorial_model_assessment_files/figure-html/unnamed-chunk-15-1.png" width="672"></p>
+<figure><p><img src="tutorial_model_assessment_files/figure-html/unnamed-chunk-14-1.png" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>The left panel shows log-likelihood, AIC, and BIC by order, with both selected orders marked. The right panel shows the permutation null for each order with the observed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mn>2</mn></msup><annotation encoding="application/x-tex">G^2</annotation></semantics></math> overlaid — a red line far out in the right tail of the null is the visual signature of a significant order increment.</p>
 <p><strong>Why this matters for the transition network.</strong> If <code>mo$optimal_order</code> is 1, the order-1 transition network captures the sequence dynamics and any pathway longer than one step is a composition of independent steps. If it is 2 or higher, the network is a <em>first-order approximation</em> to a process with memory, and longer pathways are overstated or understated depending on which specific higher-order patterns the data contains. That is the situation where a higher-order model (<code><a href="../reference/build_hon.html">build_hon()</a></code>, <code><a href="../reference/build_mogen.html">build_mogen()</a></code>) is indicated, not a signal to abandon the first-order network but to supplement it.</p>
-<hr></section><section class="level2"><h3 id="reading-the-four-assessments-together">Reading the four assessments together<a class="anchor" aria-label="anchor" href="#reading-the-four-assessments-together"></a>
+<hr></section><section class="level2"><h3 id="count-versus-probability-magnitude-difference">Count versus probability: magnitude difference<a class="anchor" aria-label="anchor" href="#count-versus-probability-magnitude-difference"></a>
 </h3>
-<p>No single number answers “is my network good”. Each of the four assessments answers a different kind of “good”:</p>
+<p><strong>Question.</strong> The network above is the row-normalised (probability) view. The same transitions also have a raw-count (frequency) view, and the two rank edges differently: an edge leaving a rare state can be a rounding error in counts yet dominate its row in probability. Which edges does normalisation promote this way, and how far?</p>
+<p><code><a href="../reference/magnitude_difference.html">magnitude_difference()</a></code> builds both views from the data and reports, per edge, the gap between them on a common scale. It takes the event log directly, not the fitted network, because it needs both the counts and the probabilities.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">md</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/magnitude_difference.html">magnitude_difference</a></span><span class="op">(</span><span class="va">ai_long</span>, action <span class="op">=</span> <span class="st">"code"</span>,</span>
+<span>                           actor <span class="op">=</span> <span class="st">"session_id"</span>, time <span class="op">=</span> <span class="st">"timestamp"</span><span class="op">)</span></span>
+<span><span class="va">md</span></span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>magnitude_difference object
+  metric: abs_diff   scale: tna_range
+  states (8):  Ask, Delegate, Execute, Explain, Investigate, Plan, Repair, Report
+  edges: 64
+  magnitude-difference summary (abs_diff):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+0.00000 0.00917 0.02858 0.07946 0.09482 0.55082 </code></pre>
+</div>
+</div>
+<p>The default metric is <code>abs_diff</code> (absolute difference) with both matrices placed on the TNA probability scale (<code>scale = "tna_range"</code>), so the numbers are in probability units. The summary shows that the median edge moves only about 0.03 between the two views — most of the network reads the same either way — but the maximum is 0.55. A handful of edges are interpreted completely differently depending on which summary you read.</p>
+<p>The plot makes the promoted edges visible. Each sector is one source state; the grey base is the value shared by both views and the coloured tip is the magnitude difference, so a long coloured tip marks an edge the probability view inflates.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">md</span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output-display">
+<div>
+<figure><p><img src="tutorial_model_assessment_files/figure-html/unnamed-chunk-16-1.png" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The longest tips sit on the rare source states — transitions such as <code>Delegate -&gt; Plan</code>, <code>Ask -&gt; Explain</code>, and <code>Repair -&gt; Execute</code> are near-zero in raw counts (a few events each) but carry probabilities of 0.4–0.6 because their source state is visited so seldom that a single successor dominates its row. The reading is concrete: a high transition probability out of a rare state is not the same evidence as a high transition probability out of a common one. When you report a strong edge, check whether its source is frequent enough for that probability to mean what it appears to mean — <code><a href="../reference/magnitude_difference.html">magnitude_difference()</a></code> tells you exactly which edges need that caveat.</p>
+<hr></section><section class="level2"><h3 id="reading-the-assessments-together">Reading the assessments together<a class="anchor" aria-label="anchor" href="#reading-the-assessments-together"></a>
+</h3>
+<p>No single number answers “is my network good”. Each assessment answers a different kind of “good”:</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 33%">
@@ -469,6 +488,11 @@ Model-level reliability across iterations (mean +/- sd per drop):
 <td>Is the first-order assumption adequate?</td>
 <td>Smallest non-rejected order</td>
 </tr>
+<tr class="odd">
+<td><code>magnitude_difference</code></td>
+<td>Which edges does the probability view inflate over counts?</td>
+<td>Large <code>signed</code> flags a rare-source edge</td>
+</tr>
 </tbody>
 </table>
 <p>The typical workflow is:</p>
@@ -483,107 +507,89 @@ Model-level reliability across iterations (mean +/- sd per drop):
 <p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. <em>Behavior Research Methods</em>, 50(1), 195–212.</p>
 <p>Saqr, M. (2026). Human–AI vibe coding interaction study. <a href="https://saqr.me/blog/2026/human-ai-interaction-cograph/" class="external-link uri">https://saqr.me/blog/2026/human-ai-interaction-cograph/</a></p>
 </section></section><script id="quarto-html-after-body" type="application/javascript">
-window.document.addEventListener("DOMContentLoaded", function (event) {
-  const toggleBodyColorMode = (bsSheetEl) => {
-    const mode = bsSheetEl.getAttribute("data-mode");
-    const bodyEl = window.document.querySelector("body");
-    if (mode === "dark") {
-      bodyEl.classList.add("quarto-dark");
-      bodyEl.classList.remove("quarto-light");
-    } else {
-      bodyEl.classList.add("quarto-light");
-      bodyEl.classList.remove("quarto-dark");
-    }
-  }
-  const toggleBodyColorPrimary = () => {
-    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
-    if (bsSheetEl) {
-      toggleBodyColorMode(bsSheetEl);
-    }
-  }
-  toggleBodyColorPrimary();
-    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-    var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
-    var isInternal = (href) => {
-        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
-    }
-    // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-    for (var i=0; i<links.length; i++) {
-      const link = links[i];
-      if (!isInternal(link.href)) {
-        // undo the damage that might have been done by quarto-nav.js in the case of
-        // links that we want to consider external
-        if (link.dataset.originalHref !== undefined) {
-          link.href = link.dataset.originalHref;
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
         }
       }
-    }
-  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-    const config = {
-      allowHTML: true,
-      maxWidth: 500,
-      delay: 100,
-      arrow: false,
-      appendTo: function(el) {
-          return el.parentElement;
-      },
-      interactive: true,
-      interactiveBorder: 10,
-      theme: 'light-border',
-      placement: 'bottom-start',
-    };
-    if (contentFn) {
-      config.content = contentFn;
-    }
-    if (onTriggerFn) {
-      config.onTrigger = onTriggerFn;
-    }
-    if (onUntriggerFn) {
-      config.onUntrigger = onUntriggerFn;
-    }
-    window.tippy(el, config);
-  }
-  const findCites = (el) => {
-    const parentEl = el.parentElement;
-    if (parentEl) {
-      const cites = parentEl.dataset.cites;
-      if (cites) {
-        return {
-          el,
-          cites: cites.split(' ')
-        };
-      } else {
-        return findCites(el.parentElement)
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'light-border',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
       }
-    } else {
-      return undefined;
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config);
     }
-  };
-  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-  for (var i=0; i<bibliorefs.length; i++) {
-    const ref = bibliorefs[i];
-    const citeInfo = findCites(ref);
-    if (citeInfo) {
-      tippyHover(citeInfo.el, function() {
-        var popup = window.document.createElement('div');
-        citeInfo.cites.forEach(function(cite) {
-          var citeDiv = window.document.createElement('div');
-          citeDiv.classList.add('hanging-indent');
-          citeDiv.classList.add('csl-entry');
-          var biblioDiv = window.document.getElementById('ref-' + cite);
-          if (biblioDiv) {
-            citeDiv.innerHTML = biblioDiv.innerHTML;
-          }
-          popup.appendChild(citeDiv);
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
         });
-        return popup.innerHTML;
-      });
+      }
     }
-  }
-});
-</script></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+  });
+  </script></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
 
@@ -593,7 +599,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>
