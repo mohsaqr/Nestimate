@@ -990,6 +990,78 @@ plot.mcml_pc <- function(x, digits = 2, ...) {
 }
 
 
+#' Promote a psychometric MCML result to a network group
+#'
+#' \code{as_networks()} is the psychometric-network counterpart of
+#' \code{\link{as_tna}}. It promotes the cluster-level (macro) and
+#' within-cluster networks produced by \code{\link{build_mcml_pc}} into a
+#' single \code{netobject_group}, so the result flows into the same
+#' downstream verbs as any other group of networks (\code{print()},
+#' \code{summary()}, \code{plot()}, \code{\link{net_centrality}}).
+#'
+#' Where \code{as_tna()} promotes \emph{transition} networks (directed,
+#' row-normalised, with initial probabilities) and re-wraps raw matrices,
+#' \code{as_networks()} promotes \emph{psychometric} networks (undirected;
+#' correlation / partial-correlation / glasso). The macro and within-cluster
+#' components of an \code{mcml_pc} object are already full netobjects carrying
+#' their estimator, directedness and data, so this function assembles them
+#' into a group rather than re-wrapping matrices.
+#'
+#' @param x An object to convert. The \code{mcml_pc} method (from
+#'   \code{\link{build_mcml_pc}}) is the primary path.
+#'
+#' @return A \code{netobject_group}: a named list whose first element is
+#'   \code{macro} (the cluster-level network), followed by one netobject per
+#'   non-singleton cluster.
+#'
+#' @seealso \code{\link{build_mcml_pc}} to create the input,
+#'   \code{\link{as_tna}} for the transition-network counterpart.
+#'
+#' @examples
+#' set.seed(1)
+#' df <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, 6))
+#' names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+#' clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
+#' fit <- build_mcml_pc(df, clusters, aggregation = "composite", method = "cor")
+#' nets <- as_networks(fit)
+#' nets
+#' nets$macro$weights
+#' @export
+as_networks <- function(x) {
+  UseMethod("as_networks")
+}
+
+#' @rdname as_networks
+#' @return The \code{mcml_pc} method returns a \code{netobject_group};
+#'   singleton clusters (no within-network) are dropped with a
+#'   \code{warning()}.
+#' @export
+as_networks.mcml_pc <- function(x) {
+  clusters <- x$clusters
+  is_singleton <- vapply(clusters, is.null, logical(1))
+  if (any(is_singleton)) {
+    warning("Dropped singleton clusters with no within-network: ",
+            paste(names(clusters)[is_singleton], collapse = ", "),
+            call. = FALSE)
+  }
+  result <- c(list(macro = x$macro), clusters[!is_singleton])
+  class(result) <- "netobject_group"
+  result
+}
+
+#' @rdname as_networks
+#' @return The default method returns the input unchanged if it is already a
+#'   \code{netobject_group}, otherwise it errors.
+#' @export
+as_networks.default <- function(x) {
+  if (inherits(x, "netobject_group")) {
+    return(x)
+  }
+  stop("Cannot convert object of class '", class(x)[1],
+       "' to a network group.", call. = FALSE)
+}
+
+
 #' Override loading weights/signs with the chosen weighting scheme
 #'
 #' "strength" weights come from .pc_network_loadings directly; this

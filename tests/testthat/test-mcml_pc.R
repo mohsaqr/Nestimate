@@ -748,3 +748,60 @@ test_that("stray ... arguments error unless weighting = 'factor'", {
     "applies only"
   )
 })
+
+# ---- as_networks(): promote an mcml_pc to a netobject_group ----
+
+test_that("as_networks.mcml_pc returns a netobject_group of macro + clusters", {
+  fit  <- build_mcml_pc(make_block_data(), block_clusters(),
+                        aggregation = "composite", method = "cor")
+  nets <- as_networks(fit)
+
+  expect_true(inherits(nets, "netobject_group"),
+              info = "as_networks must return a netobject_group")
+  expect_identical(names(nets), c("macro", "A", "B", "C"))
+  expect_length(nets, 4L)  # 1 macro + 3 clusters
+})
+
+test_that("as_networks preserves psychometric semantics (undirected, estimator, data)", {
+  fit  <- build_mcml_pc(make_block_data(), block_clusters(),
+                        aggregation = "composite", method = "cor")
+  nets <- as_networks(fit)
+
+  expect_true(inherits(nets$macro, "netobject"))
+  expect_false(nets$macro$directed)          # psychometric nets are undirected
+  expect_false(nets$A$directed)
+  expect_identical(nets$macro$method, "cor")
+  expect_identical(nets$A$method, "cor")
+  expect_false(is.null(nets$macro$data))     # data carried through, not dropped
+  # assembled, not re-wrapped: the macro netobject is the same object
+  expect_identical(nets$macro$weights, fit$macro$weights)
+})
+
+test_that("as_networks output flows into downstream verbs (centrality)", {
+  fit  <- build_mcml_pc(make_block_data(), block_clusters(),
+                        aggregation = "composite", method = "cor")
+  nets <- as_networks(fit)
+  ce   <- net_centrality(nets$macro)
+  expect_true(is.data.frame(ce))
+  expect_identical(sort(rownames(ce)), c("A", "B", "C"))
+})
+
+test_that("as_networks drops singleton clusters with a warning", {
+  df <- make_block_data()
+  # C becomes a singleton (one node) -> no within-network -> dropped
+  cl <- list(A = paste0("a", 1:3), B = paste0("b", 1:3),
+             Bx = paste0("c", 1:2), C = "c3")
+  fit <- build_mcml_pc(df, cl, aggregation = "composite", method = "cor")
+  expect_warning(nets <- as_networks(fit),
+                 "singleton clusters")
+  expect_false("C" %in% names(nets))
+  expect_true(all(c("macro", "A", "B", "Bx") %in% names(nets)))
+})
+
+test_that("as_networks.default passes through a group and errors otherwise", {
+  fit  <- build_mcml_pc(make_block_data(), block_clusters(),
+                        aggregation = "composite", method = "cor")
+  nets <- as_networks(fit)
+  expect_identical(as_networks(nets), nets)             # passthrough
+  expect_error(as_networks(list(a = 1)), "Cannot convert")
+})

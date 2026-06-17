@@ -1,5 +1,12 @@
 # Nestimate 0.7.1
 
+## New features
+
+* `as_networks()` — promote a `build_mcml_pc()` result into a
+  `netobject_group` (the psychometric-network counterpart of `as_tna()`).
+  Singleton clusters with no within-network are dropped with a warning;
+  an existing `netobject_group` passes through unchanged.
+
 ## Documentation
 
 * Vignettes and articles now call package verbs directly instead of
