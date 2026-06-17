@@ -44,6 +44,11 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.1" id="nestimate-071">Nestimate 0.7.1<a class="anchor" aria-label="anchor" href="#nestimate-071"></a></h2>
 <div class="section level3">
+<h3 id="new-features-0-7-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-1"></a></h3>
+<ul><li>
+<code><a href="../reference/as_networks.html">as_networks()</a></code> — promote a <code><a href="../reference/build_mcml_pc.html">build_mcml_pc()</a></code> result into a <code>netobject_group</code> (the psychometric-network counterpart of <code><a href="../reference/as_tna.html">as_tna()</a></code>). Singleton clusters with no within-network are dropped with a warning; an existing <code>netobject_group</code> passes through unchanged.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="documentation-0-7-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-7-1"></a></h3>
 <ul><li>Vignettes and articles now call package verbs directly instead of hand-assembled base-R subsetting rituals: <code><a href="../reference/markov_order_test.html">markov_order_test()</a></code> reads sequences straight from a fitted network (<code>markov_order_test(net)</code>); HYPA anomaly tables use <code>summary(hypa, order_by = "ratio")</code>; higher-order pathways use <code>pathways(hon, top = )</code>; grouped-clustering inspection uses <code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code>.</li>
 </ul></div>

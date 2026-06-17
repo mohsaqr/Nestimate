@@ -245,6 +245,8 @@ Helper functions and extractors
   coefficients from a fitted mlvar model
 - [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) : Convert
   cluster_summary to tna Objects
+- [`as_networks()`](https://saqr.me/Nestimate/reference/as_networks.md)
+  : Promote a psychometric MCML result to a network group
 - [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.md)
   : Extract Edge List with Weights
 - [`extract_initial_probs()`](https://saqr.me/Nestimate/reference/extract_initial_probs.md)
