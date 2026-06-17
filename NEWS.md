@@ -1,3 +1,14 @@
+# Nestimate 0.7.1
+
+## Documentation
+
+* Vignettes and articles now call package verbs directly instead of
+  hand-assembled base-R subsetting rituals: `markov_order_test()` reads
+  sequences straight from a fitted network (`markov_order_test(net)`);
+  HYPA anomaly tables use `summary(hypa, order_by = "ratio")`; higher-order
+  pathways use `pathways(hon, top = )`; grouped-clustering inspection uses
+  `cluster_diagnostics()`.
+
 # Nestimate 0.7.0
 
 ## New features (experimental)

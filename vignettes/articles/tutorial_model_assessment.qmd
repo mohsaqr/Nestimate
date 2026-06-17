@@ -1,16 +1,7 @@
 ---
 title: "Tutorial: Model assessment for transition networks"
 subtitle: "Split-half reliability, case-dropping stability, and Markov-order adequacy"
-author:
-  - name: Mohammed Saqr
-    url: https://saqr.me
-    affiliation: University of Eastern Finland
-  - name: Sonsoles López-Pernas
-    url: https://sonsoles.me
-    affiliation: University of Eastern Finland
-  - name: Kamila Misiejuk
-    url: https://kamilamisiejuk.com
-    affiliation: FernUniversität in Hagen, Germany
+author: "Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk"
 format:
   html:
     toc: true
@@ -30,16 +21,17 @@ execute:
 library(Nestimate)
 ```
 
-## The four questions
+## The questions to ask
 
-A fitted transition network summarises a lot of sequence data into a small matrix of edge weights. Before interpreting any result drawn from that matrix — a centrality ranking, a pathway, a difference between two groups — you need to know how much of the matrix is signal and how much is an artefact of this particular sample. Four complementary analyses answer that question from different angles.
+A fitted transition network summarises a lot of sequence data into a small matrix of edge weights. Before interpreting any result drawn from that matrix — a centrality ranking, a pathway, a difference between two groups — you need to know how much of the matrix is signal and how much is an artefact of this particular sample. Five complementary analyses answer that question from different angles: four ask whether the matrix is stable when the data changes, and one asks whether the probability view overstates edges that originate in rare states.
 
 - **Split-half reliability.** If I randomly split my cases into two halves and estimate the network on each half, do the two networks agree? This is the classical internal-consistency check (Epskamp, Borsboom & Fried, 2018).
 - **Edge-weight case-dropping stability.** If I drop a fraction of my cases and re-estimate the network, do the same edges keep roughly the same weights? This asks whether the *map* of connections is stable.
 - **Centrality case-dropping stability.** Same case-dropping procedure, but now we ask whether the *ranking* of nodes by centrality is preserved. The formal summary is the CS-coefficient (Epskamp, Borsboom & Fried, 2018).
 - **Markov-order adequacy.** The transition network assumes that the next state depends only on the current state. Does the data actually respect that assumption, or is history beyond one step carrying information?
+- **Count versus probability.** Row-normalisation turns transition counts into conditional probabilities. An edge leaving a rare state can be negligible in counts yet dominate its row in probability. Which edges does the probability view promote this way, and by how much?
 
-Each of the four functions below answers one question. Run them together when you need all four answers; run just the relevant one when you only need one. None of them replaces the others.
+Each function below answers one question. Run them together when you need the full picture; run just the relevant one when you only need one. None of them replaces the others.
 
 ------------------------------------------------------------------------
 
@@ -63,7 +55,7 @@ Eight codes, 8,551 actions, spread over several hundred sessions. The most commo
 
 ## Building the baseline network
 
-The four assessments all work on the same network, so we estimate it once. We use the row-stochastic transition network (`method = "relative"`): each edge is the probability of going from one code to another.
+The stability assessments all work on the same network, so we estimate it once. We use the row-stochastic transition network (`method = "relative"`): each edge is the probability of going from one code to another.
 
 ```{r}
 net <- build_network(
@@ -164,17 +156,10 @@ Each curve is one centrality measure. When two measures diverge — for example,
 
 `markov_order_test()` tests this directly. For each order $k$ from 1 to `max_order`, it asks whether moving from a $k$-th-order Markov model to a $(k+1)$-th-order one explains significantly more variance in the sequence. The test statistic is the classical likelihood-ratio $G^2$ computed on $(k+1)$-grams, with a reference distribution built by exact within-context permutation — no parametric bootstrap, no plug-in MLE. Details are in `?markov_order_test`.
 
-The function wants sequences (one per unit), not a netobject. We split `ai_long` by `session_id` and keep sessions with at least three actions (the minimum needed to see a second-order transition).
+`markov_order_test()` reads the sequences straight out of the network — pass the `net` object and it pulls one sequence per session from the model.
 
 ```{r}
-seqs <- split(ai_long$code, ai_long$session_id)
-seqs <- seqs[lengths(seqs) >= 3L]
-length(seqs)
-summary(lengths(seqs))
-```
-
-```{r}
-mo <- markov_order_test(seqs, max_order = 3L, n_perm = 200L, seed = 1)
+mo <- markov_order_test(net, max_order = 3L, n_perm = 200L, seed = 1)
 mo
 ```
 
@@ -197,9 +182,33 @@ The left panel shows log-likelihood, AIC, and BIC by order, with both selected o
 
 ------------------------------------------------------------------------
 
-## Reading the four assessments together
+## Count versus probability: magnitude difference
 
-No single number answers “is my network good”. Each of the four assessments answers a different kind of “good”:
+**Question.** The network above is the row-normalised (probability) view. The same transitions also have a raw-count (frequency) view, and the two rank edges differently: an edge leaving a rare state can be a rounding error in counts yet dominate its row in probability. Which edges does normalisation promote this way, and how far?
+
+`magnitude_difference()` builds both views from the data and reports, per edge, the gap between them on a common scale. It takes the event log directly, not the fitted network, because it needs both the counts and the probabilities.
+
+```{r}
+md <- magnitude_difference(ai_long, action = "code",
+                           actor = "session_id", time = "timestamp")
+md
+```
+
+The default metric is `abs_diff` (absolute difference) with both matrices placed on the TNA probability scale (`scale = "tna_range"`), so the numbers are in probability units. The summary shows that the median edge moves only about 0.03 between the two views — most of the network reads the same either way — but the maximum is 0.55. A handful of edges are interpreted completely differently depending on which summary you read.
+
+The plot makes the promoted edges visible. Each sector is one source state; the grey base is the value shared by both views and the coloured tip is the magnitude difference, so a long coloured tip marks an edge the probability view inflates.
+
+```{r}
+plot(md)
+```
+
+The longest tips sit on the rare source states — transitions such as `Delegate -> Plan`, `Ask -> Explain`, and `Repair -> Execute` are near-zero in raw counts (a few events each) but carry probabilities of 0.4–0.6 because their source state is visited so seldom that a single successor dominates its row. The reading is concrete: a high transition probability out of a rare state is not the same evidence as a high transition probability out of a common one. When you report a strong edge, check whether its source is frequent enough for that probability to mean what it appears to mean — `magnitude_difference()` tells you exactly which edges need that caveat.
+
+------------------------------------------------------------------------
+
+## Reading the assessments together
+
+No single number answers “is my network good”. Each assessment answers a different kind of “good”:
 
 | Assessment | Answers | Threshold |
 |----|----|----|
@@ -207,6 +216,7 @@ No single number answers “is my network good”. Each of the four assessments 
 | `casedrop_reliability` | Which edges persist when I drop cases? | CS \> 0.5 stable, \> 0.25 moderate |
 | `centrality_stability` | Can I trust the rankings I’ll report? | CS \> 0.5 stable, \> 0.25 moderate |
 | `markov_order_test` | Is the first-order assumption adequate? | Smallest non-rejected order |
+| `magnitude_difference` | Which edges does the probability view inflate over counts? | Large `signed` flags a rare-source edge |
 
 The typical workflow is:
 

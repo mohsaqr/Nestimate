@@ -45,6 +45,9 @@
 ^vignettes/articles$
 ^vignettes/\.quarto
 ^vignettes/_archive$
+^archive$
 ^audit_codex$
 ^audit_folder$
 ^proc$
+^make_site\.R$
+^Nestimate-paper\.md$

@@ -176,12 +176,10 @@ hon
 ```
 
 ```{r hon-detail}
-ho_edges <- hon$ho_edges[hon$ho_edges$from_order > 1, ]
-ho_top <- ho_edges[order(-ho_edges$count), ]
-ho_top[1:10, ]
+pathways(hon, top = 10)
 ```
 
-Out of `r nrow(hon$ho_edges)` total edges, **`r nrow(ho_edges)`** (`r round(100 * nrow(ho_edges) / nrow(hon$ho_edges))`%) are higher-order --- transitions where the preceding context changes the outcome. Look for pathways where the higher-order probability differs substantially from the first-order probability --- these represent genuine contextual effects.
+Out of `r nrow(hon$ho_edges)` total edges, **`r length(pathways(hon))`** (`r round(100 * length(pathways(hon)) / nrow(hon$ho_edges))`%) are higher-order --- transitions where the preceding context changes the outcome. Look for pathways where the higher-order probability differs substantially from the first-order probability --- these represent genuine contextual effects.
 
 ### Raw path frequencies
 
@@ -213,8 +211,7 @@ plot_simplicial(hypa, dismantled = TRUE)
 Top over-represented paths sorted by ratio (observed / expected):
 
 ```{r hypa-over-table}
-sov <- hypa$scores[hypa$scores$anomaly == "over", ]
-head(sov[order(-sov$ratio), c("path", "observed", "expected", "ratio")], 8)
+summary(hypa, type = "over", order_by = "ratio", n = 8)
 ```
 
 In this dataset the top-ratio over-represented paths are typically frustration cascades and inquiry-correction loops — composite routines built from transitions that are individually unremarkable but, when chained, occur many times more often than their degrees alone would suggest.
@@ -231,8 +228,7 @@ plot_simplicial(hypa, anomaly = "over", max_pathways = 9,
 Paths the data actively avoids. The ratios here are typically far from 1.0 in the *other* direction: observed counts are a fraction of expected, often with very small p-values:
 
 ```{r hypa-under-table}
-sun <- hypa$scores[hypa$scores$anomaly == "under", ]
-head(sun[order(sun$ratio), c("path", "observed", "expected", "ratio", "p_value")], 8)
+summary(hypa, type = "under", order_by = "ratio", n = 8)
 ```
 
 Notice paths like `Specify -> Specify -> Specify -> Specify` — a four-step run of pure specification — appear at a small fraction of expected frequency. The transition `Specify -> Specify` exists in the data, but stacking it four deep is something programmers actively don't do. The under-represented set captures these *negative* sequential constraints.
