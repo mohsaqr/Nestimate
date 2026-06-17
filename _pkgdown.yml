@@ -76,6 +76,7 @@ reference:
       - network_reliability
       - casedrop_reliability
       - centrality_stability
+      - loading_stability
 
   - title: Clustering & Grouping
     desc: Cluster-based and multilevel network analysis
@@ -142,6 +143,7 @@ reference:
       - state_distribution
       - plot_mosaic
       - mosaic_plot
+      - mosaic_analysis
       - sequence_compare
       - association_rules
 
