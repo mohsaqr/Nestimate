@@ -44,19 +44,30 @@ but negligibly small.}
 \item{seed}{Integer or NULL. RNG seed for reproducible credible intervals.}
 }
 \value{
-An object of class \code{"net_bayes"} containing:
+An object of class \code{c("net_bayes", "net_permutation")}. It carries
+the same fields as a \code{\link{permutation}} result, so it is a drop-in
+wherever a \code{net_permutation} is consumed, plus Bayesian extras:
 \describe{
 \item{x, y}{The two input \code{netobject}s.}
-\item{diff}{Posterior mean difference matrix (\code{prob_x - prob_y}).}
+\item{diff}{Posterior mean difference matrix (\code{prob_x - prob_y});
+the analogue of the permutation observed difference.}
+\item{diff_sig}{Difference where \code{sig}, else 0.}
+\item{p_values}{P-value matrix (the two-sided Bayesian p-equivalent).}
+\item{effect_size}{Posterior mean difference over its posterior SD.}
 \item{ci_lower, ci_upper}{Credible-interval bound matrices.}
-\item{pd}{Probability-of-direction matrix in \eqn{[0.5, 1]}: the share
-of posterior mass on the dominant side of zero.}
-\item{p_bayes}{Two-sided Bayesian p-equivalent matrix, \eqn{2(1 - pd)}.}
+\item{pd}{Probability-of-direction matrix in \eqn{[0.5, 1]}.}
+\item{p_bayes}{Alias of \code{p_values} (two-sided Bayesian p, \eqn{2(1-pd)}).}
 \item{prob_x, prob_y}{Posterior mean transition-probability matrices.}
 \item{sig}{Logical significance matrix (CI excludes zero, mean and
 nearest bound exceed their thresholds).}
-\item{summary}{Long-format data frame of edge-level results.}
-\item{method, prior, draws, ci, mean_threshold, bound_threshold}{Settings.}
+\item{summary}{Long-format data frame whose columns are a superset of
+\code{summary.net_permutation} (\code{from, to, weight_x, weight_y, diff,
+    effect_size, p_value, sig}) plus \code{count_x, count_y, ci_lower,
+    ci_upper, ci_width, pd}.}
+\item{method, iter, alpha, paired, adjust}{Permutation-compatible settings
+(\code{iter = draws}, \code{alpha = 1 - ci}, \code{paired = FALSE},
+\code{adjust = "none"}).}
+\item{prior, draws, ci, mean_threshold, bound_threshold}{Bayesian settings.}
 }
 }
 \description{

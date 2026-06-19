@@ -14,13 +14,38 @@ test_that("bayes_compare returns a well-formed net_bayes object", {
   expect_true(all(c("diff", "ci_lower", "ci_upper", "prob_x", "prob_y",
                     "sig", "summary") %in% names(b)))
   expect_true(is.data.frame(b$summary))
-  expect_true(all(c("from", "to", "prob_x", "prob_y", "count_x", "count_y",
-                    "mean_diff", "ci_lower", "ci_upper", "ci_width", "sig")
+  expect_true(all(c("from", "to", "weight_x", "weight_y", "count_x", "count_y",
+                    "diff", "effect_size", "ci_lower", "ci_upper", "ci_width",
+                    "pd", "p_value", "sig")
                   %in% names(b$summary)))
   # CI brackets the posterior mean difference
-  expect_true(all(b$summary$ci_lower <= b$summary$mean_diff + 1e-8))
-  expect_true(all(b$summary$ci_upper >= b$summary$mean_diff - 1e-8))
+  expect_true(all(b$summary$ci_lower <= b$summary$diff + 1e-8))
+  expect_true(all(b$summary$ci_upper >= b$summary$diff - 1e-8))
   expect_true(all(b$summary$ci_width >= 0))
+})
+
+test_that("bayes_compare result is a net_permutation drop-in", {
+  set.seed(2)
+  d1 <- data.frame(V1 = sample(LETTERS[1:4], 60, TRUE),
+                   V2 = sample(LETTERS[1:4], 60, TRUE),
+                   V3 = sample(LETTERS[1:4], 60, TRUE))
+  d2 <- data.frame(V1 = sample(LETTERS[1:4], 60, TRUE),
+                   V2 = sample(LETTERS[1:4], 60, TRUE),
+                   V3 = sample(LETTERS[1:4], 60, TRUE))
+  b <- bayes_compare(build_network(d1, method = "relative"),
+                     build_network(d2, method = "relative"),
+                     draws = 1000, seed = 1)
+  expect_true(inherits(b, "net_permutation"))
+  # all net_permutation slots present
+  expect_true(all(c("x", "y", "diff", "diff_sig", "p_values", "effect_size",
+                    "summary", "method", "iter", "alpha", "paired", "adjust")
+                  %in% names(b)))
+  # permutation summary columns present
+  perm_cols <- c("from", "to", "weight_x", "weight_y", "diff",
+                 "effect_size", "p_value", "sig")
+  expect_true(all(perm_cols %in% names(summary(b))))
+  # diff_sig is diff masked by significance
+  expect_equal(b$diff_sig, b$diff * b$sig)
 })
 
 test_that("posterior mean difference matches the closed-form Dirichlet mean", {
@@ -62,7 +87,7 @@ test_that("significance rule honours both magnitude and bound thresholds", {
   s <- b$summary
   ci_excl <- (s$ci_lower > 0) | (s$ci_upper < 0)
   nearest <- pmin(abs(s$ci_lower), abs(s$ci_upper))
-  expected <- ci_excl & abs(s$mean_diff) > b$mean_threshold &
+  expected <- ci_excl & abs(s$diff) > b$mean_threshold &
     nearest > b$bound_threshold
   expect_identical(s$sig, expected)
 })
@@ -96,7 +121,7 @@ test_that("grouped dispatch returns all pairwise comparisons", {
   bg <- bayes_compare(nets, draws = 500, seed = 1)
   expect_true(inherits(bg, "net_bayes_group"))
   expect_length(bg, 3L)  # choose(3, 2)
-  expect_true(all(c("comparison", "from", "to", "mean_diff") %in%
+  expect_true(all(c("comparison", "from", "to", "diff") %in%
                     names(summary(bg))))
 })
 

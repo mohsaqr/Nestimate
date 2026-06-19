@@ -55,19 +55,30 @@
 #'   but negligibly small.
 #' @param seed Integer or NULL. RNG seed for reproducible credible intervals.
 #'
-#' @return An object of class \code{"net_bayes"} containing:
+#' @return An object of class \code{c("net_bayes", "net_permutation")}. It carries
+#'   the same fields as a \code{\link{permutation}} result, so it is a drop-in
+#'   wherever a \code{net_permutation} is consumed, plus Bayesian extras:
 #' \describe{
 #'   \item{x, y}{The two input \code{netobject}s.}
-#'   \item{diff}{Posterior mean difference matrix (\code{prob_x - prob_y}).}
+#'   \item{diff}{Posterior mean difference matrix (\code{prob_x - prob_y});
+#'     the analogue of the permutation observed difference.}
+#'   \item{diff_sig}{Difference where \code{sig}, else 0.}
+#'   \item{p_values}{P-value matrix (the two-sided Bayesian p-equivalent).}
+#'   \item{effect_size}{Posterior mean difference over its posterior SD.}
 #'   \item{ci_lower, ci_upper}{Credible-interval bound matrices.}
-#'   \item{pd}{Probability-of-direction matrix in \eqn{[0.5, 1]}: the share
-#'     of posterior mass on the dominant side of zero.}
-#'   \item{p_bayes}{Two-sided Bayesian p-equivalent matrix, \eqn{2(1 - pd)}.}
+#'   \item{pd}{Probability-of-direction matrix in \eqn{[0.5, 1]}.}
+#'   \item{p_bayes}{Alias of \code{p_values} (two-sided Bayesian p, \eqn{2(1-pd)}).}
 #'   \item{prob_x, prob_y}{Posterior mean transition-probability matrices.}
 #'   \item{sig}{Logical significance matrix (CI excludes zero, mean and
 #'     nearest bound exceed their thresholds).}
-#'   \item{summary}{Long-format data frame of edge-level results.}
-#'   \item{method, prior, draws, ci, mean_threshold, bound_threshold}{Settings.}
+#'   \item{summary}{Long-format data frame whose columns are a superset of
+#'     \code{summary.net_permutation} (\code{from, to, weight_x, weight_y, diff,
+#'     effect_size, p_value, sig}) plus \code{count_x, count_y, ci_lower,
+#'     ci_upper, ci_width, pd}.}
+#'   \item{method, iter, alpha, paired, adjust}{Permutation-compatible settings
+#'     (\code{iter = draws}, \code{alpha = 1 - ci}, \code{paired = FALSE},
+#'     \code{adjust = "none"}).}
+#'   \item{prior, draws, ci, mean_threshold, bound_threshold}{Bayesian settings.}
 #' }
 #'
 #' @examples
@@ -215,17 +226,29 @@ bayes_compare <- function(x, y = NULL,
     (abs(diff_mat) > mean_threshold) &
     (nearest > bound_threshold)
 
-  # ---- Long-format summary (one row per directed edge present in either) ----
+  # ---- Permutation-format fields (so net_bayes is a net_permutation drop-in) ----
+  # Cohen's-d-style effect size: posterior mean diff over its posterior sd.
+  perm_sd <- res$sd
+  perm_sd[perm_sd == 0] <- NA_real_
+  effect_size <- diff_mat / perm_sd
+  effect_size[is.na(effect_size)] <- 0
+  diff_sig <- diff_mat * sig
+
+  # ---- Long-format summary (permutation columns + Bayesian extras) ----
   summary_df <- .build_bayes_summary(
     diff_mat = diff_mat, ci_lower = ci_lower, ci_upper = ci_upper,
     prob_x = prob_x, prob_y = prob_y, count_x = count_x, count_y = count_y,
-    pd = pd, p_bayes = p_bayes, sig = sig, nodes = nodes, ci = ci
+    effect_size = effect_size, pd = pd, p_bayes = p_bayes,
+    sig = sig, nodes = nodes
   )
 
   result <- list(
     x               = x,
     y               = y,
     diff            = diff_mat,
+    diff_sig        = diff_sig,
+    p_values        = p_bayes,
+    effect_size     = effect_size,
     ci_lower        = ci_lower,
     ci_upper        = ci_upper,
     pd              = pd,
@@ -235,13 +258,17 @@ bayes_compare <- function(x, y = NULL,
     sig             = sig,
     summary         = summary_df,
     method          = method_x,
+    iter            = draws,
+    alpha           = 1 - ci,
+    paired          = FALSE,
+    adjust          = "none",
     prior           = prior,
     draws           = draws,
     ci              = ci,
     mean_threshold  = mean_threshold,
     bound_threshold = bound_threshold
   )
-  class(result) <- "net_bayes"
+  class(result) <- c("net_bayes", "net_permutation")
   result
 }
 
@@ -271,35 +298,46 @@ bayes_compare <- function(x, y = NULL,
   prop_pos <- rowMeans(diff_draws > 0)
   pd <- pmax(prop_pos, 1 - prop_pos)
 
+  # Posterior sd of the difference (for the permutation-style effect size).
+  mean_d <- rowMeans(diff_draws)
+  sd_d <- sqrt(pmax(rowMeans(diff_draws^2) - mean_d^2, 0))
+
   dn <- dimnames(s1_x)
   list(
     lower = matrix(qs[1L, ], k, k, dimnames = dn),
     upper = matrix(qs[2L, ], k, k, dimnames = dn),
-    pd    = matrix(pd, k, k, dimnames = dn)
+    pd    = matrix(pd, k, k, dimnames = dn),
+    sd    = matrix(sd_d, k, k, dimnames = dn)
   )
 }
 
 
 #' Build long-format summary for net_bayes
+#'
+#' Columns are a superset of \code{summary.net_permutation}: it carries
+#' \code{from, to, weight_x, weight_y, diff, effect_size, p_value, sig}
+#' (the permutation columns, so a net_bayes summary is a drop-in) plus the
+#' Bayesian extras \code{count_x, count_y, ci_lower, ci_upper, ci_width, pd}.
 #' @noRd
 .build_bayes_summary <- function(diff_mat, ci_lower, ci_upper,
                                  prob_x, prob_y, count_x, count_y,
-                                 pd, p_bayes, sig, nodes, ci) {
+                                 effect_size, pd, p_bayes, sig, nodes) {
   n <- length(nodes)
   dt <- data.table::data.table(
-    from      = rep(nodes, each = n),
-    to        = rep(nodes, times = n),
-    prob_x    = as.vector(t(prob_x)),
-    prob_y    = as.vector(t(prob_y)),
-    count_x   = as.vector(t(count_x)),
-    count_y   = as.vector(t(count_y)),
-    mean_diff = as.vector(t(diff_mat)),
-    ci_lower  = as.vector(t(ci_lower)),
-    ci_upper  = as.vector(t(ci_upper)),
-    ci_width  = as.vector(t(ci_upper - ci_lower)),
-    pd        = as.vector(t(pd)),
-    p_bayes   = as.vector(t(p_bayes)),
-    sig       = as.vector(t(sig))
+    from        = rep(nodes, each = n),
+    to          = rep(nodes, times = n),
+    weight_x    = as.vector(t(prob_x)),
+    weight_y    = as.vector(t(prob_y)),
+    count_x     = as.vector(t(count_x)),
+    count_y     = as.vector(t(count_y)),
+    diff        = as.vector(t(diff_mat)),
+    effect_size = as.vector(t(effect_size)),
+    ci_lower    = as.vector(t(ci_lower)),
+    ci_upper    = as.vector(t(ci_upper)),
+    ci_width    = as.vector(t(ci_upper - ci_lower)),
+    pd          = as.vector(t(pd)),
+    p_value     = as.vector(t(p_bayes)),
+    sig         = as.vector(t(sig))
   )
   # Keep directed edges observed in at least one network
   dt <- dt[count_x > 0 | count_y > 0]
@@ -393,8 +431,8 @@ plot.net_bayes <- function(x, significant_only = TRUE, title = NULL, ...) {
          if (significant_only) " (none credibly different; try significant_only = FALSE)"
          else "", ".", call. = FALSE)
   }
-  ed$signed <- ed$mean_diff
-  ed$value  <- abs(ed$mean_diff)
+  ed$signed <- ed$diff
+  ed$value  <- abs(ed$diff)
   if (is.null(title)) {
     title <- "Differential transition network (posterior mean difference)"
   }
