@@ -1,3 +1,17 @@
+# Nestimate 0.7.2
+
+## New features
+
+* `bayes_compare()` — Bayesian Dirichlet-Multinomial comparison of two
+  transition networks, a complement to `permutation()`. Models each source
+  state's outgoing transitions as a Dirichlet-Multinomial process (Jeffreys
+  prior) and returns, per edge, a posterior mean difference, a credible
+  interval, the probability of direction (`pd`) and its two-sided
+  p-equivalent. Adds `print`/`summary`/`plot` methods and `netobject_group`
+  dispatch (all-pairwise or matched). Method source: Johnston & Jendoubi
+  (2026), *How Delivery Mode Reshapes Resource Engagement: A Bayesian
+  Differential Network Analysis*, TNA Workshop 2026.
+
 # Nestimate 0.7.1
 
 ## New features
