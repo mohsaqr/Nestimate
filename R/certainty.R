@@ -243,13 +243,12 @@ print.net_certainty <- function(x, ...) {
       top <- head(sig_s, 5L)
       cat("  Edge                   Mean     95% CI          p\n")
       cat("  -----------------------------------------------\n")
-      for (i in seq_len(nrow(top))) {
-        r <- top[i, ]
-        lbl2 <- sprintf("%-20s", paste0(r$from, " → ", r$to))
-        stars <- if (r$p_value < 0.001) "***" else if (r$p_value < 0.01) "** " else "*  "
-        cat(sprintf("  %s  %6.3f  [%5.3f, %5.3f]  %s\n",
-                    lbl2, r$mean, r$ci_lower, r$ci_upper, stars))
-      }
+      lbl2  <- sprintf("%-20s", paste0(top$from, " \u2192 ", top$to))
+      stars <- ifelse(top$p_value < 0.001, "***",
+                      ifelse(top$p_value < 0.01, "** ", "*  "))
+      cat(sprintf("  %s  %6.3f  [%5.3f, %5.3f]  %s\n",
+                  lbl2, top$mean, top$ci_lower, top$ci_upper, stars),
+          sep = "")
       if (nrow(sig_s) > 5L)
         cat(sprintf("  ... and %d more certain edges\n", nrow(sig_s) - 5L))
       cat("\n")
