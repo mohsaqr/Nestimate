@@ -8,7 +8,6 @@
 #'   p.adjust pnorm predict pt qnorm qt residuals rnorm runif
 #'   rbinom rpois reshape symnum ecdf complete.cases cov2cor
 #' @importFrom utils head tail combn modifyList
-#' @importFrom glasso glasso
 #' @importFrom data.table data.table setDT rbindlist
 ## usethis namespace: end
 NULL

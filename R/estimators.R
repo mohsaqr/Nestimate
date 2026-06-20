@@ -1440,31 +1440,40 @@
 }
 
 
-#' Select best lambda via EBIC using glasso fits with warm starts
+#' Select best lambda via EBIC using pure-R glasso fits with warm starts
+#'
+#' Two-tier strategy: the path is scanned at glasso's own \code{thr = 1e-4}
+#' tolerance (fast, and enough for EBIC selection since adjacent-lambda EBIC
+#' gaps dwarf 1e-4 fit noise and the lasso zeros inactive edges exactly), then
+#' the single selected lambda is re-fit to machine precision so the returned
+#' precision matrix is the certified global optimum (KKT ~1e-9, see
+#' \code{.glasso_kkt_violation}).
 #' @noRd
-.select_ebic <- function(S, lambda_path, n, gamma, penalize_diagonal) {
+.select_ebic <- function(S, lambda_path, n, gamma, penalize_diagonal,
+                         scan_tol = 1e-4, refit_tol = 1e-8) {
   p <- ncol(S)
   n_lambda <- length(lambda_path)
   ebic_vals <- numeric(n_lambda)
 
   w_prev <- NULL
-  wi_prev <- NULL
+  beta_prev <- NULL
   best_idx <- 1L
   best_ebic <- Inf
-  best_wi <- NULL
+  have_best <- FALSE
 
   for (i in seq_along(lambda_path)) {
     lam <- lambda_path[i]
 
+    # Pure-R graphical lasso (see R/glasso_pure.R), warm-started down the path,
+    # at the fast scan tolerance.
     fit <- tryCatch(
-      glasso::glasso(
-        s = S,
+      .glasso_fit(
+        S = S,
         rho = lam,
         penalize.diagonal = penalize_diagonal,
-        start = if (is.null(w_prev)) "cold" else "warm",
-        w.init = w_prev,
-        wi.init = wi_prev,
-        trace = FALSE
+        tol_outer = scan_tol, tol_inner = scan_tol,
+        w_init = w_prev,
+        beta_init = beta_prev
       ),
       error = function(e) NULL
     )
@@ -1475,7 +1484,7 @@
     }
 
     w_prev <- fit$w
-    wi_prev <- fit$wi
+    beta_prev <- fit$beta
 
     log_det <- determinant(fit$wi, logarithm = TRUE)
     if (log_det$sign <= 0) {
@@ -1492,14 +1501,20 @@
     if (ebic_vals[i] < best_ebic) {
       best_ebic <- ebic_vals[i]
       best_idx <- i
-      best_wi <- fit$wi
+      have_best <- TRUE
     }
   }
 
-  if (is.null(best_wi)) {
+  if (!have_best) {
     stop("All glasso fits failed. Check your input data.") # nocov
   }
 
+  # Tight refit at the selected lambda -> certified optimum.
+  best_wi <- .glasso_fit(
+    S = S, rho = lambda_path[best_idx],
+    penalize.diagonal = penalize_diagonal,
+    tol_outer = refit_tol, tol_inner = refit_tol * 1e-2
+  )$wi
   colnames(best_wi) <- rownames(best_wi) <- colnames(S)
 
   list(
@@ -1570,13 +1585,13 @@
     net_pattern <- -.wi2net(wi)
     zero_idx <- which(net_pattern == 0 & upper.tri(net_pattern), arr.ind = TRUE)
     if (nrow(zero_idx) > 0L) {
-      refit_result <- suppressWarnings(glasso::glasso(
-        S, rho = 0, zero = zero_idx, trace = 0,
-        penalize.diagonal = penalize.diagonal))
+      refit_result <- .glasso_fit(
+        S, rho = 0, zero = zero_idx,
+        penalize.diagonal = penalize.diagonal)
     } else {
-      refit_result <- suppressWarnings(glasso::glasso( # nocov start
-        S, rho = 0, trace = 0,
-        penalize.diagonal = penalize.diagonal)) # nocov end
+      refit_result <- .glasso_fit( # nocov start
+        S, rho = 0,
+        penalize.diagonal = penalize.diagonal) # nocov end
     }
     wi <- refit_result$wi
   }

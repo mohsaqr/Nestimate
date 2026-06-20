@@ -446,8 +446,8 @@ permutation <- function(x, y = NULL,
         S <- cor(mat_subset, method = cor_method)
         n_obs <- nrow(mat_subset)
         gp <- tryCatch(
-          glasso::glassopath(s = S, rholist = perm_rholist, trace = 0,
-                             penalize.diagonal = penalize_diag),
+          .glassopath_fit(S = S, rholist = perm_rholist,
+                          penalize.diagonal = penalize_diag),
           error = function(e) NULL
         )
         if (is.null(gp)) return(NULL) # nocov

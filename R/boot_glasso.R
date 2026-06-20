@@ -205,8 +205,8 @@ boot_glasso <- function(x,
   lambda_path <- .compute_lambda_path(S, nlambda, 0.01)
 
   gp_orig <- tryCatch(
-    glasso::glassopath(s = S, rholist = lambda_path, trace = 0,
-                       penalize.diagonal = FALSE),
+    .glassopath_fit(S = S, rholist = lambda_path,
+                    penalize.diagonal = FALSE),
     error = function(e) stop("glassopath failed on original data: ",
                               e$message, call. = FALSE)
   )
@@ -432,8 +432,8 @@ boot_glasso <- function(x,
   if (any(is.na(S_boot))) return(NULL) # nocov
 
   gp <- tryCatch(
-    glasso::glassopath(s = S_boot, rholist = lambda_path, trace = 0,
-                       penalize.diagonal = penalize_diag),
+    .glassopath_fit(S = S_boot, rholist = lambda_path,
+                    penalize.diagonal = penalize_diag),
     error = function(e) NULL
   )
   if (is.null(gp)) return(NULL) # nocov
