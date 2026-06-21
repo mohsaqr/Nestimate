@@ -100,7 +100,8 @@ errors and tests for network statistics. *Connections*, 22(2), 161-170.
 [`vertex_bootstrap`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md),
 [`nct`](https://saqr.me/Nestimate/reference/nct.md) for the
 permutation-based comparison of edge-level structure when raw data are
-available, `permutation_test`.
+available,
+[`permutation`](https://saqr.me/Nestimate/reference/permutation.md).
 
 ## Examples
 

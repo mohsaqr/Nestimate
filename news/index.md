@@ -1,5 +1,53 @@
 # Changelog
 
+## Nestimate 0.7.3
+
+### New features
+
+- [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) —
+  analytic Bayesian counterpart of
+  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  for transition networks. Models each state’s outgoing transitions as a
+  Dirichlet-Multinomial process (Jeffreys prior) and returns posterior
+  mean, sd, credible interval and a stability decision per edge in
+  closed form (no resampling). Returns the exact `net_bootstrap` object
+  layout and carries class `c("net_certainty", "net_bootstrap")`, so it
+  is a drop-in: every `net_bootstrap` method works on it. Completes the
+  assessment trio certainty / stability (`bootstrap_network`) /
+  reliability (`reliability`).
+
+### Enhancements
+
+- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  results are now 100% compatible with the
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  format: the object carries class `c("net_bayes", "net_permutation")`
+  with all `net_permutation` slots (`diff_sig`, `p_values`,
+  `effect_size`, `iter`, `alpha`, `paired`, `adjust`), and its `summary`
+  is a superset of `summary.net_permutation`
+  (`from, to, weight_x, weight_y, diff, effect_size, p_value, sig` plus
+  the Bayesian extras
+  `count_x, count_y, ci_lower, ci_upper, ci_width, pd`). A
+  [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  result is now a drop-in wherever a `net_permutation` is consumed.
+
+## Nestimate 0.7.2
+
+### New features
+
+- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  — Bayesian Dirichlet-Multinomial comparison of two transition
+  networks, a complement to
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md).
+  Models each source state’s outgoing transitions as a
+  Dirichlet-Multinomial process (Jeffreys prior) and returns, per edge,
+  a posterior mean difference, a credible interval, the probability of
+  direction (`pd`) and its two-sided p-equivalent. Adds
+  `print`/`summary`/`plot` methods and `netobject_group` dispatch
+  (all-pairwise or matched). Method source: Johnston & Jendoubi (2026),
+  *How Delivery Mode Reshapes Resource Engagement: A Bayesian
+  Differential Network Analysis*, TNA Workshop 2026.
+
 ## Nestimate 0.7.1
 
 ### New features

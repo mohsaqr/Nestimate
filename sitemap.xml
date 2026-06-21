@@ -19,6 +19,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/as_networks.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/as_tna.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/association_rules.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/bayes_compare.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/betti_numbers.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/bipartite_groups.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/boot_glasso.html</loc></url>
@@ -47,6 +48,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/build_tna.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/casedrop_reliability.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/centrality_stability.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/certainty.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/chain_structure.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/chatgpt_srl.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/check_val_in_range.html</loc></url>
@@ -116,6 +118,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/plot.mmm_compare.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.mosaic_analysis.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_association_rules.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/plot.net_bayes.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_cluster_diagnostics.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_clustering.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_comparison.html</loc></url>
@@ -155,8 +158,11 @@
 <url><loc>https://saqr.me/Nestimate/reference/print.mosaic_analysis.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.nestimate_data.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_association_rules.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.net_bayes.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.net_bayes_group.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_bootstrap.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_bootstrap_group.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.net_certainty.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_cluster_diagnostics.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_clustering.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_gimme.html</loc></url>
@@ -225,6 +231,8 @@
 <url><loc>https://saqr.me/Nestimate/reference/summary.nest_transition_counts.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.nest_transition_matrix.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_association_rules.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/summary.net_bayes.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/summary.net_bayes_group.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_bootstrap.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_bootstrap_group.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_clustering.html</loc></url>

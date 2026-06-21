@@ -252,14 +252,14 @@ print(boot)
 #>     expected_influence:    0.00 [Unstable]
 #> 
 #>   Edge differences: 1/15 pairs significantly different
-#>   Timing: 0.4s (bootstrap: 0.2s, case-drop: 0.1s)
+#>   Timing: 15.0s (bootstrap: 8.8s, case-drop: 6.1s)
 summary(boot, type = "edges")
 #>     edge weight    ci_lower  ci_upper inclusion
-#> 1 A -- B      0 -0.15265878 0.3016145      0.24
+#> 1 A -- B      0 -0.15265878 0.3016131      0.24
 #> 2 A -- C      0 -0.41694566 0.0000000      0.45
-#> 3 B -- C      0 -0.37041174 0.2982661      0.43
-#> 4 A -- D      0  0.00000000 0.3870390      0.41
-#> 5 B -- D      0 -0.19093168 0.2384451      0.21
+#> 3 B -- C      0 -0.37041116 0.2982661      0.43
+#> 4 A -- D      0  0.00000000 0.3870411      0.41
+#> 5 B -- D      0 -0.19093175 0.2384451      0.21
 #> 6 C -- D      0 -0.01732718 0.2188424      0.18
 # }
 ```

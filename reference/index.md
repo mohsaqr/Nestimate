@@ -115,6 +115,12 @@ Statistical inference for network estimation
 - [`nct()`](https://saqr.me/Nestimate/reference/nct.md) : Network
   Comparison Test
 
+- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  : Bayesian Dirichlet-Multinomial comparison of two transition networks
+
+- [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) :
+  Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
+
 - [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md)
   : Compare two networks descriptively
 
@@ -369,11 +375,20 @@ Print, summary, and plot methods for package classes
 - [`print(`*`<net_association_rules>`*`)`](https://saqr.me/Nestimate/reference/print.net_association_rules.md)
   : Print Method for net_association_rules
 
+- [`print(`*`<net_bayes>`*`)`](https://saqr.me/Nestimate/reference/print.net_bayes.md)
+  : Print method for net_bayes
+
+- [`print(`*`<net_bayes_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_bayes_group.md)
+  : Print method for net_bayes_group
+
 - [`print(`*`<net_bootstrap>`*`)`](https://saqr.me/Nestimate/reference/print.net_bootstrap.md)
   : Print Method for net_bootstrap
 
 - [`print(`*`<net_bootstrap_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_bootstrap_group.md)
   : Print Method for net_bootstrap_group
+
+- [`print(`*`<net_certainty>`*`)`](https://saqr.me/Nestimate/reference/print.net_certainty.md)
+  : Print Method for net_certainty
 
 - [`print(`*`<net_cluster_diagnostics>`*`)`](https://saqr.me/Nestimate/reference/print.net_cluster_diagnostics.md)
   : Print Method for net_cluster_diagnostics
@@ -569,6 +584,12 @@ Print, summary, and plot methods for package classes
 - [`summary(`*`<net_association_rules>`*`)`](https://saqr.me/Nestimate/reference/summary.net_association_rules.md)
   : Summary Method for net_association_rules
 
+- [`summary(`*`<net_bayes>`*`)`](https://saqr.me/Nestimate/reference/summary.net_bayes.md)
+  : Summary method for net_bayes
+
+- [`summary(`*`<net_bayes_group>`*`)`](https://saqr.me/Nestimate/reference/summary.net_bayes_group.md)
+  : Summary method for net_bayes_group
+
 - [`summary(`*`<net_bootstrap>`*`)`](https://saqr.me/Nestimate/reference/summary.net_bootstrap.md)
   : Summary Method for net_bootstrap
 
@@ -680,6 +701,9 @@ Print, summary, and plot methods for package classes
 
 - [`plot(`*`<net_association_rules>`*`)`](https://saqr.me/Nestimate/reference/plot.net_association_rules.md)
   : Plot Method for net_association_rules
+
+- [`plot(`*`<net_bayes>`*`)`](https://saqr.me/Nestimate/reference/plot.net_bayes.md)
+  : Plot method for net_bayes
 
 - [`plot(`*`<net_cluster_diagnostics>`*`)`](https://saqr.me/Nestimate/reference/plot.net_cluster_diagnostics.md)
   : Plot Method for net_cluster_diagnostics

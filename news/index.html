@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,27 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.3" id="nestimate-073">Nestimate 0.7.3<a class="anchor" aria-label="anchor" href="#nestimate-073"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-7-3">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-3"></a></h3>
+<ul><li>
+<code><a href="../reference/certainty.html">certainty()</a></code> — analytic Bayesian counterpart of <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> for transition networks. Models each state’s outgoing transitions as a Dirichlet-Multinomial process (Jeffreys prior) and returns posterior mean, sd, credible interval and a stability decision per edge in closed form (no resampling). Returns the exact <code>net_bootstrap</code> object layout and carries class <code>c("net_certainty", "net_bootstrap")</code>, so it is a drop-in: every <code>net_bootstrap</code> method works on it. Completes the assessment trio certainty / stability (<code>bootstrap_network</code>) / reliability (<code>reliability</code>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="enhancements-0-7-3">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-7-3"></a></h3>
+<ul><li>
+<code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> results are now 100% compatible with the <code><a href="../reference/permutation.html">permutation()</a></code> format: the object carries class <code>c("net_bayes", "net_permutation")</code> with all <code>net_permutation</code> slots (<code>diff_sig</code>, <code>p_values</code>, <code>effect_size</code>, <code>iter</code>, <code>alpha</code>, <code>paired</code>, <code>adjust</code>), and its <code>summary</code> is a superset of <code>summary.net_permutation</code> (<code>from, to, weight_x, weight_y, diff, effect_size, p_value, sig</code> plus the Bayesian extras <code>count_x, count_y, ci_lower, ci_upper, ci_width, pd</code>). A <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> result is now a drop-in wherever a <code>net_permutation</code> is consumed.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.2" id="nestimate-072">Nestimate 0.7.2<a class="anchor" aria-label="anchor" href="#nestimate-072"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-7-2">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-2"></a></h3>
+<ul><li>
+<code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> — Bayesian Dirichlet-Multinomial comparison of two transition networks, a complement to <code><a href="../reference/permutation.html">permutation()</a></code>. Models each source state’s outgoing transitions as a Dirichlet-Multinomial process (Jeffreys prior) and returns, per edge, a posterior mean difference, a credible interval, the probability of direction (<code>pd</code>) and its two-sided p-equivalent. Adds <code>print</code>/<code>summary</code>/<code>plot</code> methods and <code>netobject_group</code> dispatch (all-pairwise or matched). Method source: Johnston &amp; Jendoubi (2026), <em>How Delivery Mode Reshapes Resource Engagement: A Bayesian Differential Network Analysis</em>, TNA Workshop 2026.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.1" id="nestimate-071">Nestimate 0.7.1<a class="anchor" aria-label="anchor" href="#nestimate-071"></a></h2>
 <div class="section level3">
