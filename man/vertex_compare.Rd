@@ -94,5 +94,5 @@ errors and tests for network statistics. \emph{Connections}, 22(2),
 \seealso{
 \code{\link{vertex_bootstrap}}, \code{\link{nct}} for the
 permutation-based comparison of edge-level structure when raw data
-are available, \code{\link{permutation_test}}.
+are available, \code{\link{permutation}}.
 }

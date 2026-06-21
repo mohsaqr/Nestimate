@@ -211,7 +211,7 @@ weighting — related in spirit to network loadings
 EGA-family estimator. Requires raw data.}
 \item{\code{"rv"} (descriptive, multivariate)}{Macro edge A--B =
 Escoufier's RV coefficient between the member blocks — a matrix
-correlation in \link{0, 1} computed from the block covariance
+correlation in \verb{[0, 1]} computed from the block covariance
 structure. No composites are formed and no estimator is re-fit,
 so nothing is lost to averaging; signs are not represented.
 Requires raw data.}

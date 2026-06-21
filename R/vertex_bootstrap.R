@@ -434,7 +434,7 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 #'
 #' @seealso \code{\link{vertex_bootstrap}}, \code{\link{nct}} for the
 #'   permutation-based comparison of edge-level structure when raw data
-#'   are available, \code{\link{permutation_test}}.
+#'   are available, \code{\link{permutation}}.
 #'
 #' @examples
 #' states <- c("plan", "code", "debug", "test")

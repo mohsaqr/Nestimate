@@ -65,6 +65,8 @@ reference:
       - boot_glasso
       - permutation
       - nct
+      - bayes_compare
+      - certainty
       - compare_model
       - compare_model.netobject_group
       - rename_models

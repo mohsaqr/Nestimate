@@ -34,7 +34,7 @@
 #'
 #' @details
 #' Certainty (this function), stability (\code{\link{bootstrap_network}}) and
-#' reliability (\code{\link{reliability}}) answer different questions about an
+#' reliability (\code{\link[=network_reliability]{reliability}}) answer different questions about an
 #' edge: how precisely it is pinned down by the observed counts, whether it
 #' survives resampling the sequences, and whether it is consistent across
 #' split-halves. Certainty and stability agree on homogeneous data; certainty is
@@ -76,7 +76,7 @@
 #' summary(cert)
 #'
 #' @seealso \code{\link{bootstrap_network}}, \code{\link{bayes_compare}},
-#'   \code{\link{reliability}}
+#'   \code{\link{network_reliability}}
 #' @references
 #' Johnston, L. & Jendoubi, T. (2026). How Delivery Mode Reshapes Resource
 #' Engagement: A Bayesian Differential Network Analysis. TNA Workshop 2026.
