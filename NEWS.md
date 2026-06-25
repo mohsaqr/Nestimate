@@ -13,6 +13,15 @@
 
 ## Enhancements
 
+* `sequence_plot()` gains a multichannel view for `mcml` objects built from
+  sequences. `sequence_plot(fit)` draws one carpet panel per cluster channel
+  plus a macro `Summary` panel — each channel's own states solid, the other
+  clusters a faded wash, finished cells white, rows aligned by the macro
+  sequence. `sequence_plot(fit, type = "distribution")` stacks the prevalence
+  (own states + faded other clusters + an explicit `NA` band, to 100%), and
+  `normalize = TRUE` gives a TraMineR-style `seqdplot` where each time point
+  sums to 1. ggplot-based and dependency-free; returns a `ggplot` object.
+
 * `bayes_compare()` results are now 100% compatible with the `permutation()`
   format: the object carries class `c("net_bayes", "net_permutation")` with all
   `net_permutation` slots (`diff_sig`, `p_values`, `effect_size`, `iter`,

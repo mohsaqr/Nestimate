@@ -14,6 +14,7 @@ sequence_plot(
   scale = c("proportion", "count"),
   geom = c("area", "bar"),
   na = TRUE,
+  normalize = FALSE,
   row_gap = 0,
   dendrogram_width = 1.2,
   k = NULL,
@@ -58,6 +59,14 @@ assignments from \code{attr(, "clustering")}.
 \item{net_mmm}{From \code{\link{build_mmm}}. Uses \code{$models[[1]]$data}
 and \code{$assignments}.}
 \item{tna}{From the tna package. Decodes integer-encoded sequences.}
+\item{mcml}{From \code{\link{build_mcml}} (built from sequences).
+Produces a \strong{multichannel} plot: one panel per cluster plus a
+macro \code{Summary} panel. \code{type = "heatmap"}/\code{"index"}
+draw the carpet (each channel's own states solid, other clusters a
+faded wash); \code{type = "distribution"} draws the stacked
+distribution (add \code{normalize = TRUE} for a TraMineR-style
+\code{seqdplot} where each time point sums to 1). Returns a
+\code{ggplot} object.}
 }}
 
 \item{type}{One of \code{"heatmap"} (default), \code{"index"}, or
@@ -77,6 +86,11 @@ one facet per group. Index/distribution only. Ignored for heatmap.}
 
 \item{scale, geom, na}{Passed to \code{\link{distribution_plot}} when
 \code{type = "distribution"}.}
+
+\item{normalize}{\code{mcml} + \code{type = "distribution"} only. When
+\code{TRUE}, each time point is normalised to sum to 1 within its channel
+(TraMineR-style \code{seqdplot} composition); when \code{FALSE} (default)
+the stack shows prevalence and is capped with an \code{NA} band.}
 
 \item{row_gap}{Fraction of row height used as vertical gap between
 sequences in index plots. \code{0} (default) = dense like heatmap.
@@ -145,8 +159,9 @@ from the device width so the legend looks proportional at 5 in vs
 \item{legend_bty}{\code{"n"} or \code{"o"}.}
 }
 \value{
-Invisibly, a list describing the plot (shape depends on
-\code{type}).
+For base-graphics types, invisibly a list describing the plot
+(shape depends on \code{type}). For an \code{mcml} input, a \code{ggplot}
+object.
 }
 \description{
 Single entry point for three categorical-sequence visualisations.
@@ -165,8 +180,20 @@ thin gaps (no dendrogram). Supports grouping via \code{group} or a
 sequence_plot(trajectories)
 sequence_plot(trajectories, type = "index")
 sequence_plot(trajectories, type = "distribution")
+
+# Multichannel MCML view: one channel per cluster + a macro Summary.
+fit <- build_mcml(
+  group_regulation_long,
+  clusters = list(Cognitive  = c("discuss", "synthesis", "consensus", "cohesion"),
+                  Regulation = c("plan", "monitor", "adapt", "coregulate"),
+                  Affective  = "emotion"),
+  actor = "Actor", action = "Action", time = "Time")
+sequence_plot(fit)                                          # multichannel carpet
+sequence_plot(fit, type = "distribution")                  # prevalence + NA band
+sequence_plot(fit, type = "distribution", normalize = TRUE) # seqdplot (sums to 1)
 }
 }
 \seealso{
-\code{\link{distribution_plot}}, \code{\link{build_clusters}}
+\code{\link{distribution_plot}}, \code{\link{build_clusters}},
+\code{\link{build_mcml}}
 }

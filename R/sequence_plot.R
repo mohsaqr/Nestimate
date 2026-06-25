@@ -118,6 +118,14 @@
 #'     \item{net_mmm}{From \code{\link{build_mmm}}. Uses \code{$models[[1]]$data}
 #'       and \code{$assignments}.}
 #'     \item{tna}{From the tna package. Decodes integer-encoded sequences.}
+#'     \item{mcml}{From \code{\link{build_mcml}} (built from sequences).
+#'       Produces a \strong{multichannel} plot: one panel per cluster plus a
+#'       macro \code{Summary} panel. \code{type = "heatmap"}/\code{"index"}
+#'       draw the carpet (each channel's own states solid, other clusters a
+#'       faded wash); \code{type = "distribution"} draws the stacked
+#'       distribution (add \code{normalize = TRUE} for a TraMineR-style
+#'       \code{seqdplot} where each time point sums to 1). Returns a
+#'       \code{ggplot} object.}
 #'   }
 #' @param type One of \code{"heatmap"} (default), \code{"index"}, or
 #'   \code{"distribution"}.
@@ -132,6 +140,10 @@
 #'   one facet per group. Index/distribution only. Ignored for heatmap.
 #' @param scale,geom,na Passed to \code{\link{distribution_plot}} when
 #'   \code{type = "distribution"}.
+#' @param normalize \code{mcml} + \code{type = "distribution"} only. When
+#'   \code{TRUE}, each time point is normalised to sum to 1 within its channel
+#'   (TraMineR-style \code{seqdplot} composition); when \code{FALSE} (default)
+#'   the stack shows prevalence and is capped with an \code{NA} band.
 #' @param row_gap Fraction of row height used as vertical gap between
 #'   sequences in index plots. \code{0} (default) = dense like heatmap.
 #'   Try \code{0.15} for visible separators at low row counts.
@@ -176,14 +188,27 @@
 #' @param legend_border Swatch border colour.
 #' @param legend_bty \code{"n"} or \code{"o"}.
 #'
-#' @return Invisibly, a list describing the plot (shape depends on
-#'   \code{type}).
-#' @seealso \code{\link{distribution_plot}}, \code{\link{build_clusters}}
+#' @return For base-graphics types, invisibly a list describing the plot
+#'   (shape depends on \code{type}). For an \code{mcml} input, a \code{ggplot}
+#'   object.
+#' @seealso \code{\link{distribution_plot}}, \code{\link{build_clusters}},
+#'   \code{\link{build_mcml}}
 #' @examples
 #' \donttest{
 #' sequence_plot(trajectories)
 #' sequence_plot(trajectories, type = "index")
 #' sequence_plot(trajectories, type = "distribution")
+#'
+#' # Multichannel MCML view: one channel per cluster + a macro Summary.
+#' fit <- build_mcml(
+#'   group_regulation_long,
+#'   clusters = list(Cognitive  = c("discuss", "synthesis", "consensus", "cohesion"),
+#'                   Regulation = c("plan", "monitor", "adapt", "coregulate"),
+#'                   Affective  = "emotion"),
+#'   actor = "Actor", action = "Action", time = "Time")
+#' sequence_plot(fit)                                          # multichannel carpet
+#' sequence_plot(fit, type = "distribution")                  # prevalence + NA band
+#' sequence_plot(fit, type = "distribution", normalize = TRUE) # seqdplot (sums to 1)
 #' }
 #' @export
 sequence_plot <- function(x,
@@ -199,6 +224,7 @@ sequence_plot <- function(x,
                           scale            = c("proportion", "count"),
                           geom             = c("area", "bar"),
                           na               = TRUE,
+                          normalize        = FALSE,
                           row_gap          = 0,
                           dendrogram_width = 1.2,
                           k                = NULL,
@@ -233,6 +259,15 @@ sequence_plot <- function(x,
   if (is.null(legend)) legend <- "right"
   legend <- match.arg(legend, c("bottom", "right", "none"))
   if (!is.null(xlab)) time_label <- xlab
+
+  # mcml: multichannel sequence / distribution plot (ggplot, faceted by
+  # cluster-channel). Self-contained path; returns a ggplot object.
+  if (inherits(x, "mcml")) {
+    return(.sequence_plot_mcml(
+      x, type = type, normalize = isTRUE(normalize),
+      state_colors = state_colors, na_color = na_color,
+      main = main, time_label = time_label))
+  }
 
   # Open a new device when width/height supplied (interactive use). In
   # knitr, set fig.width / fig.height in the chunk header instead - this
