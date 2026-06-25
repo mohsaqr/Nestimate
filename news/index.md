@@ -18,6 +18,17 @@
 
 ### Enhancements
 
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  gains a multichannel view for `mcml` objects built from sequences.
+  `sequence_plot(fit)` draws one carpet panel per cluster channel plus a
+  macro `Summary` panel — each channel’s own states solid, the other
+  clusters a faded wash, finished cells white, rows aligned by the macro
+  sequence. `sequence_plot(fit, type = "distribution")` stacks the
+  prevalence (own states + faded other clusters + an explicit `NA` band,
+  to 100%), and `normalize = TRUE` gives a TraMineR-style `seqdplot`
+  where each time point sums to 1. ggplot-based and dependency-free;
+  returns a `ggplot` object.
+
 - [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
   results are now 100% compatible with the
   [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
@@ -414,13 +425,11 @@ addressed; two deferred pending design decisions on numeric semantics
   `NESTIMATE_EQUIV_TESTS=true`): `test-equiv-permutation.R`
   (vs. [`stats::p.adjust`](https://rdrr.io/r/stats/p.adjust.html) +
   hand-coded base-R permutation loop), `test-equiv-mlvar.R`
-  (vs. [`mlVAR::mlVAR`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) at
-  machine precision), `test-equiv-association-rules.R` (vs.
-  [`arules::apriori`](https://rdrr.io/pkg/arules/man/apriori.html)),
+  (vs. `mlVAR::mlVAR` at machine precision),
+  `test-equiv-association-rules.R` (vs. `arules::apriori`),
   `test-equiv-link-prediction.R` (vs. clean-room matrix algebra +
   [`igraph::similarity`](https://r.igraph.org/reference/similarity.html)),
-  `test-equiv-centrality-stability.R`
-  (vs. [`bootnet::corStability`](https://rdrr.io/pkg/bootnet/man/corStability.html)).
+  `test-equiv-centrality-stability.R` (vs. `bootnet::corStability`).
   Total ~162k per-value comparisons; all within machine precision except
   centrality-stability which uses a documented drop-grid tolerance
   because bootnet uses `igraph` path-based centrality and Nestimate uses
@@ -476,9 +485,7 @@ CRAN release: 2026-04-20
 - [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
   — multilevel VAR networks from ESM/EMA panel data. Estimates temporal
   (directed), contemporaneous (undirected), and between-subjects
-  (undirected) networks matching
-  [`mlVAR::mlVAR()`](https://rdrr.io/pkg/mlVAR/man/mlVAR.html) at
-  machine precision.
+  (undirected) networks matching `mlVAR::mlVAR()` at machine precision.
 - [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) /
   [`compare_mmm()`](https://saqr.me/Nestimate/reference/compare_mmm.md)
   — mixture of Markov models via EM, with BIC/AIC/ICL model selection
@@ -499,9 +506,8 @@ CRAN release: 2026-04-20
   [`q_analysis()`](https://saqr.me/Nestimate/reference/q_analysis.md) —
   topological analysis of networks via simplicial complexes.
 - [`nct()`](https://saqr.me/Nestimate/reference/nct.md) — Network
-  Comparison Test matching
-  [`NetworkComparisonTest::NCT()`](https://rdrr.io/pkg/NetworkComparisonTest/man/NCT.html)
-  at machine precision.
+  Comparison Test matching `NetworkComparisonTest::NCT()` at machine
+  precision.
 - [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
   — group iterative mean estimation for idiographic networks via lavaan.
 - [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md),
@@ -540,8 +546,7 @@ CRAN release: 2026-04-20
   replace earlier internal names for consistency with the `build_*`
   naming convention.
 - `mgm` estimator added (`method = "mgm"`) for mixed continuous +
-  categorical data via nodewise lasso, matching
-  [`mgm::mgm()`](https://rdrr.io/pkg/mgm/man/mgm.html) at machine
+  categorical data via nodewise lasso, matching `mgm::mgm()` at machine
   precision.
 
 ### Bug fixes

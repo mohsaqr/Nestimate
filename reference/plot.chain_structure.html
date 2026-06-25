@@ -94,7 +94,7 @@ probability inside each cell. Set <code>FALSE</code> for large state spaces
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Cell colour encodes <code>P(ever reach j | start at i)</code>. The diagonal
 uses the return-time convention (<code>P(return to j in &gt;= 1 steps)</code>),
-matching <code><a href="https://rdrr.io/pkg/markovchain/man/hittingProbabilities.html" class="external-link">markovchain::hittingProbabilities</a></code>. A non-irreducible chain
+matching <code>markovchain::hittingProbabilities</code>. A non-irreducible chain
 shows zero off-block entries – visual evidence of one-way doors
 between behavioural phases. An absorbing chain shows a column of 1's
 for the absorbing state.</p>

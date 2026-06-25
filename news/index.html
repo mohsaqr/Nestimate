@@ -50,8 +50,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="enhancements-0-7-3">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-7-3"></a></h3>
-<ul><li>
-<code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> results are now 100% compatible with the <code><a href="../reference/permutation.html">permutation()</a></code> format: the object carries class <code>c("net_bayes", "net_permutation")</code> with all <code>net_permutation</code> slots (<code>diff_sig</code>, <code>p_values</code>, <code>effect_size</code>, <code>iter</code>, <code>alpha</code>, <code>paired</code>, <code>adjust</code>), and its <code>summary</code> is a superset of <code>summary.net_permutation</code> (<code>from, to, weight_x, weight_y, diff, effect_size, p_value, sig</code> plus the Bayesian extras <code>count_x, count_y, ci_lower, ci_upper, ci_width, pd</code>). A <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> result is now a drop-in wherever a <code>net_permutation</code> is consumed.</li>
+<ul><li><p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> gains a multichannel view for <code>mcml</code> objects built from sequences. <code>sequence_plot(fit)</code> draws one carpet panel per cluster channel plus a macro <code>Summary</code> panel — each channel’s own states solid, the other clusters a faded wash, finished cells white, rows aligned by the macro sequence. <code>sequence_plot(fit, type = "distribution")</code> stacks the prevalence (own states + faded other clusters + an explicit <code>NA</code> band, to 100%), and <code>normalize = TRUE</code> gives a TraMineR-style <code>seqdplot</code> where each time point sums to 1. ggplot-based and dependency-free; returns a <code>ggplot</code> object.</p></li>
+<li><p><code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> results are now 100% compatible with the <code><a href="../reference/permutation.html">permutation()</a></code> format: the object carries class <code>c("net_bayes", "net_permutation")</code> with all <code>net_permutation</code> slots (<code>diff_sig</code>, <code>p_values</code>, <code>effect_size</code>, <code>iter</code>, <code>alpha</code>, <code>paired</code>, <code>adjust</code>), and its <code>summary</code> is a superset of <code>summary.net_permutation</code> (<code>from, to, weight_x, weight_y, diff, effect_size, p_value, sig</code> plus the Bayesian extras <code>count_x, count_y, ci_lower, ci_upper, ci_width, pd</code>). A <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> result is now a drop-in wherever a <code>net_permutation</code> is consumed.</p></li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -208,7 +208,7 @@
 </ul></div>
 <div class="section level3">
 <h3 id="testing-infrastructure-0-4-4">Testing infrastructure<a class="anchor" aria-label="anchor" href="#testing-infrastructure-0-4-4"></a></h3>
-<ul><li>New numerical-equivalence tests (gated by <code>NESTIMATE_EQUIV_TESTS=true</code>): <code>test-equiv-permutation.R</code> (vs. <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">stats::p.adjust</a></code> + hand-coded base-R permutation loop), <code>test-equiv-mlvar.R</code> (vs. <code><a href="https://rdrr.io/pkg/mlVAR/man/mlVAR.html" class="external-link">mlVAR::mlVAR</a></code> at machine precision), <code>test-equiv-association-rules.R</code> (vs. <code><a href="https://rdrr.io/pkg/arules/man/apriori.html" class="external-link">arules::apriori</a></code>), <code>test-equiv-link-prediction.R</code> (vs. clean-room matrix algebra + <code><a href="https://r.igraph.org/reference/similarity.html" class="external-link">igraph::similarity</a></code>), <code>test-equiv-centrality-stability.R</code> (vs. <code><a href="https://rdrr.io/pkg/bootnet/man/corStability.html" class="external-link">bootnet::corStability</a></code>). Total ~162k per-value comparisons; all within machine precision except centrality-stability which uses a documented drop-grid tolerance because bootnet uses <code>igraph</code> path-based centrality and Nestimate uses Floyd-Warshall.</li>
+<ul><li>New numerical-equivalence tests (gated by <code>NESTIMATE_EQUIV_TESTS=true</code>): <code>test-equiv-permutation.R</code> (vs. <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">stats::p.adjust</a></code> + hand-coded base-R permutation loop), <code>test-equiv-mlvar.R</code> (vs. <code>mlVAR::mlVAR</code> at machine precision), <code>test-equiv-association-rules.R</code> (vs. <code>arules::apriori</code>), <code>test-equiv-link-prediction.R</code> (vs. clean-room matrix algebra + <code><a href="https://r.igraph.org/reference/similarity.html" class="external-link">igraph::similarity</a></code>), <code>test-equiv-centrality-stability.R</code> (vs. <code>bootnet::corStability</code>). Total ~162k per-value comparisons; all within machine precision except centrality-stability which uses a documented drop-grid tolerance because bootnet uses <code>igraph</code> path-based centrality and Nestimate uses Floyd-Warshall.</li>
 <li>New HON-family equivalence tests under <code>local_testing_and_equivalence/</code> validating HON, HONEM, HYPA, MOGen, and hypergraph against pathpy 2.2.0 (via reticulate), <code>BiasedUrn</code>, <code>RSpectra</code>, and <code>HyperG</code>. Not shipped in the R-package <code>tests/</code> directory; added to <code>.Rbuildignore</code>.</li>
 <li>Branch-matrix coverage added for the four many-mode APIs (<code>wtna</code>, <code>bootstrap_network</code>, <code>build_clusters</code>, <code>sequence_plot</code>) — systematic cross-product tests over all combinations of mode parameters to catch regressions where one branch silently diverges.</li>
 </ul></div>
@@ -244,7 +244,7 @@
 <div class="section level3">
 <h3 id="new-functions-0-4-0">New functions<a class="anchor" aria-label="anchor" href="#new-functions-0-4-0"></a></h3>
 <ul><li>
-<code><a href="../reference/build_mlvar.html">build_mlvar()</a></code> — multilevel VAR networks from ESM/EMA panel data. Estimates temporal (directed), contemporaneous (undirected), and between-subjects (undirected) networks matching <code><a href="https://rdrr.io/pkg/mlVAR/man/mlVAR.html" class="external-link">mlVAR::mlVAR()</a></code> at machine precision.</li>
+<code><a href="../reference/build_mlvar.html">build_mlvar()</a></code> — multilevel VAR networks from ESM/EMA panel data. Estimates temporal (directed), contemporaneous (undirected), and between-subjects (undirected) networks matching <code>mlVAR::mlVAR()</code> at machine precision.</li>
 <li>
 <code><a href="../reference/build_mmm.html">build_mmm()</a></code> / <code><a href="../reference/compare_mmm.html">compare_mmm()</a></code> — mixture of Markov models via EM, with BIC/AIC/ICL model selection and optional covariate regression.</li>
 <li>
@@ -256,7 +256,7 @@
 <li>
 <code><a href="../reference/build_simplicial.html">build_simplicial()</a></code>, <code><a href="../reference/persistent_homology.html">persistent_homology()</a></code>, <code><a href="../reference/q_analysis.html">q_analysis()</a></code> — topological analysis of networks via simplicial complexes.</li>
 <li>
-<code><a href="../reference/nct.html">nct()</a></code> — Network Comparison Test matching <code><a href="https://rdrr.io/pkg/NetworkComparisonTest/man/NCT.html" class="external-link">NetworkComparisonTest::NCT()</a></code> at machine precision.</li>
+<code><a href="../reference/nct.html">nct()</a></code> — Network Comparison Test matching <code>NetworkComparisonTest::NCT()</code> at machine precision.</li>
 <li>
 <code><a href="../reference/build_gimme.html">build_gimme()</a></code> — group iterative mean estimation for idiographic networks via lavaan.</li>
 <li>
@@ -284,7 +284,7 @@
 <ul><li>
 <code><a href="../reference/build_clusters.html">build_clusters()</a></code>, <code><a href="../reference/network_reliability.html">network_reliability()</a></code>, <code><a href="../reference/permutation.html">permutation()</a></code>, and <code><a href="../reference/prepare.html">prepare()</a></code> replace earlier internal names for consistency with the <code>build_*</code> naming convention.</li>
 <li>
-<code>mgm</code> estimator added (<code>method = "mgm"</code>) for mixed continuous + categorical data via nodewise lasso, matching <code><a href="https://rdrr.io/pkg/mgm/man/mgm.html" class="external-link">mgm::mgm()</a></code> at machine precision.</li>
+<code>mgm</code> estimator added (<code>method = "mgm"</code>) for mixed continuous + categorical data via nodewise lasso, matching <code>mgm::mgm()</code> at machine precision.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-4-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-4-0"></a></h3>

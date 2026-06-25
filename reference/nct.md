@@ -90,11 +90,10 @@ A list of class `net_nct` with elements:
 
 ## Details
 
-Implementation matches
-[`NetworkComparisonTest::NCT()`](https://rdrr.io/pkg/NetworkComparisonTest/man/NCT.html)
-with defaults `abs = TRUE`, `weighted = TRUE`, `paired = FALSE` at
-machine precision when the same seed is used. The network estimator is
-EBIC-selected glasso applied to a Pearson correlation matrix, with
+Implementation matches `NetworkComparisonTest::NCT()` with defaults
+`abs = TRUE`, `weighted = TRUE`, `paired = FALSE` at machine precision
+when the same seed is used. The network estimator is EBIC-selected
+glasso applied to a Pearson correlation matrix, with
 [`Matrix::nearPD`](https://rdrr.io/pkg/Matrix/man/nearPD.html)
 symmetrization (matching NCT's `NCT_estimator_GGM` default).
 

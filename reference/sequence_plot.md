@@ -25,6 +25,7 @@ sequence_plot(
   scale = c("proportion", "count"),
   geom = c("area", "bar"),
   na = TRUE,
+  normalize = FALSE,
   row_gap = 0,
   dendrogram_width = 1.2,
   k = NULL,
@@ -95,6 +96,18 @@ sequence_plot(
 
   :   From the tna package. Decodes integer-encoded sequences.
 
+  mcml
+
+  :   From
+      [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md)
+      (built from sequences). Produces a **multichannel** plot: one
+      panel per cluster plus a macro `Summary` panel.
+      `type = "heatmap"`/`"index"` draw the carpet (each channel's own
+      states solid, other clusters a faded wash);
+      `type = "distribution"` draws the stacked distribution (add
+      `normalize = TRUE` for a TraMineR-style `seqdplot` where each time
+      point sums to 1). Returns a `ggplot` object.
+
 - type:
 
   One of `"heatmap"` (default), `"index"`, or `"distribution"`.
@@ -122,6 +135,13 @@ sequence_plot(
   Passed to
   [`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md)
   when `type = "distribution"`.
+
+- normalize:
+
+  `mcml` + `type = "distribution"` only. When `TRUE`, each time point is
+  normalised to sum to 1 within its channel (TraMineR-style `seqdplot`
+  composition); when `FALSE` (default) the stack shows prevalence and is
+  capped with an `NA` band.
 
 - row_gap:
 
@@ -235,12 +255,14 @@ sequence_plot(
 
 ## Value
 
-Invisibly, a list describing the plot (shape depends on `type`).
+For base-graphics types, invisibly a list describing the plot (shape
+depends on `type`). For an `mcml` input, a `ggplot` object.
 
 ## See also
 
 [`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md),
-[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md),
+[`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md)
 
 ## Examples
 
@@ -251,6 +273,20 @@ sequence_plot(trajectories)
 sequence_plot(trajectories, type = "index")
 
 sequence_plot(trajectories, type = "distribution")
+
+
+# Multichannel MCML view: one channel per cluster + a macro Summary.
+fit <- build_mcml(
+  group_regulation_long,
+  clusters = list(Cognitive  = c("discuss", "synthesis", "consensus", "cohesion"),
+                  Regulation = c("plan", "monitor", "adapt", "coregulate"),
+                  Affective  = "emotion"),
+  actor = "Actor", action = "Action", time = "Time")
+sequence_plot(fit)                                          # multichannel carpet
+
+sequence_plot(fit, type = "distribution")                  # prevalence + NA band
+
+sequence_plot(fit, type = "distribution", normalize = TRUE) # seqdplot (sums to 1)
 
 # }
 ```

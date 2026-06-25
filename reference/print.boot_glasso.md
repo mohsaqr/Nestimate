@@ -56,6 +56,6 @@ print(boot)
 #>     strength:              0.00 [Unstable]
 #> 
 #>   Edge differences: 1/15 pairs significantly different
-#>   Timing: 3.8s (bootstrap: 2.1s, case-drop: 1.6s)
+#>   Timing: 3.4s (bootstrap: 2.1s, case-drop: 1.2s)
 # }
 ```
