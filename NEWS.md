@@ -2,6 +2,18 @@
 
 ## New features
 
+* `as_netobject()` / `validate_netobject()` — the boundary layer between
+  \pkg{psychnet} (which owns the psychometric-network math and emits a lean
+  `cograph_network`) and Nestimate (which owns the canonical `netobject`
+  schema). `as_netobject()` promotes a `psychnet` result or a bare
+  `cograph_network` to the dual-class `c("netobject", "cograph_network")` so it
+  dispatches to every Nestimate verb, parking psychnet-specific fields (including
+  the GLASSO KKT certificate) under `$meta$psychnet`; `netobject`s pass through
+  unchanged. `validate_netobject()` enforces the shared structural contract so
+  schema drift on either side fails loudly. `psychnet` is a Suggests (interop
+  only — Nestimate never calls it), resolved via the r-universe
+  `Additional_repositories`.
+
 * `certainty()` — analytic Bayesian counterpart of `bootstrap_network()` for
   transition networks. Models each state's outgoing transitions as a
   Dirichlet-Multinomial process (Jeffreys prior) and returns posterior mean,

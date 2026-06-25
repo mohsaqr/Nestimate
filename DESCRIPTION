@@ -46,7 +46,9 @@ Suggests:
     ggfittext,
     knitr,
     rmarkdown,
-    tna
+    tna,
+    psychnet
+Additional_repositories: https://mohsaqr.r-universe.dev
 Config/testthat/edition: 3
 Depends:
     R (>= 4.1.0)
