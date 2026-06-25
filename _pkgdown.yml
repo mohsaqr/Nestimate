@@ -133,6 +133,8 @@ reference:
       - coefs
       - as_tna
       - as_networks
+      - as_netobject
+      - validate_netobject
       - extract_edges
       - extract_initial_probs
       - extract_transition_matrix

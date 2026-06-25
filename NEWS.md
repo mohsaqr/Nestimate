@@ -10,9 +10,9 @@
   dispatches to every Nestimate verb, parking psychnet-specific fields (including
   the GLASSO KKT certificate) under `$meta$psychnet`; `netobject`s pass through
   unchanged. `validate_netobject()` enforces the shared structural contract so
-  schema drift on either side fails loudly. `psychnet` is a Suggests (interop
-  only — Nestimate never calls it), resolved via the r-universe
-  `Additional_repositories`.
+  schema drift on either side fails loudly. `psychnet` is not a declared
+  dependency — Nestimate never calls it; the converter works by S3 dispatch on
+  whatever `psychnet` object the caller supplies.
 
 * `certainty()` — analytic Bayesian counterpart of `bootstrap_network()` for
   transition networks. Models each state's outgoing transitions as a

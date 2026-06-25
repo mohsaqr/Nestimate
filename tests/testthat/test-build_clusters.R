@@ -906,15 +906,17 @@ test_that("cosine distance R path handles all-NA sequences (zero-norm rows)", {
 # 27. tna / cograph_network covariates rejection (L430, L440)
 # ==============================================================================
 
-test_that("cograph_network input with column-name covariates errors", {
+test_that("cograph_network input with an unresolvable covariate column errors", {
   cg <- structure(
     list(data = make_test_data(n = 20, k = 5),
          weights = matrix(0, 4, 4), directed = TRUE),
     class = c("cograph_network", "list")
   )
+  # Column-name covariates are now resolved from the network's $metadata/$data;
+  # a column that exists in neither errors.
   expect_error(
     build_clusters(cg, k = 2, covariates = "some_col"),
-    "tna/cograph_network"
+    "not found in network object"
   )
 })
 
