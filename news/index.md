@@ -4,6 +4,24 @@
 
 ### New features
 
+- [`as_netobject()`](https://saqr.me/Nestimate/reference/as_netobject.md)
+  /
+  [`validate_netobject()`](https://saqr.me/Nestimate/reference/validate_netobject.md)
+  — the boundary layer between (which owns the psychometric-network math
+  and emits a lean `cograph_network`) and Nestimate (which owns the
+  canonical `netobject` schema).
+  [`as_netobject()`](https://saqr.me/Nestimate/reference/as_netobject.md)
+  promotes a `psychnet` result or a bare `cograph_network` to the
+  dual-class `c("netobject", "cograph_network")` so it dispatches to
+  every Nestimate verb, parking psychnet-specific fields (including the
+  GLASSO KKT certificate) under `$meta$psychnet`; `netobject`s pass
+  through unchanged.
+  [`validate_netobject()`](https://saqr.me/Nestimate/reference/validate_netobject.md)
+  enforces the shared structural contract so schema drift on either side
+  fails loudly. `psychnet` is not a declared dependency — Nestimate
+  never calls it; the converter works by S3 dispatch on whatever
+  `psychnet` object the caller supplies.
+
 - [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) —
   analytic Bayesian counterpart of
   [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)

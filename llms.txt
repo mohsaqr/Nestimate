@@ -725,6 +725,10 @@ Helper functions and extractors
   cluster_summary to tna Objects
 - [`as_networks()`](https://saqr.me/Nestimate/reference/as_networks.md)
   : Promote a psychometric MCML result to a network group
+- [`as_netobject()`](https://saqr.me/Nestimate/reference/as_netobject.md)
+  : Coerce a network object to a Nestimate netobject
+- [`validate_netobject()`](https://saqr.me/Nestimate/reference/validate_netobject.md)
+  : Validate a netobject / cograph_network against the shared schema
 - [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.md)
   : Extract Edge List with Weights
 - [`extract_initial_probs()`](https://saqr.me/Nestimate/reference/extract_initial_probs.md)

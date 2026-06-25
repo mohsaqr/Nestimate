@@ -78,7 +78,7 @@ long_data <- data.frame(
 wide_data <- long_to_wide(long_data, id_col = "Actor")
 head(wide_data)
 #>   Actor V1 V2 V3 V4
-#> 1     1  A  C  A  B
-#> 2     2  C  C  B  B
-#> 3     3  B  C  C  A
+#> 1     1  C  B  A  C
+#> 2     2  C  C  B  A
+#> 3     3  B  A  B  C
 ```

@@ -107,12 +107,18 @@ in which the item's sign differed from the observed one),
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a1"</span>, <span class="st">"a2"</span>, <span class="st">"a3"</span>, <span class="st">"b1"</span>, <span class="st">"b2"</span>, <span class="st">"b3"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a1"</span>, <span class="st">"a2"</span>, <span class="st">"a3"</span><span class="op">)</span>, B <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"b1"</span>, <span class="st">"b2"</span>, <span class="st">"b3"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_mcml_pc.html">build_mcml_pc</a></span><span class="op">(</span><span class="va">df</span>, <span class="va">cl</span>, aggregation <span class="op">=</span> <span class="st">"loadings"</span>,</span></span>
-<span class="r-in"><span>                     estimator <span class="op">=</span> <span class="st">"cor"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> 'estimator' in ... is the lavaan estimator (e.g. "WLSMV") and applies only to fa_method = "cfa". The network estimator is selected by 'method'.</span>
+<span class="r-in"><span>                     method <span class="op">=</span> <span class="st">"cor"</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, a3, b1, b2. See $loadings (misfit, cross_cluster).</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Reverse-keyed item(s) flipped in composites: a2, b3. See $loadings (sign).</span>
 <span class="r-in"><span><span class="va">ls</span> <span class="op">&lt;-</span> <span class="fu">loading_stability</span><span class="op">(</span><span class="va">fit</span>, iter <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'fit' not found</span>
 <span class="r-in"><span><span class="va">ls</span><span class="op">$</span><span class="va">summary</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ls$summary:</span> object of type 'closure' is not subsettable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   node cluster     weight  boot_mean   boot_sd   ci_lower  ci_upper sign_flips</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   a1       A  0.1405873  0.2119349 0.2931353 -0.4594061 0.4760502       0.18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   a2       A -0.3666270  0.1041219 0.3064605 -0.4215860 0.4384606       0.68</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   a3       A  0.4927857  0.1710647 0.3171502 -0.4661878 0.4662406       0.24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   b1       B  0.2856282  0.2469936 0.2441808 -0.4553946 0.4688604       0.10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   b2       B  0.2708179  0.2257656 0.2509415 -0.4394226 0.4624575       0.12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   b3       B -0.4435540 -0.1735737 0.3268693 -0.4691528 0.4829590       0.26</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
