@@ -23,6 +23,17 @@
 #'   \code{"bar"} draws stacked bars.
 #' @param na If \code{TRUE} (default), \code{NA} cells are shown as an
 #'   extra band coloured \code{na_color}.
+#' @param trim Optional time-axis truncation, to stop a few long
+#'   sequences from stretching the plot. \code{NULL} (default) keeps the
+#'   full width. A fraction in \code{(0, 1)} drops everything past that
+#'   quantile of sequence lengths (e.g. \code{trim = 0.95}); a value
+#'   \code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
+#'   time points). See \code{\link{sequence_plot}}.
+#' @param trim_clusterwise Grouped plots only, fractional \code{trim}
+#'   only. \code{FALSE} (default) uses one pooled cutoff for every panel
+#'   so the time axes stay aligned; \code{TRUE} crops each group to its
+#'   own length quantile (panels can differ in width). See
+#'   \code{\link{sequence_plot}}.
 #' @param state_colors Vector of colours, one per state. Defaults to
 #'   Okabe-Ito.
 #' @param na_color Colour for the \code{NA} band.
@@ -69,6 +80,8 @@ distribution_plot <- function(x,
                               scale          = c("proportion", "count"),
                               geom           = c("area", "bar"),
                               na             = TRUE,
+                              trim           = NULL,
+                              trim_clusterwise = FALSE,
                               state_colors   = NULL,
                               na_color       = "grey90",
                               frame          = FALSE,
@@ -100,7 +113,8 @@ distribution_plot <- function(x,
   stopifnot(
     is.logical(na),       length(na)       == 1L,
     is.logical(frame),    length(frame)    == 1L,
-    is.logical(combined), length(combined) == 1L
+    is.logical(combined), length(combined) == 1L,
+    is.logical(trim_clusterwise), length(trim_clusterwise) == 1L
   )
 
   if (interactive() && (!is.null(width) || !is.null(height))) {
@@ -125,24 +139,29 @@ distribution_plot <- function(x,
   }
 
   enc        <- .encode_states(x)
-  codes      <- enc$codes
+  full_codes <- enc$codes
   levels_all <- enc$levels
-  n_cols     <- ncol(codes)
+  col_names  <- colnames(full_codes)
   K_core     <- length(levels_all)
   K          <- K_core + (if (na) 1L else 0L)
+  # One pooled cut keeps every panel the same width (aligned axes);
+  # trim_clusterwise crops each group to its own length quantile.
+  global_cut <- .trim_cut(full_codes, trim)
 
   palette       <- .state_palette(state_colors, K_core)
   full_palette  <- if (na) c(palette, na_color) else palette
   legend_labels <- if (na) c(levels_all, "NA") else levels_all
 
   # Factor-rep so grouping dispatch works identically with or without group.
-  groups <- if (is.null(group)) factor(rep("all", nrow(codes))) else group
+  groups <- if (is.null(group)) factor(rep("all", nrow(full_codes))) else group
   group_levels <- levels(groups)
   G <- length(group_levels)
 
   count_list <- lapply(group_levels, function(g) {
-    sub <- codes[groups == g, , drop = FALSE]
-    tab <- vapply(seq_len(n_cols), function(t) {
+    sub <- full_codes[groups == g, , drop = FALSE]
+    cut <- if (isTRUE(trim_clusterwise)) .trim_cut(sub, trim) else global_cut
+    sub <- sub[, seq_len(cut), drop = FALSE]
+    tab <- vapply(seq_len(cut), function(t) {
       col <- sub[, t]
       out <- tabulate(col, nbins = K_core)
       if (na) out <- c(out, sum(is.na(col)))
@@ -194,11 +213,12 @@ distribution_plot <- function(x,
 
   mar_bottom <- if (!is.null(time_label) && nzchar(time_label)) 3 else 1
   mar_top    <- if (!is.null(main) || isTRUE(show_n)) 2.5 else 1.5
-  ticks      <- .tick_positions(n_cols, tick, colnames(codes))
 
   invisible(lapply(seq_len(G), function(g_idx) {
     g   <- group_levels[g_idx]
     mat <- plot_mats[[g_idx]]
+    nc  <- ncol(mat)
+    ticks <- .tick_positions(nc, tick, col_names[seq_len(nc)])
     # When combined = FALSE, restore oma per page so each group's legend
     # has room (graphics::layout() preserves oma for the whole page; with
     # no layout, every plot.new() starts a fresh page that resets oma).
@@ -209,22 +229,22 @@ distribution_plot <- function(x,
     }
     graphics::par(mar = c(mar_bottom, 4, mar_top, 1))
     graphics::plot.new()
-    graphics::plot.window(xlim = c(0.5, n_cols + 0.5),
+    graphics::plot.window(xlim = c(0.5, nc + 0.5),
                           ylim = c(0, y_max), xaxs = "i", yaxs = "i")
 
     cum <- rbind(0, apply(mat, 2, cumsum))
     if (geom == "area") {
-      x_poly <- c(0.5, seq_len(n_cols), n_cols + 0.5)
+      x_poly <- c(0.5, seq_len(nc), nc + 0.5)
       invisible(lapply(seq_len(K), function(k) {
-        y_bot <- c(cum[k,     1L], cum[k,     ], cum[k,     n_cols])
-        y_top <- c(cum[k + 1, 1L], cum[k + 1, ], cum[k + 1, n_cols])
+        y_bot <- c(cum[k,     1L], cum[k,     ], cum[k,     nc])
+        y_top <- c(cum[k + 1, 1L], cum[k + 1, ], cum[k + 1, nc])
         graphics::polygon(c(x_poly, rev(x_poly)),
                           c(y_bot, rev(y_top)),
                           col = full_palette[k], border = NA)
       }))
     } else {
-      ks <- rep(seq_len(K),      times = n_cols)
-      ts <- rep(seq_len(n_cols), each  = K)
+      ks <- rep(seq_len(K),  times = nc)
+      ts <- rep(seq_len(nc), each  = K)
       graphics::rect(xleft   = ts - 0.5,
                      ybottom = cum[cbind(ks,     ts)],
                      xright  = ts + 0.5,

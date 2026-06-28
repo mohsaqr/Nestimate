@@ -27,7 +27,7 @@ block_clusters <- function() {
 test_that("all three aggregations recover the planted block ordering", {
   df <- make_block_data()
   cl <- block_clusters()
-  for (agg in c("average", "composite", "loadings")) {
+  for (agg in c("average", "scaled", "loadings")) {
     fit <- build_mcml_pc(df, cl, aggregation = agg, method = "cor")
     W <- fit$macro$weights
     expect_true(W["A", "B"] > W["A", "C"],
@@ -37,9 +37,21 @@ test_that("all three aggregations recover the planted block ordering", {
   }
 })
 
+test_that("aggregation = 'composite' remains a scaled-score alias", {
+  df <- make_block_data()
+  cl <- block_clusters()
+
+  scaled <- build_mcml_pc(df, cl, aggregation = "scaled", method = "cor")
+  composite <- build_mcml_pc(df, cl, aggregation = "composite", method = "cor")
+
+  expect_equal(composite$macro$weights, scaled$macro$weights)
+  expect_identical(composite$meta$aggregation, "composite")
+  expect_identical(composite$meta$scale, TRUE)
+})
+
 test_that("result structure is complete and undirected", {
   df <- make_block_data()
-  fit <- build_mcml_pc(df, block_clusters(), aggregation = "composite",
+  fit <- build_mcml_pc(df, block_clusters(), aggregation = "scaled",
                        method = "pcor")
   expect_s3_class(fit, "mcml_pc")
   expect_true(inherits(fit$macro, "netobject"))
@@ -55,7 +67,7 @@ test_that("result structure is complete and undirected", {
 test_that("netobject input reuses its data and method", {
   df <- make_block_data()
   net <- build_network(df, method = "glasso")
-  fit <- build_mcml_pc(net, block_clusters(), aggregation = "composite")
+  fit <- build_mcml_pc(net, block_clusters(), aggregation = "scaled")
   expect_identical(fit$meta$method, "glasso")
 })
 
@@ -63,11 +75,11 @@ test_that("average mode works without raw data; re-estimation refuses", {
   df <- make_block_data()
   net <- build_network(df, method = "pcor")
   net$data <- NULL
-  fit <- build_mcml_pc(net, block_clusters())
+  fit <- build_mcml_pc(net, block_clusters(), aggregation = "average")
   expect_s3_class(fit, "mcml_pc")
   expect_identical(fit$meta$within, "subnetwork")
   expect_error(
-    build_mcml_pc(net, block_clusters(), aggregation = "composite"),
+    build_mcml_pc(net, block_clusters(), aggregation = "scaled"),
     "requires raw data"
   )
 })
@@ -118,7 +130,7 @@ test_that("singleton clusters get NULL within networks", {
   # splitting true block C trips the misfit diagnostic (correctly):
   # c2 is as connected to c1 as to its assigned cluster
   fit <- suppressWarnings(
-    build_mcml_pc(df, cl, aggregation = "composite", method = "cor")
+    build_mcml_pc(df, cl, aggregation = "scaled", method = "cor")
   )
   expect_null(fit$clusters$C1)
   expect_true(inherits(fit$clusters$C23, "netobject"))
@@ -164,7 +176,7 @@ test_that("composite and loadings agree when loadings are uniform", {
   # loadings composite ~= plain composite
   df <- make_block_data()
   cl <- block_clusters()
-  f1 <- build_mcml_pc(df, cl, aggregation = "composite", method = "cor")
+  f1 <- build_mcml_pc(df, cl, aggregation = "scaled", method = "cor")
   f2 <- build_mcml_pc(df, cl, aggregation = "loadings", method = "cor")
   expect_true(max(abs(f1$macro$weights - f2$macro$weights)) < 0.01)
 })
@@ -219,7 +231,7 @@ test_that("reverse-keyed items are flipped and the macro recovers", {
 test_that("rv and canonical aggregations recover the planted ordering", {
   df <- make_block_data()
   cl <- block_clusters()
-  for (agg in c("rv", "canonical")) {
+  for (agg in c("escoufier", "cancor")) {
     fit <- build_mcml_pc(df, cl, aggregation = agg)
     W <- fit$macro$weights
     expect_true(W["A", "B"] > W["A", "C"], info = agg)
@@ -233,9 +245,9 @@ test_that("rv and canonical aggregations recover the planted ordering", {
 test_that("canonical correlation upper-bounds the composite correlation", {
   df <- make_block_data()
   cl <- block_clusters()
-  comp <- build_mcml_pc(df, cl, aggregation = "composite",
+  comp <- build_mcml_pc(df, cl, aggregation = "scaled",
                         method = "cor")$macro$weights
-  can <- build_mcml_pc(df, cl, aggregation = "canonical")$macro$weights
+  can <- build_mcml_pc(df, cl, aggregation = "cancor")$macro$weights
   off <- upper.tri(comp)
   expect_true(all(can[off] >= abs(comp[off]) - 1e-10))
 })
@@ -244,7 +256,7 @@ test_that("rv and canonical refuse weight-only input", {
   df <- make_block_data()
   net <- build_network(df, method = "cor")
   net$data <- NULL
-  expect_error(build_mcml_pc(net, block_clusters(), aggregation = "rv"),
+  expect_error(build_mcml_pc(net, block_clusters(), aggregation = "escoufier"),
                "requires raw data")
 })
 
@@ -254,7 +266,7 @@ test_that("composites tolerate missing data", {
   holes <- cbind(sample(nrow(df), 40), sample(ncol(df), 40, replace = TRUE))
   df[holes] <- NA
   suppressMessages(
-    fit <- build_mcml_pc(df, block_clusters(), aggregation = "composite",
+    fit <- build_mcml_pc(df, block_clusters(), aggregation = "scaled",
                          method = "cor")
   )
   expect_s3_class(fit, "mcml_pc")
@@ -281,7 +293,7 @@ test_that("polychoric estimation works on ordinal data", {
 
 test_that("bootstrap machinery works on the composite macro network", {
   df <- make_block_data(n = 200)
-  fit <- build_mcml_pc(df, block_clusters(), aggregation = "composite",
+  fit <- build_mcml_pc(df, block_clusters(), aggregation = "scaled",
                        method = "cor")
   boot <- bootstrap_network(fit$macro, iter = 30, seed = 1)
   expect_s3_class(boot, "net_bootstrap")
@@ -318,7 +330,7 @@ test_that("singleton clusters are not flagged misfit and carry weight 1", {
   cl <- list(A = paste0("a", 1:3), B = paste0("b", 1:3),
              C1 = "c1", C23 = c("c2", "c3"))
   fit <- suppressWarnings(
-    build_mcml_pc(df, cl, aggregation = "composite", method = "cor")
+    build_mcml_pc(df, cl, aggregation = "scaled", method = "cor")
   )
   ld <- fit$loadings
   expect_false(ld$misfit[ld$node == "c1"])
@@ -331,7 +343,7 @@ test_that("all five weightings recover the planted block ordering", {
   df <- make_block_data()
   cl <- block_clusters()
   for (w in c("equal", "strength", "eigen", "pca", "factor")) {
-    fit <- build_mcml_pc(df, cl, aggregation = "composite",
+    fit <- build_mcml_pc(df, cl, aggregation = "scaled",
                          weighting = w, method = "cor")
     W <- fit$macro$weights
     expect_true(W["A", "B"] > W["A", "C"],
@@ -346,11 +358,11 @@ test_that("aggregation = 'loadings' is composite with strength weighting", {
   cl <- block_clusters()
   f_load <- build_mcml_pc(df, cl, aggregation = "loadings",
                           method = "cor")
-  f_str <- build_mcml_pc(df, cl, aggregation = "composite",
+  f_str <- build_mcml_pc(df, cl, aggregation = "scaled",
                          weighting = "strength", method = "cor")
   expect_identical(f_load$macro$weights, f_str$macro$weights)
   expect_identical(f_load$meta$weighting, "strength")
-  f_comp <- build_mcml_pc(df, cl, aggregation = "composite",
+  f_comp <- build_mcml_pc(df, cl, aggregation = "scaled",
                           method = "cor")
   expect_identical(f_comp$meta$weighting, "equal")
 })
@@ -359,7 +371,7 @@ test_that("every weighting gives non-negative weights summing to 1", {
   df <- make_block_data()
   cl <- block_clusters()
   for (w in c("equal", "strength", "eigen", "pca", "factor")) {
-    fit <- build_mcml_pc(df, cl, aggregation = "composite",
+    fit <- build_mcml_pc(df, cl, aggregation = "scaled",
                          weighting = w, method = "cor")
     ld <- fit$loadings
     expect_true(all(ld$weight >= 0), info = w)
@@ -376,7 +388,7 @@ test_that("data-driven weightings diverge from equal on a weak item", {
   cl <- block_clusters()
   for (w in c("strength", "pca", "factor")) {
     fit <- suppressWarnings(
-      build_mcml_pc(d, cl, aggregation = "composite", weighting = w,
+      build_mcml_pc(d, cl, aggregation = "scaled", weighting = w,
                     method = "cor")
     )
     ld <- fit$loadings
@@ -396,11 +408,11 @@ test_that("pca and factor weightings recover a reverse-keyed item", {
   df_rev$a1 <- -df_rev$a1
   for (w in c("pca", "factor")) {
     fit_orig <- suppressWarnings(
-      build_mcml_pc(df, cl, aggregation = "composite", weighting = w,
+      build_mcml_pc(df, cl, aggregation = "scaled", weighting = w,
                     method = "cor")
     )
     fit_rev <- suppressWarnings(
-      build_mcml_pc(df_rev, cl, aggregation = "composite", weighting = w,
+      build_mcml_pc(df_rev, cl, aggregation = "scaled", weighting = w,
                     method = "cor")
     )
     ld <- fit_rev$loadings
@@ -422,7 +434,7 @@ test_that("factor weighting on a 2-item cluster warns and falls back", {
               B = c("a3", paste0("b", 1:3)),
               C = paste0("c", 1:3))
   suppressWarnings(expect_warning(
-    fit <- build_mcml_pc(df, cl2, aggregation = "composite",
+    fit <- build_mcml_pc(df, cl2, aggregation = "scaled",
                          weighting = "factor", method = "cor"),
     "fewer than 3"
   ))
@@ -435,9 +447,9 @@ test_that("factor weighting on a 2-item cluster warns and falls back", {
 test_that("factor weighting is deterministic across identical calls", {
   df <- make_block_data()
   cl <- block_clusters()
-  f1 <- build_mcml_pc(df, cl, aggregation = "composite",
+  f1 <- build_mcml_pc(df, cl, aggregation = "scaled",
                       weighting = "factor", method = "cor")
-  f2 <- build_mcml_pc(df, cl, aggregation = "composite",
+  f2 <- build_mcml_pc(df, cl, aggregation = "scaled",
                       weighting = "factor", method = "cor")
   expect_identical(f1$macro$weights, f2$macro$weights)
 })
@@ -451,7 +463,7 @@ test_that("id_col drops identifier columns from data.frame input", {
     Social     = c("cohesion", "consensus", "discuss", "emotion", "synthesis")
   )
   fit <- suppressWarnings(
-    build_mcml_pc(prof, cl, aggregation = "composite", method = "pcor",
+    build_mcml_pc(prof, cl, aggregation = "scaled", method = "pcor",
                   id_col = c("rid", "Actor"))
   )
   expect_s3_class(fit, "mcml_pc")
@@ -470,7 +482,7 @@ test_that("the five new weightings recover the planted block ordering", {
   for (w in c("closeness", "betweenness", "expected_influence",
               "specificity", "item_total")) {
     fit <- suppressWarnings(
-      build_mcml_pc(df, cl, aggregation = "composite",
+      build_mcml_pc(df, cl, aggregation = "scaled",
                     weighting = w, method = "cor")
     )
     W <- fit$macro$weights
@@ -487,9 +499,9 @@ test_that("the five new weightings recover the planted block ordering", {
 test_that("expected_influence equals strength without negative edges", {
   df <- make_block_data()
   cl <- block_clusters()
-  f_ei <- build_mcml_pc(df, cl, aggregation = "composite",
+  f_ei <- build_mcml_pc(df, cl, aggregation = "scaled",
                         weighting = "expected_influence", method = "cor")
-  f_str <- build_mcml_pc(df, cl, aggregation = "composite",
+  f_str <- build_mcml_pc(df, cl, aggregation = "scaled",
                          weighting = "strength", method = "cor")
   expect_equal(f_ei$macro$weights, f_str$macro$weights)
 })
@@ -500,7 +512,7 @@ test_that("specificity downweights a misassigned item to zero", {
   bad <- list(A = c("a2", "a3"), B = c("a1", paste0("b", 1:3)),
               C = paste0("c", 1:3))
   fit <- suppressWarnings(
-    build_mcml_pc(df, bad, aggregation = "composite",
+    build_mcml_pc(df, bad, aggregation = "scaled",
                   weighting = "specificity", method = "cor")
   )
   ld <- fit$loadings
@@ -513,7 +525,7 @@ test_that("betweenness falls back to equal weights with a warning", {
   # no item ever lies on a shortest path -> all-zero betweenness; the
   # fallback warns once per cluster, hence the suppressWarnings wrapper
   suppressWarnings(expect_warning(
-    fit <- build_mcml_pc(df, block_clusters(), aggregation = "composite",
+    fit <- build_mcml_pc(df, block_clusters(), aggregation = "scaled",
                          weighting = "betweenness", method = "cor"),
     "betweenness"
   ))
@@ -526,14 +538,14 @@ test_that("custom named weight vectors are honored and validated", {
   cl <- block_clusters()
   w_vec <- setNames(rep(1, 9), names(df))
   w_vec["a3"] <- 0
-  fit <- build_mcml_pc(df, cl, aggregation = "composite",
+  fit <- build_mcml_pc(df, cl, aggregation = "scaled",
                        weighting = w_vec, method = "cor")
   ld <- fit$loadings
   expect_equal(ld$weight[ld$node == "a3"], 0)
   expect_equal(ld$weight[ld$node == "a1"], 0.5)
   expect_identical(fit$meta$weighting, "custom (vector)")
   expect_error(
-    build_mcml_pc(df, cl, aggregation = "composite",
+    build_mcml_pc(df, cl, aggregation = "scaled",
                   weighting = w_vec[names(w_vec) != "a3"],
                   method = "cor"),
     "lacks entries"
@@ -543,7 +555,7 @@ test_that("custom named weight vectors are honored and validated", {
 test_that("custom weighting functions are honored and validated", {
   df <- make_block_data()
   cl <- block_clusters()
-  fit <- build_mcml_pc(df, cl, aggregation = "composite",
+  fit <- build_mcml_pc(df, cl, aggregation = "scaled",
                        weighting = function(Wb, db, nodes) seq_along(nodes),
                        method = "cor")
   expect_s3_class(fit, "mcml_pc")
@@ -551,7 +563,7 @@ test_that("custom weighting functions are honored and validated", {
   ld <- fit$loadings
   expect_equal(as.numeric(tapply(ld$weight, ld$cluster, sum)), rep(1, 3))
   expect_error(
-    build_mcml_pc(df, cl, aggregation = "composite",
+    build_mcml_pc(df, cl, aggregation = "scaled",
                   weighting = function(Wb, db, nodes) 1,
                   method = "cor"),
     "finite numeric"
@@ -575,10 +587,10 @@ test_that("item_total recovers a reverse-keyed item", {
   cl <- list(A = paste0("a", 1:5), B = paste0("b", 1:3))
   df_rev <- df
   df_rev$a1 <- -df_rev$a1
-  fit_orig <- build_mcml_pc(df, cl, aggregation = "composite",
+  fit_orig <- build_mcml_pc(df, cl, aggregation = "scaled",
                             weighting = "item_total", method = "cor")
   fit_rev <- suppressWarnings(
-    build_mcml_pc(df_rev, cl, aggregation = "composite",
+    build_mcml_pc(df_rev, cl, aggregation = "scaled",
                   weighting = "item_total", method = "cor")
   )
   ld <- fit_rev$loadings
@@ -599,11 +611,11 @@ test_that("item_total recovers a reverse-keyed item even in a 3-item cluster", {
   cl <- block_clusters()
 
   fit_rev <- suppressWarnings(
-    build_mcml_pc(df_rev, cl, aggregation = "composite",
+    build_mcml_pc(df_rev, cl, aggregation = "scaled",
                   weighting = "item_total", method = "cor")
   )
   fit_orig <- suppressWarnings(
-    build_mcml_pc(df, cl, aggregation = "composite",
+    build_mcml_pc(df, cl, aggregation = "scaled",
                   weighting = "item_total", method = "cor")
   )
   expect_identical(fit_rev$loadings$sign[fit_rev$loadings$node == "a1"], -1)
@@ -617,7 +629,7 @@ test_that("all fa_method extractors run and agree on clean 1-factor blocks", {
   df <- make_block_data()
   cl <- block_clusters()
   fits <- lapply(c("ml", "paf", "minres"), function(fm) {
-    build_mcml_pc(df, cl, aggregation = "composite", weighting = "factor",
+    build_mcml_pc(df, cl, aggregation = "scaled", weighting = "factor",
                   method = "cor", fa_method = fm)
   })
   names(fits) <- c("ml", "paf", "minres")
@@ -640,10 +652,10 @@ test_that("cfa extraction works and matches ml for continuous items", {
   skip_if_not_installed("lavaan")
   df <- make_block_data()
   cl <- block_clusters()
-  f_cfa <- build_mcml_pc(df, cl, aggregation = "composite",
+  f_cfa <- build_mcml_pc(df, cl, aggregation = "scaled",
                          weighting = "factor", method = "cor",
                          fa_method = "cfa")
-  f_ml <- build_mcml_pc(df, cl, aggregation = "composite",
+  f_ml <- build_mcml_pc(df, cl, aggregation = "scaled",
                         weighting = "factor", method = "cor",
                         fa_method = "ml")
   expect_identical(f_cfa$meta$fa_method, "cfa")
@@ -657,7 +669,7 @@ test_that("polychoric CFA (categorical factor model) runs on ordinal data", {
     as.integer(cut(x, breaks = quantile(x, probs = seq(0, 1, 0.2)),
                    include.lowest = TRUE))
   }))
-  fit <- build_mcml_pc(likert, block_clusters(), aggregation = "composite",
+  fit <- build_mcml_pc(likert, block_clusters(), aggregation = "scaled",
                        weighting = "factor", fa_method = "cfa",
                        cor_method = "polychoric", method = "pcor")
   expect_identical(fit$meta$fa_method, "cfa")
@@ -670,11 +682,11 @@ test_that("fa_method is validated and recorded only for factor weighting", {
   df <- make_block_data()
   cl <- block_clusters()
   expect_error(
-    build_mcml_pc(df, cl, aggregation = "composite", weighting = "factor",
+    build_mcml_pc(df, cl, aggregation = "scaled", weighting = "factor",
                   method = "cor", fa_method = "bogus"),
     "should be one of"
   )
-  fit <- build_mcml_pc(df, cl, aggregation = "composite",
+  fit <- build_mcml_pc(df, cl, aggregation = "scaled",
                        weighting = "equal", method = "cor")
   expect_true(is.na(fit$meta$fa_method))
 })
@@ -690,11 +702,11 @@ test_that("lavaan arguments pass through ... verbatim", {
 
   # estimator choice reaches lavaan: WLSMV vs ULSMV give different
   # (but close) loadings on ordered items
-  f_wlsmv <- build_mcml_pc(likert, cl, aggregation = "composite",
+  f_wlsmv <- build_mcml_pc(likert, cl, aggregation = "scaled",
                            weighting = "factor", fa_method = "cfa",
                            cor_method = "polychoric", method = "cor",
                            estimator = "WLSMV")
-  f_ulsmv <- build_mcml_pc(likert, cl, aggregation = "composite",
+  f_ulsmv <- build_mcml_pc(likert, cl, aggregation = "scaled",
                            weighting = "factor", fa_method = "cfa",
                            cor_method = "polychoric", method = "cor",
                            estimator = "ULSMV")
@@ -712,13 +724,13 @@ test_that("protected fa_args are ignored with a warning", {
   df <- make_block_data()
   cl <- block_clusters()
   expect_warning(
-    fit <- build_mcml_pc(df, cl, aggregation = "composite",
+    fit <- build_mcml_pc(df, cl, aggregation = "scaled",
                          weighting = "factor", method = "cor",
                          factors = 3),
     "managed internally"
   )
   # result identical to the unmolested one-factor fit
-  ref <- build_mcml_pc(df, cl, aggregation = "composite",
+  ref <- build_mcml_pc(df, cl, aggregation = "scaled",
                        weighting = "factor", method = "cor")
   expect_equal(fit$macro$weights, ref$macro$weights)
 })
@@ -726,14 +738,14 @@ test_that("protected fa_args are ignored with a warning", {
 test_that("paf convergence controls pass through fa_args", {
   df <- make_block_data()
   cl <- block_clusters()
-  f1 <- build_mcml_pc(df, cl, aggregation = "composite",
+  f1 <- build_mcml_pc(df, cl, aggregation = "scaled",
                       weighting = "factor", method = "cor",
                       fa_method = "paf", tol = 1e-10)
-  f2 <- build_mcml_pc(df, cl, aggregation = "composite",
+  f2 <- build_mcml_pc(df, cl, aggregation = "scaled",
                       weighting = "factor", method = "cor",
                       fa_method = "paf")
   expect_true(max(abs(f1$macro$weights - f2$macro$weights)) < 1e-4)
-  expect_true(is.na(build_mcml_pc(df, cl, aggregation = "composite",
+  expect_true(is.na(build_mcml_pc(df, cl, aggregation = "scaled",
                                   weighting = "equal",
                                   method = "cor")$meta$fa_method))
 })
@@ -742,12 +754,12 @@ test_that("stray ... arguments error unless weighting = 'factor'", {
   df <- make_block_data()
   cl <- block_clusters()
   expect_error(
-    build_mcml_pc(df, cl, aggregation = "composite", weighting = "equal",
+    build_mcml_pc(df, cl, aggregation = "scaled", weighting = "equal",
                   method = "cor", missing = "fiml"),
     "Unused argument"
   )
   expect_error(
-    build_mcml_pc(df, cl, aggregation = "composite", weighting = "factor",
+    build_mcml_pc(df, cl, aggregation = "scaled", weighting = "factor",
                   method = "cor", fa_method = "ml",
                   estimator = "WLSMV"),
     "applies only"
@@ -758,7 +770,7 @@ test_that("stray ... arguments error unless weighting = 'factor'", {
 
 test_that("as_networks.mcml_pc returns a netobject_group of macro + clusters", {
   fit  <- build_mcml_pc(make_block_data(), block_clusters(),
-                        aggregation = "composite", method = "cor")
+                        aggregation = "scaled", method = "cor")
   nets <- as_networks(fit)
 
   expect_true(inherits(nets, "netobject_group"),
@@ -769,7 +781,7 @@ test_that("as_networks.mcml_pc returns a netobject_group of macro + clusters", {
 
 test_that("as_networks preserves psychometric semantics (undirected, estimator, data)", {
   fit  <- build_mcml_pc(make_block_data(), block_clusters(),
-                        aggregation = "composite", method = "cor")
+                        aggregation = "scaled", method = "cor")
   nets <- as_networks(fit)
 
   expect_true(inherits(nets$macro, "netobject"))
@@ -784,7 +796,7 @@ test_that("as_networks preserves psychometric semantics (undirected, estimator, 
 
 test_that("as_networks output flows into downstream verbs (centrality)", {
   fit  <- build_mcml_pc(make_block_data(), block_clusters(),
-                        aggregation = "composite", method = "cor")
+                        aggregation = "scaled", method = "cor")
   nets <- as_networks(fit)
   ce   <- net_centrality(nets$macro)
   expect_true(is.data.frame(ce))
@@ -796,7 +808,7 @@ test_that("as_networks drops singleton clusters with a warning", {
   # C becomes a singleton (one node) -> no within-network -> dropped
   cl <- list(A = paste0("a", 1:3), B = paste0("b", 1:3),
              Bx = paste0("c", 1:2), C = "c3")
-  fit <- build_mcml_pc(df, cl, aggregation = "composite", method = "cor")
+  fit <- build_mcml_pc(df, cl, aggregation = "scaled", method = "cor")
   expect_warning(nets <- as_networks(fit),
                  "singleton clusters")
   expect_false("C" %in% names(nets))
@@ -805,8 +817,33 @@ test_that("as_networks drops singleton clusters with a warning", {
 
 test_that("as_networks.default passes through a group and errors otherwise", {
   fit  <- build_mcml_pc(make_block_data(), block_clusters(),
-                        aggregation = "composite", method = "cor")
+                        aggregation = "scaled", method = "cor")
   nets <- as_networks(fit)
   expect_identical(as_networks(nets), nets)             # passthrough
   expect_error(as_networks(list(a = 1)), "Cannot convert")
+})
+
+test_that("build_mcml_pc accepts clusters as a two-column data.frame", {
+  set.seed(1)
+  items <- as.data.frame(matrix(round(runif(200 * 6, 1, 5)), ncol = 6))
+  names(items) <- paste0("v", 1:6)
+
+  cl_list <- list(A = c("v1", "v2", "v3"), B = c("v4", "v5", "v6"))
+  cl_df   <- data.frame(item  = paste0("v", 1:6),
+                        group = rep(c("A", "B"), each = 3))
+
+  f_list <- build_mcml_pc(items, cl_list, aggregation = "scaled", method = "cor")
+  f_df   <- build_mcml_pc(items, cl_df,   aggregation = "scaled", method = "cor")
+
+  # df read by position -> same partition -> identical macro network.
+  expect_equal(f_df$macro$weights, f_list$macro$weights)
+  expect_setequal(names(f_df$clusters), names(f_list$clusters))
+
+  # column names are irrelevant (read by position).
+  cl_df2 <- stats::setNames(cl_df, c("node", "cluster"))
+  expect_no_error(build_mcml_pc(items, cl_df2, aggregation = "scaled", method = "cor"))
+
+  # a one-column data.frame is rejected with a clear message.
+  expect_error(build_mcml_pc(items, data.frame(x = paste0("v", 1:6))),
+               "at least two columns")
 })

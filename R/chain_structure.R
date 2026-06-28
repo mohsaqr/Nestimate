@@ -64,7 +64,7 @@
 
 #' Period of a recurrent class given its support submatrix.
 #'
-#' Period of state i = gcd{n >= 1 : P^n[i, i] > 0}. For an irreducible
+#' Period of state i = gcd{n >= 1 : P^n\eqn{[i, i]} > 0}. For an irreducible
 #' aperiodic class on a self-looped state, returns 1. Returns NA if no
 #' return is possible (which shouldn't happen for a recurrent class).
 #' @noRd

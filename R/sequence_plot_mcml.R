@@ -11,7 +11,7 @@
 utils::globalVariables(c("time", "y", "key", "prop"))
 
 # ---- internal: pull per-channel matrices out of an mcml ---------------------
-.mcml_seq_channels <- function(x) {
+.mcml_seq_channels <- function(x, trim = NULL) {
   layers <- x$clusters
   if (is.null(layers) || !length(layers)) {
     stop("mcml has no clusters to plot.", call. = FALSE)
@@ -36,6 +36,19 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   summary_cluster_mat <- summary_mat
   summary_cluster_mat[] <- state2cluster[summary_mat]
 
+  # Trim the time axis on the coalesced full sequence (a single masked
+  # channel mostly contains NA, so its per-row length understates the real
+  # sequence length). Apply the same cut to every channel to keep rows
+  # aligned across panels.
+  cut <- .trim_cut(summary_mat, trim)
+  if (cut < length(tcols)) {
+    keep                <- seq_len(cut)
+    tcols               <- tcols[keep]
+    cmats               <- lapply(cmats, function(m) m[, keep, drop = FALSE])
+    summary_mat         <- summary_mat[, keep, drop = FALSE]
+    summary_cluster_mat <- summary_cluster_mat[, keep, drop = FALSE]
+  }
+
   list(cluster_names = cluster_names, clusters = clusters, cmats = cmats,
        times = seq_along(tcols), all_states = all_states,
        summary_mat = summary_mat, summary_cluster_mat = summary_cluster_mat)
@@ -56,6 +69,17 @@ utils::globalVariables(c("time", "y", "key", "prop"))
     }, character(1L)),
     paste0(cn, " (elsewhere)"))
   list(state = state_pal, cluster = cluster_pal, faded = faded)
+}
+
+# ---- internal: legend keys grouped by cluster -------------------------------
+# Order the fill legend so each cluster name is followed by its own states:
+#   Cognitive, discuss, synthesis, ... , Regulation, plan, ... .
+# The cluster-name key carries the cluster colour (the same colour used in the
+# Summary channel), so it reads as a group header above its member states.
+# Used as `breaks` for the fill scale; rendered as a single vertical column.
+.mcml_grouped_breaks <- function(ch) {
+  unlist(lapply(ch$cluster_names, function(k) c(k, ch$clusters[[k]])),
+         use.names = FALSE)
 }
 
 # ---- internal: melt a subject x time matrix to long, dropping NA cells ------
@@ -106,8 +130,9 @@ utils::globalVariables(c("time", "y", "key", "prop"))
     ggplot2::facet_wrap(~ channel, ncol = 1L, strip.position = "left") +
     ggplot2::scale_fill_manual(
       values = c(pals$state, pals$cluster, pals$faded),
-      breaks = c(cn, ch$all_states), na.value = "white",
+      breaks = .mcml_grouped_breaks(ch), na.value = "white",
       name = "Cluster / State") +
+    ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1L, byrow = TRUE)) +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
     ggplot2::scale_y_reverse(expand = c(0, 0)) +
     ggplot2::labs(x = time_label, y = NULL, title = main) +
@@ -119,7 +144,7 @@ utils::globalVariables(c("time", "y", "key", "prop"))
       axis.ticks.y      = ggplot2::element_blank(),
       strip.text.y.left = ggplot2::element_text(angle = 0, face = "bold"),
       panel.spacing     = ggplot2::unit(8, "pt"),
-      legend.position   = "bottom")
+      legend.position   = "right")
 }
 
 # ---- internal: multichannel distribution (seqdplot) -------------------------
@@ -180,8 +205,11 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   ggplot2::ggplot(bands, ggplot2::aes(x = time, y = prop, fill = key)) +
     ggplot2::geom_area(position = ggplot2::position_stack(reverse = TRUE)) +
     ggplot2::facet_wrap(~ channel, ncol = 1L, strip.position = "left") +
-    ggplot2::scale_fill_manual(values = fillvals, breaks = brks,
+    ggplot2::scale_fill_manual(values = fillvals,
+                               breaks = c(.mcml_grouped_breaks(ch),
+                                          if ("NA" %in% brks) "NA"),
                                name = "Cluster / State") +
+    ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1L, byrow = TRUE)) +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
     ggplot2::scale_y_continuous(expand = c(0, 0),
                                 labels = scales::percent_format(accuracy = 1)) +
@@ -192,13 +220,13 @@ utils::globalVariables(c("time", "y", "key", "prop"))
       panel.grid.minor  = ggplot2::element_blank(),
       strip.text.y.left = ggplot2::element_text(angle = 0, face = "bold"),
       panel.spacing     = ggplot2::unit(8, "pt"),
-      legend.position   = "bottom")
+      legend.position   = "right")
 }
 
 # ---- internal: mcml dispatcher (called from sequence_plot) ------------------
 .sequence_plot_mcml <- function(x, type, normalize, state_colors, na_color,
-                                main, time_label) {
-  ch   <- .mcml_seq_channels(x)
+                                main, time_label, trim = NULL) {
+  ch   <- .mcml_seq_channels(x, trim)
   pals <- .mcml_seq_palettes(ch, state_colors)
   if (type %in% c("heatmap", "index")) {
     .mcml_index_plot(ch, pals, main, time_label)

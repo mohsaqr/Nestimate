@@ -7,12 +7,12 @@
 build_mcml_pc(
   x,
   clusters,
-  aggregation = c("average", "composite", "loadings", "rv", "canonical"),
+  aggregation = c("scaled", "composite", "mean", "median", "loadings", "average",
+    "escoufier", "cancor"),
   method = c("pcor", "glasso", "cor"),
   within = c("reestimate", "subnetwork"),
   weighting = c("equal", "strength", "eigen", "closeness", "betweenness",
     "expected_influence", "specificity", "pca", "factor", "item_total"),
-  scale = TRUE,
   cor_method = c("pearson", "spearman", "polychoric"),
   signed = TRUE,
   id_col = NULL,
@@ -27,13 +27,33 @@ its \code{$data} and \code{$method} are reused — or a numeric
 data.frame of raw observations (then \code{method} decides the
 estimator).}
 
-\item{clusters}{Cluster membership: a named list of node-label vectors
-(names = cluster labels), or a vector of cluster labels named by
-node. Every node must be assigned to exactly one cluster.}
+\item{clusters}{Cluster membership in any of three forms: a named list of
+node-label vectors (names = cluster labels); a two-column
+\code{data.frame} read by position (first column = node names, second =
+group labels); or a vector of cluster labels named by node. Every node
+must be assigned to exactly one cluster.}
 
-\item{aggregation}{Character. \code{"average"}, \code{"composite"},
-\code{"loadings"}, \code{"rv"}, or \code{"canonical"} (see
-Description). Default \code{"average"}.}
+\item{aggregation}{Character. How clusters are collapsed to the macro
+network. Default \code{"scaled"}.
+\describe{
+\item{\code{"scaled"}}{Re-estimate the network on per-cluster scores
+formed as the mean of \emph{standardized} member items (the
+default; was \code{"composite"}).}
+\item{\code{"composite"}}{Backward-compatible alias for
+\code{"scaled"}.}
+\item{\code{"mean"}}{As \code{"scaled"} but on raw (unstandardized)
+item means.}
+\item{\code{"median"}}{As \code{"mean"} but the per-cluster score is
+the row-wise median of the items (unweighted).}
+\item{\code{"loadings"}}{The scaled score path with member items
+weighted by their within-cluster network strength.}
+\item{\code{"average"}}{Average the item-pair edges in each
+between-cluster submatrix — no scores, no re-estimation.}
+\item{\code{"escoufier"}}{Escoufier RV coefficient (descriptive
+multivariate similarity between blocks).}
+\item{\code{"cancor"}}{First canonical correlation — an upper bound
+on how related two blocks can be.}
+}}
 
 \item{method}{Character. Network estimator for the re-estimation
 paths and for data.frame input: \code{"pcor"} (default),
@@ -46,7 +66,8 @@ method used instead) when \code{x} is a netobject and
 \code{"subnetwork"} (see Details).}
 
 \item{weighting}{Character. How items are weighted inside their
-cluster composite (\code{aggregation = "composite"} only):
+cluster score (the score paths \code{"scaled"} / \code{"mean"} /
+\code{"loadings"}; not \code{"median"}, which is unweighted):
 \describe{
 \item{\code{"equal"}}{(default) 1/m per item — the scale as
 scored.}
@@ -99,10 +120,6 @@ inherently non-negative weights (equal, closeness, betweenness,
 specificity) keep the eigenvector-based item signs; sign-carrying
 schemes (eigen, pca, factor, expected_influence, item_total, custom)
 use their own.}
-
-\item{scale}{Logical. Standardize member variables before forming
-composites (default \code{TRUE}). Ignored for \code{"average"},
-\code{"rv"}, and \code{"canonical"}.}
 
 \item{cor_method}{Character. Correlation type for estimation from raw
 data: \code{"pearson"} (default), \code{"spearman"}, or

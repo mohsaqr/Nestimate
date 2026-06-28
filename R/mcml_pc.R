@@ -108,12 +108,32 @@
 #'   its \code{$data} and \code{$method} are reused — or a numeric
 #'   data.frame of raw observations (then \code{method} decides the
 #'   estimator).
-#' @param clusters Cluster membership: a named list of node-label vectors
-#'   (names = cluster labels), or a vector of cluster labels named by
-#'   node. Every node must be assigned to exactly one cluster.
-#' @param aggregation Character. \code{"average"}, \code{"composite"},
-#'   \code{"loadings"}, \code{"rv"}, or \code{"canonical"} (see
-#'   Description). Default \code{"average"}.
+#' @param clusters Cluster membership in any of three forms: a named list of
+#'   node-label vectors (names = cluster labels); a two-column
+#'   \code{data.frame} read by position (first column = node names, second =
+#'   group labels); or a vector of cluster labels named by node. Every node
+#'   must be assigned to exactly one cluster.
+#' @param aggregation Character. How clusters are collapsed to the macro
+#'   network. Default \code{"scaled"}.
+#'   \describe{
+#'     \item{\code{"scaled"}}{Re-estimate the network on per-cluster scores
+#'       formed as the mean of \emph{standardized} member items (the
+#'       default; was \code{"composite"}).}
+#'     \item{\code{"composite"}}{Backward-compatible alias for
+#'       \code{"scaled"}.}
+#'     \item{\code{"mean"}}{As \code{"scaled"} but on raw (unstandardized)
+#'       item means.}
+#'     \item{\code{"median"}}{As \code{"mean"} but the per-cluster score is
+#'       the row-wise median of the items (unweighted).}
+#'     \item{\code{"loadings"}}{The scaled score path with member items
+#'       weighted by their within-cluster network strength.}
+#'     \item{\code{"average"}}{Average the item-pair edges in each
+#'       between-cluster submatrix — no scores, no re-estimation.}
+#'     \item{\code{"escoufier"}}{Escoufier RV coefficient (descriptive
+#'       multivariate similarity between blocks).}
+#'     \item{\code{"cancor"}}{First canonical correlation — an upper bound
+#'       on how related two blocks can be.}
+#'   }
 #' @param method Character. Network estimator for the re-estimation
 #'   paths and for data.frame input: \code{"pcor"} (default),
 #'   \code{"glasso"}, or \code{"cor"} — the same vocabulary as
@@ -123,7 +143,8 @@
 #' @param within Character. \code{"reestimate"} (default) or
 #'   \code{"subnetwork"} (see Details).
 #' @param weighting Character. How items are weighted inside their
-#'   cluster composite (\code{aggregation = "composite"} only):
+#'   cluster score (the score paths \code{"scaled"} / \code{"mean"} /
+#'   \code{"loadings"}; not \code{"median"}, which is unweighted):
 #'   \describe{
 #'     \item{\code{"equal"}}{(default) 1/m per item — the scale as
 #'       scored.}
@@ -176,9 +197,6 @@
 #'   specificity) keep the eigenvector-based item signs; sign-carrying
 #'   schemes (eigen, pca, factor, expected_influence, item_total, custom)
 #'   use their own.
-#' @param scale Logical. Standardize member variables before forming
-#'   composites (default \code{TRUE}). Ignored for \code{"average"},
-#'   \code{"rv"}, and \code{"canonical"}.
 #' @param cor_method Character. Correlation type for estimation from raw
 #'   data: \code{"pearson"} (default), \code{"spearman"}, or
 #'   \code{"polychoric"} (needs \pkg{lavaan}; see Details).
@@ -285,15 +303,16 @@
 #' @export
 build_mcml_pc <- function(x,
                           clusters,
-                          aggregation = c("average", "composite",
-                                          "loadings", "rv", "canonical"),
+                          aggregation = c("scaled", "composite", "mean",
+                                          "median",
+                                          "loadings", "average", "escoufier",
+                                          "cancor"),
                           method = c("pcor", "glasso", "cor"),
                           within = c("reestimate", "subnetwork"),
                           weighting = c("equal", "strength", "eigen",
                                         "closeness", "betweenness",
                                         "expected_influence", "specificity",
                                         "pca", "factor", "item_total"),
-                          scale = TRUE,
                           cor_method = c("pearson", "spearman",
                                          "polychoric"),
                           signed = TRUE,
@@ -301,6 +320,23 @@ build_mcml_pc <- function(x,
                           fa_method = c("ml", "paf", "minres", "cfa"),
                           ...) {
   aggregation <- match.arg(aggregation)
+  # Public label kept for printing / metadata; the strategy logic below runs
+  # on the internal "composite" token.
+  aggregation_label <- aggregation
+  # "scaled" / "composite" / "mean" / "median" are the re-estimated score path:
+  # they differ only in how each cluster score is formed (z-scored mean / raw
+  # mean / raw median). Resolve them to the internal composite strategy.
+  score_fn <- "mean"
+  scale <- TRUE
+  if (aggregation %in% c("scaled", "composite", "mean", "median")) {
+    score_fn    <- if (aggregation == "median") "median" else "mean"
+    scale       <- aggregation %in% c("scaled", "composite")
+    aggregation <- "composite"
+  }
+  # Public names for the two descriptive similarity coefficients map onto the
+  # internal strategy tokens.
+  if (aggregation == "escoufier") aggregation <- "rv"
+  if (aggregation == "cancor")    aggregation <- "canonical"
   weighting_given <- !missing(weighting)
   custom_weighting <- !is.character(weighting)
   if (custom_weighting) {
@@ -350,7 +386,6 @@ build_mcml_pc <- function(x,
     }
   }
   stopifnot(
-    is.logical(scale), length(scale) == 1L, !is.na(scale),
     is.logical(signed), length(signed) == 1L, !is.na(signed)
   )
 
@@ -406,8 +441,8 @@ build_mcml_pc <- function(x,
     all(node_labels %in% colnames(data))
   needs_data <- c("composite", "loadings", "rv", "canonical")
   if (aggregation %in% needs_data && !has_data) {
-    stop("aggregation = \"", aggregation, "\" requires raw data with one ",
-         "column per node. Pass a netobject that carries $data, or the ",
+    stop("aggregation = \"", aggregation_label, "\" requires raw data with ",
+         "one column per node. Pass a netobject that carries $data, or the ",
          "raw data.frame itself. For weight-only input use ",
          "aggregation = \"average\".", call. = FALSE)
   }
@@ -452,7 +487,7 @@ build_mcml_pc <- function(x,
                               method = "pc_average", directed = FALSE),
     composite = {
       composites <- .pc_composites(data, members, loadings_df, scale,
-                                   signed = signed)
+                                   signed = signed, score_fn = score_fn)
       .pc_estimate(composites, method, "pearson")
     },
     rv = .wrap_netobject(.pc_block_macro(data, members, "rv"),
@@ -483,7 +518,7 @@ build_mcml_pc <- function(x,
     node_network = node_network,
     data = if (has_data) data else NULL,
     meta = list(
-      aggregation = aggregation,
+      aggregation = aggregation_label,
       method = if (aggregation == "composite") method
         else NA_character_,
       within = within,
@@ -537,7 +572,17 @@ build_mcml_pc <- function(x,
 #' Normalize cluster input to a named list of member labels
 #' @noRd
 .pc_normalize_clusters <- function(clusters, node_labels) {
-  if (is.list(clusters)) {
+  if (is.data.frame(clusters)) {
+    # Two-column data.frame read by position: first column = node names
+    # (the item / variable columns), second column = group labels. Column
+    # names are irrelevant, matching build_mcml()'s data.frame handling.
+    if (ncol(clusters) < 2L) {
+      stop("'clusters' data.frame must have at least two columns ",
+           "(node names, then group labels).", call. = FALSE)
+    }
+    members <- split(as.character(clusters[[1L]]),
+                     as.character(clusters[[2L]]))
+  } else if (is.list(clusters)) {
     if (is.null(names(clusters)) || any(!nzchar(names(clusters)))) {
       stop("'clusters' list must have non-empty names.", call. = FALSE)
     }
@@ -545,8 +590,9 @@ build_mcml_pc <- function(x,
   } else if (is.atomic(clusters) && !is.null(names(clusters))) {
     members <- split(names(clusters), as.character(clusters))
   } else {
-    stop("'clusters' must be a named list of node labels or a vector of ",
-         "cluster labels named by node.", call. = FALSE)
+    stop("'clusters' must be a named list of node labels, a two-column ",
+         "data.frame (node, group), or a vector of cluster labels named ",
+         "by node.", call. = FALSE)
   }
   assigned <- unlist(members, use.names = FALSE)
   if (anyDuplicated(assigned)) {
@@ -716,16 +762,25 @@ build_mcml_pc <- function(x,
 
 #' Per-observation cluster composites (NA-tolerant, sign-corrected)
 #' @noRd
-.pc_composites <- function(data, members, loadings_df, scale, signed) {
+.pc_composites <- function(data, members, loadings_df, scale, signed,
+                           score_fn = "mean") {
   cols <- lapply(names(members), function(cl) {
     nodes <- members[[cl]]
     mat <- as.matrix(data[, nodes, drop = FALSE])
     if (scale) mat <- base::scale(mat)
     idx <- match(nodes, loadings_df$node)
-    w <- loadings_df$weight[idx]
-    if (signed) w <- w * loadings_df$sign[idx]
+    sgn <- if (signed) loadings_df$sign[idx] else rep(1, length(nodes))
+    if (identical(score_fn, "median")) {
+      # Row-wise median over observed members (sign-corrected). Median is
+      # unweighted by definition, so item weights do not apply here.
+      smat <- sweep(mat, 2L, sgn, "*")
+      out <- apply(smat, 1L, stats::median, na.rm = TRUE)
+      out[rowSums(!is.na(smat)) == 0L] <- NA_real_
+      return(out)
+    }
     # Row-wise weighted mean over observed members: renormalize the
     # absolute weights across non-missing cells per row.
+    w <- loadings_df$weight[idx] * sgn
     wmat <- matrix(w, nrow(mat), length(w), byrow = TRUE)
     wmat[is.na(mat)] <- NA
     num <- rowSums(mat * wmat, na.rm = TRUE)

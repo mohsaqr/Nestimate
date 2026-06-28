@@ -1,13 +1,3 @@
-#' Data Format Conversion Functions
-#'
-#' @description
-#' Functions for converting between wide and long data formats commonly used
-#' in Temporal Network Analysis.
-#'
-#' @name data_conversion
-#' @keywords internal
-NULL
-
 #' Convert Wide Sequences to Long Format
 #'
 #' @description

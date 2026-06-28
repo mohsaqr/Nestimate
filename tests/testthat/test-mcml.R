@@ -1872,13 +1872,15 @@ test_that("edge-list clusters-by-column reflects documented narrow contract", {
 })
 
 # ============================================
-# audit_mcml #6 gap: as_tna.mcml() must drop relative-method clusters
-# whose within-matrix has zero row sums (cannot row-normalise) and warn
-# clearly. Deterministic fixture: a 4-node mcml where one cluster has
-# an absorbing-only row (all-zero outgoing weights).
+# as_tna.mcml() keeps EVERY cluster, including ones with a zero-row-sum
+# (sink) node: the weights are stored as-is (never re-normalised), so a sink
+# row simply stays all-zero -- the same way the relative estimator and the
+# frequency path keep it. Deterministic fixture: a 4-node mcml where one
+# cluster (G2 = {b1, b2}) has node b1 transitioning only OUT of the cluster,
+# so its within-G2 row sums to zero.
 # ============================================
 
-test_that("as_tna.mcml drops zero-row-sum clusters and warns", {
+test_that("as_tna.mcml keeps clusters with zero-row-sum (sink) nodes, no warning", {
   # Drop only fires when net_method == "relative" (i.e. sequence/edgelist
   # input with type = "tna"). cluster_summary() on a matrix produces
   # frequency-method results where a zero row is a legitimate sink and
@@ -1903,12 +1905,13 @@ test_that("as_tna.mcml drops zero-row-sum clusters and warns", {
   zero_rows <- rownames(w_g2)[rowSums(w_g2) == 0]
   expect_true(length(zero_rows) >= 1L)
 
-  expect_warning(out <- as_tna(mc), "Dropped clusters with zero row sums")
-  expect_false("G2" %in% names(out))
-  expect_true("macro" %in% names(out))
+  out <- expect_no_warning(as_tna(mc))
+  # G2 is kept, with its sink row left all-zero.
+  expect_true(all(c("macro", "G1", "G2") %in% names(out)))
+  expect_equal(sum(out$G2$weights[zero_rows[1L], ]), 0)
 })
 
-test_that("as_tna.mcml preserves relative macro weights and inits while dropping bad within clusters", {
+test_that("as_tna.mcml preserves relative macro weights and inits, keeps every cluster", {
   seq_df <- data.frame(
     t1 = c("b2", "b2", "a1", "a2"),
     t2 = c("b1", "b1", "a2", "a1"),
@@ -1919,13 +1922,11 @@ test_that("as_tna.mcml preserves relative macro weights and inits while dropping
   clusters <- list(G1 = c("a1", "a2"), G2 = c("b1", "b2"))
   mc <- build_mcml(seq_df, clusters, type = "tna")
 
-  expect_warning(result <- as_tna(mc),
-                 "Dropped clusters with zero row sums")
+  result <- expect_no_warning(as_tna(mc))
   expect_identical(result$macro$weights, mc$macro$weights)
   expect_identical(result$macro$inits, mc$macro$inits)
   expect_equal(result$macro$method, "relative")
-  expect_true("G1" %in% names(result))
-  expect_false("G2" %in% names(result))
+  expect_true(all(c("G1", "G2") %in% names(result)))
 })
 
 test_that("meta$directed records effective directedness, not the argument", {

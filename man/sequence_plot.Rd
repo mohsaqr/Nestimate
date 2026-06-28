@@ -15,6 +15,8 @@ sequence_plot(
   geom = c("area", "bar"),
   na = TRUE,
   normalize = FALSE,
+  trim = NULL,
+  trim_clusterwise = FALSE,
   row_gap = 0,
   dendrogram_width = 1.2,
   k = NULL,
@@ -91,6 +93,24 @@ one facet per group. Index/distribution only. Ignored for heatmap.}
 \code{TRUE}, each time point is normalised to sum to 1 within its channel
 (TraMineR-style \code{seqdplot} composition); when \code{FALSE} (default)
 the stack shows prevalence and is capped with an \code{NA} band.}
+
+\item{trim}{Optional time-axis truncation, to stop a few long
+sequences from stretching the plot. Applies to all three types
+(including the \code{mcml} multichannel view). \code{NULL} (default)
+plots the full width. A fraction in \code{(0, 1)} drops everything
+past that quantile of sequence lengths (e.g. \code{trim = 0.95} keeps
+the columns covering the shortest 95\\% of sequences); a value
+\code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
+time points).}
+
+\item{trim_clusterwise}{Grouped \code{type = "index"} /
+\code{"distribution"} only, and only when \code{trim} is a fraction.
+\code{FALSE} (default) computes one cutoff on the pooled data and
+applies it to every panel, so all facets share the same width and the
+time axes stay aligned. \code{TRUE} crops each group to its own
+length quantile, so panels can end up at different widths (ragged
+axes). Absolute \code{trim} (\code{>= 1}) ignores this - the column is
+the same everywhere either way.}
 
 \item{row_gap}{Fraction of row height used as vertical gap between
 sequences in index plots. \code{0} (default) = dense like heatmap.

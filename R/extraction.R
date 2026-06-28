@@ -1,12 +1,3 @@
-#' Model Extraction Functions
-#'
-#' @description
-#' Functions for extracting components from TNA model objects.
-#'
-#' @name extraction
-#' @keywords internal
-NULL
-
 #' Extract Transition Matrix from Model
 #'
 #' @description

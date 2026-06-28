@@ -25,6 +25,38 @@
 }
 
 
+# Number of time (column) points to keep so a few very long sequences
+# don't blow up the carpet width. `trim = NULL` keeps every column.
+# A fraction in (0, 1) keeps columns up to that quantile of per-row
+# sequence lengths (last non-NA position); a value >= 1 is an absolute
+# "drop after column t" cut. Works on numeric or character matrices.
+# Returns an integer in [1, ncol]. Callers apply it to one or more
+# matrices that share the same time axis.
+.trim_cut <- function(codes, trim) {
+  n_cols <- ncol(codes)
+  if (is.null(trim)) return(n_cols)
+  stopifnot(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
+  if (trim < 1) {
+    pos <- col(codes)
+    pos[is.na(codes)] <- 0L
+    lengths <- apply(pos, 1L, max)              # last non-NA position per row
+    cut <- ceiling(stats::quantile(lengths, probs = trim,
+                                   names = FALSE, type = 7))
+  } else {
+    cut <- as.integer(round(trim))
+  }
+  max(1L, min(as.integer(cut), n_cols))
+}
+
+# Truncate a codes matrix on the time (column) axis. Column names (tick
+# labels) are preserved.
+.trim_codes <- function(codes, trim) {
+  cut <- .trim_cut(codes, trim)
+  if (cut >= ncol(codes)) return(codes)
+  codes[, seq_len(cut), drop = FALSE]
+}
+
+
 # Compute only the dissimilarity matrix for a sequence of states using the
 # same dispatch as build_clusters(), but without running PAM / hclust /
 # silhouette. Used by sequence_plot() when sort = any distance metric.

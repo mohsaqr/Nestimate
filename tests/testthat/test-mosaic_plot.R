@@ -197,3 +197,32 @@ test_that("mosaic_plot geometry matches tna::plot_mosaic", {
   expect_equal(d_tna$ymax, d_nest$ymax, tolerance = 1e-10)
   expect_equal(d_tna$fill, d_nest$fill)
 })
+
+test_that("mosaic_plot works on a tna-type mcml via count recovery from $data", {
+  skip_if_not(exists("build_mcml"))
+  cl <- list(Cognitive  = c("discuss", "synthesis", "consensus", "cohesion"),
+             Regulation = c("plan", "monitor", "adapt", "coregulate"),
+             Affective  = "emotion")
+  args <- list(group_regulation_long, clusters = cl,
+               actor = "Actor", action = "Action", time = "Time")
+  fit_tna  <- do.call(build_mcml, c(args, type = "tna"))
+  fit_freq <- do.call(build_mcml, c(args, type = "frequency"))
+
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+
+  # tna weights are probabilities; the mosaic must still render (recounts
+  # integer transitions from each layer's $data).
+  expect_no_error(mosaic_plot(fit_tna, level = "macro"))
+  # clusters level drops the single-state Affective cluster with a warning.
+  expect_warning(mosaic_plot(fit_tna, level = "clusters"), "single-state")
+
+  # tna and frequency mcml recover the SAME count table -> identical mosaic
+  # input. Compare the recovered macro count matrix.
+  ct_tna <- Nestimate:::.mosaic_count_or_stop(
+    list(weights = fit_tna$macro$weights, data = fit_tna$macro$data,
+         method = "tna"))
+  ct_freq <- Nestimate:::.mosaic_count_or_stop(
+    list(weights = fit_freq$macro$weights, data = fit_freq$macro$data,
+         method = "frequency"))
+  expect_equal(ct_tna[rownames(ct_freq), colnames(ct_freq)], ct_freq)
+})

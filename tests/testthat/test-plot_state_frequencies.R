@@ -291,3 +291,29 @@ test_that("print.state_freq writes the canonical header", {
   expect_true(any(grepl("Per-group totals", out, fixed = TRUE)))
   expect_true(any(grepl("Per-state proportions", out, fixed = TRUE)))
 })
+
+test_that("knit_print.state_freq does not explode a gtable/facet_list into text", {
+  skip_if_not_installed("knitr")
+  skip_if_not_installed("gridExtra")
+  fit <- build_mcml(
+    group_regulation_long,
+    clusters = list(Cognitive  = c("discuss", "synthesis", "consensus", "cohesion"),
+                    Regulation = c("plan", "monitor", "adapt", "coregulate"),
+                    Affective  = "emotion"),
+    actor = "Actor", action = "Action", time = "Time", type = "tna")
+
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+
+  # per_facet -> gtable; the old code unlisted the grob tree into thousands
+  # of lines. The textual asis payload must stay small (the plot is drawn,
+  # not dumped).
+  pf <- plot_state_frequencies(fit, legend = "per_facet")
+  expect_true(inherits(pf$plot, "gtable"))
+  out_pf <- as.character(Nestimate:::knit_print.state_freq(pf))
+  expect_lt(sum(nchar(out_pf)), 5000L)
+
+  # include_macro -> nestimate_facet_list; must also render, not error.
+  fl <- plot_state_frequencies(fit, include_macro = TRUE, legend = "per_facet")
+  expect_true(inherits(fl$plot, "nestimate_facet_list"))
+  expect_no_error(Nestimate:::knit_print.state_freq(fl))
+})

@@ -10,6 +10,8 @@ distribution_plot(
   scale = c("proportion", "count"),
   geom = c("area", "bar"),
   na = TRUE,
+  trim = NULL,
+  trim_clusterwise = FALSE,
   state_colors = NULL,
   na_color = "grey90",
   frame = FALSE,
@@ -51,6 +53,19 @@ total so bands fill 0..1. \code{"count"} keeps raw counts.}
 
 \item{na}{If \code{TRUE} (default), \code{NA} cells are shown as an
 extra band coloured \code{na_color}.}
+
+\item{trim}{Optional time-axis truncation, to stop a few long
+sequences from stretching the plot. \code{NULL} (default) keeps the
+full width. A fraction in \code{(0, 1)} drops everything past that
+quantile of sequence lengths (e.g. \code{trim = 0.95}); a value
+\code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
+time points). See \code{\link{sequence_plot}}.}
+
+\item{trim_clusterwise}{Grouped plots only, fractional \code{trim}
+only. \code{FALSE} (default) uses one pooled cutoff for every panel
+so the time axes stay aligned; \code{TRUE} crops each group to its
+own length quantile (panels can differ in width). See
+\code{\link{sequence_plot}}.}
 
 \item{state_colors}{Vector of colours, one per state. Defaults to
 Okabe-Ito.}

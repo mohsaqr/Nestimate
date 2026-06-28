@@ -887,11 +887,21 @@ build_mcml <- function(x,
   if (!is.null(labels)) {
     result <- .apply_node_labels(result, labels)
   }
+  # Stash the node-level source so as_htna(mcml) can expand back to the node
+  # level without the caller re-passing data. `x` here is already in
+  # build_network-ready wide form (long input was widened by prepare()
+  # above), so no actor/action/time roles are needed to rebuild. Restricted
+  # to sequence input: matrix inputs carry no node-level data, and the
+  # edgelist -> build_network(method = "relative") round-trip is unreliable,
+  # so those fall back to the explicit "pass data" path in as_htna.mcml().
+  if (identical(input_type, "sequence")) {
+    attr(result, "htna_source") <- x
+  }
   result
 }
 
 #' Detect input type for build_mcml
-#' @keywords internal
+#' @noRd
 .detect_mcml_input <- function(x) {
   if (inherits(x, "tna")) {
     if (!is.null(x$data)) return("tna_data")
@@ -934,7 +944,7 @@ build_mcml <- function(x,
 }
 
 #' Auto-detect clusters from netobject
-#' @keywords internal
+#' @noRd
 .auto_detect_clusters <- function(x) {
   # Prefer x$nodes-embedded cluster column. x$nodes is the canonical node
   # table — if it carries a cluster column, the row order is by definition
@@ -1050,7 +1060,7 @@ build_mcml <- function(x,
 }
 
 #' Build node-to-cluster lookup from cluster specification
-#' @keywords internal
+#' @noRd
 .build_cluster_lookup <- function(clusters, all_nodes) {
   if (is.data.frame(clusters)) { # nocov start
     # Defensive: .normalize_clusters converts df to list before this is called
@@ -1127,7 +1137,7 @@ build_mcml <- function(x,
 }
 
 #' Build cluster_summary from transition vectors
-#' @keywords internal
+#' @noRd
 .build_from_transitions <- function(from_nodes, to_nodes, weights,
                                      cluster_lookup, cluster_list,
                                      method, type, directed,
@@ -1459,7 +1469,7 @@ build_mcml <- function(x,
 }
 
 #' Build MCML from edge list data.frame
-#' @keywords internal
+#' @noRd
 .build_mcml_edgelist <- function(df, clusters, method, type,
                                   directed, compute_within) {
 
@@ -1568,7 +1578,7 @@ build_mcml <- function(x,
 }
 
 #' Build MCML from sequence data.frame
-#' @keywords internal
+#' @noRd
 .build_mcml_sequence <- function(df, clusters, method, type,
                                   directed, compute_within) {
 
@@ -1619,7 +1629,7 @@ build_mcml <- function(x,
 }
 
 #' Process weights based on type
-#' @keywords internal
+#' @noRd
 .process_weights <- function(raw_weights, type, directed = TRUE) {
   if (!is.matrix(raw_weights) || !is.numeric(raw_weights)) {
     stop("'raw_weights' must be a numeric matrix.", call. = FALSE)
@@ -1716,22 +1726,14 @@ build_mcml <- function(x,
 #' tna::centralities(tna_models$clusters$ClusterA)
 #' }
 #'
-#' ## Excluded Clusters
+#' ## Zero-out-degree (sink) nodes
 #'
-#' A within-cluster network is dropped only when row-normalisation would
-#' fail. Specifically, when the recorded \code{net_method} is
-#' \code{"relative"} (row-stochastic transitions) and any node in the
-#' cluster has zero outgoing weight, that cluster is excluded from
-#' \code{$clusters} and a \code{warning()} is emitted listing the dropped
-#' cluster names. For \code{net_method = "frequency"} (raw counts), a
-#' zero-row node is a legitimate sink and the cluster is retained.
-#' The macro / between-cluster network always includes every cluster
-#' regardless of the per-cluster drop decisions.
-#'
-#' If a cluster you expect to see is missing from the returned
-#' \code{$clusters}, check the warning output and consider building with
-#' \code{type = "raw"} (which carries through to a frequency-method
-#' netobject and skips the drop) or inspect \code{rowSums(x$clusters[[cl]]$weights)}.
+#' Every cluster is returned, regardless of its row sums. A node with zero
+#' outgoing weight is a legitimate sink (a terminal state); its row in the
+#' wrapped network is left all-zero. This holds for both
+#' \code{net_method = "relative"} and \code{"frequency"} -- the stored
+#' weights are never re-normalised, so a sink row needs no special handling.
+#' Inspect \code{rowSums(x$clusters[[cl]]$weights)} to find sink nodes.
 #'
 #' @export
 #' @seealso
@@ -1772,29 +1774,20 @@ as_tna.mcml <- function(x) {
                                method = net_method, directed = directed,
                                inits = x$macro$inits)
 
-  # Per-cluster. Drop a cluster only when the wrapped netobject would be
-  # un-normalisable (relative-method requires positive row sums). For
-  # frequency-method counts a zero row is a legitimate sink and is kept.
+  # Per-cluster. Every cluster is kept. A zero-sum row is a legitimate sink
+  # (a terminal state with no out-transitions): the weights are stored as-is
+  # by .wrap_netobject() -- which never re-normalises -- so a sink row simply
+  # stays all-zero, exactly as the `relative` estimator and the frequency
+  # path already keep it. Dropping the whole cluster over one sink node was
+  # over-conservative and is no longer done.
   cluster_nets <- if (!is.null(x$clusters)) {
-    drop_zero_rows <- net_method == "relative"
-    dropped <- character()
     nets <- lapply(names(x$clusters), function(cl) {
-      w <- x$clusters[[cl]]$weights
-      d <- x$clusters[[cl]]$data
-      i <- x$clusters[[cl]]$inits
-      if (drop_zero_rows && any(rowSums(w) == 0)) {
-        dropped[[length(dropped) + 1L]] <<- cl
-        return(NULL)
-      }
-      .wrap_netobject(w, data = d, method = net_method, directed = directed,
-                      inits = i)
+      .wrap_netobject(x$clusters[[cl]]$weights, data = x$clusters[[cl]]$data,
+                      method = net_method, directed = directed,
+                      inits = x$clusters[[cl]]$inits)
     })
     names(nets) <- names(x$clusters)
-    if (length(dropped) > 0L) {
-      warning("Dropped clusters with zero row sums (cannot row-normalise): ",
-              paste(dropped, collapse = ", "), call. = FALSE)
-    }
-    nets[!vapply(nets, is.null, logical(1))]
+    nets
   } else {
     list()
   }
@@ -1883,6 +1876,136 @@ as_tna.default <- function(x) {
     return(x)
   }
   stop("Cannot convert object of class '", class(x)[1], "' to tna", call. = FALSE)
+}
+
+
+# ==============================================================================
+# as_htna -- Full node-level network grouped by cluster (for cograph::plot_htna)
+# ==============================================================================
+
+#' Build a grouped node-level network (htna) from data and a clustering
+#'
+#' Builds the full node-level network from the original data and attaches a
+#' cluster grouping, producing a single \code{netobject} in which every actor
+#' is a node and cluster membership labels the actors. This is the node-level
+#' counterpart of \code{\link{build_mcml}}: where \code{build_mcml} collapses
+#' the network to a cluster-level (macro) summary, \code{as_htna} keeps every
+#' node and every transition — including the between-cluster transitions an
+#' mcml only retains in aggregate.
+#'
+#' \strong{Why this rebuilds from data.} An \code{mcml} stores cluster-level
+#' data (the macro sequences are recoded to cluster labels, and the per-cluster
+#' data is filtered to within-cluster nodes), so it does not retain a faithful
+#' node-level transition network. The only faithful source of node-level
+#' between-cluster transitions is the original data. \code{as_htna()} therefore
+#' rebuilds from data via \code{\link{build_network}}; an \code{mcml} can supply
+#' the cluster membership, but the data must be provided.
+#'
+#' The result is a genuine \code{netobject}, so it supports inference
+#' (\code{\link{bootstrap_network}}, centrality, \code{\link{permutation}})
+#' and plots directly as a grouped network with cograph:
+#' \code{cograph::plot_htna(as_htna(data, clusters))}.
+#'
+#' @param x Data accepted by \code{\link{build_network}} (sequence data frame,
+#'   edgelist, transition matrix, \code{netobject}, or \code{tna}); or an
+#'   \code{mcml} object, in which case the original \code{data} must also be
+#'   supplied and the mcml provides the cluster membership.
+#' @param clusters Cluster assignment: a named list of node-name vectors, a
+#'   per-node membership vector, or a two-column data frame. When \code{NULL}
+#'   and \code{x} carries node groups (or is an \code{mcml}), those are used.
+#' @param method Estimator passed to \code{\link{build_network}}. Default
+#'   \code{"relative"} (row-normalized transitions).
+#' @param ... Further arguments forwarded to \code{\link{build_network}}
+#'   (e.g. \code{actor}, \code{action}, \code{time} for long-format data).
+#' @return A \code{netobject} (\code{cograph_network}) over all nodes, with a
+#'   \code{cluster} column on \code{$nodes}, \code{$node_groups} populated, and
+#'   the membership stored in the \code{"cluster_members"} attribute.
+#' @seealso \code{\link{build_mcml}}, \code{\link{build_network}}; plot with
+#'   \code{cograph::plot_htna()}.
+#' @export
+#' @examples
+#' seqs <- data.frame(
+#'   t1 = c("A", "C", "E", "B"), t2 = c("B", "D", "F", "A"),
+#'   t3 = c("C", "A", "E", "D"), stringsAsFactors = FALSE
+#' )
+#' clusters <- list(C1 = c("A", "B"), C2 = c("C", "D"), C3 = c("E", "F"))
+#' net <- as_htna(seqs, clusters)
+#' net$nodes$cluster
+#' \dontrun{
+#' cograph::plot_htna(net)
+#' }
+as_htna <- function(x, clusters = NULL, method = "relative", ...) {
+  UseMethod("as_htna")
+}
+
+#' @rdname as_htna
+#' @param data For the \code{mcml} method, the original data the mcml was built
+#'   from (sequence/edgelist/etc.). Optional when the mcml was built from
+#'   sequence/edgelist data: \code{build_mcml()} stashes that source (and the
+#'   \code{actor}/\code{action}/\code{time} roles), so \code{as_htna(mcml)}
+#'   works on its own. Required for an mcml built from a matrix/aggregate,
+#'   which retains no node-level data.
+#' @export
+as_htna.mcml <- function(x, clusters = NULL, method = "relative",
+                         data = NULL, ...) {
+  # An mcml built from sequence/edgelist data stashes that source (see
+  # build_mcml), so as_htna(mcml) works on its own; reuse it when `data`
+  # is not supplied.
+  src <- attr(x, "htna_source")
+  if (is.null(data) && !is.null(src)) data <- src
+  if (is.null(data)) {
+    stop("This mcml carries no expandable node-level source (it was built ",
+         "from a matrix, aggregate, or edge list), so it cannot be expanded ",
+         "to an htna on its own. Pass the original data:\n",
+         "  as_htna(mcml, data = <original data>)   # reuses mcml$cluster_members\n",
+         "or equivalently as_htna(<original data>, clusters = mcml$cluster_members).",
+         call. = FALSE)
+  }
+  if (is.null(clusters)) clusters <- x$cluster_members
+  as_htna.default(data, clusters = clusters, method = method, ...)
+}
+
+#' @rdname as_htna
+#' @export
+as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
+  net <- build_network(x, method = method, ...)
+  if (!inherits(net, "netobject")) {
+    stop("as_htna() expects a single node-level network; build_network() ",
+         "returned class '", class(net)[1], "'. Provide ungrouped data ",
+         "(do not pass a 'group' argument).", call. = FALSE)
+  }
+  node_names <- net$nodes$label
+
+  # Derive clusters from carried node groups when not supplied.
+  if (is.null(clusters)) {
+    ng <- net$node_groups
+    if (is.data.frame(ng) && all(c("node", "group") %in% names(ng))) {
+      clusters <- stats::setNames(ng$group, ng$node)
+    } else {
+      stop("'clusters' is required: a named list of node vectors, a per-node ",
+           "membership vector, or a two-column data frame.", call. = FALSE)
+    }
+  }
+  members <- .normalize_clusters(clusters, node_names)
+
+  # node -> cluster label map; every node must belong to exactly one cluster.
+  map <- stats::setNames(
+    rep(names(members), lengths(members)),
+    unlist(members, use.names = FALSE)
+  )
+  missing_nodes <- setdiff(node_names, names(map))
+  if (length(missing_nodes) > 0L) {
+    stop("These nodes are not assigned to any cluster: ",
+         paste(missing_nodes, collapse = ", "), call. = FALSE)
+  }
+
+  net$nodes$cluster <- unname(map[node_names])
+  net$node_groups <- data.frame(
+    node = node_names, group = unname(map[node_names]),
+    stringsAsFactors = FALSE
+  )
+  attr(net, "cluster_members") <- members
+  net
 }
 
 #' Normalize cluster specification to list format

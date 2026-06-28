@@ -219,3 +219,121 @@ test_that("sequence_plot distribution branch matrix: scale x geom combinations",
     }
   }
 })
+
+test_that("trim truncates the time axis by quantile and absolute cut", {
+  # 95 short sequences (<=20 cols) + 5 long ones (200 cols).
+  set.seed(1)
+  n_row <- 100L; n_col <- 200L
+  states <- c("A", "B", "C")
+  m <- matrix(NA_character_, n_row, n_col)
+  lens <- c(sample(10:20, 95, replace = TRUE), rep(200L, 5L))
+  invisible(lapply(seq_len(n_row), function(i)
+    m[i, seq_len(lens[i])] <<- sample(states, lens[i], replace = TRUE)))
+  df <- as.data.frame(m, stringsAsFactors = FALSE)
+  colnames(df) <- paste0("T", seq_len(n_col))
+
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+
+  # NULL trim plots full width.
+  full <- sequence_plot(df, type = "index", trim = NULL, legend = "none")
+  expect_equal(ncol(full$codes), n_col)
+
+  # Quantile trim drops the long tail; column names are preserved.
+  q <- sequence_plot(df, type = "index", trim = 0.95, legend = "none")
+  expect_lt(ncol(q$codes), n_col)
+  expect_identical(colnames(q$codes), paste0("T", seq_len(ncol(q$codes))))
+
+  # Absolute cut keeps exactly the first t columns.
+  abs_cut <- sequence_plot(df, type = "index", trim = 30, legend = "none")
+  expect_equal(ncol(abs_cut$codes), 30L)
+
+  # Heatmap honours trim too (z is transposed: rows = time).
+  hm <- sequence_plot(df, type = "heatmap", trim = 30, legend = "none")
+  expect_equal(ncol(hm$codes), 30L)
+
+  # Cut beyond the data is a harmless no-op.
+  over <- sequence_plot(df, type = "index", trim = 999, legend = "none")
+  expect_equal(ncol(over$codes), n_col)
+
+  # Invalid trim errors.
+  expect_error(sequence_plot(df, type = "index", trim = -1))
+})
+
+test_that("trim applies to the distribution and mcml paths", {
+  set.seed(1)
+  n_row <- 100L; n_col <- 200L
+  states <- c("A", "B", "C")
+  m <- matrix(NA_character_, n_row, n_col)
+  lens <- c(sample(10:20, 95, replace = TRUE), rep(200L, 5L))
+  invisible(lapply(seq_len(n_row), function(i)
+    m[i, seq_len(lens[i])] <<- sample(states, lens[i], replace = TRUE)))
+  df <- as.data.frame(m, stringsAsFactors = FALSE)
+  colnames(df) <- paste0("T", seq_len(n_col))
+
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+
+  # distribution: absolute and quantile cut, via both entry points.
+  d_full <- distribution_plot(df, trim = NULL, legend = "none")
+  expect_equal(ncol(d_full$counts[[1L]]), n_col)
+  d_abs <- distribution_plot(df, trim = 30, legend = "none")
+  expect_equal(ncol(d_abs$counts[[1L]]), 30L)
+  d_q <- sequence_plot(df, type = "distribution", trim = 0.95, legend = "none")
+  expect_lt(ncol(d_q$counts[[1L]]), n_col)
+
+  # mcml: every channel cut to the same width as the (trimmed) time axis.
+  skip_if_not(exists("build_mcml"))
+  fit <- build_mcml(
+    group_regulation_long,
+    clusters = list(Cognitive  = c("discuss", "synthesis", "consensus", "cohesion"),
+                    Regulation = c("plan", "monitor", "adapt", "coregulate"),
+                    Affective  = "emotion"),
+    actor = "Actor", action = "Action", time = "Time")
+
+  ch_full <- Nestimate:::.mcml_seq_channels(fit, NULL)
+  ch_abs  <- Nestimate:::.mcml_seq_channels(fit, 15)
+  expect_lt(length(ch_abs$times), length(ch_full$times))
+  expect_equal(length(ch_abs$times), 15L)
+  expect_true(all(vapply(ch_abs$cmats, ncol, 1L) == length(ch_abs$times)))
+  expect_equal(ncol(ch_abs$summary_mat), 15L)
+
+  expect_s3_class(sequence_plot(fit, type = "index", trim = 15), "ggplot")
+  expect_s3_class(sequence_plot(fit, type = "distribution", trim = 0.9), "ggplot")
+})
+
+test_that("trim_clusterwise: global keeps panels aligned, clusterwise crops per group", {
+  set.seed(1)
+  mk <- function(lo, hi, n) {
+    m <- matrix(NA_character_, n, 100L)
+    L <- sample(lo:hi, n, replace = TRUE)
+    invisible(lapply(seq_len(n), function(i)
+      m[i, seq_len(L[i])] <<- sample(c("A", "B", "C"), L[i], replace = TRUE)))
+    m
+  }
+  df <- as.data.frame(rbind(mk(10, 15, 50), mk(40, 50, 50)),
+                      stringsAsFactors = FALSE)
+  colnames(df) <- paste0("T", seq_len(100))
+  grp <- rep(c("Short", "Long"), each = 50L)
+
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+
+  # Default (global): both groups share one width.
+  g <- distribution_plot(df, group = grp, trim = 0.95,
+                         trim_clusterwise = FALSE, legend = "none")
+  expect_equal(ncol(g$counts$Short), ncol(g$counts$Long))
+
+  # Clusterwise: short group cropped much tighter than the long group.
+  c1 <- distribution_plot(df, group = grp, trim = 0.95,
+                          trim_clusterwise = TRUE, legend = "none")
+  expect_lt(ncol(c1$counts$Short), ncol(c1$counts$Long))
+
+  # Absolute trim is unaffected by the flag.
+  a <- distribution_plot(df, group = grp, trim = 20,
+                         trim_clusterwise = TRUE, legend = "none")
+  expect_equal(ncol(a$counts$Short), 20L)
+  expect_equal(ncol(a$counts$Long), 20L)
+
+  # Index path honours it too, and orders still cover all rows.
+  ix <- sequence_plot(df, type = "index", group = grp, trim = 0.95,
+                      trim_clusterwise = TRUE, legend = "none")
+  expect_setequal(unlist(ix$orders), seq_len(nrow(df)))
+})

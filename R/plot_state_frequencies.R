@@ -829,12 +829,17 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
   if (identical(source_class, "mcml")) {
     # build_mcml() / cluster_summary() return $macro$weights (cluster x
     # cluster aggregate) and $clusters[[k]]$weights (per-cluster matrix).
+    # mcml weights may be row-normalised (type = "tna"); the mosaic needs
+    # integer transition counts. .mosaic_count_or_stop() recovers them from
+    # the layer's $data when the stored weights aren't counts, so the mosaic
+    # works regardless of how the mcml was estimated.
     if (identical(level, "macro")) {
       if (is.null(x$macro) || is.null(x$macro$weights)) {
         stop("mosaic_plot.mcml: x$macro$weights is missing.", call. = FALSE)
       }
-      w <- .mosaic_weights_or_stop(x$macro$weights, x$meta$type,
-                                   ctx = "macro")
+      w <- .mosaic_count_or_stop(
+        list(weights = x$macro$weights, data = x$macro$data,
+             method = x$meta$type), ctx = "macro")
       return(list(tabs = list(as.table(t(w))),
                   titles = NULL,
                   xlab_default = NULL,
@@ -846,12 +851,26 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
     }
     titles <- names(x$clusters) %||%
       paste0("Cluster ", seq_along(x$clusters))
-    tabs <- lapply(seq_along(x$clusters), function(i) {
-      w <- .mosaic_weights_or_stop(x$clusters[[i]]$weights, x$meta$type,
-                                   ctx = sprintf("cluster[%s]", titles[i]))
-      as.table(t(w))
+    built <- lapply(seq_along(x$clusters), function(i) {
+      cl <- x$clusters[[i]]
+      w <- .mosaic_count_or_stop(
+        list(weights = cl$weights, data = cl$data, method = x$meta$type),
+        ctx = sprintf("cluster[%s]", titles[i]))
+      # A single-state cluster has a 1x1 matrix -- no 2-D contingency table
+      # to draw -- so it is dropped from the faceted figure (with a note)
+      # rather than aborting every other cluster's panel.
+      if (nrow(w) < 2L || ncol(w) < 2L) NULL else as.table(t(w))
     })
-    return(list(tabs = tabs, titles = titles,
+    keep <- !vapply(built, is.null, logical(1L))
+    if (!any(keep)) {
+      stop("mosaic_plot.mcml: no cluster has >= 2 states to draw a mosaic.",
+           call. = FALSE)
+    }
+    if (!all(keep)) {
+      warning("mosaic_plot.mcml: skipping single-state cluster(s): ",
+              paste(titles[!keep], collapse = ", "), call. = FALSE)
+    }
+    return(list(tabs = built[keep], titles = titles[keep],
                 xlab_default = NULL,
                 ylab_default = NULL))
   }
@@ -868,7 +887,7 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
 # cor, ...) -- mirroring the documented fallback honored by the
 # netobject_group path. Falls through to the strict integer guard only when
 # $data is also absent.
-.mosaic_count_or_stop <- function(x) {
+.mosaic_count_or_stop <- function(x, ctx = NULL) {
   w <- x$weights
   is_count_mat <- function(m) {
     is.matrix(m) && is.numeric(m) && all(is.finite(m)) &&
@@ -885,15 +904,18 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
   #    review).
   fm <- x$frequency_matrix
   if (is_count_mat(fm)) return(fm)
-  # 3. Last resort: recount plain order-1 transitions from raw $data.
+  # 3. Last resort: recount plain order-1 transitions from raw $data. This
+  #    is what lets a row-normalised network (tna / relative / glasso) still
+  #    produce a count-based mosaic -- and is the path mcml clusters take,
+  #    since their stored $weights are probabilities under type = "tna".
   if (!is.null(x$data) &&
       (is.data.frame(x$data) || is.matrix(x$data))) {
     alphabet <- rownames(w) %||% colnames(w)
     counts <- .count_transitions(as.data.frame(x$data), format = "wide",
                                  id = NULL, alphabet = alphabet)
-    return(.mosaic_weights_or_stop(counts, "frequency"))
+    return(.mosaic_weights_or_stop(counts, "frequency", ctx))
   }
-  .mosaic_weights_or_stop(w, x$method)
+  .mosaic_weights_or_stop(w, x$method, ctx)
 }
 
 # Validate that a weight matrix is mosaic-able (finite, non-negative, integer-
@@ -2297,6 +2319,23 @@ state_distribution.default <- function(x, ...) {
 #' @name state_freq
 NULL
 
+# Draw whatever kind of plot object a state_freq carries: a single ggplot,
+# a gtable / grob (per_facet, hierarchical marimekko), or a
+# nestimate_facet_list (one full-size ggplot per panel, e.g. 4+ panels or
+# include_macro). Centralised so print / plot / knit_print stay in sync.
+.draw_state_freq_plot <- function(p) {
+  if (is.null(p)) return(invisible(NULL))
+  if (inherits(p, "ggplot") || inherits(p, "nestimate_facet_list")) {
+    print(p)
+  } else if (inherits(p, "gtable") || grid::is.grob(p)) {
+    grid::grid.newpage()
+    grid::grid.draw(p)
+  } else {
+    print(p)
+  }
+  invisible(NULL)
+}
+
 #' @export
 #' @rdname state_freq
 print.state_freq <- function(x, digits = 1, max_states = 20L, ...) {
@@ -2353,26 +2392,14 @@ print.state_freq <- function(x, digits = 1, max_states = 20L, ...) {
 
   # Render the chart to the active graphics device so the table + plot
   # appear together (console: opens a window; knitr: embeds inline).
-  if (inherits(x$plot, "ggplot")) {
-    print(x$plot)
-  } else if (inherits(x$plot, "gtable")) {
-    grid::grid.newpage()
-    grid::grid.draw(x$plot)
-  }
+  .draw_state_freq_plot(x$plot)
   invisible(x)
 }
 
 #' @export
 #' @rdname state_freq
 plot.state_freq <- function(x, ...) {
-  if (inherits(x$plot, "ggplot")) {
-    print(x$plot)
-  } else if (inherits(x$plot, "gtable")) {
-    grid::grid.newpage()
-    grid::grid.draw(x$plot)
-  } else {
-    print(x$plot)
-  }
+  .draw_state_freq_plot(x$plot)
   invisible(NULL)
 }
 
@@ -2387,17 +2414,18 @@ knit_print.state_freq <- function(x, options = list(), ...) {
   if (!requireNamespace("knitr", quietly = TRUE)) {
     print(x); return(invisible(NULL))
   }
+  # Capture ONLY the textual summary (strip the plot so print() doesn't draw).
   table_text <- paste(utils::capture.output({
     old <- list(plot = x$plot); x$plot <- NULL
     print(x)
     x$plot <- old$plot
   }), collapse = "\n")
-  if (is.null(options$out.width)) options$out.width <- "70%"
-  parts <- list(
-    knitr::asis_output(paste0("\n```\n", table_text, "\n```\n")),
-    knitr::knit_print(x$plot, options = options, ...)
-  )
-  knitr::asis_output(paste(unlist(parts), collapse = "\n\n"))
+  # Draw the chart to the active chunk device so knitr captures it as a
+  # properly sized figure. A gtable (per_facet / hierarchical) must NOT be
+  # passed through paste()/unlist() -- that explodes the grob tree into tens
+  # of thousands of text fragments and never draws the plot.
+  .draw_state_freq_plot(x$plot)
+  knitr::asis_output(paste0("\n```\n", table_text, "\n```\n"))
 }
 
 
