@@ -565,6 +565,19 @@ Order, structure, entropy, and stability of Markov chains
 - [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md)
   : Transition Entropy of a Markov Chain
 
+## Network Pruning
+
+Non-destructive edge pruning and restoration
+
+- [`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.md) :
+  Prune a Network's Edges
+- [`net_deprune()`](https://saqr.me/Nestimate/reference/net_deprune.md)
+  : Undo Network Pruning
+- [`net_reprune()`](https://saqr.me/Nestimate/reference/net_reprune.md)
+  : Re-apply Network Pruning
+- [`net_pruning_details()`](https://saqr.me/Nestimate/reference/net_pruning_details.md)
+  : Report Network Pruning Details
+
 ## Bootstrap & Inference
 
 Statistical inference for network estimation
@@ -719,10 +732,14 @@ Helper functions and extractors
   : Aggregate Edge Weights
 - [`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.md)
   : Compute Centrality Measures for a Network
+- [`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  : Edge Betweenness Network
 - [`coefs()`](https://saqr.me/Nestimate/reference/coefs.md) : Tidy
   coefficients from a fitted mlvar model
 - [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) : Convert
   cluster_summary to tna Objects
+- [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md) : Build
+  a grouped node-level network (htna) from data and a clustering
 - [`as_networks()`](https://saqr.me/Nestimate/reference/as_networks.md)
   : Promote a psychometric MCML result to a network group
 - [`as_netobject()`](https://saqr.me/Nestimate/reference/as_netobject.md)
@@ -930,6 +947,9 @@ Print, summary, and plot methods for package classes
 
 - [`print(`*`<net_permutation_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_permutation_group.md)
   : Print Method for net_permutation_group
+
+- [`print(`*`<net_pruning_details>`*`)`](https://saqr.me/Nestimate/reference/print.net_pruning_details.md)
+  : Print method for pruning details
 
 - [`print(`*`<net_reliability>`*`)`](https://saqr.me/Nestimate/reference/print.net_reliability.md)
   : Print Method for net_reliability

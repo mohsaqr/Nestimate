@@ -79,22 +79,14 @@ an error with installation instructions.
     plot(tna_models$clusters$ClusterA)
     tna::centralities(tna_models$clusters$ClusterA)
 
-### Excluded Clusters
+### Zero-out-degree (sink) nodes
 
-A within-cluster network is dropped only when row-normalisation would
-fail. Specifically, when the recorded `net_method` is `"relative"`
-(row-stochastic transitions) and any node in the cluster has zero
-outgoing weight, that cluster is excluded from `$clusters` and a
-[`warning()`](https://rdrr.io/r/base/warning.html) is emitted listing
-the dropped cluster names. For `net_method = "frequency"` (raw counts),
-a zero-row node is a legitimate sink and the cluster is retained. The
-macro / between-cluster network always includes every cluster regardless
-of the per-cluster drop decisions.
-
-If a cluster you expect to see is missing from the returned `$clusters`,
-check the warning output and consider building with `type = "raw"`
-(which carries through to a frequency-method netobject and skips the
-drop) or inspect `rowSums(x$clusters[[cl]]$weights)`.
+Every cluster is returned, regardless of its row sums. A node with zero
+outgoing weight is a legitimate sink (a terminal state); its row in the
+wrapped network is left all-zero. This holds for both
+`net_method = "relative"` and `"frequency"` – the stored weights are
+never re-normalised, so a sink row needs no special handling. Inspect
+`rowSums(x$clusters[[cl]]$weights)` to find sink nodes.
 
 ## See also
 

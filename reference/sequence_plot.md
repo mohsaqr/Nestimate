@@ -26,6 +26,8 @@ sequence_plot(
   geom = c("area", "bar"),
   na = TRUE,
   normalize = FALSE,
+  trim = NULL,
+  trim_clusterwise = FALSE,
   row_gap = 0,
   dendrogram_width = 1.2,
   k = NULL,
@@ -142,6 +144,26 @@ sequence_plot(
   normalised to sum to 1 within its channel (TraMineR-style `seqdplot`
   composition); when `FALSE` (default) the stack shows prevalence and is
   capped with an `NA` band.
+
+- trim:
+
+  Optional time-axis truncation, to stop a few long sequences from
+  stretching the plot. Applies to all three types (including the `mcml`
+  multichannel view). `NULL` (default) plots the full width. A fraction
+  in `(0, 1)` drops everything past that quantile of sequence lengths
+  (e.g. `trim = 0.95` keeps the columns covering the shortest 95\\
+  `>= 1` is an absolute cut (`trim = 50` keeps the first 50 time
+  points).
+
+- trim_clusterwise:
+
+  Grouped `type = "index"` / `"distribution"` only, and only when `trim`
+  is a fraction. `FALSE` (default) computes one cutoff on the pooled
+  data and applies it to every panel, so all facets share the same width
+  and the time axes stay aligned. `TRUE` crops each group to its own
+  length quantile, so panels can end up at different widths (ragged
+  axes). Absolute `trim` (`>= 1`) ignores this - the column is the same
+  everywhere either way.
 
 - row_gap:
 

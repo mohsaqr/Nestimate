@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -132,7 +132,7 @@
 <ul><li>
 <code><a href="../reference/cluster_network.html">cluster_network()</a></code> now forwards distance-clustering arguments (<code>na_syms</code>, <code>weighted</code>, <code>lambda</code>, <code>seed</code>, <code>q</code>, <code>p</code>, <code>covariates</code>) to <code><a href="../reference/build_clusters.html">build_clusters()</a></code> instead of silently passing them to <code><a href="../reference/build_network.html">build_network()</a></code>. The split runs on caller <code>...</code> only — netobject <code>build_args</code> continue to flow only to the <code><a href="../reference/build_network.html">build_network()</a></code> step, protecting attention-method (<code>atna</code>) network history from being re-routed to weighted Hamming. (audit_clustering <a href="https://github.com/mohsaqr/Nestimate/issues/1" class="external-link">#1</a>)</li>
 <li>
-<code><a href="../reference/dot-auto_detect_clusters.html">.auto_detect_clusters()</a></code> (used by <code><a href="../reference/build_mcml.html">build_mcml()</a></code> and <code><a href="../reference/cluster_summary.html">cluster_summary()</a></code>) now requires <code>node_groups</code> to carry a node identifier column when shaped as a data.frame, or be a named atomic vector keyed by node label. Previously, a bare <code>cluster</code>-only data.frame was read positionally — silently mis-assigning nodes whenever <code>node_groups</code> rows were in a different order than <code>x$nodes</code>. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/1" class="external-link">#1</a>)</li>
+<code>.auto_detect_clusters()</code> (used by <code><a href="../reference/build_mcml.html">build_mcml()</a></code> and <code><a href="../reference/cluster_summary.html">cluster_summary()</a></code>) now requires <code>node_groups</code> to carry a node identifier column when shaped as a data.frame, or be a named atomic vector keyed by node label. Previously, a bare <code>cluster</code>-only data.frame was read positionally — silently mis-assigning nodes whenever <code>node_groups</code> rows were in a different order than <code>x$nodes</code>. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/1" class="external-link">#1</a>)</li>
 <li>
 <code><a href="../reference/build_clusters.html">build_clusters()</a></code> now rejects all-missing input early with a clear message instead of failing indirectly downstream in pam/hclust. (audit_clustering <a href="https://github.com/mohsaqr/Nestimate/issues/4" class="external-link">#4</a>)</li>
 </ul></div>

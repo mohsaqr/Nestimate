@@ -60,12 +60,12 @@ therefore have explicitly different statuses:
 build_mcml_pc(
   x,
   clusters,
-  aggregation = c("average", "composite", "loadings", "rv", "canonical"),
+  aggregation = c("scaled", "composite", "mean", "median", "loadings", "average",
+    "escoufier", "cancor"),
   method = c("pcor", "glasso", "cor"),
   within = c("reestimate", "subnetwork"),
   weighting = c("equal", "strength", "eigen", "closeness", "betweenness",
     "expected_influence", "specificity", "pca", "factor", "item_total"),
-  scale = TRUE,
   cor_method = c("pearson", "spearman", "polychoric"),
   signed = TRUE,
   id_col = NULL,
@@ -85,14 +85,54 @@ build_mcml_pc(
 
 - clusters:
 
-  Cluster membership: a named list of node-label vectors (names =
-  cluster labels), or a vector of cluster labels named by node. Every
-  node must be assigned to exactly one cluster.
+  Cluster membership in any of three forms: a named list of node-label
+  vectors (names = cluster labels); a two-column `data.frame` read by
+  position (first column = node names, second = group labels); or a
+  vector of cluster labels named by node. Every node must be assigned to
+  exactly one cluster.
 
 - aggregation:
 
-  Character. `"average"`, `"composite"`, `"loadings"`, `"rv"`, or
-  `"canonical"` (see Description). Default `"average"`.
+  Character. How clusters are collapsed to the macro network. Default
+  `"scaled"`.
+
+  `"scaled"`
+
+  :   Re-estimate the network on per-cluster scores formed as the mean
+      of *standardized* member items (the default; was `"composite"`).
+
+  `"composite"`
+
+  :   Backward-compatible alias for `"scaled"`.
+
+  `"mean"`
+
+  :   As `"scaled"` but on raw (unstandardized) item means.
+
+  `"median"`
+
+  :   As `"mean"` but the per-cluster score is the row-wise median of
+      the items (unweighted).
+
+  `"loadings"`
+
+  :   The scaled score path with member items weighted by their
+      within-cluster network strength.
+
+  `"average"`
+
+  :   Average the item-pair edges in each between-cluster submatrix — no
+      scores, no re-estimation.
+
+  `"escoufier"`
+
+  :   Escoufier RV coefficient (descriptive multivariate similarity
+      between blocks).
+
+  `"cancor"`
+
+  :   First canonical correlation — an upper bound on how related two
+      blocks can be.
 
 - method:
 
@@ -109,8 +149,9 @@ build_mcml_pc(
 
 - weighting:
 
-  Character. How items are weighted inside their cluster composite
-  (`aggregation = "composite"` only):
+  Character. How items are weighted inside their cluster score (the
+  score paths `"scaled"` / `"mean"` / `"loadings"`; not `"median"`,
+  which is unweighted):
 
   `"equal"`
 
@@ -181,11 +222,6 @@ build_mcml_pc(
   specificity) keep the eigenvector-based item signs; sign-carrying
   schemes (eigen, pca, factor, expected_influence, item_total, custom)
   use their own.
-
-- scale:
-
-  Logical. Standardize member variables before forming composites
-  (default `TRUE`). Ignored for `"average"`, `"rv"`, and `"canonical"`.
 
 - cor_method:
 

@@ -119,7 +119,7 @@ composite methods can recover. Requires raw data.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -216,12 +216,12 @@ composite methods can recover. Requires raw data.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">build_mcml_pc</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">clusters</span>,</span>
-<span>  aggregation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"average"</span>, <span class="st">"composite"</span>, <span class="st">"loadings"</span>, <span class="st">"rv"</span>, <span class="st">"canonical"</span><span class="op">)</span>,</span>
+<span>  aggregation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"scaled"</span>, <span class="st">"composite"</span>, <span class="st">"mean"</span>, <span class="st">"median"</span>, <span class="st">"loadings"</span>, <span class="st">"average"</span>,</span>
+<span>    <span class="st">"escoufier"</span>, <span class="st">"cancor"</span><span class="op">)</span>,</span>
 <span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcor"</span>, <span class="st">"glasso"</span>, <span class="st">"cor"</span><span class="op">)</span>,</span>
 <span>  within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"reestimate"</span>, <span class="st">"subnetwork"</span><span class="op">)</span>,</span>
 <span>  weighting <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"equal"</span>, <span class="st">"strength"</span>, <span class="st">"eigen"</span>, <span class="st">"closeness"</span>, <span class="st">"betweenness"</span>,</span>
 <span>    <span class="st">"expected_influence"</span>, <span class="st">"specificity"</span>, <span class="st">"pca"</span>, <span class="st">"factor"</span>, <span class="st">"item_total"</span><span class="op">)</span>,</span>
-<span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cor_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pearson"</span>, <span class="st">"spearman"</span>, <span class="st">"polychoric"</span><span class="op">)</span>,</span>
 <span>  signed <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  id_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -243,15 +243,50 @@ estimator).</p></dd>
 
 
 <dt id="arg-clusters">clusters<a class="anchor" aria-label="anchor" href="#arg-clusters"></a></dt>
-<dd><p>Cluster membership: a named list of node-label vectors
-(names = cluster labels), or a vector of cluster labels named by
-node. Every node must be assigned to exactly one cluster.</p></dd>
+<dd><p>Cluster membership in any of three forms: a named list of
+node-label vectors (names = cluster labels); a two-column
+<code>data.frame</code> read by position (first column = node names, second =
+group labels); or a vector of cluster labels named by node. Every node
+must be assigned to exactly one cluster.</p></dd>
 
 
 <dt id="arg-aggregation">aggregation<a class="anchor" aria-label="anchor" href="#arg-aggregation"></a></dt>
-<dd><p>Character. <code>"average"</code>, <code>"composite"</code>,
-<code>"loadings"</code>, <code>"rv"</code>, or <code>"canonical"</code> (see
-Description). Default <code>"average"</code>.</p></dd>
+<dd><p>Character. How clusters are collapsed to the macro
+network. Default <code>"scaled"</code>.</p><dl><dt><code>"scaled"</code></dt>
+<dd><p>Re-estimate the network on per-cluster scores
+formed as the mean of <em>standardized</em> member items (the
+default; was <code>"composite"</code>).</p></dd>
+
+<dt><code>"composite"</code></dt>
+<dd><p>Backward-compatible alias for
+<code>"scaled"</code>.</p></dd>
+
+<dt><code>"mean"</code></dt>
+<dd><p>As <code>"scaled"</code> but on raw (unstandardized)
+item means.</p></dd>
+
+<dt><code>"median"</code></dt>
+<dd><p>As <code>"mean"</code> but the per-cluster score is
+the row-wise median of the items (unweighted).</p></dd>
+
+<dt><code>"loadings"</code></dt>
+<dd><p>The scaled score path with member items
+weighted by their within-cluster network strength.</p></dd>
+
+<dt><code>"average"</code></dt>
+<dd><p>Average the item-pair edges in each
+between-cluster submatrix — no scores, no re-estimation.</p></dd>
+
+<dt><code>"escoufier"</code></dt>
+<dd><p>Escoufier RV coefficient (descriptive
+multivariate similarity between blocks).</p></dd>
+
+<dt><code>"cancor"</code></dt>
+<dd><p>First canonical correlation — an upper bound
+on how related two blocks can be.</p></dd>
+
+
+</dl></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -270,7 +305,8 @@ method used instead) when <code>x</code> is a netobject and
 
 <dt id="arg-weighting">weighting<a class="anchor" aria-label="anchor" href="#arg-weighting"></a></dt>
 <dd><p>Character. How items are weighted inside their
-cluster composite (<code>aggregation = "composite"</code> only):</p><dl><dt><code>"equal"</code></dt>
+cluster score (the score paths <code>"scaled"</code> / <code>"mean"</code> /
+<code>"loadings"</code>; not <code>"median"</code>, which is unweighted):</p><dl><dt><code>"equal"</code></dt>
 <dd><p>(default) 1/m per item — the scale as
 scored.</p></dd>
 
@@ -338,12 +374,6 @@ inherently non-negative weights (equal, closeness, betweenness,
 specificity) keep the eigenvector-based item signs; sign-carrying
 schemes (eigen, pca, factor, expected_influence, item_total, custom)
 use their own.</p></dd>
-
-
-<dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
-<dd><p>Logical. Standardize member variables before forming
-composites (default <code>TRUE</code>). Ignored for <code>"average"</code>,
-<code>"rv"</code>, and <code>"canonical"</code>.</p></dd>
 
 
 <dt id="arg-cor-method">cor_method<a class="anchor" aria-label="anchor" href="#arg-cor-method"></a></dt>

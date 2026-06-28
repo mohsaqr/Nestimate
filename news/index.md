@@ -270,8 +270,7 @@ addressed; two deferred pending design decisions on numeric semantics
   step, protecting attention-method (`atna`) network history from being
   re-routed to weighted Hamming. (audit_clustering
   [\#1](https://github.com/mohsaqr/Nestimate/issues/1))
-- [`.auto_detect_clusters()`](https://saqr.me/Nestimate/reference/dot-auto_detect_clusters.md)
-  (used by
+- `.auto_detect_clusters()` (used by
   [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
   and
   [`cluster_summary()`](https://saqr.me/Nestimate/reference/cluster_summary.md))

@@ -15,6 +15,8 @@ distribution_plot(
   scale = c("proportion", "count"),
   geom = c("area", "bar"),
   na = TRUE,
+  trim = NULL,
+  trim_clusterwise = FALSE,
   state_colors = NULL,
   na_color = "grey90",
   frame = FALSE,
@@ -67,6 +69,23 @@ distribution_plot(
 
   If `TRUE` (default), `NA` cells are shown as an extra band coloured
   `na_color`.
+
+- trim:
+
+  Optional time-axis truncation, to stop a few long sequences from
+  stretching the plot. `NULL` (default) keeps the full width. A fraction
+  in `(0, 1)` drops everything past that quantile of sequence lengths
+  (e.g. `trim = 0.95`); a value `>= 1` is an absolute cut (`trim = 50`
+  keeps the first 50 time points). See
+  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md).
+
+- trim_clusterwise:
+
+  Grouped plots only, fractional `trim` only. `FALSE` (default) uses one
+  pooled cutoff for every panel so the time axes stay aligned; `TRUE`
+  crops each group to its own length quantile (panels can differ in
+  width). See
+  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md).
 
 - state_colors:
 

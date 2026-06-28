@@ -13,7 +13,7 @@ transitions within each cluster)."><meta property="og:image" content="https://sa
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,22 +131,15 @@ an error with installation instructions.</p>
 </div>
 
 <div class="section">
-<h3 id="excluded-clusters">Excluded Clusters<a class="anchor" aria-label="anchor" href="#excluded-clusters"></a></h3>
+<h3 id="zero-out-degree-sink-nodes">Zero-out-degree (sink) nodes<a class="anchor" aria-label="anchor" href="#zero-out-degree-sink-nodes"></a></h3>
 
 
-<p>A within-cluster network is dropped only when row-normalisation would
-fail. Specifically, when the recorded <code>net_method</code> is
-<code>"relative"</code> (row-stochastic transitions) and any node in the
-cluster has zero outgoing weight, that cluster is excluded from
-<code>$clusters</code> and a <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code> is emitted listing the dropped
-cluster names. For <code>net_method = "frequency"</code> (raw counts), a
-zero-row node is a legitimate sink and the cluster is retained.
-The macro / between-cluster network always includes every cluster
-regardless of the per-cluster drop decisions.</p>
-<p>If a cluster you expect to see is missing from the returned
-<code>$clusters</code>, check the warning output and consider building with
-<code>type = "raw"</code> (which carries through to a frequency-method
-netobject and skips the drop) or inspect <code>rowSums(x$clusters[[cl]]$weights)</code>.</p>
+<p>Every cluster is returned, regardless of its row sums. A node with zero
+outgoing weight is a legitimate sink (a terminal state); its row in the
+wrapped network is left all-zero. This holds for both
+<code>net_method = "relative"</code> and <code>"frequency"</code> – the stored
+weights are never re-normalised, so a sink row needs no special handling.
+Inspect <code>rowSums(x$clusters[[cl]]$weights)</code> to find sink nodes.</p>
 </div>
 
     </div>

@@ -13,7 +13,7 @@ Accepts the same inputs as sequence_plot."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,6 +63,8 @@ Accepts the same inputs as <code><a href="sequence_plot.html">sequence_plot</a><
 <span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"proportion"</span>, <span class="st">"count"</span><span class="op">)</span>,</span>
 <span>  geom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"area"</span>, <span class="st">"bar"</span><span class="op">)</span>,</span>
 <span>  na <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  trim_clusterwise <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  state_colors <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  na_color <span class="op">=</span> <span class="st">"grey90"</span>,</span>
 <span>  frame <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -117,6 +119,23 @@ total so bands fill 0..1. <code>"count"</code> keeps raw counts.</p></dd>
 <dt id="arg-na">na<a class="anchor" aria-label="anchor" href="#arg-na"></a></dt>
 <dd><p>If <code>TRUE</code> (default), <code>NA</code> cells are shown as an
 extra band coloured <code>na_color</code>.</p></dd>
+
+
+<dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
+<dd><p>Optional time-axis truncation, to stop a few long
+sequences from stretching the plot. <code>NULL</code> (default) keeps the
+full width. A fraction in <code>(0, 1)</code> drops everything past that
+quantile of sequence lengths (e.g. <code>trim = 0.95</code>); a value
+<code>&gt;= 1</code> is an absolute cut (<code>trim = 50</code> keeps the first 50
+time points). See <code><a href="sequence_plot.html">sequence_plot</a></code>.</p></dd>
+
+
+<dt id="arg-trim-clusterwise">trim_clusterwise<a class="anchor" aria-label="anchor" href="#arg-trim-clusterwise"></a></dt>
+<dd><p>Grouped plots only, fractional <code>trim</code>
+only. <code>FALSE</code> (default) uses one pooled cutoff for every panel
+so the time axes stay aligned; <code>TRUE</code> crops each group to its
+own length quantile (panels can differ in width). See
+<code><a href="sequence_plot.html">sequence_plot</a></code>.</p></dd>
 
 
 <dt id="arg-state-colors">state_colors<a class="anchor" aria-label="anchor" href="#arg-state-colors"></a></dt>
