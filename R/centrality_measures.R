@@ -84,6 +84,51 @@
 }
 
 
+#' Edge betweenness (directed or undirected, weighted)
+#'
+#' Replaces each edge's weight with the number of shortest paths that
+#' traverse it (fractional when shortest paths tie), matching
+#' \code{tna::betweenness_network()} / \code{igraph::edge_betweenness()}.
+#' For a probability/transition network, weights are inverted to distances
+#' (\code{invert = TRUE}) so the geodesic between two states is the most
+#' probable route, not the fewest hops.
+#'
+#' @param W Square numeric weight matrix (zeros = no edge).
+#' @param invert Logical. Invert weights to distances by \code{1/w}?
+#'   Default \code{TRUE}.
+#' @return A numeric matrix the same shape as \code{W}: edge-betweenness on
+#'   edge positions, zero elsewhere. Symmetric when \code{W} is symmetric.
+#' @noRd
+.edge_betweenness <- function(W, invert = TRUE) {
+  n   <- nrow(W)
+  EB  <- matrix(0, n, n, dimnames = dimnames(W))
+  if (n < 2L) return(EB)
+
+  sp  <- .floyd_warshall_sp(W, invert)
+  D   <- sp$D
+  sg  <- sp$sigma
+  pos <- W > 0
+  len <- matrix(Inf, n, n)
+  len[pos] <- if (invert) 1 / W[pos] else W[pos]
+
+  edges <- which(pos, arr.ind = TRUE)
+  vals  <- vapply(seq_len(nrow(edges)), function(e) {
+    a <- edges[e, 1L]
+    b <- edges[e, 2L]
+    # A shortest s->t path uses edge a->b iff
+    #   d(s, a) + len(a, b) + d(b, t) == d(s, t).
+    # Such paths number sigma(s, a) * sigma(b, t); divide by sigma(s, t).
+    through <- outer(D[, a], D[b, ], "+") + len[a, b]
+    on_path <- is.finite(D) & sg > 0L & abs(through - D) < 1e-9
+    diag(on_path) <- FALSE                       # exclude s == t
+    sum((outer(sg[, a], sg[b, ]) / sg)[on_path])
+  }, numeric(1))
+
+  EB[edges] <- vals
+  EB
+}
+
+
 #' Closeness centrality (directed or undirected, weighted)
 #'
 #' For directed networks returns both InCloseness and OutCloseness.
@@ -224,4 +269,82 @@ centrality.mcml <- function(x, measures = NULL, loops = FALSE,
                              centrality_fn = NULL, ...) {
   centrality.netobject_group(as_tna(x), measures = measures, loops = loops,
                               centrality_fn = centrality_fn)
+}
+
+
+# ---- Exported net_edge_betweenness() ----
+
+#' Edge Betweenness Network
+#'
+#' Builds a network in which each edge's weight is replaced by its
+#' betweenness: the number of shortest paths between all node pairs that
+#' traverse that edge (fractional when shortest paths tie). This is the
+#' Nestimate counterpart of \code{tna::betweenness_network()} and produces
+#' identical values for transition networks; the name differs to avoid a
+#' clash with \code{tna::betweenness_network()} and
+#' \code{igraph::edge_betweenness()}.
+#'
+#' For a probability/transition network the edge weights are transition
+#' probabilities, so they are inverted to distances (\code{invert = TRUE})
+#' before path-finding: the geodesic between two states is then the most
+#' probable route rather than the one with the fewest hops. Pass
+#' \code{invert = FALSE} when the weights already represent distances.
+#'
+#' Directedness is taken from the network itself. A directed network yields
+#' an asymmetric betweenness matrix; an undirected (symmetric) network
+#' yields a symmetric one.
+#'
+#' @param x A \code{netobject} or \code{netobject_group}.
+#' @param invert Logical. Invert weights to distances by \code{1/w} before
+#'   computing shortest paths? Default \code{TRUE} (correct for probability
+#'   and frequency networks).
+#' @param ... Additional arguments (ignored).
+#'
+#' @return For a \code{netobject}: a new \code{netobject} (class
+#'   \code{c("netobject", "cograph_network")}) whose \code{$weights} are the
+#'   edge-betweenness scores, with \code{method = "edge_betweenness"}. Call
+#'   \code{extract_edges()} on it for a tidy per-edge table, or \code{plot()}
+#'   to render it. For a \code{netobject_group}: a \code{netobject_group} of
+#'   such networks, one per group.
+#'
+#' @examples
+#' seqs <- data.frame(
+#'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+#'   V3 = c("C","A","C","B"))
+#' net <- build_network(seqs, method = "relative")
+#' eb  <- net_edge_betweenness(net)
+#' extract_edges(eb)
+#'
+#' @export
+net_edge_betweenness <- function(x, invert = TRUE, ...) {
+  UseMethod("net_edge_betweenness")
+}
+
+#' @rdname net_edge_betweenness
+#' @export
+net_edge_betweenness.netobject <- function(x, invert = TRUE, ...) {
+  mat <- x$weights
+  if (is.null(dimnames(mat)) && !is.null(x$nodes$name)) {
+    dimnames(mat) <- list(x$nodes$name, x$nodes$name)
+  }
+  directed <- if (!is.null(x$directed)) isTRUE(x$directed) else TRUE
+  eb <- .edge_betweenness(mat, invert = invert)
+  .wrap_netobject(eb, data = x$data, method = "edge_betweenness",
+                  directed = directed, inits = x$inits)
+}
+
+#' @rdname net_edge_betweenness
+#' @export
+net_edge_betweenness.netobject_group <- function(x, invert = TRUE, ...) {
+  result <- lapply(x, net_edge_betweenness.netobject, invert = invert)
+  names(result) <- names(x)
+  class(result) <- "netobject_group"
+  result
+}
+
+#' @rdname net_edge_betweenness
+#' @export
+net_edge_betweenness.default <- function(x, invert = TRUE, ...) {
+  stop("net_edge_betweenness() requires a 'netobject' or 'netobject_group'; ",
+       "got '", class(x)[1L], "'.", call. = FALSE)
 }
