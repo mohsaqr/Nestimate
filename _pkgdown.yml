@@ -56,6 +56,14 @@ reference:
       - path_dependence
       - transition_entropy
 
+  - title: Network Pruning
+    desc: Non-destructive edge pruning and restoration
+    contents:
+      - net_prune
+      - net_deprune
+      - net_reprune
+      - net_pruning_details
+
   - title: Bootstrap & Inference
     desc: Statistical inference for network estimation
     contents:
@@ -130,8 +138,10 @@ reference:
       - state_frequencies
       - net_aggregate_weights
       - net_centrality
+      - net_edge_betweenness
       - coefs
       - as_tna
+      - as_htna
       - as_networks
       - as_netobject
       - validate_netobject
