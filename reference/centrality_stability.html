@@ -25,7 +25,7 @@ are computed directly from the matrix without igraph."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,6 +85,9 @@ are computed directly from the matrix without igraph.</p>
 <span>  method <span class="op">=</span> <span class="st">"pearson"</span>,</span>
 <span>  centrality_fn <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  loops <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  normalize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  invert <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  normalize_diffusion <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -99,13 +102,12 @@ are computed directly from the matrix without igraph.</p>
 
 <dt id="arg-measures">measures<a class="anchor" aria-label="anchor" href="#arg-measures"></a></dt>
 <dd><p>Character vector. Centrality measures to assess.
-Built-in: <code>"InStrength"</code>, <code>"OutStrength"</code>, <code>"Betweenness"</code>,
-<code>"InCloseness"</code>, <code>"OutCloseness"</code>, <code>"Closeness"</code>.
-<code>"Closeness"</code> is defined only for undirected networks;
-<code>"InCloseness"</code>/<code>"OutCloseness"</code> only for directed
-networks (requesting the wrong one for the network's directedness
-is an error). Custom measures beyond these are valid only when a
-<code>centrality_fn</code> is supplied to resolve them.
+Built-in: <code>"OutStrength"</code>, <code>"InStrength"</code>,
+<code>"ClosenessIn"</code>, <code>"ClosenessOut"</code>, <code>"Closeness"</code>,
+<code>"Betweenness"</code>, <code>"BetweennessRSP"</code>, <code>"Diffusion"</code>,
+and <code>"Clustering"</code>. The legacy aliases <code>"InCloseness"</code> and
+<code>"OutCloseness"</code> are also accepted. Custom measures beyond these
+are valid only when a <code>centrality_fn</code> is supplied to resolve them.
 Default: <code>c("InStrength", "OutStrength", "Betweenness")</code>.</p></dd>
 
 
@@ -139,11 +141,12 @@ threshold (default: 0.95).</p></dd>
 that takes a weight matrix and returns a named list of centrality
 vectors. When <code>NULL</code> (default), all built-in measures are
 computed internally: <code>"InStrength"</code>/<code>"OutStrength"</code> via
-<code>colSums</code>/<code>rowSums</code>, and <code>"Betweenness"</code>/
-<code>"InCloseness"</code>/<code>"OutCloseness"</code>/<code>"Closeness"</code> via an
-internal Floyd-Warshall shortest-path routine. When provided, the
+<code>colSums</code>/<code>rowSums</code>, path measures via an internal
+Floyd-Warshall shortest-path routine, and diffusion, randomized
+shortest-path betweenness, and clustering via dependency-free matrix
+algebra. When provided, the
 function is called as <code>centrality_fn(mat)</code> and is used only for
-requested measures that are not one of the six built-ins; it should
+requested measures that are not one of the built-ins; it should
 return a named list (e.g., <code>list(my_metric = ...)</code>).</p></dd>
 
 
@@ -151,6 +154,22 @@ return a named list (e.g., <code>list(my_metric = ...)</code>).</p></dd>
 <dd><p>Logical. If <code>FALSE</code> (default), self-loops (diagonal)
 are excluded from centrality computation. This does not modify the
 stored matrix.</p></dd>
+
+
+<dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
+<dd><p>Logical. Range-normalize all requested measures using the
+same transformation as <code>tna::centralities(normalize = TRUE)</code>.
+Default: <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-invert">invert<a class="anchor" aria-label="anchor" href="#arg-invert"></a></dt>
+<dd><p>Logical. Invert weights for shortest-path measures?
+Default: <code>TRUE</code>, matching <code>tna</code>.</p></dd>
+
+
+<dt id="arg-normalize-diffusion">normalize_diffusion<a class="anchor" aria-label="anchor" href="#arg-normalize-diffusion"></a></dt>
+<dd><p>Logical. Range-normalize <code>Diffusion</code> even
+when <code>normalize = FALSE</code>. Default: <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>

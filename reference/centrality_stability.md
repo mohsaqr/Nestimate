@@ -24,6 +24,9 @@ centrality_stability(
   method = "pearson",
   centrality_fn = NULL,
   loops = FALSE,
+  normalize = FALSE,
+  invert = TRUE,
+  normalize_diffusion = TRUE,
   seed = NULL
 )
 ```
@@ -38,13 +41,12 @@ centrality_stability(
 - measures:
 
   Character vector. Centrality measures to assess. Built-in:
-  `"InStrength"`, `"OutStrength"`, `"Betweenness"`, `"InCloseness"`,
-  `"OutCloseness"`, `"Closeness"`. `"Closeness"` is defined only for
-  undirected networks; `"InCloseness"`/`"OutCloseness"` only for
-  directed networks (requesting the wrong one for the network's
-  directedness is an error). Custom measures beyond these are valid only
-  when a `centrality_fn` is supplied to resolve them. Default:
-  `c("InStrength", "OutStrength", "Betweenness")`.
+  `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`,
+  `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"`, and
+  `"Clustering"`. The legacy aliases `"InCloseness"` and
+  `"OutCloseness"` are also accepted. Custom measures beyond these are
+  valid only when a `centrality_fn` is supplied to resolve them.
+  Default: `c("InStrength", "OutStrength", "Betweenness")`.
 
 - iter:
 
@@ -75,17 +77,34 @@ centrality_stability(
   Optional function. A custom centrality function that takes a weight
   matrix and returns a named list of centrality vectors. When `NULL`
   (default), all built-in measures are computed internally:
-  `"InStrength"`/`"OutStrength"` via `colSums`/`rowSums`, and
-  `"Betweenness"`/ `"InCloseness"`/`"OutCloseness"`/`"Closeness"` via an
-  internal Floyd-Warshall shortest-path routine. When provided, the
-  function is called as `centrality_fn(mat)` and is used only for
-  requested measures that are not one of the six built-ins; it should
-  return a named list (e.g., `list(my_metric = ...)`).
+  `"InStrength"`/`"OutStrength"` via `colSums`/`rowSums`, path measures
+  via an internal Floyd-Warshall shortest-path routine, and diffusion,
+  randomized shortest-path betweenness, and clustering via
+  dependency-free matrix algebra. When provided, the function is called
+  as `centrality_fn(mat)` and is used only for requested measures that
+  are not one of the built-ins; it should return a named list (e.g.,
+  `list(my_metric = ...)`).
 
 - loops:
 
   Logical. If `FALSE` (default), self-loops (diagonal) are excluded from
   centrality computation. This does not modify the stored matrix.
+
+- normalize:
+
+  Logical. Range-normalize all requested measures using the same
+  transformation as `tna::centralities(normalize = TRUE)`. Default:
+  `FALSE`.
+
+- invert:
+
+  Logical. Invert weights for shortest-path measures? Default: `TRUE`,
+  matching `tna`.
+
+- normalize_diffusion:
+
+  Logical. Range-normalize `Diffusion` even when `normalize = FALSE`.
+  Default: `TRUE`.
 
 - seed:
 

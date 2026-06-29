@@ -1,14 +1,24 @@
 # Compute Centrality Measures for a Network
 
-Computes centrality measures from a `netobject`, `netobject_group`, or
-`cograph_network`. For directed networks the default measures are
-InStrength, OutStrength, and Betweenness. For undirected networks the
-defaults are Closeness and Betweenness.
+Computes centrality measures from a `netobject`, `netobject_group`,
+`mcml`, or `cograph_network`. The built-in measures match
+[`tna::centralities()`](http://sonsoles.me/tna/reference/centralities.md)
+without importing `tna` or `igraph`. The only intentional default
+difference is that `Diffusion` is range-normalized by default.
 
 ## Usage
 
 ``` r
-net_centrality(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
+net_centrality(
+  x,
+  measures = NULL,
+  loops = FALSE,
+  normalize = FALSE,
+  invert = TRUE,
+  normalize_diffusion = TRUE,
+  centrality_fn = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -20,16 +30,31 @@ net_centrality(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
 - measures:
 
   Character vector. Centrality measures to compute. Built-in:
-  `"InStrength"`, `"OutStrength"`, `"Betweenness"`, `"InCloseness"`,
-  `"OutCloseness"`, `"Closeness"`. `"Closeness"` is defined only for
-  undirected networks; `"InCloseness"`/`"OutCloseness"` only for
-  directed networks (requesting the wrong one for the network's
-  directedness is an error). Default depends on directedness.
+  `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`,
+  `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"`, and
+  `"Clustering"`. The legacy aliases `"InCloseness"` and
+  `"OutCloseness"` are also accepted.
 
 - loops:
 
   Logical. Include self-loops (diagonal) in computation? Default:
   `FALSE`.
+
+- normalize:
+
+  Logical. Range-normalize all requested measures using the same
+  transformation as `tna::centralities(normalize = TRUE)`. Default:
+  `FALSE`.
+
+- invert:
+
+  Logical. Invert weights for shortest-path measures? Default: `TRUE`,
+  matching `tna`.
+
+- normalize_diffusion:
+
+  Logical. Range-normalize `Diffusion` even when `normalize = FALSE`.
+  Default: `TRUE`.
 
 - centrality_fn:
 
@@ -42,9 +67,9 @@ net_centrality(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
 
 ## Value
 
-For a `netobject`: a data frame with node names as rows and centrality
-measures as columns. For a `netobject_group`: a named list of such data
-frames (one per group).
+For a `netobject`: a `net_centrality` data frame with node names as
+rows, a `state` column, and one column per centrality measure. For a
+`netobject_group`: a `net_centrality_group` list of such data frames.
 
 ## Examples
 
@@ -55,8 +80,12 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 net_centrality(net)
 #> centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
-#>   InStrength OutStrength Betweenness
-#> A          1           1         0.5
-#> B          1           1         0.5
-#> C          1           1         0.5
+#>   state OutStrength InStrength ClosenessIn ClosenessOut Closeness Betweenness
+#> A     A           1          1   0.3333333    0.3333333       0.5           1
+#> B     B           1          1   0.3333333    0.3333333       0.5           1
+#> C     C           1          1   0.3333333    0.3333333       0.5           1
+#>   BetweennessRSP Diffusion Clustering
+#> A              1       NaN          1
+#> B              1       NaN          1
+#> C              1       NaN          1
 ```
