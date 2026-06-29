@@ -68,8 +68,11 @@ test_that("centrality.netobject returns correct directed defaults (L163-177)", {
   net <- build_network(seqs, method = "relative")
   c1 <- net_centrality(net)
   expect_true(is.data.frame(c1))
+  expect_s3_class(c1, "net_centrality")
   expect_equal(nrow(c1), 3)
-  expect_true(all(c("InStrength", "OutStrength", "Betweenness") %in% names(c1)))
+  expect_true(all(c("InStrength", "OutStrength", "Betweenness",
+                    "BetweennessRSP", "Diffusion", "Clustering") %in%
+                    names(c1)))
 })
 
 test_that("centrality.netobject returns correct undirected defaults (L163-177)", {
@@ -78,6 +81,7 @@ test_that("centrality.netobject returns correct undirected defaults (L163-177)",
   net_ud <- build_network(panel, method = "cor")
   c2 <- net_centrality(net_ud)
   expect_true(is.data.frame(c2))
+  expect_s3_class(c2, "net_centrality")
   expect_true(all(c("Closeness", "Betweenness") %in% names(c2)))
 })
 
@@ -91,6 +95,7 @@ test_that("centrality.netobject_group returns list of data frames (L185-188)", {
   nets <- build_network(seqs, method = "relative", group = "grp")
   c3 <- net_centrality(nets)
   expect_true(is.list(c3))
+  expect_s3_class(c3, "net_centrality_group")
   expect_equal(length(c3), 2)
   expect_true(all(vapply(c3, is.data.frame, logical(1))))
 })
@@ -126,6 +131,79 @@ test_that(".compute_centralities errors when external measure lacks centrality_f
     net_centrality(net, measures = c("InStrength", "BadMeasure")),
     "centrality_fn is required"
   )
+})
+
+test_that("net_centrality matches tna centralities for all shared measures", {
+  skip_if_not_installed("tna")
+  measures <- c("OutStrength", "InStrength", "ClosenessIn", "ClosenessOut",
+                "Closeness", "Betweenness", "BetweennessRSP", "Diffusion",
+                "Clustering")
+  mat <- matrix(c(
+    0,   .20, 0,   .35,
+    .90, 0,   .40, .10,
+    .10, .30, 0,   .60,
+    .20, .15, .50, 0
+  ), nrow = 4L, byrow = TRUE,
+  dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  net <- .wrap_netobject(mat, method = "relative", directed = TRUE,
+                         data = NULL)
+
+  ours <- suppressMessages(net_centrality(
+    net, measures = measures, normalize_diffusion = FALSE
+  ))
+  ref <- tna::centralities(mat, measures = measures)
+
+  expect_equal(as.data.frame(ours)[, measures],
+               as.data.frame(ref)[, measures],
+               tolerance = 1e-10, ignore_attr = TRUE)
+})
+
+test_that("Diffusion is normalized by default but can match raw tna output", {
+  skip_if_not_installed("tna")
+  mat <- matrix(c(
+    0,   .20, 0,   .35,
+    .90, 0,   .40, .10,
+    .10, .30, 0,   .60,
+    .20, .15, .50, 0
+  ), nrow = 4L, byrow = TRUE,
+  dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  net <- .wrap_netobject(mat, method = "relative", directed = TRUE,
+                         data = NULL)
+
+  def <- suppressMessages(net_centrality(net, measures = "Diffusion"))
+  raw <- suppressMessages(net_centrality(
+    net, measures = "Diffusion", normalize_diffusion = FALSE
+  ))
+  ref_raw <- tna::centralities(mat, measures = "Diffusion")
+  ref_norm <- tna::centralities(mat, measures = "Diffusion",
+                                normalize = TRUE)
+
+  expect_equal(def$Diffusion, ref_norm$Diffusion,
+               tolerance = 1e-10, ignore_attr = TRUE)
+  expect_equal(raw$Diffusion, ref_raw$Diffusion,
+               tolerance = 1e-10, ignore_attr = TRUE)
+})
+
+test_that("net_centrality plots work for single and grouped outputs", {
+  seqs <- data.frame(
+    V1 = c("A","B","A","C","B","A"),
+    V2 = c("B","C","B","A","C","B"),
+    V3 = c("C","A","C","B","A","C"),
+    grp = c("X","X","X","Y","Y","Y")
+  )
+  net <- build_network(seqs[1:3], method = "relative")
+  cent <- suppressMessages(net_centrality(
+    net, measures = c("InStrength", "OutStrength", "Diffusion")
+  ))
+  expect_s3_class(plot(cent), "ggplot")
+  expect_s3_class(plot(cent, type = "profile"), "ggplot")
+
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  cents <- suppressMessages(net_centrality(
+    nets, measures = c("InStrength", "OutStrength", "Diffusion")
+  ))
+  expect_s3_class(plot(cents), "ggplot")
+  expect_s3_class(plot(cents, type = "profile"), "ggplot")
 })
 
 # ---- Regression: non-square matrix $data (pre-2026-04-21 bug) ----

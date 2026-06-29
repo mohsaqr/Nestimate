@@ -14,6 +14,9 @@ centrality_stability(
   method = "pearson",
   centrality_fn = NULL,
   loops = FALSE,
+  normalize = FALSE,
+  invert = TRUE,
+  normalize_diffusion = TRUE,
   seed = NULL
 )
 }
@@ -21,13 +24,12 @@ centrality_stability(
 \item{x}{A \code{netobject} from \code{\link{build_network}}.}
 
 \item{measures}{Character vector. Centrality measures to assess.
-Built-in: \code{"InStrength"}, \code{"OutStrength"}, \code{"Betweenness"},
-\code{"InCloseness"}, \code{"OutCloseness"}, \code{"Closeness"}.
-\code{"Closeness"} is defined only for undirected networks;
-\code{"InCloseness"}/\code{"OutCloseness"} only for directed
-networks (requesting the wrong one for the network's directedness
-is an error). Custom measures beyond these are valid only when a
-\code{centrality_fn} is supplied to resolve them.
+Built-in: \code{"OutStrength"}, \code{"InStrength"},
+\code{"ClosenessIn"}, \code{"ClosenessOut"}, \code{"Closeness"},
+\code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"},
+and \code{"Clustering"}. The legacy aliases \code{"InCloseness"} and
+\code{"OutCloseness"} are also accepted. Custom measures beyond these
+are valid only when a \code{centrality_fn} is supplied to resolve them.
 Default: \code{c("InStrength", "OutStrength", "Betweenness")}.}
 
 \item{iter}{Integer. Number of bootstrap iterations per drop
@@ -49,16 +51,27 @@ threshold (default: 0.95).}
 that takes a weight matrix and returns a named list of centrality
 vectors. When \code{NULL} (default), all built-in measures are
 computed internally: \code{"InStrength"}/\code{"OutStrength"} via
-\code{colSums}/\code{rowSums}, and \code{"Betweenness"}/
-\code{"InCloseness"}/\code{"OutCloseness"}/\code{"Closeness"} via an
-internal Floyd-Warshall shortest-path routine. When provided, the
+\code{colSums}/\code{rowSums}, path measures via an internal
+Floyd-Warshall shortest-path routine, and diffusion, randomized
+shortest-path betweenness, and clustering via dependency-free matrix
+algebra. When provided, the
 function is called as \code{centrality_fn(mat)} and is used only for
-requested measures that are not one of the six built-ins; it should
+requested measures that are not one of the built-ins; it should
 return a named list (e.g., \code{list(my_metric = ...)}).}
 
 \item{loops}{Logical. If \code{FALSE} (default), self-loops (diagonal)
 are excluded from centrality computation. This does not modify the
 stored matrix.}
+
+\item{normalize}{Logical. Range-normalize all requested measures using the
+same transformation as \code{tna::centralities(normalize = TRUE)}.
+Default: \code{FALSE}.}
+
+\item{invert}{Logical. Invert weights for shortest-path measures?
+Default: \code{TRUE}, matching \code{tna}.}
+
+\item{normalize_diffusion}{Logical. Range-normalize \code{Diffusion} even
+when \code{normalize = FALSE}. Default: \code{TRUE}.}
 
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
 }

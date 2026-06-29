@@ -4,23 +4,40 @@
 \alias{net_centrality}
 \title{Compute Centrality Measures for a Network}
 \usage{
-net_centrality(x, measures = NULL, loops = FALSE, centrality_fn = NULL, ...)
+net_centrality(
+  x,
+  measures = NULL,
+  loops = FALSE,
+  normalize = FALSE,
+  invert = TRUE,
+  normalize_diffusion = TRUE,
+  centrality_fn = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{netobject}, \code{netobject_group}, or
 \code{cograph_network}.}
 
 \item{measures}{Character vector. Centrality measures to compute.
-Built-in: \code{"InStrength"}, \code{"OutStrength"},
-\code{"Betweenness"}, \code{"InCloseness"}, \code{"OutCloseness"},
-\code{"Closeness"}. \code{"Closeness"} is defined only for
-undirected networks; \code{"InCloseness"}/\code{"OutCloseness"}
-only for directed networks (requesting the wrong one for the
-network's directedness is an error). Default depends on
-directedness.}
+Built-in: \code{"OutStrength"}, \code{"InStrength"},
+\code{"ClosenessIn"}, \code{"ClosenessOut"}, \code{"Closeness"},
+\code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"},
+and \code{"Clustering"}. The legacy aliases \code{"InCloseness"} and
+\code{"OutCloseness"} are also accepted.}
 
 \item{loops}{Logical. Include self-loops (diagonal) in computation?
 Default: \code{FALSE}.}
+
+\item{normalize}{Logical. Range-normalize all requested measures using the
+same transformation as \code{tna::centralities(normalize = TRUE)}.
+Default: \code{FALSE}.}
+
+\item{invert}{Logical. Invert weights for shortest-path measures?
+Default: \code{TRUE}, matching \code{tna}.}
+
+\item{normalize_diffusion}{Logical. Range-normalize \code{Diffusion} even
+when \code{normalize = FALSE}. Default: \code{TRUE}.}
 
 \item{centrality_fn}{Optional function. Custom centrality function that
 takes a weight matrix and returns a named list of centrality vectors.}
@@ -28,15 +45,17 @@ takes a weight matrix and returns a named list of centrality vectors.}
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-For a \code{netobject}: a data frame with node names as rows and
-centrality measures as columns. For a \code{netobject_group}: a named
-list of such data frames (one per group).
+For a \code{netobject}: a \code{net_centrality} data frame with
+node names as rows, a \code{state} column, and one column per centrality
+measure. For a \code{netobject_group}: a \code{net_centrality_group}
+list of such data frames.
 }
 \description{
 Computes centrality measures from a \code{netobject},
-\code{netobject_group}, or \code{cograph_network}. For directed networks
-the default measures are InStrength, OutStrength, and Betweenness. For
-undirected networks the defaults are Closeness and Betweenness.
+\code{netobject_group}, \code{mcml}, or \code{cograph_network}. The built-in
+measures match \code{tna::centralities()} without importing \code{tna} or
+\code{igraph}. The only intentional default difference is that
+\code{Diffusion} is range-normalized by default.
 }
 \examples{
 seqs <- data.frame(
