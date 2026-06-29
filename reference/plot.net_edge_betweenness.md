@@ -10,7 +10,7 @@ diagram with `cograph::splot(eb)` and the ranking with `plot(eb)`.
 
 ``` r
 # S3 method for class 'net_edge_betweenness'
-plot(x, style = c("bar", "forest"), top_n = NULL, labels = TRUE, ...)
+plot(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 ```
 
 ## Arguments
@@ -24,7 +24,9 @@ plot(x, style = c("bar", "forest"), top_n = NULL, labels = TRUE, ...)
 
   Plot style. `"bar"` (default) draws one horizontal bar per edge;
   `"forest"` draws a forest/lollipop chart (a stem from zero to a point)
-  with a dashed reference line at the mean betweenness.
+  with a dashed reference line at the mean betweenness; `"delta"` draws
+  each edge's deviation from the mean edge betweenness as a diverging
+  bar (above the mean in blue, below in red).
 
 - top_n:
 
@@ -53,4 +55,6 @@ eb <- net_edge_betweenness(build_network(seqs, method = "relative"))
 plot(eb)
 
 plot(eb, style = "forest")
+
+plot(eb, style = "delta")
 ```

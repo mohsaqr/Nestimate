@@ -30,6 +30,7 @@ permutation(
   alpha = 0.05,
   paired = FALSE,
   adjust = "none",
+  measures = NULL,
   nlambda = 50L,
   seed = NULL
 )
@@ -66,6 +67,16 @@ permutation(
   Character. p-value adjustment method passed to
   [`p.adjust`](https://rdrr.io/r/stats/p.adjust.html) (default:
   `"none"`). Common choices: `"holm"`, `"BH"`, `"bonferroni"`.
+
+- measures:
+
+  Character vector of centrality measures to permutation-test in
+  addition to the edges, or `"all"` for every built-in measure. Default
+  `NULL` (edges only). When supplied, the result gains a `$centralities`
+  block matching the layout of `tna::permutation_test(measures = )`: per
+  state and measure it reports the observed difference, an effect size
+  (difference / SD of the permutation null), and a permutation p-value,
+  all using the same permuted networks as the edge test.
 
 - nlambda:
 
@@ -128,6 +139,13 @@ An object of class `"net_permutation"` containing:
 - adjust:
 
   p-value adjustment method used.
+
+- centralities:
+
+  Present only when `measures` is supplied. A list with `stats` (one row
+  per state-by-measure: `state`, `centrality`, `diff_true`,
+  `effect_size`, `p_value`), `diffs_true` (wide observed differences),
+  and `diffs_sig` (observed differences where `p < alpha`, else 0).
 
 ## See also
 

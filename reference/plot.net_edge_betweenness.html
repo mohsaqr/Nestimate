@@ -13,7 +13,7 @@ cograph::splot(eb) and the ranking with plot(eb)."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ cograph-free companion to the node-link diagram: render the diagram with
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'net_edge_betweenness'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bar"</span>, <span class="st">"forest"</span><span class="op">)</span>, top_n <span class="op">=</span> <span class="cn">NULL</span>, labels <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bar"</span>, <span class="st">"forest"</span>, <span class="st">"delta"</span><span class="op">)</span>, top_n <span class="op">=</span> <span class="cn">NULL</span>, labels <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -73,7 +73,9 @@ cograph-free companion to the node-link diagram: render the diagram with
 <dt id="arg-style">style<a class="anchor" aria-label="anchor" href="#arg-style"></a></dt>
 <dd><p>Plot style. <code>"bar"</code> (default) draws one horizontal bar
 per edge; <code>"forest"</code> draws a forest/lollipop chart (a stem from
-zero to a point) with a dashed reference line at the mean betweenness.</p></dd>
+zero to a point) with a dashed reference line at the mean betweenness;
+<code>"delta"</code> draws each edge's deviation from the mean edge betweenness
+as a diverging bar (above the mean in blue, below in red).</p></dd>
 
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
@@ -105,6 +107,8 @@ Default <code>TRUE</code>.</p></dd>
 <span class="r-plt img"><img src="plot.net_edge_betweenness-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">eb</span>, style <span class="op">=</span> <span class="st">"forest"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot.net_edge_betweenness-2.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">eb</span>, style <span class="op">=</span> <span class="st">"delta"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot.net_edge_betweenness-3.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
