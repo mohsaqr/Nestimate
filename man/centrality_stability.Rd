@@ -51,12 +51,11 @@ threshold (default: 0.95).}
 that takes a weight matrix and returns a named list of centrality
 vectors. When \code{NULL} (default), all built-in measures are
 computed internally: \code{"InStrength"}/\code{"OutStrength"} via
-\code{colSums}/\code{rowSums}, path measures via an internal
-Floyd-Warshall shortest-path routine, and diffusion, randomized
-shortest-path betweenness, and clustering via dependency-free matrix
-algebra. When provided, the
+\code{colSums}/\code{rowSums}, and \code{"Betweenness"}/
+\code{"InCloseness"}/\code{"OutCloseness"}/\code{"Closeness"} via an
+internal Floyd-Warshall shortest-path routine. When provided, the
 function is called as \code{centrality_fn(mat)} and is used only for
-requested measures that are not one of the built-ins; it should
+requested measures that are not one of the six built-ins; it should
 return a named list (e.g., \code{list(my_metric = ...)}).}
 
 \item{loops}{Logical. If \code{FALSE} (default), self-loops (diagonal)

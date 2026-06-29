@@ -70,9 +70,14 @@ test_that("centrality.netobject returns correct directed defaults (L163-177)", {
   expect_true(is.data.frame(c1))
   expect_s3_class(c1, "net_centrality")
   expect_equal(nrow(c1), 3)
+  # default is the compact trio
+  expect_identical(setdiff(names(c1), "state"),
+                   c("InStrength", "Betweenness", "Diffusion"))
+  # measures = "all" expands to every built-in measure
+  c_all <- net_centrality(net, measures = "all")
   expect_true(all(c("InStrength", "OutStrength", "Betweenness",
                     "BetweennessRSP", "Diffusion", "Clustering") %in%
-                    names(c1)))
+                    names(c_all)))
 })
 
 test_that("centrality.netobject returns correct undirected defaults (L163-177)", {
@@ -82,7 +87,11 @@ test_that("centrality.netobject returns correct undirected defaults (L163-177)",
   c2 <- net_centrality(net_ud)
   expect_true(is.data.frame(c2))
   expect_s3_class(c2, "net_centrality")
-  expect_true(all(c("Closeness", "Betweenness") %in% names(c2)))
+  # Betweenness is part of the default trio
+  expect_true("Betweenness" %in% names(c2))
+  # the full closeness family appears under measures = "all"
+  expect_true(all(c("Closeness", "Betweenness") %in%
+                    names(net_centrality(net_ud, measures = "all"))))
 })
 
 test_that("centrality.netobject_group returns list of data frames (L185-188)", {
@@ -196,14 +205,44 @@ test_that("net_centrality plots work for single and grouped outputs", {
     net, measures = c("InStrength", "OutStrength", "Diffusion")
   ))
   expect_s3_class(plot(cent), "ggplot")
-  expect_s3_class(plot(cent, type = "profile"), "ggplot")
+  expect_s3_class(plot(cent, type = "line"), "ggplot")
+  expect_s3_class(plot(cent, type = "profile"), "ggplot")  # back-compat alias
+  expect_s3_class(plot(cent, type = "heatmap"), "ggplot")
+  expect_s3_class(plot(cent, type = "bar", drop_zero = TRUE), "ggplot")
 
   nets <- build_network(seqs, method = "relative", group = "grp")
   cents <- suppressMessages(net_centrality(
     nets, measures = c("InStrength", "OutStrength", "Diffusion")
   ))
   expect_s3_class(plot(cents), "ggplot")
-  expect_s3_class(plot(cents, type = "profile"), "ggplot")
+  expect_s3_class(plot(cents, type = "line"), "ggplot")
+  expect_s3_class(plot(cents, type = "profile"), "ggplot")  # back-compat alias
+  expect_s3_class(plot(cents, type = "delta"), "ggplot")
+})
+
+test_that("centrality heatmap and delta views behave correctly", {
+  seqs <- data.frame(
+    V1 = c("A","B","A","C","B","A"),
+    V2 = c("B","C","B","A","C","B"),
+    V3 = c("C","A","C","B","A","C"),
+    grp = c("X","X","X","Y","Y","Y")
+  )
+  # drop_zero removes an all-zero measure panel
+  net <- build_network(seqs[1:3], method = "relative")
+  cent <- suppressMessages(net_centrality(
+    net, measures = c("OutStrength", "Betweenness")
+  ))
+  # Betweenness is all zero on this tiny ring -> dropped
+  p_keep <- plot(cent, type = "bar", drop_zero = FALSE)
+  p_drop <- plot(cent, type = "bar", drop_zero = TRUE)
+  expect_true(length(levels(p_keep$data$measure)) >=
+              length(levels(droplevels(p_drop$data$measure))))
+
+  # delta supports 3+ groups via deviation-from-mean
+  three <- within(seqs, grp <- c("X","X","Y","Y","Z","Z"))
+  nets3 <- build_network(three, method = "relative", group = "grp")
+  cents3 <- suppressMessages(net_centrality(nets3, measures = "OutStrength"))
+  expect_s3_class(plot(cents3, type = "delta", labels = TRUE), "ggplot")
 })
 
 # ---- Regression: non-square matrix $data (pre-2026-04-21 bug) ----

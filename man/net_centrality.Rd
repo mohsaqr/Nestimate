@@ -20,11 +20,12 @@ net_centrality(
 \code{cograph_network}.}
 
 \item{measures}{Character vector. Centrality measures to compute.
-Built-in: \code{"OutStrength"}, \code{"InStrength"},
-\code{"ClosenessIn"}, \code{"ClosenessOut"}, \code{"Closeness"},
-\code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"},
-and \code{"Clustering"}. The legacy aliases \code{"InCloseness"} and
-\code{"OutCloseness"} are also accepted.}
+Defaults to \code{c("InStrength", "Betweenness", "Diffusion")}. Pass
+\code{"all"} for every built-in measure: \code{"OutStrength"},
+\code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
+\code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"},
+\code{"Diffusion"}, and \code{"Clustering"}. The legacy aliases
+\code{"InCloseness"} and \code{"OutCloseness"} are also accepted.}
 
 \item{loops}{Logical. Include self-loops (diagonal) in computation?
 Default: \code{FALSE}.}

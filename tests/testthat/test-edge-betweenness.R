@@ -71,3 +71,36 @@ test_that("net_edge_betweenness rejects unsupported input", {
   expect_error(net_edge_betweenness(1:5), "netobject")
   expect_error(net_edge_betweenness(matrix(0, 2, 2)), "netobject")
 })
+
+test_that("net_edge_betweenness carries net_edge_betweenness class without breaking netobject dispatch", {
+  seqs <- data.frame(
+    V1 = c("A", "B", "A", "C", "B"), V2 = c("B", "C", "B", "A", "C"),
+    V3 = c("C", "A", "C", "B", "A"), stringsAsFactors = FALSE
+  )
+  eb <- net_edge_betweenness(build_network(seqs, method = "relative"))
+  expect_true(inherits(eb, "net_edge_betweenness"))
+  expect_identical(class(eb)[1L], "net_edge_betweenness")
+  # netobject accessors still resolve via inheritance
+  expect_s3_class(extract_edges(eb), "data.frame")
+  expect_silent(invisible(capture.output(print(eb))))
+})
+
+test_that("plot.net_edge_betweenness returns a ranked ggplot", {
+  skip_if_not_installed("ggplot2")
+  seqs <- as.data.frame(matrix(c(
+    "A", "B", "C", "D", "E",
+    "A", "B", "C", "D", "E",
+    "B", "C", "D", "E", "A"), ncol = 5, byrow = TRUE),
+    stringsAsFactors = FALSE)
+  eb <- net_edge_betweenness(build_network(seqs, method = "relative"))
+  p  <- plot(eb)
+  expect_s3_class(p, "ggplot")
+  # forest style also returns a ggplot
+  expect_s3_class(plot(eb, style = "forest"), "ggplot")
+  # top_n trims the edge set
+  p2 <- plot(eb, top_n = 3)
+  expect_s3_class(p2, "ggplot")
+  expect_equal(nrow(p2$data), 3L)
+  # bars are sorted descending by betweenness
+  expect_true(all(diff(p$data$weight) <= 0))
+})
