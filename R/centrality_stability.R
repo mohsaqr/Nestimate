@@ -17,13 +17,12 @@
 #'
 #' @param x A \code{netobject} from \code{\link{build_network}}.
 #' @param measures Character vector. Centrality measures to assess.
-#'   Built-in: \code{"InStrength"}, \code{"OutStrength"}, \code{"Betweenness"},
-#'   \code{"InCloseness"}, \code{"OutCloseness"}, \code{"Closeness"}.
-#'   \code{"Closeness"} is defined only for undirected networks;
-#'   \code{"InCloseness"}/\code{"OutCloseness"} only for directed
-#'   networks (requesting the wrong one for the network's directedness
-#'   is an error). Custom measures beyond these are valid only when a
-#'   \code{centrality_fn} is supplied to resolve them.
+#'   Built-in: \code{"OutStrength"}, \code{"InStrength"},
+#'   \code{"ClosenessIn"}, \code{"ClosenessOut"}, \code{"Closeness"},
+#'   \code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"},
+#'   and \code{"Clustering"}. The legacy aliases \code{"InCloseness"} and
+#'   \code{"OutCloseness"} are also accepted. Custom measures beyond these
+#'   are valid only when a \code{centrality_fn} is supplied to resolve them.
 #'   Default: \code{c("InStrength", "OutStrength", "Betweenness")}.
 #' @param iter Integer. Number of bootstrap iterations per drop
 #'   proportion (default: 1000).
@@ -48,6 +47,13 @@
 #' @param loops Logical. If \code{FALSE} (default), self-loops (diagonal)
 #'   are excluded from centrality computation. This does not modify the
 #'   stored matrix.
+#' @param normalize Logical. Range-normalize all requested measures using the
+#'   same transformation as \code{tna::centralities(normalize = TRUE)}.
+#'   Default: \code{FALSE}.
+#' @param invert Logical. Invert weights for shortest-path measures?
+#'   Default: \code{TRUE}, matching \code{tna}.
+#' @param normalize_diffusion Logical. Range-normalize \code{Diffusion} even
+#'   when \code{normalize = FALSE}. Default: \code{TRUE}.
 #' @param seed Integer or NULL. RNG seed for reproducibility.
 #'
 #' @return An object of class \code{"net_stability"} containing:
@@ -92,6 +98,9 @@ centrality_stability <- function(x,
                                  method = "pearson",
                                  centrality_fn = NULL,
                                  loops = FALSE,
+                                 normalize = FALSE,
+                                 invert = TRUE,
+                                 normalize_diffusion = TRUE,
                                  seed = NULL) {
 
   # ---- Input validation ----
@@ -103,6 +112,8 @@ centrality_stability <- function(x,
                            drop_prop = drop_prop, threshold = threshold,
                            certainty = certainty, method = method,
                            centrality_fn = centrality_fn, loops = loops,
+                           normalize = normalize, invert = invert,
+                           normalize_diffusion = normalize_diffusion,
                            seed = seed)
     })
     class(out) <- c("net_stability_group", "list")
@@ -130,8 +141,7 @@ centrality_stability <- function(x,
     stopifnot("centrality_fn must be a function" = is.function(centrality_fn))
   }
 
-  valid_measures <- c("InStrength", "OutStrength", "Betweenness",
-                       "Closeness", "InCloseness", "OutCloseness")
+  valid_measures <- .centrality_builtin_measures()
   bad <- setdiff(measures, valid_measures)
   # A custom centrality_fn resolves non-builtin measure names (mirrors
   # net_centrality, which has no whitelist). Only reject unknown names
@@ -159,8 +169,11 @@ centrality_stability <- function(x,
   thresh <- x$threshold
 
   # ---- Original centralities ----
-  orig_cents <- .compute_centralities(x$weights, states, x$directed, measures,
-                                       loops, centrality_fn)
+  orig_cents <- .compute_centralities(
+    x$weights, states, x$directed, measures,
+    loops = loops, normalize = normalize, invert = invert,
+    normalize_diffusion = normalize_diffusion, centrality_fn = centrality_fn
+  )
 
   # Drop measures with zero variance (e.g. OutStrength for relative networks)
   keep <- vapply(measures, function(m) sd(orig_cents[[m]]) > 0, logical(1))
@@ -259,8 +272,11 @@ centrality_stability <- function(x,
       mat <- build_matrix(idx)
       if (is.null(mat)) return(rep(NA_real_, n_measures))
 
-      sub_cents <- .compute_centralities(mat, states, x$directed, measures,
-                                          loops, centrality_fn)
+      sub_cents <- .compute_centralities(
+        mat, states, x$directed, measures,
+        loops = loops, normalize = normalize, invert = invert,
+        normalize_diffusion = normalize_diffusion, centrality_fn = centrality_fn
+      )
 
       vapply(measures, function(m) {
         sc <- sub_cents[[m]]
@@ -304,66 +320,66 @@ centrality_stability <- function(x,
 
 #' Compute centralities from a weight matrix
 #'
-#' InStrength and OutStrength use colSums/rowSums (no dependencies).
-#' Other measures (Betweenness, Closeness, InCloseness, OutCloseness)
-#' require a user-supplied \code{centrality_fn}.
+#' Built-in measures are dependency-free and follow tna centrality semantics.
 #'
 #' @param mat Weight matrix.
 #' @param states Character vector of state names.
 #' @param directed Logical.
 #' @param measures Character vector of requested measures.
 #' @param loops Logical. If FALSE, zero out diagonal before computing.
+#' @param normalize Logical. Range-normalize all requested built-in measures.
+#' @param invert Logical. Invert weights for path-based measures.
+#' @param normalize_diffusion Logical. Range-normalize Diffusion even when
+#'   \code{normalize = FALSE}.
 #' @param centrality_fn Optional function taking a weight matrix and
 #'   returning a named list of centrality vectors.
 #' @noRd
 .compute_centralities <- function(mat, states, directed, measures,
-                                  loops = FALSE, centrality_fn = NULL) {
+                                  loops = FALSE, normalize = FALSE,
+                                  invert = TRUE,
+                                  normalize_diffusion = TRUE,
+                                  centrality_fn = NULL) {
   n <- length(states)
+  dimnames(mat) <- list(states, states)
   if (!loops) diag(mat) <- 0
   result <- list()
 
-  # .closeness() is documented to return a single "Closeness" only for
-  # UNDIRECTED networks and "InCloseness"/"OutCloseness" only for DIRECTED
-  # networks. Requesting the wrong one for the network's directedness
-  # would otherwise silently produce no column (or crash a downstream
-  # sd() check). Error cleanly with the correct measure name instead.
-  if (directed && "Closeness" %in% measures) {
-    stop("'Closeness' is defined only for undirected networks. ",
-         "For directed networks use 'InCloseness' and/or 'OutCloseness'.",
-         call. = FALSE)
-  }
-  if (!directed && any(c("InCloseness", "OutCloseness") %in% measures)) {
-    stop("'InCloseness'/'OutCloseness' are defined only for directed ",
-         "networks. For undirected networks use 'Closeness'.",
-         call. = FALSE)
+  builtin <- .centrality_builtin_measures()
+  canonical <- vapply(measures, .centrality_canonical_measure, character(1))
+
+  if (any(c("InStrength", "OutStrength") %in% canonical)) {
+    if ("InStrength" %in% canonical) result[["InStrength"]] <- colSums(mat)
+    if ("OutStrength" %in% canonical) result[["OutStrength"]] <- rowSums(mat)
   }
 
-  # Built-in matrix-based centralities (no dependencies)
-  builtin <- c("InStrength", "OutStrength",
-               "Betweenness", "InCloseness", "OutCloseness", "Closeness")
-
-  if ("InStrength"  %in% measures) result[["InStrength"]]  <- colSums(mat)
-  if ("OutStrength" %in% measures) result[["OutStrength"]] <- rowSums(mat)
-
-  path_measures <- intersect(measures,
-                             c("Betweenness", "InCloseness", "OutCloseness",
-                               "Closeness"))
-  if (length(path_measures) > 0L) {
-    path_mat <- abs(mat)
-    if ("Betweenness" %in% path_measures) {
-      result[["Betweenness"]] <- .betweenness(path_mat, directed = directed,
-                                               invert = TRUE)
+  abs_mat <- abs(mat)
+  if (any(c("Betweenness", "ClosenessIn", "ClosenessOut", "Closeness") %in%
+          canonical)) {
+    if ("Betweenness" %in% canonical) {
+      result[["Betweenness"]] <- .betweenness(abs_mat, directed = directed,
+                                               invert = invert)
     }
-    cl_measures <- intersect(path_measures, c("InCloseness", "OutCloseness",
-                                               "Closeness"))
-    if (length(cl_measures) > 0L) {
-      cl <- .closeness(path_mat, directed = directed, invert = TRUE)
-      for (m in cl_measures) result[[m]] <- cl[[m]]
+    if (any(c("ClosenessIn", "ClosenessOut", "Closeness") %in% canonical)) {
+      cl <- .closeness(abs_mat, directed = directed, invert = invert)
+      for (m in intersect(c("ClosenessIn", "ClosenessOut", "Closeness"),
+                          canonical)) {
+        result[[m]] <- cl[[m]]
+      }
     }
+  }
+
+  if ("BetweennessRSP" %in% canonical) {
+    result[["BetweennessRSP"]] <- .rsp_betweenness(abs_mat)
+  }
+  if ("Diffusion" %in% canonical) {
+    result[["Diffusion"]] <- .diffusion_centrality(mat)
+  }
+  if ("Clustering" %in% canonical) {
+    result[["Clustering"]] <- .weighted_clustering(mat + t(mat))
   }
 
   # External centralities via centrality_fn (user-supplied measures only)
-  external <- setdiff(measures, builtin)
+  external <- measures[!(measures %in% builtin)]
   if (length(external) > 0L) {
     if (is.null(centrality_fn)) {
       stop("centrality_fn is required for measures: ",
@@ -384,7 +400,26 @@ centrality_stability <- function(x,
     }
   }
 
-  result
+  for (m in names(result)) {
+    if (isTRUE(normalize) ||
+        (identical(m, "Diffusion") && isTRUE(normalize_diffusion))) {
+      result[[m]] <- .range01_tna(result[[m]])
+    }
+  }
+
+  out <- vector("list", length(measures))
+  names(out) <- measures
+  for (i in seq_along(measures)) {
+    m <- measures[[i]]
+    cm <- canonical[[i]]
+    if (!is.null(result[[m]])) {
+      out[[m]] <- result[[m]]
+    } else {
+      out[[m]] <- result[[cm]]
+    }
+    names(out[[m]]) <- states
+  }
+  out
 }
 
 

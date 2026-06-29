@@ -46,9 +46,9 @@
 
 #' Betweenness centrality (directed or undirected, weighted)
 #'
-#' Fraction of all shortest paths passing through each node.
-#' Normalized by \code{(n-1)(n-2)} for directed, \code{(n-1)(n-2)/2}
-#' for undirected.
+#' Number of all shortest paths passing through each node. This matches
+#' \code{igraph::betweenness(normalized = FALSE)}, which is the scale used by
+#' \code{tna::centralities()}.
 #'
 #' @param W Square numeric weight matrix.
 #' @param directed Logical.
@@ -78,8 +78,7 @@
     sum((num / sg_st)[on_path], na.rm = TRUE)
   }, numeric(1))
 
-  norm <- if (directed) (n - 1) * (n - 2) else (n - 1) * (n - 2) / 2
-  if (norm > 0) btw <- btw / norm
+  if (!directed) btw <- btw / 2
   setNames(btw, rownames(W))
 }
 
@@ -131,9 +130,8 @@
 
 #' Closeness centrality (directed or undirected, weighted)
 #'
-#' For directed networks returns both InCloseness and OutCloseness.
-#' Closeness = (reachable - 1) / sum(distances to/from reachable nodes).
-#' Isolated nodes (no reachable peers) get 0.
+#' Returns \code{ClosenessIn}, \code{ClosenessOut}, and \code{Closeness} on the
+#' unnormalized \code{igraph::closeness()} scale used by \code{tna}.
 #'
 #' @param W Square numeric weight matrix.
 #' @param directed Logical.
@@ -146,26 +144,113 @@
   n   <- nrow(W)
   nms <- rownames(W)
   D   <- .floyd_warshall_sp(W, invert)$D
+  W_all <- pmax(W, t(W))
+  D_all <- .floyd_warshall_sp(W_all, invert)$D
 
   .cl <- function(d_vec) {
     finite_d <- d_vec[is.finite(d_vec) & d_vec > 0]
-    r <- length(finite_d)
-    if (r == 0L) 0 else r / sum(finite_d)
+    if (length(finite_d) == 0L) NaN else 1 / sum(finite_d)
   }
 
-  if (directed) {
-    list(
-      InCloseness  = setNames(vapply(seq_len(n), function(v) .cl(D[, v]),
-                                     numeric(1)), nms),
-      OutCloseness = setNames(vapply(seq_len(n), function(v) .cl(D[v, ]),
-                                     numeric(1)), nms)
-    )
-  } else {
-    list(
-      Closeness = setNames(vapply(seq_len(n), function(v) .cl(D[v, ]),
-                                  numeric(1)), nms)
-    )
+  list(
+    ClosenessIn = setNames(vapply(seq_len(n), function(v) .cl(D[, v]),
+                                  numeric(1)), nms),
+    ClosenessOut = setNames(vapply(seq_len(n), function(v) .cl(D[v, ]),
+                                   numeric(1)), nms),
+    Closeness = setNames(vapply(seq_len(n), function(v) .cl(D_all[v, ]),
+                                numeric(1)), nms)
+  )
+}
+
+#' Randomized shortest-path betweenness
+#' @noRd
+.rsp_betweenness <- function(mat, beta = 0.01) {
+  n <- ncol(mat)
+  d <- rowSums(mat)
+  if (any(d == 0)) return(setNames(rep(NA_real_, n), rownames(mat)))
+  p_ref <- diag(d^-1, n, n) %*% mat
+  cost <- mat^-1
+  cost[is.infinite(cost)] <- 0
+  W <- p_ref * exp(-beta * cost)
+  Z <- tryCatch(solve(diag(1, n, n) - W), error = function(e) NULL)
+  if (is.null(Z)) return(setNames(rep(NA_real_, n), rownames(mat)))
+  Z_recip <- Z^-1
+  Z_recip[is.infinite(Z_recip)] <- 0
+  Z_recip_diag <- diag(Z_recip) * diag(1, n, n)
+  out <- diag(tcrossprod(Z, Z_recip - n * Z_recip_diag) %*% Z)
+  out <- round(out)
+  out <- out - min(out, na.rm = TRUE) + 1
+  setNames(out, rownames(mat))
+}
+
+#' Diffusion centrality
+#' @noRd
+.diffusion_centrality <- function(mat) {
+  n <- ncol(mat)
+  p <- diag(1, n, n)
+  s <- 0
+  for (i in seq_len(n)) {
+    p <- p %*% mat
+    s <- s + p
   }
+  setNames(rowSums(s), rownames(mat))
+}
+
+#' Weighted clustering coefficient used by tna
+#' @noRd
+.weighted_clustering <- function(mat) {
+  diag(mat) <- 0
+  n <- ncol(mat)
+  num <- diag(mat %*% mat %*% mat)
+  den <- colSums(mat)^2 - colSums(mat^2)
+  setNames(num / den, rownames(mat))
+}
+
+#' Range-normalize on the same scale as tna::centralities(normalize = TRUE)
+#' @noRd
+.range01_tna <- function(x, na.rm = FALSE) {
+  mi <- min(x, na.rm = na.rm)
+  ma <- max(x, na.rm = na.rm)
+  (x - mi) / (ma - mi)
+}
+
+#' @noRd
+.centrality_builtin_measures <- function() {
+  c("OutStrength", "InStrength", "ClosenessIn", "ClosenessOut",
+    "Closeness", "Betweenness", "BetweennessRSP", "Diffusion",
+    "Clustering", "InCloseness", "OutCloseness")
+}
+
+#' @noRd
+.centrality_default_measures <- function() {
+  c("OutStrength", "InStrength", "ClosenessIn", "ClosenessOut",
+    "Closeness", "Betweenness", "BetweennessRSP", "Diffusion",
+    "Clustering")
+}
+
+#' @noRd
+.centrality_canonical_measure <- function(measure) {
+  switch(measure,
+    InCloseness = "ClosenessIn",
+    OutCloseness = "ClosenessOut",
+    measure
+  )
+}
+
+#' @noRd
+.as_net_centrality_frame <- function(result, states, measures,
+                                     normalized, invert,
+                                     normalize_diffusion) {
+  out <- data.frame(state = factor(states, levels = states),
+                    check.names = FALSE)
+  for (m in measures) out[[m]] <- unname(result[[m]])
+  rownames(out) <- states
+  attr(out, "measures") <- measures
+  attr(out, "normalized") <- normalized
+  attr(out, "invert") <- invert
+  attr(out, "normalize_diffusion") <- normalize_diffusion
+  class(out) <- c("net_centrality", class(out))
+  out
 }
 
 
@@ -182,29 +267,36 @@ centrality <- function(x, ...) {
 #' Compute Centrality Measures for a Network
 #'
 #' Computes centrality measures from a \code{netobject},
-#' \code{netobject_group}, or \code{cograph_network}. For directed networks
-#' the default measures are InStrength, OutStrength, and Betweenness. For
-#' undirected networks the defaults are Closeness and Betweenness.
+#' \code{netobject_group}, \code{mcml}, or \code{cograph_network}. The built-in
+#' measures match \code{tna::centralities()} without importing \code{tna} or
+#' \code{igraph}. The only intentional default difference is that
+#' \code{Diffusion} is range-normalized by default.
 #'
 #' @param x A \code{netobject}, \code{netobject_group}, or
 #'   \code{cograph_network}.
 #' @param measures Character vector. Centrality measures to compute.
-#'   Built-in: \code{"InStrength"}, \code{"OutStrength"},
-#'   \code{"Betweenness"}, \code{"InCloseness"}, \code{"OutCloseness"},
-#'   \code{"Closeness"}. \code{"Closeness"} is defined only for
-#'   undirected networks; \code{"InCloseness"}/\code{"OutCloseness"}
-#'   only for directed networks (requesting the wrong one for the
-#'   network's directedness is an error). Default depends on
-#'   directedness.
+#'   Built-in: \code{"OutStrength"}, \code{"InStrength"},
+#'   \code{"ClosenessIn"}, \code{"ClosenessOut"}, \code{"Closeness"},
+#'   \code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"},
+#'   and \code{"Clustering"}. The legacy aliases \code{"InCloseness"} and
+#'   \code{"OutCloseness"} are also accepted.
 #' @param loops Logical. Include self-loops (diagonal) in computation?
 #'   Default: \code{FALSE}.
+#' @param normalize Logical. Range-normalize all requested measures using the
+#'   same transformation as \code{tna::centralities(normalize = TRUE)}.
+#'   Default: \code{FALSE}.
+#' @param invert Logical. Invert weights for shortest-path measures?
+#'   Default: \code{TRUE}, matching \code{tna}.
+#' @param normalize_diffusion Logical. Range-normalize \code{Diffusion} even
+#'   when \code{normalize = FALSE}. Default: \code{TRUE}.
 #' @param centrality_fn Optional function. Custom centrality function that
 #'   takes a weight matrix and returns a named list of centrality vectors.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return For a \code{netobject}: a data frame with node names as rows and
-#'   centrality measures as columns. For a \code{netobject_group}: a named
-#'   list of such data frames (one per group).
+#' @return For a \code{netobject}: a \code{net_centrality} data frame with
+#'   node names as rows, a \code{state} column, and one column per centrality
+#'   measure. For a \code{netobject_group}: a \code{net_centrality_group}
+#'   list of such data frames.
 #'
 #' @examples
 #' seqs <- data.frame(
@@ -215,60 +307,372 @@ centrality <- function(x, ...) {
 #'
 #' @export
 net_centrality <- function(x, measures = NULL, loops = FALSE,
+                            normalize = FALSE, invert = TRUE,
+                            normalize_diffusion = TRUE,
                             centrality_fn = NULL, ...) {
   if (isFALSE(loops)) {
     message("centralities computed excluding loops (diagonal). ",
             "Pass `loops = TRUE` to include self-transitions.")
   }
   centrality(x, measures = measures, loops = loops,
+             normalize = normalize, invert = invert,
+             normalize_diffusion = normalize_diffusion,
              centrality_fn = centrality_fn, ...)
 }
 
 
 #' @noRd
 centrality.netobject <- function(x, measures = NULL, loops = FALSE,
+                                  normalize = FALSE, invert = TRUE,
+                                  normalize_diffusion = TRUE,
                                   centrality_fn = NULL, ...) {
   mat      <- x$weights
   states   <- x$nodes$label
   directed <- x$directed
 
-  if (is.null(measures)) {
-    measures <- if (directed) {
-      c("InStrength", "OutStrength", "Betweenness")
-    } else {
-      c("Closeness", "Betweenness")
-    }
-  }
+  if (is.null(measures)) measures <- .centrality_default_measures()
 
   res <- .compute_centralities(mat, states, directed, measures,
-                                loops = loops, centrality_fn = centrality_fn)
-  as.data.frame(res, row.names = states)
+                                loops = loops, normalize = normalize,
+                                invert = invert,
+                                normalize_diffusion = normalize_diffusion,
+                                centrality_fn = centrality_fn)
+  .as_net_centrality_frame(res, states, measures,
+                           normalized = normalize, invert = invert,
+                           normalize_diffusion = normalize_diffusion)
 }
 
 
 #' @noRd
 centrality.netobject_group <- function(x, measures = NULL, loops = FALSE,
+                                        normalize = FALSE, invert = TRUE,
+                                        normalize_diffusion = TRUE,
                                         centrality_fn = NULL, ...) {
-  lapply(x, function(net) {
+  out <- lapply(x, function(net) {
     centrality.netobject(net, measures = measures, loops = loops,
+                         normalize = normalize, invert = invert,
+                         normalize_diffusion = normalize_diffusion,
                          centrality_fn = centrality_fn)
   })
+  names(out) <- names(x)
+  attr(out, "measures") <- if (is.null(measures)) .centrality_default_measures()
+                           else measures
+  class(out) <- c("net_centrality_group", "list")
+  out
 }
 
 
 #' @noRd
 centrality.cograph_network <- function(x, measures = NULL, loops = FALSE,
+                                        normalize = FALSE, invert = TRUE,
+                                        normalize_diffusion = TRUE,
                                         centrality_fn = NULL, ...) {
   centrality.netobject(.as_netobject(x), measures = measures, loops = loops,
+                        normalize = normalize, invert = invert,
+                        normalize_diffusion = normalize_diffusion,
                         centrality_fn = centrality_fn)
 }
 
 
 #' @noRd
 centrality.mcml <- function(x, measures = NULL, loops = FALSE,
+                             normalize = FALSE, invert = TRUE,
+                             normalize_diffusion = TRUE,
                              centrality_fn = NULL, ...) {
   centrality.netobject_group(as_tna(x), measures = measures, loops = loops,
+                              normalize = normalize, invert = invert,
+                              normalize_diffusion = normalize_diffusion,
                               centrality_fn = centrality_fn)
+}
+
+#' Plot centrality measures
+#'
+#' @param x A \code{net_centrality} object returned by
+#'   \code{\link{net_centrality}}.
+#' @param reorder Logical. Reorder states within each centrality panel by
+#'   centrality value. Default: \code{TRUE}.
+#' @param type Plot type. \code{"bar"} shows one faceted horizontal bar chart
+#'   per measure; \code{"profile"} shows state profiles across measures.
+#' @param ncol Integer. Number of facet columns.
+#' @param scales Facet scale mode. \code{"free_x"} uses free centrality axes;
+#'   \code{"fixed"} keeps a common centrality axis.
+#' @param profile_scale Scaling used by \code{type = "profile"}.
+#'   \code{"measure"} rescales each centrality measure to 0--1 before drawing
+#'   cross-measure profiles; \code{"none"} uses raw values.
+#' @param labels Logical. Add compact value labels.
+#' @param ... Additional arguments ignored.
+#' @return A \code{ggplot} object.
+#' @export
+plot.net_centrality <- function(x, reorder = TRUE, ncol = 3L,
+                                type = c("bar", "profile"),
+                                scales = c("free_x", "fixed"),
+                                profile_scale = c("measure", "none"),
+                                labels = TRUE, ...) {
+  type <- match.arg(type)
+  scales <- match.arg(scales)
+  profile_scale <- match.arg(profile_scale)
+  if (type == "profile") {
+    profile_ncol <- if (missing(ncol)) 1L else ncol
+    profile_labels <- if (missing(labels)) FALSE else labels
+    return(.plot_net_centrality_profile(
+      x, ncol = profile_ncol, profile_scale = profile_scale,
+      labels = profile_labels
+    ))
+  }
+  scales <- if (scales == "free_x") "free_x" else "fixed"
+  d <- .centrality_plot_data(x)
+  d$state <- .centrality_state_factor(d, reorder = reorder)
+  p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$value,
+                                        y = .data$state,
+                                        fill = .data$measure)) +
+    ggplot2::geom_col(width = 0.72, alpha = 0.88, show.legend = FALSE,
+                      na.rm = TRUE) +
+    ggplot2::facet_wrap(~ measure, ncol = ncol, scales = scales) +
+    ggplot2::scale_fill_manual(values = .centrality_measure_palette()) +
+    ggplot2::labs(x = "Centrality", y = NULL) +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(
+      panel.grid.major.y = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(face = "bold"),
+      panel.spacing = ggplot2::unit(1.2, "lines"),
+      plot.margin = ggplot2::margin(8, 14, 8, 8)
+    )
+  if (isTRUE(labels)) {
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(label = .data$label),
+      hjust = -0.08, size = 2.8, na.rm = TRUE
+    ) +
+      ggplot2::scale_x_continuous(
+        expand = ggplot2::expansion(mult = c(0.02, 0.16))
+      )
+  }
+  p
+}
+
+#' Plot grouped centrality measures
+#'
+#' @param x A \code{net_centrality_group} object returned by
+#'   \code{\link{net_centrality}}.
+#' @param reorder Logical. Reorder states by their mean value within each
+#'   centrality panel. Default: \code{TRUE}.
+#' @param type Plot type. \code{"bar"} shows grouped bars within each measure;
+#'   \code{"profile"} facets by state and draws group profiles across
+#'   centrality measures.
+#' @param ncol Integer. Number of facet columns.
+#' @param scales Facet scale mode. \code{"free_x"} uses free centrality axes;
+#'   \code{"fixed"} keeps a common centrality axis.
+#' @param palette Brewer palette for groups.
+#' @param profile_scale Scaling used by \code{type = "profile"}.
+#'   \code{"measure"} rescales each centrality measure to 0--1 before drawing
+#'   cross-measure profiles; \code{"none"} uses raw values.
+#' @param labels Logical. Add compact value labels.
+#' @param ... Additional arguments ignored.
+#' @return A \code{ggplot} object.
+#' @export
+plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
+                                      type = c("bar", "profile"),
+                                      scales = c("free_x", "fixed"),
+                                      palette = "Set2",
+                                      profile_scale = c("measure", "none"),
+                                      labels = FALSE,
+                                      ...) {
+  type <- match.arg(type)
+  scales <- match.arg(scales)
+  profile_scale <- match.arg(profile_scale)
+  scales <- if (scales == "free_x") "free_x" else "fixed"
+  d <- do.call(rbind, lapply(names(x), function(g) {
+    z <- .centrality_plot_data(x[[g]])
+    z$group <- g
+    z
+  }))
+  rownames(d) <- NULL
+  if (type == "profile") {
+    profile_ncol <- if (missing(ncol)) 1L else ncol
+    return(.plot_net_centrality_group_profile(
+      d, ncol = profile_ncol, palette = palette,
+      profile_scale = profile_scale, labels = labels
+    ))
+  }
+  d$state <- .centrality_state_factor(d, reorder = reorder)
+  dodge <- ggplot2::position_dodge2(width = 0.76, preserve = "single",
+                                    padding = 0.08)
+  p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$value,
+                                        y = .data$state,
+                                        fill = .data$group,
+                                        group = .data$group)) +
+    ggplot2::geom_col(position = dodge, width = 0.68, alpha = 0.88,
+                      colour = "white", linewidth = 0.25, na.rm = TRUE) +
+    ggplot2::facet_wrap(~ measure, ncol = ncol, scales = scales) +
+    ggplot2::scale_fill_brewer(palette = palette) +
+    ggplot2::scale_x_continuous(
+      expand = ggplot2::expansion(mult = c(0.02, 0.16))
+    ) +
+    ggplot2::labs(x = "Centrality", y = NULL, fill = NULL) +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(
+      panel.grid.major.y = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(face = "bold"),
+      legend.position = "bottom",
+      panel.spacing = ggplot2::unit(1.2, "lines"),
+      plot.margin = ggplot2::margin(8, 14, 8, 8)
+    )
+  if (isTRUE(labels)) {
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(label = .data$label),
+      position = dodge, hjust = -0.08, size = 2.5,
+      show.legend = FALSE, na.rm = TRUE
+    )
+  }
+  p
+}
+
+#' @noRd
+.centrality_plot_data <- function(x) {
+  d <- as.data.frame(x)
+  measures <- setdiff(names(d), "state")
+  out <- stats::reshape(
+    d,
+    varying = measures,
+    v.names = "value",
+    timevar = "measure",
+    times = measures,
+    idvar = "state",
+    direction = "long"
+  )
+  out$state <- as.character(out$state)
+  out$measure <- factor(out$measure, levels = measures)
+  out$state_panel <- paste(out$state, out$measure, sep = "__")
+  out$label <- ifelse(is.finite(out$value), sprintf("%.2f", out$value), "")
+  rownames(out) <- NULL
+  out
+}
+
+#' @noRd
+.plot_net_centrality_profile <- function(x, ncol = 1L,
+                                         profile_scale = "measure",
+                                         labels = TRUE) {
+  d <- .centrality_profile_data(.centrality_plot_data(x),
+                                profile_scale = profile_scale)
+  y_lab <- if (profile_scale == "measure") {
+    "Centrality (within-measure scaled)"
+  } else {
+    "Centrality"
+  }
+  p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$measure,
+                                        y = .data$value_plot,
+                                        group = .data$state)) +
+    ggplot2::geom_line(linewidth = 0.85, colour = "#2A6FBB",
+                       alpha = 0.86, na.rm = TRUE) +
+    ggplot2::geom_point(size = 2.4, colour = "#2A6FBB", na.rm = TRUE) +
+    ggplot2::facet_wrap(~ state, ncol = ncol) +
+    ggplot2::labs(x = NULL, y = y_lab) +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(
+      panel.grid.minor = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_text(angle = 30, hjust = 1),
+      strip.text = ggplot2::element_text(face = "bold"),
+      plot.margin = ggplot2::margin(8, 14, 8, 8)
+    )
+  if (isTRUE(labels)) {
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(label = .data$label),
+      vjust = -0.65, size = 2.6, show.legend = FALSE, na.rm = TRUE
+    )
+  }
+  p
+}
+
+#' @noRd
+.plot_net_centrality_group_profile <- function(d, ncol = 3L,
+                                               palette = "Set2",
+                                               profile_scale = "measure",
+                                               labels = FALSE) {
+  d <- .centrality_profile_data(d, profile_scale = profile_scale)
+  y_lab <- if (profile_scale == "measure") {
+    "Centrality (within-measure scaled)"
+  } else {
+    "Centrality"
+  }
+  p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$measure,
+                                        y = .data$value_plot,
+                                        colour = .data$group,
+                                        group = .data$group)) +
+    ggplot2::geom_line(linewidth = 0.85, alpha = 0.86, na.rm = TRUE) +
+    ggplot2::geom_point(size = 2.3, na.rm = TRUE) +
+    ggplot2::facet_wrap(~ state, ncol = ncol) +
+    ggplot2::scale_colour_brewer(palette = palette) +
+    ggplot2::labs(x = NULL, y = y_lab, colour = NULL) +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(
+      panel.grid.minor = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_text(angle = 30, hjust = 1),
+      strip.text = ggplot2::element_text(face = "bold"),
+      legend.position = "bottom",
+      panel.spacing = ggplot2::unit(1.2, "lines"),
+      plot.margin = ggplot2::margin(8, 14, 8, 8)
+    )
+  if (isTRUE(labels)) {
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(label = .data$label),
+      vjust = -0.65, size = 2.4, show.legend = FALSE, na.rm = TRUE
+    )
+  }
+  p
+}
+
+#' @noRd
+.centrality_profile_data <- function(d, profile_scale = "measure") {
+  d$value_plot <- d$value
+  if (profile_scale == "measure") {
+    split_idx <- split(seq_len(nrow(d)), d$measure)
+    for (idx in split_idx) {
+      vals <- d$value[idx]
+      finite <- is.finite(vals)
+      if (!any(finite)) {
+        d$value_plot[idx] <- NA_real_
+        next
+      }
+      mi <- min(vals[finite])
+      ma <- max(vals[finite])
+      if (!is.finite(mi) || !is.finite(ma) || isTRUE(all.equal(mi, ma))) {
+        d$value_plot[idx] <- ifelse(finite, 0.5, NA_real_)
+      } else {
+        d$value_plot[idx] <- (vals - mi) / (ma - mi)
+      }
+    }
+  }
+  d$label <- ifelse(is.finite(d$value), sprintf("%.2f", d$value), "")
+  d
+}
+
+#' @noRd
+.centrality_state_factor <- function(d, reorder = TRUE) {
+  states <- unique(as.character(d$state))
+  if (isTRUE(reorder)) {
+    ord <- stats::aggregate(value ~ state, d, mean, na.rm = TRUE)
+    ord <- ord[order(ord$value, na.last = TRUE), , drop = FALSE]
+    states <- ord$state
+  }
+  factor(as.character(d$state), levels = states)
+}
+
+#' @noRd
+.centrality_measure_palette <- function() {
+  c(
+    OutStrength = "#2A6FBB",
+    InStrength = "#D94F45",
+    ClosenessIn = "#2F9E72",
+    ClosenessOut = "#8E63B0",
+    Closeness = "#D98C20",
+    Betweenness = "#4F6D7A",
+    BetweennessRSP = "#C44E7F",
+    Diffusion = "#6F9E2F",
+    Clustering = "#7B6D5F",
+    InCloseness = "#2F9E72",
+    OutCloseness = "#8E63B0"
+  )
 }
 
 
