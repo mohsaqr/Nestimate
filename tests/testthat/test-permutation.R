@@ -622,3 +622,42 @@ test_that("permutation mcml dispatch matches explicit as_tna group dispatch", {
   expect_equal(perm_mc$macro$diff, perm_grp$macro$diff,
                tolerance = 1e-12)
 })
+
+test_that("permutation(measures=) returns a tna-shaped centralities block", {
+  set.seed(3)
+  s1 <- as.data.frame(matrix(sample(c("A","B","C","D"), 240, TRUE), ncol = 6))
+  s2 <- as.data.frame(matrix(sample(c("A","B","C","D"), 240, TRUE), ncol = 6))
+  n1 <- build_network(s1, method = "relative")
+  n2 <- build_network(s2, method = "relative")
+
+  # edges-only by default (no behaviour change)
+  expect_null(permutation(n1, n2, iter = 20, seed = 1)$centralities)
+
+  meas <- c("InStrength", "Betweenness", "Diffusion")
+  p <- permutation(n1, n2, iter = 50, measures = meas, seed = 1)
+  expect_false(is.null(p$centralities))
+  expect_identical(names(p$centralities),
+                   c("stats", "diffs_true", "diffs_sig"))
+  expect_identical(names(p$centralities$stats),
+                   c("state", "centrality", "diff_true", "effect_size",
+                     "p_value"))
+  # one row per state x measure
+  n_states <- nrow(n1$weights)
+  expect_equal(nrow(p$centralities$stats), n_states * length(meas))
+  expect_identical(levels(p$centralities$stats$centrality), meas)
+  # wide tables carry a state column plus one column per measure
+  expect_identical(names(p$centralities$diffs_true), c("state", meas))
+  # diff_true is deterministic = centrality(x) - centrality(y)
+  cx <- net_centrality(n1, measures = meas, normalize_diffusion = FALSE)
+  cy <- net_centrality(n2, measures = meas, normalize_diffusion = FALSE)
+  expect_equal(p$centralities$diffs_true$Betweenness,
+               as.data.frame(cx)$Betweenness - as.data.frame(cy)$Betweenness,
+               tolerance = 1e-10)
+  # "all" expands to every built-in measure
+  pa <- permutation(n1, n2, iter = 20, measures = "all", seed = 1)
+  expect_true(all(c("InStrength", "Betweenness", "Closeness") %in%
+                    levels(pa$centralities$stats$centrality)))
+  # unknown measure errors
+  expect_error(permutation(n1, n2, iter = 10, measures = "Nope"),
+               "Unknown measures")
+})

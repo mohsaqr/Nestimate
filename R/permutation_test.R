@@ -32,6 +32,14 @@
 #' @param adjust Character. p-value adjustment method passed to
 #'   \code{\link[stats]{p.adjust}} (default: \code{"none"}). Common choices:
 #'   \code{"holm"}, \code{"BH"}, \code{"bonferroni"}.
+#' @param measures Character vector of centrality measures to permutation-test
+#'   in addition to the edges, or \code{"all"} for every built-in measure.
+#'   Default \code{NULL} (edges only). When supplied, the result gains a
+#'   \code{$centralities} block matching the layout of
+#'   \code{tna::permutation_test(measures = )}: per state and measure it reports
+#'   the observed difference, an effect size (difference / SD of the permutation
+#'   null), and a permutation p-value, all using the same permuted networks as
+#'   the edge test.
 #' @param nlambda Integer. Number of lambda values for the \code{glassopath}
 #'   regularisation path (only used when \code{method = "glasso"}).
 #'   Higher values give finer lambda resolution at the cost of speed.
@@ -52,6 +60,11 @@
 #'   \item{alpha}{Significance level used.}
 #'   \item{paired}{Whether paired permutation was used.}
 #'   \item{adjust}{p-value adjustment method used.}
+#'   \item{centralities}{Present only when \code{measures} is supplied. A list
+#'     with \code{stats} (one row per state-by-measure: \code{state},
+#'     \code{centrality}, \code{diff_true}, \code{effect_size}, \code{p_value}),
+#'     \code{diffs_true} (wide observed differences), and \code{diffs_sig}
+#'     (observed differences where \code{p < alpha}, else 0).}
 #' }
 #'
 #' @examples
@@ -86,6 +99,7 @@ permutation <- function(x, y = NULL,
                              alpha = 0.05,
                              paired = FALSE,
                              adjust = "none",
+                             measures = NULL,
                              nlambda = 50L,
                              seed = NULL) {
 
@@ -97,11 +111,12 @@ permutation <- function(x, y = NULL,
     result <- list(
       transition = permutation(
         x$transition, y$transition, iter = iter, alpha = alpha,
-        paired = paired, adjust = adjust, nlambda = nlambda, seed = seed
+        paired = paired, adjust = adjust, measures = measures, nlambda = nlambda, seed = seed
       ),
       cooccurrence = permutation(
         x$cooccurrence, y$cooccurrence, iter = iter, alpha = alpha,
-        paired = paired, adjust = adjust, nlambda = nlambda, seed = seed
+        paired = paired, adjust = adjust, measures = measures,
+        nlambda = nlambda, seed = seed
       )
     )
     class(result) <- "wtna_perm_mixed"
@@ -125,7 +140,7 @@ permutation <- function(x, y = NULL,
       i <- pairs[1L, k]
       j <- pairs[2L, k]
       permutation(x[[i]], x[[j]], iter = iter, alpha = alpha,
-                  paired = paired, adjust = adjust,
+                  paired = paired, adjust = adjust, measures = measures,
                   nlambda = nlambda, seed = seed)
     })
     pair_labels <- vapply(seq_len(ncol(pairs)), function(k) {
@@ -144,8 +159,8 @@ permutation <- function(x, y = NULL,
     }
     results <- lapply(common, function(nm) {
       permutation(x[[nm]], y[[nm]], iter = iter, alpha = alpha,
-                  paired = paired, adjust = adjust, nlambda = nlambda,
-                  seed = seed)
+                  paired = paired, adjust = adjust, measures = measures,
+                  nlambda = nlambda, seed = seed)
     })
     names(results) <- common
     class(results) <- c("net_permutation_group", "list")
@@ -210,6 +225,23 @@ permutation <- function(x, y = NULL,
   # ---- Observed difference ----
   obs_diff <- x$weights - y$weights
 
+  # ---- Centrality differences (optional, tna-parity) ----
+  if (!is.null(measures)) {
+    if (length(measures) == 1L && identical(tolower(measures), "all")) {
+      measures <- .centrality_all_measures()
+    }
+    bad <- setdiff(measures, .centrality_builtin_measures())
+    if (length(bad) > 0L) {
+      stop("Unknown measures: ", paste(bad, collapse = ", "),
+           ". Options: ", paste(.centrality_builtin_measures(), collapse = ", "),
+           call. = FALSE)
+    }
+    obs_cent_diff <- .perm_cent_diff_mat(x$weights, y$weights, nodes,
+                                         directed, measures)
+  } else {
+    obs_cent_diff <- NULL
+  }
+
   # ---- Dispatch permutation ----
   has_data_x <- is.data.frame(x$data) && ncol(x$data) > 0L
   has_data_y <- is.data.frame(y$data) && ncol(y$data) > 0L
@@ -233,12 +265,14 @@ permutation <- function(x, y = NULL,
     }
     perm_result <- .permutation_transition(
       x = x, y = y, nodes = nodes, method = method,
-      iter = iter, paired = paired
+      iter = iter, paired = paired,
+      measures = measures, directed = directed, obs_cent_diff = obs_cent_diff
     )
   } else {
     perm_result <- .permutation_association(
       x = x, y = y, nodes = nodes, method = method,
-      iter = iter, paired = paired, nlambda = nlambda
+      iter = iter, paired = paired, nlambda = nlambda,
+      measures = measures, directed = directed, obs_cent_diff = obs_cent_diff
     )
   }
 
@@ -293,8 +327,76 @@ permutation <- function(x, y = NULL,
     paired      = paired,
     adjust      = adjust
   )
+
+  # ---- Centrality permutation block (tna-parity) ----
+  if (!is.null(measures)) {
+    result$centralities <- .build_permutation_centralities(
+      obs_cent_diff = obs_cent_diff,
+      cent_exceed = perm_result$cent_exceed,
+      cent_sum = perm_result$cent_sum,
+      cent_sumsq = perm_result$cent_sumsq,
+      states = nodes, measures = measures,
+      iter = iter, alpha = alpha, adjust = adjust
+    )
+  }
+
   class(result) <- "net_permutation"
   result
+}
+
+# ---- Centrality permutation helpers (tna-parity) ----
+
+#' Centralities of a permuted weight matrix, tna::centralities() settings
+#' @noRd
+.perm_centralities_mat <- function(mat, nodes, directed, measures) {
+  dimnames(mat) <- list(nodes, nodes)
+  res <- .compute_centralities(
+    mat, nodes, directed, measures,
+    loops = FALSE, normalize = FALSE, invert = TRUE,
+    normalize_diffusion = FALSE
+  )
+  vapply(measures, function(m) {
+    v <- res[[.centrality_canonical_measure(m)]]
+    if (is.null(v)) rep(NA_real_, length(nodes)) else unname(v)
+  }, numeric(length(nodes)))
+}
+
+#' Observed/permuted centrality difference matrix (states x measures)
+#' @noRd
+.perm_cent_diff_mat <- function(wx, wy, nodes, directed, measures) {
+  cx <- .perm_centralities_mat(wx, nodes, directed, measures)
+  cy <- .perm_centralities_mat(wy, nodes, directed, measures)
+  m <- cx - cy
+  dim(m) <- c(length(nodes), length(measures))
+  dimnames(m) <- list(nodes, measures)
+  m
+}
+
+#' Assemble the $centralities block exactly like tna::permutation_test()
+#' @noRd
+.build_permutation_centralities <- function(obs_cent_diff, cent_exceed,
+                                            cent_sum, cent_sumsq, states,
+                                            measures, iter, alpha, adjust) {
+  cent_p <- (cent_exceed + 1) / (iter + 1)
+  cent_p[] <- stats::p.adjust(as.vector(cent_p), method = adjust)
+  cent_mean <- cent_sum / iter
+  cent_sd <- sqrt(pmax(cent_sumsq / iter - cent_mean^2, 0))
+  effect <- obs_cent_diff / cent_sd          # tna: diff / sd (no guard)
+  sig <- obs_cent_diff * (cent_p < alpha)
+  state_f <- factor(states, levels = states)
+  stats_df <- expand.grid(state = state_f, centrality = measures,
+                          KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE)
+  stats_df$centrality <- factor(stats_df$centrality, levels = measures)
+  stats_df$diff_true <- as.vector(obs_cent_diff)
+  stats_df$effect_size <- as.vector(effect)
+  stats_df$p_value <- as.vector(cent_p)
+  diffs_true <- data.frame(state = state_f, as.data.frame(obs_cent_diff),
+                           check.names = FALSE)
+  diffs_sig <- data.frame(state = state_f, as.data.frame(sig),
+                          check.names = FALSE)
+  rownames(diffs_true) <- NULL
+  rownames(diffs_sig) <- NULL
+  list(stats = stats_df, diffs_true = diffs_true, diffs_sig = diffs_sig)
 }
 
 
@@ -302,10 +404,19 @@ permutation <- function(x, y = NULL,
 
 #' Permutation test for transition networks via pre-computed counts
 #' @noRd
-.permutation_transition <- function(x, y, nodes, method, iter, paired) {
+.permutation_transition <- function(x, y, nodes, method, iter, paired,
+                                    measures = NULL, directed = TRUE,
+                                    obs_cent_diff = NULL) {
   n_nodes <- length(nodes)
   nbins <- n_nodes * n_nodes
   is_relative <- method == "relative"
+  do_cent <- !is.null(measures)
+  if (do_cent) {
+    cent_abs_true <- abs(obs_cent_diff)
+    cent_exceed <- matrix(0L, n_nodes, length(measures))
+    cent_sum <- matrix(0, n_nodes, length(measures))
+    cent_sumsq <- matrix(0, n_nodes, length(measures))
+  }
 
   # Pre-compute per-sequence counts for both groups
   trans_x <- .precompute_per_sequence(x$data, method, x$params, nodes)
@@ -353,16 +464,29 @@ permutation <- function(x, y = NULL,
     exceed_counts <- exceed_counts + (abs(perm_diff) >= abs(obs_flat))
     sum_diffs <- sum_diffs + perm_diff
     sum_diffs_sq <- sum_diffs_sq + perm_diff^2
+
+    if (do_cent) {
+      cd <- .perm_cent_diff_mat(mat_x, mat_y, nodes, directed, measures)
+      cent_exceed <- cent_exceed + (abs(cd) >= cent_abs_true)
+      cent_sum <- cent_sum + cd
+      cent_sumsq <- cent_sumsq + cd^2
+    }
   }
 
   # SD of permutation diffs
   perm_mean <- sum_diffs / iter
   perm_sd <- sqrt(pmax(sum_diffs_sq / iter - perm_mean^2, 0))
 
-  list(
+  out <- list(
     exceed_counts = exceed_counts,
     perm_sd = perm_sd
   )
+  if (do_cent) {
+    out$cent_exceed <- cent_exceed
+    out$cent_sum <- cent_sum
+    out$cent_sumsq <- cent_sumsq
+  }
+  out
 }
 
 
@@ -392,9 +516,17 @@ permutation <- function(x, y = NULL,
 #' back to full estimator calls.
 #' @noRd
 .permutation_association <- function(x, y, nodes, method, iter, paired,
-                                    nlambda = 50L) {
+                                    nlambda = 50L, measures = NULL,
+                                    directed = FALSE, obs_cent_diff = NULL) {
   n_nodes <- length(nodes)
   nbins <- n_nodes * n_nodes
+  do_cent <- !is.null(measures)
+  if (do_cent) {
+    cent_abs_true <- abs(obs_cent_diff)
+    cent_exceed <- matrix(0L, n_nodes, length(measures))
+    cent_sum <- matrix(0, n_nodes, length(measures))
+    cent_sumsq <- matrix(0, n_nodes, length(measures))
+  }
 
   # $data is already cleaned by the estimator (numeric matrix, no NAs,
   # no zero-variance columns) — just pool directly
@@ -510,15 +642,28 @@ permutation <- function(x, y = NULL,
     exceed_counts <- exceed_counts + (abs(perm_diff) >= abs(obs_flat))
     sum_diffs <- sum_diffs + perm_diff
     sum_diffs_sq <- sum_diffs_sq + perm_diff^2
+
+    if (do_cent) {
+      cd <- .perm_cent_diff_mat(mat_x, mat_y, nodes, directed, measures)
+      cent_exceed <- cent_exceed + (abs(cd) >= cent_abs_true)
+      cent_sum <- cent_sum + cd
+      cent_sumsq <- cent_sumsq + cd^2
+    }
   }
 
   perm_mean <- sum_diffs / iter
   perm_sd <- sqrt(pmax(sum_diffs_sq / iter - perm_mean^2, 0))
 
-  list(
+  out <- list(
     exceed_counts = exceed_counts,
     perm_sd = perm_sd
   )
+  if (do_cent) {
+    out$cent_exceed <- cent_exceed
+    out$cent_sum <- cent_sum
+    out$cent_sumsq <- cent_sumsq
+  }
+  out
 }
 
 

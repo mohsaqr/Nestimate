@@ -448,7 +448,7 @@ plot.net_centrality <- function(x, reorder = TRUE, ncol = 3L,
   scales <- match.arg(scales)
   profile_scale <- match.arg(profile_scale)
   if (type == "line") {
-    profile_ncol <- if (missing(ncol)) 1L else ncol
+    profile_ncol <- if (missing(ncol)) NULL else ncol
     profile_labels <- if (missing(labels)) FALSE else labels
     return(.plot_net_centrality_profile(
       x, ncol = profile_ncol, profile_scale = profile_scale,
@@ -542,7 +542,7 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
                                       labels = labels, palette = palette))
   }
   if (type == "line") {
-    profile_ncol <- if (missing(ncol)) 1L else ncol
+    profile_ncol <- if (missing(ncol)) NULL else ncol
     return(.plot_net_centrality_group_profile(
       d, ncol = profile_ncol, palette = palette,
       profile_scale = profile_scale, labels = labels
@@ -604,73 +604,69 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
 }
 
 #' @noRd
-.plot_net_centrality_profile <- function(x, ncol = 1L,
+.plot_net_centrality_profile <- function(x, ncol = NULL,
                                          profile_scale = "measure",
-                                         labels = TRUE) {
-  d <- .centrality_profile_data(.centrality_plot_data(x),
-                                profile_scale = profile_scale)
-  y_lab <- if (profile_scale == "measure") {
-    "Centrality (within-measure scaled)"
-  } else {
-    "Centrality"
-  }
-  p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$measure,
-                                        y = .data$value_plot,
-                                        group = .data$state)) +
-    ggplot2::geom_line(linewidth = 0.85, colour = "#2A6FBB",
-                       alpha = 0.86, na.rm = TRUE) +
-    ggplot2::geom_point(size = 2.4, colour = "#2A6FBB", na.rm = TRUE) +
-    ggplot2::facet_wrap(~ state, ncol = ncol) +
-    ggplot2::labs(x = NULL, y = y_lab) +
-    ggplot2::theme_minimal(base_size = 12) +
-    ggplot2::theme(
-      panel.grid.minor = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_text(angle = 30, hjust = 1),
-      strip.text = ggplot2::element_text(face = "bold"),
-      plot.margin = ggplot2::margin(8, 14, 8, 8)
-    )
-  if (isTRUE(labels)) {
-    p <- p + ggplot2::geom_text(
-      ggplot2::aes(label = .data$label),
-      vjust = -0.65, size = 2.6, show.legend = FALSE, na.rm = TRUE
-    )
-  }
-  p
+                                         labels = FALSE) {
+  .centrality_line_plot(.centrality_plot_data(x), group = FALSE, ncol = ncol,
+                        profile_scale = profile_scale, labels = labels)
 }
 
 #' @noRd
-.plot_net_centrality_group_profile <- function(d, ncol = 3L,
+.plot_net_centrality_group_profile <- function(d, ncol = NULL,
                                                palette = "Set2",
                                                profile_scale = "measure",
                                                labels = FALSE) {
-  d <- .centrality_profile_data(d, profile_scale = profile_scale)
-  y_lab <- if (profile_scale == "measure") {
-    "Centrality (within-measure scaled)"
+  .centrality_line_plot(d, group = TRUE, ncol = ncol, palette = palette,
+                        profile_scale = profile_scale, labels = labels)
+}
+
+#' Centrality line chart: states on x, one panel per measure, line per group
+#' @noRd
+.centrality_line_plot <- function(d, group = FALSE, ncol = NULL,
+                                  palette = "Set2",
+                                  profile_scale = "measure",
+                                  labels = FALSE) {
+  scaled <- identical(profile_scale, "measure")
+  d <- .centrality_profile_data(d, profile_scale = "measure")  # value_plot, label
+  # consistent state order across panels: highest mean centrality on the left
+  ord <- stats::aggregate(value_plot ~ state, d, mean, na.rm = TRUE)
+  ord <- ord[order(ord$value_plot, decreasing = TRUE), , drop = FALSE]
+  d$state <- factor(as.character(d$state), levels = ord$state)
+  if (!scaled) d$value_plot <- d$value      # display raw values, free y per panel
+  if (is.null(ncol)) ncol <- min(3L, length(levels(d$measure)))
+  y_lab <- if (scaled) "Centrality (within-measure scaled)" else "Centrality"
+  facet_scales <- if (scaled) "fixed" else "free_y"
+
+  if (group) {
+    p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$state, y = .data$value_plot,
+                                         colour = .data$group,
+                                         group = .data$group)) +
+      ggplot2::geom_line(linewidth = 0.85, alpha = 0.9, na.rm = TRUE) +
+      ggplot2::geom_point(size = 2.1, na.rm = TRUE) +
+      ggplot2::scale_colour_brewer(palette = palette)
   } else {
-    "Centrality"
+    p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$state, y = .data$value_plot,
+                                         group = 1L)) +
+      ggplot2::geom_line(linewidth = 0.85, colour = "#2A6FBB", alpha = 0.9,
+                         na.rm = TRUE) +
+      ggplot2::geom_point(size = 2.1, colour = "#2A6FBB", na.rm = TRUE)
   }
-  p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$measure,
-                                        y = .data$value_plot,
-                                        colour = .data$group,
-                                        group = .data$group)) +
-    ggplot2::geom_line(linewidth = 0.85, alpha = 0.86, na.rm = TRUE) +
-    ggplot2::geom_point(size = 2.3, na.rm = TRUE) +
-    ggplot2::facet_wrap(~ state, ncol = ncol) +
-    ggplot2::scale_colour_brewer(palette = palette) +
+  p <- p +
+    ggplot2::facet_wrap(~ measure, ncol = ncol, scales = facet_scales) +
     ggplot2::labs(x = NULL, y = y_lab, colour = NULL) +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(
       panel.grid.minor = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_text(angle = 30, hjust = 1),
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
       strip.text = ggplot2::element_text(face = "bold"),
-      legend.position = "bottom",
-      panel.spacing = ggplot2::unit(1.2, "lines"),
+      legend.position = if (group) "bottom" else "none",
+      panel.spacing = ggplot2::unit(1, "lines"),
       plot.margin = ggplot2::margin(8, 14, 8, 8)
     )
   if (isTRUE(labels)) {
     p <- p + ggplot2::geom_text(
       ggplot2::aes(label = .data$label),
-      vjust = -0.65, size = 2.4, show.legend = FALSE, na.rm = TRUE
+      vjust = -0.65, size = 2.3, show.legend = FALSE, na.rm = TRUE
     )
   }
   p
@@ -972,7 +968,9 @@ net_edge_betweenness.default <- function(x, invert = TRUE, ...) {
 #'   \code{\link{net_edge_betweenness}}.
 #' @param style Plot style. \code{"bar"} (default) draws one horizontal bar
 #'   per edge; \code{"forest"} draws a forest/lollipop chart (a stem from
-#'   zero to a point) with a dashed reference line at the mean betweenness.
+#'   zero to a point) with a dashed reference line at the mean betweenness;
+#'   \code{"delta"} draws each edge's deviation from the mean edge betweenness
+#'   as a diverging bar (above the mean in blue, below in red).
 #' @param top_n Integer or \code{NULL}. Keep only the \code{top_n} highest
 #'   edges. Default \code{NULL} (all edges with non-zero betweenness).
 #' @param labels Logical. Print the betweenness value beside each edge.
@@ -986,8 +984,9 @@ net_edge_betweenness.default <- function(x, invert = TRUE, ...) {
 #' eb <- net_edge_betweenness(build_network(seqs, method = "relative"))
 #' plot(eb)
 #' plot(eb, style = "forest")
+#' plot(eb, style = "delta")
 #' @export
-plot.net_edge_betweenness <- function(x, style = c("bar", "forest"),
+plot.net_edge_betweenness <- function(x, style = c("bar", "forest", "delta"),
                                       top_n = NULL, labels = TRUE, ...) {
   style <- match.arg(style)
   e <- extract_edges(x)
@@ -1007,6 +1006,38 @@ plot.net_edge_betweenness <- function(x, style = c("bar", "forest"),
       panel.grid.minor = ggplot2::element_blank(),
       plot.margin = ggplot2::margin(8, 14, 8, 8)
     )
+
+  if (style == "delta") {
+    ref <- mean(e$weight, na.rm = TRUE)
+    e$delta <- e$weight - ref
+    # re-order edges by the deviation (most-above at top)
+    e$edge <- factor(sprintf("%s -> %s", e$from, e$to),
+                     levels = sprintf("%s -> %s", e$from, e$to)[order(e$delta)])
+    e$sign <- factor(ifelse(e$delta >= 0, "above", "below"),
+                     levels = c("below", "above"))
+    e$label <- .fmt_centrality(e$delta, signed = TRUE)
+    p <- ggplot2::ggplot(e, ggplot2::aes(x = .data$delta, y = .data$edge,
+                                         fill = .data$sign)) +
+      ggplot2::geom_col(width = 0.72, alpha = 0.9, na.rm = TRUE) +
+      ggplot2::geom_vline(xintercept = 0, linewidth = 0.4, colour = "grey40") +
+      ggplot2::scale_fill_manual(
+        values = c(below = "#D33F6A", above = "#4A6FE3"),
+        labels = c(below = "below mean", above = "above mean"), name = NULL
+      ) +
+      ggplot2::labs(x = sprintf("Edge betweenness − mean (%.2f)", ref),
+                    y = NULL) +
+      base_theme + ggplot2::theme(legend.position = "bottom")
+    if (isTRUE(labels)) {
+      p <- p + ggplot2::geom_text(
+        ggplot2::aes(label = .data$label),
+        hjust = ifelse(e$delta >= 0, -0.1, 1.1), size = 2.8, na.rm = TRUE
+      ) +
+        ggplot2::scale_x_continuous(
+          expand = ggplot2::expansion(mult = c(0.14, 0.14))
+        )
+    }
+    return(p)
+  }
 
   if (style == "forest") {
     ref <- mean(e$weight, na.rm = TRUE)

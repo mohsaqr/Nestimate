@@ -278,3 +278,24 @@ test_that("centrality_stability works when $data is a raw numeric matrix", {
   if (is.data.frame(corrs)) corrs <- corrs$correlation
   expect_true(any(is.finite(unlist(corrs))))
 })
+
+test_that("centrality_stability default is the trio and accepts measures = 'all'", {
+  set.seed(1)
+  seqs <- as.data.frame(matrix(sample(c("A","B","C","D"), 160, TRUE), ncol = 4))
+  net <- build_network(seqs, method = "relative")
+
+  # default measures
+  expect_identical(eval(formals(centrality_stability)$measures),
+                   c("InStrength", "Betweenness", "Diffusion"))
+  s_def <- suppressWarnings(suppressMessages(
+    centrality_stability(net, iter = 40, seed = 1)))
+  expect_identical(s_def$measures, c("InStrength", "Betweenness", "Diffusion"))
+
+  # "all" expands to every built-in measure (and no longer errors on
+  # degenerate resamples where Diffusion/RSP can be NA)
+  s_all <- suppressWarnings(suppressMessages(
+    centrality_stability(net, measures = "all", iter = 40, seed = 1)))
+  expect_true(all(c("OutStrength", "InStrength", "Closeness", "Betweenness",
+                    "BetweennessRSP", "Diffusion", "Clustering") %in%
+                    s_all$measures))
+})

@@ -4,7 +4,7 @@
 \alias{plot.net_edge_betweenness}
 \title{Plot edge-betweenness scores}
 \usage{
-\method{plot}{net_edge_betweenness}(x, style = c("bar", "forest"), top_n = NULL, labels = TRUE, ...)
+\method{plot}{net_edge_betweenness}(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 }
 \arguments{
 \item{x}{A \code{net_edge_betweenness} network from
@@ -12,7 +12,9 @@
 
 \item{style}{Plot style. \code{"bar"} (default) draws one horizontal bar
 per edge; \code{"forest"} draws a forest/lollipop chart (a stem from
-zero to a point) with a dashed reference line at the mean betweenness.}
+zero to a point) with a dashed reference line at the mean betweenness;
+\code{"delta"} draws each edge's deviation from the mean edge betweenness
+as a diverging bar (above the mean in blue, below in red).}
 
 \item{top_n}{Integer or \code{NULL}. Keep only the \code{top_n} highest
 edges. Default \code{NULL} (all edges with non-zero betweenness).}
@@ -38,4 +40,5 @@ seqs <- data.frame(
 eb <- net_edge_betweenness(build_network(seqs, method = "relative"))
 plot(eb)
 plot(eb, style = "forest")
+plot(eb, style = "delta")
 }

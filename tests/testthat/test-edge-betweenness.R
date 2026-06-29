@@ -95,8 +95,12 @@ test_that("plot.net_edge_betweenness returns a ranked ggplot", {
   eb <- net_edge_betweenness(build_network(seqs, method = "relative"))
   p  <- plot(eb)
   expect_s3_class(p, "ggplot")
-  # forest style also returns a ggplot
+  # forest and delta styles also return a ggplot
   expect_s3_class(plot(eb, style = "forest"), "ggplot")
+  pd <- plot(eb, style = "delta")
+  expect_s3_class(pd, "ggplot")
+  # edge deviations from the mean sum to ~0
+  expect_true(abs(sum(pd$data$delta)) < 1e-8)
   # top_n trims the edge set
   p2 <- plot(eb, top_n = 3)
   expect_s3_class(p2, "ggplot")

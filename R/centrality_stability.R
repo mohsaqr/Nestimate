@@ -17,13 +17,14 @@
 #'
 #' @param x A \code{netobject} from \code{\link{build_network}}.
 #' @param measures Character vector. Centrality measures to assess.
-#'   Built-in: \code{"OutStrength"}, \code{"InStrength"},
-#'   \code{"ClosenessIn"}, \code{"ClosenessOut"}, \code{"Closeness"},
-#'   \code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"},
-#'   and \code{"Clustering"}. The legacy aliases \code{"InCloseness"} and
-#'   \code{"OutCloseness"} are also accepted. Custom measures beyond these
-#'   are valid only when a \code{centrality_fn} is supplied to resolve them.
-#'   Default: \code{c("InStrength", "OutStrength", "Betweenness")}.
+#'   Defaults to \code{c("InStrength", "Betweenness", "Diffusion")}. Pass
+#'   \code{"all"} for every built-in measure: \code{"OutStrength"},
+#'   \code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
+#'   \code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"},
+#'   \code{"Diffusion"}, and \code{"Clustering"}. The legacy aliases
+#'   \code{"InCloseness"} and \code{"OutCloseness"} are also accepted. Custom
+#'   measures beyond these are valid only when a \code{centrality_fn} is
+#'   supplied to resolve them.
 #' @param iter Integer. Number of bootstrap iterations per drop
 #'   proportion (default: 1000).
 #' @param drop_prop Numeric vector. Proportions of cases to drop
@@ -89,8 +90,8 @@
 #' @importFrom stats cor sd
 #' @export
 centrality_stability <- function(x,
-                                 measures = c("InStrength", "OutStrength",
-                                              "Betweenness"),
+                                 measures = c("InStrength", "Betweenness",
+                                              "Diffusion"),
                                  iter = 1000L,
                                  drop_prop = seq(0.1, 0.9, by = 0.1),
                                  threshold = 0.7,
@@ -104,6 +105,7 @@ centrality_stability <- function(x,
                                  seed = NULL) {
 
   # ---- Input validation ----
+  measures <- .resolve_measures(measures)   # "all" -> every built-in measure
   if (inherits(x, "mcml")) x <- as_tna(x)
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
   if (inherits(x, "netobject_group")) {
@@ -281,8 +283,11 @@ centrality_stability <- function(x,
       vapply(measures, function(m) {
         sc <- sub_cents[[m]]
         oc <- orig_cents[[m]]
-        if (sd(sc) == 0) return(NA_real_)
-        cor(sc, oc, method = method, use = "complete.obs")
+        ok <- is.finite(sc) & is.finite(oc)
+        # a resampled network can leave a measure constant or NA (e.g.
+        # Diffusion / RSP betweenness on a degenerate draw): no correlation
+        if (sum(ok) < 2L || sd(sc[ok]) == 0) return(NA_real_)
+        cor(sc[ok], oc[ok], method = method)
       }, numeric(1))
     }, numeric(n_measures))
 

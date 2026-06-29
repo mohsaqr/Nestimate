@@ -11,6 +11,7 @@ permutation(
   alpha = 0.05,
   paired = FALSE,
   adjust = "none",
+  measures = NULL,
   nlambda = 50L,
   seed = NULL
 )
@@ -31,6 +32,15 @@ equal number of observations in \code{x} and \code{y}). Default: FALSE.}
 \item{adjust}{Character. p-value adjustment method passed to
 \code{\link[stats]{p.adjust}} (default: \code{"none"}). Common choices:
 \code{"holm"}, \code{"BH"}, \code{"bonferroni"}.}
+
+\item{measures}{Character vector of centrality measures to permutation-test
+in addition to the edges, or \code{"all"} for every built-in measure.
+Default \code{NULL} (edges only). When supplied, the result gains a
+\code{$centralities} block matching the layout of
+\code{tna::permutation_test(measures = )}: per state and measure it reports
+the observed difference, an effect size (difference / SD of the permutation
+null), and a permutation p-value, all using the same permuted networks as
+the edge test.}
 
 \item{nlambda}{Integer. Number of lambda values for the \code{glassopath}
 regularisation path (only used when \code{method = "glasso"}).
@@ -54,6 +64,11 @@ An object of class \code{"net_permutation"} containing:
 \item{alpha}{Significance level used.}
 \item{paired}{Whether paired permutation was used.}
 \item{adjust}{p-value adjustment method used.}
+\item{centralities}{Present only when \code{measures} is supplied. A list
+with \code{stats} (one row per state-by-measure: \code{state},
+\code{centrality}, \code{diff_true}, \code{effect_size}, \code{p_value}),
+\code{diffs_true} (wide observed differences), and \code{diffs_sig}
+(observed differences where \code{p < alpha}, else 0).}
 }
 }
 \description{
