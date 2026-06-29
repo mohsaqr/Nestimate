@@ -25,7 +25,7 @@ are computed directly from the matrix without igraph."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -141,12 +141,11 @@ threshold (default: 0.95).</p></dd>
 that takes a weight matrix and returns a named list of centrality
 vectors. When <code>NULL</code> (default), all built-in measures are
 computed internally: <code>"InStrength"</code>/<code>"OutStrength"</code> via
-<code>colSums</code>/<code>rowSums</code>, path measures via an internal
-Floyd-Warshall shortest-path routine, and diffusion, randomized
-shortest-path betweenness, and clustering via dependency-free matrix
-algebra. When provided, the
+<code>colSums</code>/<code>rowSums</code>, and <code>"Betweenness"</code>/
+<code>"InCloseness"</code>/<code>"OutCloseness"</code>/<code>"Closeness"</code> via an
+internal Floyd-Warshall shortest-path routine. When provided, the
 function is called as <code>centrality_fn(mat)</code> and is used only for
-requested measures that are not one of the built-ins; it should
+requested measures that are not one of the six built-ins; it should
 return a named list (e.g., <code>list(my_metric = ...)</code>).</p></dd>
 
 

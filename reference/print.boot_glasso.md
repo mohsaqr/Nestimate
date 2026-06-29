@@ -39,7 +39,7 @@ print(bg)
 #>     strength:              0.00 [Unstable]
 #> 
 #>   Edge differences: 2/3 pairs significantly different
-#>   Timing: 0.8s (bootstrap: 0.5s, case-drop: 0.3s)
+#>   Timing: 0.9s (bootstrap: 0.6s, case-drop: 0.3s)
 # \donttest{
 set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
@@ -56,6 +56,6 @@ print(boot)
 #>     strength:              0.00 [Unstable]
 #> 
 #>   Edge differences: 1/15 pairs significantly different
-#>   Timing: 3.1s (bootstrap: 2.0s, case-drop: 1.1s)
+#>   Timing: 3.5s (bootstrap: 2.2s, case-drop: 1.2s)
 # }
 ```

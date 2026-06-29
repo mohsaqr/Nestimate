@@ -1201,6 +1201,12 @@ Print, summary, and plot methods for package classes
 - [`plot(`*`<net_bayes>`*`)`](https://saqr.me/Nestimate/reference/plot.net_bayes.md)
   : Plot method for net_bayes
 
+- [`plot(`*`<net_centrality>`*`)`](https://saqr.me/Nestimate/reference/plot.net_centrality.md)
+  : Plot centrality measures
+
+- [`plot(`*`<net_centrality_group>`*`)`](https://saqr.me/Nestimate/reference/plot.net_centrality_group.md)
+  : Plot grouped centrality measures
+
 - [`plot(`*`<net_cluster_diagnostics>`*`)`](https://saqr.me/Nestimate/reference/plot.net_cluster_diagnostics.md)
   : Plot Method for net_cluster_diagnostics
 
@@ -1209,6 +1215,9 @@ Print, summary, and plot methods for package classes
 
 - [`plot(`*`<net_comparison>`*`)`](https://saqr.me/Nestimate/reference/plot.net_comparison.md)
   : Plot a network comparison
+
+- [`plot(`*`<net_edge_betweenness>`*`)`](https://saqr.me/Nestimate/reference/plot.net_edge_betweenness.md)
+  : Plot edge-betweenness scores
 
 - [`plot(`*`<net_gimme>`*`)`](https://saqr.me/Nestimate/reference/plot.net_gimme.md)
   : Plot Method for net_gimme

@@ -116,9 +116,12 @@
 <url><loc>https://saqr.me/Nestimate/reference/plot.mosaic_analysis.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_association_rules.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_bayes.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/plot.net_centrality.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/plot.net_centrality_group.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_cluster_diagnostics.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_clustering.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_comparison.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/plot.net_edge_betweenness.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_gimme.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_honem.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_markov_order.html</loc></url>

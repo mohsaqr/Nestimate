@@ -29,11 +29,12 @@ net_centrality(
 
 - measures:
 
-  Character vector. Centrality measures to compute. Built-in:
-  `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`,
-  `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"`, and
-  `"Clustering"`. The legacy aliases `"InCloseness"` and
-  `"OutCloseness"` are also accepted.
+  Character vector. Centrality measures to compute. Defaults to
+  `c("InStrength", "Betweenness", "Diffusion")`. Pass `"all"` for every
+  built-in measure: `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`,
+  `"ClosenessOut"`, `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`,
+  `"Diffusion"`, and `"Clustering"`. The legacy aliases `"InCloseness"`
+  and `"OutCloseness"` are also accepted.
 
 - loops:
 
@@ -80,12 +81,8 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 net_centrality(net)
 #> centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
-#>   state OutStrength InStrength ClosenessIn ClosenessOut Closeness Betweenness
-#> A     A           1          1   0.3333333    0.3333333       0.5           1
-#> B     B           1          1   0.3333333    0.3333333       0.5           1
-#> C     C           1          1   0.3333333    0.3333333       0.5           1
-#>   BetweennessRSP Diffusion Clustering
-#> A              1       NaN          1
-#> B              1       NaN          1
-#> C              1       NaN          1
+#>   state InStrength Betweenness Diffusion
+#> A     A          1           1       NaN
+#> B     B          1           1       NaN
+#> C     C          1           1       NaN
 ```

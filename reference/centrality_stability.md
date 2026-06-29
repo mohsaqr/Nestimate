@@ -77,13 +77,12 @@ centrality_stability(
   Optional function. A custom centrality function that takes a weight
   matrix and returns a named list of centrality vectors. When `NULL`
   (default), all built-in measures are computed internally:
-  `"InStrength"`/`"OutStrength"` via `colSums`/`rowSums`, path measures
-  via an internal Floyd-Warshall shortest-path routine, and diffusion,
-  randomized shortest-path betweenness, and clustering via
-  dependency-free matrix algebra. When provided, the function is called
-  as `centrality_fn(mat)` and is used only for requested measures that
-  are not one of the built-ins; it should return a named list (e.g.,
-  `list(my_metric = ...)`).
+  `"InStrength"`/`"OutStrength"` via `colSums`/`rowSums`, and
+  `"Betweenness"`/ `"InCloseness"`/`"OutCloseness"`/`"Closeness"` via an
+  internal Floyd-Warshall shortest-path routine. When provided, the
+  function is called as `centrality_fn(mat)` and is used only for
+  requested measures that are not one of the six built-ins; it should
+  return a named list (e.g., `list(my_metric = ...)`).
 
 - loops:
 
