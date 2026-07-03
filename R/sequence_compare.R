@@ -345,7 +345,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
     if (n_pos < 1L) {
       return(matrix("", nrow = 0, ncol = n))
     }
-    # Build pattern strings for each position × sequence
+    # Build pattern strings for each position x sequence
     out <- matrix("", nrow = n_pos, ncol = n)
     for (i in seq_len(n_pos)) {
       idx <- i:(i + k - 1L)
@@ -640,9 +640,9 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
   long$group   <- factor(long$group, levels = groups)
 
   r_max <- max(abs(long$resid), na.rm = TRUE)
-  # Saturate at ±3 (|z|>3 is the conventional "very strong" threshold).
+  # Saturate at +/-3 (|z|>3 is the conventional "very strong" threshold).
   # Anything beyond clips to full color via scales::squish so mid-range
-  # residuals (±1 to ±2) pick up visible color instead of fading to white.
+  # residuals (+/-1 to +/-2) pick up visible color instead of fading to white.
   r_lim <- 3
 
   p <- ggplot(long, aes(x = group, y = pattern, fill = resid)) +

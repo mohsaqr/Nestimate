@@ -1,4 +1,4 @@
-# magnitude_difference() — compare the probability view (TNA) of a
+# magnitude_difference() - compare the probability view (TNA) of a
 # transition network against the frequency view (FTNA) on a single dataset.
 #
 # The two matrices encode the same data in different units: raw counts
@@ -76,7 +76,7 @@ utils::globalVariables(c(
 #' network between its two natural summaries: raw transition counts
 #' (frequency / FTNA, `build_network(method = "frequency")`) and
 #' row-conditional probabilities (TNA, `build_network(method = "relative")`).
-#' The two matrices rank edges differently — an edge that is large in counts
+#' The two matrices rank edges differently - an edge that is large in counts
 #' can be modest in probability, and a rare-source edge can dominate its row
 #' in probability. The per-edge discrepancy on a common scale is the
 #' *magnitude difference*.
@@ -94,7 +94,7 @@ utils::globalVariables(c(
 #'   TNA's `[min, max]` range and leaves TNA untouched, so the difference is
 #'   in TNA probability units. `"rank_minmax"` converts each matrix's values
 #'   to ranks scaled to `[0, 1]` (ordinal). `"minmax"` scales each matrix's
-#'   raw values to `[0, 1]` separately (asymmetric — TNA's max and FTNA's max
+#'   raw values to `[0, 1]` separately (asymmetric - TNA's max and FTNA's max
 #'   map to the same value despite differing native ranges). `"none"` uses
 #'   raw weights.
 #' @param format Input format passed through to [build_network()];
@@ -335,7 +335,7 @@ print.magnitude_difference <- function(x, ...) {
                                     %% length(.okabe_ito)) + 1L],
                        from_nodes)
 
-  # sector start / size — vectorized via cumsum (no for loop). unname() so
+  # sector start / size - vectorized via cumsum (no for loop). unname() so
   # the from-state names do not propagate into per-sector data.frames (which
   # would warn "row names were found from a short variable").
   edge_counts <- unname(vapply(from_nodes,
@@ -346,7 +346,7 @@ print.magnitude_difference <- function(x, ...) {
   sector_start  <- pi / 2 - starts_offset
   sector_mid    <- sector_start - sector_sz / 2
 
-  # per-edge angle + slot width — lapply over sectors
+  # per-edge angle + slot width - lapply over sectors
   geom_per_sector <- lapply(seq_along(from_nodes), function(i) {
     idx <- which(ed$from == from_nodes[i])
     n_e <- length(idx); s <- sector_start[i]; sz <- sector_sz[i]
@@ -367,8 +367,8 @@ print.magnitude_difference <- function(x, ...) {
   ed$slot_w <- geom_df$slot_w
 
   # Bar anatomy:
-  #   r_inner ─ to_r(min(F,T))         = grey shared portion
-  #   to_r(min(F,T)) ─ to_r(max(F,T))  = colored magnitude-difference tip
+  #   r_inner - to_r(min(F,T))         = grey shared portion
+  #   to_r(min(F,T)) - to_r(max(F,T))  = colored magnitude-difference tip
   scale_max <- max(c(ed$ftna, ed$tna))
   to_r <- function(v) r_inner + (v / scale_max) * (r_outer - r_inner)
   ed$r_grey_top <- to_r(pmin(ed$ftna, ed$tna))

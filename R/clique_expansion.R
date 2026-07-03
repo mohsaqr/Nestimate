@@ -6,7 +6,7 @@
 #' Clique expansion of a hypergraph
 #'
 #' Projects a [net_hypergraph][build_hypergraph] to a standard pairwise
-#' [netobject][build_network] (the *clique expansion* — also called the
+#' [netobject][build_network] (the *clique expansion* - also called the
 #' "downgrade" of a hypergraph to a dyadic graph). Each hyperedge of size
 #' k contributes 1 (or its weight) to every pair of its members. The
 #' resulting edge weight `W[i, j]` equals the number of hyperedges

@@ -15,7 +15,7 @@
 #'     \item A wide sequence \code{data.frame} or \code{matrix} (non-binary).
 #'     \item A \code{list} of character vectors (each element is a transaction).
 #'   }
-#' @param field Character. The entity column — determines what the nodes are.
+#' @param field Character. The entity column - determines what the nodes are.
 #'   For delimited format, a single column whose values are split by \code{sep}.
 #'   For long/bipartite format, the item column. For multi-column delimited,
 #'   a vector of column names whose split values are pooled per row.

@@ -37,7 +37,7 @@ before differencing. \code{"tna_range"} (default) rescales FTNA linearly into
 TNA's \verb{[min, max]} range and leaves TNA untouched, so the difference is
 in TNA probability units. \code{"rank_minmax"} converts each matrix's values
 to ranks scaled to \verb{[0, 1]} (ordinal). \code{"minmax"} scales each matrix's
-raw values to \verb{[0, 1]} separately (asymmetric — TNA's max and FTNA's max
+raw values to \verb{[0, 1]} separately (asymmetric - TNA's max and FTNA's max
 map to the same value despite differing native ranges). \code{"none"} uses
 raw weights.}
 
@@ -70,7 +70,7 @@ Quantifies, per edge, how much row-normalization moves a transition
 network between its two natural summaries: raw transition counts
 (frequency / FTNA, \code{build_network(method = "frequency")}) and
 row-conditional probabilities (TNA, \code{build_network(method = "relative")}).
-The two matrices rank edges differently — an edge that is large in counts
+The two matrices rank edges differently - an edge that is large in counts
 can be modest in probability, and a rare-source edge can dominate its row
 in probability. The per-edge discrepancy on a common scale is the
 \emph{magnitude difference}.

@@ -148,7 +148,7 @@ NULL
 #'
 #' @param m A numeric matrix.
 #' @param value_col Name of the value column (e.g. "weight", "count").
-#' @param include One of `"nonzero"` (default) or `"positive"` — which entries
+#' @param include One of `"nonzero"` (default) or `"positive"` - which entries
 #'   to include.
 #' @param sort_by One of `"abs_value"` (default, descending) or `"none"`.
 #' @return A data.frame with columns `from`, `to`, and `<value_col>`.
@@ -323,7 +323,7 @@ safe_sd <- function(x) {
     }
     return(df)
   }
-  ## Bare sequence matrix (character / logical) → wide data.frame.
+  ## Bare sequence matrix (character / logical) -> wide data.frame.
   if (is.matrix(data) && !is.numeric(data)) {
     return(as.data.frame(data, stringsAsFactors = FALSE))
   }
@@ -401,7 +401,7 @@ safe_sd <- function(x) {
 
 
 # ---------------------------------------------------------------------------
-# Higher-order → cograph_network bridge
+# Higher-order -> cograph_network bridge
 # ---------------------------------------------------------------------------
 
 #' Add cograph_network fields to a higher-order network object

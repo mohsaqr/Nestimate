@@ -33,7 +33,7 @@ that preserve higher-order dependencies. Uses exponentially-decaying matrix
 powers of the HON transition matrix followed by truncated SVD.
 }
 \details{
-HONEM is parameter-free and scalable — no random walks, skip-gram, or
+HONEM is parameter-free and scalable - no random walks, skip-gram, or
 hyperparameter tuning required.
 }
 \examples{
@@ -53,5 +53,5 @@ plot(emb)
 \references{
 Saebi, M., Ciampaglia, G. L., Kazemzadeh, S., & Meyur, R. (2020).
 HONEM: Learning Embedding for Higher Order Networks. \emph{Big Data},
-8(4), 255–269.
+8(4), 255-269.
 }

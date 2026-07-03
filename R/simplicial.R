@@ -40,7 +40,7 @@
 #' @param threshold For \code{type = "clique"}: minimum non-zero absolute
 #'   edge weight to include an edge (default 0). Edges below this are
 #'   ignored; zero-weight non-edges are never included. Ignored for
-#'   \code{type = "vr"} — use \code{max_scale} instead.
+#'   \code{type = "vr"} - use \code{max_scale} instead.
 #' @param max_dim Maximum simplex dimension (default 10). Must be a single
 #'   non-negative integer. A k-simplex has k+1 nodes.
 #' @param max_pathways For \code{type = "pathway"}: maximum number of
@@ -122,7 +122,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 }
 
 # =========================================================================
-# Clique complex — verified against igraph::cliques()
+# Clique complex - verified against igraph::cliques()
 # =========================================================================
 
 #' @noRd
@@ -492,16 +492,16 @@ euler_characteristic <- function(sc) {
 # Algorithm: full boundary-matrix reduction over Z/2 (Edelsbrunner, Letscher
 # & Zomorodian 2000). Filtered complex is built once at full graph;
 # filtration values are assigned per simplex (vertices at 0, k-simplex at
-# max_w - min edge weight in σ for the clique filtration; max pairwise
-# distance in σ for the VR filtration). Persistence pairs are read off the
-# reduction directly — the previous Betti-difference heuristic that mispaired
+# max_w - min edge weight in sigma for the clique filtration; max pairwise
+# distance in sigma for the VR filtration). Persistence pairs are read off the
+# reduction directly - the previous Betti-difference heuristic that mispaired
 # features born/dying between adjacent grid steps is gone.
 # =========================================================================
 
 #' @noRd
 .filter_clique_complex <- function(mat, max_dim = 3L) {
   # Clique filtration in similarity (descending) semantics.
-  # filt_asc(σ) = max_w - min(edge weights in σ), vertex = 0.
+  # filt_asc(sigma) = max_w - min(edge weights in sigma), vertex = 0.
   # So a high-weight simplex has a small filt_asc (enters early in ascending).
   n <- nrow(mat)
   nodes <- rownames(mat) %||% paste0("V", seq_len(n))
@@ -545,7 +545,7 @@ euler_characteristic <- function(sc) {
 #' @noRd
 .filter_vr_complex <- function(d, max_dim = 3L, max_scale = NULL) {
   # Vietoris-Rips filtration on a non-negative distance matrix.
-  # filt(σ) = max pairwise distance in σ; vertex = 0.
+  # filt(sigma) = max pairwise distance in sigma; vertex = 0.
   stopifnot(is.matrix(d), nrow(d) == ncol(d))
   n <- nrow(d)
   nodes <- rownames(d) %||% paste0("V", seq_len(n))
@@ -651,7 +651,7 @@ euler_characteristic <- function(sc) {
 .persistence_pairs_z2 <- function(fc) {
   # Standard left-to-right boundary-matrix reduction over Z/2.
   # The j-loop is sequential by construction (column j depends on reduced
-  # columns 1..j-1) — this is the package's second documented for-loop
+  # columns 1..j-1) - this is the package's second documented for-loop
   # exception alongside the permutation loop in sequence_compare.R.
   simplices <- fc$simplices
   dims <- fc$dim
@@ -766,7 +766,7 @@ euler_characteristic <- function(sc) {
 #' \eqn{\mathbb{Z}/2} (Edelsbrunner, Letscher & Zomorodian 2000). The
 #' returned persistence diagram pairs each k-dimensional homology class
 #' to the simplex whose addition creates it (birth) and the simplex whose
-#' addition destroys it (death). Essential classes — those never killed —
+#' addition destroys it (death). Essential classes - those never killed -
 #' are reported with \code{death = 0} in clique mode (similarity scale,
 #' descending) and \code{death = Inf} in VR mode (distance scale, ascending).
 #'
@@ -785,7 +785,7 @@ euler_characteristic <- function(sc) {
 #' @param x A square matrix, \code{tna}, or \code{netobject}. For
 #'   \code{type = "vr"}, must be a non-negative distance matrix.
 #' @param n_steps Number of grid points for the reported Betti curve
-#'   (default 20). The persistence diagram itself is exact — it does not
+#'   (default 20). The persistence diagram itself is exact - it does not
 #'   depend on \code{n_steps}.
 #' @param max_dim Maximum simplex dimension to track (default 3).
 #' @param type Filtration: \code{"clique"} (default, similarity-weighted)
@@ -829,7 +829,7 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
 
   # Filtered-complex handoff: build_simplicial(type = "vr") attaches a
   # $filtration vector. Consume it directly instead of rebuilding from a
-  # matrix — this is the workflow advertised by the build_simplicial docs.
+  # matrix - this is the workflow advertised by the build_simplicial docs.
   if (inherits(x, "simplicial_complex") && !is.null(x$filtration)) {
     fc <- .fc_from_filtered_complex(x, max_dim = max_dim,
                                     max_scale = max_scale)

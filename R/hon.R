@@ -146,7 +146,7 @@
 
   for (source_key in ls(count)) {
     counts <- count[[source_key]]
-    # Zero out below min_freq — modify count in place so KLDThreshold
+    # Zero out below min_freq - modify count in place so KLDThreshold
     # uses filtered totals (matching pyHON's BuildDistributions behavior)
     counts[counts < min_freq] <- 0L
     count[[source_key]] <- counts
@@ -479,7 +479,7 @@
     return(ext_keys[has_distr])
   }
 
-  # Not cached yet — build lazily
+  # Not cached yet - build lazily
   .honp_extend_observation(curr_key, source_to_ext, count, distr,
                            starting_points, trajectories, min_freq)
 

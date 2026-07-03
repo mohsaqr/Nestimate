@@ -44,10 +44,10 @@
 #' @param lag Integer. The lag order (default 1).
 #' @param standardize Logical. If `TRUE`, each variable is grand-mean
 #'   centered and divided by its pooled SD *before* augmentation. Default
-#'   `FALSE`, matching `mlVAR::mlVAR(scale = FALSE)` — the only setting for
+#'   `FALSE`, matching `mlVAR::mlVAR(scale = FALSE)` - the only setting for
 #'   which numerical equivalence has been validated.
 #'
-#' @return A dual-class `c("net_mlvar", "netobject_group")` object — a
+#' @return A dual-class `c("net_mlvar", "netobject_group")` object - a
 #'   named list of three full netobjects, one per network, plus
 #'   model-level metadata stored as attributes. Each element is a
 #'   standard `c("netobject", "cograph_network")` weight-matrix wrapper
@@ -55,7 +55,7 @@
 #'   `cograph::splot(fit$temporal)` work directly. The three constituents
 #'   are matrix-wrapped and carry no underlying panel data, so
 #'   data-resampling verbs such as [bootstrap_network()] (and
-#'   reliability/stability) cannot iterate over them — extract a single
+#'   reliability/stability) cannot iterate over them - extract a single
 #'   constituent and rebuild via [build_network()] if you need those.
 #'   Structure:
 #'   \describe{
@@ -133,7 +133,7 @@ build_mlvar <- function(data, vars, id,
 
   # Wrap each of the three matrices as a full cograph_network netobject via
   # the package-wide `.wrap_netobject()` constructor. Nestimate never calls
-  # cograph — plotting is handled by cograph's existing splot.netobject /
+  # cograph - plotting is handled by cograph's existing splot.netobject /
   # splot.cograph_network dispatch, which fires automatically because each
   # constituent here is a standard netobject.
   temporal_net        <- .wrap_netobject(Res$temporal$B,
@@ -173,13 +173,13 @@ build_mlvar <- function(data, vars, id,
 #' `(outcome, predictor)` pair and columns `outcome`, `predictor`,
 #' `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`, `significant`.
 #'
-#' Only the within-person (temporal) coefficients are tabulated —
+#' Only the within-person (temporal) coefficients are tabulated -
 #' these are the lagged fixed effects that populate `fit$temporal`.
 #' The between-subjects effects that go into `fit$between` are handled
 #' via the `D (I - Gamma)` transformation and are not exposed as a
 #' separate tidy table.
 #'
-#' @param x A fitted model object — currently only `net_mlvar` is supported.
+#' @param x A fitted model object - currently only `net_mlvar` is supported.
 #' @param ... Unused.
 #' @return A tidy `data.frame` of coefficient estimates.
 #' @inherit build_mlvar examples
@@ -349,7 +349,7 @@ coefs.default <- function(x, ...) {
 
   z975 <- stats::qnorm(0.975)
 
-  # Tidy coefs: one row per (outcome, predictor) pair — fills d * d rows.
+  # Tidy coefs: one row per (outcome, predictor) pair - fills d * d rows.
   # Faster and cleaner than growing a list of per-outcome data.frames and
   # `do.call(rbind, ...)` at the end.
   n_coef_rows <- d * d
@@ -368,10 +368,10 @@ coefs.default <- function(x, ...) {
 
   for (k in seq_len(d)) {
     outcome <- vars[k]
-    # Own PM excluded — matches mlVAR's `getModel` filter on `dep == outcome`
+    # Own PM excluded - matches mlVAR's `getModel` filter on `dep == outcome`
     fixed_preds <- c(within_ids, var_to_between[-k])
 
-    # Random intercept only — matches mlVAR temporal="fixed".
+    # Random intercept only - matches mlVAR temporal="fixed".
     fm_str <- paste0(outcome, " ~ ",
                      paste(fixed_preds, collapse = " + "),
                      " + (1 | ", id, ")")
@@ -379,7 +379,7 @@ coefs.default <- function(x, ...) {
       lme4::lmer(stats::as.formula(fm_str), data = augData, REML = FALSE)
     ))
 
-    # Convergence diagnostics — warn but don't stop (matches mlVAR behaviour)
+    # Convergence diagnostics - warn but don't stop (matches mlVAR behaviour)
     if (lme4::isSingular(fit)) {
       warning(sprintf(
         "Model for '%s': singular fit (random-effects variance near zero).",
@@ -441,7 +441,7 @@ coefs.default <- function(x, ...) {
 #' Uses a logical `NA` (not `NA_real_`) for the prepended entries so that
 #' integer input columns retain integer type. Preserving the integer type
 #' is critical because base R's `mean()` uses a two-pass summation
-#' correction for numeric input but a simple sum/n for integer input — the
+#' correction for numeric input but a simple sum/n for integer input - the
 #' two paths drift by ~1.4e-14, which then amplifies through lmer into
 #' ~1e-10 coefficient diffs against mlVAR's integer-typed pipeline.
 #' @noRd
@@ -451,12 +451,12 @@ coefs.default <- function(x, ...) {
   c(rep(NA, lag), x[seq_len(n - lag)])
 }
 
-#' Force a symmetric matrix to be positive-definite — byte-for-byte replica
+#' Force a symmetric matrix to be positive-definite - byte-for-byte replica
 #' of `mlVAR:::forcePositive`.
 #'
 #' Note the scalar-recycling quirk in the upstream implementation. In
 #' `x - (diag(n) * min_ev - 0.001)`, the `0.001` scalar is subtracted from
-#' every element of the diagonal matrix — so the final operation adds
+#' every element of the diagonal matrix - so the final operation adds
 #' `|min_ev|` to the diagonal *and* `+0.001` to every off-diagonal element.
 #' This looks unintentional upstream but has to be replicated exactly for
 #' equivalence with `mlVAR::mlVAR()`.
@@ -503,7 +503,7 @@ coefs.default <- function(x, ...) {
 #' `contemporaneous = "fixed"`: rescale the residual correlation by the
 #' per-outcome lmer residual SDs and take `cor2pcor` directly. No
 #' EBIC-GLASSO regularization. Note `cor2pcor` is scale-invariant, so the
-#' `D %*% . %*% D` rescaling does not affect the pcor output — it is kept
+#' `D %*% . %*% D` rescaling does not affect the pcor output - it is kept
 #' only for parity with mlVAR's `cov`/`prec` slots.
 #' @noRd
 .mlvar_contemporaneous_fixed <- function(residuals_mat, sigma_vec, vars) {

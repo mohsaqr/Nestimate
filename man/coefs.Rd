@@ -13,7 +13,7 @@ coefs(x, ...)
 \method{coefs}{default}(x, ...)
 }
 \arguments{
-\item{x}{A fitted model object — currently only \code{net_mlvar} is supported.}
+\item{x}{A fitted model object - currently only \code{net_mlvar} is supported.}
 
 \item{...}{Unused.}
 }
@@ -27,7 +27,7 @@ Generic accessor for the tidy coefficient table stored on a
 \code{beta}, \code{se}, \code{t}, \code{p}, \code{ci_lower}, \code{ci_upper}, \code{significant}.
 }
 \details{
-Only the within-person (temporal) coefficients are tabulated —
+Only the within-person (temporal) coefficients are tabulated -
 these are the lagged fixed effects that populate \code{fit$temporal}.
 The between-subjects effects that go into \code{fit$between} are handled
 via the \code{D (I - Gamma)} transformation and are not exposed as a

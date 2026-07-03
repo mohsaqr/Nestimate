@@ -31,11 +31,11 @@ When provided, lag pairs are only formed within the same day.}
 
 \item{standardize}{Logical. If \code{TRUE}, each variable is grand-mean
 centered and divided by its pooled SD \emph{before} augmentation. Default
-\code{FALSE}, matching \code{mlVAR::mlVAR(scale = FALSE)} — the only setting for
+\code{FALSE}, matching \code{mlVAR::mlVAR(scale = FALSE)} - the only setting for
 which numerical equivalence has been validated.}
 }
 \value{
-A dual-class \code{c("net_mlvar", "netobject_group")} object — a
+A dual-class \code{c("net_mlvar", "netobject_group")} object - a
 named list of three full netobjects, one per network, plus
 model-level metadata stored as attributes. Each element is a
 standard \code{c("netobject", "cograph_network")} weight-matrix wrapper
@@ -43,7 +43,7 @@ standard \code{c("netobject", "cograph_network")} weight-matrix wrapper
 \code{cograph::splot(fit$temporal)} work directly. The three constituents
 are matrix-wrapped and carry no underlying panel data, so
 data-resampling verbs such as \code{\link[=bootstrap_network]{bootstrap_network()}} (and
-reliability/stability) cannot iterate over them — extract a single
+reliability/stability) cannot iterate over them - extract a single
 constituent and rebuild via \code{\link[=build_network]{build_network()}} if you need those.
 Structure:
 \describe{

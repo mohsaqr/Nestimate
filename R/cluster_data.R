@@ -239,7 +239,7 @@
 # 3. Vectorized Distance Matrix (hamming, qgram-family)
 # ==============================================================================
 
-#' Hamming distance matrix via column-wise outer() — no pair loop
+#' Hamming distance matrix via column-wise outer() - no pair loop
 #' @noRd
 .hamming_matrix_outer <- function(mat_s, weights) {
   n <- nrow(mat_s)
@@ -333,14 +333,14 @@
   isect <- tcrossprod(bin)
   sizes <- rowSums(bin)
   union_mat <- outer(sizes, sizes, "+") - isect
-  # Avoid 0/0 (both empty → distance 0)
+  # Avoid 0/0 (both empty -> distance 0)
   d <- ifelse(union_mat == 0, 0, 1 - isect / union_mat)
   diag(d) <- 0
   stats::as.dist(d)
 }
 
 # ==============================================================================
-# 4. Pairwise Distance Matrix (DP distances — pair loop unavoidable)
+# 4. Pairwise Distance Matrix (DP distances - pair loop unavoidable)
 # ==============================================================================
 
 #' Compute pairwise dissimilarity matrix using pure R
@@ -425,7 +425,7 @@
   chr_mat[obs] <- base_chars[int_mat[obs]]
 
   if (dissimilarity == "hamming") {
-    # Weighted hamming not supported by stringdist — fall back to R
+    # Weighted hamming not supported by stringdist - fall back to R
     if (lambda > 0) {
       return(.dissimilarity_matrix_r(enc, dissimilarity, lambda, q, p)) # nocov
     }
@@ -1135,7 +1135,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       theme_minimal(base_size = 12)
 
   } else {
-    # Heatmap — order by cluster assignment
+    # Heatmap - order by cluster assignment
     ord <- order(x$assignments)
     dist_mat <- as.matrix(x$distance)[ord, ord]
     n <- nrow(dist_mat)
@@ -1391,26 +1391,26 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #'
 #' Dispatches on `estimator`:
 #' \itemize{
-#'   \item `"firth"` (default) — Firth's penalised multinomial logit via
+#'   \item `"firth"` (default) - Firth's penalised multinomial logit via
 #'     `brglm2::brmultinom`. Bias-reduced; estimates stay finite under
 #'     quasi-complete separation. AIC/BIC/McFadden derived from the same
 #'     log-likelihood scale as the ML fit, so they remain comparable.
-#'   \item `"multinom"` — classical ML multinomial via `nnet::multinom`.
+#'   \item `"multinom"` - classical ML multinomial via `nnet::multinom`.
 #'     Identical to the pre-2026-05-10 behaviour. A `warning()` is emitted
 #'     because rare-cell pathologies (separation, infinite ORs) are silent
 #'     in this estimator.
-#'   \item `"chisq"` — descriptive only, WeightedCluster-style: per-covariate
+#'   \item `"chisq"` - descriptive only, WeightedCluster-style: per-covariate
 #'     test of cluster association (chi-square + Cramer's V for factors,
-#'     Kruskal-Wallis + eta² for numerics). No ORs; a separate residuals
+#'     Kruskal-Wallis + eta^2 for numerics). No ORs; a separate residuals
 #'     table reports per-cell standardized adjusted residuals so the user
 #'     can read which (cluster, level) cells drive the association.
 #' }
 #'
 #' Output shape:
 #' \itemize{
-#'   \item firth/multinom: `list(profiles, coefficients, fit, model)` —
+#'   \item firth/multinom: `list(profiles, coefficients, fit, model)` -
 #'     `coefficients` carries the OR table, `fit` carries AIC/BIC/McFadden.
-#'   \item chisq: `list(profiles, tests, residuals, fit)` — `tests` is a
+#'   \item chisq: `list(profiles, tests, residuals, fit)` - `tests` is a
 #'     per-covariate row, `residuals` is a tidy frame of standardized
 #'     adjusted residuals (factor covariates only).
 #' }
@@ -1813,7 +1813,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 
 # Tidy a covariate-analysis result list into a single data.frame the user
 # can hand to write.csv / kable / dplyr without further reshaping. Returns
-# different shapes per estimator (logit vs chisq) — the column set names
+# different shapes per estimator (logit vs chisq) - the column set names
 # the relevant statistics for each path so the meaning is unambiguous.
 #
 # Attributes carry the metadata that didn't fit a tidy column (cluster
@@ -1968,7 +1968,7 @@ print.tidy_covariates <- function(x, ...) {
 }
 
 # ==============================================================================
-# 9. cluster_network — one-shot clustering + network estimation
+# 9. cluster_network - one-shot clustering + network estimation
 # ==============================================================================
 
 #' Cluster data and build per-cluster networks in one step
@@ -2071,8 +2071,8 @@ cluster_network <- function(data, k, cluster_by = "pam",
   # Split caller's `...` into build_clusters() args vs build_network() args.
   # Without this split, weighted/lambda/seed/q/p/na_syms/covariates are
   # silently dropped because they reach build_network() instead of the
-  # clusterer (audit_clustering finding #1). Splitting on caller_dots only —
-  # never on data$build_args — keeps network-history args (e.g. an `atna`
+  # clusterer (audit_clustering finding #1). Splitting on caller_dots only -
+  # never on data$build_args - keeps network-history args (e.g. an `atna`
   # net's `lambda` decay) routed to build_network where they belong.
   cluster_arg_names <- c("na_syms", "weighted", "lambda", "seed",
                          "q", "p", "covariates", "estimator")

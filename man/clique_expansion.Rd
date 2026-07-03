@@ -22,7 +22,7 @@ A \code{netobject} (also \code{cograph_network}) with \code{method = "clique_exp
 }
 \description{
 Projects a \link[=build_hypergraph]{net_hypergraph} to a standard pairwise
-\link[=build_network]{netobject} (the \emph{clique expansion} — also called the
+\link[=build_network]{netobject} (the \emph{clique expansion} - also called the
 "downgrade" of a hypergraph to a dyadic graph). Each hyperedge of size
 k contributes 1 (or its weight) to every pair of its members. The
 resulting edge weight \code{W[i, j]} equals the number of hyperedges

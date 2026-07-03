@@ -345,7 +345,7 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
   # Extract optimal-order transition matrix for cograph compatibility
   opt_mat <- trans_mats[[optimal_order + 1L]]
   if (is.null(dim(opt_mat))) {
-    # Order 0: marginal vector → 1×n matrix
+    # Order 0: marginal vector -> 1xn matrix
     opt_mat <- matrix(opt_mat, nrow = 1,
                       dimnames = list("marginal", names(opt_mat)))
   }

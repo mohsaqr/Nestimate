@@ -24,13 +24,13 @@ NAs filled by \code{state}.
 Mirror of \code{\link[=mark_terminal_state]{mark_terminal_state()}} for \emph{left-censored} sequence data.
 Replaces every cell \emph{before} each row's first observed state with
 the label given by \code{state}. The resulting chain has a structurally
-\emph{recurrent} "Start" state that everyone enters from — useful for
+\emph{recurrent} "Start" state that everyone enters from - useful for
 cohort-entry analyses where students join at different time points
 and you want a uniform pre-observation marker.
 }
 \details{
 Unlike \code{\link[=mark_terminal_state]{mark_terminal_state()}}, the marked state is \strong{not}
-absorbing in the resulting transition matrix — every transition
+absorbing in the resulting transition matrix - every transition
 from "Start" goes to one of the original states (the actor's
 first observed state), and the "Start" row is row-stochastic
 exactly as the data dictates.

@@ -26,7 +26,7 @@ numeric adjacency / weight matrix. Directed inputs are symmetrised by
 the underlying clique enumerator.}
 
 \item{p}{Probability in \verb{[0, 1]} that each k-clique with k >= 3 becomes a
-k-hyperedge. Default \code{1} (deterministic — every found clique is
+k-hyperedge. Default \code{1} (deterministic - every found clique is
 included).}
 
 \item{method}{Hyperedge enumeration. \code{"clique"} (default) promotes

@@ -84,7 +84,7 @@ actor_endpoints <- function(data, cols = NULL) {
 #' Mirror of [mark_terminal_state()] for *left-censored* sequence data.
 #' Replaces every cell *before* each row's first observed state with
 #' the label given by `state`. The resulting chain has a structurally
-#' *recurrent* "Start" state that everyone enters from — useful for
+#' *recurrent* "Start" state that everyone enters from - useful for
 #' cohort-entry analyses where students join at different time points
 #' and you want a uniform pre-observation marker.
 #'
@@ -98,7 +98,7 @@ actor_endpoints <- function(data, cols = NULL) {
 #'   NAs filled by `state`.
 #' @details
 #'   Unlike [mark_terminal_state()], the marked state is **not**
-#'   absorbing in the resulting transition matrix — every transition
+#'   absorbing in the resulting transition matrix - every transition
 #'   from "Start" goes to one of the original states (the actor's
 #'   first observed state), and the "Start" row is row-stochastic
 #'   exactly as the data dictates.
@@ -159,7 +159,7 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
 #'   right-censored sequence data into an absorbing-chain model. The
 #'   chain on the resulting matrix has one extra state (`state`)
 #'   which is structurally absorbing because every cell after the
-#'   actor's last observed step has been set to `state` — the chain
+#'   actor's last observed step has been set to `state` - the chain
 #'   stays there forever once entered.
 #'
 #'   Use [chain_structure()] on the result to compute mean absorption

@@ -12,7 +12,7 @@
 #'
 #' @param x Input data. Accepts:
 #'   \describe{
-#'     \item{netobject}{Uses \code{$data} sequences — each sequence becomes
+#'     \item{netobject}{Uses \code{$data} sequences - each sequence becomes
 #'       a transaction of its unique states.}
 #'     \item{list}{Each element is a character vector of items (one transaction).}
 #'     \item{data.frame}{Wide format: each row is a transaction, character
@@ -252,7 +252,7 @@ association_rules <- function(x,
 
 #' @noRd
 .ar_parse_input <- function(x) {
-  # mcml → netobject_group → use first element
+  # mcml -> netobject_group -> use first element
   if (inherits(x, "mcml")) x <- as_tna(x)
   if (inherits(x, "netobject_group")) x <- x[[1]]
   if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
@@ -282,7 +282,7 @@ association_rules <- function(x,
     stop("tna object has no $data. Build from sequence data.", call. = FALSE)
   }
 
-  # netobject: sequences → transactions (unique states per row)
+  # netobject: sequences -> transactions (unique states per row)
   if (inherits(x, "netobject")) {
     if (is.null(x$data)) {
       stop("netobject has no $data. Build from sequence data.", call. = FALSE)

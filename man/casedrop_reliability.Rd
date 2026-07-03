@@ -85,7 +85,7 @@ list of four single-panel ggplots, one per metric.}
 \value{
 An object of class \code{net_casedrop_reliability} with:
 \describe{
-\item{\code{cs}}{Scalar CS-coefficient — the maximum drop proportion for
+\item{\code{cs}}{Scalar CS-coefficient - the maximum drop proportion for
 which the edge-vector correlation remains >= \code{threshold} in at
 least \code{certainty} of iterations. Zero if no proportion qualifies.}
 \item{\code{correlations}}{\code{iter} x \code{length(drop_prop)} matrix of per-

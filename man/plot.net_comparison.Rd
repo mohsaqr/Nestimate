@@ -14,7 +14,7 @@
 \arguments{
 \item{x}{A \code{net_comparison} object from \code{\link[=compare_model]{compare_model()}}.}
 
-\item{type}{Character. One of \code{"scatter"} (default — edge-weight scatter
+\item{type}{Character. One of \code{"scatter"} (default - edge-weight scatter
 with OLS fit and correlation overlay), \code{"heatmap"} (n by n grid of
 x - y differences using the diverging palette), \code{"diff_hist"}
 (histogram of |x - y| absolute differences with rug + density),

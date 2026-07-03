@@ -25,7 +25,7 @@ or \code{"vr"} (alias \code{"rips"}).}
 \item{threshold}{For \code{type = "clique"}: minimum non-zero absolute
 edge weight to include an edge (default 0). Edges below this are
 ignored; zero-weight non-edges are never included. Ignored for
-\code{type = "vr"} — use \code{max_scale} instead.}
+\code{type = "vr"} - use \code{max_scale} instead.}
 
 \item{max_dim}{Maximum simplex dimension (default 10). Must be a single
 non-negative integer. A k-simplex has k+1 nodes.}

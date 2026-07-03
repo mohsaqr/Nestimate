@@ -210,7 +210,7 @@ build_network <- function(data,
                           labels = NULL,
                           ...) {
   # --- Coerce sequence matrices (character / logical / integer) to data.frame ---
-  # Numeric square matrices are left alone — they may already be transition
+  # Numeric square matrices are left alone - they may already be transition
   # matrices for downstream estimators that accept them.
   if (is.matrix(data) && !is.numeric(data)) {
     data <- as.data.frame(data, stringsAsFactors = FALSE)
@@ -787,14 +787,14 @@ build_network <- function(data,
     node_groups = NULL
   )
 
-  # Carry over method-specific extras (exclude cleaned_data — identical to $data)
+  # Carry over method-specific extras (exclude cleaned_data - identical to $data)
   extras <- setdiff(names(est_result),
                     c("matrix", "nodes", "directed", "cleaned_data"))
   for (key in extras) {
     result[[key]] <- est_result[[key]]
   }
 
-  # Auto-compute predictability (R²) for undirected association methods.
+  # Auto-compute predictability (R^2) for undirected association methods.
   # Stored as a named numeric vector for backward compatibility with downstream
   # consumers (e.g. cograph::splot pie ring). Users calling predictability()
   # directly get the full tidy data.frame with R2 + RMSE.
@@ -1316,7 +1316,7 @@ predictability.netobject <- function(object, data = NULL, ...) {
   labels <- object$nodes$label
   p <- length(labels)
 
-  # ---- R² ----
+  # ---- R^2 ----
   if (!is.null(object$precision_matrix)) {
     omega_diag <- diag(object$precision_matrix)
     r2 <- 1 - 1 / omega_diag

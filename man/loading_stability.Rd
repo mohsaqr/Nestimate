@@ -21,7 +21,7 @@ re-estimation makes this heavier than a plain bootstrap).}
 An object of class \code{"pc_loading_stability"}: a list with
 \code{summary} (tidy data frame: \code{node}, \code{cluster},
 \code{weight}, \code{boot_mean}, \code{boot_sd}, \code{ci_lower},
-\code{ci_upper}, \code{sign_flips} — the proportion of replicates
+\code{ci_upper}, \code{sign_flips} - the proportion of replicates
 in which the item's sign differed from the observed one),
 \code{boot_weights} (iter x n_nodes matrix), \code{iter}, and
 \code{ci_level}. Has print and plot methods.

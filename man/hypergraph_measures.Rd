@@ -49,7 +49,7 @@ per hyperedge).}
 \item{\code{size_distribution}}{Tabulation of hyperedge sizes (passed
 through from \code{hg}).}
 \item{\code{intersection_profile}}{Distribution of pairwise hyperedge
-intersection sizes — useful for spotting whether hyperedges
+intersection sizes - useful for spotting whether hyperedges
 overlap mostly trivially or share substantial cores
 (Do et al. 2020).}
 \item{\code{pairwise_participation}}{Fraction of node pairs co-appearing

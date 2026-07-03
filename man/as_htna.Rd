@@ -46,7 +46,7 @@ cluster grouping, producing a single \code{netobject} in which every actor
 is a node and cluster membership labels the actors. This is the node-level
 counterpart of \code{\link{build_mcml}}: where \code{build_mcml} collapses
 the network to a cluster-level (macro) summary, \code{as_htna} keeps every
-node and every transition — including the between-cluster transitions an
+node and every transition - including the between-cluster transitions an
 mcml only retains in aggregate.
 }
 \details{

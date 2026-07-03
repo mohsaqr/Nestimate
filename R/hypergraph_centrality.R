@@ -1,9 +1,9 @@
 # ---- Hypergraph eigenvector centralities (HON-5) -------------------------
 # Three variants from Benson (2019, arXiv:1807.09644):
-#   * clique-motif ("CEC") — standard eigenvector centrality on the
+#   * clique-motif ("CEC") - standard eigenvector centrality on the
 #                            clique-expanded pairwise graph
-#   * Z-eigenvector ("Z")  — linear tensor eigenvector
-#   * H-eigenvector ("H")  — H-eigenvector (power-k-1 recurrence)
+#   * Z-eigenvector ("Z")  - linear tensor eigenvector
+#   * H-eigenvector ("H")  - H-eigenvector (power-k-1 recurrence)
 #
 # All three solved by power iteration on the hyperedge list.
 
@@ -12,7 +12,7 @@
 #' Computes one or more eigenvector-style centralities on a
 #' [net_hypergraph][build_hypergraph]: *clique-motif* (CEC),
 #' *Z-eigenvector* (ZEC), and *H-eigenvector* (HEC). Each variant
-#' captures influence differently — CEC flattens group structure via
+#' captures influence differently - CEC flattens group structure via
 #' clique expansion, while ZEC and HEC propagate through the
 #' higher-order groups directly.
 #'
@@ -72,7 +72,7 @@
 #'
 #' @note The `"clique"` (CEC) variant is validated against
 #'   `igraph::eigen_centrality` (cosine ~ 1). The `"Z"` and `"H"` variants are
-#'   **(experimental)** — validated only against a clean-room list-based
+#'   **(experimental)** - validated only against a clean-room list-based
 #'   tensor power iteration (same operator, different loop structure); no
 #'   R package exposes tensor eigenvectors as a primitive for independent
 #'   comparison.
@@ -137,7 +137,7 @@ hypergraph_centrality <- function(hg,
     out$clique <- stats::setNames(x, nodes)
   }
 
-  # ---- ZEC: λ x = Σ_{e∋i} Π_{j∈e,j≠i} x_j ----
+  # ---- ZEC: lambda x = sum_{e contains i} prod_{j in e,j!=i} x_j ----
   if ("Z" %in% type) {
     out$Z <- stats::setNames(
       .hg_tensor_power_iter(hyperedges, edge_sizes, n,
@@ -147,7 +147,7 @@ hypergraph_centrality <- function(hg,
     )
   }
 
-  # ---- HEC: λ x^{k-1} = Σ_{e∋i} Π_{j∈e,j≠i} x_j ----
+  # ---- HEC: lambda x^{k-1} = sum_{e contains i} prod_{j in e,j!=i} x_j ----
   if ("H" %in% type) {
     out$H <- stats::setNames(
       .hg_tensor_power_iter(hyperedges, edge_sizes, n,
@@ -167,8 +167,8 @@ hypergraph_centrality <- function(hg,
 # which guarantees monotone convergence for non-negative tensors
 # (Chang, Pearson & Zhang 2009 / Kolda & Mayo 2011).
 #
-# exponent = 1    ⇒ Z-eigenvector (no post-root)
-# exponent = k-1  ⇒ H-eigenvector (k-1-root)
+# exponent = 1    => Z-eigenvector (no post-root)
+# exponent = k-1  => H-eigenvector (k-1-root)
 #' @noRd
 .hg_tensor_power_iter <- function(hyperedges, edge_sizes, n, exponent,
                                    max_iter, tol, x0, normalize,

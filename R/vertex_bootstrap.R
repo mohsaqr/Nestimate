@@ -12,9 +12,9 @@
 #' Unlike \code{\link{bootstrap_network}}, which resamples the underlying
 #' cases (sequences or rows) and therefore requires the raw data stored in
 #' the netobject, the vertex bootstrap needs \strong{only the weight
-#' matrix}. It works on any \code{netobject} — including data-less ones
+#' matrix}. It works on any \code{netobject} - including data-less ones
 #' such as \code{\link{build_mlvar}} constituents or \code{as_tna(mcml)}
-#' elements — and on plain weight matrices. The two procedures answer
+#' elements - and on plain weight matrices. The two procedures answer
 #' different questions: the case bootstrap quantifies sampling-of-subjects
 #' uncertainty in the edge weights; the vertex bootstrap quantifies
 #' structural uncertainty of whole-network descriptives given the one
@@ -27,7 +27,7 @@
 #' structural self-pair; following Snijders & Borgatti, such cells are
 #' filled with the weight of a randomly chosen pair of distinct original
 #' vertices. Diagonal entries carry the original self-weight of the
-#' resampled vertex (\code{W[idx_i, idx_i]}) — self-loops are meaningful
+#' resampled vertex (\code{W[idx_i, idx_i]}) - self-loops are meaningful
 #' in transition networks and are never altered. For undirected networks
 #' the substitution is applied symmetrically so replicates stay symmetric.
 #'

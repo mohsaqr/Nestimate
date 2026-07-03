@@ -37,9 +37,9 @@
 #' clique structure), `bipartite_groups()` takes group memberships
 #' directly. The two functions are complementary:
 #' \itemize{
-#'   \item `bipartite_groups()` — when group membership is observed
+#'   \item `bipartite_groups()` - when group membership is observed
 #'     (sessions, transactions, co-authorships).
-#'   \item `build_hypergraph()` — when only pairwise interactions are
+#'   \item `build_hypergraph()` - when only pairwise interactions are
 #'     observed and triadic structure must be inferred from triangles.
 #' }
 #'

@@ -44,9 +44,9 @@ Unlike \code{\link[=build_hypergraph]{build_hypergraph()}} (which derives hypere
 clique structure), \code{bipartite_groups()} takes group memberships
 directly. The two functions are complementary:
 \itemize{
-\item \code{bipartite_groups()} — when group membership is observed
+\item \code{bipartite_groups()} - when group membership is observed
 (sessions, transactions, co-authorships).
-\item \code{build_hypergraph()} — when only pairwise interactions are
+\item \code{build_hypergraph()} - when only pairwise interactions are
 observed and triadic structure must be inferred from triangles.
 }
 

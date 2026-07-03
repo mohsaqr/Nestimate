@@ -1,6 +1,6 @@
 # Boundary between psychnet (psychometric math, emits a lean cograph_network)
 # and Nestimate (owns the canonical netobject schema). psychnet is imported by
-# Nestimate, never the reverse, so the converter lives here — on the side that
+# Nestimate, never the reverse, so the converter lives here - on the side that
 # owns the target schema and can see both types.
 
 #' Coerce a network object to a Nestimate netobject
@@ -13,8 +13,8 @@
 #'
 #' The psychnet method re-derives the integer-indexed edge table that Nestimate
 #' expects (psychnet stores character-labelled edges), preserves the estimator
-#' name in \code{$method}, and parks every psychnet-specific field — including
-#' the graphical-lasso \code{$kkt} optimality certificate — under
+#' name in \code{$method}, and parks every psychnet-specific field - including
+#' the graphical-lasso \code{$kkt} optimality certificate - under
 #' \code{$meta$psychnet} so nothing is lost in translation.
 #'
 #' @param x A \code{psychnet} object, a \code{cograph_network}, or a

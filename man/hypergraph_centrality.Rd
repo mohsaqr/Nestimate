@@ -37,7 +37,7 @@ component is a named numeric vector of length \code{hg$n_nodes}.
 Computes one or more eigenvector-style centralities on a
 \link[=build_hypergraph]{net_hypergraph}: \emph{clique-motif} (CEC),
 \emph{Z-eigenvector} (ZEC), and \emph{H-eigenvector} (HEC). Each variant
-captures influence differently — CEC flattens group structure via
+captures influence differently - CEC flattens group structure via
 clique expansion, while ZEC and HEC propagate through the
 higher-order groups directly.
 }
@@ -65,7 +65,7 @@ from ZEC in the mixed case.
 \note{
 The \code{"clique"} (CEC) variant is validated against
 \code{igraph::eigen_centrality} (cosine ~ 1). The \code{"Z"} and \code{"H"} variants are
-\strong{(experimental)} — validated only against a clean-room list-based
+\strong{(experimental)} - validated only against a clean-room list-based
 tensor power iteration (same operator, different loop structure); no
 R package exposes tensor eigenvectors as a primitive for independent
 comparison.

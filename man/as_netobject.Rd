@@ -35,8 +35,8 @@ bootstrap, reliability, ...). A \code{netobject} is returned unchanged.
 \details{
 The psychnet method re-derives the integer-indexed edge table that Nestimate
 expects (psychnet stores character-labelled edges), preserves the estimator
-name in \code{$method}, and parks every psychnet-specific field — including
-the graphical-lasso \code{$kkt} optimality certificate — under
+name in \code{$method}, and parks every psychnet-specific field - including
+the graphical-lasso \code{$kkt} optimality certificate - under
 \code{$meta$psychnet} so nothing is lost in translation.
 }
 \examples{

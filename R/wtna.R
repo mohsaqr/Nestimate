@@ -13,7 +13,7 @@
 #'   \code{"relative"} (row-normalized probabilities). Default: \code{"frequency"}.
 #'   Note that \code{type = "relative"} applied to \code{method = "cooccurrence"}
 #'   produces an asymmetric matrix (conditional co-occurrence given row state),
-#'   not a symmetric undirected weight matrix — use \code{type = "frequency"}
+#'   not a symmetric undirected weight matrix - use \code{type = "frequency"}
 #'   if symmetric co-occurrence counts are required.
 #' @param codes Character vector or NULL. Names of the one-hot columns to use.
 #'   If NULL, auto-detects binary columns. Default: NULL.
@@ -150,7 +150,7 @@ wtna <- function(data,
 #'
 #' For window_size <= 1: consecutive crossprod (t->t+1).
 #' For window_size > 1: pairwise between-window transitions matching tna's
-#' windowed algorithm — every position in window_i paired with every position
+#' windowed algorithm - every position in window_i paired with every position
 #' in window_{i+1}.
 #' @noRd
 .wtna_transitions <- function(X, window_size = 3L, mode = "non-overlapping") {
@@ -197,7 +197,7 @@ wtna <- function(data,
 #'
 #' For window_size <= 1: standard crossprod across all rows.
 #' For window_size > 1: within-window pairwise co-occurrence matching tna's
-#' windowed algorithm — every position in a window paired with every other
+#' windowed algorithm - every position in a window paired with every other
 #' position in the same window.
 #' @noRd
 .wtna_cooccurrence <- function(X, window_size = 3L, mode = "non-overlapping") {
@@ -281,10 +281,10 @@ wtna <- function(data,
 #'
 #' Supports multiple selection styles:
 #' \itemize{
-#'   \item \code{NULL} — auto-detect binary 0/1 columns (excluding \code{exclude})
-#'   \item Character vector — column names (e.g. \code{c("A", "B", "C")})
-#'   \item Numeric vector — column indices (e.g. \code{2:9})
-#'   \item Single string with \code{:} — column name range
+#'   \item \code{NULL} - auto-detect binary 0/1 columns (excluding \code{exclude})
+#'   \item Character vector - column names (e.g. \code{c("A", "B", "C")})
+#'   \item Numeric vector - column indices (e.g. \code{2:9})
+#'   \item Single string with \code{:} - column name range
 #'     (e.g. \code{"Planning:Evaluating"})
 #' }
 #' @param df Data frame.

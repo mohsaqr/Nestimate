@@ -155,7 +155,7 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
 }
 
 # Freeman degree centralization. For directed graphs the maximum possible
-# sum of (max - d) across n nodes is (n - 1)^2 — the star graph attains it.
+# sum of (max - d) across n nodes is (n - 1)^2 - the star graph attains it.
 # For undirected graphs the corresponding bound is (n - 1)(n - 2).
 .freeman_degree_centralization <- function(d, n, directed) {
   if (n < 2L) return(0)

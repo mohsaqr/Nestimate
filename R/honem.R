@@ -4,7 +4,7 @@
 # of Higher-Order Networks. Uses neighborhood matrix construction with
 # exponentially decaying powers of the transition matrix, then truncated SVD.
 #
-# NO random walks or skip-gram — direct matrix factorization.
+# NO random walks or skip-gram - direct matrix factorization.
 
 # ---------------------------------------------------------------------------
 # Internal: Build transition matrix from HON adjacency
@@ -98,7 +98,7 @@
 #' that preserve higher-order dependencies. Uses exponentially-decaying matrix
 #' powers of the HON transition matrix followed by truncated SVD.
 #'
-#' HONEM is parameter-free and scalable — no random walks, skip-gram, or
+#' HONEM is parameter-free and scalable - no random walks, skip-gram, or
 #' hyperparameter tuning required.
 #'
 #' @param hon A \code{net_hon} object from \code{\link{build_hon}}, or a
@@ -120,7 +120,7 @@
 #' @references
 #' Saebi, M., Ciampaglia, G. L., Kazemzadeh, S., & Meyur, R. (2020).
 #' HONEM: Learning Embedding for Higher Order Networks. \emph{Big Data},
-#' 8(4), 255–269.
+#' 8(4), 255-269.
 #'
 #' @examples
 #' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))

@@ -7,7 +7,7 @@
 #' structural similarity methods. Accepts \code{netobject}, \code{mcml},
 #' \code{cograph_network}, or a raw weight matrix.
 #'
-#' All methods are fully vectorized using matrix operations — no loops.
+#' All methods are fully vectorized using matrix operations - no loops.
 #' Supports both weighted and binary adjacency, directed and undirected
 #' networks.
 #'

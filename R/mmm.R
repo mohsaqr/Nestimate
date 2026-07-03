@@ -1,4 +1,4 @@
-# Mixed Markov Model — latent-class mixture of Markov chains
+# Mixed Markov Model - latent-class mixture of Markov chains
 #
 # Discovers subgroups with different transition dynamics via EM.
 # Uses precomputed per-sequence transition counts for speed.
@@ -37,7 +37,7 @@
   from_idx <- rep(seq_len(K), each = K)
 
   # Initial state indicator (N x K, sparse: one 1 per row).
-  # Used in the M-step only — the E-step indexes log(init_all) directly.
+  # Used in the M-step only - the E-step indexes log(init_all) directly.
   init_ind <- matrix(0, N, K)
   valid_init <- !is.na(init_state)
   init_ind[cbind(which(valid_init), init_state[valid_init])] <- 1
@@ -197,7 +197,7 @@
     mean(posterior[idx, m])
   }, numeric(1))
 
-  # Max posterior per sequence — direct pmax.int beats `do.call(pmax,
+  # Max posterior per sequence - direct pmax.int beats `do.call(pmax,
   # as.data.frame(posterior))` which copies the matrix into a list.
   max_post <- if (M == 2L) {
     pmax.int(posterior[, 1L], posterior[, 2L])
@@ -574,7 +574,7 @@ build_mmm <- function(data,
   K2 <- n_states * n_states
 
   # Extract initial states from the FIRST sequence column. We do NOT scan
-  # forward to the first non-NA position — see "Initial states" section in
+  # forward to the first non-NA position - see "Initial states" section in
   # the build_mmm() roxygen for the rationale and a workaround for
   # left-padded sequences. NA values here are treated downstream as an
   # uninformative initial distribution.
@@ -694,7 +694,7 @@ build_mmm <- function(data,
   }
 
   # ---- Assignments ----
-  # max.col is the vectorized row-wise argmax — avoids `apply` overhead.
+  # max.col is the vectorized row-wise argmax - avoids `apply` overhead.
   assignments <- max.col(best$posterior, ties.method = "first")
 
   # ---- Build netobjects for each component ----
@@ -1251,7 +1251,7 @@ plot.mmm_compare <- function(x, ...) {
 }
 
 # ---------------------------------------------------------------------------
-# cluster_mmm — wrapper returning netobject_group (parallel to cluster_network)
+# cluster_mmm - wrapper returning netobject_group (parallel to cluster_network)
 # ---------------------------------------------------------------------------
 
 # Attach MMM clustering metadata (assignments, posterior, mixing, ICs, full

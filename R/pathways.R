@@ -76,7 +76,7 @@ pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
   if (nrow(ho) == 0L) return(character(0))
 
   # Convert "A -> B -> C" path format to "A B -> C" for plot_simplicial
-  # path column is already "A -> B -> C" — split into states
+  # path column is already "A -> B -> C" - split into states
   vapply(ho$path, function(p) {
     parts <- trimws(strsplit(p, "->", fixed = TRUE)[[1]])
     if (length(parts) < 2L) return(p) # nocov

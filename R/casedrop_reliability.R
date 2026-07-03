@@ -38,7 +38,7 @@
 #'
 #' @return An object of class `net_casedrop_reliability` with:
 #' \describe{
-#'   \item{`cs`}{Scalar CS-coefficient — the maximum drop proportion for
+#'   \item{`cs`}{Scalar CS-coefficient - the maximum drop proportion for
 #'     which the edge-vector correlation remains >= `threshold` in at
 #'     least `certainty` of iterations. Zero if no proportion qualifies.}
 #'   \item{`correlations`}{`iter` x `length(drop_prop)` matrix of per-

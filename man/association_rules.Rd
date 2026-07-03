@@ -15,7 +15,7 @@ association_rules(
 \arguments{
 \item{x}{Input data. Accepts:
 \describe{
-\item{netobject}{Uses \code{$data} sequences — each sequence becomes
+\item{netobject}{Uses \code{$data} sequences - each sequence becomes
 a transaction of its unique states.}
 \item{list}{Each element is a character vector of items (one transaction).}
 \item{data.frame}{Wide format: each row is a transaction, character

@@ -17,7 +17,7 @@ persistent_homology(
 \code{type = "vr"}, must be a non-negative distance matrix.}
 
 \item{n_steps}{Number of grid points for the reported Betti curve
-(default 20). The persistence diagram itself is exact — it does not
+(default 20). The persistence diagram itself is exact - it does not
 depend on \code{n_steps}.}
 
 \item{max_dim}{Maximum simplex dimension to track (default 3).}
@@ -46,7 +46,7 @@ Computes persistent homology via full boundary-matrix reduction over
 \eqn{\mathbb{Z}/2} (Edelsbrunner, Letscher & Zomorodian 2000). The
 returned persistence diagram pairs each k-dimensional homology class
 to the simplex whose addition creates it (birth) and the simplex whose
-addition destroys it (death). Essential classes — those never killed —
+addition destroys it (death). Essential classes - those never killed -
 are reported with \code{death = 0} in clique mode (similarity scale,
 descending) and \code{death = Inf} in VR mode (distance scale, ascending).
 

@@ -947,7 +947,7 @@ build_mcml <- function(x,
 #' @noRd
 .auto_detect_clusters <- function(x) {
   # Prefer x$nodes-embedded cluster column. x$nodes is the canonical node
-  # table — if it carries a cluster column, the row order is by definition
+  # table - if it carries a cluster column, the row order is by definition
   # aligned with the weight matrix, so positional use is safe.
   clusters <- NULL
   if (!is.null(x$nodes)) {
@@ -1890,7 +1890,7 @@ as_tna.default <- function(x) {
 #' is a node and cluster membership labels the actors. This is the node-level
 #' counterpart of \code{\link{build_mcml}}: where \code{build_mcml} collapses
 #' the network to a cluster-level (macro) summary, \code{as_htna} keeps every
-#' node and every transition — including the between-cluster transitions an
+#' node and every transition - including the between-cluster transitions an
 #' mcml only retains in aggregate.
 #'
 #' \strong{Why this rebuilds from data.} An \code{mcml} stores cluster-level

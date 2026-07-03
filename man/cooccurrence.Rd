@@ -28,7 +28,7 @@ cooccurrence(
 \item A \code{list} of character vectors (each element is a transaction).
 }}
 
-\item{field}{Character. The entity column — determines what the nodes are.
+\item{field}{Character. The entity column - determines what the nodes are.
 For delimited format, a single column whose values are split by \code{sep}.
 For long/bipartite format, the item column. For multi-column delimited,
 a vector of column names whose split values are pooled per row.}
