@@ -85,6 +85,72 @@ test_that("net_edge_betweenness carries net_edge_betweenness class without break
   expect_silent(invisible(capture.output(print(eb))))
 })
 
+test_that("net_edge_betweenness preserves source-network provenance", {
+  seqs <- data.frame(
+    V1 = c("A", "B", "A", "C", "B"), V2 = c("B", "C", "B", "A", "C"),
+    V3 = c("C", "A", "C", "B", "A"), stringsAsFactors = FALSE
+  )
+  net <- build_network(seqs, method = "relative")
+  eb <- net_edge_betweenness(net)
+
+  expect_identical(eb$edge_betweenness$source_method, "relative")
+  expect_true(eb$edge_betweenness$invert)
+  expect_equal(eb$params, net$params)
+  expect_equal(eb$source_weights, net$weights)
+})
+
+test_that("permutation works for edge-betweenness networks", {
+  w1 <- data.frame(
+    T1 = c("A", "A", "B", "C", "A", "B", "C", "A"),
+    T2 = c("B", "B", "C", "A", "C", "A", "B", "B"),
+    T3 = c("C", "C", "A", "B", "B", "C", "A", "C"),
+    stringsAsFactors = FALSE
+  )
+  w2 <- data.frame(
+    T1 = c("A", "C", "B", "C", "B", "A", "C", "B"),
+    T2 = c("C", "A", "A", "B", "C", "B", "A", "A"),
+    T3 = c("B", "B", "C", "A", "A", "C", "B", "C"),
+    stringsAsFactors = FALSE
+  )
+  eb1 <- net_edge_betweenness(build_network(w1, method = "relative"))
+  eb2 <- net_edge_betweenness(build_network(w2, method = "relative"))
+
+  perm <- permutation(eb1, eb2, iter = 20L, seed = 1)
+  perm_again <- permutation(eb1, eb2, iter = 20L, seed = 1)
+
+  expect_s3_class(perm, "net_permutation")
+  expect_identical(perm$method, "edge_betweenness")
+  expect_identical(perm$source_method, "relative")
+  expect_equal(perm$diff, eb1$weights - eb2$weights)
+  expect_true(all(perm$p_values >= 0 & perm$p_values <= 1))
+  expect_true(is.data.frame(summary(perm)))
+  expect_equal(perm$p_values, perm_again$p_values)
+  expect_true(any(grepl("Edge-Betweenness", capture.output(print(perm)))))
+})
+
+test_that("edge-betweenness permutation validates compatible derived networks", {
+  seqs <- data.frame(
+    T1 = c("A", "B", "C", "A"),
+    T2 = c("B", "C", "A", "B"),
+    T3 = c("C", "A", "B", "C"),
+    stringsAsFactors = FALSE
+  )
+  eb_rel <- net_edge_betweenness(build_network(seqs, method = "relative"))
+  eb_freq <- net_edge_betweenness(build_network(seqs, method = "frequency"))
+  eb_noinvert <- net_edge_betweenness(build_network(seqs, method = "relative"),
+                                      invert = FALSE)
+
+  expect_error(permutation(eb_rel, build_network(seqs, method = "relative"),
+                           iter = 5L),
+               "Both x and y")
+  expect_error(permutation(eb_rel, eb_freq, iter = 5L),
+               "Source methods must match")
+  expect_error(permutation(eb_rel, eb_noinvert, iter = 5L),
+               "same edge-betweenness `invert` setting")
+  expect_error(permutation(eb_rel, eb_rel, iter = 5L, measures = "all"),
+               "`measures` is not supported")
+})
+
 test_that("plot.net_edge_betweenness returns a ranked ggplot", {
   skip_if_not_installed("ggplot2")
   seqs <- as.data.frame(matrix(c(

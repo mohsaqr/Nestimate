@@ -135,7 +135,7 @@ test_that("A09-F02: directed Closeness is supported", {
   cs <- centrality_stability(netd, iter = 6, drop_prop = c(0.2, 0.4),
                              seed = 1)
   expect_s3_class(cs, "net_stability")
-  expect_true(all(c("InStrength", "OutStrength", "Betweenness") %in%
+  expect_true(all(c("InStrength", "Betweenness", "Diffusion") %in%
                     names(cs$cs)))
 })
 
@@ -162,7 +162,7 @@ test_that("A09-F03: directed net_centrality Closeness is computed", {
   expect_true("Closeness" %in% colnames(uc))
   expect_equal(nrow(uc), 4L)
   dd <- suppressMessages(net_centrality(netd))
-  expect_true(all(c("InStrength", "OutStrength", "Betweenness") %in%
+  expect_true(all(c("InStrength", "Betweenness", "Diffusion") %in%
                     colnames(dd)))
 })
 

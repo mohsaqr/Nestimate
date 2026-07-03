@@ -1,6 +1,6 @@
 Package: Nestimate
 Title: Network Estimation, Bootstrap, and Higher-Order Analysis
-Version: 0.7.7
+Version: 0.7.8
 Authors@R: c(
     person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
     person("Sonsoles", "López-Pernas", email = "sonsoles.lopez@uef.fi", role = "aut"),
@@ -42,7 +42,7 @@ Suggests:
     lme4,
     corpcor,
     Matrix,
-    cograph,
+    cograph (>= 2.4.4),
     ggfittext,
     knitr,
     rmarkdown,
@@ -52,3 +52,4 @@ Depends:
     R (>= 4.1.0)
 LazyData: true
 VignetteBuilder: knitr
+Additional_repositories: https://mohsaqr.r-universe.dev

@@ -14,10 +14,12 @@
 
 \item{title}{Optional plot title.}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{Additional arguments passed to \code{cograph::splot()} when
+cograph is available.}
 }
 \value{
-A \code{ggplot} object.
+Invisibly, the cograph network returned by \code{cograph::splot()}
+when cograph is available; otherwise a fallback \code{ggplot} object.
 }
 \description{
 Draws a differential transition network as a directed chord diagram.

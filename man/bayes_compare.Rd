@@ -17,7 +17,8 @@ bayes_compare(
 }
 \arguments{
 \item{x}{A \code{netobject} (from \code{\link{build_network}}), a
-\code{netobject_group}, or an \code{mcml} object. Must use a transition
+\code{netobject_group}, an \code{mcml} object, or a
+\code{\link{net_edge_betweenness}} object. Must use a transition
 method (\code{"relative"} / \code{"frequency"} and their aliases).}
 
 \item{y}{A second object of the same kind as \code{x}, or \code{NULL}.
@@ -44,26 +45,34 @@ but negligibly small.}
 \item{seed}{Integer or NULL. RNG seed for reproducible credible intervals.}
 }
 \value{
-An object of class \code{c("net_bayes", "net_permutation")}. It carries
+An object of class
+\code{c("net_bayes", "netdifference", "net_permutation")}. It carries
 the same fields as a \code{\link{permutation}} result, so it is a drop-in
-wherever a \code{net_permutation} is consumed, plus Bayesian extras:
+wherever a \code{net_permutation} is consumed, and also carries a
+\code{netdifference} difference matrix for cograph difference plotting,
+plus Bayesian extras:
 \describe{
 \item{x, y}{The two input \code{netobject}s.}
 \item{diff}{Posterior mean difference matrix (\code{prob_x - prob_y});
 the analogue of the permutation observed difference.}
+\item{difference_matrix}{Alias of \code{diff} for cograph
+\code{netdifference} helpers.}
 \item{diff_sig}{Difference where \code{sig}, else 0.}
 \item{p_values}{P-value matrix (the two-sided Bayesian p-equivalent).}
 \item{effect_size}{Posterior mean difference over its posterior SD.}
 \item{ci_lower, ci_upper}{Credible-interval bound matrices.}
-\item{pd}{Probability-of-direction matrix in \eqn{[0.5, 1]}.}
-\item{p_bayes}{Alias of \code{p_values} (two-sided Bayesian p, \eqn{2(1-pd)}).}
+\item{p_difference}{Probability of the difference: the share of
+posterior mass on the dominant side of zero, in \eqn{[0.5, 1]}
+(\eqn{P(\mathrm{High} > \mathrm{Low})} for a positive difference).}
+\item{p_bayes}{Alias of \code{p_values} (two-sided Bayesian p,
+\eqn{2(1-\mathrm{p\_difference})}).}
 \item{prob_x, prob_y}{Posterior mean transition-probability matrices.}
 \item{sig}{Logical significance matrix (CI excludes zero, mean and
 nearest bound exceed their thresholds).}
 \item{summary}{Long-format data frame whose columns are a superset of
 \code{summary.net_permutation} (\code{from, to, weight_x, weight_y, diff,
     effect_size, p_value, sig}) plus \code{count_x, count_y, ci_lower,
-    ci_upper, ci_width, pd}.}
+    ci_upper, ci_width, p_difference}.}
 \item{method, iter, alpha, paired, adjust}{Permutation-compatible settings
 (\code{iter = draws}, \code{alpha = 1 - ci}, \code{paired = FALSE},
 \code{adjust = "none"}).}
@@ -88,6 +97,18 @@ comparison answers "what is the plausible range of the true difference,
 and how precisely is it estimated given the counts?". An edge with few
 outgoing transitions from its source state yields a wide credible
 interval even when its row-normalised probability looks decisive.
+
+\code{bayes_compare()} also accepts two \code{\link{net_edge_betweenness}}
+objects (source method \code{"relative"} only). Edge betweenness is a
+nonlinear function of the whole transition matrix, so instead of Beta
+marginals the full transition matrix is drawn from each group's row-wise
+Dirichlet posterior and edge betweenness is recomputed on every draw -
+the Bayesian analogue of \code{permutation()}'s edge-betweenness dispatch.
+The result summarises the posterior of \code{EB(x) - EB(y)}: \code{diff}
+is the posterior mean difference, \code{prob_x}/\code{prob_y} hold the
+posterior mean betweenness matrices, and \code{observed_diff} the plug-in
+difference of the two input networks. Both inputs must use the same
+\code{invert} setting.
 }
 \examples{
 s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))

@@ -791,7 +791,7 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
       name = "Higher in"
     ) +
     ggplot2::labs(
-      x = sprintf("Difference (%s − %s)", groups[2L], groups[1L]),
+      x = sprintf("Difference (%s - %s)", groups[2L], groups[1L]),
       y = NULL
     ) +
     ggplot2::theme_minimal(base_size = 12) +
@@ -910,8 +910,10 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
 #'   \code{c("netobject", "cograph_network")}) whose \code{$weights} are the
 #'   edge-betweenness scores, with \code{method = "edge_betweenness"}. Call
 #'   \code{extract_edges()} on it for a tidy per-edge table, or \code{plot()}
-#'   to render it. For a \code{netobject_group}: a \code{netobject_group} of
-#'   such networks, one per group.
+#'   to render it. The object preserves source-network metadata so
+#'   \code{\link{permutation}} can test edge-betweenness differences by
+#'   permuting the source networks. For a \code{netobject_group}: a
+#'   \code{netobject_group} of such networks, one per group.
 #'
 #' @examples
 #' seqs <- data.frame(
@@ -937,6 +939,19 @@ net_edge_betweenness.netobject <- function(x, invert = TRUE, ...) {
   eb <- .edge_betweenness(mat, invert = invert)
   out <- .wrap_netobject(eb, data = x$data, method = "edge_betweenness",
                          directed = directed, inits = x$inits)
+  out$metadata <- x$metadata
+  out$params <- x$params %||% list()
+  out$scaling <- x$scaling
+  out$threshold <- x$threshold %||% 0
+  out$level <- x$level
+  out$build_args <- x$build_args
+  out$source_weights <- mat
+  out$frequency_matrix <- x$frequency_matrix
+  out$edge_betweenness <- list(
+    source_method = x$method,
+    invert = isTRUE(invert)
+  )
+  out$meta$edge_betweenness <- out$edge_betweenness
   class(out) <- c("net_edge_betweenness", class(out))
   out
 }
@@ -1024,7 +1039,7 @@ plot.net_edge_betweenness <- function(x, style = c("bar", "forest", "delta"),
         values = c(below = "#D33F6A", above = "#4A6FE3"),
         labels = c(below = "below mean", above = "above mean"), name = NULL
       ) +
-      ggplot2::labs(x = sprintf("Edge betweenness − mean (%.2f)", ref),
+      ggplot2::labs(x = sprintf("Edge betweenness - mean (%.2f)", ref),
                     y = NULL) +
       base_theme + ggplot2::theme(legend.position = "bottom")
     if (isTRUE(labels)) {

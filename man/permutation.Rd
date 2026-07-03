@@ -17,9 +17,11 @@ permutation(
 )
 }
 \arguments{
-\item{x}{A \code{netobject} (from \code{\link{build_network}}).}
+\item{x}{A \code{netobject} (from \code{\link{build_network}}) or a
+\code{\link{net_edge_betweenness}} object.}
 
-\item{y}{A \code{netobject} (from \code{\link{build_network}}).
+\item{y}{A \code{netobject} (from \code{\link{build_network}}) or a
+\code{\link{net_edge_betweenness}} object.
 Must use the same method and have the same nodes as \code{x}.}
 
 \item{iter}{Integer. Number of permutation iterations (default: 1000).}
@@ -40,7 +42,7 @@ Default \code{NULL} (edges only). When supplied, the result gains a
 \code{tna::permutation_test(measures = )}: per state and measure it reports
 the observed difference, an effect size (difference / SD of the permutation
 null), and a permutation p-value, all using the same permuted networks as
-the edge test.}
+the edge test. Not supported for \code{net_edge_betweenness} inputs.}
 
 \item{nlambda}{Integer. Number of lambda values for the \code{glassopath}
 regularisation path (only used when \code{method = "glasso"}).
@@ -60,6 +62,7 @@ An object of class \code{"net_permutation"} containing:
 \item{effect_size}{Effect size matrix (observed diff / SD of permutation diffs).}
 \item{summary}{Long-format data frame of edge-level results.}
 \item{method}{The network estimation method.}
+\item{source_method}{For edge-betweenness tests, the source network method.}
 \item{iter}{Number of permutation iterations.}
 \item{alpha}{Significance level used.}
 \item{paired}{Whether paired permutation was used.}
@@ -90,6 +93,12 @@ group split.
 If either transition network contains only one sequence, the function warns
 that such a network is not recommended for permutation or other
 confirmatory testing.
+
+\code{permutation()} also accepts two \code{\link{net_edge_betweenness}}
+objects. In that case it permutes the source networks, recomputes edge
+betweenness for each shuffled split, and tests edge-betweenness differences.
+The two edge-betweenness objects must come from the same source method and
+use the same \code{invert} setting.
 }
 \examples{
 s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))

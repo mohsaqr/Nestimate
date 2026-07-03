@@ -22,8 +22,16 @@
 #' that such a network is not recommended for permutation or other
 #' confirmatory testing.
 #'
-#' @param x A \code{netobject} (from \code{\link{build_network}}).
-#' @param y A \code{netobject} (from \code{\link{build_network}}).
+#' \code{permutation()} also accepts two \code{\link{net_edge_betweenness}}
+#' objects. In that case it permutes the source networks, recomputes edge
+#' betweenness for each shuffled split, and tests edge-betweenness differences.
+#' The two edge-betweenness objects must come from the same source method and
+#' use the same \code{invert} setting.
+#'
+#' @param x A \code{netobject} (from \code{\link{build_network}}) or a
+#'   \code{\link{net_edge_betweenness}} object.
+#' @param y A \code{netobject} (from \code{\link{build_network}}) or a
+#'   \code{\link{net_edge_betweenness}} object.
 #'   Must use the same method and have the same nodes as \code{x}.
 #' @param iter Integer. Number of permutation iterations (default: 1000).
 #' @param alpha Numeric. Significance level (default: 0.05).
@@ -39,7 +47,7 @@
 #'   \code{tna::permutation_test(measures = )}: per state and measure it reports
 #'   the observed difference, an effect size (difference / SD of the permutation
 #'   null), and a permutation p-value, all using the same permuted networks as
-#'   the edge test.
+#'   the edge test. Not supported for \code{net_edge_betweenness} inputs.
 #' @param nlambda Integer. Number of lambda values for the \code{glassopath}
 #'   regularisation path (only used when \code{method = "glasso"}).
 #'   Higher values give finer lambda resolution at the cost of speed.
@@ -56,6 +64,7 @@
 #'   \item{effect_size}{Effect size matrix (observed diff / SD of permutation diffs).}
 #'   \item{summary}{Long-format data frame of edge-level results.}
 #'   \item{method}{The network estimation method.}
+#'   \item{source_method}{For edge-betweenness tests, the source network method.}
 #'   \item{iter}{Number of permutation iterations.}
 #'   \item{alpha}{Significance level used.}
 #'   \item{paired}{Whether paired permutation was used.}
@@ -170,6 +179,15 @@ permutation <- function(x, y = NULL,
   # ---- Coerce cograph_network inputs ----
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
   if (inherits(y, "cograph_network")) y <- .as_netobject(y)
+
+  # ---- Edge-betweenness dispatch: permute source networks, compare EB ----
+  if (inherits(x, "net_edge_betweenness") ||
+      inherits(y, "net_edge_betweenness")) {
+    return(.permutation_edge_betweenness(
+      x = x, y = y, iter = iter, alpha = alpha, paired = paired,
+      adjust = adjust, measures = measures, nlambda = nlambda, seed = seed
+    ))
+  }
 
   # ---- Input validation ----
   stopifnot(
@@ -400,17 +418,207 @@ permutation <- function(x, y = NULL,
 }
 
 
+# ---- Edge-betweenness permutation path ----
+
+#' Source-network proxy for a net_edge_betweenness object
+#' @noRd
+.edge_betweenness_source_net <- function(x) {
+  if (!inherits(x, "net_edge_betweenness")) {
+    stop("Both x and y must be net_edge_betweenness objects.",
+         call. = FALSE)
+  }
+  source_method <- x$edge_betweenness$source_method
+  if (is.null(source_method) || length(source_method) != 1L ||
+      is.na(source_method) || !nzchar(source_method)) {
+    stop(
+      "net_edge_betweenness object does not carry its source method. ",
+      "Recreate it with net_edge_betweenness() before permutation().",
+      call. = FALSE
+    )
+  }
+  src <- x
+  src$method <- source_method
+  if (!is.null(x$source_weights)) {
+    src$weights <- x$source_weights
+  }
+  src$params <- x$params %||% list()
+  src$scaling <- x$scaling
+  src$threshold <- x$threshold %||% 0
+  src
+}
+
+#' Permutation test for edge-betweenness differences
+#' @noRd
+.permutation_edge_betweenness <- function(x, y, iter, alpha, paired,
+                                          adjust, measures, nlambda, seed) {
+  if (!inherits(x, "net_edge_betweenness") ||
+      !inherits(y, "net_edge_betweenness")) {
+    stop("Both x and y must be net_edge_betweenness objects.",
+         call. = FALSE)
+  }
+  if (!is.null(measures)) {
+    stop("`measures` is not supported for edge-betweenness permutation tests.",
+         call. = FALSE)
+  }
+
+  stopifnot(
+    is.numeric(iter), length(iter) == 1, iter >= 2,
+    is.numeric(alpha), length(alpha) == 1, alpha > 0, alpha < 1,
+    is.logical(paired), length(paired) == 1,
+    is.character(adjust), length(adjust) == 1
+  )
+  iter <- as.integer(iter)
+
+  if (is.null(x$data)) {
+    stop("'x' does not contain $data. Rebuild with build_network().",
+         call. = FALSE)
+  }
+  if (is.null(y$data)) {
+    stop("'y' does not contain $data. Rebuild with build_network().",
+         call. = FALSE)
+  }
+
+  if (!setequal(x$nodes$label, y$nodes$label)) {
+    stop("Nodes must be the same in both networks.", call. = FALSE)
+  }
+
+  nodes <- x$nodes$label
+  if (!identical(x$nodes$label, y$nodes$label)) {
+    y$weights <- y$weights[nodes, nodes]
+  }
+
+  x_src <- .edge_betweenness_source_net(x)
+  y_src <- .edge_betweenness_source_net(y)
+  method <- .resolve_method_alias(x_src$method)
+  y_method <- .resolve_method_alias(y_src$method)
+  if (method != y_method) {
+    stop("Source methods must match: x uses '", method,
+         "', y uses '", y_method, "'.", call. = FALSE)
+  }
+
+  directed <- x$directed
+  n_nodes <- length(nodes)
+
+  if (paired && nrow(x$data) != nrow(y$data)) {
+    stop("Paired test requires equal number of observations in x and y.",
+         call. = FALSE)
+  }
+
+  if (!is.null(seed)) {
+    stopifnot(is.numeric(seed), length(seed) == 1)
+    set.seed(seed)
+  }
+
+  obs_diff <- x$weights - y$weights
+  invert <- isTRUE(x$edge_betweenness$invert)
+  if (!identical(isTRUE(y$edge_betweenness$invert), invert)) {
+    stop("x and y must use the same edge-betweenness `invert` setting.",
+         call. = FALSE)
+  }
+  transform_eb <- function(mat) {
+    dimnames(mat) <- list(nodes, nodes)
+    .edge_betweenness(mat, invert = invert)
+  }
+
+  has_data_x <- is.data.frame(x_src$data) && ncol(x_src$data) > 0L
+  has_data_y <- is.data.frame(y_src$data) && ncol(y_src$data) > 0L
+  if (method %in% c("relative", "frequency", "co_occurrence")) {
+    if (!has_data_x || !has_data_y) {
+      stop("Permutation test requires the original data stored in the netobject. ",
+           "For wtna/cna networks, use wtna() directly instead of ",
+           "build_network(method='cna').", call. = FALSE)
+    }
+    x_src$data <- .resampling_transition_data(
+      x_src$data, x_src$metadata, x_src$params
+    )
+    y_src$data <- .resampling_transition_data(
+      y_src$data, y_src$metadata, y_src$params
+    )
+    n_seq_x <- .transition_resampling_n_sequences(x_src$data, x_src$params)
+    n_seq_y <- .transition_resampling_n_sequences(y_src$data, y_src$params)
+    if ((!is.na(n_seq_x) && n_seq_x <= 1L) ||
+        (!is.na(n_seq_y) && n_seq_y <= 1L)) {
+      warning(
+        "A network with one long sequence is not recommended and can't be ",
+        "validated using bootstrap and other confirmatory testings.",
+        call. = FALSE
+      )
+    }
+    perm_result <- .permutation_transition(
+      x = x_src, y = y_src, nodes = nodes, method = method,
+      iter = iter, paired = paired,
+      measures = NULL, directed = directed, obs_cent_diff = NULL,
+      transform = transform_eb, obs_diff = obs_diff
+    )
+  } else {
+    perm_result <- .permutation_association(
+      x = x_src, y = y_src, nodes = nodes, method = method,
+      iter = iter, paired = paired, nlambda = nlambda,
+      measures = NULL, directed = directed, obs_cent_diff = NULL,
+      transform = transform_eb, obs_diff = obs_diff
+    )
+  }
+
+  obs_flat <- as.vector(obs_diff)
+  p_values_flat <- (perm_result$exceed_counts + 1L) / (iter + 1L)
+  p_values_flat <- p.adjust(p_values_flat, method = adjust)
+  p_mat <- matrix(p_values_flat, n_nodes, n_nodes,
+                  dimnames = list(nodes, nodes))
+
+  perm_sd <- perm_result$perm_sd
+  perm_sd[perm_sd == 0] <- NA_real_
+  es_flat <- obs_flat / perm_sd
+  es_flat[is.na(es_flat)] <- 0
+  es_mat <- matrix(es_flat, n_nodes, n_nodes,
+                   dimnames = list(nodes, nodes))
+
+  diff_sig <- obs_diff * ((p_mat < alpha) * 1)
+  summary_df <- .build_permutation_summary(
+    obs_diff = obs_diff,
+    p_mat = p_mat,
+    es_mat = es_mat,
+    x_matrix = x$weights,
+    y_matrix = y$weights,
+    nodes = nodes,
+    directed = directed,
+    alpha = alpha
+  )
+
+  result <- list(
+    x = x,
+    y = y,
+    diff = obs_diff,
+    diff_sig = diff_sig,
+    p_values = p_mat,
+    effect_size = es_mat,
+    summary = summary_df,
+    method = "edge_betweenness",
+    source_method = method,
+    iter = iter,
+    alpha = alpha,
+    paired = paired,
+    adjust = adjust,
+    edge_betweenness = list(invert = invert, source_method = method)
+  )
+  class(result) <- "net_permutation"
+  result
+}
+
+
 # ---- Transition fast path ----
 
 #' Permutation test for transition networks via pre-computed counts
 #' @noRd
 .permutation_transition <- function(x, y, nodes, method, iter, paired,
                                     measures = NULL, directed = TRUE,
-                                    obs_cent_diff = NULL) {
+                                    obs_cent_diff = NULL,
+                                    transform = NULL,
+                                    obs_diff = NULL) {
   n_nodes <- length(nodes)
   nbins <- n_nodes * n_nodes
   is_relative <- method == "relative"
   do_cent <- !is.null(measures)
+  if (is.null(transform)) transform <- identity
   if (do_cent) {
     cent_abs_true <- abs(obs_cent_diff)
     cent_exceed <- matrix(0L, n_nodes, length(measures))
@@ -430,7 +638,7 @@ permutation <- function(x, y = NULL,
   n_total <- n_x + n_y
 
   # Observed diff (recomputed from counts for consistency)
-  obs_flat <- as.vector(x$weights - y$weights)
+  obs_flat <- as.vector(obs_diff %||% (x$weights - y$weights))
 
   # Running counters
   exceed_counts <- integer(nbins)
@@ -458,6 +666,8 @@ permutation <- function(x, y = NULL,
     mat_y <- .postprocess_counts(counts_y, n_nodes, is_relative,
                                  y$scaling, y$threshold)
 
+    mat_x <- transform(mat_x)
+    mat_y <- transform(mat_y)
     perm_diff <- as.vector(mat_x) - as.vector(mat_y)
 
     # Accumulate
@@ -517,10 +727,13 @@ permutation <- function(x, y = NULL,
 #' @noRd
 .permutation_association <- function(x, y, nodes, method, iter, paired,
                                     nlambda = 50L, measures = NULL,
-                                    directed = FALSE, obs_cent_diff = NULL) {
+                                    directed = FALSE, obs_cent_diff = NULL,
+                                    transform = NULL,
+                                    obs_diff = NULL) {
   n_nodes <- length(nodes)
   nbins <- n_nodes * n_nodes
   do_cent <- !is.null(measures)
+  if (is.null(transform)) transform <- identity
   if (do_cent) {
     cent_abs_true <- abs(obs_cent_diff)
     cent_exceed <- matrix(0L, n_nodes, length(measures))
@@ -529,7 +742,7 @@ permutation <- function(x, y = NULL,
   }
 
   # $data is already cleaned by the estimator (numeric matrix, no NAs,
-  # no zero-variance columns) — just pool directly
+  # no zero-variance columns) - just pool directly
   n_x <- nrow(x$data)
   n_y <- nrow(y$data)
   pooled_mat <- rbind(x$data, y$data)
@@ -542,7 +755,7 @@ permutation <- function(x, y = NULL,
   threshold_y <- y$threshold
   scaling_x <- x$scaling
   scaling_y <- y$scaling
-  obs_flat <- as.vector(x$weights - y$weights)
+  obs_flat <- as.vector(obs_diff %||% (x$weights - y$weights))
 
   # Select fast path based on method
   use_fast <- method %in% c("cor", "pcor", "glasso")
@@ -637,6 +850,8 @@ permutation <- function(x, y = NULL,
     if (!is.null(scaling_y)) mat_y <- .apply_scaling(mat_y, scaling_y) # nocov
     if (threshold_y > 0) mat_y[abs(mat_y) < threshold_y] <- 0
 
+    mat_x <- transform(mat_x)
+    mat_y <- transform(mat_y)
     perm_diff <- as.vector(mat_x) - as.vector(mat_y)
 
     exceed_counts <- exceed_counts + (abs(perm_diff) >= abs(obs_flat))
@@ -765,7 +980,8 @@ print.net_permutation <- function(x, ...) {
     pcor          = "Partial Correlation Network (unregularised)",
     cor           = "Correlation Network",
     attention     = "Attention Network (decay-weighted transitions)",
-    wtna          = "Window TNA (transitions)"
+    wtna          = "Window TNA (transitions)",
+    edge_betweenness = "Edge-Betweenness Network"
   )
   label <- if (x$method %in% names(method_labels)) {
     method_labels[[x$method]]

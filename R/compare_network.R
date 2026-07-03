@@ -296,7 +296,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 
 # Single source of truth for descriptive similarity between two networks.
 # Returns a named numeric vector. Inputs can be matrices (full 22 metrics)
-# or vectors (subset that does not need matrix structure — RV and
+# or vectors (subset that does not need matrix structure - RV and
 # rank_agreement are skipped).
 #
 # Used by `.compare_impl()`, `.split_half_metrics()` (reliability), and
@@ -430,15 +430,12 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 }
 
 .compare_centralities <- function(x, y, measures) {
-  cx <- centrality(.wrap_netobject(x, method = "compare_model", directed = TRUE,
-                                   data = NULL))
-  cy <- centrality(.wrap_netobject(y, method = "compare_model", directed = TRUE,
-                                   data = NULL))
-  cx_df <- as.data.frame(cx)
-  cy_df <- as.data.frame(cy)
-  valid <- setdiff(names(cx_df), c("state", "name"))
-  keep <- intersect(measures, names(cx_df))
-  unmatched <- setdiff(measures, names(cx_df))
+  # Validate against the full built-in vocabulary, not the DEFAULT columns of
+  # centrality() — the defaults shrank in 0.7.6 and silently turned valid
+  # measures (e.g. OutStrength) into "unknown" here.
+  valid <- .centrality_builtin_measures()
+  keep <- intersect(measures, valid)
+  unmatched <- setdiff(measures, valid)
   if (length(unmatched) > 0L) {
     warning("compare_model(): unknown centrality measure",
             if (length(unmatched) == 1L) " " else "s ",
@@ -450,6 +447,14 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
     return(list(differences = data.frame(),
                 correlations = data.frame()))
   }
+  cx <- net_centrality(.wrap_netobject(x, method = "compare_model",
+                                       directed = TRUE, data = NULL),
+                       measures = keep)
+  cy <- net_centrality(.wrap_netobject(y, method = "compare_model",
+                                       directed = TRUE, data = NULL),
+                       measures = keep)
+  cx_df <- as.data.frame(cx)
+  cy_df <- as.data.frame(cy)
   state <- if ("state" %in% names(cx_df)) cx_df$state
            else if ("name" %in% names(cx_df)) cx_df$name
            else seq_len(nrow(cx_df))
@@ -509,7 +514,7 @@ print.net_comparison <- function(x, ...) {
 #' correlations.
 #'
 #' @param x A `net_comparison` object from [compare_model()].
-#' @param type Character. One of `"scatter"` (default — edge-weight scatter
+#' @param type Character. One of `"scatter"` (default - edge-weight scatter
 #'   with OLS fit and correlation overlay), `"heatmap"` (n by n grid of
 #'   x - y differences using the diverging palette), `"diff_hist"`
 #'   (histogram of |x - y| absolute differences with rug + density),
@@ -548,7 +553,7 @@ plot.net_comparison <- function(x,
 # 2x2 grid of all four panels, stripped of titles so the layout reads as
 # a single figure. Uses gridExtra::arrangeGrob (already in Suggests).
 # combined = FALSE returns the four ggplots as a named list instead of
-# stitching them — useful when each panel needs its own device or the
+# stitching them - useful when each panel needs its own device or the
 # user wants to save them separately.
 .plot_comparison_all <- function(x, combined = TRUE) {
   strip <- function(p, label) {
@@ -618,7 +623,7 @@ plot.net_comparison <- function(x,
 
 # Heatmap of (x - y), the scaled difference matrix. Diverging palette
 # matches the project house defaults (red -> white -> blue, midpoint = 0).
-# Per CLAUDE.md, never touch the diagonal — it stays as estimated.
+# Per CLAUDE.md, never touch the diagonal - it stays as estimated.
 .plot_comparison_heatmap <- function(x) {
   d <- x$difference_matrix
   rn <- rownames(d); cn <- colnames(d)

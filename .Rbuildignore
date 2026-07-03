@@ -54,3 +54,10 @@
 ^AIED$
 ^paper$
 ^experimental$
+^dynasite$
+^dynalytics-plots$
+^scripts$
+^AGENT-NOTE-.*\.md$
+^confirmatory-network-tests-tutorial\.html$
+^dynalytics-dynamic-networks-chapter\.html$
+^\.playwright-mcp$

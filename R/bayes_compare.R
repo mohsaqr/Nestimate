@@ -35,8 +35,21 @@
 #' outgoing transitions from its source state yields a wide credible
 #' interval even when its row-normalised probability looks decisive.
 #'
+#' \code{bayes_compare()} also accepts two \code{\link{net_edge_betweenness}}
+#' objects (source method \code{"relative"} only). Edge betweenness is a
+#' nonlinear function of the whole transition matrix, so instead of Beta
+#' marginals the full transition matrix is drawn from each group's row-wise
+#' Dirichlet posterior and edge betweenness is recomputed on every draw -
+#' the Bayesian analogue of \code{permutation()}'s edge-betweenness dispatch.
+#' The result summarises the posterior of \code{EB(x) - EB(y)}: \code{diff}
+#' is the posterior mean difference, \code{prob_x}/\code{prob_y} hold the
+#' posterior mean betweenness matrices, and \code{observed_diff} the plug-in
+#' difference of the two input networks. Both inputs must use the same
+#' \code{invert} setting.
+#'
 #' @param x A \code{netobject} (from \code{\link{build_network}}), a
-#'   \code{netobject_group}, or an \code{mcml} object. Must use a transition
+#'   \code{netobject_group}, an \code{mcml} object, or a
+#'   \code{\link{net_edge_betweenness}} object. Must use a transition
 #'   method (\code{"relative"} / \code{"frequency"} and their aliases).
 #' @param y A second object of the same kind as \code{x}, or \code{NULL}.
 #'   When \code{x} is a \code{netobject_group} and \code{y} is \code{NULL},
@@ -55,26 +68,34 @@
 #'   but negligibly small.
 #' @param seed Integer or NULL. RNG seed for reproducible credible intervals.
 #'
-#' @return An object of class \code{c("net_bayes", "net_permutation")}. It carries
+#' @return An object of class
+#'   \code{c("net_bayes", "netdifference", "net_permutation")}. It carries
 #'   the same fields as a \code{\link{permutation}} result, so it is a drop-in
-#'   wherever a \code{net_permutation} is consumed, plus Bayesian extras:
+#'   wherever a \code{net_permutation} is consumed, and also carries a
+#'   \code{netdifference} difference matrix for cograph difference plotting,
+#'   plus Bayesian extras:
 #' \describe{
 #'   \item{x, y}{The two input \code{netobject}s.}
 #'   \item{diff}{Posterior mean difference matrix (\code{prob_x - prob_y});
 #'     the analogue of the permutation observed difference.}
+#'   \item{difference_matrix}{Alias of \code{diff} for cograph
+#'     \code{netdifference} helpers.}
 #'   \item{diff_sig}{Difference where \code{sig}, else 0.}
 #'   \item{p_values}{P-value matrix (the two-sided Bayesian p-equivalent).}
 #'   \item{effect_size}{Posterior mean difference over its posterior SD.}
 #'   \item{ci_lower, ci_upper}{Credible-interval bound matrices.}
-#'   \item{pd}{Probability-of-direction matrix in \eqn{[0.5, 1]}.}
-#'   \item{p_bayes}{Alias of \code{p_values} (two-sided Bayesian p, \eqn{2(1-pd)}).}
+#'   \item{p_difference}{Probability of the difference: the share of
+#'     posterior mass on the dominant side of zero, in \eqn{[0.5, 1]}
+#'     (\eqn{P(\mathrm{High} > \mathrm{Low})} for a positive difference).}
+#'   \item{p_bayes}{Alias of \code{p_values} (two-sided Bayesian p,
+#'     \eqn{2(1-\mathrm{p\_difference})}).}
 #'   \item{prob_x, prob_y}{Posterior mean transition-probability matrices.}
 #'   \item{sig}{Logical significance matrix (CI excludes zero, mean and
 #'     nearest bound exceed their thresholds).}
 #'   \item{summary}{Long-format data frame whose columns are a superset of
 #'     \code{summary.net_permutation} (\code{from, to, weight_x, weight_y, diff,
 #'     effect_size, p_value, sig}) plus \code{count_x, count_y, ci_lower,
-#'     ci_upper, ci_width, pd}.}
+#'     ci_upper, ci_width, p_difference}.}
 #'   \item{method, iter, alpha, paired, adjust}{Permutation-compatible settings
 #'     (\code{iter = draws}, \code{alpha = 1 - ci}, \code{paired = FALSE},
 #'     \code{adjust = "none"}).}
@@ -153,6 +174,16 @@ bayes_compare <- function(x, y = NULL,
   # ---- Coerce cograph_network inputs ----
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
   if (inherits(y, "cograph_network")) y <- .as_netobject(y)
+
+  # ---- Edge-betweenness dispatch: posterior draws of the source networks ----
+  if (inherits(x, "net_edge_betweenness") ||
+      inherits(y, "net_edge_betweenness")) {
+    return(.bayes_compare_edge_betweenness(
+      x = x, y = y, prior = prior, draws = draws, ci = ci,
+      mean_threshold = mean_threshold, bound_threshold = bound_threshold,
+      seed = seed
+    ))
+  }
 
   # ---- Input validation ----
   stopifnot(
@@ -246,12 +277,13 @@ bayes_compare <- function(x, y = NULL,
     x               = x,
     y               = y,
     diff            = diff_mat,
+    difference_matrix = diff_mat,
     diff_sig        = diff_sig,
     p_values        = p_bayes,
     effect_size     = effect_size,
     ci_lower        = ci_lower,
     ci_upper        = ci_upper,
-    pd              = pd,
+    p_difference    = pd,
     p_bayes         = p_bayes,
     prob_x          = prob_x,
     prob_y          = prob_y,
@@ -266,10 +298,172 @@ bayes_compare <- function(x, y = NULL,
     draws           = draws,
     ci              = ci,
     mean_threshold  = mean_threshold,
-    bound_threshold = bound_threshold
+    bound_threshold = bound_threshold,
+    meta            = list(splot = list(renderer = "permutation"))
   )
-  class(result) <- c("net_bayes", "net_permutation")
+  class(result) <- c("net_bayes", "netdifference", "net_permutation")
   result
+}
+
+
+#' Bayesian comparison of two edge-betweenness networks
+#'
+#' Edge betweenness is a nonlinear function of the whole transition matrix,
+#' so per-edge Beta marginals do not apply. Instead: draw full transition
+#' matrices from each group's row-wise Dirichlet posterior, recompute edge
+#' betweenness on every draw (the Bayesian analogue of the permutation
+#' dispatch, which recomputes it on every shuffle), and summarise the
+#' posterior of \code{EB(x) - EB(y)} per edge.
+#' @noRd
+.bayes_compare_edge_betweenness <- function(x, y, prior, draws, ci,
+                                            mean_threshold, bound_threshold,
+                                            seed) {
+  if (!inherits(x, "net_edge_betweenness") ||
+      !inherits(y, "net_edge_betweenness")) {
+    stop("Both x and y must be net_edge_betweenness objects.", call. = FALSE)
+  }
+  stopifnot(
+    is.numeric(prior), length(prior) == 1, prior > 0,
+    is.numeric(draws), length(draws) == 1, draws >= 2,
+    is.numeric(ci), length(ci) == 1, ci > 0, ci < 1,
+    is.numeric(mean_threshold), length(mean_threshold) == 1,
+    is.numeric(bound_threshold), length(bound_threshold) == 1
+  )
+  draws <- as.integer(draws)
+
+  x_src <- .edge_betweenness_source_net(x)
+  y_src <- .edge_betweenness_source_net(y)
+  method <- .resolve_method_alias(x_src$method)
+  y_method <- .resolve_method_alias(y_src$method)
+  if (method != y_method) {
+    stop("Source methods must match: x uses '", method,
+         "', y uses '", y_method, "'.", call. = FALSE)
+  }
+  if (method != "relative") {
+    stop("Bayesian edge-betweenness comparison requires source method ",
+         "\"relative\": the Dirichlet posterior models the transition ",
+         "probability rows that the betweenness is computed on; got '",
+         method, "'.", call. = FALSE)
+  }
+  invert <- isTRUE(x$edge_betweenness$invert)
+  if (!identical(isTRUE(y$edge_betweenness$invert), invert)) {
+    stop("x and y must use the same edge-betweenness `invert` setting.",
+         call. = FALSE)
+  }
+  if (is.null(x$frequency_matrix) || is.null(y$frequency_matrix)) {
+    stop("Transition counts ($frequency_matrix) not found. ",
+         "Recreate with net_edge_betweenness(build_network(...)).",
+         call. = FALSE)
+  }
+  if (!setequal(x$nodes$label, y$nodes$label)) {
+    stop("Nodes must be the same in both networks.", call. = FALSE)
+  }
+
+  if (!is.null(seed)) {
+    stopifnot(is.numeric(seed), length(seed) == 1)
+    set.seed(seed)
+  }
+
+  nodes <- x$nodes$label
+  count_x <- x$frequency_matrix[nodes, nodes, drop = FALSE]
+  count_y <- y$frequency_matrix[nodes, nodes, drop = FALSE]
+  k <- length(nodes)
+  nbins <- k * k
+  dn <- list(nodes, nodes)
+
+  alpha_x <- count_x + prior
+  alpha_y <- count_y + prior
+
+  # ---- Posterior draws: Dirichlet rows -> edge betweenness per draw ----
+  samp <- vapply(seq_len(draws), function(d) {
+    px <- .dirichlet_rows(alpha_x)
+    py <- .dirichlet_rows(alpha_y)
+    ex <- as.vector(.edge_betweenness(px, invert = invert))
+    ey <- as.vector(.edge_betweenness(py, invert = invert))
+    c(ex - ey, ex, ey)
+  }, numeric(3L * nbins))
+  diff_draws <- samp[seq_len(nbins), , drop = FALSE]
+  eb_x_mean <- matrix(rowMeans(samp[nbins + seq_len(nbins), , drop = FALSE]),
+                      k, k, dimnames = dn)
+  eb_y_mean <- matrix(rowMeans(samp[2L * nbins + seq_len(nbins), , drop = FALSE]),
+                      k, k, dimnames = dn)
+
+  # ---- Posterior summaries (same rules as the transition path) ----
+  diff_mat <- matrix(rowMeans(diff_draws), k, k, dimnames = dn)
+  probs <- c((1 - ci) / 2, 1 - (1 - ci) / 2)
+  qs <- apply(diff_draws, 1L, stats::quantile, probs = probs, names = FALSE)
+  ci_lower <- matrix(qs[1L, ], k, k, dimnames = dn)
+  ci_upper <- matrix(qs[2L, ], k, k, dimnames = dn)
+  prop_pos <- rowMeans(diff_draws > 0)
+  pd <- matrix(pmax(prop_pos, 1 - prop_pos), k, k, dimnames = dn)
+  p_bayes <- 2 * (1 - pd)
+  sd_d <- sqrt(pmax(rowMeans(diff_draws^2) - rowMeans(diff_draws)^2, 0))
+  perm_sd <- matrix(sd_d, k, k, dimnames = dn)
+
+  ci_excl <- (ci_lower > 0) | (ci_upper < 0)
+  nearest <- pmin(abs(ci_lower), abs(ci_upper))
+  sig <- ci_excl &
+    (abs(diff_mat) > mean_threshold) &
+    (nearest > bound_threshold)
+
+  perm_sd[perm_sd == 0] <- NA_real_
+  effect_size <- diff_mat / perm_sd
+  effect_size[is.na(effect_size)] <- 0
+  diff_sig <- diff_mat * sig
+
+  summary_df <- .build_bayes_summary(
+    diff_mat = diff_mat, ci_lower = ci_lower, ci_upper = ci_upper,
+    prob_x = eb_x_mean, prob_y = eb_y_mean,
+    count_x = count_x, count_y = count_y,
+    effect_size = effect_size, pd = pd, p_bayes = p_bayes,
+    sig = sig, nodes = nodes
+  )
+
+  result <- list(
+    x               = x,
+    y               = y,
+    diff            = diff_mat,
+    difference_matrix = diff_mat,
+    diff_sig        = diff_sig,
+    p_values        = p_bayes,
+    effect_size     = effect_size,
+    ci_lower        = ci_lower,
+    ci_upper        = ci_upper,
+    p_difference    = pd,
+    p_bayes         = p_bayes,
+    prob_x          = eb_x_mean,
+    prob_y          = eb_y_mean,
+    observed_diff   = x$weights - y$weights[nodes, nodes],
+    sig             = sig,
+    summary         = summary_df,
+    method          = "edge_betweenness",
+    source_method   = method,
+    edge_betweenness = list(invert = invert, source_method = method),
+    iter            = draws,
+    alpha           = 1 - ci,
+    paired          = FALSE,
+    adjust          = "none",
+    prior           = prior,
+    draws           = draws,
+    ci              = ci,
+    mean_threshold  = mean_threshold,
+    bound_threshold = bound_threshold,
+    meta            = list(splot = list(renderer = "permutation"))
+  )
+  class(result) <- c("net_bayes", "netdifference", "net_permutation")
+  result
+}
+
+
+#' Row-wise Dirichlet draw of a transition matrix
+#'
+#' One sample of the full transition matrix: each row i is drawn from
+#' Dirichlet(alpha[i, ]) via normalised Gamma variates.
+#' @noRd
+.dirichlet_rows <- function(alpha) {
+  g <- matrix(stats::rgamma(length(alpha), shape = alpha),
+              nrow(alpha), ncol(alpha), dimnames = dimnames(alpha))
+  g / rowSums(g)
 }
 
 
@@ -317,7 +511,8 @@ bayes_compare <- function(x, y = NULL,
 #' Columns are a superset of \code{summary.net_permutation}: it carries
 #' \code{from, to, weight_x, weight_y, diff, effect_size, p_value, sig}
 #' (the permutation columns, so a net_bayes summary is a drop-in) plus the
-#' Bayesian extras \code{count_x, count_y, ci_lower, ci_upper, ci_width, pd}.
+#' Bayesian extras \code{count_x, count_y, ci_lower, ci_upper, ci_width,
+#' p_difference}.
 #' @noRd
 .build_bayes_summary <- function(diff_mat, ci_lower, ci_upper,
                                  prob_x, prob_y, count_x, count_y,
@@ -335,7 +530,7 @@ bayes_compare <- function(x, y = NULL,
     ci_lower    = as.vector(t(ci_lower)),
     ci_upper    = as.vector(t(ci_upper)),
     ci_width    = as.vector(t(ci_upper - ci_lower)),
-    pd          = as.vector(t(pd)),
+    p_difference = as.vector(t(pd)),
     p_value     = as.vector(t(p_bayes)),
     sig         = as.vector(t(sig))
   )
@@ -363,7 +558,8 @@ bayes_compare <- function(x, y = NULL,
 print.net_bayes <- function(x, ...) {
   method_labels <- c(
     relative  = "Transition Network (relative probabilities)",
-    frequency = "Transition Network (frequency counts)"
+    frequency = "Transition Network (frequency counts)",
+    edge_betweenness = "Edge-Betweenness Network"
   )
   label <- if (x$method %in% names(method_labels)) {
     method_labels[[x$method]]
@@ -411,8 +607,10 @@ summary.net_bayes <- function(object, ...) {
 #' @param significant_only Logical. Show only credibly-different edges
 #'   (default \code{TRUE}).
 #' @param title Optional plot title.
-#' @param ... Additional arguments (ignored).
-#' @return A \code{ggplot} object.
+#' @param ... Additional arguments passed to \code{cograph::splot()} when
+#'   cograph is available.
+#' @return Invisibly, the cograph network returned by \code{cograph::splot()}
+#'   when cograph is available; otherwise a fallback \code{ggplot} object.
 #' @examples
 #' \donttest{
 #' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
@@ -424,6 +622,56 @@ summary.net_bayes <- function(object, ...) {
 #' }
 #' @export
 plot.net_bayes <- function(x, significant_only = TRUE, title = NULL, ...) {
+  if (requireNamespace("cograph", quietly = TRUE)) {
+    args <- list(...)
+
+    # Per-edge CI vectors must line up with the edge set cograph's
+    # net_permutation renderer enumerates: it rounds the display matrix to
+    # weight_digits first and, for undirected networks, keeps only the upper
+    # triangle - replicate both so the vectors stay aligned.
+    weights_display <- if (isTRUE(significant_only)) x$diff_sig else x$diff
+    weights_display <- round(weights_display, args[["weight_digits"]] %||% 2)
+    directed <- if (!is.null(x$x$directed)) isTRUE(x$x$directed) else TRUE
+    edge_pos <- if (directed) {
+      which(weights_display != 0, arr.ind = TRUE)
+    } else {
+      which(weights_display != 0 & upper.tri(weights_display), arr.ind = TRUE)
+    }
+    if (nrow(edge_pos) == 0L) {
+      stop("No edges to plot",
+           if (significant_only) " (none credibly different; try significant_only = FALSE)"
+           else "", ".", call. = FALSE)
+    }
+    # Exact [[ ]] indexing throughout: `$` on a list partially matches
+    # (args$title finds args$title_size when title is absent), which
+    # silently skipped the title default here.
+    if (is.null(args[["edge_ci_lower"]])) args[["edge_ci_lower"]] <- x$ci_lower[edge_pos]
+    if (is.null(args[["edge_ci_upper"]])) args[["edge_ci_upper"]] <- x$ci_upper[edge_pos]
+    if (is.null(args[["edge_ci"]])) {
+      args[["edge_ci"]] <- pmax(args[["edge_ci_upper"]] - args[["edge_ci_lower"]], 0)
+    }
+    if (is.null(args[["edge_label_template"]]) && is.null(args[["edge_label_style"]])) {
+      args[["edge_label_template"]] <- "{est} {stars}\n[{low}, {up}]"
+    }
+    if (is.null(args[["edge_label_oneline"]])) args[["edge_label_oneline"]] <- FALSE
+    if (is.null(args[["edge_label_digits"]])) args[["edge_label_digits"]] <- 3L
+    if (is.null(args[["edge_label_leading_zero"]])) {
+      args[["edge_label_leading_zero"]] <- FALSE
+    }
+    if (is.null(args[["edge_label_stars"]])) args[["edge_label_stars"]] <- TRUE
+    if (is.null(args[["edge_label_size"]])) args[["edge_label_size"]] <- 0.36
+    if (is.null(args[["edge_ci_alpha"]])) args[["edge_ci_alpha"]] <- 0.10
+    if (is.null(args[["edge_ci_scale"]])) args[["edge_ci_scale"]] <- 1.0
+    if (is.null(args[["edge_ci_style"]])) args[["edge_ci_style"]] <- 1
+    if (is.null(args[["title_size"]])) args[["title_size"]] <- 0.82
+    if (is.null(args[["title"]])) {
+      args[["title"]] <- title %||% "Bayesian network difference"
+    }
+    args[["show_nonsig"]] <- !isTRUE(significant_only)
+
+    return(do.call(cograph::splot, c(list(x = x), args)))
+  }
+
   ed <- x$summary
   if (significant_only) ed <- ed[ed$sig, , drop = FALSE]
   if (nrow(ed) == 0L) {
