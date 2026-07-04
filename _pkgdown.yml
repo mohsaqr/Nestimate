@@ -79,6 +79,8 @@ reference:
       - compare_model.netobject_group
       - rename_models
       - magnitude_difference
+      - subtract_networks
+      - as_netdifference
 
   - title: Reliability & Stability
     desc: Assess reliability and stability of network estimates

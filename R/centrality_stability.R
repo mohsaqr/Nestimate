@@ -178,7 +178,11 @@ centrality_stability <- function(x,
   )
 
   # Drop measures with zero variance (e.g. OutStrength for relative networks)
-  keep <- vapply(measures, function(m) sd(orig_cents[[m]]) > 0, logical(1))
+  # or that are undefined on this network (e.g. Diffusion is NaN on a small
+  # cyclic net): an all-NA sd() would otherwise poison `any()` with NA.
+  keep <- vapply(measures,
+                 function(m) isTRUE(sd(orig_cents[[m]], na.rm = TRUE) > 0),
+                 logical(1))
   if (!any(keep)) {
     warning("All centrality measures have zero variance. ",
             "No stability can be assessed.", call. = FALSE)
