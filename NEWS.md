@@ -1,3 +1,96 @@
+# Nestimate 0.7.8
+
+## New features
+
+* `subtract_networks()` / `as_netdifference()` — verbs for the difference
+  between two networks. `subtract_networks(x, y)` returns the edge-wise
+  difference as a `netdifference` object; `as_netdifference()` promotes an
+  existing comparison result to the same class — a `bayes_compare()` result,
+  or a `netdifference`, which passes through; anything else errors — so a
+  difference computed by any route prints the same way. Adds
+  `print.netdifference`.
+
+* `bayes_compare()` accepts two `net_edge_betweenness()` objects (source
+  method `"relative"` only). Edge betweenness is recomputed on every
+  posterior draw, giving the Bayesian analogue of `permutation()`'s
+  edge-betweenness dispatch, with posterior mean betweenness matrices and
+  the plug-in `observed_diff`.
+
+* `permutation()` gains a `measures` argument for centrality permutation
+  tests, matching the `tna` package's dispatch.
+
+## Enhancements
+
+* `bayes_compare()`'s probability-of-direction column is renamed `pd` ->
+  `p_difference` in the `summary()` frame, and the result now carries class
+  `c("net_bayes", "netdifference", "net_permutation")` so it dispatches to
+  the difference verbs as well as the permutation ones.
+
+* Non-ASCII characters normalized across R sources and man pages.
+
+## Bug fixes
+
+* `centrality_stability()` no longer errors with
+  "missing value where TRUE/FALSE needed" when a requested measure is
+  undefined on the network (e.g. `Diffusion` is `NaN` on a small cyclic
+  net): `sd()` returned `NA`, which poisoned `if (!any(keep))`. Such
+  measures now drop like zero-variance ones.
+
+* `centrality_stability()`'s default `measures` is restored to
+  `c("InStrength", "OutStrength", "Betweenness")`. 0.7.7 had swapped
+  `OutStrength` for `Diffusion`, which broke the \pkg{htna} package: it calls
+  `centrality_stability()` with no `measures` and compares the result
+  against its own explicit trio. `centrality()` / `net_centrality()` keep
+  the `Diffusion` default; only `centrality_stability()` reverts.
+
+* `Suggests: cograph` relaxed from `(>= 2.4.4)` to `(>= 2.3.6)`, the version
+  available on CRAN. `Additional_repositories` removed — every declared
+  dependency now resolves from CRAN.
+
+# Nestimate 0.7.7
+
+## Enhancements
+
+* `plot()` on a `net_centrality_group` gains `type = "delta"`, showing the
+  between-group difference per measure, and now supports three or more
+  groups. Zero-valued edges can be blanked with `drop_zero = TRUE`.
+
+# Nestimate 0.7.6
+
+## New features
+
+* `plot()` on a `net_edge_betweenness()` result (`plot.net_edge_betweenness`).
+
+## Enhancements
+
+* `plot()` on centrality results gains alternative views:
+  `type = c("bar", "line", "heatmap")` for a single `net_centrality`, and
+  `type = c("bar", "line", "delta")` for a `net_centrality_group`. Count-like
+  measures get integer axis labels.
+
+# Nestimate 0.7.5
+
+Version bump only; no user-visible changes.
+
+# Nestimate 0.7.4
+
+## New features
+
+* `as_htna()` — builds a grouped node-level network from data and a
+  clustering, keeping every node (unlike `cluster_summary()`, which
+  collapses to a cluster-level macro summary). Intended for
+  `cograph::plot_htna()`.
+
+## Enhancements
+
+* Centrality gains the `tna`-parity measures. `net_centrality(x, measures =
+  "all")` now returns `OutStrength`, `InStrength`, `ClosenessIn`,
+  `ClosenessOut`, `Closeness`, `Betweenness`, `BetweennessRSP`, `Diffusion`
+  and `Clustering` — previously only the strengths, `Closeness` and
+  `Betweenness`. Adds `plot.net_centrality` and `plot.net_centrality_group`.
+
+* `sequence_plot()` and the MCML plots gain layout refinements.
+
 # Nestimate 0.7.3
 
 ## New features
@@ -162,6 +255,49 @@
   echoing the `directed` argument unchanged. Renderers that auto-detect
   directedness (e.g., `cograph::plot_mcml()` with `directed = NULL`) now
   draw co-occurrence MCML objects as undirected networks automatically.
+
+# Nestimate 0.6.3
+
+## New features
+
+* `mosaic_analysis(data, var1, var2)` — two-variable mosaic analysis on a
+  `data.frame`: chi-square or Fisher test, Cramer's V (df-adjusted effect
+  size) and a flat mosaic plot. Returns class `mosaic_analysis` with a tidy
+  one-row-per-cell `$counts`, a one-row `$stats`, and print/summary/plot.
+  Distinct from `mosaic_plot()`, which draws from a fitted network object.
+
+## Enhancements
+
+* `mosaic_plot()` gains `style = c("classic", "flat")`. The flat style uses
+  variable-width columns, white gutters and in-tile or side labels, sharing
+  the classic style's geometry and diverging palette; `values = TRUE` prints
+  residuals inside the tiles.
+
+# Nestimate 0.6.2
+
+## Bug fixes
+
+* Corrected stale rank-scaling assertions in the test suite. No user-visible
+  change.
+
+# Nestimate 0.6.1
+
+## New features
+
+* `build_network()` and the transition wrappers (`build_tna()`,
+  `build_ftna()`, `build_atna()`, `build_cna()`) gain `start` and `end`
+  boundary markers: `FALSE` (default), `TRUE` (labels `"Start"` / `"End"`)
+  or a custom string. `start` prepends a source state to every sequence;
+  `end` places a sink in the single cell after each sequence's last non-`NA`
+  state (not absorbing — see `mark_terminal_state()` for that). Honoured by
+  the `relative`, `frequency`, `co_occurrence` and `attention` estimators;
+  other methods error.
+
+* `build_mmm()` gains `covariate_effect`. `"em"` (default) folds covariates
+  into the EM as covariate-dependent mixing, changing the fit; `"posthoc"`
+  fits a plain mixture and uses covariates only for the after-fit
+  multinomial logit, leaving the clustering bit-identical to a
+  no-covariate fit.
 
 # Nestimate 0.6.0
 
