@@ -284,12 +284,15 @@ test_that("centrality_stability default is the trio and accepts measures = 'all'
   seqs <- as.data.frame(matrix(sample(c("A","B","C","D"), 160, TRUE), ncol = 4))
   net <- build_network(seqs, method = "relative")
 
-  # default measures
+  # Default measures. Kept at the 0.6.0 trio (OutStrength, not Diffusion):
+  # htna's CRAN release compares its own explicit trio against this default,
+  # so changing it breaks the reverse dependency. See CLAUDE.md, "Reverse
+  # Dependency: htna".
   expect_identical(eval(formals(centrality_stability)$measures),
-                   c("InStrength", "Betweenness", "Diffusion"))
+                   c("InStrength", "OutStrength", "Betweenness"))
   s_def <- suppressWarnings(suppressMessages(
     centrality_stability(net, iter = 40, seed = 1)))
-  expect_identical(s_def$measures, c("InStrength", "Betweenness", "Diffusion"))
+  expect_identical(s_def$measures, c("InStrength", "OutStrength", "Betweenness"))
 
   # "all" expands to every built-in measure (and no longer errors on
   # degenerate resamples where Diffusion/RSP can be NA)

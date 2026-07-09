@@ -63,8 +63,9 @@ test_that("argument names htna passes still exist on the generics", {
 
 # ---- Contract B: Nestimate dispatches on objects of class `htna` -----------
 
-# Minimal object matching what htna::build_htna() returns: a netobject
-# carrying $node_groups (node, group), with "htna" prepended to the class.
+# Minimal object matching what the htna package's build_htna() returns: a
+# netobject carrying $node_groups (node, group), with "htna" prepended to the
+# class. Constructed here rather than imported, so this file needs no htna.
 .fake_htna <- function() {
   set.seed(42)
   seqs <- data.frame(
@@ -208,12 +209,22 @@ test_that("undefined (NaN) measures do not crash and do not change the default s
   names(seqs) <- paste0("T", seq_len(ncol(seqs)))
   net <- build_network(seqs, method = "relative")
 
-  defaults <- eval(formals(centrality_stability)$measures)
-  expect_true("Diffusion" %in% defaults)  # the test is vacuous without it
+  # Request Diffusion explicitly: it is not in the default set, and the test is
+  # vacuous without it.
+  m <- c("InStrength", "Betweenness", "Diffusion")
+  st <- suppressWarnings(centrality_stability(net, measures = m, iter = 5L, seed = 1L))
+  expect_identical(names(st$cs), m)
+  expect_equal(unname(st$cs), rep(0, length(m)))
+})
 
-  st <- suppressWarnings(centrality_stability(net, iter = 5L, seed = 1L))
-  expect_identical(names(st$cs), defaults)
-  expect_equal(unname(st$cs), rep(0, length(defaults)))
+test_that("centrality_stability's DEFAULT measure set is the 0.6.0 trio", {
+  # htna's CRAN release calls Nestimate::centrality_stability() with no
+  # `measures` and compares the result against its own explicit trio. Any
+  # change to this default silently breaks that reverse dependency: commit
+  # b0d20cd swapped OutStrength -> Diffusion here and broke 21 htna assertions
+  # while Nestimate's own suite stayed green. This is the guard for that.
+  expect_identical(eval(formals(centrality_stability)$measures),
+                   c("InStrength", "OutStrength", "Betweenness"))
 })
 
 test_that("fully degenerate: every requested measure is returned with cs = 0", {

@@ -17,7 +17,7 @@
 #'
 #' @param x A \code{netobject} from \code{\link{build_network}}.
 #' @param measures Character vector. Centrality measures to assess.
-#'   Defaults to \code{c("InStrength", "Betweenness", "Diffusion")}. Pass
+#'   Defaults to \code{c("InStrength", "OutStrength", "Betweenness")}. Pass
 #'   \code{"all"} for every built-in measure: \code{"OutStrength"},
 #'   \code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
 #'   \code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"},
@@ -90,8 +90,8 @@
 #' @importFrom stats cor sd
 #' @export
 centrality_stability <- function(x,
-                                 measures = c("InStrength", "Betweenness",
-                                              "Diffusion"),
+                                 measures = c("InStrength", "OutStrength",
+                                              "Betweenness"),
                                  iter = 1000L,
                                  drop_prop = seq(0.1, 0.9, by = 0.1),
                                  threshold = 0.7,

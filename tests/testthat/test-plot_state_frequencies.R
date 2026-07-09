@@ -187,33 +187,11 @@ test_that("mcml frequency methods reject unsupported dots", {
 # ---------------------------------------------------------------------------
 # plot_state_frequencies on htna
 # ---------------------------------------------------------------------------
-
-test_that("plot_state_frequencies works on htna", {
-  skip_if_not_installed("htna")
-  data(ai_long, package = "Nestimate")
-  data(human_long, package = "Nestimate")
-
-  ht <- htna::build_htna(list(AI = ai_long, Human = human_long),
-                          action = "code", session = "session_id",
-                          order = "code_order")
-  expect_s3_class(ht, "htna")
-  expect_false(is.null(ht$node_groups))
-
-  # Default for htna is now legend = "bottom" -> ggplot. Per-facet still
-  # available via legend = "per_facet".
-  skip_if_not_installed("gridExtra")
-  p_default <- plot_state_frequencies(ht)
-  expect_s3_class(p_default, "state_freq")
-  expect_true(inherits(p_default$plot, "gtable") ||
-              inherits(p_default$plot, "ggplot"))
-
-  # Explicit single-legend bottom -> ggplot.
-  p_single <- plot_state_frequencies(ht, legend = "bottom")
-  expect_s3_class(p_single$plot, "ggplot")
-
-  p_bars <- plot_state_frequencies(ht, style = "bars")
-  expect_s3_class(p_bars$plot, "ggplot")
-})
+# The end-to-end check against a real object from the htna package lives in
+# local_testing_and_equivalence/test-equiv-htna-plot.R: htna Imports Nestimate,
+# so Suggesting it here would create a dependency cycle and an "Unstated
+# dependencies in 'tests'" WARN. The htna-shaped S3 contract is covered without
+# that dependency in test-contract-htna.R.
 
 
 # ---------------------------------------------------------------------------
