@@ -42,7 +42,7 @@ Suggests:
     lme4,
     corpcor,
     Matrix,
-    cograph (>= 2.4.4),
+    cograph (>= 2.3.6),
     ggfittext,
     knitr,
     rmarkdown,
