@@ -19,7 +19,7 @@ igraph::edge_betweenness()."><meta property="og:image" content="https://saqr.me/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,8 +102,10 @@ and frequency networks).</p></dd>
 <code>c("netobject", "cograph_network")</code>) whose <code>$weights</code> are the
 edge-betweenness scores, with <code>method = "edge_betweenness"</code>. Call
 <code><a href="extract_edges.html">extract_edges()</a></code> on it for a tidy per-edge table, or <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
-to render it. For a <code>netobject_group</code>: a <code>netobject_group</code> of
-such networks, one per group.</p>
+to render it. The object preserves source-network metadata so
+<code><a href="permutation.html">permutation</a></code> can test edge-betweenness differences by
+permuting the source networks. For a <code>netobject_group</code>: a
+<code>netobject_group</code> of such networks, one per group.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -144,7 +146,7 @@ yields a symmetric one.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

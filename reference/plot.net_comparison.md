@@ -26,7 +26,7 @@ plot(
 
 - type:
 
-  Character. One of `"scatter"` (default — edge-weight scatter with OLS
+  Character. One of `"scatter"` (default - edge-weight scatter with OLS
   fit and correlation overlay), `"heatmap"` (n by n grid of x - y
   differences using the diverging palette), `"diff_hist"` (histogram of
   \|x - y\| absolute differences with rug + density), `"weight_dist"`

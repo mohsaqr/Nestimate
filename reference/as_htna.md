@@ -6,7 +6,7 @@ a node and cluster membership labels the actors. This is the node-level
 counterpart of
 [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md): where
 `build_mcml` collapses the network to a cluster-level (macro) summary,
-`as_htna` keeps every node and every transition — including the
+`as_htna` keeps every node and every transition - including the
 between-cluster transitions an mcml only retains in aggregate.
 
 ## Usage

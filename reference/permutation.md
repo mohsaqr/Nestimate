@@ -20,6 +20,13 @@ If either transition network contains only one sequence, the function
 warns that such a network is not recommended for permutation or other
 confirmatory testing.
 
+`permutation()` also accepts two
+[`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+objects. In that case it permutes the source networks, recomputes edge
+betweenness for each shuffled split, and tests edge-betweenness
+differences. The two edge-betweenness objects must come from the same
+source method and use the same `invert` setting.
+
 ## Usage
 
 ``` r
@@ -41,13 +48,18 @@ permutation(
 - x:
 
   A `netobject` (from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md))
+  or a
+  [`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  object.
 
 - y:
 
   A `netobject` (from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
-  Must use the same method and have the same nodes as `x`.
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md))
+  or a
+  [`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  object. Must use the same method and have the same nodes as `x`.
 
 - iter:
 
@@ -76,7 +88,8 @@ permutation(
   block matching the layout of `tna::permutation_test(measures = )`: per
   state and measure it reports the observed difference, an effect size
   (difference / SD of the permutation null), and a permutation p-value,
-  all using the same permuted networks as the edge test.
+  all using the same permuted networks as the edge test. Not supported
+  for `net_edge_betweenness` inputs.
 
 - nlambda:
 
@@ -123,6 +136,10 @@ An object of class `"net_permutation"` containing:
 - method:
 
   The network estimation method.
+
+- source_method:
+
+  For edge-betweenness tests, the source network method.
 
 - iter:
 

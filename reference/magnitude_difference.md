@@ -5,7 +5,7 @@ network between its two natural summaries: raw transition counts
 (frequency / FTNA, `build_network(method = "frequency")`) and
 row-conditional probabilities (TNA,
 `build_network(method = "relative")`). The two matrices rank edges
-differently — an edge that is large in counts can be modest in
+differently - an edge that is large in counts can be modest in
 probability, and a rare-source edge can dominate its row in probability.
 The per-edge discrepancy on a common scale is the *magnitude
 difference*.
@@ -56,7 +56,7 @@ plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
   TNA's `[min, max]` range and leaves TNA untouched, so the difference
   is in TNA probability units. `"rank_minmax"` converts each matrix's
   values to ranks scaled to `[0, 1]` (ordinal). `"minmax"` scales each
-  matrix's raw values to `[0, 1]` separately (asymmetric — TNA's max and
+  matrix's raw values to `[0, 1]` separately (asymmetric - TNA's max and
   FTNA's max map to the same value despite differing native ranges).
   `"none"` uses raw weights.
 

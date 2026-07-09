@@ -13,7 +13,12 @@ and custom estimators), the full estimator is called on each permuted
 group split.
 If either transition network contains only one sequence, the function warns
 that such a network is not recommended for permutation or other
-confirmatory testing.'><meta property="og:description" content='Compares two networks estimated by build_network using a
+confirmatory testing.
+permutation() also accepts two net_edge_betweenness
+objects. In that case it permutes the source networks, recomputes edge
+betweenness for each shuffled split, and tests edge-betweenness differences.
+The two edge-betweenness objects must come from the same source method and
+use the same invert setting.'><meta property="og:description" content='Compares two networks estimated by build_network using a
 permutation test. Works with all built-in methods (transition and
 association) as well as custom registered estimators. The test shuffles
 which observations belong to which group, re-estimates networks, and tests
@@ -27,7 +32,12 @@ and custom estimators), the full estimator is called on each permuted
 group split.
 If either transition network contains only one sequence, the function warns
 that such a network is not recommended for permutation or other
-confirmatory testing.'><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"></head><body>
+confirmatory testing.
+permutation() also accepts two net_edge_betweenness
+objects. In that case it permutes the source networks, recomputes edge
+betweenness for each shuffled split, and tests edge-betweenness differences.
+The two edge-betweenness objects must come from the same source method and
+use the same invert setting.'><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -35,7 +45,7 @@ confirmatory testing.'><meta property="og:image" content="https://saqr.me/Nestim
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,6 +96,11 @@ group split.</p>
 <p>If either transition network contains only one sequence, the function warns
 that such a network is not recommended for permutation or other
 confirmatory testing.</p>
+<p><code>permutation()</code> also accepts two <code><a href="net_edge_betweenness.html">net_edge_betweenness</a></code>
+objects. In that case it permutes the source networks, recomputes edge
+betweenness for each shuffled split, and tests edge-betweenness differences.
+The two edge-betweenness objects must come from the same source method and
+use the same <code>invert</code> setting.</p>
     </div>
 
     <div class="section level2">
@@ -108,11 +123,13 @@ confirmatory testing.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>netobject</code> (from <code><a href="build_network.html">build_network</a></code>).</p></dd>
+<dd><p>A <code>netobject</code> (from <code><a href="build_network.html">build_network</a></code>) or a
+<code><a href="net_edge_betweenness.html">net_edge_betweenness</a></code> object.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
-<dd><p>A <code>netobject</code> (from <code><a href="build_network.html">build_network</a></code>).
+<dd><p>A <code>netobject</code> (from <code><a href="build_network.html">build_network</a></code>) or a
+<code><a href="net_edge_betweenness.html">net_edge_betweenness</a></code> object.
 Must use the same method and have the same nodes as <code>x</code>.</p></dd>
 
 
@@ -143,7 +160,7 @@ Default <code>NULL</code> (edges only). When supplied, the result gains a
 <code>tna::permutation_test(measures = )</code>: per state and measure it reports
 the observed difference, an effect size (difference / SD of the permutation
 null), and a permutation p-value, all using the same permuted networks as
-the edge test.</p></dd>
+the edge test. Not supported for <code>net_edge_betweenness</code> inputs.</p></dd>
 
 
 <dt id="arg-nlambda">nlambda<a class="anchor" aria-label="anchor" href="#arg-nlambda"></a></dt>
@@ -182,6 +199,9 @@ Default: 50.</p></dd>
 
 <dt>method</dt>
 <dd><p>The network estimation method.</p></dd>
+
+<dt>source_method</dt>
+<dd><p>For edge-betweenness tests, the source network method.</p></dd>
 
 <dt>iter</dt>
 <dd><p>Number of permutation iterations.</p></dd>
@@ -264,7 +284,7 @@ with <code>stats</code> (one row per state-by-measure: <code>state</code>,
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

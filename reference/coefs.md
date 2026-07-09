@@ -22,7 +22,7 @@ coefs(x, ...)
 
 - x:
 
-  A fitted model object — currently only `net_mlvar` is supported.
+  A fitted model object - currently only `net_mlvar` is supported.
 
 - ...:
 
@@ -34,7 +34,7 @@ A tidy `data.frame` of coefficient estimates.
 
 ## Details
 
-Only the within-person (temporal) coefficients are tabulated — these are
+Only the within-person (temporal) coefficients are tabulated - these are
 the lagged fixed effects that populate `fit$temporal`. The
 between-subjects effects that go into `fit$between` are handled via the
 `D (I - Gamma)` transformation and are not exposed as a separate tidy

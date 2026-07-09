@@ -42,7 +42,7 @@ cooccurrence(
 
 - field:
 
-  Character. The entity column — determines what the nodes are. For
+  Character. The entity column - determines what the nodes are. For
   delimited format, a single column whose values are split by `sep`. For
   long/bipartite format, the item column. For multi-column delimited, a
   vector of column names whose split values are pooled per row.

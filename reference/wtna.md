@@ -36,7 +36,7 @@ wtna(
   (row-normalized probabilities). Default: `"frequency"`. Note that
   `type = "relative"` applied to `method = "cooccurrence"` produces an
   asymmetric matrix (conditional co-occurrence given row state), not a
-  symmetric undirected weight matrix — use `type = "frequency"` if
+  symmetric undirected weight matrix - use `type = "frequency"` if
   symmetric co-occurrence counts are required.
 
 - codes:

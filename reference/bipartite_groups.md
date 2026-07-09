@@ -59,11 +59,11 @@ Unlike
 `bipartite_groups()` takes group memberships directly. The two functions
 are complementary:
 
-- `bipartite_groups()` — when group membership is observed (sessions,
+- `bipartite_groups()` - when group membership is observed (sessions,
   transactions, co-authorships).
 
-- [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
-  — when only pairwise interactions are observed and triadic structure
+- [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md) -
+  when only pairwise interactions are observed and triadic structure
   must be inferred from triangles.
 
 Rows with `NA` in either the `player` or `group` column (or, when

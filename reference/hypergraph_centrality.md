@@ -3,7 +3,7 @@
 Computes one or more eigenvector-style centralities on a
 [net_hypergraph](https://saqr.me/Nestimate/reference/build_hypergraph.md):
 *clique-motif* (CEC), *Z-eigenvector* (ZEC), and *H-eigenvector* (HEC).
-Each variant captures influence differently — CEC flattens group
+Each variant captures influence differently - CEC flattens group
 structure via clique expansion, while ZEC and HEC propagate through the
 higher-order groups directly.
 
@@ -81,7 +81,7 @@ in the mixed case.
 
 The `"clique"` (CEC) variant is validated against
 [`igraph::eigen_centrality`](https://r.igraph.org/reference/eigen_centrality.html)
-(cosine ~ 1). The `"Z"` and `"H"` variants are **(experimental)** —
+(cosine ~ 1). The `"Z"` and `"H"` variants are **(experimental)** -
 validated only against a clean-room list-based tensor power iteration
 (same operator, different loop structure); no R package exposes tensor
 eigenvectors as a primitive for independent comparison.

@@ -39,9 +39,9 @@ A `c("netobject", "cograph_network")` object.
 
 The psychnet method re-derives the integer-indexed edge table that
 Nestimate expects (psychnet stores character-labelled edges), preserves
-the estimator name in `$method`, and parks every psychnet-specific field
-— including the graphical-lasso `$kkt` optimality certificate — under
-`$meta$psychnet` so nothing is lost in translation.
+the estimator name in `$method`, and parks every psychnet-specific
+field - including the graphical-lasso `$kkt` optimality certificate -
+under `$meta$psychnet` so nothing is lost in translation.
 
 ## See also
 

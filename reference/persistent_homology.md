@@ -4,7 +4,7 @@ Computes persistent homology via full boundary-matrix reduction over
 \\\mathbb{Z}/2\\ (Edelsbrunner, Letscher & Zomorodian 2000). The
 returned persistence diagram pairs each k-dimensional homology class to
 the simplex whose addition creates it (birth) and the simplex whose
-addition destroys it (death). Essential classes — those never killed —
+addition destroys it (death). Essential classes - those never killed -
 are reported with `death = 0` in clique mode (similarity scale,
 descending) and `death = Inf` in VR mode (distance scale, ascending).
 
@@ -46,7 +46,7 @@ persistent_homology(
 - n_steps:
 
   Number of grid points for the reported Betti curve (default 20). The
-  persistence diagram itself is exact — it does not depend on `n_steps`.
+  persistence diagram itself is exact - it does not depend on `n_steps`.
 
 - max_dim:
 

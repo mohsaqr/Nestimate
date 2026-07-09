@@ -5,7 +5,7 @@ Mirror of
 for *left-censored* sequence data. Replaces every cell *before* each
 row's first observed state with the label given by `state`. The
 resulting chain has a structurally *recurrent* "Start" state that
-everyone enters from — useful for cohort-entry analyses where students
+everyone enters from - useful for cohort-entry analyses where students
 join at different time points and you want a uniform pre-observation
 marker.
 
@@ -39,10 +39,10 @@ A `data.frame` of the same shape as `data` with leading NAs filled by
 
 Unlike
 [`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md),
-the marked state is **not** absorbing in the resulting transition matrix
-— every transition from "Start" goes to one of the original states (the
-actor's first observed state), and the "Start" row is row-stochastic
-exactly as the data dictates.
+the marked state is **not** absorbing in the resulting transition
+matrix - every transition from "Start" goes to one of the original
+states (the actor's first observed state), and the "Start" row is
+row-stochastic exactly as the data dictates.
 
 ## See also
 

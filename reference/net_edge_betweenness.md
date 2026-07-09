@@ -50,7 +50,10 @@ edge-betweenness scores, with `method = "edge_betweenness"`. Call
 [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.md)
 on it for a tidy per-edge table, or
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) to render it.
-For a `netobject_group`: a `netobject_group` of such networks, one per
+The object preserves source-network metadata so
+[`permutation`](https://saqr.me/Nestimate/reference/permutation.md) can
+test edge-betweenness differences by permuting the source networks. For
+a `netobject_group`: a `netobject_group` of such networks, one per
 group.
 
 ## Details

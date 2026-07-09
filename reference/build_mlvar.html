@@ -63,7 +63,7 @@ tmp/mlvar_equivalence_20seeds.R."><meta property="og:image" content="https://saq
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -173,13 +173,13 @@ When provided, lag pairs are only formed within the same day.</p></dd>
 <dt id="arg-standardize">standardize<a class="anchor" aria-label="anchor" href="#arg-standardize"></a></dt>
 <dd><p>Logical. If <code>TRUE</code>, each variable is grand-mean
 centered and divided by its pooled SD <em>before</em> augmentation. Default
-<code>FALSE</code>, matching <code>mlVAR::mlVAR(scale = FALSE)</code> — the only setting for
+<code>FALSE</code>, matching <code>mlVAR::mlVAR(scale = FALSE)</code> - the only setting for
 which numerical equivalence has been validated.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A dual-class <code>c("net_mlvar", "netobject_group")</code> object — a
+    <p>A dual-class <code>c("net_mlvar", "netobject_group")</code> object - a
 named list of three full netobjects, one per network, plus
 model-level metadata stored as attributes. Each element is a
 standard <code>c("netobject", "cograph_network")</code> weight-matrix wrapper
@@ -187,7 +187,7 @@ standard <code>c("netobject", "cograph_network")</code> weight-matrix wrapper
 <code>cograph::splot(fit$temporal)</code> work directly. The three constituents
 are matrix-wrapped and carry no underlying panel data, so
 data-resampling verbs such as <code><a href="bootstrap_network.html">bootstrap_network()</a></code> (and
-reliability/stability) cannot iterate over them — extract a single
+reliability/stability) cannot iterate over them - extract a single
 constituent and rebuild via <code><a href="build_network.html">build_network()</a></code> if you need those.
 Structure:</p><dl><dt><code>fit$temporal</code></dt>
 <dd><p>Directed netobject for the <code>d x d</code> matrix of
@@ -253,7 +253,7 @@ standardization was applied.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

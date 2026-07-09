@@ -21,6 +21,20 @@ edge with few outgoing transitions from its source state yields a wide
 credible interval even when its row-normalised probability looks
 decisive.
 
+`bayes_compare()` also accepts two
+[`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+objects (source method `"relative"` only). Edge betweenness is a
+nonlinear function of the whole transition matrix, so instead of Beta
+marginals the full transition matrix is drawn from each group's row-wise
+Dirichlet posterior and edge betweenness is recomputed on every draw -
+the Bayesian analogue of
+[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)'s
+edge-betweenness dispatch. The result summarises the posterior of
+`EB(x) - EB(y)`: `diff` is the posterior mean difference,
+`prob_x`/`prob_y` hold the posterior mean betweenness matrices, and
+`observed_diff` the plug-in difference of the two input networks. Both
+inputs must use the same `invert` setting.
+
 ## Usage
 
 ``` r
@@ -42,8 +56,10 @@ bayes_compare(
 
   A `netobject` (from
   [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)),
-  a `netobject_group`, or an `mcml` object. Must use a transition method
-  (`"relative"` / `"frequency"` and their aliases).
+  a `netobject_group`, an `mcml` object, or a
+  [`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  object. Must use a transition method (`"relative"` / `"frequency"` and
+  their aliases).
 
 - y:
 
@@ -82,11 +98,12 @@ bayes_compare(
 
 ## Value
 
-An object of class `c("net_bayes", "net_permutation")`. It carries the
-same fields as a
+An object of class `c("net_bayes", "netdifference", "net_permutation")`.
+It carries the same fields as a
 [`permutation`](https://saqr.me/Nestimate/reference/permutation.md)
-result, so it is a drop-in wherever a `net_permutation` is consumed,
-plus Bayesian extras:
+result, so it is a drop-in wherever a `net_permutation` is consumed, and
+also carries a `netdifference` difference matrix for cograph difference
+plotting, plus Bayesian extras:
 
 - x, y:
 
@@ -96,6 +113,10 @@ plus Bayesian extras:
 
   Posterior mean difference matrix (`prob_x - prob_y`); the analogue of
   the permutation observed difference.
+
+- difference_matrix:
+
+  Alias of `diff` for cograph `netdifference` helpers.
 
 - diff_sig:
 
@@ -113,13 +134,16 @@ plus Bayesian extras:
 
   Credible-interval bound matrices.
 
-- pd:
+- p_difference:
 
-  Probability-of-direction matrix in \\\[0.5, 1\]\\.
+  Probability of the difference: the share of posterior mass on the
+  dominant side of zero, in \\\[0.5, 1\]\\ (\\P(\mathrm{High} \>
+  \mathrm{Low})\\ for a positive difference).
 
 - p_bayes:
 
-  Alias of `p_values` (two-sided Bayesian p, \\2(1-pd)\\).
+  Alias of `p_values` (two-sided Bayesian p,
+  \\2(1-\mathrm{p\\difference})\\).
 
 - prob_x, prob_y:
 
@@ -135,7 +159,7 @@ plus Bayesian extras:
   Long-format data frame whose columns are a superset of
   `summary.net_permutation`
   (`from, to, weight_x, weight_y, diff, effect_size, p_value, sig`) plus
-  `count_x, count_y, ci_lower, ci_upper, ci_width, pd`.
+  `count_x, count_y, ci_lower, ci_upper, ci_width, p_difference`.
 
 - method, iter, alpha, paired, adjust:
 

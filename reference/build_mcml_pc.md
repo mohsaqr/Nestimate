@@ -2,7 +2,7 @@
 
 **Experimental.** Aggregates a node-level psychometric network
 (correlation, partial correlation, or EBICglasso) into a cluster-level
-macro network plus per-cluster within networks — the MCML view that
+macro network plus per-cluster within networks - the MCML view that
 [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md)
 provides for transition networks, adapted to the statistics of
 undirected association networks. The API and the exact aggregation
@@ -35,23 +35,23 @@ therefore have explicitly different statuses:
   within-cluster connection strength in the node-level network (the
   absolute summed weight to the other members of their own cluster,
   normalized to sum to 1 per cluster). Nodes that anchor their cluster
-  contribute more to its composite. This is Nestimate's own weighting —
+  contribute more to its composite. This is Nestimate's own weighting -
   related in spirit to network loadings (Christensen & Golino 2021) but
   not a reimplementation of any EGA-family estimator. Requires raw data.
 
 - `"rv"` (descriptive, multivariate):
 
-  Macro edge A–B = Escoufier's RV coefficient between the member blocks
-  — a matrix correlation in `[0, 1]` computed from the block covariance
-  structure. No composites are formed and no estimator is re-fit, so
-  nothing is lost to averaging; signs are not represented. Requires raw
-  data.
+  Macro edge A–B = Escoufier's RV coefficient between the member
+  blocks - a matrix correlation in `[0, 1]` computed from the block
+  covariance structure. No composites are formed and no estimator is
+  re-fit, so nothing is lost to averaging; signs are not represented.
+  Requires raw data.
 
 - `"canonical"` (descriptive, multivariate):
 
   Macro edge A–B = the first canonical correlation between the member
   blocks: the strongest linear relationship any weighting of A's items
-  can have with any weighting of B's items — an upper bound on what
+  can have with any weighting of B's items - an upper bound on what
   composite methods can recover. Requires raw data.
 
 ## Usage
@@ -79,8 +79,8 @@ build_mcml_pc(
 - x:
 
   A `netobject` estimated with an undirected association method (`cor`,
-  `pcor`, `glasso`; aliases accepted) — its `$data` and `$method` are
-  reused — or a numeric data.frame of raw observations (then `method`
+  `pcor`, `glasso`; aliases accepted) - its `$data` and `$method` are
+  reused - or a numeric data.frame of raw observations (then `method`
   decides the estimator).
 
 - clusters:
@@ -121,7 +121,7 @@ build_mcml_pc(
 
   `"average"`
 
-  :   Average the item-pair edges in each between-cluster submatrix — no
+  :   Average the item-pair edges in each between-cluster submatrix - no
       scores, no re-estimation.
 
   `"escoufier"`
@@ -131,13 +131,13 @@ build_mcml_pc(
 
   `"cancor"`
 
-  :   First canonical correlation — an upper bound on how related two
+  :   First canonical correlation - an upper bound on how related two
       blocks can be.
 
 - method:
 
   Character. Network estimator for the re-estimation paths and for
-  data.frame input: `"pcor"` (default), `"glasso"`, or `"cor"` — the
+  data.frame input: `"pcor"` (default), `"glasso"`, or `"cor"` - the
   same vocabulary as
   [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
   Ignored (with the netobject's own method used instead) when `x` is a
@@ -155,7 +155,7 @@ build_mcml_pc(
 
   `"equal"`
 
-  :   (default) 1/m per item — the scale as scored.
+  :   (default) 1/m per item - the scale as scored.
 
   `"strength"`
 
@@ -165,17 +165,18 @@ build_mcml_pc(
   `"eigen"`
 
   :   Leading-eigenvector weights of the within-cluster block of the
-      node-level network — like strength but giving extra weight to
+      node-level network - like strength but giving extra weight to
       items connected to other well-connected items.
 
   `"pca"`
 
-  :   First principal component of the member items' correlation matrix
-      — a data-statistical weighting, blind to the estimated network.
+  :   First principal component of the member items' correlation
+      matrix - a data-statistical weighting, blind to the estimated
+      network.
 
   `"factor"`
 
-  :   Standardized loadings of a one-factor model per cluster — the
+  :   Standardized loadings of a one-factor model per cluster - the
       classical latent-variable weighting. The extraction method is
       chosen by `fa_method` and the correlation input respects
       `cor_method` (so polychoric factor analysis of ordinal items is
@@ -192,7 +193,7 @@ build_mcml_pc(
   `"expected_influence"`
 
   :   Mean *signed* connection to the other own-cluster members
-      (Robinaugh et al. 2016) — like strength, but opposite-sign
+      (Robinaugh et al. 2016) - like strength, but opposite-sign
       connections subtract, and negative expected influence marks
       reverse-keyed items.
 
@@ -200,13 +201,13 @@ build_mcml_pc(
 
   :   The misfit margin: own-cluster strength minus the strongest
       cross-cluster strength, floored at 0. Items that belong as much to
-      another cluster contribute nothing to their composite — the
+      another cluster contribute nothing to their composite - the
       weighting twin of the `misfit` diagnostic.
 
   `"item_total"`
 
   :   Corrected item-total correlation: each item against the mean of
-      the other (standardized) members — the classical
+      the other (standardized) members - the classical
       scale-construction weighting.
 
   **Custom weightings:** `weighting` also accepts a *named numeric
@@ -216,7 +217,7 @@ build_mcml_pc(
   per item, evaluated per cluster.
 
   Network-based and data-based weightings answer different questions;
-  comparing them is informative — divergence means the network's view of
+  comparing them is informative - divergence means the network's view of
   the cluster differs from its latent-variable view. Schemes with
   inherently non-negative weights (equal, closeness, betweenness,
   specificity) keep the eigenvector-based item signs; sign-carrying
@@ -280,7 +281,7 @@ build_mcml_pc(
   [`stats::factanal()`](https://rdrr.io/r/stats/factanal.html) arguments
   for `"ml"`, and `max_iter` / `tol` for `"paf"`. Arguments managed
   internally (`model`, `data`, `covmat`, `n.obs`, `factors`) are ignored
-  with a warning — the model is always the one-factor model per cluster,
+  with a warning - the model is always the one-factor model per cluster,
   because the composite needs exactly one weight per item.
 
 ## Value
@@ -330,7 +331,7 @@ available, every item's connection strength to *every* cluster is
 computed. The `$loadings` table reports, per item: its signed
 own-cluster loading, its composite weight, its strongest cross-cluster
 loading, and a `misfit` flag set when the cross-cluster loading exceeds
-the own-cluster loading — evidence the item is assigned to the wrong
+the own-cluster loading - evidence the item is assigned to the wrong
 cluster. Misfit items trigger a warning; every aggregation silently
 inherits a bad membership, so fix the assignment rather than ignoring
 the flag.
@@ -350,12 +351,12 @@ handling.
 
 **Ordinal items.** `cor_method = "polychoric"` (requires the lavaan
 package) estimates the node-level and within-cluster networks from
-polychoric correlations — appropriate for Likert items. Composites are
+polychoric correlations - appropriate for Likert items. Composites are
 continuous sums, so the macro re-estimation uses Pearson correlations of
 the composites regardless.
 
 **Within-cluster networks** follow `within`: `"reestimate"` (default)
-re-fits the estimator on the member columns alone — the honest
+re-fits the estimator on the member columns alone - the honest
 conditional structure of the subsystem; `"subnetwork"` slices the
 node-level weight matrix and is descriptive (for pcor/glasso it retains
 conditioning on out-of-cluster nodes). Modes without raw data force

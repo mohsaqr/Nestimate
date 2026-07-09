@@ -36,7 +36,7 @@ summary(object, ...)
 - p:
 
   Probability in `[0, 1]` that each k-clique with k \>= 3 becomes a
-  k-hyperedge. Default `1` (deterministic — every found clique is
+  k-hyperedge. Default `1` (deterministic - every found clique is
   included).
 
 - method:

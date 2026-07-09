@@ -52,7 +52,7 @@ build_simplicial(
 
   For `type = "clique"`: minimum non-zero absolute edge weight to
   include an edge (default 0). Edges below this are ignored; zero-weight
-  non-edges are never included. Ignored for `type = "vr"` — use
+  non-edges are never included. Ignored for `type = "vr"` - use
   `max_scale` instead.
 
 - max_dim:

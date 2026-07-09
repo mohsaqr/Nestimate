@@ -150,6 +150,13 @@ Statistical inference for network estimation
   [`plot(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
   : Magnitude difference between the frequency and probability views
 
+- [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  [`print(`*`<netdifference>`*`)`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  : Subtract one network from another
+
+- [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+  : Coerce an inferential comparison to a network difference
+
 ## Reliability & Stability
 
 Assess reliability and stability of network estimates
@@ -562,6 +569,10 @@ Print, summary, and plot methods for package classes
   [`plot(`*`<state_freq>`*`)`](https://saqr.me/Nestimate/reference/state_freq.md)
   [`as.data.frame(`*`<state_freq>`*`)`](https://saqr.me/Nestimate/reference/state_freq.md)
   : Print, Plot, and Convert a state_freq Object
+
+- [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  [`print(`*`<netdifference>`*`)`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  : Subtract one network from another
 
 - [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)
   [`summary(`*`<net_mpt>`*`)`](https://saqr.me/Nestimate/reference/passage_time.md)

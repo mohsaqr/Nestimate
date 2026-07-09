@@ -4,7 +4,7 @@ Projects a
 [net_hypergraph](https://saqr.me/Nestimate/reference/build_hypergraph.md)
 to a standard pairwise
 [netobject](https://saqr.me/Nestimate/reference/build_network.md) (the
-*clique expansion* — also called the "downgrade" of a hypergraph to a
+*clique expansion* - also called the "downgrade" of a hypergraph to a
 dyadic graph). Each hyperedge of size k contributes 1 (or its weight) to
 every pair of its members. The resulting edge weight `W[i, j]` equals
 the number of hyperedges containing both `i` and `j` (binary incidence)

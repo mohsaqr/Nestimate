@@ -4,7 +4,7 @@ Computes link prediction scores for all node pairs using one or more
 structural similarity methods. Accepts `netobject`, `mcml`,
 `cograph_network`, or a raw weight matrix.
 
-All methods are fully vectorized using matrix operations — no loops.
+All methods are fully vectorized using matrix operations - no loops.
 Supports both weighted and binary adjacency, directed and undirected
 networks.
 

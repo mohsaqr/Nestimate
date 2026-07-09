@@ -82,12 +82,12 @@ build_mlvar(
 
   Logical. If `TRUE`, each variable is grand-mean centered and divided
   by its pooled SD *before* augmentation. Default `FALSE`, matching
-  `mlVAR::mlVAR(scale = FALSE)` — the only setting for which numerical
+  `mlVAR::mlVAR(scale = FALSE)` - the only setting for which numerical
   equivalence has been validated.
 
 ## Value
 
-A dual-class `c("net_mlvar", "netobject_group")` object — a named list
+A dual-class `c("net_mlvar", "netobject_group")` object - a named list
 of three full netobjects, one per network, plus model-level metadata
 stored as attributes. Each element is a standard
 `c("netobject", "cograph_network")` weight-matrix wrapper (no raw
@@ -98,7 +98,7 @@ stored as attributes. Each element is a standard
 matrix-wrapped and carry no underlying panel data, so data-resampling
 verbs such as
 [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
-(and reliability/stability) cannot iterate over them — extract a single
+(and reliability/stability) cannot iterate over them - extract a single
 constituent and rebuild via
 [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
 if you need those. Structure:

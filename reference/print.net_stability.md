@@ -29,9 +29,15 @@ The input object, invisibly.
 net <- build_network(data.frame(V1 = c("A","B","C","A"),
   V2 = c("B","C","A","B")), method = "relative")
 cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
-#> Error in if (!any(keep)) {    warning("All centrality measures have zero variance. ", "No stability can be assessed.",         call. = FALSE)    result <- list(cs = stats::setNames(rep(0, length(measures)),         measures), correlations = stats::setNames(lapply(measures,         function(m) {            matrix(NA_real_, nrow = iter, ncol = length(drop_prop))        }), measures), measures = measures, drop_prop = drop_prop,         threshold = threshold, certainty = certainty, iter = iter,         method = method)    class(result) <- "net_stability"    return(result)}: missing value where TRUE/FALSE needed
+#> Warning: All centrality measures have zero variance. No stability can be assessed.
 print(cs)
-#> Error: object 'cs' not found
+#> Centrality Stability (10 iterations, threshold = 0.7)
+#>   Drop proportions: 0.3
+#> 
+#>   CS-coefficients:
+#>     InStrength       0.00
+#>     OutStrength      0.00
+#>     Betweenness      0.00
 # \donttest{
 set.seed(1)
 seqs <- data.frame(

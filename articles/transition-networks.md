@@ -437,8 +437,8 @@ centrality_stability(net_tna, iter = 100)
 #> 
 #>   CS-coefficients:
 #>     InStrength       0.90
+#>     OutStrength      0.80
 #>     Betweenness      0.90
-#>     Diffusion        0.80
 ```
 
 ### Clustering

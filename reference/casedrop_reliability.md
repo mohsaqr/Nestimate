@@ -130,7 +130,7 @@ An object of class `net_casedrop_reliability` with:
 
 - `cs`:
 
-  Scalar CS-coefficient — the maximum drop proportion for which the
+  Scalar CS-coefficient - the maximum drop proportion for which the
   edge-vector correlation remains \>= `threshold` in at least
   `certainty` of iterations. Zero if no proportion qualifies.
 

@@ -92,7 +92,7 @@ An object of class `hypergraph_measures` (a named list) with components:
 
 - `intersection_profile`:
 
-  Distribution of pairwise hyperedge intersection sizes — useful for
+  Distribution of pairwise hyperedge intersection sizes - useful for
   spotting whether hyperedges overlap mostly trivially or share
   substantial cores (Do et al. 2020).
 

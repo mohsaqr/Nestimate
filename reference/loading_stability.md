@@ -36,7 +36,7 @@ loading_stability(x, iter = 200L, ci_level = 0.05, seed = NULL)
 
 An object of class `"pc_loading_stability"`: a list with `summary` (tidy
 data frame: `node`, `cluster`, `weight`, `boot_mean`, `boot_sd`,
-`ci_lower`, `ci_upper`, `sign_flips` — the proportion of replicates in
+`ci_lower`, `ci_upper`, `sign_flips` - the proportion of replicates in
 which the item's sign differed from the observed one), `boot_weights`
 (iter x n_nodes matrix), `iter`, and `ci_level`. Has print and plot
 methods.

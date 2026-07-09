@@ -39,7 +39,7 @@ This is the small piece of pre-processing required to turn
 right-censored sequence data into an absorbing-chain model. The chain on
 the resulting matrix has one extra state (`state`) which is structurally
 absorbing because every cell after the actor's last observed step has
-been set to `state` — the chain stays there forever once entered.
+been set to `state` - the chain stays there forever once entered.
 
 Use
 [`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.md)

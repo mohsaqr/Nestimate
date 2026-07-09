@@ -10,10 +10,10 @@ Unlike
 [`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
 which resamples the underlying cases (sequences or rows) and therefore
 requires the raw data stored in the netobject, the vertex bootstrap
-needs **only the weight matrix**. It works on any `netobject` —
+needs **only the weight matrix**. It works on any `netobject` -
 including data-less ones such as
 [`build_mlvar`](https://saqr.me/Nestimate/reference/build_mlvar.md)
-constituents or `as_tna(mcml)` elements — and on plain weight matrices.
+constituents or `as_tna(mcml)` elements - and on plain weight matrices.
 The two procedures answer different questions: the case bootstrap
 quantifies sampling-of-subjects uncertainty in the edge weights; the
 vertex bootstrap quantifies structural uncertainty of whole-network
@@ -106,7 +106,7 @@ for two different positions, the off-diagonal cell would be a structural
 self-pair; following Snijders & Borgatti, such cells are filled with the
 weight of a randomly chosen pair of distinct original vertices. Diagonal
 entries carry the original self-weight of the resampled vertex
-(`W[idx_i, idx_i]`) — self-loops are meaningful in transition networks
+(`W[idx_i, idx_i]`) - self-loops are meaningful in transition networks
 and are never altered. For undirected networks the substitution is
 applied symmetrically so replicates stay symmetric.
 

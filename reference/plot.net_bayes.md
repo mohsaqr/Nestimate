@@ -27,11 +27,15 @@ plot(x, significant_only = TRUE, title = NULL, ...)
 
 - ...:
 
-  Additional arguments (ignored).
+  Additional arguments passed to
+  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+  when cograph is available.
 
 ## Value
 
-A `ggplot` object.
+Invisibly, the cograph network returned by
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+when cograph is available; otherwise a fallback `ggplot` object.
 
 ## Examples
 

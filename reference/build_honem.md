@@ -61,13 +61,13 @@ An object of class `net_honem` with components:
 
 ## Details
 
-HONEM is parameter-free and scalable — no random walks, skip-gram, or
+HONEM is parameter-free and scalable - no random walks, skip-gram, or
 hyperparameter tuning required.
 
 ## References
 
 Saebi, M., Ciampaglia, G. L., Kazemzadeh, S., & Meyur, R. (2020). HONEM:
-Learning Embedding for Higher Order Networks. *Big Data*, 8(4), 255–269.
+Learning Embedding for Higher Order Networks. *Big Data*, 8(4), 255-269.
 
 ## Examples
 

@@ -16,7 +16,7 @@ computed directly from the matrix without igraph.
 ``` r
 centrality_stability(
   x,
-  measures = c("InStrength", "Betweenness", "Diffusion"),
+  measures = c("InStrength", "OutStrength", "Betweenness"),
   iter = 1000L,
   drop_prop = seq(0.1, 0.9, by = 0.1),
   threshold = 0.7,
@@ -41,12 +41,13 @@ centrality_stability(
 - measures:
 
   Character vector. Centrality measures to assess. Defaults to
-  `c("InStrength", "Betweenness", "Diffusion")`. Pass `"all"` for every
-  built-in measure: `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`,
-  `"ClosenessOut"`, `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`,
-  `"Diffusion"`, and `"Clustering"`. The legacy aliases `"InCloseness"`
-  and `"OutCloseness"` are also accepted. Custom measures beyond these
-  are valid only when a `centrality_fn` is supplied to resolve them.
+  `c("InStrength", "OutStrength", "Betweenness")`. Pass `"all"` for
+  every built-in measure: `"OutStrength"`, `"InStrength"`,
+  `"ClosenessIn"`, `"ClosenessOut"`, `"Closeness"`, `"Betweenness"`,
+  `"BetweennessRSP"`, `"Diffusion"`, and `"Clustering"`. The legacy
+  aliases `"InCloseness"` and `"OutCloseness"` are also accepted. Custom
+  measures beyond these are valid only when a `centrality_fn` is
+  supplied to resolve them.
 
 - iter:
 
@@ -157,7 +158,7 @@ An object of class `"net_stability"` containing:
 net <- build_network(data.frame(V1 = c("A","B","C","A"),
   V2 = c("B","C","A","B")), method = "relative")
 cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
-#> Error in if (!any(keep)) {    warning("All centrality measures have zero variance. ", "No stability can be assessed.",         call. = FALSE)    result <- list(cs = stats::setNames(rep(0, length(measures)),         measures), correlations = stats::setNames(lapply(measures,         function(m) {            matrix(NA_real_, nrow = iter, ncol = length(drop_prop))        }), measures), measures = measures, drop_prop = drop_prop,         threshold = threshold, certainty = certainty, iter = iter,         method = method)    class(result) <- "net_stability"    return(result)}: missing value where TRUE/FALSE needed
+#> Warning: All centrality measures have zero variance. No stability can be assessed.
 # \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
