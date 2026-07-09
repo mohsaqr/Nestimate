@@ -180,11 +180,15 @@ prepare <- function(data,
   if (!is.null(time)) {
     time_mat <- matrix(NA_real_, nrow = length(sessions), ncol = max_len)
     time_mat[cbind(session_idx, df$.sequence)] <- as.numeric(df$.parsed_time)
-    time_data <- as.data.frame(time_mat)
-    names(time_data) <- paste0("time_T", seq_len(max_len))
-    for (j in seq_len(ncol(time_data))) {
-      time_data[[j]] <- as.POSIXct(time_data[[j]], origin = "1970-01-01")
-    }
+    # Convert every column first, then build the frame once. Assigning into a
+    # data.frame column-by-column copies the whole frame on each iteration,
+    # which is quadratic in max_len -- 27k+ columns for a single long sequence.
+    time_cols <- lapply(
+      seq_len(max_len),
+      function(j) as.POSIXct(time_mat[, j], origin = "1970-01-01")
+    )
+    names(time_cols) <- paste0("time_T", seq_len(max_len))
+    time_data <- as.data.frame(time_cols, stringsAsFactors = FALSE)
   } else {
     time_data <- NULL
   }

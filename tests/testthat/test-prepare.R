@@ -385,3 +385,44 @@ test_that("tied-mode character extra column emits message and returns first valu
   )
   expect_true(res$meta_data$level %in% c("high", "low"))
 })
+
+# ---------------------------------------------------------------------------
+# Wide time matrix: built in one shot, not column-by-column
+# ---------------------------------------------------------------------------
+# prepare() used to convert time_data one column at a time with
+#   for (j in seq_len(ncol(time_data))) time_data[[j]] <- as.POSIXct(...)
+# Each `[[<-` copies the whole data.frame, so the cost was quadratic in the
+# sequence length. A single long sequence (no `actor`) has one row and one
+# column per event, so 27k events meant 27k frame copies (~26 s).
+
+test_that("time_data columns are POSIXct regardless of sequence shape", {
+  ev <- data.frame(
+    student = c("a", "a", "a", "b", "b"),
+    code    = c("x", "y", "z", "x", "z"),
+    t       = as.POSIXct("2024-01-01 00:00:00", tz = "UTC") + c(0, 60, 120, 0, 60)
+  )
+  res <- prepare(ev, actor = "student", action = "code", time = "t")
+  expect_true(all(vapply(res$time_data, function(x) inherits(x, "POSIXct"), TRUE)))
+  expect_true(all(grepl("^time_T\\d+$", names(res$time_data))))
+  expect_identical(nrow(res$time_data), 2L)
+
+  # Single pooled sequence: one row, one column per event.
+  res1 <- prepare(ev, action = "code", time = "t")
+  expect_identical(nrow(res1$time_data), 1L)
+  expect_identical(ncol(res1$time_data), 5L)
+  expect_true(all(vapply(res1$time_data, function(x) inherits(x, "POSIXct"), TRUE)))
+})
+
+test_that("a long single sequence does not scale quadratically", {
+  skip_on_cran()
+  n <- 4000L
+  ev <- data.frame(
+    code = rep(c("x", "y", "z", "w"), length.out = n),
+    t    = as.POSIXct("2024-01-01", tz = "UTC") + seq_len(n)
+  )
+  half <- system.time(prepare(ev[seq_len(n / 2L), ], action = "code", time = "t"))[["elapsed"]]
+  full <- system.time(prepare(ev, action = "code", time = "t"))[["elapsed"]]
+  # Linear would be ~2x. Quadratic would be ~4x. Allow generous slack for
+  # timer noise on loaded CI machines, but a quadratic regression blows past it.
+  expect_lt(full, max(0.5, half * 3))
+})

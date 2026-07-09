@@ -16,10 +16,13 @@ testthat::skip_on_cran()
 }
 
 # Helper: directed transition net from bundled group_regulation_long.
+# `actor = "Actor"` is what makes this the wide form: 2000 sequences of 26
+# steps. Without it every row joins one 27533-step sequence whose transitions
+# cross actor boundaries -- a wrong network, and ~100x slower to build.
 .fix2_directed_net <- function(method = "relative") {
   e <- new.env()
   data("group_regulation_long", package = "Nestimate", envir = e)
-  suppressWarnings(build_network(e$group_regulation_long, method = method))
+  build_network(e$group_regulation_long, method = method, actor = "Actor")
 }
 
 
