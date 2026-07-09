@@ -46,7 +46,8 @@ Suggests:
     ggfittext,
     knitr,
     rmarkdown,
-    tna
+    tna,
+    htna
 Config/testthat/edition: 3
 Depends:
     R (>= 4.1.0)
