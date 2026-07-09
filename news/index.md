@@ -1,5 +1,126 @@
 # Changelog
 
+## Nestimate 0.7.8
+
+### New features
+
+- [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  /
+  [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+  — verbs for the difference between two networks.
+  `subtract_networks(x, y)` returns the edge-wise difference as a
+  `netdifference` object;
+  [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+  promotes an existing comparison result to the same class — a
+  [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  result, or a `netdifference`, which passes through; anything else
+  errors — so a difference computed by any route prints the same way.
+  Adds `print.netdifference`.
+
+- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  accepts two
+  [`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  objects (source method `"relative"` only). Edge betweenness is
+  recomputed on every posterior draw, giving the Bayesian analogue of
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)’s
+  edge-betweenness dispatch, with posterior mean betweenness matrices
+  and the plug-in `observed_diff`.
+
+- [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  gains a `measures` argument for centrality permutation tests, matching
+  the `tna` package’s dispatch.
+
+### Enhancements
+
+- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)’s
+  probability-of-direction column is renamed `pd` -\> `p_difference` in
+  the [`summary()`](https://rdrr.io/r/base/summary.html) frame, and the
+  result now carries class
+  `c("net_bayes", "netdifference", "net_permutation")` so it dispatches
+  to the difference verbs as well as the permutation ones.
+
+- Non-ASCII characters normalized across R sources and man pages.
+
+### Bug fixes
+
+- [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+  no longer errors with “missing value where TRUE/FALSE needed” when a
+  requested measure is undefined on the network (e.g. `Diffusion` is
+  `NaN` on a small cyclic net):
+  [`sd()`](https://rdrr.io/r/stats/sd.html) returned `NA`, which
+  poisoned `if (!any(keep))`. Such measures now drop like zero-variance
+  ones.
+
+- [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)’s
+  default `measures` is restored to
+  `c("InStrength", "OutStrength", "Betweenness")`. 0.7.7 had swapped
+  `OutStrength` for `Diffusion`, which broke the package: it calls
+  [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+  with no `measures` and compares the result against its own explicit
+  trio.
+  [`centrality()`](https://sonsoles.me/cograph/reference/centrality.html)
+  /
+  [`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.md)
+  keep the `Diffusion` default; only
+  [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+  reverts.
+
+- `Suggests: cograph` relaxed from `(>= 2.4.4)` to `(>= 2.3.6)`, the
+  version available on CRAN. `Additional_repositories` removed — every
+  declared dependency now resolves from CRAN.
+
+## Nestimate 0.7.7
+
+### Enhancements
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a
+  `net_centrality_group` gains `type = "delta"`, showing the
+  between-group difference per measure, and now supports three or more
+  groups. Zero-valued edges can be blanked with `drop_zero = TRUE`.
+
+## Nestimate 0.7.6
+
+### New features
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a
+  [`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  result (`plot.net_edge_betweenness`).
+
+### Enhancements
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on centrality
+  results gains alternative views: `type = c("bar", "line", "heatmap")`
+  for a single `net_centrality`, and `type = c("bar", "line", "delta")`
+  for a `net_centrality_group`. Count-like measures get integer axis
+  labels.
+
+## Nestimate 0.7.5
+
+Version bump only; no user-visible changes.
+
+## Nestimate 0.7.4
+
+### New features
+
+- [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md) — builds
+  a grouped node-level network from data and a clustering, keeping every
+  node (unlike
+  [`cluster_summary()`](https://saqr.me/Nestimate/reference/cluster_summary.md),
+  which collapses to a cluster-level macro summary). Intended for
+  [`cograph::plot_htna()`](https://sonsoles.me/cograph/reference/plot_htna.html).
+
+### Enhancements
+
+- Centrality gains the `tna`-parity measures.
+  `net_centrality(x, measures = "all")` now returns `OutStrength`,
+  `InStrength`, `ClosenessIn`, `ClosenessOut`, `Closeness`,
+  `Betweenness`, `BetweennessRSP`, `Diffusion` and `Clustering` —
+  previously only the strengths, `Closeness` and `Betweenness`. Adds
+  `plot.net_centrality` and `plot.net_centrality_group`.
+
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  and the MCML plots gain layout refinements.
+
 ## Nestimate 0.7.3
 
 ### New features
@@ -203,6 +324,57 @@
   [`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html)
   with `directed = NULL`) now draw co-occurrence MCML objects as
   undirected networks automatically.
+
+## Nestimate 0.6.3
+
+### New features
+
+- `mosaic_analysis(data, var1, var2)` — two-variable mosaic analysis on
+  a `data.frame`: chi-square or Fisher test, Cramer’s V (df-adjusted
+  effect size) and a flat mosaic plot. Returns class `mosaic_analysis`
+  with a tidy one-row-per-cell `$counts`, a one-row `$stats`, and
+  print/summary/plot. Distinct from
+  [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.md),
+  which draws from a fitted network object.
+
+### Enhancements
+
+- [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.md)
+  gains `style = c("classic", "flat")`. The flat style uses
+  variable-width columns, white gutters and in-tile or side labels,
+  sharing the classic style’s geometry and diverging palette;
+  `values = TRUE` prints residuals inside the tiles.
+
+## Nestimate 0.6.2
+
+### Bug fixes
+
+- Corrected stale rank-scaling assertions in the test suite. No
+  user-visible change.
+
+## Nestimate 0.6.1
+
+### New features
+
+- [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+  and the transition wrappers
+  ([`build_tna()`](https://saqr.me/Nestimate/reference/build_tna.md),
+  [`build_ftna()`](https://saqr.me/Nestimate/reference/build_ftna.md),
+  [`build_atna()`](https://saqr.me/Nestimate/reference/build_atna.md),
+  [`build_cna()`](https://saqr.me/Nestimate/reference/build_cna.md))
+  gain `start` and `end` boundary markers: `FALSE` (default), `TRUE`
+  (labels `"Start"` / `"End"`) or a custom string. `start` prepends a
+  source state to every sequence; `end` places a sink in the single cell
+  after each sequence’s last non-`NA` state (not absorbing — see
+  [`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md)
+  for that). Honoured by the `relative`, `frequency`, `co_occurrence`
+  and `attention` estimators; other methods error.
+
+- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md)
+  gains `covariate_effect`. `"em"` (default) folds covariates into the
+  EM as covariate-dependent mixing, changing the fit; `"posthoc"` fits a
+  plain mixture and uses covariates only for the after-fit multinomial
+  logit, leaving the clustering bit-identical to a no-covariate fit.
 
 ## Nestimate 0.6.0
 

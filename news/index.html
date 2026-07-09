@@ -42,6 +42,64 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.8" id="nestimate-078">Nestimate 0.7.8<a class="anchor" aria-label="anchor" href="#nestimate-078"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-7-8">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-8"></a></h3>
+<ul><li><p><code><a href="../reference/subtract_networks.html">subtract_networks()</a></code> / <code><a href="../reference/as_netdifference.html">as_netdifference()</a></code> — verbs for the difference between two networks. <code>subtract_networks(x, y)</code> returns the edge-wise difference as a <code>netdifference</code> object; <code><a href="../reference/as_netdifference.html">as_netdifference()</a></code> promotes an existing comparison result to the same class — a <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> result, or a <code>netdifference</code>, which passes through; anything else errors — so a difference computed by any route prints the same way. Adds <code>print.netdifference</code>.</p></li>
+<li><p><code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> accepts two <code><a href="../reference/net_edge_betweenness.html">net_edge_betweenness()</a></code> objects (source method <code>"relative"</code> only). Edge betweenness is recomputed on every posterior draw, giving the Bayesian analogue of <code><a href="../reference/permutation.html">permutation()</a></code>’s edge-betweenness dispatch, with posterior mean betweenness matrices and the plug-in <code>observed_diff</code>.</p></li>
+<li><p><code><a href="../reference/permutation.html">permutation()</a></code> gains a <code>measures</code> argument for centrality permutation tests, matching the <code>tna</code> package’s dispatch.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="enhancements-0-7-8">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-7-8"></a></h3>
+<ul><li><p><code><a href="../reference/bayes_compare.html">bayes_compare()</a></code>’s probability-of-direction column is renamed <code>pd</code> -&gt; <code>p_difference</code> in the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> frame, and the result now carries class <code>c("net_bayes", "netdifference", "net_permutation")</code> so it dispatches to the difference verbs as well as the permutation ones.</p></li>
+<li><p>Non-ASCII characters normalized across R sources and man pages.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-7-8">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-7-8"></a></h3>
+<ul><li><p><code><a href="../reference/centrality_stability.html">centrality_stability()</a></code> no longer errors with “missing value where TRUE/FALSE needed” when a requested measure is undefined on the network (e.g. <code>Diffusion</code> is <code>NaN</code> on a small cyclic net): <code><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd()</a></code> returned <code>NA</code>, which poisoned <code>if (!any(keep))</code>. Such measures now drop like zero-variance ones.</p></li>
+<li><p><code><a href="../reference/centrality_stability.html">centrality_stability()</a></code>’s default <code>measures</code> is restored to <code>c("InStrength", "OutStrength", "Betweenness")</code>. 0.7.7 had swapped <code>OutStrength</code> for <code>Diffusion</code>, which broke the  package: it calls <code><a href="../reference/centrality_stability.html">centrality_stability()</a></code> with no <code>measures</code> and compares the result against its own explicit trio. <code><a href="https://sonsoles.me/cograph/reference/centrality.html" class="external-link">centrality()</a></code> / <code><a href="../reference/net_centrality.html">net_centrality()</a></code> keep the <code>Diffusion</code> default; only <code><a href="../reference/centrality_stability.html">centrality_stability()</a></code> reverts.</p></li>
+<li><p><code>Suggests: cograph</code> relaxed from <code>(&gt;= 2.4.4)</code> to <code>(&gt;= 2.3.6)</code>, the version available on CRAN. <code>Additional_repositories</code> removed — every declared dependency now resolves from CRAN.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.7" id="nestimate-077">Nestimate 0.7.7<a class="anchor" aria-label="anchor" href="#nestimate-077"></a></h2>
+<div class="section level3">
+<h3 id="enhancements-0-7-7">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-7-7"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a <code>net_centrality_group</code> gains <code>type = "delta"</code>, showing the between-group difference per measure, and now supports three or more groups. Zero-valued edges can be blanked with <code>drop_zero = TRUE</code>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.6" id="nestimate-076">Nestimate 0.7.6<a class="anchor" aria-label="anchor" href="#nestimate-076"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-7-6">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-6"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a <code><a href="../reference/net_edge_betweenness.html">net_edge_betweenness()</a></code> result (<code>plot.net_edge_betweenness</code>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="enhancements-0-7-6">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-7-6"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on centrality results gains alternative views: <code>type = c("bar", "line", "heatmap")</code> for a single <code>net_centrality</code>, and <code>type = c("bar", "line", "delta")</code> for a <code>net_centrality_group</code>. Count-like measures get integer axis labels.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.5" id="nestimate-075">Nestimate 0.7.5<a class="anchor" aria-label="anchor" href="#nestimate-075"></a></h2>
+<p>Version bump only; no user-visible changes.</p>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.4" id="nestimate-074">Nestimate 0.7.4<a class="anchor" aria-label="anchor" href="#nestimate-074"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-7-4">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-4"></a></h3>
+<ul><li>
+<code><a href="../reference/as_htna.html">as_htna()</a></code> — builds a grouped node-level network from data and a clustering, keeping every node (unlike <code><a href="../reference/cluster_summary.html">cluster_summary()</a></code>, which collapses to a cluster-level macro summary). Intended for <code><a href="https://sonsoles.me/cograph/reference/plot_htna.html" class="external-link">cograph::plot_htna()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="enhancements-0-7-4">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-7-4"></a></h3>
+<ul><li><p>Centrality gains the <code>tna</code>-parity measures. <code>net_centrality(x, measures = "all")</code> now returns <code>OutStrength</code>, <code>InStrength</code>, <code>ClosenessIn</code>, <code>ClosenessOut</code>, <code>Closeness</code>, <code>Betweenness</code>, <code>BetweennessRSP</code>, <code>Diffusion</code> and <code>Clustering</code> — previously only the strengths, <code>Closeness</code> and <code>Betweenness</code>. Adds <code>plot.net_centrality</code> and <code>plot.net_centrality_group</code>.</p></li>
+<li><p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> and the MCML plots gain layout refinements.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.3" id="nestimate-073">Nestimate 0.7.3<a class="anchor" aria-label="anchor" href="#nestimate-073"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-7-3">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-3"></a></h3>
@@ -102,6 +160,34 @@
 <h3 id="bug-fixes-0-6-4">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-6-4"></a></h3>
 <ul><li>
 <code><a href="../reference/build_mcml.html">build_mcml()</a></code> (sequence and edge-list paths) now records the <em>effective</em> directedness in <code>$meta$directed</code>: <code>FALSE</code> when <code>type = "cooccurrence"</code>, whose weights are symmetrized, instead of echoing the <code>directed</code> argument unchanged. Renderers that auto-detect directedness (e.g., <code><a href="https://sonsoles.me/cograph/reference/plot_mcml.html" class="external-link">cograph::plot_mcml()</a></code> with <code>directed = NULL</code>) now draw co-occurrence MCML objects as undirected networks automatically.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.3" id="nestimate-063">Nestimate 0.6.3<a class="anchor" aria-label="anchor" href="#nestimate-063"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-6-3">New features<a class="anchor" aria-label="anchor" href="#new-features-0-6-3"></a></h3>
+<ul><li>
+<code>mosaic_analysis(data, var1, var2)</code> — two-variable mosaic analysis on a <code>data.frame</code>: chi-square or Fisher test, Cramer’s V (df-adjusted effect size) and a flat mosaic plot. Returns class <code>mosaic_analysis</code> with a tidy one-row-per-cell <code>$counts</code>, a one-row <code>$stats</code>, and print/summary/plot. Distinct from <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code>, which draws from a fitted network object.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="enhancements-0-6-3">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-6-3"></a></h3>
+<ul><li>
+<code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code> gains <code>style = c("classic", "flat")</code>. The flat style uses variable-width columns, white gutters and in-tile or side labels, sharing the classic style’s geometry and diverging palette; <code>values = TRUE</code> prints residuals inside the tiles.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.2" id="nestimate-062">Nestimate 0.6.2<a class="anchor" aria-label="anchor" href="#nestimate-062"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-6-2">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-6-2"></a></h3>
+<ul><li>Corrected stale rank-scaling assertions in the test suite. No user-visible change.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.1" id="nestimate-061">Nestimate 0.6.1<a class="anchor" aria-label="anchor" href="#nestimate-061"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-6-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-6-1"></a></h3>
+<ul><li><p><code><a href="../reference/build_network.html">build_network()</a></code> and the transition wrappers (<code><a href="../reference/build_tna.html">build_tna()</a></code>, <code><a href="../reference/build_ftna.html">build_ftna()</a></code>, <code><a href="../reference/build_atna.html">build_atna()</a></code>, <code><a href="../reference/build_cna.html">build_cna()</a></code>) gain <code>start</code> and <code>end</code> boundary markers: <code>FALSE</code> (default), <code>TRUE</code> (labels <code>"Start"</code> / <code>"End"</code>) or a custom string. <code>start</code> prepends a source state to every sequence; <code>end</code> places a sink in the single cell after each sequence’s last non-<code>NA</code> state (not absorbing — see <code><a href="../reference/mark_terminal_state.html">mark_terminal_state()</a></code> for that). Honoured by the <code>relative</code>, <code>frequency</code>, <code>co_occurrence</code> and <code>attention</code> estimators; other methods error.</p></li>
+<li><p><code><a href="../reference/build_mmm.html">build_mmm()</a></code> gains <code>covariate_effect</code>. <code>"em"</code> (default) folds covariates into the EM as covariate-dependent mixing, changing the fit; <code>"posthoc"</code> fits a plain mixture and uses covariates only for the after-fit multinomial logit, leaving the clustering bit-identical to a no-covariate fit.</p></li>
 </ul></div>
 </div>
     <div class="section level2">
