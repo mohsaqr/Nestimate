@@ -2,7 +2,7 @@
 % Please edit documentation in R/chain_structure.R
 \name{summary.chain_structure_group}
 \alias{summary.chain_structure_group}
-\title{Cross-group comparison of \code{chain_structure_group}.}
+\title{Cross-group comparison of \code{chain_structure_group}}
 \usage{
 \method{summary}{chain_structure_group}(object, ...)
 }

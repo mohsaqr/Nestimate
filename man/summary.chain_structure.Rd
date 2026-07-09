@@ -2,7 +2,7 @@
 % Please edit documentation in R/chain_structure.R
 \name{summary.chain_structure}
 \alias{summary.chain_structure}
-\title{Tidy per-state summary of a \code{chain_structure}.}
+\title{Tidy per-state summary of a \code{chain_structure}}
 \usage{
 \method{summary}{chain_structure}(object, ...)
 }

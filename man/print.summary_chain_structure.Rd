@@ -2,7 +2,7 @@
 % Please edit documentation in R/chain_structure.R
 \name{print.summary_chain_structure}
 \alias{print.summary_chain_structure}
-\title{Print method for \code{summary.chain_structure}.}
+\title{Print method for \code{summary.chain_structure}}
 \usage{
 \method{print}{summary_chain_structure}(x, ...)
 }

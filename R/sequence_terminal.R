@@ -3,7 +3,7 @@
 # per-actor endpoint summary, or (b) a chain with an extra absorbing
 # state representing dropout / course-end / censoring.
 
-#' Tidy per-actor endpoint summary of a wide-format sequence dataset.
+#' Tidy per-actor endpoint summary of a wide-format sequence dataset
 #'
 #' For each actor (row), reports the first and last observed states,
 #' the time indices at which they appear, the number of observed
@@ -79,7 +79,7 @@ actor_endpoints <- function(data, cols = NULL) {
 }
 
 
-#' Mark leading-NA cells with an explicit state label.
+#' Mark leading-NA cells with an explicit state label
 #'
 #' Mirror of [mark_terminal_state()] for *left-censored* sequence data.
 #' Replaces every cell *before* each row's first observed state with
@@ -138,7 +138,7 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
   out
 }
 
-#' Mark terminal-NA cells with an explicit state label.
+#' Mark terminal-NA cells with an explicit state label
 #'
 #' Replaces every cell after each row's last observed state with the
 #' label given by `state`, leaving non-terminal NAs untouched. The

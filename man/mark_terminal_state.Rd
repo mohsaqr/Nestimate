@@ -2,7 +2,7 @@
 % Please edit documentation in R/sequence_terminal.R
 \name{mark_terminal_state}
 \alias{mark_terminal_state}
-\title{Mark terminal-NA cells with an explicit state label.}
+\title{Mark terminal-NA cells with an explicit state label}
 \usage{
 mark_terminal_state(data, state = "End", cols = NULL)
 }

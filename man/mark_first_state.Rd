@@ -2,7 +2,7 @@
 % Please edit documentation in R/sequence_terminal.R
 \name{mark_first_state}
 \alias{mark_first_state}
-\title{Mark leading-NA cells with an explicit state label.}
+\title{Mark leading-NA cells with an explicit state label}
 \usage{
 mark_first_state(data, state = "Start", cols = NULL)
 }

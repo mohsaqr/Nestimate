@@ -164,7 +164,7 @@
 # Public API
 # ---------------------------------------------------------------------------
 
-#' Qualitative structure of a discrete-time Markov chain.
+#' Qualitative structure of a discrete-time Markov chain
 #'
 #' Computes properties that depend only on the transition matrix support,
 #' not on any starting distribution: state classification, communicating
@@ -357,7 +357,7 @@ chain_structure <- function(x, normalize = TRUE, tol = 1e-10) {
 # S3 methods
 # ---------------------------------------------------------------------------
 
-#' Print method for `chain_structure`.
+#' Print method for `chain_structure`
 #'
 #' Prints a compact chain-level header. For the full per-state table,
 #' call `summary()` on the same object.
@@ -383,7 +383,7 @@ print.chain_structure <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot method for `chain_structure`.
+#' Plot method for `chain_structure`
 #'
 #' Renders the hitting-probability matrix as a heatmap, with rows and
 #' columns ordered by communicating class so the block structure is
@@ -493,7 +493,7 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
   p
 }
 
-#' Tidy per-state summary of a `chain_structure`.
+#' Tidy per-state summary of a `chain_structure`
 #'
 #' Returns a single data.frame with one row per state, combining every
 #' per-state metric `chain_structure()` computes. Always includes
@@ -563,7 +563,7 @@ summary.chain_structure <- function(object, ...) {
   out
 }
 
-#' Print method for `chain_structure_group`.
+#' Print method for `chain_structure_group`
 #'
 #' One header line per group, followed by each group's per-state
 #' table (via `summary.chain_structure`).
@@ -582,7 +582,7 @@ print.chain_structure_group <- function(x, ...) {
   invisible(x)
 }
 
-#' Cross-group comparison of `chain_structure_group`.
+#' Cross-group comparison of `chain_structure_group`
 #'
 #' Produces a single tidy data.frame with one row per (group, state)
 #' combination, combining classification, persistence, sojourn, and --
@@ -620,7 +620,7 @@ summary.chain_structure_group <- function(object, ...) {
   out
 }
 
-#' Print method for `summary.chain_structure`.
+#' Print method for `summary.chain_structure`
 #'
 #' Prints a one-line chain header followed by the tidy per-state table.
 #' @param x A `summary_chain_structure` object.

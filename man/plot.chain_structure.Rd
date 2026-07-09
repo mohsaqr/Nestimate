@@ -2,7 +2,7 @@
 % Please edit documentation in R/chain_structure.R
 \name{plot.chain_structure}
 \alias{plot.chain_structure}
-\title{Plot method for \code{chain_structure}.}
+\title{Plot method for \code{chain_structure}}
 \usage{
 \method{plot}{chain_structure}(x, show_values = TRUE, digits = 2L, ...)
 }

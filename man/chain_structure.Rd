@@ -2,7 +2,7 @@
 % Please edit documentation in R/chain_structure.R
 \name{chain_structure}
 \alias{chain_structure}
-\title{Qualitative structure of a discrete-time Markov chain.}
+\title{Qualitative structure of a discrete-time Markov chain}
 \usage{
 chain_structure(x, normalize = TRUE, tol = 1e-10)
 }
