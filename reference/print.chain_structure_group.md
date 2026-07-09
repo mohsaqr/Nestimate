@@ -1,4 +1,4 @@
-# Print method for `chain_structure_group`.
+# Print method for `chain_structure_group`
 
 One header line per group, followed by each group's per-state table (via
 `summary.chain_structure`).

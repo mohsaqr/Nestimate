@@ -1,4 +1,4 @@
-# Mark terminal-NA cells with an explicit state label.
+# Mark terminal-NA cells with an explicit state label
 
 Replaces every cell after each row's last observed state with the label
 given by `state`, leaving non-terminal NAs untouched. The result, passed

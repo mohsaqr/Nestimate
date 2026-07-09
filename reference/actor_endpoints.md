@@ -1,4 +1,4 @@
-# Tidy per-actor endpoint summary of a wide-format sequence dataset.
+# Tidy per-actor endpoint summary of a wide-format sequence dataset
 
 For each actor (row), reports the first and last observed states, the
 time indices at which they appear, the number of observed steps, and a

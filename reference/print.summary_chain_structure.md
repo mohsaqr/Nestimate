@@ -1,4 +1,4 @@
-# Print method for `summary.chain_structure`.
+# Print method for `summary.chain_structure`
 
 Prints a one-line chain header followed by the tidy per-state table.
 

@@ -1,4 +1,4 @@
-# Plot method for `chain_structure`.
+# Plot method for `chain_structure`
 
 Renders the hitting-probability matrix as a heatmap, with rows and
 columns ordered by communicating class so the block structure is visible

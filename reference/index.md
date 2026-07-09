@@ -78,7 +78,7 @@ Methods for capturing higher-order dependencies
 Order, structure, entropy, and stability of Markov chains
 
 - [`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.md)
-  : Qualitative structure of a discrete-time Markov chain.
+  : Qualitative structure of a discrete-time Markov chain
 - [`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md)
   : Test the Markov order of a sequential process
 - [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
@@ -247,11 +247,11 @@ Convert and prepare data for network estimation
 - [`convert_sequence_format()`](https://saqr.me/Nestimate/reference/convert_sequence_format.md)
   : Convert Sequence Data to Different Formats
 - [`actor_endpoints()`](https://saqr.me/Nestimate/reference/actor_endpoints.md)
-  : Tidy per-actor endpoint summary of a wide-format sequence dataset.
+  : Tidy per-actor endpoint summary of a wide-format sequence dataset
 - [`mark_first_state()`](https://saqr.me/Nestimate/reference/mark_first_state.md)
-  : Mark leading-NA cells with an explicit state label.
+  : Mark leading-NA cells with an explicit state label
 - [`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md)
-  : Mark terminal-NA cells with an explicit state label.
+  : Mark terminal-NA cells with an explicit state label
 
 ## Utilities
 
@@ -372,12 +372,12 @@ Print, summary, and plot methods for package classes
 - [`print(`*`<chain_structure>`*`)`](https://saqr.me/Nestimate/reference/print.chain_structure.md)
   :
 
-  Print method for `chain_structure`.
+  Print method for `chain_structure`
 
 - [`print(`*`<chain_structure_group>`*`)`](https://saqr.me/Nestimate/reference/print.chain_structure_group.md)
   :
 
-  Print method for `chain_structure_group`.
+  Print method for `chain_structure_group`
 
 - [`print(`*`<cluster_choice>`*`)`](https://saqr.me/Nestimate/reference/print.cluster_choice.md)
   : Print Method for cluster_choice
@@ -551,7 +551,7 @@ Print, summary, and plot methods for package classes
 - [`print(`*`<summary_chain_structure>`*`)`](https://saqr.me/Nestimate/reference/print.summary_chain_structure.md)
   :
 
-  Print method for `summary.chain_structure`.
+  Print method for `summary.chain_structure`
 
 - [`print(`*`<tidy_covariates>`*`)`](https://saqr.me/Nestimate/reference/print.tidy_covariates.md)
   : Print method for tidy covariate output
@@ -585,12 +585,12 @@ Print, summary, and plot methods for package classes
 - [`summary(`*`<chain_structure>`*`)`](https://saqr.me/Nestimate/reference/summary.chain_structure.md)
   :
 
-  Tidy per-state summary of a `chain_structure`.
+  Tidy per-state summary of a `chain_structure`
 
 - [`summary(`*`<chain_structure_group>`*`)`](https://saqr.me/Nestimate/reference/summary.chain_structure_group.md)
   :
 
-  Cross-group comparison of `chain_structure_group`.
+  Cross-group comparison of `chain_structure_group`
 
 - [`summary(`*`<cluster_choice>`*`)`](https://saqr.me/Nestimate/reference/summary.cluster_choice.md)
   : Summary Method for cluster_choice
@@ -720,7 +720,7 @@ Print, summary, and plot methods for package classes
 - [`plot(`*`<chain_structure>`*`)`](https://saqr.me/Nestimate/reference/plot.chain_structure.md)
   :
 
-  Plot method for `chain_structure`.
+  Plot method for `chain_structure`
 
 - [`plot(`*`<cluster_choice>`*`)`](https://saqr.me/Nestimate/reference/plot.cluster_choice.md)
   : Plot Method for cluster_choice

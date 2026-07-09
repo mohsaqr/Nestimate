@@ -1,4 +1,4 @@
-# Cross-group comparison of `chain_structure_group`.
+# Cross-group comparison of `chain_structure_group`
 
 Produces a single tidy data.frame with one row per (group, state)
 combination, combining classification, persistence, sojourn, and – when

@@ -1,4 +1,4 @@
-# Mark leading-NA cells with an explicit state label.
+# Mark leading-NA cells with an explicit state label
 
 Mirror of
 [`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md)

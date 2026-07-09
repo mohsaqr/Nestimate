@@ -1,4 +1,4 @@
-# Qualitative structure of a discrete-time Markov chain.
+# Qualitative structure of a discrete-time Markov chain
 
 Computes properties that depend only on the transition matrix support,
 not on any starting distribution: state classification, communicating

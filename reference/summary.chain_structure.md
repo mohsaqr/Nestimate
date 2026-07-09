@@ -1,4 +1,4 @@
-# Tidy per-state summary of a `chain_structure`.
+# Tidy per-state summary of a `chain_structure`
 
 Returns a single data.frame with one row per state, combining every
 per-state metric

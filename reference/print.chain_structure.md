@@ -1,4 +1,4 @@
-# Print method for `chain_structure`.
+# Print method for `chain_structure`
 
 Prints a compact chain-level header. For the full per-state table, call
 [`summary()`](https://rdrr.io/r/base/summary.html) on the same object.
