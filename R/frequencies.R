@@ -5,7 +5,6 @@
 #' transition frequency matrices and other useful representations.
 #'
 #' @name frequencies
-#' @keywords internal
 NULL
 
 

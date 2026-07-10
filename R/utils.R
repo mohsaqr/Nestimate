@@ -1,7 +1,6 @@
-#' @title Internal Helper Functions for Nestimate
-#' @name utils
-#' @description Internal utility functions used by other Nestimate functions.
-#' @keywords internal
+# Internal helpers. No Rd page: nothing here is exported. The roxygen block
+# below exists only to carry the NAMESPACE imports.
+
 #' @importFrom utils tail head
 NULL
 

@@ -130,5 +130,8 @@ estimation problems. \emph{Proceedings of the Royal Society of London A},
 186(1007), 453-461.
 }
 \seealso{
-\code{\link{permutation}}, \code{\link{build_network}}
+\code{\link{permutation}} for the frequentist complement;
+\code{\link{certainty}} for single-network posterior edge intervals;
+\code{\link{subtract_networks}} and \code{\link{as_netdifference}} for the
+difference verbs; \code{\link{build_network}}
 }

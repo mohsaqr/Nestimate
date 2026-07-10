@@ -110,6 +110,8 @@ summary(boot)
 
 }
 \seealso{
+\code{\link{certainty}} for the closed-form Bayesian counterpart
+(same result layout, no resampling);
 \code{\link{build_network}}, \code{\link{print.net_bootstrap}},
 \code{\link{summary.net_bootstrap}}
 }

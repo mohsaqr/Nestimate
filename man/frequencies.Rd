@@ -73,4 +73,3 @@ freq <- frequencies(long, action = "Action", id = "Actor")
 \code{\link{convert_sequence_format}} for converting to other
 representations (frequency counts, one-hot, edge lists).
 }
-\keyword{internal}

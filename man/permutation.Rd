@@ -123,6 +123,9 @@ summary(perm)
 
 }
 \seealso{
+\code{\link{bayes_compare}} for the Bayesian complement: instead of
+"is this difference more extreme than chance?" it answers "how probable is
+a difference, and how large?";
 \code{\link{build_network}}, \code{\link{bootstrap_network}},
 \code{\link{print.net_permutation}},
 \code{\link{summary.net_permutation}}

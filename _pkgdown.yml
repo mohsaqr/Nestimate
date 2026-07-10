@@ -30,6 +30,17 @@ reference:
       - build_mlvar
       - build_gimme
 
+  - title: Bayesian Inference
+    desc: >
+      Dirichlet-Multinomial posterior inference for transition networks.
+      `certainty()` is the closed-form counterpart of `bootstrap_network()`;
+      `bayes_compare()` is the complement of `permutation()`.
+    contents:
+      - certainty
+      - bayes_compare
+      - subtract_networks
+      - as_netdifference
+
   - title: Higher-Order Networks
     desc: Methods for capturing higher-order dependencies
     contents:
@@ -73,14 +84,10 @@ reference:
       - boot_glasso
       - permutation
       - nct
-      - bayes_compare
-      - certainty
       - compare_model
       - compare_model.netobject_group
       - rename_models
       - magnitude_difference
-      - subtract_networks
-      - as_netdifference
 
   - title: Reliability & Stability
     desc: Assess reliability and stability of network estimates
