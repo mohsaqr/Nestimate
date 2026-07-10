@@ -513,6 +513,26 @@ Core functions for building networks from data
 - [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
   : GIMME: Group Iterative Multiple Model Estimation
 
+## Bayesian Inference
+
+Dirichlet-Multinomial posterior inference for transition networks.
+[`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) is the
+closed-form counterpart of
+[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md);
+[`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+is the complement of
+[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md).
+
+- [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) :
+  Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
+- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  : Bayesian Dirichlet-Multinomial comparison of two transition networks
+- [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  [`print(`*`<netdifference>`*`)`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  : Subtract one network from another
+- [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+  : Coerce an inferential comparison to a network difference
+
 ## Higher-Order Networks
 
 Methods for capturing higher-order dependencies
@@ -600,12 +620,6 @@ Statistical inference for network estimation
 - [`nct()`](https://saqr.me/Nestimate/reference/nct.md) : Network
   Comparison Test
 
-- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
-  : Bayesian Dirichlet-Multinomial comparison of two transition networks
-
-- [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) :
-  Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
-
 - [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md)
   : Compare two networks descriptively
 
@@ -621,13 +635,6 @@ Statistical inference for network estimation
   [`print(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
   [`plot(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
   : Magnitude difference between the frequency and probability views
-
-- [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
-  [`print(`*`<netdifference>`*`)`](https://saqr.me/Nestimate/reference/subtract_networks.md)
-  : Subtract one network from another
-
-- [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md)
-  : Coerce an inferential comparison to a network difference
 
 ## Reliability & Stability
 

@@ -152,6 +152,8 @@ An object of class `"net_bootstrap"` containing:
 
 ## See also
 
+[`certainty`](https://saqr.me/Nestimate/reference/certainty.md) for the
+closed-form Bayesian counterpart (same result layout, no resampling);
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
 [`print.net_bootstrap`](https://saqr.me/Nestimate/reference/print.net_bootstrap.md),
 [`summary.net_bootstrap`](https://saqr.me/Nestimate/reference/summary.net_bootstrap.md)

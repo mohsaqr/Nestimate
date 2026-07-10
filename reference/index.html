@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,6 +175,43 @@
 
         </dt>
         <dd>GIMME: Group Iterative Multiple Model Estimation</dd>
+      </dl></div><div class="section level2">
+      <h2 id="bayesian-inference">Bayesian Inference<a class="anchor" aria-label="anchor" href="#bayesian-inference"></a></h2>
+
+      <div class="section-desc"><p>Dirichlet-Multinomial posterior inference for transition networks. <code><a href="../reference/certainty.html">certainty()</a></code> is the closed-form counterpart of <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code>; <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> is the complement of <code><a href="../reference/permutation.html">permutation()</a></code>.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="certainty.html">certainty()</a></code>
+
+        </dt>
+        <dd>Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)</dd>
+
+        <dt>
+
+          <code><a href="bayes_compare.html">bayes_compare()</a></code>
+
+        </dt>
+        <dd>Bayesian Dirichlet-Multinomial comparison of two transition networks</dd>
+
+        <dt>
+
+          <code><a href="subtract_networks.html">subtract_networks()</a></code> <code><a href="subtract_networks.html">print(<i>&lt;netdifference&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Subtract one network from another</dd>
+
+        <dt>
+
+          <code><a href="as_netdifference.html">as_netdifference()</a></code>
+
+        </dt>
+        <dd>Coerce an inferential comparison to a network difference</dd>
       </dl></div><div class="section level2">
       <h2 id="higher-order-networks">Higher-Order Networks<a class="anchor" aria-label="anchor" href="#higher-order-networks"></a></h2>
 
@@ -410,20 +447,6 @@
 
         <dt>
 
-          <code><a href="bayes_compare.html">bayes_compare()</a></code>
-
-        </dt>
-        <dd>Bayesian Dirichlet-Multinomial comparison of two transition networks</dd>
-
-        <dt>
-
-          <code><a href="certainty.html">certainty()</a></code>
-
-        </dt>
-        <dd>Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)</dd>
-
-        <dt>
-
           <code><a href="compare_model.html">compare_model()</a></code>
 
         </dt>
@@ -449,20 +472,6 @@
 
         </dt>
         <dd>Magnitude difference between the frequency and probability views</dd>
-
-        <dt>
-
-          <code><a href="subtract_networks.html">subtract_networks()</a></code> <code><a href="subtract_networks.html">print(<i>&lt;netdifference&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Subtract one network from another</dd>
-
-        <dt>
-
-          <code><a href="as_netdifference.html">as_netdifference()</a></code>
-
-        </dt>
-        <dd>Coerce an inferential comparison to a network difference</dd>
       </dl></div><div class="section level2">
       <h2 id="reliability-stability">Reliability &amp; Stability<a class="anchor" aria-label="anchor" href="#reliability-stability"></a></h2>
 

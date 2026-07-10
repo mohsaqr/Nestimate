@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,21 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.0" id="nestimate-080">Nestimate 0.8.0<a class="anchor" aria-label="anchor" href="#nestimate-080"></a></h2>
+<div class="section level3">
+<h3 id="documentation-0-8-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-8-0"></a></h3>
+<ul><li><p>The Bayesian verbs get their own reference section, placed directly after Network Estimation: <code><a href="../reference/certainty.html">certainty()</a></code>, <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code>, <code><a href="../reference/subtract_networks.html">subtract_networks()</a></code> and <code><a href="../reference/as_netdifference.html">as_netdifference()</a></code>. They were previously buried in a fourteen-entry “Bootstrap &amp; Inference” list. <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> now points at <code><a href="../reference/certainty.html">certainty()</a></code> as its closed-form counterpart, and <code><a href="../reference/permutation.html">permutation()</a></code> points at <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> as its Bayesian complement, so each pair is reachable from either side.</p></li>
+<li><p><code><a href="../reference/frequencies.html">frequencies()</a></code> is no longer marked <code>\keyword{internal}</code>. The topic page and the exported function share a roxygen topic name, so the keyword from the topic block leaked onto the function’s own help page even though the function is exported (and called by the  package). <code><a href="../reference/cluster_data.html">cluster_data()</a></code> keeps its internal keyword: it is a deprecated alias for <code><a href="../reference/build_clusters.html">build_clusters()</a></code> and is meant to stay out of the index.</p></li>
+<li><p>Dropped the <code>utils</code> help page, which documented no exported object. The <code>@importFrom</code> directives it carried are retained.</p></li>
+<li><p><code>audit_codex/</code> is no longer tracked; it holds generated audit artifacts.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="dependencies-0-8-0">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies-0-8-0"></a></h3>
+<ul><li>
+<code>Suggests: cograph (&gt;= 2.4.4)</code>. The netdifference verbs added in 0.7.8 need cograph 2.4.x: CRAN’s cograph 2.3.6 contains no <code>netdifference</code> support, so <code><a href="https://sonsoles.me/cograph/reference/plot_difference.html" class="external-link">cograph::plot_difference()</a></code> does not exist there and <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code> on a <code>netdifference</code> falls through to the plain <code>netobject</code> renderer and silently draws an unsigned network. Nestimate must not be submitted to CRAN before cograph 2.4.4 is available there.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.8" id="nestimate-078">Nestimate 0.7.8<a class="anchor" aria-label="anchor" href="#nestimate-078"></a></h2>
 <div class="section level3">

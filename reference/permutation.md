@@ -166,6 +166,9 @@ An object of class `"net_permutation"` containing:
 
 ## See also
 
+[`bayes_compare`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+for the Bayesian complement: instead of "is this difference more extreme
+than chance?" it answers "how probable is a difference, and how large?";
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
 [`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
 [`print.net_permutation`](https://saqr.me/Nestimate/reference/print.net_permutation.md),

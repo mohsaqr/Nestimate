@@ -1,5 +1,56 @@
 # Changelog
 
+## Nestimate 0.8.0
+
+### Documentation
+
+- The Bayesian verbs get their own reference section, placed directly
+  after Network Estimation:
+  [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md),
+  [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md),
+  [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  and
+  [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md).
+  They were previously buried in a fourteen-entry “Bootstrap &
+  Inference” list.
+  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  now points at
+  [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) as
+  its closed-form counterpart, and
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  points at
+  [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  as its Bayesian complement, so each pair is reachable from either
+  side.
+
+- [`frequencies()`](https://saqr.me/Nestimate/reference/frequencies.md)
+  is no longer marked `\keyword{internal}`. The topic page and the
+  exported function share a roxygen topic name, so the keyword from the
+  topic block leaked onto the function’s own help page even though the
+  function is exported (and called by the package).
+  [`cluster_data()`](https://saqr.me/Nestimate/reference/cluster_data.md)
+  keeps its internal keyword: it is a deprecated alias for
+  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  and is meant to stay out of the index.
+
+- Dropped the `utils` help page, which documented no exported object.
+  The `@importFrom` directives it carried are retained.
+
+- `audit_codex/` is no longer tracked; it holds generated audit
+  artifacts.
+
+### Dependencies
+
+- `Suggests: cograph (>= 2.4.4)`. The netdifference verbs added in 0.7.8
+  need cograph 2.4.x: CRAN’s cograph 2.3.6 contains no `netdifference`
+  support, so
+  [`cograph::plot_difference()`](https://sonsoles.me/cograph/reference/plot_difference.html)
+  does not exist there and
+  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+  on a `netdifference` falls through to the plain `netobject` renderer
+  and silently draws an unsigned network. Nestimate must not be
+  submitted to CRAN before cograph 2.4.4 is available there.
+
 ## Nestimate 0.7.8
 
 ### New features

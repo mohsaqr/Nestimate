@@ -184,7 +184,14 @@ estimation problems. *Proceedings of the Royal Society of London A*,
 
 ## See also
 
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md),
+[`permutation`](https://saqr.me/Nestimate/reference/permutation.md) for
+the frequentist complement;
+[`certainty`](https://saqr.me/Nestimate/reference/certainty.md) for
+single-network posterior edge intervals;
+[`subtract_networks`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+and
+[`as_netdifference`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+for the difference verbs;
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
 
 ## Examples
