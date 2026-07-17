@@ -35,3 +35,18 @@ vignettes/articles/higher-order-networks_cache/
 vignettes/articles/*_cache/
 experimental/
 audit_codex/
+codex_docs/
+*.tar.gz
+
+# pkgdown built site — generated, never commit (was ~2.2 GB of history bloat)
+# Root-anchored so tracked source (pkgdown/favicon/, vignettes/*.Rmd) stays versioned
+/articles/
+/reference/
+/deps/
+/search.json
+/index.html
+/README.html
+/llms.txt
+/sitemap.xml
+# knitr/rmarkdown render outputs under any article dir
+vignettes/articles/*_files/
