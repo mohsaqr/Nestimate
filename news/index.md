@@ -1,5 +1,19 @@
 # Changelog
 
+## Nestimate 0.8.3
+
+### HTNA expansion
+
+- [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md) still
+  rebuilds one full node-level network from the original source,
+  preserving every between-cluster transition, and now completes the
+  canonical HTNA contract. Its result inherits from `htna`, `netobject`,
+  and `cograph_network`; stores character actor labels in
+  `$node_groups$group`, a factor in `$nodes$groups`, and actor order in
+  `$actor_levels`; and retains actor-order metadata on `$node_groups`
+  for lossless partition round trips, plus the legacy `$nodes$cluster`
+  and `"cluster_members"` metadata.
+
 ## Nestimate 0.8.2
 
 ### Session grouping

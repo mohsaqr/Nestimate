@@ -1,9 +1,9 @@
 # Build a grouped node-level network (htna) from data and a clustering
 
 Builds the full node-level network from the original data and attaches a
-cluster grouping, producing a single `netobject` in which every actor is
-a node and cluster membership labels the actors. This is the node-level
-counterpart of
+cluster grouping, producing a single `htna` network in which every actor
+is a node and cluster membership labels the actors. This is the
+node-level counterpart of
 [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md): where
 `build_mcml` collapses the network to a cluster-level (macro) summary,
 `as_htna` keeps every node and every transition - including the
@@ -61,9 +61,12 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 
 ## Value
 
-A `netobject` (`cograph_network`) over all nodes, with a `cluster`
-column on `$nodes`, `$node_groups` populated, and the membership stored
-in the `"cluster_members"` attribute.
+A single `htna` (also a `netobject` and `cograph_network`) over all
+nodes. Cluster labels are stored as a factor in `$nodes$groups` and as
+character values in `$node_groups$group`; `$actor_levels` records their
+order and is also attached to `$node_groups` for lossless partition
+round trips. For compatibility, the result also retains `$nodes$cluster`
+and the membership in the `"cluster_members"` attribute.
 
 ## Details
 
@@ -74,8 +77,8 @@ faithful node-level transition network. The only faithful source of
 node-level between-cluster transitions is the original data. `as_htna()`
 therefore rebuilds from data via
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md);
-an `mcml` can supply the cluster membership, but the data must be
-provided.
+an `mcml` supplies the cluster membership and either its retained source
+or explicitly supplied original data supplies the transitions.
 
 The result is a genuine `netobject`, so it supports inference
 ([`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),

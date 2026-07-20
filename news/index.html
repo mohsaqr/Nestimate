@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,14 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.3" id="nestimate-083">Nestimate 0.8.3<a class="anchor" aria-label="anchor" href="#nestimate-083"></a></h2>
+<div class="section level3">
+<h3 id="htna-expansion-0-8-3">HTNA expansion<a class="anchor" aria-label="anchor" href="#htna-expansion-0-8-3"></a></h3>
+<ul><li>
+<code><a href="../reference/as_htna.html">as_htna()</a></code> still rebuilds one full node-level network from the original source, preserving every between-cluster transition, and now completes the canonical HTNA contract. Its result inherits from <code>htna</code>, <code>netobject</code>, and <code>cograph_network</code>; stores character actor labels in <code>$node_groups$group</code>, a factor in <code>$nodes$groups</code>, and actor order in <code>$actor_levels</code>; and retains actor-order metadata on <code>$node_groups</code> for lossless partition round trips, plus the legacy <code>$nodes$cluster</code> and <code>"cluster_members"</code> metadata.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.2" id="nestimate-082">Nestimate 0.8.2<a class="anchor" aria-label="anchor" href="#nestimate-082"></a></h2>
 <div class="section level3">
