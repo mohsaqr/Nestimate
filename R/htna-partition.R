@@ -12,7 +12,7 @@
   }
 
   group_chr <- as.character(ng$group)
-  actor_levels <- x$actor_levels
+  actor_levels <- x$actor_levels %||% attr(ng, "actor_levels")
   if (is.null(actor_levels) && is.factor(ng$group)) {
     actor_levels <- levels(ng$group)
   }
@@ -65,6 +65,7 @@
     group = node_actor,
     stringsAsFactors = FALSE
   )
+  attr(net$node_groups, "actor_levels") <- actor_levels
   net$actor_levels <- actor_levels
   class(net) <- unique(c("htna", class(net)))
   net

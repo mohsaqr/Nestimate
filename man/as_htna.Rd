@@ -36,13 +36,17 @@ works on its own. Required for an mcml built from a matrix/aggregate,
 which retains no node-level data.}
 }
 \value{
-A \code{netobject} (\code{cograph_network}) over all nodes, with a
-\code{cluster} column on \code{$nodes}, \code{$node_groups} populated, and
-the membership stored in the \code{"cluster_members"} attribute.
+A single \code{htna} (also a \code{netobject} and
+\code{cograph_network}) over all nodes. Cluster labels are stored as a
+factor in \code{$nodes$groups} and as character values in
+\code{$node_groups$group}; \code{$actor_levels} records their order and
+is also attached to \code{$node_groups} for lossless partition round trips.
+For compatibility, the result also retains \code{$nodes$cluster} and the
+membership in the \code{"cluster_members"} attribute.
 }
 \description{
 Builds the full node-level network from the original data and attaches a
-cluster grouping, producing a single \code{netobject} in which every actor
+cluster grouping, producing a single \code{htna} network in which every actor
 is a node and cluster membership labels the actors. This is the node-level
 counterpart of \code{\link{build_mcml}}: where \code{build_mcml} collapses
 the network to a cluster-level (macro) summary, \code{as_htna} keeps every
@@ -55,8 +59,9 @@ data (the macro sequences are recoded to cluster labels, and the per-cluster
 data is filtered to within-cluster nodes), so it does not retain a faithful
 node-level transition network. The only faithful source of node-level
 between-cluster transitions is the original data. \code{as_htna()} therefore
-rebuilds from data via \code{\link{build_network}}; an \code{mcml} can supply
-the cluster membership, but the data must be provided.
+rebuilds from data via \code{\link{build_network}}; an \code{mcml} supplies
+the cluster membership and either its retained source or explicitly supplied
+original data supplies the transitions.
 
 The result is a genuine \code{netobject}, so it supports inference
 (\code{\link{bootstrap_network}}, centrality, \code{\link{permutation}})

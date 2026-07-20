@@ -10,9 +10,11 @@ make_seqs <- function() {
 }
 clusters3 <- list(C1 = c("A", "B"), C2 = c("C", "D"), C3 = c("E", "F"))
 
-test_that("as_htna() returns a node-level netobject grouped by cluster", {
+test_that("as_htna() returns a node-level htna grouped by cluster", {
   seqs <- make_seqs()
   net <- as_htna(seqs, clusters3)
+  expect_identical(class(net)[1:3], c("htna", "netobject", "cograph_network"))
+  expect_s3_class(net, "htna")
   expect_s3_class(net, "netobject")
   expect_s3_class(net, "cograph_network")
   # one node per state, with a cluster column
@@ -36,6 +38,12 @@ test_that("node_groups and cluster column agree with the membership", {
   ng <- net$node_groups
   expect_true(is.data.frame(ng))
   expect_setequal(names(ng), c("node", "group"))
+  expect_type(ng$group, "character")
+  expect_s3_class(net$nodes$groups, "factor")
+  expect_identical(levels(net$nodes$groups), names(clusters3))
+  expect_identical(net$actor_levels, names(clusters3))
+  expect_identical(attr(ng, "actor_levels"), names(clusters3))
+  expect_identical(as.character(net$nodes$groups), ng$group)
   # A,B -> C1 ; C,D -> C2 ; E,F -> C3
   m <- stats::setNames(net$nodes$cluster, net$nodes$label)
   expect_equal(unname(m[c("A", "B")]), c("C1", "C1"))
@@ -51,6 +59,7 @@ test_that("as_htna(mcml) works on its own (stashed source) and with data", {
   expect_false(is.null(attr(m, "htna_source")))   # source stashed
   net0 <- as_htna(m)                               # no data needed
   net  <- as_htna(m, data = seqs)
+  expect_s3_class(net0, "htna")
   expect_identical(attr(net0, "cluster_members"), clusters3)
   expect_equal(net0$weights, build_network(seqs, method = "relative")$weights)
   expect_equal(net0$weights, net$weights)
@@ -82,6 +91,7 @@ test_that("as_htna() accepts a per-node membership vector", {
     c("C1", "C1", "C2", "C2", "C3", "C3"), LETTERS[1:6]
   )
   net <- as_htna(seqs, membership)
+  expect_s3_class(net, "htna")
   expect_s3_class(net, "netobject")
   expect_true("cluster" %in% names(net$nodes))
 })

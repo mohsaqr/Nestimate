@@ -311,6 +311,8 @@ test_that("the restored HTNA partition matches the shape htna itself builds", {
   expect_type(restored$node_groups$group, "character")
   expect_s3_class(restored$nodes$groups, "factor")
   expect_identical(levels(restored$nodes$groups), src$actor_levels)
+  expect_identical(attr(restored$node_groups, "actor_levels"),
+                   src$actor_levels)
   expect_identical(restored$node_groups$group, src$node_groups$group)
   expect_false(anyNA(restored$node_groups$group))
 
