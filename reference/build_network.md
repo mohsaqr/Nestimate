@@ -122,8 +122,9 @@ build_network(
 
 - time_threshold:
 
-  Numeric. Maximum time gap (seconds) for long format session splitting.
-  Default: `900`.
+  Numeric or FALSE. Maximum time gap (seconds) for long format session
+  splitting. Set to `FALSE` to switch session-interval splitting off, so
+  each actor (or actor-session) forms a single sequence. Default: `900`.
 
 - predictability:
 

@@ -11,7 +11,7 @@ detects sessions from time gaps, and handles tie-breaking."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,9 +107,11 @@ sessions are further split by time gaps. Default: NULL.</p></dd>
 
 
 <dt id="arg-time-threshold">time_threshold<a class="anchor" aria-label="anchor" href="#arg-time-threshold"></a></dt>
-<dd><p>Numeric. Maximum gap in seconds between consecutive
-events before a new session starts. Only used when <code>time</code> is
-provided. Default: 900 (15 minutes).</p></dd>
+<dd><p>Numeric or FALSE. Maximum gap in seconds between
+consecutive events before a new session starts. Only used when
+<code>time</code> is provided. Set to <code>FALSE</code> to switch session-interval
+splitting off, so each actor (or actor-session) forms a single sequence
+however long the gaps are. Default: 900 (15 minutes).</p></dd>
 
 
 <dt id="arg-custom-format">custom_format<a class="anchor" aria-label="anchor" href="#arg-custom-format"></a></dt>
@@ -149,6 +151,13 @@ max_sequence_length, unique_actors, etc.</p></dd>
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Sessions are identified by the observed combinations of the <code>actor</code> and
+<code>session</code> columns, so identifiers containing separator characters stay
+distinct and high-cardinality identifiers cannot overflow. Missing values in
+any grouping column raise an error: drop or relabel those events first.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code>, <code><a href="prepare_onehot.html">prepare_onehot</a></code></p></div>

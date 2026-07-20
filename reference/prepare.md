@@ -59,9 +59,11 @@ prepare(
 
 - time_threshold:
 
-  Numeric. Maximum gap in seconds between consecutive events before a
-  new session starts. Only used when `time` is provided. Default: 900
-  (15 minutes).
+  Numeric or FALSE. Maximum gap in seconds between consecutive events
+  before a new session starts. Only used when `time` is provided. Set to
+  `FALSE` to switch session-interval splitting off, so each actor (or
+  actor-session) forms a single sequence however long the gaps are.
+  Default: 900 (15 minutes).
 
 - custom_format:
 
@@ -102,6 +104,14 @@ A list with class `"nestimate_data"` containing:
 
   List with total_sessions, total_actions, max_sequence_length,
   unique_actors, etc.
+
+## Details
+
+Sessions are identified by the observed combinations of the `actor` and
+`session` columns, so identifiers containing separator characters stay
+distinct and high-cardinality identifiers cannot overflow. Missing
+values in any grouping column raise an error: drop or relabel those
+events first.
 
 ## See also
 

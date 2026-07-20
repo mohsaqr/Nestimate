@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,36 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.8.0" id="nestimate-080">Nestimate 0.8.0<a class="anchor" aria-label="anchor" href="#nestimate-080"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.8.2" id="nestimate-082">Nestimate 0.8.2<a class="anchor" aria-label="anchor" href="#nestimate-082"></a></h2>
+<div class="section level3">
+<h3 id="session-grouping-0-8-2">Session grouping<a class="anchor" aria-label="anchor" href="#session-grouping-0-8-2"></a></h3>
+<ul><li>
+<p><code><a href="../reference/prepare.html">prepare()</a></code> now identifies sessions from the observed combinations of the <code>actor</code> and <code>session</code> columns instead of <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">base::interaction()</a></code>. Three defects are fixed:</p>
+<ul><li>
+<strong>Integer overflow.</strong> <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code> codes a combination over the marginal level space, which exceeds <code>.Machine$integer.max</code> once both columns pass 46,341 distinct values. The resulting <code>NA</code>s were pasted into the literal string <code>"NA"</code>, merging unrelated events into one pseudo-session. On 50,000 actor-session pairs this silently discarded 14% of sessions and manufactured transitions that no input sequence contained, including self-loops on terminal states.</li>
+<li>
+<strong>Separator collisions.</strong> Identifiers were pasted with <code>" | "</code> before being used as a grouping and metadata merge key, so <code>("a | b", "c")</code> and <code>("a", "b | c")</code> collapsed into a single session. Grouping now keys on the original columns; the readable label is display-only and is exposed as <code>.session_label</code> in <code>meta_data</code>.</li>
+<li>
+<strong>Missing identifiers.</strong> Missing values in a grouping column silently changed the session count. They now raise an error naming the columns.</li>
+</ul><p>Group numbering reproduces <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code>’s ordering, so prepared row order and finite same-seed bootstrap results are unchanged.</p>
+</li>
+<li><p><code>time_threshold = FALSE</code> switches session-interval splitting off, so each actor (or actor-session) forms a single sequence regardless of gap length. Accepted by <code><a href="../reference/prepare.html">prepare()</a></code>, <code><a href="../reference/build_network.html">build_network()</a></code> and <code><a href="../reference/build_mcml.html">build_mcml()</a></code>.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="testing-0-8-2">Testing<a class="anchor" aria-label="anchor" href="#testing-0-8-2"></a></h3>
+<ul><li>Added a randomized grouping sweep over 1,000 seeded datasets covering actor/session column counts, identifier vocabularies including separator and UTF-8 cases, time on and off, tied timestamps, explicit order columns, shuffled input, and time-gap structures that split, do not split, or sit exactly on the threshold. Verified against ground truth and against <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code> for row-order compatibility.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.1" id="nestimate-081">Nestimate 0.8.1<a class="anchor" aria-label="anchor" href="#nestimate-081"></a></h2>
+<div class="section level3">
+<h3 id="htna-interoperability-0-8-1">HTNA interoperability<a class="anchor" aria-label="anchor" href="#htna-interoperability-0-8-1"></a></h3>
+<ul><li><p>Distance clustering and mixed-Markov clustering now preserve HTNA inputs. <code><a href="../reference/build_clusters.html">build_clusters()</a></code> carries the node-to-actor partition into <code><a href="../reference/build_network.html">build_network()</a></code>, while <code><a href="../reference/cluster_network.html">cluster_network()</a></code> and <code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> return an <code>htna_group</code> directly. Every child remains an <code>htna</code> object with <code>$node_groups</code>, <code>$nodes$groups</code>, and <code>$actor_levels</code>; clustering assignments, posterior probabilities, fit diagnostics, and other outer attributes remain attached.</p></li>
+<li><p>Added extensive randomized equivalence coverage across distance clustering, mixed-Markov clustering, all transition-network estimators, actor-absent clusters, and HTNA-versus-plain input paths.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.0" id="nestimate-080">Nestimate 0.8.0<a class="anchor" aria-label="anchor" href="#nestimate-080"></a></h2><p class="text-muted">CRAN release: 2026-07-10</p>
 <div class="section level3">
 <h3 id="documentation-0-8-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-8-0"></a></h3>
 <ul><li><p>The Bayesian verbs get their own reference section, placed directly after Network Estimation: <code><a href="../reference/certainty.html">certainty()</a></code>, <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code>, <code><a href="../reference/subtract_networks.html">subtract_networks()</a></code> and <code><a href="../reference/as_netdifference.html">as_netdifference()</a></code>. They were previously buried in a fourteen-entry “Bootstrap &amp; Inference” list. <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> now points at <code><a href="../reference/certainty.html">certainty()</a></code> as its closed-form counterpart, and <code><a href="../reference/permutation.html">permutation()</a></code> points at <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> as its Bayesian complement, so each pair is reachable from either side.</p></li>

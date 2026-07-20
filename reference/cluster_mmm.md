@@ -113,9 +113,10 @@ cluster_mmm(
 
 ## Value
 
-A `netobject_group` (list of `netobject`s, one per cluster).
-MMM-specific information is stored in `attr(, "clustering")` (class
-`"net_mmm_clustering"`):
+A `netobject_group` (list of `netobject`s, one per cluster). For HTNA
+input this is an `htna_group`, and every child retains the original
+actor partition and HTNA class. MMM-specific information is stored in
+`attr(, "clustering")` (class `"net_mmm_clustering"`):
 
 - assignments:
 

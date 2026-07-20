@@ -1,6 +1,83 @@
 # Changelog
 
+## Nestimate 0.8.2
+
+### Session grouping
+
+- [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) now
+  identifies sessions from the observed combinations of the `actor` and
+  `session` columns instead of
+  [`base::interaction()`](https://rdrr.io/r/base/interaction.html).
+  Three defects are fixed:
+
+  - **Integer overflow.**
+    [`interaction()`](https://rdrr.io/r/base/interaction.html) codes a
+    combination over the marginal level space, which exceeds
+    `.Machine$integer.max` once both columns pass 46,341 distinct
+    values. The resulting `NA`s were pasted into the literal string
+    `"NA"`, merging unrelated events into one pseudo-session. On 50,000
+    actor-session pairs this silently discarded 14% of sessions and
+    manufactured transitions that no input sequence contained, including
+    self-loops on terminal states.
+  - **Separator collisions.** Identifiers were pasted with `" | "`
+    before being used as a grouping and metadata merge key, so
+    `("a | b", "c")` and `("a", "b | c")` collapsed into a single
+    session. Grouping now keys on the original columns; the readable
+    label is display-only and is exposed as `.session_label` in
+    `meta_data`.
+  - **Missing identifiers.** Missing values in a grouping column
+    silently changed the session count. They now raise an error naming
+    the columns.
+
+  Group numbering reproduces
+  [`interaction()`](https://rdrr.io/r/base/interaction.html)’s ordering,
+  so prepared row order and finite same-seed bootstrap results are
+  unchanged.
+
+- `time_threshold = FALSE` switches session-interval splitting off, so
+  each actor (or actor-session) forms a single sequence regardless of
+  gap length. Accepted by
+  [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md),
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+  and
+  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md).
+
+### Testing
+
+- Added a randomized grouping sweep over 1,000 seeded datasets covering
+  actor/session column counts, identifier vocabularies including
+  separator and UTF-8 cases, time on and off, tied timestamps, explicit
+  order columns, shuffled input, and time-gap structures that split, do
+  not split, or sit exactly on the threshold. Verified against ground
+  truth and against
+  [`interaction()`](https://rdrr.io/r/base/interaction.html) for
+  row-order compatibility.
+
+## Nestimate 0.8.1
+
+### HTNA interoperability
+
+- Distance clustering and mixed-Markov clustering now preserve HTNA
+  inputs.
+  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  carries the node-to-actor partition into
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
+  while
+  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+  and
+  [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+  return an `htna_group` directly. Every child remains an `htna` object
+  with `$node_groups`, `$nodes$groups`, and `$actor_levels`; clustering
+  assignments, posterior probabilities, fit diagnostics, and other outer
+  attributes remain attached.
+
+- Added extensive randomized equivalence coverage across distance
+  clustering, mixed-Markov clustering, all transition-network
+  estimators, actor-absent clusters, and HTNA-versus-plain input paths.
+
 ## Nestimate 0.8.0
+
+CRAN release: 2026-07-10
 
 ### Documentation
 

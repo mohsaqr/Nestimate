@@ -219,6 +219,11 @@ An object of class `"net_clustering"` containing:
 
   Lambda value used (0 if not weighted).
 
+- htna_partition:
+
+  For HTNA input, the preserved node-to-actor partition used to restore
+  HTNA children when networks are built.
+
 ## Examples
 
 ``` r

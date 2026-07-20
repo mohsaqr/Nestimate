@@ -17,7 +17,7 @@ uniform across clustering families."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -166,7 +166,9 @@ at <code><a href="cluster_network.html">cluster_network</a></code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>netobject_group</code> (list of <code>netobject</code>s, one per
-cluster). MMM-specific information is stored in
+cluster). For HTNA input this is an <code>htna_group</code>, and every child
+retains the original actor partition and HTNA class. MMM-specific
+information is stored in
 <code>attr(, "clustering")</code> (class <code>"net_mmm_clustering"</code>):</p><dl><dt>assignments</dt>
 <dd><p>Integer vector of cluster assignments.</p></dd>
 

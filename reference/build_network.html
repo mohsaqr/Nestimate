@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -182,8 +182,10 @@ methods. One of <code>NULL</code>, <code>"between"</code>, <code>"within"</code>
 
 
 <dt id="arg-time-threshold">time_threshold<a class="anchor" aria-label="anchor" href="#arg-time-threshold"></a></dt>
-<dd><p>Numeric. Maximum time gap (seconds) for long format
-session splitting. Default: <code>900</code>.</p></dd>
+<dd><p>Numeric or FALSE. Maximum time gap (seconds) for long
+format session splitting. Set to <code>FALSE</code> to switch session-interval
+splitting off, so each actor (or actor-session) forms a single sequence.
+Default: <code>900</code>.</p></dd>
 
 
 <dt id="arg-predictability">predictability<a class="anchor" aria-label="anchor" href="#arg-predictability"></a></dt>
