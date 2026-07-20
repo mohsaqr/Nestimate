@@ -1,3 +1,58 @@
+# Nestimate 0.8.2
+
+## Session grouping
+
+* `prepare()` now identifies sessions from the observed combinations of the
+  `actor` and `session` columns instead of `base::interaction()`. Three
+  defects are fixed:
+
+  - **Integer overflow.** `interaction()` codes a combination over the
+    marginal level space, which exceeds `.Machine$integer.max` once both
+    columns pass 46,341 distinct values. The resulting `NA`s were pasted into
+    the literal string `"NA"`, merging unrelated events into one pseudo-session.
+    On 50,000 actor-session pairs this silently discarded 14% of sessions and
+    manufactured transitions that no input sequence contained, including
+    self-loops on terminal states.
+  - **Separator collisions.** Identifiers were pasted with `" | "` before being
+    used as a grouping and metadata merge key, so `("a | b", "c")` and
+    `("a", "b | c")` collapsed into a single session. Grouping now keys on the
+    original columns; the readable label is display-only and is exposed as
+    `.session_label` in `meta_data`.
+  - **Missing identifiers.** Missing values in a grouping column silently
+    changed the session count. They now raise an error naming the columns.
+
+  Group numbering reproduces `interaction()`'s ordering, so prepared row order
+  and finite same-seed bootstrap results are unchanged.
+
+* `time_threshold = FALSE` switches session-interval splitting off, so each
+  actor (or actor-session) forms a single sequence regardless of gap length.
+  Accepted by `prepare()`, `build_network()` and `build_mcml()`.
+
+## Testing
+
+* Added a randomized grouping sweep over 1,000 seeded datasets covering
+  actor/session column counts, identifier vocabularies including separator and
+  UTF-8 cases, time on and off, tied timestamps, explicit order columns,
+  shuffled input, and time-gap structures that split, do not split, or sit
+  exactly on the threshold. Verified against ground truth and against
+  `interaction()` for row-order compatibility.
+
+# Nestimate 0.8.1
+
+## HTNA interoperability
+
+* Distance clustering and mixed-Markov clustering now preserve HTNA inputs.
+  `build_clusters()` carries the node-to-actor partition into
+  `build_network()`, while `cluster_network()` and `cluster_mmm()` return an
+  `htna_group` directly. Every child remains an `htna` object with
+  `$node_groups`, `$nodes$groups`, and `$actor_levels`; clustering assignments,
+  posterior probabilities, fit diagnostics, and other outer attributes remain
+  attached.
+
+* Added extensive randomized equivalence coverage across distance clustering,
+  mixed-Markov clustering, all transition-network estimators, actor-absent
+  clusters, and HTNA-versus-plain input paths.
+
 # Nestimate 0.8.0
 
 ## Documentation

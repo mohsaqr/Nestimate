@@ -11,6 +11,11 @@
 #'   \code{c("student", "group")}). If missing, all data is treated as one
 #'   actor.
 #' @param action Character. Column name containing the action/state/code.
+#' @details
+#' Sessions are identified by the observed combinations of the \code{actor} and
+#' \code{session} columns, so identifiers containing separator characters stay
+#' distinct and high-cardinality identifiers cannot overflow. Missing values in
+#' any grouping column raise an error: drop or relabel those events first.
 #' @param time Character or NULL. Column name containing timestamps.
 #'   Supports ISO8601, Unix timestamps (numeric), and 40+ date/time formats.
 #'   If NULL, row order defines the sequence. Default: NULL.
@@ -21,9 +26,11 @@
 #'   explicit session grouping (e.g. \code{"course"} or
 #'   \code{c("course", "semester")}). When combined with \code{time},
 #'   sessions are further split by time gaps. Default: NULL.
-#' @param time_threshold Numeric. Maximum gap in seconds between consecutive
-#'   events before a new session starts. Only used when \code{time} is
-#'   provided. Default: 900 (15 minutes).
+#' @param time_threshold Numeric or FALSE. Maximum gap in seconds between
+#'   consecutive events before a new session starts. Only used when
+#'   \code{time} is provided. Set to \code{FALSE} to switch session-interval
+#'   splitting off, so each actor (or actor-session) forms a single sequence
+#'   however long the gaps are. Default: 900 (15 minutes).
 #' @param custom_format Character or NULL. Custom \code{strptime} format
 #'   string for parsing timestamps. Default: NULL (auto-detect).
 #' @param is_unix_time Logical. If TRUE, treat numeric time values as Unix
@@ -69,8 +76,13 @@ prepare <- function(data,
                                             "microseconds")) {
   stopifnot(is.data.frame(data))
   stopifnot(is.character(action), length(action) == 1, action %in% names(data))
+  # FALSE disables gap-based splitting. Inf makes the `gaps > time_threshold`
+  # test below never fire, so no separate code path is needed.
+  if (isFALSE(time_threshold)) {
+    time_threshold <- Inf
+  }
   stopifnot(is.numeric(time_threshold), length(time_threshold) == 1,
-            time_threshold > 0)
+            !is.na(time_threshold), time_threshold > 0)
   unix_time_unit <- match.arg(unix_time_unit)
 
   df <- as.data.frame(data)
@@ -85,21 +97,21 @@ prepare <- function(data,
   } else {
     stopifnot(is.character(actor), all(actor %in% names(df)))
     if (length(actor) > 1L) {
-      df$.actor <- interaction(df[, actor, drop = FALSE], sep = "-",
-                               drop = TRUE)
+      # Display label only. Identity comes from the underlying columns below.
+      df$.actor <- .group_label(df[, actor, drop = FALSE], sep = "-")
       actor_col <- ".actor"
     } else {
       actor_col <- actor
     }
   }
+  actor_key_cols <- if (default_actor) ".actor" else actor
 
   # ---- Session (explicit grouping) ----
   if (!is.null(session)) {
     stopifnot(is.character(session), all(session %in% names(df)))
     if (length(session) > 1L) {
-      df$.session_explicit <- interaction(
-        df[, session, drop = FALSE], sep = "-", drop = TRUE
-      )
+      df$.session_explicit <- .group_label(df[, session, drop = FALSE],
+                                           sep = "-")
     } else {
       df$.session_explicit <- df[[session]]
     }
@@ -115,12 +127,15 @@ prepare <- function(data,
   }
 
   # ---- Build base grouping key (actor + session) ----
-  if (!is.null(session)) {
-    df$.base_group <- interaction(
-      df[[actor_col]], df$.session_explicit, sep = " | ", drop = TRUE
-    )
+  # Identity is an integer over observed combinations of the *original*
+  # columns, so it cannot overflow and no separator can collide. The label is
+  # kept separately for display.
+  key_cols <- df[, c(actor_key_cols, session), drop = FALSE]
+  df$.base_group <- .observed_group_id(key_cols, context = "actor/session")
+  df$.base_label <- if (is.null(session)) {
+    as.character(df[[actor_col]])
   } else {
-    df$.base_group <- df[[actor_col]]
+    .group_label(list(df[[actor_col]], df$.session_explicit))
   }
 
   # ---- Time parsing + inferred session detection ----
@@ -151,7 +166,9 @@ prepare <- function(data,
       }
     )
 
+    # Both parts are integers, so this key is unambiguous.
     df$.session_id <- paste0(df$.base_group, " s", df$.inferred_nr)
+    df$.session_label <- paste0(df$.base_label, " s", df$.inferred_nr)
 
   } else {
     # No time: sort by base_group + order
@@ -159,6 +176,7 @@ prepare <- function(data,
 
     # Each base group = one session
     df$.session_id <- as.character(df$.base_group)
+    df$.session_label <- df$.base_label
   }
 
   # ---- Sequence numbering within sessions ----
@@ -193,8 +211,11 @@ prepare <- function(data,
     time_data <- NULL
   }
 
-  # Meta data
+  # Meta data. Keyed on the unambiguous .session_id; .session_label carries the
+  # readable actor/session name for reporting.
   meta_data <- data.frame(.session_id = sessions, stringsAsFactors = FALSE)
+  label_map <- df$.session_label[match(sessions, df$.session_id)]
+  meta_data$.session_label <- label_map
   if (!default_actor) {
     actor_map <- df[!duplicated(df$.session_id),
                     c(".session_id", actor_col), drop = FALSE]

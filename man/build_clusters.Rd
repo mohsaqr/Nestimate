@@ -131,6 +131,8 @@ for hierarchical methods).}
 \item{seed}{Seed used (or NULL).}
 \item{weighted}{Logical, whether weighted Hamming was used.}
 \item{lambda}{Lambda value used (0 if not weighted).}
+\item{htna_partition}{For HTNA input, the preserved node-to-actor
+partition used to restore HTNA children when networks are built.}
 }
 }
 \description{

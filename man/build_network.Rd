@@ -94,8 +94,10 @@ result matrix. Default: 0 (no thresholding).}
 methods. One of \code{NULL}, \code{"between"}, \code{"within"},
 \code{"both"}. Requires \code{id_col}. Default: \code{NULL}.}
 
-\item{time_threshold}{Numeric. Maximum time gap (seconds) for long format
-session splitting. Default: \code{900}.}
+\item{time_threshold}{Numeric or FALSE. Maximum time gap (seconds) for long
+format session splitting. Set to \code{FALSE} to switch session-interval
+splitting off, so each actor (or actor-session) forms a single sequence.
+Default: \code{900}.}
 
 \item{predictability}{Logical. If \code{TRUE} (default), compute and store
 node predictability (R-squared) for undirected association methods

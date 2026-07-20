@@ -630,6 +630,8 @@
 #'   \item{seed}{Seed used (or NULL).}
 #'   \item{weighted}{Logical, whether weighted Hamming was used.}
 #'   \item{lambda}{Lambda value used (0 if not weighted).}
+#'   \item{htna_partition}{For HTNA input, the preserved node-to-actor
+#'     partition used to restore HTNA children when networks are built.}
 #' }
 #'
 #' @examples
@@ -774,7 +776,7 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
     )
   }
 
-  structure(
+  result <- structure(
     list(
       data = data,
       k = k,
@@ -790,10 +792,12 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
       lambda = lambda,
       covariates = cov_result,
       network_method = if (inherits(raw_data, "netobject")) raw_data$method else NULL,
-      build_args     = if (inherits(raw_data, "netobject")) raw_data$build_args else NULL
+      build_args     = if (inherits(raw_data, "netobject")) raw_data$build_args else NULL,
+      htna_partition = .capture_htna_partition(raw_data)
     ),
     class = "net_clustering"
   )
+  result
 }
 
 #' Cluster sequence data (deprecated alias)
@@ -1937,7 +1941,10 @@ print.tidy_covariates <- function(x, ...) {
 #' @param x A \code{net_clustering} object.
 #' @param method Network estimation method (default: "relative").
 #' @param ... Passed to \code{build_network()}.
-#' @return A \code{netobject_group}.
+#' @return A \code{netobject_group}. When \code{data} is an HTNA network,
+#'   the result is an \code{htna_group}; every child retains the original
+#'   node-to-actor partition and HTNA class, while the clustering diagnostics
+#'   remain attached to the outer object.
 #' @noRd
 .build_network_clustering <- function(x, method = "relative", ...) {
   assignments <- x$assignments
@@ -1964,7 +1971,7 @@ print.tidy_covariates <- function(x, ...) {
   attr(nets, "group_col") <- "cluster"
   attr(nets, "clustering") <- x
   class(nets) <- "netobject_group"
-  nets
+  .restore_htna_group(nets, x$htna_partition)
 }
 
 # ==============================================================================

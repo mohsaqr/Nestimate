@@ -86,8 +86,10 @@
 #'   \code{"non-overlapping"} or \code{"overlapping"}. Has no effect on
 #'   wide or long sequence data (only the one-hot/wtna path reads it).
 #'   Default: \code{"non-overlapping"}.
-#' @param time_threshold Numeric. Maximum time gap (seconds) for long format
-#'   session splitting. Default: \code{900}.
+#' @param time_threshold Numeric or FALSE. Maximum time gap (seconds) for long
+#'   format session splitting. Set to \code{FALSE} to switch session-interval
+#'   splitting off, so each actor (or actor-session) forms a single sequence.
+#'   Default: \code{900}.
 #' @param predictability Logical. If \code{TRUE} (default), compute and store
 #'   node predictability (R-squared) for undirected association methods
 #'   (glasso, pcor, cor). Stored in \code{$predictability} and auto-displayed

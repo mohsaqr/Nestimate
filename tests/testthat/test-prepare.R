@@ -426,3 +426,142 @@ test_that("a long single sequence does not scale quadratically", {
   # timer noise on loaded CI machines, but a quadratic regression blows past it.
   expect_lt(full, max(0.5, half * 3))
 })
+
+test_that("time_threshold = FALSE switches session-interval splitting off", {
+  # One actor, three events an hour apart.
+  ev <- data.frame(
+    s = "u1",
+    a = c("A", "B", "C"),
+    t = as.POSIXct("2024-01-01", tz = "UTC") + c(0, 3600, 7200)
+  )
+
+  # The default 900s interval splits every gap into its own session.
+  expect_identical(
+    nrow(prepare(ev, actor = "s", action = "a", time = "t")$sequence_data),
+    3L
+  )
+
+  # FALSE keeps the actor as a single sequence, matching an infinite interval.
+  off <- prepare(ev, actor = "s", action = "a", time = "t",
+                 time_threshold = FALSE)$sequence_data
+  expect_identical(nrow(off), 1L)
+  expect_identical(unname(unlist(off[1, ])), c("A", "B", "C"))
+  expect_equal(
+    off,
+    prepare(ev, actor = "s", action = "a", time = "t",
+            time_threshold = Inf)$sequence_data
+  )
+
+  # build_network() forwards it: three lone events carry no transition,
+  # one pooled sequence carries A -> B -> C.
+  expect_identical(
+    build_network(ev, actor = "s", action = "a", time = "t",
+                  method = "tna")$n_edges,
+    0L
+  )
+  expect_identical(
+    build_network(ev, actor = "s", action = "a", time = "t",
+                  time_threshold = FALSE, method = "tna")$n_edges,
+    2L
+  )
+
+  # TRUE stays invalid: only FALSE is meaningful as a switch.
+  expect_error(prepare(ev, actor = "s", action = "a", time = "t",
+                       time_threshold = TRUE))
+  expect_error(prepare(ev, actor = "s", action = "a", time = "t",
+                       time_threshold = 0))
+  expect_error(prepare(ev, actor = "s", action = "a", time = "t",
+                       time_threshold = NA))
+})
+
+test_that("high-cardinality actor/session grouping does not overflow", {
+  skip_on_cran()
+  # 50,000 x 50,000 marginal levels: interaction() codes this as 2.5e9, past
+  # .Machine$integer.max, and used to drop ~14% of sessions into a single "NA"
+  # pseudo-session that manufactured transitions no input sequence contained.
+  n <- 50000L
+  ev <- data.frame(
+    student = sprintf("stu-%05d", seq_len(n)),
+    step    = sprintf("step-%05d", seq_len(n)),
+    stringsAsFactors = FALSE
+  )
+  ev <- ev[rep(seq_len(n), each = 3L), ]
+  ev$tm  <- 1700000000 + rep(c(0, 1, 2), n)
+  ev$act <- rep(c("A", "B", "C"), n)
+
+  expect_no_warning(
+    prepared <- prepare(ev, actor = "student", session = "step", time = "tm",
+                        action = "act", time_threshold = 3600)
+  )
+  expect_identical(nrow(prepared$sequence_data), n)
+
+  # Every session is A -> B -> C, so C is terminal and its row must be empty.
+  w <- build_network(ev, actor = "student", session = "step", time = "tm",
+                     action = "act", time_threshold = 3600,
+                     method = "tna")$weights
+  expect_equal(unname(w["A", "B"]), 1)
+  expect_equal(unname(w["B", "C"]), 1)
+  expect_equal(unname(w["C", ]), c(0, 0, 0))
+})
+
+test_that("separator characters inside identifiers cannot collide", {
+  # ("a | b", "c") and ("a", "b | c") both paste to "a | b | c".
+  ev <- data.frame(
+    student = c("a | b", "a | b", "a", "a"),
+    session = c("c", "c", "b | c", "b | c"),
+    tm      = 1700000000 + c(0, 1, 0, 1),
+    act     = c("A", "B", "A", "C"),
+    stringsAsFactors = FALSE
+  )
+  res <- prepare(ev, actor = "student", session = "session", time = "tm",
+                 action = "act", time_threshold = 3600)
+
+  expect_identical(nrow(res$sequence_data), 2L)
+  # The merge key must stay distinct even though the display label does not.
+  expect_identical(anyDuplicated(res$meta_data$.session_id), 0L)
+  expect_identical(nrow(res$meta_data), 2L)
+})
+
+test_that("missing actor or session identifiers fail fast", {
+  ev <- data.frame(
+    student = c("u1", "u1", NA, NA),
+    session = c("s1", "s1", "s2", "s2"),
+    tm      = 1700000000 + c(0, 1, 0, 1),
+    act     = c("A", "B", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+  # Previously this silently produced three sessions from two real ones.
+  expect_error(
+    prepare(ev, actor = "student", session = "session", time = "tm",
+            action = "act", time_threshold = 3600),
+    "Missing values in actor/session column"
+  )
+  ev2 <- ev
+  ev2$student <- "u1"
+  ev2$session[3:4] <- NA
+  expect_error(
+    prepare(ev2, actor = "student", session = "session", time = "tm",
+            action = "act", time_threshold = 3600),
+    "Missing values in actor/session column"
+  )
+})
+
+test_that("grouping keeps interaction()'s row order so seeds stay reproducible", {
+  set.seed(9)
+  k <- 60L
+  ev <- data.frame(
+    student = sprintf("u%02d", rep(seq_len(k), each = 6)),
+    session = sprintf("s%d", rep(1:2, each = 3, times = k)),
+    act     = sample(c("A", "B", "C"), k * 6, TRUE),
+    stringsAsFactors = FALSE
+  )
+  ev$tm <- 1700000000 + seq_len(nrow(ev))
+
+  sorted  <- prepare(ev, actor = "student", session = "session",
+                     time = "tm", action = "act")
+  shuffled <- prepare(ev[sample(nrow(ev)), ], actor = "student",
+                      session = "session", time = "tm", action = "act")
+  # Input order must not leak into prepared row order: a finite seeded
+  # bootstrap indexes rows, so a permutation would change its output.
+  expect_identical(sorted$sequence_data, shuffled$sequence_data)
+})

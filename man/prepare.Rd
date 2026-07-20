@@ -40,9 +40,11 @@ explicit session grouping (e.g. \code{"course"} or
 \code{c("course", "semester")}). When combined with \code{time},
 sessions are further split by time gaps. Default: NULL.}
 
-\item{time_threshold}{Numeric. Maximum gap in seconds between consecutive
-events before a new session starts. Only used when \code{time} is
-provided. Default: 900 (15 minutes).}
+\item{time_threshold}{Numeric or FALSE. Maximum gap in seconds between
+consecutive events before a new session starts. Only used when
+\code{time} is provided. Set to \code{FALSE} to switch session-interval
+splitting off, so each actor (or actor-session) forms a single sequence
+however long the gaps are. Default: 900 (15 minutes).}
 
 \item{custom_format}{Character or NULL. Custom \code{strptime} format
 string for parsing timestamps. Default: NULL (auto-detect).}
@@ -70,6 +72,12 @@ max_sequence_length, unique_actors, etc.}
 Converts event log data (actor, action, time) into wide sequence format
 suitable for \code{\link{build_network}}. Automatically parses timestamps,
 detects sessions from time gaps, and handles tie-breaking.
+}
+\details{
+Sessions are identified by the observed combinations of the \code{actor} and
+\code{session} columns, so identifiers containing separator characters stay
+distinct and high-cardinality identifiers cannot overflow. Missing values in
+any grouping column raise an error: drop or relabel those events first.
 }
 \examples{
 df <- data.frame(

@@ -78,8 +78,27 @@ test_that("argument names htna passes still exist on the generics", {
     group = rep(c("AI", "Human"), length.out = nrow(net$nodes)),
     stringsAsFactors = FALSE
   )
+  net$actor_levels <- c("AI", "Human")
+  net$nodes$groups <- factor(
+    net$node_groups$group,
+    levels = net$actor_levels
+  )
   class(net) <- c("htna", class(net))
   net
+}
+
+.expect_preserved_htna_group <- function(x, expected_levels) {
+  expect_s3_class(x, "htna_group")
+  expect_s3_class(x, "netobject_group")
+  expect_identical(attr(x, "actor_levels"), expected_levels)
+  for (net in x) {
+    expect_s3_class(net, "htna")
+    expect_identical(net$actor_levels, expected_levels)
+    expect_true(all(c("node", "group") %in% names(net$node_groups)))
+    expect_identical(as.character(net$node_groups$node),
+                     as.character(net$nodes$label))
+    expect_false(anyNA(net$node_groups$group))
+  }
 }
 
 test_that("the htna S3 methods Nestimate registers stay dispatchable", {
@@ -109,6 +128,44 @@ test_that("htna objects still carry the netobject fields Nestimate reads", {
   expect_true(all(c("node", "group") %in% names(net$node_groups)))
   expect_identical(class(net)[1], "htna")
   expect_true(inherits(net, "netobject"))
+})
+
+test_that("distance clustering preserves the HTNA actor partition", {
+  net <- .fake_htna()
+  clustering <- build_clusters(net, k = 2, seed = 1)
+
+  expect_identical(clustering$htna_partition$actor_levels,
+                   net$actor_levels)
+
+  grouped <- build_network(clustering)
+  .expect_preserved_htna_group(grouped, net$actor_levels)
+  expect_s3_class(attr(grouped, "clustering"), "net_clustering")
+})
+
+test_that("cluster_network preserves HTNA children and diagnostics", {
+  net <- .fake_htna()
+  grouped <- cluster_network(net, k = 2, seed = 1)
+
+  .expect_preserved_htna_group(grouped, net$actor_levels)
+  expect_s3_class(attr(grouped, "clustering"), "net_clustering")
+})
+
+test_that("MMM clustering preserves the HTNA actor partition", {
+  net <- .fake_htna()
+  grouped <- cluster_mmm(
+    net,
+    k = 2,
+    n_starts = 1,
+    max_iter = 20,
+    seed = 1
+  )
+
+  .expect_preserved_htna_group(grouped, net$actor_levels)
+  clustering <- attr(grouped, "clustering")
+  expect_s3_class(clustering, "net_mmm_clustering")
+  expect_identical(clustering$htna_partition$actor_levels,
+                   net$actor_levels)
+  expect_equal(nrow(clustering$posterior), nrow(net$data))
 })
 
 # ---- Contract B2: the three exports htna's own suite never exercises -------
@@ -241,4 +298,45 @@ test_that("fully degenerate: every requested measure is returned with cs = 0", {
   st <- suppressWarnings(centrality_stability(net, measures = m, iter = 5L, seed = 1L))
   expect_identical(names(st$cs), m)
   expect_equal(unname(st$cs), rep(0, 3))
+})
+
+test_that("the restored HTNA partition matches the shape htna itself builds", {
+  src <- .fake_htna()
+  partition <- .capture_htna_partition(src)
+  plain <- build_network(src$data, method = "relative")
+  restored <- .restore_htna_partition(plain, partition)
+
+  # htna's build_htna() stores $node_groups$group as character and mirrors it
+  # as a factor on $nodes$groups. A factor in both places is not that shape.
+  expect_type(restored$node_groups$group, "character")
+  expect_s3_class(restored$nodes$groups, "factor")
+  expect_identical(levels(restored$nodes$groups), src$actor_levels)
+  expect_identical(restored$node_groups$group, src$node_groups$group)
+  expect_false(anyNA(restored$node_groups$group))
+
+  # Capturing the restored object again must reproduce the same partition.
+  expect_identical(.capture_htna_partition(restored), partition)
+})
+
+test_that("actor levels that omit an observed actor error instead of NA-ing", {
+  src <- .fake_htna()
+  # A stale level set: factor() would silently coerce "Human" to NA.
+  src$actor_levels <- "AI"
+  partition <- .capture_htna_partition(src)
+  plain <- build_network(src$data, method = "relative")
+
+  expect_error(
+    .restore_htna_partition(plain, partition),
+    "absent from 'actor_levels'"
+  )
+})
+
+test_that("restoring a group keeps the clustering attributes intact", {
+  src <- .fake_htna()
+  nets <- cluster_network(src, k = 2)
+
+  expect_s3_class(nets, "htna_group")
+  expect_false(is.null(attr(nets, "clustering")))
+  expect_identical(attr(nets, "group_col"), "cluster")
+  expect_identical(attr(nets, "actor_levels"), src$actor_levels)
 })

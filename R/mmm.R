@@ -514,6 +514,7 @@ build_mmm <- function(data,
   max_iter <- as.integer(max_iter)
 
   # ---- Extract data and states ----
+  htna_partition <- .capture_htna_partition(data)
   network_method <- NULL
   build_args     <- NULL
   if (inherits(data, "tna") || inherits(data, "ftna")) {
@@ -781,7 +782,8 @@ build_mmm <- function(data,
     n_sequences = N,
     covariates = cov_result,
     network_method = network_method,
-    build_args     = build_args
+    build_args     = build_args,
+    htna_partition = htna_partition
   ), class = "net_mmm")
 }
 
@@ -1273,7 +1275,7 @@ plot.mmm_compare <- function(x, ...) {
   class(clustering_info) <- "net_mmm_clustering"
   attr(nets, "clustering") <- clustering_info
   attr(nets, "group_col")  <- "cluster"
-  nets
+  .restore_htna_group(nets, mmm$htna_partition)
 }
 
 #' Cluster sequences using Mixed Markov Models
@@ -1295,7 +1297,9 @@ plot.mmm_compare <- function(x, ...) {
 #'   at \code{\link{cluster_network}}.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
 #' @return A \code{netobject_group} (list of \code{netobject}s, one per
-#'   cluster). MMM-specific information is stored in
+#'   cluster). For HTNA input this is an \code{htna_group}, and every child
+#'   retains the original actor partition and HTNA class. MMM-specific
+#'   information is stored in
 #'   \code{attr(, "clustering")} (class \code{"net_mmm_clustering"}):
 #'   \describe{
 #'     \item{assignments}{Integer vector of cluster assignments.}

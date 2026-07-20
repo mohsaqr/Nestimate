@@ -78,7 +78,9 @@ at \code{\link{cluster_network}}.}
 }
 \value{
 A \code{netobject_group} (list of \code{netobject}s, one per
-cluster). MMM-specific information is stored in
+cluster). For HTNA input this is an \code{htna_group}, and every child
+retains the original actor partition and HTNA class. MMM-specific
+information is stored in
 \code{attr(, "clustering")} (class \code{"net_mmm_clustering"}):
 \describe{
 \item{assignments}{Integer vector of cluster assignments.}
