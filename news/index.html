@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,16 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.4" id="nestimate-084">Nestimate 0.8.4<a class="anchor" aria-label="anchor" href="#nestimate-084"></a></h2>
+<div class="section level3">
+<h3 id="mixed-markov-clustering-contract-0-8-4">Mixed Markov clustering contract<a class="anchor" aria-label="anchor" href="#mixed-markov-clustering-contract-0-8-4"></a></h3>
+<ul><li>
+<code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> now returns the fitted <code>net_mmm</code> clustering object, retaining assignments, posterior probabilities, mixing proportions, fit criteria, and fitted component models. Network materialization remains the responsibility of <code>build_network(fit)</code> or the one-step <code>cluster_network(..., cluster_by = "mmm")</code> workflow.</li>
+<li>
+<code><a href="../reference/as_htna.html">as_htna()</a></code> gains a <code>net_mmm</code> method. An MMM fit created from an HTNA model is materialized into an <code>htna_group</code> without rerunning the MMM fit, while the original actor partition and clustering diagnostics are preserved.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.3" id="nestimate-083">Nestimate 0.8.3<a class="anchor" aria-label="anchor" href="#nestimate-083"></a></h2>
 <div class="section level3">
 <h3 id="htna-expansion-0-8-3">HTNA expansion<a class="anchor" aria-label="anchor" href="#htna-expansion-0-8-3"></a></h3>
@@ -74,7 +84,7 @@
 <h2 class="pkg-version" data-toc-text="0.8.1" id="nestimate-081">Nestimate 0.8.1<a class="anchor" aria-label="anchor" href="#nestimate-081"></a></h2>
 <div class="section level3">
 <h3 id="htna-interoperability-0-8-1">HTNA interoperability<a class="anchor" aria-label="anchor" href="#htna-interoperability-0-8-1"></a></h3>
-<ul><li><p>Distance clustering and mixed-Markov clustering now preserve HTNA inputs. <code><a href="../reference/build_clusters.html">build_clusters()</a></code> carries the node-to-actor partition into <code><a href="../reference/build_network.html">build_network()</a></code>, while <code><a href="../reference/cluster_network.html">cluster_network()</a></code> and <code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> return an <code>htna_group</code> directly. Every child remains an <code>htna</code> object with <code>$node_groups</code>, <code>$nodes$groups</code>, and <code>$actor_levels</code>; clustering assignments, posterior probabilities, fit diagnostics, and other outer attributes remain attached.</p></li>
+<ul><li><p>Distance clustering and mixed-Markov clustering now preserve HTNA inputs. <code><a href="../reference/build_clusters.html">build_clusters()</a></code> and <code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> carry the node-to-actor partition into network materialization, while <code><a href="../reference/cluster_network.html">cluster_network()</a></code> returns an <code>htna_group</code> directly. Every child remains an <code>htna</code> object with <code>$node_groups</code>, <code>$nodes$groups</code>, and <code>$actor_levels</code>; clustering assignments, posterior probabilities, fit diagnostics, and other outer attributes remain attached.</p></li>
 <li><p>Added extensive randomized equivalence coverage across distance clustering, mixed-Markov clustering, all transition-network estimators, actor-absent clusters, and HTNA-versus-plain input paths.</p></li>
 </ul></div>
 </div>

@@ -22,9 +22,7 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
   A `net_clustering`, `net_mmm`, `netobject_group` (with
   `attr(, "clustering")` attached by
   [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
-  or
-  [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)),
-  or `net_mmm_clustering`.
+  or `build_network(net_mmm)`), or `net_mmm_clustering`.
 
 - ...:
 
@@ -97,8 +95,8 @@ cluster_diagnostics(cl)
 #>   1        20 (66.7%)  1.137             0.326
 #>   2        10 (33.3%)  0.733             0.558
 # \donttest{
-grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
-cluster_diagnostics(grp)
+fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+cluster_diagnostics(fit)
 #> Cluster Diagnostics (mmm) [k = 2]
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
 #>   Quality: AvePP = 0.989  |  Entropy = 0.090  |  Class.Err = 0.0%
@@ -107,7 +105,7 @@ cluster_diagnostics(grp)
 #>   Cluster  N           Mix%   AvePP  Class.Err%
 #>   1        24 (80.0%)  79.4%  0.989   0.0%
 #>   2        6 (20.0%)   20.6%  0.987   0.0%
-as.data.frame(cluster_diagnostics(grp))
+as.data.frame(cluster_diagnostics(fit))
 #>   cluster size pct  mix_pct     avepp class_err_pct
 #> 1       1   24  80 79.44647 0.9889875             0
 #> 2       2    6  20 20.55353 0.9867095             0

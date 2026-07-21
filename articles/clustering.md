@@ -489,27 +489,25 @@ group-level edge comparison via
 Two paths produce the same `netobject_group`:
 
 1.  **Manual** — fit clustering with
-    [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md),
-    then pass the result to
-    [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
-    to build one network per cluster.
+    [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+    or
+    [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md),
+    then pass the fitted clustering to
+    [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
 2.  **Shortcut** —
     [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
-    and
-    [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
-    collapse both steps into one call.
+    collapses fitting and network materialization into one call for
+    either distance or MMM clustering.
 
-The distance-based shortcut
-([`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md))
-groups sessions by sequence similarity. The model-based shortcut
-([`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md))
-groups them by which Markov model best explains each sequence’s
-transitions.
+Distance clustering groups sessions by sequence similarity. Model-based
+MMM clustering groups them by which Markov model best explains each
+sequence’s transitions.
 
 | Function | Clustering method | Returns |
 |----|----|----|
-| [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md) | Distance-based (Hamming, LCS, etc.) | `netobject_group` |
-| [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md) | Model-based (MMM) | `netobject_group` |
+| [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md) | Distance-based (Hamming, LCS, etc.) | `net_clustering` |
+| [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md) | Model-based (MMM) | `net_mmm` |
+| [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md) | Distance-based or MMM | `netobject_group` |
 
 ### From `build_clusters()` to per-cluster networks
 
@@ -561,14 +559,17 @@ grp_dist
 #>   Cluster 2  3      9      [0.109, 0.571]  91 (17.3%)
 ```
 
-### Shortcut: `cluster_mmm()` (model-based)
+### Fitted MMM clustering and its networks
 
-Model-based equivalent: fits a mixture of Markov models and returns
-per-cluster networks.
+[`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+returns the fitted clustering object. Passing that fit to
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+materializes one transition network per fitted cluster.
 
 ``` r
 
-grp_mmm <- cluster_mmm(net, k = 2)
+fit_mmm <- cluster_mmm(net, k = 2)
+grp_mmm <- build_network(fit_mmm)
 grp_mmm
 #> Group Networks (2 clusters from MMM)
 #> 
@@ -577,10 +578,8 @@ grp_mmm
 #>   Cluster 2  3      9      [0.144, 0.647]  334 (63.5%)
 ```
 
-Both return a `netobject_group`.
 [`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
-reports what the clustering did — cluster sizes and fit quality — for
-either shortcut, without reaching into the object’s internals:
+works directly on either fitted clustering object:
 
 ``` r
 
@@ -592,7 +591,7 @@ cluster_diagnostics(grp_dist)
 #>   Cluster  N            Mean within-dist  Silhouette
 #>   1        435 (82.7%)  13.148            0.727
 #>   2        91 (17.3%)   50.727            -0.076
-cluster_diagnostics(grp_mmm)
+cluster_diagnostics(fit_mmm)
 #> Cluster Diagnostics (mmm) [k = 2]
 #>   Sequences: 526  |  Clusters: 2  |  States: 3
 #>   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 0.0%

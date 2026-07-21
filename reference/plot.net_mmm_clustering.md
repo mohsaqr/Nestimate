@@ -59,6 +59,11 @@ seqs <- data.frame(V1 = sample(c("A","B","C"), 40, TRUE),
                    V2 = sample(c("A","B","C"), 40, TRUE))
 grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
 plot(attr(grp, "clustering"), type = "posterior")
+#> Warning: no non-missing arguments to min; returning Inf
+#> Warning: no non-missing arguments to max; returning -Inf
+#> Warning: no non-missing arguments to min; returning Inf
+#> Warning: no non-missing arguments to max; returning -Inf
 
+#> Error in plot.window(...): need finite 'xlim' values
 # }
 ```

@@ -17,7 +17,7 @@ netobject_group."><meta property="og:image" content="https://saqr.me/Nestimate/l
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@ longer have to know which fields live on <code>net_clustering</code> vs.
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>net_clustering</code>, <code>net_mmm</code>, <code>netobject_group</code>
 (with <code>attr(, "clustering")</code> attached by <code><a href="cluster_network.html">cluster_network()</a></code>
-or <code><a href="cluster_mmm.html">cluster_mmm()</a></code>), or <code>net_mmm_clustering</code>.</p></dd>
+or <code>build_network(net_mmm)</code>), or <code>net_mmm_clustering</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -147,8 +147,8 @@ differ by family. Distance: <code>cluster</code>, <code>size</code>,
 <span class="r-out co"><span class="r-pr">#&gt;</span>   1        20 (66.7%)  1.137             0.326</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   2        10 (33.3%)  0.733             0.558</span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">grp</span> <span class="op">&lt;-</span> <span class="fu"><a href="cluster_mmm.html">cluster_mmm</a></span><span class="op">(</span><span class="va">seqs</span>, k <span class="op">=</span> <span class="fl">2</span>, n_starts <span class="op">=</span> <span class="fl">1</span>, max_iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">cluster_diagnostics</span><span class="op">(</span><span class="va">grp</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="cluster_mmm.html">cluster_mmm</a></span><span class="op">(</span><span class="va">seqs</span>, k <span class="op">=</span> <span class="fl">2</span>, n_starts <span class="op">=</span> <span class="fl">1</span>, max_iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">cluster_diagnostics</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Cluster Diagnostics (mmm) [k = 2]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sequences: 30  |  Clusters: 2  |  States: 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Quality: AvePP = 0.989  |  Entropy = 0.090  |  Class.Err = 0.0%</span>
@@ -157,7 +157,7 @@ differ by family. Distance: <code>cluster</code>, <code>size</code>,
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Cluster  N           Mix%   AvePP  Class.Err%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   1        24 (80.0%)  79.4%  0.989   0.0%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   2        6 (20.0%)   20.6%  0.987   0.0%</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">cluster_diagnostics</span><span class="op">(</span><span class="va">grp</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">cluster_diagnostics</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size pct  mix_pct     avepp class_err_pct</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1   24  80 79.44647 0.9889875             0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2    6  20 20.55353 0.9867095             0</span>

@@ -1,12 +1,9 @@
 # Cluster sequences using Mixed Markov Models
 
-Fits a mixture of Markov chains to sequence data and returns a
-`netobject_group` containing per-cluster transition networks. This is
-the MMM equivalent of
-[`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
-(which uses distance-based clustering); both functions share the
-`cluster_by = ...` surface argument so the call shape stays uniform
-across clustering families.
+Fits a mixture of Markov chains to sequence data and returns the fitted
+`net_mmm` clustering object. The fit retains assignments, posterior
+probabilities, mixing proportions, information criteria, and the fitted
+component models.
 
 ## Usage
 
@@ -113,69 +110,70 @@ cluster_mmm(
 
 ## Value
 
-A `netobject_group` (list of `netobject`s, one per cluster). For HTNA
-input this is an `htna_group`, and every child retains the original
-actor partition and HTNA class. MMM-specific information is stored in
-`attr(, "clustering")` (class `"net_mmm_clustering"`):
-
-- assignments:
-
-  Integer vector of cluster assignments.
-
-- k:
-
-  Number of clusters.
-
-- posterior:
-
-  N x k matrix of posterior probabilities.
-
-- mixing:
-
-  Mixing proportions.
-
-- quality:
-
-  List with AvePP, entropy, classification error.
-
-- BIC, AIC, ICL:
-
-  Model fit statistics.
-
-- data:
-
-  The full N-row sequence frame, matching `$assignments` – so
-  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md)
-  and
-  [`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md)
-  can recover both.
+A fitted `net_mmm` clustering object. This is the same object contract
+returned by
+[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md). For
+HTNA input, its preserved actor partition is restored when the fit is
+materialized with
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+or
+[`Nestimate::as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md).
 
 ## Details
 
-For the full `net_mmm` object with posterior probabilities, model fit
-statistics, and S3 methods, use
-[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md) instead.
+To materialize one network per fitted cluster, pass the result to
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+or use `cluster_network(..., cluster_by = "mmm")` for fitting and
+network construction in one call.
 
 ## See also
 
-[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md) for the
-full MMM object,
+[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md),
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+and
 [`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
-for distance-based clustering
+for fitting and immediately materializing per-cluster networks
 
 ## Examples
 
 ``` r
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))
-grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-grp[[1]]$weights
-#>           A         B          C
-#> A 0.1089275 0.8624067 0.02866584
-#> B 0.4564744 0.4564744 0.08705128
-#> C 0.1384553 0.5770726 0.28447209
-attr(grp, "clustering")$assignments
+fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+fit$assignments
 #>  [1] 1 2 1 2 1 1 1 1 1 1 1 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1
+fit$posterior
+#>             [,1]       [,2]
+#>  [1,] 0.93308744 0.06691256
+#>  [2,] 0.05671918 0.94328082
+#>  [3,] 0.98448637 0.01551363
+#>  [4,] 0.05671918 0.94328082
+#>  [5,] 0.98208168 0.01791832
+#>  [6,] 0.98208168 0.01791832
+#>  [7,] 0.98448637 0.01551363
+#>  [8,] 0.98448637 0.01551363
+#>  [9,] 0.96505461 0.03494539
+#> [10,] 0.98208168 0.01791832
+#> [11,] 0.84431831 0.15568169
+#> [12,] 0.05671918 0.94328082
+#> [13,] 0.97033747 0.02966253
+#> [14,] 0.98448637 0.01551363
+#> [15,] 0.98448637 0.01551363
+#> [16,] 0.92870181 0.07129819
+#> [17,] 0.98448637 0.01551363
+#> [18,] 0.98208168 0.01791832
+#> [19,] 0.05671918 0.94328082
+#> [20,] 0.96505461 0.03494539
+#> [21,] 0.97033747 0.02966253
+#> [22,] 0.97033747 0.02966253
+#> [23,] 0.97033747 0.02966253
+#> [24,] 0.97033747 0.02966253
+#> [25,] 0.98448637 0.01551363
+#> [26,] 0.97033747 0.02966253
+#> [27,] 0.97033747 0.02966253
+#> [28,] 0.98448637 0.01551363
+#> [29,] 0.98448637 0.01551363
+#> [30,] 0.98448637 0.01551363
 # \donttest{
 # Visualise with sequence_plot
 seqs <- data.frame(
@@ -183,8 +181,8 @@ seqs <- data.frame(
   V2 = sample(LETTERS[1:3], 40, TRUE),
   V3 = sample(LETTERS[1:3], 40, TRUE)
 )
-grp <- cluster_mmm(seqs, k = 2)
-sequence_plot(grp, type = "index")
+fit <- cluster_mmm(seqs, k = 2)
+sequence_plot(fit, type = "index")
 
 # }
 ```

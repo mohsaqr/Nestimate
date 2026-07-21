@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -559,15 +559,15 @@ via <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a><
 <ol style="list-style-type: decimal">
 <li>
 <strong>Manual</strong> — fit clustering with
-<code><a href="../reference/build_clusters.html">build_clusters()</a></code>, then pass the result to
-<code><a href="../reference/build_network.html">build_network()</a></code> to build one network per cluster.</li>
+<code><a href="../reference/build_clusters.html">build_clusters()</a></code> or <code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code>, then pass
+the fitted clustering to <code><a href="../reference/build_network.html">build_network()</a></code>.</li>
 <li>
-<strong>Shortcut</strong> — <code><a href="../reference/cluster_network.html">cluster_network()</a></code> and
-<code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> collapse both steps into one call.</li>
+<strong>Shortcut</strong> — <code><a href="../reference/cluster_network.html">cluster_network()</a></code> collapses
+fitting and network materialization into one call for either distance or
+MMM clustering.</li>
 </ol>
-<p>The distance-based shortcut (<code><a href="../reference/cluster_network.html">cluster_network()</a></code>) groups
-sessions by sequence similarity. The model-based shortcut
-(<code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code>) groups them by which Markov model best
+<p>Distance clustering groups sessions by sequence similarity.
+Model-based MMM clustering groups them by which Markov model best
 explains each sequence’s transitions.</p>
 <table class="table">
 <colgroup>
@@ -582,13 +582,18 @@ explains each sequence’s transitions.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code><a href="../reference/cluster_network.html">cluster_network()</a></code></td>
+<td><code><a href="../reference/build_clusters.html">build_clusters()</a></code></td>
 <td>Distance-based (Hamming, LCS, etc.)</td>
-<td><code>netobject_group</code></td>
+<td><code>net_clustering</code></td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code></td>
 <td>Model-based (MMM)</td>
+<td><code>net_mmm</code></td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/cluster_network.html">cluster_network()</a></code></td>
+<td>Distance-based or MMM</td>
 <td><code>netobject_group</code></td>
 </tr>
 </tbody>
@@ -630,22 +635,22 @@ into one call.</p>
 <span><span class="co">#&gt;   Cluster 2  3      9      [0.109, 0.571]  91 (17.3%)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="shortcut-cluster_mmm-model-based">Shortcut: <code>cluster_mmm()</code> (model-based)<a class="anchor" aria-label="anchor" href="#shortcut-cluster_mmm-model-based"></a>
+<h3 id="fitted-mmm-clustering-and-its-networks">Fitted MMM clustering and its networks<a class="anchor" aria-label="anchor" href="#fitted-mmm-clustering-and-its-networks"></a>
 </h3>
-<p>Model-based equivalent: fits a mixture of Markov models and returns
-per-cluster networks.</p>
+<p><code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> returns the fitted clustering object.
+Passing that fit to <code><a href="../reference/build_network.html">build_network()</a></code> materializes one
+transition network per fitted cluster.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">grp_mmm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_mmm.html">cluster_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">fit_mmm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_mmm.html">cluster_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">grp_mmm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">fit_mmm</span><span class="op">)</span></span>
 <span><span class="va">grp_mmm</span></span>
 <span><span class="co">#&gt; Group Networks (2 clusters from MMM)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Group      Nodes  Edges  Weights         N</span></span>
 <span><span class="co">#&gt;   Cluster 1  3      9      [0.090, 0.565]  192 (36.5%)</span></span>
 <span><span class="co">#&gt;   Cluster 2  3      9      [0.144, 0.647]  334 (63.5%)</span></span></code></pre></div>
-<p>Both return a <code>netobject_group</code>.
-<code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code> reports what the clustering did —
-cluster sizes and fit quality — for either shortcut, without reaching
-into the object’s internals:</p>
+<p><code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code> works directly on either fitted
+clustering object:</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">grp_dist</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Cluster Diagnostics (distance) [ward.D2 / hamming]</span></span>
@@ -655,7 +660,7 @@ into the object’s internals:</p>
 <span><span class="co">#&gt;   Cluster  N            Mean within-dist  Silhouette</span></span>
 <span><span class="co">#&gt;   1        435 (82.7%)  13.148            0.727</span></span>
 <span><span class="co">#&gt;   2        91 (17.3%)   50.727            -0.076</span></span>
-<span><span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">grp_mmm</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">fit_mmm</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Cluster Diagnostics (mmm) [k = 2]</span></span>
 <span><span class="co">#&gt;   Sequences: 526  |  Clusters: 2  |  States: 3</span></span>
 <span><span class="co">#&gt;   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 0.0%</span></span>

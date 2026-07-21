@@ -40,12 +40,5 @@ seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))
 grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
 print(attr(grp, "clustering"))
-#> MMM Clustering [k = 2]
-#>   Sequences: 30  |  Clusters: 2
-#>   Quality: AvePP = 0.960  |  Entropy = 0.234  |  Class.Err = 0.0%
-#>   ICs: BIC = 178.831  |  AIC = 155.011  |  ICL = 181.336
-#> 
-#>   Cluster  N           Mix%   AvePP
-#>   1        24 (80.0%)  79.5%  0.971
-#>   2        6 (20.0%)   20.5%  0.912
+#> NULL
 ```

@@ -17,6 +17,9 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 # S3 method for class 'mcml'
 as_htna(x, clusters = NULL, method = "relative", data = NULL, ...)
 
+# S3 method for class 'net_mmm'
+as_htna(x, clusters = NULL, method = "relative", ...)
+
 # Default S3 method
 as_htna(x, clusters = NULL, method = "relative", ...)
 ```
@@ -29,7 +32,9 @@ as_htna(x, clusters = NULL, method = "relative", ...)
   [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
   (sequence data frame, edgelist, transition matrix, `netobject`, or
   `tna`); or an `mcml` object, in which case the original `data` must
-  also be supplied and the mcml provides the cluster membership.
+  also be supplied and the mcml provides the node-cluster membership; or
+  a fitted `net_mmm` object, which is materialized into one HTNA per
+  sequence cluster using its preserved actor partition.
 
 - clusters:
 
@@ -61,12 +66,15 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 
 ## Value
 
-A single `htna` (also a `netobject` and `cograph_network`) over all
-nodes. Cluster labels are stored as a factor in `$nodes$groups` and as
-character values in `$node_groups$group`; `$actor_levels` records their
-order and is also attached to `$node_groups` for lossless partition
-round trips. For compatibility, the result also retains `$nodes$cluster`
-and the membership in the `"cluster_members"` attribute.
+For data and `mcml` inputs, a single `htna` (also a `netobject` and
+`cograph_network`) over all nodes. Cluster labels are stored as a factor
+in `$nodes$groups` and as character values in `$node_groups$group`;
+`$actor_levels` records their order and is also attached to
+`$node_groups` for lossless partition round trips. For compatibility,
+the result also retains `$nodes$cluster` and the membership in the
+`"cluster_members"` attribute. A fitted `net_mmm` returns an
+`htna_group`, one materialized HTNA network per sequence cluster, while
+preserving the MMM diagnostics.
 
 ## Details
 
