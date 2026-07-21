@@ -197,12 +197,11 @@ test_that("MMM clustering of HTNA is numerically identical to plain input", {
     htna <- .as_equiv_htna(plain)
 
     args <- list(k = 2L, n_starts = 2L, max_iter = 40L, seed = seed)
-    grouped_plain <- do.call(cluster_mmm, c(list(data = plain), args))
-    grouped_htna <- do.call(cluster_mmm, c(list(data = htna), args))
-    fit_plain <- attr(grouped_plain, "clustering")
-    fit_htna <- attr(grouped_htna, "clustering")
+    fit_plain <- do.call(cluster_mmm, c(list(data = plain), args))
+    fit_htna <- do.call(cluster_mmm, c(list(data = htna), args))
 
-    expect_s3_class(grouped_htna, "htna_group")
+    expect_s3_class(fit_plain, "net_mmm")
+    expect_s3_class(fit_htna, "net_mmm")
     expect_identical(fit_htna$assignments, fit_plain$assignments)
     expect_equal(fit_htna$posterior, fit_plain$posterior, tolerance = 1e-12)
     expect_equal(fit_htna$mixing, fit_plain$mixing, tolerance = 1e-12)
@@ -213,6 +212,12 @@ test_that("MMM clustering of HTNA is numerically identical to plain input", {
                  tolerance = 1e-12)
     expect_identical(fit_htna$converged, fit_plain$converged)
 
+    grouped_plain <- build_network(fit_plain)
+    grouped_htna <- as_htna(fit_htna)
+    expect_s3_class(grouped_htna, "htna_group")
+    expect_identical(attr(grouped_htna, "clustering")$assignments,
+                     fit_htna$assignments)
+
     for (cluster_id in seq_along(grouped_plain)) {
       .expect_equiv_network(
         grouped_htna[[cluster_id]], grouped_plain[[cluster_id]],
@@ -222,13 +227,12 @@ test_that("MMM clustering of HTNA is numerically identical to plain input", {
       checked_cells <- checked_cells + length(grouped_plain[[cluster_id]]$weights)
     }
 
-    mmm_fit <- do.call(build_mmm, c(list(data = htna), args))
-    rebuilt <- build_network(mmm_fit)
+    rebuilt <- build_network(fit_htna)
     expect_s3_class(rebuilt, "htna_group")
     expect_identical(attr(rebuilt, "clustering")$assignments,
-                     mmm_fit$assignments)
+                     fit_htna$assignments)
     for (cluster_id in seq_along(rebuilt)) {
-      .expect_equiv_network(rebuilt[[cluster_id]], mmm_fit$models[[cluster_id]],
+      .expect_equiv_network(rebuilt[[cluster_id]], fit_htna$models[[cluster_id]],
                             paste("build_network(net_mmm)", seed, cluster_id))
       .expect_equiv_actor_partition(rebuilt[[cluster_id]])
     }

@@ -85,7 +85,7 @@ test_that("plot_state_frequencies works on netobject_group", {
   expect_s3_class(p_bars$plot, "ggplot")
 })
 
-test_that("plot_state_frequencies uses cluster_mmm member data, not full data twice", {
+test_that("plot_state_frequencies uses MMM network member data", {
   data <- data.frame(
     V1 = c(rep("A", 20), rep("C", 20)),
     V2 = c(rep("A", 20), rep("C", 20)),
@@ -93,7 +93,8 @@ test_that("plot_state_frequencies uses cluster_mmm member data, not full data tw
     V4 = c(rep("B", 20), rep("D", 20)),
     stringsAsFactors = FALSE
   )
-  grp <- cluster_mmm(data, k = 2, n_starts = 5, max_iter = 50, seed = 1)
+  grp <- cluster_network(data, k = 2, cluster_by = "mmm",
+                         n_starts = 5, max_iter = 50, seed = 1)
   cl <- attr(grp, "clustering")
   sizes <- tabulate(cl$assignments, nbins = cl$k)
 

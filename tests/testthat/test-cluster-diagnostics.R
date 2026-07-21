@@ -96,7 +96,8 @@ test_that("netobject_group dispatch routes to attr(, 'clustering')", {
   expect_equal(d_diag$k, 2L)
 
   # MMM group -> net_mmm_clustering attr -> mmm family.
-  grp_m <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp_m <- cluster_network(d, k = 2, cluster_by = "mmm",
+                           n_starts = 1, max_iter = 20, seed = 1)
   m_diag <- cluster_diagnostics(grp_m)
   expect_identical(m_diag$family, "mmm")
   expect_equal(m_diag$k, 2L)
@@ -113,7 +114,8 @@ test_that("netobject_group without clustering attribute errors helpfully", {
 
 test_that("net_mmm_clustering produces same diagnostics as net_mmm", {
   d <- .make_diag_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 2, max_iter = 30, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 2, max_iter = 30, seed = 1)
   cl_attr <- attr(grp, "clustering")
 
   # Compare to a direct build_mmm on the same call. Use the same
@@ -144,7 +146,8 @@ test_that("cluster_diagnostics rejects unsupported extra arguments", {
   d <- .make_diag_data()
   cl <- build_clusters(d, k = 2, method = "ward.D2")
   mmm <- build_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
 
   expect_error(cluster_diagnostics(cl, typo_arg = TRUE),
                "unsupported argument: typo_arg")
@@ -237,7 +240,8 @@ test_that("plot.net_cluster_diagnostics delegates to plot.net_clustering", {
 
 test_that("plot.net_cluster_diagnostics delegates to plot.net_mmm_clustering for MMM groups", {
   d <- .make_diag_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
   diag <- cluster_diagnostics(grp)
 
   expect_s3_class(plot(diag, type = "posterior"), "ggplot")

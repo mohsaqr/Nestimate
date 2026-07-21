@@ -36,7 +36,7 @@
     # Prefer the full N-row data carried by the clustering attribute --
     # cluster_network() splits per-cluster $data subsets into each member,
     # so x[[1L]]$data has only n1 rows whereas $assignments has all N.
-    # cluster_mmm() now stashes the same full data to make this invariant.
+    # build_network(net_mmm) stashes the same full data to make this invariant.
     if (!is.null(cl) && !is.null(cl$data)) {
       data <- cl$data
       if (is.null(group)) group <- cl$assignments

@@ -12,7 +12,7 @@ cluster_diagnostics(x, ...)
 \arguments{
 \item{x}{A \code{net_clustering}, \code{net_mmm}, \code{netobject_group}
 (with \code{attr(, "clustering")} attached by \code{cluster_network()}
-or \code{cluster_mmm()}), or \code{net_mmm_clustering}.}
+or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}.}
 
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 
@@ -57,9 +57,9 @@ seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
 cl <- build_clusters(seqs, k = 2, method = "ward.D2")
 cluster_diagnostics(cl)
 \donttest{
-grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
-cluster_diagnostics(grp)
-as.data.frame(cluster_diagnostics(grp))
+fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+cluster_diagnostics(fit)
+as.data.frame(cluster_diagnostics(fit))
 }
 }
 \seealso{

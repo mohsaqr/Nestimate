@@ -3,6 +3,7 @@
 \name{as_htna}
 \alias{as_htna}
 \alias{as_htna.mcml}
+\alias{as_htna.net_mmm}
 \alias{as_htna.default}
 \title{Build a grouped node-level network (htna) from data and a clustering}
 \usage{
@@ -10,13 +11,17 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 
 \method{as_htna}{mcml}(x, clusters = NULL, method = "relative", data = NULL, ...)
 
+\method{as_htna}{net_mmm}(x, clusters = NULL, method = "relative", ...)
+
 \method{as_htna}{default}(x, clusters = NULL, method = "relative", ...)
 }
 \arguments{
 \item{x}{Data accepted by \code{\link{build_network}} (sequence data frame,
 edgelist, transition matrix, \code{netobject}, or \code{tna}); or an
 \code{mcml} object, in which case the original \code{data} must also be
-supplied and the mcml provides the cluster membership.}
+supplied and the mcml provides the node-cluster membership; or a fitted
+\code{net_mmm} object, which is materialized into one HTNA per sequence
+cluster using its preserved actor partition.}
 
 \item{clusters}{Cluster assignment: a named list of node-name vectors, a
 per-node membership vector, or a two-column data frame. When \code{NULL}
@@ -36,13 +41,15 @@ works on its own. Required for an mcml built from a matrix/aggregate,
 which retains no node-level data.}
 }
 \value{
-A single \code{htna} (also a \code{netobject} and
+For data and \code{mcml} inputs, a single \code{htna} (also a \code{netobject} and
 \code{cograph_network}) over all nodes. Cluster labels are stored as a
 factor in \code{$nodes$groups} and as character values in
 \code{$node_groups$group}; \code{$actor_levels} records their order and
 is also attached to \code{$node_groups} for lossless partition round trips.
 For compatibility, the result also retains \code{$nodes$cluster} and the
-membership in the \code{"cluster_members"} attribute.
+membership in the \code{"cluster_members"} attribute. A fitted
+\code{net_mmm} returns an \code{htna_group}, one materialized HTNA network
+per sequence cluster, while preserving the MMM diagnostics.
 }
 \description{
 Builds the full node-level network from the original data and attaches a

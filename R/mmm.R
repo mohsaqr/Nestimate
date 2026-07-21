@@ -1253,15 +1253,15 @@ plot.mmm_compare <- function(x, ...) {
 }
 
 # ---------------------------------------------------------------------------
-# cluster_mmm - wrapper returning netobject_group (parallel to cluster_network)
+# MMM network materialization metadata
 # ---------------------------------------------------------------------------
 
 # Attach MMM clustering metadata (assignments, posterior, mixing, ICs, full
-# sequence data) to a netobject_group built from a net_mmm. Used by both
-# cluster_mmm() and build_network.net_mmm so the netobject_group invariant
-# is the same regardless of how the user got there: every member has its
-# own $weights/$nodes/$edges, and `attr(, "clustering")` carries N-row
-# $data matching $assignments.
+# sequence data) to a netobject_group built from a net_mmm. Used by
+# build_network(net_mmm), including the network-building stage inside
+# cluster_network(..., cluster_by = "mmm"). Every member has its own
+# $weights/$nodes/$edges, and `attr(, "clustering")` carries N-row $data
+# matching $assignments.
 #' @noRd
 .attach_mmm_clustering <- function(nets, mmm, full_data = NULL) {
   clustering_info <- mmm[setdiff(names(mmm), "models")]
@@ -1280,15 +1280,15 @@ plot.mmm_compare <- function(x, ...) {
 
 #' Cluster sequences using Mixed Markov Models
 #'
-#' Fits a mixture of Markov chains to sequence data and returns a
-#' \code{netobject_group} containing per-cluster transition networks.
-#' This is the MMM equivalent of \code{\link{cluster_network}} (which uses
-#' distance-based clustering); both functions share the
-#' \code{cluster_by = ...} surface argument so the call shape stays
-#' uniform across clustering families.
+#' Fits a mixture of Markov chains to sequence data and returns the fitted
+#' \code{net_mmm} clustering object. The fit retains assignments, posterior
+#' probabilities, mixing proportions, information criteria, and the fitted
+#' component models.
 #'
-#' For the full \code{net_mmm} object with posterior probabilities, model
-#' fit statistics, and S3 methods, use \code{\link{build_mmm}} instead.
+#' To materialize one network per fitted cluster, pass the result to
+#' \code{\link{build_network}} or use
+#' \code{cluster_network(..., cluster_by = "mmm")} for fitting and network
+#' construction in one call.
 #'
 #' @inheritParams build_mmm
 #' @param cluster_by Character. Accepted only as \code{"mmm"} (the
@@ -1296,30 +1296,19 @@ plot.mmm_compare <- function(x, ...) {
 #'   share the same call shape; any other value raises an error pointing
 #'   at \code{\link{cluster_network}}.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return A \code{netobject_group} (list of \code{netobject}s, one per
-#'   cluster). For HTNA input this is an \code{htna_group}, and every child
-#'   retains the original actor partition and HTNA class. MMM-specific
-#'   information is stored in
-#'   \code{attr(, "clustering")} (class \code{"net_mmm_clustering"}):
-#'   \describe{
-#'     \item{assignments}{Integer vector of cluster assignments.}
-#'     \item{k}{Number of clusters.}
-#'     \item{posterior}{N x k matrix of posterior probabilities.}
-#'     \item{mixing}{Mixing proportions.}
-#'     \item{quality}{List with AvePP, entropy, classification error.}
-#'     \item{BIC, AIC, ICL}{Model fit statistics.}
-#'     \item{data}{The full N-row sequence frame, matching
-#'       \code{$assignments} -- so \code{\link{sequence_plot}} and
-#'       \code{\link{distribution_plot}} can recover both.}
-#'   }
-#' @seealso \code{\link{build_mmm}} for the full MMM object,
-#'   \code{\link{cluster_network}} for distance-based clustering
+#' @return A fitted \code{net_mmm} clustering object. This is the same object
+#'   contract returned by \code{\link{build_mmm}}. For HTNA input, its
+#'   preserved actor partition is restored when the fit is materialized with
+#'   \code{\link{build_network}} or \code{Nestimate::as_htna()}.
+#' @seealso \code{\link{build_mmm}}, \code{\link{build_network}}, and
+#'   \code{\link{cluster_network}} for fitting and immediately materializing
+#'   per-cluster networks
 #' @examples
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
 #'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-#' grp[[1]]$weights
-#' attr(grp, "clustering")$assignments
+#' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' fit$assignments
+#' fit$posterior
 #' \donttest{
 #' # Visualise with sequence_plot
 #' seqs <- data.frame(
@@ -1327,8 +1316,8 @@ plot.mmm_compare <- function(x, ...) {
 #'   V2 = sample(LETTERS[1:3], 40, TRUE),
 #'   V3 = sample(LETTERS[1:3], 40, TRUE)
 #' )
-#' grp <- cluster_mmm(seqs, k = 2)
-#' sequence_plot(grp, type = "index")
+#' fit <- cluster_mmm(seqs, k = 2)
+#' sequence_plot(fit, type = "index")
 #' }
 #' @export
 cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
@@ -1356,16 +1345,11 @@ cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
          "clustering algorithms, use cluster_network(..., cluster_by = ...).",
          call. = FALSE)
   }
-  mmm <- build_mmm(data = data, k = k, n_starts = n_starts,
-                   max_iter = max_iter, tol = tol, smooth = smooth,
-                   seed = seed, covariates = covariates,
-                   covariate_effect = covariate_effect,
-                   estimator = estimator)
-
-  grp <- mmm$models
-  if (is.null(names(grp))) names(grp) <- paste0("Cluster ", seq_along(grp))
-  class(grp) <- "netobject_group"
-  .attach_mmm_clustering(grp, mmm, full_data = mmm$data)
+  build_mmm(data = data, k = k, n_starts = n_starts,
+            max_iter = max_iter, tol = tol, smooth = smooth,
+            seed = seed, covariates = covariates,
+            covariate_effect = covariate_effect,
+            estimator = estimator)
 }
 
 #' Print Method for MMM Clustering Attribute

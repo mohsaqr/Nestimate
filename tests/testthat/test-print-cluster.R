@@ -11,7 +11,7 @@ testthat::skip_on_cran()
 #   1. Headers / column shapes match the agreed layout.
 #   2. New `digits` arg is honoured but optional (non-breaking).
 #   3. Old behaviours preserved (returns invisibly, no error on minimal input).
-#   4. Regression: cluster_network/cluster_mmm output flows through
+#   4. Regression: cluster_network output flows through
 #      sequence_plot()/distribution_plot() without length mismatch (the
 #      .extract_seqplot_input bug fixed in this change).
 # ==============================================================================
@@ -148,7 +148,8 @@ test_that("print.net_mmm: digits arg honoured + invisible return", {
 
 test_that("print.net_mmm_clustering: header + cluster table", {
   d <- .make_clust_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 2, max_iter = 30, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 2, max_iter = 30, seed = 1)
 
   expect_s3_class(grp, "netobject_group")
   cl <- attr(grp, "clustering")
@@ -168,7 +169,8 @@ test_that("print.net_mmm_clustering: header + cluster table", {
 
 test_that("net_mmm_clustering methods reject unsupported dots and bad digits", {
   d <- .make_clust_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
   cl <- attr(grp, "clustering")
 
   expect_error(print(cl, typo_arg = TRUE),
@@ -183,7 +185,8 @@ test_that("net_mmm_clustering methods reject unsupported dots and bad digits", {
 
 test_that("net_mmm_clustering print sizes match component member data", {
   d <- .make_clust_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
   cl <- attr(grp, "clustering")
 
   assignment_sizes <- as.integer(tabulate(cl$assignments, nbins = cl$k))
@@ -191,9 +194,10 @@ test_that("net_mmm_clustering print sizes match component member data", {
   expect_equal(assignment_sizes, component_rows)
 })
 
-test_that("cluster_mmm stashes full sequence data on the clustering attribute", {
+test_that("cluster_network MMM stashes full sequence data on its attribute", {
   d <- .make_clust_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
   cl <- attr(grp, "clustering")
 
   # The invariant set by cluster_mmm + .extract_seqplot_input depends on
@@ -238,9 +242,10 @@ test_that("print.netobject_group (cluster_network): clustering source surfaced",
   expect_true(grepl("\\bN\\b", out[hdr]))
 })
 
-test_that("print.netobject_group (cluster_mmm): MMM source surfaced", {
+test_that("print.netobject_group (MMM): MMM source surfaced", {
   d <- .make_clust_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
 
   out <- capture.output(print(grp))
   expect_match(out[1L], "^Group Networks \\(2 clusters from MMM\\)")
@@ -278,9 +283,10 @@ test_that("sequence_plot accepts cluster_network output without length mismatch"
   expect_silent(p <- distribution_plot(grp))
 })
 
-test_that("sequence_plot accepts cluster_mmm output without length mismatch", {
+test_that("sequence_plot accepts MMM cluster_network output without mismatch", {
   d <- .make_clust_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
 
   expect_silent(p <- sequence_plot(grp, type = "index"))
   expect_silent(p <- distribution_plot(grp))
@@ -343,9 +349,9 @@ test_that("cluster_mmm accepts cluster_by + extra ... without erroring", {
   # API parity with cluster_network(): the unified surface
   # cluster_*(data, k, cluster_by = ..., ...) shouldn't blow up because
   # cluster_mmm() got a name it doesn't use internally.
-  expect_silent(grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20,
-                                    seed = 1, cluster_by = "mmm"))
-  expect_s3_class(grp, "netobject_group")
+  expect_silent(fit <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20,
+                                   seed = 1, cluster_by = "mmm"))
+  expect_s3_class(fit, "net_mmm")
 
   # But mistyping cluster_by should produce a clear error, not run
   # something else.
@@ -365,7 +371,8 @@ test_that("cluster_mmm accepts cluster_by + extra ... without erroring", {
 
 test_that("plot.net_mmm_clustering: posterior produces a ggplot", {
   d <- .make_clust_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
   cl <- attr(grp, "clustering")
 
   p <- plot(cl, type = "posterior")
@@ -374,7 +381,8 @@ test_that("plot.net_mmm_clustering: posterior produces a ggplot", {
 
 test_that("plot.net_mmm_clustering: predictors is alias for covariates, errors w/o covariates", {
   d <- .make_clust_data()
-  grp <- cluster_mmm(d, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+  grp <- cluster_network(d, k = 2, cluster_by = "mmm",
+                         n_starts = 1, max_iter = 20, seed = 1)
   cl <- attr(grp, "clustering")
 
   # No covariates set on this run -> both predictors and covariates error

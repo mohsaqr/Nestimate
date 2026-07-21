@@ -1,3 +1,16 @@
+# Nestimate 0.8.4
+
+## Mixed Markov clustering contract
+
+* `cluster_mmm()` now returns the fitted `net_mmm` clustering object, retaining
+  assignments, posterior probabilities, mixing proportions, fit criteria, and
+  fitted component models. Network materialization remains the responsibility
+  of `build_network(fit)` or the one-step
+  `cluster_network(..., cluster_by = "mmm")` workflow.
+* `as_htna()` gains a `net_mmm` method. An MMM fit created from an HTNA model is
+  materialized into an `htna_group` without rerunning the MMM fit, while the
+  original actor partition and clustering diagnostics are preserved.
+
 # Nestimate 0.8.3
 
 ## HTNA expansion
@@ -54,9 +67,9 @@
 ## HTNA interoperability
 
 * Distance clustering and mixed-Markov clustering now preserve HTNA inputs.
-  `build_clusters()` carries the node-to-actor partition into
-  `build_network()`, while `cluster_network()` and `cluster_mmm()` return an
-  `htna_group` directly. Every child remains an `htna` object with
+  `build_clusters()` and `cluster_mmm()` carry the node-to-actor partition into
+  network materialization, while `cluster_network()` returns an `htna_group`
+  directly. Every child remains an `htna` object with
   `$node_groups`, `$nodes$groups`, and `$actor_levels`; clustering assignments,
   posterior probabilities, fit diagnostics, and other outer attributes remain
   attached.

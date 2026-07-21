@@ -260,19 +260,20 @@ resampling via `bootstrap_network()`, group-level edge comparison via
 
 Two paths produce the same `netobject_group`:
 
-1. **Manual** — fit clustering with `build_clusters()`, then pass the
-   result to `build_network()` to build one network per cluster.
-2. **Shortcut** — `cluster_network()` and `cluster_mmm()` collapse both
-   steps into one call.
+1. **Manual** — fit clustering with `build_clusters()` or `cluster_mmm()`,
+   then pass the fitted clustering to `build_network()`.
+2. **Shortcut** — `cluster_network()` collapses fitting and network
+   materialization into one call for either distance or MMM clustering.
 
-The distance-based shortcut (`cluster_network()`) groups sessions by
-sequence similarity. The model-based shortcut (`cluster_mmm()`) groups
-them by which Markov model best explains each sequence's transitions.
+Distance clustering groups sessions by sequence similarity. Model-based MMM
+clustering groups them by which Markov model best explains each sequence's
+transitions.
 
 | Function | Clustering method | Returns |
 |----------|------------------|---------|
-| `cluster_network()` | Distance-based (Hamming, LCS, etc.) | `netobject_group` |
-| `cluster_mmm()` | Model-based (MMM) | `netobject_group` |
+| `build_clusters()` | Distance-based (Hamming, LCS, etc.) | `net_clustering` |
+| `cluster_mmm()` | Model-based (MMM) | `net_mmm` |
+| `cluster_network()` | Distance-based or MMM | `netobject_group` |
 
 ### From `build_clusters()` to per-cluster networks
 
@@ -301,20 +302,22 @@ grp_dist <- Nestimate::cluster_network(net, k = 2, cluster_by = "ward.D2")
 grp_dist
 ```
 
-### Shortcut: `cluster_mmm()` (model-based)
+### Fitted MMM clustering and its networks
 
-Model-based equivalent: fits a mixture of Markov models and returns per-cluster networks.
+`cluster_mmm()` returns the fitted clustering object. Passing that fit to
+`build_network()` materializes one transition network per fitted cluster.
 
 ```{r cluster-mmm}
-grp_mmm <- cluster_mmm(net, k = 2)
+fit_mmm <- cluster_mmm(net, k = 2)
+grp_mmm <- build_network(fit_mmm)
 grp_mmm
 ```
 
-Both return a `netobject_group`. `cluster_diagnostics()` reports what the clustering did — cluster sizes and fit quality — for either shortcut, without reaching into the object's internals:
+`cluster_diagnostics()` works directly on either fitted clustering object:
 
 ```{r}
 cluster_diagnostics(grp_dist)
-cluster_diagnostics(grp_mmm)
+cluster_diagnostics(fit_mmm)
 ```
 
 Each element is a full `netobject`, addressable by its cluster name:

@@ -85,16 +85,18 @@ test_that("build_mmm is deterministic when seed is supplied", {
                tolerance = 1e-12)
 })
 
-test_that("cluster_mmm returns per-cluster data without losing full clustering data", {
+test_that("cluster_mmm returns the fitted MMM clustering object", {
   data <- .make_mmm_data()
-  grp <- cluster_mmm(data, k = 2, n_starts = 3, max_iter = 30, seed = 1)
-  cl <- attr(grp, "clustering")
-  sizes <- tabulate(cl$assignments, nbins = cl$k)
+  fit <- cluster_mmm(data, k = 2, n_starts = 3, max_iter = 30, seed = 1)
+  reference <- build_mmm(data, k = 2, n_starts = 3, max_iter = 30, seed = 1)
 
-  expect_s3_class(grp, "netobject_group")
-  expect_equal(cl$data, data)
-  expect_equal(unname(vapply(grp, function(x) nrow(x$data), integer(1L))), sizes)
-  expect_false(identical(grp[[1L]]$data, grp[[2L]]$data))
+  expect_s3_class(fit, "net_mmm")
+  expect_identical(fit$assignments, reference$assignments)
+  expect_equal(fit$posterior, reference$posterior, tolerance = 1e-12)
+  expect_equal(fit$mixing, reference$mixing, tolerance = 1e-12)
+  expect_equal(fit$log_likelihood, reference$log_likelihood,
+               tolerance = 1e-12)
+  expect_equal(fit$data, data)
 })
 
 test_that("cluster_mmm rejects unsupported extra arguments", {
@@ -526,11 +528,10 @@ test_that("covariate_effect is validated and inert without covariates", {
 
 test_that("cluster_mmm forwards covariate_effect", {
   sim <- .make_mmm_cov_data(n = 70, seed = 8)
-  grp <- cluster_mmm(sim$data, k = 2, n_starts = 4, seed = 8,
+  fit <- cluster_mmm(sim$data, k = 2, n_starts = 4, seed = 8,
                      covariates = "Age", covariate_effect = "posthoc")
-  expect_s3_class(grp, "netobject_group")
-  ci <- attr(grp, "clustering")
-  expect_true(is.data.frame(ci$covariates$coefficients))
+  expect_s3_class(fit, "net_mmm")
+  expect_true(is.data.frame(fit$covariates$coefficients))
 })
 
 test_that("print and summary show covariates", {

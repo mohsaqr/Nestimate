@@ -102,6 +102,47 @@ test_that("as_htna() result is usable for inference", {
   expect_no_error(bootstrap_network(net, iter = 20))
 })
 
+test_that("as_htna(net_mmm) materializes fitted HTNA sequence clusters", {
+  seqs <- make_seqs()
+  base <- build_network(seqs, method = "relative")
+  base$node_groups <- data.frame(
+    node = base$nodes$label,
+    group = rep(c("Human", "AI"), each = 3L),
+    stringsAsFactors = FALSE
+  )
+  base$actor_levels <- c("Human", "AI")
+  base$nodes$groups <- factor(
+    base$node_groups$group,
+    levels = base$actor_levels
+  )
+  class(base) <- unique(c("htna", class(base)))
+
+  fit <- cluster_mmm(base, k = 2, n_starts = 1, max_iter = 20, seed = 7)
+  result <- as_htna(fit)
+  direct <- build_network(fit)
+
+  expect_s3_class(fit, "net_mmm")
+  expect_s3_class(result, "htna_group")
+  expect_s3_class(result, "netobject_group")
+  expect_identical(attr(result, "actor_levels"), base$actor_levels)
+  expect_identical(attr(result, "clustering")$assignments, fit$assignments)
+  expect_equal(attr(result, "clustering")$posterior, fit$posterior)
+  expect_equal(lapply(result, function(net) net$weights),
+               lapply(fit$models, function(net) net$weights))
+  expect_equal(lapply(result, function(net) net$weights),
+               lapply(direct, function(net) net$weights))
+  expect_true(all(vapply(result, inherits, logical(1L), what = "htna")))
+})
+
+test_that("as_htna(net_mmm) rejects fits without an actor partition", {
+  fit <- cluster_mmm(
+    make_seqs(), k = 2, n_starts = 1, max_iter = 20, seed = 7
+  )
+  expect_error(as_htna(fit), "does not carry an HTNA actor partition")
+  expect_error(as_htna(fit, clusters = clusters3),
+               "clusters.*not used")
+})
+
 test_that("as_htna(mcml) robustness across build inputs", {
   cl <- list(C1 = c("A", "B"), C2 = c("C", "D"), C3 = c("E", "F"))
 

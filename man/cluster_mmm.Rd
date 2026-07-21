@@ -77,41 +77,29 @@ at \code{\link{cluster_network}}.}
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{
-A \code{netobject_group} (list of \code{netobject}s, one per
-cluster). For HTNA input this is an \code{htna_group}, and every child
-retains the original actor partition and HTNA class. MMM-specific
-information is stored in
-\code{attr(, "clustering")} (class \code{"net_mmm_clustering"}):
-\describe{
-\item{assignments}{Integer vector of cluster assignments.}
-\item{k}{Number of clusters.}
-\item{posterior}{N x k matrix of posterior probabilities.}
-\item{mixing}{Mixing proportions.}
-\item{quality}{List with AvePP, entropy, classification error.}
-\item{BIC, AIC, ICL}{Model fit statistics.}
-\item{data}{The full N-row sequence frame, matching
-\code{$assignments} -- so \code{\link{sequence_plot}} and
-\code{\link{distribution_plot}} can recover both.}
-}
+A fitted \code{net_mmm} clustering object. This is the same object
+contract returned by \code{\link{build_mmm}}. For HTNA input, its
+preserved actor partition is restored when the fit is materialized with
+\code{\link{build_network}} or \code{Nestimate::as_htna()}.
 }
 \description{
-Fits a mixture of Markov chains to sequence data and returns a
-\code{netobject_group} containing per-cluster transition networks.
-This is the MMM equivalent of \code{\link{cluster_network}} (which uses
-distance-based clustering); both functions share the
-\code{cluster_by = ...} surface argument so the call shape stays
-uniform across clustering families.
+Fits a mixture of Markov chains to sequence data and returns the fitted
+\code{net_mmm} clustering object. The fit retains assignments, posterior
+probabilities, mixing proportions, information criteria, and the fitted
+component models.
 }
 \details{
-For the full \code{net_mmm} object with posterior probabilities, model
-fit statistics, and S3 methods, use \code{\link{build_mmm}} instead.
+To materialize one network per fitted cluster, pass the result to
+\code{\link{build_network}} or use
+\code{cluster_network(..., cluster_by = "mmm")} for fitting and network
+construction in one call.
 }
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))
-grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-grp[[1]]$weights
-attr(grp, "clustering")$assignments
+fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+fit$assignments
+fit$posterior
 \donttest{
 # Visualise with sequence_plot
 seqs <- data.frame(
@@ -119,11 +107,12 @@ seqs <- data.frame(
   V2 = sample(LETTERS[1:3], 40, TRUE),
   V3 = sample(LETTERS[1:3], 40, TRUE)
 )
-grp <- cluster_mmm(seqs, k = 2)
-sequence_plot(grp, type = "index")
+fit <- cluster_mmm(seqs, k = 2)
+sequence_plot(fit, type = "index")
 }
 }
 \seealso{
-\code{\link{build_mmm}} for the full MMM object,
-\code{\link{cluster_network}} for distance-based clustering
+\code{\link{build_mmm}}, \code{\link{build_network}}, and
+\code{\link{cluster_network}} for fitting and immediately materializing
+per-cluster networks
 }

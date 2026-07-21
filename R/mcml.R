@@ -1910,7 +1910,9 @@ as_tna.default <- function(x) {
 #' @param x Data accepted by \code{\link{build_network}} (sequence data frame,
 #'   edgelist, transition matrix, \code{netobject}, or \code{tna}); or an
 #'   \code{mcml} object, in which case the original \code{data} must also be
-#'   supplied and the mcml provides the cluster membership.
+#'   supplied and the mcml provides the node-cluster membership; or a fitted
+#'   \code{net_mmm} object, which is materialized into one HTNA per sequence
+#'   cluster using its preserved actor partition.
 #' @param clusters Cluster assignment: a named list of node-name vectors, a
 #'   per-node membership vector, or a two-column data frame. When \code{NULL}
 #'   and \code{x} carries node groups (or is an \code{mcml}), those are used.
@@ -1918,13 +1920,15 @@ as_tna.default <- function(x) {
 #'   \code{"relative"} (row-normalized transitions).
 #' @param ... Further arguments forwarded to \code{\link{build_network}}
 #'   (e.g. \code{actor}, \code{action}, \code{time} for long-format data).
-#' @return A single \code{htna} (also a \code{netobject} and
+#' @return For data and \code{mcml} inputs, a single \code{htna} (also a \code{netobject} and
 #'   \code{cograph_network}) over all nodes. Cluster labels are stored as a
 #'   factor in \code{$nodes$groups} and as character values in
 #'   \code{$node_groups$group}; \code{$actor_levels} records their order and
 #'   is also attached to \code{$node_groups} for lossless partition round trips.
 #'   For compatibility, the result also retains \code{$nodes$cluster} and the
-#'   membership in the \code{"cluster_members"} attribute.
+#'   membership in the \code{"cluster_members"} attribute. A fitted
+#'   \code{net_mmm} returns an \code{htna_group}, one materialized HTNA network
+#'   per sequence cluster, while preserving the MMM diagnostics.
 #' @seealso \code{\link{build_mcml}}, \code{\link{build_network}}; plot with
 #'   \code{cograph::plot_htna()}.
 #' @export
@@ -1968,6 +1972,24 @@ as_htna.mcml <- function(x, clusters = NULL, method = "relative",
   }
   if (is.null(clusters)) clusters <- x$cluster_members
   as_htna.default(data, clusters = clusters, method = method, ...)
+}
+
+#' @rdname as_htna
+#' @export
+as_htna.net_mmm <- function(x, clusters = NULL, method = "relative", ...) {
+  if (!is.null(clusters)) {
+    stop("`clusters` is not used for a fitted `net_mmm`: its sequence ",
+         "clusters are already fitted and its HTNA actor partition is ",
+         "preserved separately.", call. = FALSE)
+  }
+
+  nets <- build_network(x, method = method, ...)
+  if (!inherits(nets, "htna_group")) {
+    stop("The fitted `net_mmm` does not carry an HTNA actor partition. ",
+         "Fit `cluster_mmm()` on an HTNA object, or materialize ordinary ",
+         "cluster networks with `build_network()`.", call. = FALSE)
+  }
+  nets
 }
 
 #' @rdname as_htna

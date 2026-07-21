@@ -48,7 +48,7 @@
 #'
 #' @param x A \code{net_clustering}, \code{net_mmm}, \code{netobject_group}
 #'   (with \code{attr(, "clustering")} attached by \code{cluster_network()}
-#'   or \code{cluster_mmm()}), or \code{net_mmm_clustering}.
+#'   or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
 #' @return A \code{net_cluster_diagnostics} object.
 #' @seealso \code{\link{print.net_cluster_diagnostics}},
@@ -60,9 +60,9 @@
 #' cl <- build_clusters(seqs, k = 2, method = "ward.D2")
 #' cluster_diagnostics(cl)
 #' \donttest{
-#' grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
-#' cluster_diagnostics(grp)
-#' as.data.frame(cluster_diagnostics(grp))
+#' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+#' cluster_diagnostics(fit)
+#' as.data.frame(cluster_diagnostics(fit))
 #' }
 #' @export
 cluster_diagnostics <- function(x, ...) {
@@ -75,7 +75,7 @@ cluster_diagnostics.default <- function(x, ...) {
   stop("cluster_diagnostics() has no method for class '",
        paste(class(x), collapse = "/"), "'. Supported inputs: ",
        "net_clustering (from build_clusters), net_mmm (from build_mmm), ",
-       "netobject_group (from cluster_network / cluster_mmm), ",
+       "netobject_group (from cluster_network / build_network), ",
        "or net_mmm_clustering (the clustering attribute itself).",
        call. = FALSE)
 }

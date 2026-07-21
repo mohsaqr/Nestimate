@@ -152,7 +152,7 @@ test_that("cluster_network preserves HTNA children and diagnostics", {
 
 test_that("MMM clustering preserves the HTNA actor partition", {
   net <- .fake_htna()
-  grouped <- cluster_mmm(
+  fit <- cluster_mmm(
     net,
     k = 2,
     n_starts = 1,
@@ -160,6 +160,11 @@ test_that("MMM clustering preserves the HTNA actor partition", {
     seed = 1
   )
 
+  expect_s3_class(fit, "net_mmm")
+  expect_identical(fit$htna_partition$actor_levels, net$actor_levels)
+  expect_equal(nrow(fit$posterior), nrow(net$data))
+
+  grouped <- as_htna(fit)
   .expect_preserved_htna_group(grouped, net$actor_levels)
   clustering <- attr(grouped, "clustering")
   expect_s3_class(clustering, "net_mmm_clustering")

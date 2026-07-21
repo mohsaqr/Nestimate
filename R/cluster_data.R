@@ -836,7 +836,7 @@ cluster_data <- function(...) {
 # vector of formatted lines, indented and headed by a separator rule. Used by
 # print.net_clustering / print.net_mmm / print.net_mmm_clustering /
 # print.netobject_group so a netobject_group built by cluster_network() and
-# one built by cluster_mmm() print with the same shape.
+# one built from net_mmm print with the same shape.
 # ------------------------------------------------------------------------------
 .cluster_table_lines <- function(cols, indent = "  ", sep = "  ") {
   stopifnot(is.list(cols), length(cols) >= 1L, !is.null(names(cols)))
