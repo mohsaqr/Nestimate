@@ -18,8 +18,9 @@ Default \code{3}.}
 The input object, invisibly.
 }
 \description{
-Prints the clustering metadata that \code{\link{cluster_mmm}} attaches
-to its \code{netobject_group} return value (\code{attr(grp, "clustering")}).
+Prints the clustering metadata attached to the \code{netobject_group}
+that \code{\link{build_network}} materializes from a
+\code{\link{cluster_mmm}} fit (\code{attr(grp, "clustering")}).
 Layout mirrors \code{\link{print.net_clustering}}: a one-line dimension
 header, a quality line with AvePP / entropy / classification error,
 information criteria, and a per-cluster table.
@@ -27,7 +28,8 @@ information criteria, and a per-cluster table.
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))
-grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+grp <- build_network(fit)
 print(attr(grp, "clustering"))
 
 }

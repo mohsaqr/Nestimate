@@ -66,6 +66,9 @@ reference:
       - passage_time
       - path_dependence
       - transition_entropy
+      - entropy_network
+      - entropy_trajectory
+      - entropy_bayes
 
   - title: Network Pruning
     desc: Non-destructive edge pruning and restoration

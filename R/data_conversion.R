@@ -506,10 +506,12 @@ prepare_onehot <- function(data,
   if (is.null(actor)) work[[actor_col]] <- 1L
   if (is.null(session)) work[[session_col]] <- 1L
 
-  group_key <- interaction(work[, c(actor_col, session_col), drop = FALSE],
-                           drop = TRUE)
-  group_key <- as.character(group_key)
-  groups <- lapply(unique(group_key), function(key) work[group_key == key, , drop = FALSE])
+  group_ids <- .observed_group_id(
+    work[, c(actor_col, session_col), drop = FALSE],
+    context = "actor/session"
+  )
+  groups <- lapply(.split_first_seen(group_ids),
+                   function(i) work[i, , drop = FALSE])
 
   lag_chr <- function(x, n) {
     if (n == 0L) return(x)
@@ -551,14 +553,14 @@ prepare_onehot <- function(data,
     ord <- do.call(order, work[, c(actor_col, session_col, ".window"),
                                 drop = FALSE])
     work <- work[ord, , drop = FALSE]
-    agg_key <- interaction(work[, c(actor_col, session_col, ".window"),
-                                drop = FALSE], drop = TRUE)
-    agg_key <- as.character(agg_key)
-    work <- do.call(rbind, lapply(unique(agg_key), function(key) {
-      g <- work[agg_key == key, , drop = FALSE]
+    agg_ids <- .observed_group_id(
+      work[, c(actor_col, session_col, ".window"), drop = FALSE],
+      context = "actor/session/window"
+    )
+    work <- do.call(rbind, lapply(.split_first_seen(agg_ids), function(i) {
+      g <- work[i, , drop = FALSE]
       out <- g[1L, , drop = FALSE]
       out[cols] <- lapply(cols, function(col) first_non_missing(g[[col]]))
-      names(out[cols]) <- cols
       out
     }))
     rownames(work) <- NULL
@@ -571,33 +573,35 @@ prepare_onehot <- function(data,
     work$.window_grp <- work$.window %/% interval
     work$.window_idx <- work$.window %% interval
 
-    long_rows <- lapply(seq_len(nrow(work)), function(i) {
-      data.frame(
-        .actor = work[[actor_col]][i],
-        .session = work[[session_col]][i],
-        .window_grp = work$.window_grp[i],
-        .window_idx = work$.window_idx[i],
-        value = unname(unlist(work[i, cols, drop = FALSE], use.names = FALSE)),
-        stringsAsFactors = FALSE
-      )
-    })
-    long <- do.call(rbind, long_rows)
-    obs_key <- interaction(long[, c(".actor", ".session", ".window_grp",
-                                    ".window_idx"), drop = FALSE],
-                           drop = TRUE)
-    long$.obs <- ave(seq_len(nrow(long)), obs_key, FUN = seq_along)
-    id_key <- interaction(long[, c(".actor", ".session", ".window_grp"),
-                               drop = FALSE], drop = TRUE)
-    id_key <- as.character(id_key)
-    wide_list <- lapply(unique(id_key), function(key) {
-      g <- long[id_key == key, , drop = FALSE]
-      row <- data.frame(.row = 1L)
-      for (i in seq_len(nrow(g))) {
-        col_name <- sprintf("W%d_T%d", g$.window_idx[i], g$.obs[i])
-        row[[col_name]] <- g$value[i]
-      }
-      row$.row <- NULL
-      row
+    # One row of `work` contributes one entry per code column, in `cols` order.
+    # Built in a single stacked allocation rather than a data.frame per row.
+    n_code <- length(cols)
+    long <- data.frame(
+      .actor      = rep(work[[actor_col]], each = n_code),
+      .session    = rep(work[[session_col]], each = n_code),
+      .window_grp = rep(work$.window_grp, each = n_code),
+      .window_idx = rep(work$.window_idx, each = n_code),
+      value       = as.character(t(as.matrix(work[, cols, drop = FALSE]))),
+      stringsAsFactors = FALSE
+    )
+
+    obs_ids <- .observed_group_id(
+      long[, c(".actor", ".session", ".window_grp", ".window_idx"),
+           drop = FALSE],
+      context = "actor/session/window"
+    )
+    long$.obs <- ave(seq_len(nrow(long)), obs_ids, FUN = seq_along)
+    id_ids <- .observed_group_id(
+      long[, c(".actor", ".session", ".window_grp"), drop = FALSE],
+      context = "actor/session"
+    )
+    # `.obs` counts within (id group, window_idx), so within one id group each
+    # (window_idx, obs) pair -- and therefore each cell name -- occurs once.
+    cell_names <- sprintf("W%d_T%d", long$.window_idx, long$.obs)
+    wide_list <- lapply(.split_first_seen(id_ids), function(i) {
+      row <- as.list(long$value[i])
+      names(row) <- cell_names[i]
+      as.data.frame(row, stringsAsFactors = FALSE)
     })
 
     all_cols <- unique(unlist(lapply(wide_list, names), use.names = FALSE))

@@ -1,0 +1,204 @@
+---
+title: "Transition Matrix Entropy"
+author:
+  - name: Mohammed Saqr
+    url: https://saqr.me
+    affiliation: University of Eastern Finland
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Transition Matrix Entropy}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  out.width = "100%",
+  fig.width = 7,
+  fig.height = 5,
+  dpi       = 96,
+  warning   = FALSE,
+  message   = FALSE
+)
+has_cograph <- requireNamespace("cograph", quietly = TRUE)
+```
+
+```{r}
+library(Nestimate)
+```
+
+How predictable is a sequential process? The entropy rate of its transition
+matrix answers with a single number: the average uncertainty, in bits, about
+the next state given the current one (Shannon, 1948; Cover & Thomas, 2006,
+ch. 4),
+
+$$H = -\sum_i \pi_i \sum_j P_{ij} \log_2 P_{ij},$$
+
+where $P$ is the transition matrix and $\pi$ its stationary distribution
+(the eigenvector of $P^\top$ at $\lambda = 1$). This is the quantity Krejtz
+et al. (2015) introduced to behavioral research as gaze transition entropy
+and Krejtz et al. (2025) track in real time as mobile transition matrix
+entropy. Nestimate computes it for any transition network, decomposes it
+per state and per edge, tracks it over time, and estimates it with Bayesian
+credible intervals.
+
+Throughout we use the bundled `group_regulation_long` data: 27,533
+timestamped regulation actions by students collaborating in groups, coded
+into nine states.
+
+# The entropy of a transition network
+
+`transition_entropy()` accepts a fitted network, a transition matrix, or
+sequence data.
+
+```{r fit}
+net <- build_network(group_regulation_long, method = "relative",
+                     actor = "Actor", action = "Action", time = "Time")
+te <- transition_entropy(net)
+te
+```
+
+The call computes the entropy rate $H$, the stationary entropy
+$H(\pi)$ (the ceiling that would apply if consecutive actions were
+independent), and their difference, the redundancy. The process runs at
+2.41 bits per step against a ceiling of $\log_2 9 = 3.17$; the normalized
+entropy 0.76 is the scale-free version Krejtz et al. (2025) report.
+Regulation is far from scripted, but knowing the current action removes
+22% of the uncertainty about the next one (relative redundancy 0.22):
+sequence carries real information, which is the empirical justification
+for modeling transitions rather than activity frequencies alone.
+
+## Which states are decision points?
+
+$H$ is the stationary-weighted sum of per-state branching entropies
+$H(P_{i\cdot})$. The summary and plot display those terms.
+
+```{r states}
+summary(te)
+plot(te)
+```
+
+Tall bars are decision points: states whose continuation is genuinely
+open. Short bars are scripted states whose next step is nearly determined.
+Bar width is the stationary probability $\pi_i$, so bar area is the
+state's additive contribution $\pi_i H(P_{i\cdot})$ to the process
+entropy.
+
+# The entropy network
+
+$H$ is a sum over transitions: edge $i \to j$ contributes exactly
+$\pi_i P_{ij} \log_2(1/P_{ij})$. `entropy_network()` returns the fitted
+network with those terms as edge weights — the same object class as
+`build_network()`, so it prints, summarises, and plots identically. With
+`scaling = "share"` the weights become percentages of $H$ and sum to 100.
+
+```{r entropy-network}
+ent <- entropy_network(net, scaling = "share")
+ent
+```
+
+```{r entropy-network-plot, eval = has_cograph, fig.width = 10, fig.height = 6}
+op <- par(mfrow = c(1, 2))
+cograph::splot(net, minimum = 0, title = "Transition probabilities",
+               edge_label_digits = 2)
+cograph::splot(ent, title = "Share of process entropy (%)")
+par(op)
+```
+
+The two panels separate structure from uncertainty. The probability panel
+shows where the process goes; the entropy panel shows where it is
+unpredictable. High-probability routine transitions shrink in the entropy
+view — observing the near-inevitable carries little information — while
+the thick entropy edges mark frequent transitions whose outcome is
+genuinely open. No new quantity is estimated: the entropy network displays
+the summands of the equation above, so every number inherits the
+defensibility of $H$ itself.
+
+# Entropy over time
+
+A single $H$ summarises the whole observation period. Sliding a window
+across the transition stream — the design of Krejtz et al. (2025), who
+use 30-second windows over gaze transitions — turns entropy into a
+process measure. `entropy_trajectory()` builds transitions within each
+actor's sequence, orders them in time, and computes one entropy value per
+window.
+
+```{r trajectory, fig.width = 8, fig.height = 4.5}
+tr <- entropy_trajectory(group_regulation_long,
+                         action = "Action", actor = "Actor", time = "Time",
+                         group = "Achiever", window = 500, step = 100)
+summary(tr)
+plot(tr)
+```
+
+Each faint line is one 500-transition window stepped by 100; the bold
+curve is the loess trend per achievement group. Declining entropy is
+routinization — the group settling into predictable regulation; rising
+entropy is exploration; a level shift marks a phase change. The `change`
+column of the summary (last window minus first) gives each group's net
+trend. Within a window the chain is routinely non-ergodic, so the
+per-window estimator weights rows by observed occupancy rather than the
+eigenvector stationary distribution; over long stationary stretches the
+two coincide.
+
+# Bayesian estimation
+
+Plug-in entropy treats an edge observed three times exactly like one
+observed three thousand times. `entropy_bayes()` places an independent
+Dirichlet posterior on each row of the transition matrix (Jeffreys prior
+0.5 by default) and pushes Monte Carlo draws through the entropy
+formula, so every quantity — the entropy rate, each state's branching
+entropy, each edge's contribution — arrives with a credible interval that
+reflects how much data supports it.
+
+```{r bayes}
+eb <- entropy_bayes(net, draws = 1000, seed = 1)
+eb
+```
+
+The posterior mean sits slightly below the plug-in estimate — the
+posterior integrates over sparse-count uncertainty instead of taking the
+point estimate at face value — and the interval quantifies how firmly the
+data pin down the process entropy. An edge is flagged `credible` when its
+share of $H$ credibly exceeds `min_share` (1% by default); `$model`
+contains the entropy network with all other edges zeroed — the stable
+entropy skeleton, safe to display without overreading thin cells.
+
+```{r bayes-plot, fig.width = 7.5, fig.height = 6}
+plot(eb)
+```
+
+Blue intervals are stable estimates; grey intervals rest on too few
+observations to distinguish their entropy share from noise at the 95%
+level.
+
+# When to use which
+
+- **One process, one number** — `transition_entropy()`: how predictable is
+  the process; is sequence informative at all (redundancy).
+- **Where the uncertainty sits** — `plot(transition_entropy())` for
+  states, `entropy_network()` for transitions. Both display terms of the
+  same equation; use `scaling = "share"` for percentage labels.
+- **Change over time** — `entropy_trajectory()`: routinization,
+  exploration, phase shifts. Report the window size and step.
+- **Sparse data or formal comparison** — `entropy_bayes()`: credible
+  intervals for $H$, per-state and per-edge; group differences via the
+  posterior draws; `$model` for a display pruned of unstable edges.
+
+# References
+
+Cover, T. M., & Thomas, J. A. (2006). *Elements of Information Theory*
+(2nd ed., ch. 4). Wiley.
+
+Krejtz, K., Duchowski, A., Szmidt, T., Krejtz, I., González Perilli, F.,
+Pires, A., Vilaró, A., & Villalobos, N. (2015). Gaze transition entropy.
+*ACM Transactions on Applied Perception*, 13(1), 4:1–4:20.
+
+Krejtz, K., Hughes, C. J., Stasiak, I., Duchowski, A., & Krejtz, I.
+(2025). Real-time mobile transition matrix entropy based on eye and head
+movements. *Proceedings of ETRA '25*.
+
+Shannon, C. E. (1948). A mathematical theory of communication. *Bell
+System Technical Journal*, 27, 379–423.

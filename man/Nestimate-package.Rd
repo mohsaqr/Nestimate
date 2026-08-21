@@ -4,7 +4,7 @@
 \name{Nestimate-package}
 \alias{Nestimate}
 \alias{Nestimate-package}
-\title{Nestimate: Network Estimation, Bootstrap, and Higher-Order Analysis}
+\title{Nestimate: Dynamic, Probabilistic, and Higher-Order Network Analysis}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 

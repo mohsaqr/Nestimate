@@ -1354,8 +1354,9 @@ cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
 
 #' Print Method for MMM Clustering Attribute
 #'
-#' Prints the clustering metadata that \code{\link{cluster_mmm}} attaches
-#' to its \code{netobject_group} return value (\code{attr(grp, "clustering")}).
+#' Prints the clustering metadata attached to the \code{netobject_group}
+#' that \code{\link{build_network}} materializes from a
+#' \code{\link{cluster_mmm}} fit (\code{attr(grp, "clustering")}).
 #' Layout mirrors \code{\link{print.net_clustering}}: a one-line dimension
 #' header, a quality line with AvePP / entropy / classification error,
 #' information criteria, and a per-cluster table.
@@ -1370,7 +1371,8 @@ cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
 #' @examples
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
 #'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
+#' grp <- build_network(fit)
 #' print(attr(grp, "clustering"))
 #'
 #' @export
@@ -1418,9 +1420,10 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
 
 #' Plot Method for MMM Clustering Attribute
 #'
-#' Plot routines for the MMM clustering metadata attached to a
-#' \code{netobject_group} by \code{\link{cluster_mmm}} (or
-#' \code{\link{cluster_network}} with \code{cluster_by = "mmm"}).
+#' Plot routines for the MMM clustering metadata attached to the
+#' \code{netobject_group} that \code{\link{build_network}} materializes from
+#' a \code{\link{cluster_mmm}} fit (or that \code{\link{cluster_network}}
+#' returns directly with \code{cluster_by = "mmm"}).
 #' Mirrors the type-driven surface of
 #' \code{\link{plot.net_clustering}} but covers only the metrics the EM
 #' fit produces -- there is no distance matrix on an MMM clustering, so
@@ -1444,7 +1447,8 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
 #' \donttest{
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 40, TRUE),
 #'                    V2 = sample(c("A","B","C"), 40, TRUE))
-#' grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+#' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+#' grp <- build_network(fit)
 #' plot(attr(grp, "clustering"), type = "posterior")
 #' }
 #' @export

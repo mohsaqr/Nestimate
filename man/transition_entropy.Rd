@@ -53,9 +53,15 @@ entropy removed by order-1 memory), \strong{not}
 \description{
 Computes per-state branching entropy, stationary entropy, and the
 chain-level entropy rate of a Markov transition process. The entropy rate
-is the Shannon-McMillan-Breiman per-step uncertainty of trajectories under
-the stationary distribution; it is the canonical information-theoretic
-summary of a transition matrix.
+\eqn{H = -\sum_i \pi_i \sum_j P_{ij} \log_b P_{ij}} (with \eqn{\pi} the
+stationary distribution from the eigendecomposition of \eqn{P^\top} at
+\eqn{\lambda = 1}) is the Shannon-McMillan-Breiman per-step uncertainty
+of trajectories - the canonical information-theoretic summary of a
+transition matrix, introduced to behavioral research as gaze transition
+entropy by Krejtz et al. (2015) and tracked in real time as mobile
+transition matrix entropy by Krejtz et al. (2025). The normalized fields
+(\code{*_norm}, division by \eqn{\log_b n}) are the scale-free variants
+those papers report.
 }
 \details{
 Convention \eqn{0 \log 0 := 0} is applied, so absorbing or
@@ -83,10 +89,22 @@ plot(te)
 Cover, T.M. & Thomas, J.A. (2006). \emph{Elements of Information Theory},
 2nd ed., chapter 4. Wiley.
 
+Krejtz, K., Duchowski, A., Szmidt, T., Krejtz, I., Gonzalez Perilli, F.,
+Pires, A., Vilaro, A., & Villalobos, N. (2015). Gaze transition entropy.
+\emph{ACM Transactions on Applied Perception}, 13(1), 4:1-4:20.
+\doi{10.1145/2834121}
+
+Krejtz, K., Hughes, C.J., Stasiak, I., Duchowski, A., & Krejtz, I.
+(2025). Real-time mobile transition matrix entropy based on eye and head
+movements. \emph{Proceedings of ETRA '25}. \doi{10.1145/3715669.3723128}
+
 Shannon, C.E. (1948). A mathematical theory of communication.
 \emph{Bell System Technical Journal}, 27, 379-423.
 }
 \seealso{
+\code{\link{entropy_network}} for the edge-level decomposition,
+\code{\link{entropy_trajectory}} for the sliding-window version,
+\code{\link{entropy_bayes}} for credible intervals;
 \code{\link{markov_stability}}, \code{\link{passage_time}},
 \code{\link{markov_order_test}}, \code{\link{chain_structure}}
 }

@@ -45,6 +45,20 @@
   ids
 }
 
+# Row indices per group, groups ordered by first appearance.
+#
+# Replaces the `lapply(unique(key), function(k) x[key == k, ])` idiom, which
+# rescans the whole key vector once per group and is therefore quadratic in the
+# number of groups. `split()` does it in one pass; reordering by each group's
+# smallest index restores the first-appearance order that `unique()` gave, so
+# downstream row order -- and any same-seed resampling built on it -- is
+# unchanged.
+.split_first_seen <- function(ids) {
+  idx <- split(seq_along(ids), ids)
+  if (length(idx) <= 1L) return(idx)
+  idx[order(vapply(idx, function(i) i[1L], integer(1)))]
+}
+
 # Human-readable label for a set of grouping columns. Display only -- never a
 # key, because any separator can occur inside the values themselves.
 .group_label <- function(cols, sep = " | ") {

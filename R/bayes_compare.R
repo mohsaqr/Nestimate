@@ -461,7 +461,7 @@ bayes_compare <- function(x, y = NULL,
 #' Row-wise Dirichlet draw of a transition matrix
 #'
 #' One sample of the full transition matrix: each row i is drawn from
-#' Dirichlet(alpha[i, ]) via normalised Gamma variates.
+#' Dirichlet(\code{alpha[i, ]}) via normalised Gamma variates.
 #' @noRd
 .dirichlet_rows <- function(alpha) {
   g <- matrix(stats::rgamma(length(alpha), shape = alpha),

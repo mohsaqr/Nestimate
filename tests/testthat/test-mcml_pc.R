@@ -711,12 +711,18 @@ test_that("lavaan arguments pass through ... verbatim", {
                            cor_method = "polychoric", method = "cor",
                            estimator = "ULSMV")
   expect_identical(f_wlsmv$meta$fa_args, list(estimator = "WLSMV"))
-  # WLSMV vs ULSMV ordered-CFA *loadings* coincide under Windows LAPACK (the
-  # estimator there changes only SEs/fit, not point estimates), so the
-  # "estimators differ numerically" checks below are platform-sensitive.
-  # The argument pass-through above is verified on every platform.
-  skip_on_os("windows")
-  expect_false(identical(f_wlsmv$loadings$weight, f_ulsmv$loadings$weight))
+  expect_identical(f_ulsmv$meta$fa_args, list(estimator = "ULSMV"))
+  # Each cluster holds 3 items, so the one-factor CFA is just-identified and
+  # every consistent estimator reproduces the polychoric matrix exactly --
+  # WLSMV and ULSMV loadings agree up to float noise. Prove the argument
+  # reaches lavaan by handing it an estimator lavaan itself rejects: the
+  # error surfaces through the fa -> pca fallback as a warning quoting it.
+  expect_warning(
+    build_mcml_pc(likert, cl, aggregation = "scaled", weighting = "factor",
+                  fa_method = "cfa", cor_method = "polychoric",
+                  method = "cor", estimator = "NOT_AN_ESTIMATOR"),
+    "invalid value in estimator option"
+  )
   expect_true(max(abs(f_wlsmv$macro$weights - f_ulsmv$macro$weights)) < 0.05)
 })
 
