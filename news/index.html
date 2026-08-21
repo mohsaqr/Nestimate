@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,7 +18,8 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
+    <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
@@ -42,7 +43,39 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.5" id="nestimate-085">Nestimate 0.8.5<a class="anchor" aria-label="anchor" href="#nestimate-085"></a></h2>
+<p>Bug-fix release. 0.8.4 was published on r-universe but never reached CRAN.</p>
+<div class="section level3">
+<h3 id="plotting-in-non-utf-locales-0-8-5">Plotting in non-UTF-8 locales<a class="anchor" aria-label="anchor" href="#plotting-in-non-utf-locales-0-8-5"></a></h3>
+<ul><li><p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on <code>net_entropy_bayes</code> and <code>net_sequence_comparison</code> results no longer fails where the graphics device cannot represent the arrow glyph. Edge labels and the comparison subtitle previously used <code>U+2192</code>/<code>U+2190</code>, which a non-UTF-8 locale cannot convert; the graphics engine raised an error (<code>conversion failure ... in 'mbcsToSbcs'</code>) rather than substituting a character, so the plot could not be drawn at all. Both now use the ASCII arrow notation (<code>A -&gt; B</code>) already used by the higher-order network verbs. Console output is unaffected.</p></li>
+<li><p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on <code>net_entropy_bayes</code> results no longer emits a deprecation warning under ggplot2 4.0, which removed <code>geom_errorbarh()</code>.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="rendering-entropy-networks-with-cograph-0-8-5">Rendering entropy networks with cograph<a class="anchor" aria-label="anchor" href="#rendering-entropy-networks-with-cograph-0-8-5"></a></h3>
+<ul><li>
+<code><a href="../reference/entropy_network.html">entropy_network()</a></code> now renders with its intended transition-network styling on cograph 2.4.4, the current CRAN version. The object states its full style through cograph’s <code>meta$splot</code> producer contract instead of relying on cograph recognising the <code>"entropy"</code> method name, so no cograph update is required. Output is identical under cograph 2.4.4 and 2.4.5.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-8-5">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-8-5"></a></h3>
+<ul><li>The <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> examples for the MMM clustering attribute now reach it through <code><a href="../reference/build_network.html">build_network()</a></code>, matching the 0.8.4 change that made <code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> return the fitted <code>net_mmm</code> object.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.4" id="nestimate-084">Nestimate 0.8.4<a class="anchor" aria-label="anchor" href="#nestimate-084"></a></h2>
+<div class="section level3">
+<h3 id="transition-matrix-entropy-0-8-4">Transition matrix entropy<a class="anchor" aria-label="anchor" href="#transition-matrix-entropy-0-8-4"></a></h3>
+<ul><li>New entropy suite around the entropy rate of a transition matrix (Shannon 1948; Cover &amp; Thomas 2006, ch. 4; the transition entropy of Krejtz et al. 2015 and the real-time mobile transition matrix entropy of Krejtz et al. 2025):
+<ul><li>
+<code><a href="../reference/transition_entropy.html">transition_entropy()</a></code> — entropy rate H (stationary distribution from the eigendecomposition at lambda = 1), stationary entropy, redundancy, per-state branching entropies, all with the normalized (scale-free) variants; print/summary/plot and <code>netobject_group</code> dispatch.</li>
+<li>
+<code><a href="../reference/entropy_network.html">entropy_network()</a></code> — the exact edge-level decomposition of H: each edge carries its term pi_i P_ij log(1/P_ij); weights sum to H. Displays the summands of the entropy-rate equation — no new quantity is estimated. <code>scaling = "share"</code> relabels edges as percentages of H (sum = 100). Additional weights: <code>"surprisal"</code> (optionally <code>scaling = "chance"</code>) and <code>"production"</code> (irreversibility). The result is a regular <code>netobject</code> that inherits its source network’s styling and ships an entropy house style via cograph’s <code>meta$splot</code> producer contract, which states the styling outright rather than relying on cograph recognising the method name (cograph &gt;= 2.4.4).</li>
+<li>
+<code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> — sliding-window entropy over the transition stream (the windowed design of Krejtz et al. 2025): tidy per-window table, per-group trajectories, loess-trend plot; the per-window estimator weights rows by observed occupancy (robust to non-ergodic window fragments).</li>
+<li>
+<code><a href="../reference/entropy_bayes.html">entropy_bayes()</a></code> — Dirichlet-posterior estimation: credible intervals for H, per-state entropies, and per-edge contributions; edges flagged credible when their share of H credibly exceeds <code>min_share</code>; <code>$model</code> holds the pruned stable entropy network.</li>
+</ul></li>
+<li>New vignette: <em>Transition Matrix Entropy</em>.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="mixed-markov-clustering-contract-0-8-4">Mixed Markov clustering contract<a class="anchor" aria-label="anchor" href="#mixed-markov-clustering-contract-0-8-4"></a></h3>
 <ul><li>

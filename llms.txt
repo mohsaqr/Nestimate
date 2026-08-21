@@ -584,6 +584,12 @@ Order, structure, entropy, and stability of Markov chains
   : Per-Context Path Dependence at Order k
 - [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md)
   : Transition Entropy of a Markov Chain
+- [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.md)
+  : Transition Entropy Network
+- [`entropy_trajectory()`](https://saqr.me/Nestimate/reference/entropy_trajectory.md)
+  : Sliding-Window Transition Entropy Trajectory
+- [`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.md)
+  : Bayesian Transition Entropy
 
 ## Network Pruning
 
@@ -903,6 +909,21 @@ Print, summary, and plot methods for package classes
 - [`print(`*`<net_clustering>`*`)`](https://saqr.me/Nestimate/reference/print.net_clustering.md)
   : Print Method for net_clustering
 
+- [`print(`*`<net_entropy_bayes>`*`)`](https://saqr.me/Nestimate/reference/print.net_entropy_bayes.md)
+  :
+
+  Print method for `net_entropy_bayes`
+
+- [`print(`*`<net_entropy_bayes_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_entropy_bayes_group.md)
+  :
+
+  Print method for `net_entropy_bayes_group`
+
+- [`print(`*`<net_entropy_trajectory>`*`)`](https://saqr.me/Nestimate/reference/print.net_entropy_trajectory.md)
+  :
+
+  Print method for `net_entropy_trajectory`
+
 - [`print(`*`<net_gimme>`*`)`](https://saqr.me/Nestimate/reference/print.net_gimme.md)
   : Print Method for net_gimme
 
@@ -1113,6 +1134,16 @@ Print, summary, and plot methods for package classes
 - [`summary(`*`<net_clustering>`*`)`](https://saqr.me/Nestimate/reference/summary.net_clustering.md)
   : Summary Method for net_clustering
 
+- [`summary(`*`<net_entropy_bayes>`*`)`](https://saqr.me/Nestimate/reference/summary.net_entropy_bayes.md)
+  :
+
+  Summary method for `net_entropy_bayes`
+
+- [`summary(`*`<net_entropy_trajectory>`*`)`](https://saqr.me/Nestimate/reference/summary.net_entropy_trajectory.md)
+  :
+
+  Summary method for `net_entropy_trajectory`
+
 - [`summary(`*`<net_gimme>`*`)`](https://saqr.me/Nestimate/reference/summary.net_gimme.md)
   : Summary Method for net_gimme
 
@@ -1237,6 +1268,16 @@ Print, summary, and plot methods for package classes
 - [`plot(`*`<net_edge_betweenness>`*`)`](https://saqr.me/Nestimate/reference/plot.net_edge_betweenness.md)
   : Plot edge-betweenness scores
 
+- [`plot(`*`<net_entropy_bayes>`*`)`](https://saqr.me/Nestimate/reference/plot.net_entropy_bayes.md)
+  :
+
+  Plot method for `net_entropy_bayes`
+
+- [`plot(`*`<net_entropy_trajectory>`*`)`](https://saqr.me/Nestimate/reference/plot.net_entropy_trajectory.md)
+  :
+
+  Plot method for `net_entropy_trajectory`
+
 - [`plot(`*`<net_gimme>`*`)`](https://saqr.me/Nestimate/reference/plot.net_gimme.md)
   : Plot Method for net_gimme
 
@@ -1305,6 +1346,8 @@ Print, summary, and plot methods for package classes
 
 ### Articles
 
+- [Transition Matrix
+  Entropy](https://saqr.me/Nestimate/articles/transition-entropy.md):
 - [Network Estimation and Analysis with
   Nestimate](https://saqr.me/Nestimate/articles/transition-networks.md):
 - [Sequence Pattern Comparison: Early vs Late Human-AI

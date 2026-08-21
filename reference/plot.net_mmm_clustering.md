@@ -1,10 +1,14 @@
 # Plot Method for MMM Clustering Attribute
 
-Plot routines for the MMM clustering metadata attached to a
-`netobject_group` by
-[`cluster_mmm`](https://saqr.me/Nestimate/reference/cluster_mmm.md) (or
+Plot routines for the MMM clustering metadata attached to the
+`netobject_group` that
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+materializes from a
+[`cluster_mmm`](https://saqr.me/Nestimate/reference/cluster_mmm.md) fit
+(or that
 [`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
-with `cluster_by = "mmm"`). Mirrors the type-driven surface of
+returns directly with `cluster_by = "mmm"`). Mirrors the type-driven
+surface of
 [`plot.net_clustering`](https://saqr.me/Nestimate/reference/plot.net_clustering.md)
 but covers only the metrics the EM fit produces – there is no distance
 matrix on an MMM clustering, so `"silhouette"` / `"mds"` / `"heatmap"`
@@ -57,13 +61,9 @@ A `ggplot` object, invisibly.
 # \donttest{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 40, TRUE),
                    V2 = sample(c("A","B","C"), 40, TRUE))
-grp <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
+grp <- build_network(fit)
 plot(attr(grp, "clustering"), type = "posterior")
-#> Warning: no non-missing arguments to min; returning Inf
-#> Warning: no non-missing arguments to max; returning -Inf
-#> Warning: no non-missing arguments to min; returning Inf
-#> Warning: no non-missing arguments to max; returning -Inf
 
-#> Error in plot.window(...): need finite 'xlim' values
 # }
 ```

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,7 +18,8 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
+    <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
@@ -356,6 +357,27 @@
 
         </dt>
         <dd>Transition Entropy of a Markov Chain</dd>
+
+        <dt>
+
+          <code><a href="entropy_network.html">entropy_network()</a></code>
+
+        </dt>
+        <dd>Transition Entropy Network</dd>
+
+        <dt>
+
+          <code><a href="entropy_trajectory.html">entropy_trajectory()</a></code>
+
+        </dt>
+        <dd>Sliding-Window Transition Entropy Trajectory</dd>
+
+        <dt>
+
+          <code><a href="entropy_bayes.html">entropy_bayes()</a></code>
+
+        </dt>
+        <dd>Bayesian Transition Entropy</dd>
       </dl></div><div class="section level2">
       <h2 id="network-pruning">Network Pruning<a class="anchor" aria-label="anchor" href="#network-pruning"></a></h2>
 
@@ -1172,6 +1194,27 @@
 
         <dt>
 
+          <code><a href="print.net_entropy_bayes.html">print(<i>&lt;net_entropy_bayes&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for <code>net_entropy_bayes</code></dd>
+
+        <dt>
+
+          <code><a href="print.net_entropy_bayes_group.html">print(<i>&lt;net_entropy_bayes_group&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for <code>net_entropy_bayes_group</code></dd>
+
+        <dt>
+
+          <code><a href="print.net_entropy_trajectory.html">print(<i>&lt;net_entropy_trajectory&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for <code>net_entropy_trajectory</code></dd>
+
+        <dt>
+
           <code><a href="print.net_gimme.html">print(<i>&lt;net_gimme&gt;</i>)</a></code>
 
         </dt>
@@ -1599,6 +1642,20 @@
 
         <dt>
 
+          <code><a href="summary.net_entropy_bayes.html">summary(<i>&lt;net_entropy_bayes&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summary method for <code>net_entropy_bayes</code></dd>
+
+        <dt>
+
+          <code><a href="summary.net_entropy_trajectory.html">summary(<i>&lt;net_entropy_trajectory&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summary method for <code>net_entropy_trajectory</code></dd>
+
+        <dt>
+
           <code><a href="summary.net_gimme.html">summary(<i>&lt;net_gimme&gt;</i>)</a></code>
 
         </dt>
@@ -1869,6 +1926,20 @@
 
         </dt>
         <dd>Plot edge-betweenness scores</dd>
+
+        <dt>
+
+          <code><a href="plot.net_entropy_bayes.html">plot(<i>&lt;net_entropy_bayes&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot method for <code>net_entropy_bayes</code></dd>
+
+        <dt>
+
+          <code><a href="plot.net_entropy_trajectory.html">plot(<i>&lt;net_entropy_trajectory&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot method for <code>net_entropy_trajectory</code></dd>
 
         <dt>
 

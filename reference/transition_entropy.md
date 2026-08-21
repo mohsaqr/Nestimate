@@ -2,9 +2,15 @@
 
 Computes per-state branching entropy, stationary entropy, and the
 chain-level entropy rate of a Markov transition process. The entropy
-rate is the Shannon-McMillan-Breiman per-step uncertainty of
-trajectories under the stationary distribution; it is the canonical
-information-theoretic summary of a transition matrix.
+rate \\H = -\sum_i \pi_i \sum_j P\_{ij} \log_b P\_{ij}\\ (with \\\pi\\
+the stationary distribution from the eigendecomposition of \\P^\top\\ at
+\\\lambda = 1\\) is the Shannon-McMillan-Breiman per-step uncertainty of
+trajectories - the canonical information-theoretic summary of a
+transition matrix, introduced to behavioral research as gaze transition
+entropy by Krejtz et al. (2015) and tracked in real time as mobile
+transition matrix entropy by Krejtz et al. (2025). The normalized fields
+(`*_norm`, division by \\\log_b n\\) are the scale-free variants those
+papers report.
 
 ## Usage
 
@@ -109,11 +115,27 @@ states are independent. The deficit \\H(\pi) - h(P)\\ is reported as
 Cover, T.M. & Thomas, J.A. (2006). *Elements of Information Theory*, 2nd
 ed., chapter 4. Wiley.
 
+Krejtz, K., Duchowski, A., Szmidt, T., Krejtz, I., Gonzalez Perilli, F.,
+Pires, A., Vilaro, A., & Villalobos, N. (2015). Gaze transition entropy.
+*ACM Transactions on Applied Perception*, 13(1), 4:1-4:20.
+[doi:10.1145/2834121](https://doi.org/10.1145/2834121)
+
+Krejtz, K., Hughes, C.J., Stasiak, I., Duchowski, A., & Krejtz, I.
+(2025). Real-time mobile transition matrix entropy based on eye and head
+movements. *Proceedings of ETRA '25*.
+[doi:10.1145/3715669.3723128](https://doi.org/10.1145/3715669.3723128)
+
 Shannon, C.E. (1948). A mathematical theory of communication. *Bell
 System Technical Journal*, 27, 379-423.
 
 ## See also
 
+[`entropy_network`](https://saqr.me/Nestimate/reference/entropy_network.md)
+for the edge-level decomposition,
+[`entropy_trajectory`](https://saqr.me/Nestimate/reference/entropy_trajectory.md)
+for the sliding-window version,
+[`entropy_bayes`](https://saqr.me/Nestimate/reference/entropy_bayes.md)
+for credible intervals;
 [`markov_stability`](https://saqr.me/Nestimate/reference/markov_stability.md),
 [`passage_time`](https://saqr.me/Nestimate/reference/passage_time.md),
 [`markov_order_test`](https://saqr.me/Nestimate/reference/markov_order_test.md),

@@ -8,6 +8,7 @@
 <url><loc>https://saqr.me/Nestimate/articles/markov-stability.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/sequence-comparison.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/sequence-plots.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/articles/transition-entropy.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/transition-networks.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/tutorial_model_assessment.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/authors.html</loc></url>
@@ -68,6 +69,9 @@
 <url><loc>https://saqr.me/Nestimate/reference/convert_sequence_format.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/cooccurrence.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/distribution_plot.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/entropy_bayes.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/entropy_network.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/entropy_trajectory.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/estimate_network.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/euler_characteristic.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/evaluate_links.html</loc></url>
@@ -123,6 +127,8 @@
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_clustering.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_comparison.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_edge_betweenness.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/plot.net_entropy_bayes.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/plot.net_entropy_trajectory.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_gimme.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_honem.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_markov_order.html</loc></url>
@@ -166,6 +172,9 @@
 <url><loc>https://saqr.me/Nestimate/reference/print.net_certainty.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_cluster_diagnostics.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_clustering.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.net_entropy_bayes.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.net_entropy_bayes_group.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.net_entropy_trajectory.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_gimme.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_hon.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_honem.html</loc></url>
@@ -236,6 +245,8 @@
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_bootstrap.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_bootstrap_group.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_clustering.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/summary.net_entropy_bayes.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/summary.net_entropy_trajectory.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_gimme.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_hon.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_honem.html</loc></url>

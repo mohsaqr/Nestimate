@@ -2,6 +2,8 @@
 
 ### Articles
 
+- [Transition Matrix
+  Entropy](https://saqr.me/Nestimate/articles/transition-entropy.md):
 - [Network Estimation and Analysis with
   Nestimate](https://saqr.me/Nestimate/articles/transition-networks.md):
 - [Sequence Pattern Comparison: Early vs Late Human-AI

@@ -1,4 +1,4 @@
-# Nestimate: Network Estimation, Bootstrap, and Higher-Order Analysis
+# Nestimate: Dynamic, Probabilistic, and Higher-Order Network Analysis
 
 Estimate, compare, and analyze dynamic and psychological networks using
 a unified interface. Provides transition network analysis estimation

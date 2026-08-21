@@ -1,6 +1,80 @@
 # Changelog
 
+## Nestimate 0.8.5
+
+Bug-fix release. 0.8.4 was published on r-universe but never reached
+CRAN.
+
+### Plotting in non-UTF-8 locales
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on
+  `net_entropy_bayes` and `net_sequence_comparison` results no longer
+  fails where the graphics device cannot represent the arrow glyph. Edge
+  labels and the comparison subtitle previously used `U+2192`/`U+2190`,
+  which a non-UTF-8 locale cannot convert; the graphics engine raised an
+  error (`conversion failure ... in 'mbcsToSbcs'`) rather than
+  substituting a character, so the plot could not be drawn at all. Both
+  now use the ASCII arrow notation (`A -> B`) already used by the
+  higher-order network verbs. Console output is unaffected.
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on
+  `net_entropy_bayes` results no longer emits a deprecation warning
+  under ggplot2 4.0, which removed `geom_errorbarh()`.
+
+### Rendering entropy networks with cograph
+
+- [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.md)
+  now renders with its intended transition-network styling on cograph
+  2.4.4, the current CRAN version. The object states its full style
+  through cograph’s `meta$splot` producer contract instead of relying on
+  cograph recognising the `"entropy"` method name, so no cograph update
+  is required. Output is identical under cograph 2.4.4 and 2.4.5.
+
+### Documentation
+
+- The [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) examples for
+  the MMM clustering attribute now reach it through
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
+  matching the 0.8.4 change that made
+  [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+  return the fitted `net_mmm` object.
+
 ## Nestimate 0.8.4
+
+### Transition matrix entropy
+
+- New entropy suite around the entropy rate of a transition matrix
+  (Shannon 1948; Cover & Thomas 2006, ch. 4; the transition entropy of
+  Krejtz et al. 2015 and the real-time mobile transition matrix entropy
+  of Krejtz et al. 2025):
+  - [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md)
+    — entropy rate H (stationary distribution from the
+    eigendecomposition at lambda = 1), stationary entropy, redundancy,
+    per-state branching entropies, all with the normalized (scale-free)
+    variants; print/summary/plot and `netobject_group` dispatch.
+  - [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.md)
+    — the exact edge-level decomposition of H: each edge carries its
+    term pi_i P_ij log(1/P_ij); weights sum to H. Displays the summands
+    of the entropy-rate equation — no new quantity is estimated.
+    `scaling = "share"` relabels edges as percentages of H (sum = 100).
+    Additional weights: `"surprisal"` (optionally `scaling = "chance"`)
+    and `"production"` (irreversibility). The result is a regular
+    `netobject` that inherits its source network’s styling and ships an
+    entropy house style via cograph’s `meta$splot` producer contract,
+    which states the styling outright rather than relying on cograph
+    recognising the method name (cograph \>= 2.4.4).
+  - [`entropy_trajectory()`](https://saqr.me/Nestimate/reference/entropy_trajectory.md)
+    — sliding-window entropy over the transition stream (the windowed
+    design of Krejtz et al. 2025): tidy per-window table, per-group
+    trajectories, loess-trend plot; the per-window estimator weights
+    rows by observed occupancy (robust to non-ergodic window fragments).
+  - [`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.md)
+    — Dirichlet-posterior estimation: credible intervals for H,
+    per-state entropies, and per-edge contributions; edges flagged
+    credible when their share of H credibly exceeds `min_share`;
+    `$model` holds the pruned stable entropy network.
+- New vignette: *Transition Matrix Entropy*.
 
 ### Mixed Markov clustering contract
 
