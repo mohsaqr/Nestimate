@@ -78,12 +78,14 @@ test_that("build_gimme(exogenous=) changes the fitted model", {
   expect_false(identical(g0$syntax, g1$syntax))
 
   bs <- g1$syntax[[1]]
-  # V4 is exogenous: no AR self-path, never a regression outcome,
-  # row of coefs all zero.
+  # V4 is exogenous: no AR self-path, never an endogenous outcome. Since
+  # 0.8.6 (idiographic delegation, upstream-gimme convention) exogenous
+  # variables are excluded from the coefs rows entirely rather than kept
+  # as a zero row.
   expect_false(any(bs == "V4~V4lag"))
-  expect_true(all(g1$coefs[[1]]["V4", ] == 0))
-  # Endogenous->exogenous fixed to zero (nonsense paths present).
-  expect_true(any(grepl("^V4~0\\*", bs)))
+  expect_false("V4" %in% rownames(g1$coefs[[1]]))
+  # ... but V4 still enters as a predictor column.
+  expect_true("V4" %in% colnames(g1$coefs[[1]]))
 
   # exogenous = NULL must be byte-identical to omitting the arg (no
   # behavioral regression for the default path).

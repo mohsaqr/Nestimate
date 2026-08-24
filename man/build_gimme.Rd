@@ -39,13 +39,7 @@ When provided, data is sorted by \code{id} then \code{time} before lagging.}
 (each variable predicting itself at lag 1) are included as fixed paths.}
 
 \item{standardize}{Logical. If \code{TRUE} (default \code{FALSE}),
-variables are standardized per person before estimation. Note: the
-returned coefficient network (\code{$coefs}, \code{$psi},
-\code{$temporal_avg}, \code{$contemporaneous_avg}, \code{$group_paths})
-is unaffected because Nestimate extracts the standardized lavaan
-solution (\code{lavInspect(fit, "std")}), which is invariant to input
-scaling. Only the scale-dependent \code{$fit} statistics (chisq, aic,
-bic) change.}
+variables are standardized per person before estimation.}
 
 \item{groupcutoff}{Numeric between 0 and 1. Proportion of individuals for
 whom a path must be significant to be added at group level.
@@ -82,6 +76,8 @@ An S3 object of class \code{"net_gimme"} containing:
 path counts -- entry \code{[i,j]} = number of individuals with path j(t-1)->i(t).}
 \item{\code{contemporaneous}}{p x p matrix of group-level contemporaneous
 path counts -- entry \code{[i,j]} = number of individuals with path j(t)->i(t).}
+\item{\code{temporal_avg}, \code{contemporaneous_avg}}{p x p group-average
+coefficient matrices.}
 \item{\code{coefs}}{List of per-person p x 2p coefficient matrices
 (rows = endogenous, cols = \code{[lagged, contemporaneous]}).}
 \item{\code{psi}}{List of per-person residual covariance matrices.}
@@ -98,6 +94,10 @@ individual-level paths (beyond group).}
 \item{\code{n_obs}}{Integer vector. Time points per individual.}
 \item{\code{config}}{List of configuration parameters.}
 }
+The object additionally carries idiographic's netobject fields
+(\code{weights}, \code{nodes}, \code{edges}, ...) so it renders directly
+with cograph, and dispatches to idiographic's \code{print}, \code{summary},
+and \code{plot} methods.
 }
 \description{
 Estimates person-specific directed networks from intensive longitudinal data
@@ -110,8 +110,13 @@ a data-driven search that identifies:
 person, found after group paths are established.
 }
 
-Uses \code{lavaan} for SEM estimation and modification indices.
-Accepts a single data frame with an ID column (not CSV directories).
+Estimation is delegated to \code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}}, the clean-room home
+of the temporal idiographic estimators, whose search reproduces the
+upstream \pkg{gimme} package (>= 10.0) exactly (verified at tolerance 0 on
+path counts and per-person coefficient matrices in idiographic's own
+parity suite). Uses \code{lavaan} for SEM estimation and modification
+indices. Accepts a single data frame with an ID column (not CSV
+directories).
 }
 \examples{
 \dontshow{if (requireNamespace("lavaan", quietly = TRUE)) withAutoprint(\{ # examplesIf}
