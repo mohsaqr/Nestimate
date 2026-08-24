@@ -1,6 +1,74 @@
 # Changelog
 
+## Nestimate 0.8.6
+
+Delegation release: Nestimate stops owning psychometric-network math and
+delegates it to its two clean-room home packages, `psychnets`
+(cross-sectional) and `idiographic` (temporal). No public API changes:
+every signature, default, return shape, and — verified against frozen
+pre-delegation baselines — every number is preserved.
+
+### Delegated to psychnets (new hard dependency, \>= 0.5.2)
+
+- The `cor`, `pcor`, and `glasso` estimators keep Nestimate’s input
+  layer, validation, and return contract; the math now runs in
+  [`psychnets::cor_network()`](https://pak.dynasite.org/psychnets/reference/cor_network.html)
+  / `pcor_network()` / `ebic_glasso()`. Verified field-complete against
+  the frozen baseline: `cor` exact, `pcor` within 5.6e-17, `glasso`
+  exact on weights, precision, selected lambda, and the EBIC path
+  (including `penalize.diagonal` and `refit` branches).
+- [`nct()`](https://saqr.me/Nestimate/reference/nct.md) delegates its
+  inner EBIC-glasso solve; the NCT-specific `nearPD` symmetrization
+  stays local. Seeded runs: networks and p-values exact.
+- [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)
+  and
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  (glasso branch) delegate the per-resample solve via
+  `psychnets::ebic_glasso(lambda_path = )`, keeping the
+  fixed-path-across-resamples semantics. Seeded
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  is byte-identical;
+  [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)
+  is identical except wall-clock timing.
+- The internal pure-R glasso kernel (`glasso_pure.R`) and its EBIC
+  helpers are deleted; psychnets owns that math now.
+- The `ising` and `mgm` estimators remain local for now (their
+  delegation needs psychnets to expose per-node lambda selection and a
+  scale passthrough) and are unchanged.
+
+### Delegated to idiographic (new hard dependency, \>= 0.3.4)
+
+- [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+  keeps its signature, S3 methods, and return object; the lmer
+  estimation pipeline now runs in
+  [`idiographic::fit_mlvar()`](https://pak.dynasite.org/idiographic/reference/fit_mlvar.html).
+  Verified identical at tolerance 0 (object, class, print, summary)
+  across lag/standardize/day/beep configurations, and against
+  `mlVAR::mlVAR()` at 8.8e-16 over 954 checks.
+- When the between-subjects network is not estimable (a random-intercept
+  SD of zero),
+  [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+  now warns before returning the zero matrix; it previously returned it
+  silently. Numbers are unchanged.
+- [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
+  delegates its whole search to
+  [`idiographic::fit_gimme()`](https://pak.dynasite.org/idiographic/reference/fit_gimme.html).
+  **This is the one delegation that changes results**: idiographic’s
+  search reproduces the upstream `gimme` package (\>= 10.0) exactly,
+  which Nestimate’s own search did not — the individual-level path
+  search in particular under-detected person-specific paths relative to
+  upstream. Group-level results are typically unchanged;
+  individual-level path sets can grow. The signature and the `net_gimme`
+  field contract are unchanged (the object gains idiographic’s netobject
+  fields and now renders directly with cograph);
+  `print`/`summary`/`plot` dispatch to idiographic’s methods. Treat
+  pre-0.8.6
+  [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
+  individual-level results as superseded.
+
 ## Nestimate 0.8.5
+
+CRAN release: 2026-08-21
 
 Bug-fix release. 0.8.4 was published on r-universe but never reached
 CRAN.

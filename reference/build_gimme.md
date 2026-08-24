@@ -10,8 +10,14 @@ Implements a data-driven search that identifies:
 2.  **Individual-level paths**: Additional edges specific to each
     person, found after group paths are established.
 
-Uses `lavaan` for SEM estimation and modification indices. Accepts a
-single data frame with an ID column (not CSV directories).
+Estimation is delegated to
+[`idiographic::fit_gimme()`](https://pak.dynasite.org/idiographic/reference/fit_gimme.html),
+the clean-room home of the temporal idiographic estimators, whose search
+reproduces the upstream gimme package (\>= 10.0) exactly (verified at
+tolerance 0 on path counts and per-person coefficient matrices in
+idiographic's own parity suite). Uses `lavaan` for SEM estimation and
+modification indices. Accepts a single data frame with an ID column (not
+CSV directories).
 
 ## Usage
 
@@ -65,12 +71,7 @@ build_gimme(
 - standardize:
 
   Logical. If `TRUE` (default `FALSE`), variables are standardized per
-  person before estimation. Note: the returned coefficient network
-  (`$coefs`, `$psi`, `$temporal_avg`, `$contemporaneous_avg`,
-  `$group_paths`) is unaffected because Nestimate extracts the
-  standardized lavaan solution (`lavInspect(fit, "std")`), which is
-  invariant to input scaling. Only the scale-dependent `$fit` statistics
-  (chisq, aic, bic) change.
+  person before estimation.
 
 - groupcutoff:
 
@@ -135,6 +136,10 @@ An S3 object of class `"net_gimme"` containing:
   p x p matrix of group-level contemporaneous path counts – entry
   `[i,j]` = number of individuals with path j(t)-\>i(t).
 
+- `temporal_avg`, `contemporaneous_avg`:
+
+  p x p group-average coefficient matrices.
+
 - `coefs`:
 
   List of per-person p x 2p coefficient matrices (rows = endogenous,
@@ -186,6 +191,10 @@ An S3 object of class `"net_gimme"` containing:
 
   List of configuration parameters.
 
+The object additionally carries idiographic's netobject fields
+(`weights`, `nodes`, `edges`, ...) so it renders directly with cograph,
+and dispatches to idiographic's `print`, `summary`, and `plot` methods.
+
 ## See also
 
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
@@ -213,20 +222,27 @@ print(res)
 #> 
 #> Group-level paths found: 0 
 #> 
-#> Individual-level paths:  mean 0.0, range 0-0
+#> Individual-level paths:  mean 1.3, range 0-3
 #> 
-#> Temporal path counts (lagged):
-#>    V1 V2 V3 V4
-#> V1  3  0  0  0
-#> V2  0  3  0  0
-#> V3  0  0  3  0
-#> V4  0  0  0  3
+#> Proportion of subjects with each path:
 #> 
-#> Contemporaneous path counts:
-#>    V1 V2 V3 V4
-#> V1  0  0  0  0
-#> V2  0  0  0  0
-#> V3  0  0  0  0
-#> V4  0  0  0  0
+#>   Temporal [directed]
+#>     weights [0.333, 1.000]  |  +6 / -0 edges
+#>        V1 V2   V3   V4
+#>     V1  1  0 0.00 0.00
+#>     V2  0  1 0.33 0.33
+#>     V3  0  0 1.00 0.00
+#>     V4  0  0 0.00 1.00
+#> 
+#>   Contemporaneous [directed]
+#>     weights [0.333, 0.333]  |  +2 / -0 edges
+#>        V1   V2 V3   V4
+#>     V1  0 0.00  0 0.00
+#>     V2  0 0.00  0 0.00
+#>     V3  0 0.00  0 0.33
+#>     V4  0 0.33  0 0.00
+#> 
+#>   plot(x)  (faithful gimme-style mixed network) | plot(x, layer = "temporal") 
+#>   edges(x) | nodes(x) | summary(x) | coefs(x) | matrices(x)
 # }
 ```

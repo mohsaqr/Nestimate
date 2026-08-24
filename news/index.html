@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,7 +43,29 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.8.5" id="nestimate-085">Nestimate 0.8.5<a class="anchor" aria-label="anchor" href="#nestimate-085"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.8.6" id="nestimate-086">Nestimate 0.8.6<a class="anchor" aria-label="anchor" href="#nestimate-086"></a></h2>
+<p>Delegation release: Nestimate stops owning psychometric-network math and delegates it to its two clean-room home packages, <code>psychnets</code> (cross-sectional) and <code>idiographic</code> (temporal). No public API changes: every signature, default, return shape, and — verified against frozen pre-delegation baselines — every number is preserved.</p>
+<div class="section level3">
+<h3 id="delegated-to-psychnets-new-hard-dependency--0-8-6">Delegated to psychnets (new hard dependency, &gt;= 0.5.2)<a class="anchor" aria-label="anchor" href="#delegated-to-psychnets-new-hard-dependency--0-8-6"></a></h3>
+<ul><li>The <code>cor</code>, <code>pcor</code>, and <code>glasso</code> estimators keep Nestimate’s input layer, validation, and return contract; the math now runs in <code><a href="https://pak.dynasite.org/psychnets/reference/cor_network.html" class="external-link">psychnets::cor_network()</a></code> / <code>pcor_network()</code> / <code>ebic_glasso()</code>. Verified field-complete against the frozen baseline: <code>cor</code> exact, <code>pcor</code> within 5.6e-17, <code>glasso</code> exact on weights, precision, selected lambda, and the EBIC path (including <code>penalize.diagonal</code> and <code>refit</code> branches).</li>
+<li>
+<code><a href="../reference/nct.html">nct()</a></code> delegates its inner EBIC-glasso solve; the NCT-specific <code>nearPD</code> symmetrization stays local. Seeded runs: networks and p-values exact.</li>
+<li>
+<code><a href="../reference/boot_glasso.html">boot_glasso()</a></code> and <code><a href="../reference/permutation.html">permutation()</a></code> (glasso branch) delegate the per-resample solve via <code>psychnets::ebic_glasso(lambda_path = )</code>, keeping the fixed-path-across-resamples semantics. Seeded <code><a href="../reference/permutation.html">permutation()</a></code> is byte-identical; <code><a href="../reference/boot_glasso.html">boot_glasso()</a></code> is identical except wall-clock timing.</li>
+<li>The internal pure-R glasso kernel (<code>glasso_pure.R</code>) and its EBIC helpers are deleted; psychnets owns that math now.</li>
+<li>The <code>ising</code> and <code>mgm</code> estimators remain local for now (their delegation needs psychnets to expose per-node lambda selection and a scale passthrough) and are unchanged.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="delegated-to-idiographic-new-hard-dependency--0-8-6">Delegated to idiographic (new hard dependency, &gt;= 0.3.4)<a class="anchor" aria-label="anchor" href="#delegated-to-idiographic-new-hard-dependency--0-8-6"></a></h3>
+<ul><li>
+<code><a href="../reference/build_mlvar.html">build_mlvar()</a></code> keeps its signature, S3 methods, and return object; the lmer estimation pipeline now runs in <code><a href="https://pak.dynasite.org/idiographic/reference/fit_mlvar.html" class="external-link">idiographic::fit_mlvar()</a></code>. Verified identical at tolerance 0 (object, class, print, summary) across lag/standardize/day/beep configurations, and against <code>mlVAR::mlVAR()</code> at 8.8e-16 over 954 checks.</li>
+<li>When the between-subjects network is not estimable (a random-intercept SD of zero), <code><a href="../reference/build_mlvar.html">build_mlvar()</a></code> now warns before returning the zero matrix; it previously returned it silently. Numbers are unchanged.</li>
+<li>
+<code><a href="../reference/build_gimme.html">build_gimme()</a></code> delegates its whole search to <code><a href="https://pak.dynasite.org/idiographic/reference/fit_gimme.html" class="external-link">idiographic::fit_gimme()</a></code>. <strong>This is the one delegation that changes results</strong>: idiographic’s search reproduces the upstream <code>gimme</code> package (&gt;= 10.0) exactly, which Nestimate’s own search did not — the individual-level path search in particular under-detected person-specific paths relative to upstream. Group-level results are typically unchanged; individual-level path sets can grow. The signature and the <code>net_gimme</code> field contract are unchanged (the object gains idiographic’s netobject fields and now renders directly with cograph); <code>print</code>/<code>summary</code>/<code>plot</code> dispatch to idiographic’s methods. Treat pre-0.8.6 <code><a href="../reference/build_gimme.html">build_gimme()</a></code> individual-level results as superseded.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.5" id="nestimate-085">Nestimate 0.8.5<a class="anchor" aria-label="anchor" href="#nestimate-085"></a></h2><p class="text-muted">CRAN release: 2026-08-21</p>
 <p>Bug-fix release. 0.8.4 was published on r-universe but never reached CRAN.</p>
 <div class="section level3">
 <h3 id="plotting-in-non-utf-locales-0-8-5">Plotting in non-UTF-8 locales<a class="anchor" aria-label="anchor" href="#plotting-in-non-utf-locales-0-8-5"></a></h3>

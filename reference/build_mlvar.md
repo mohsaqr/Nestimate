@@ -8,34 +8,6 @@ undirected contemporaneous network of partial correlations among
 residuals, and (3) an undirected between-subjects network of partial
 correlations derived from the person-mean fixed effects.
 
-\#' @details The algorithm follows mlVAR's lmer pipeline exactly:
-
-1.  Drop rows with NA in id/day/beep and optionally grand-mean
-    standardize each variable.
-
-2.  Expand the per-(id, day) beep grid and right-join original values,
-    producing the augmented panel (`augData`).
-
-3.  Add within-person lagged predictors (`L1_*`) and person-mean
-    predictors (`PM_*`).
-
-4.  For each outcome variable fit
-    `lmer(y ~ within + between-except-own-PM + (1 | id))` with
-    `REML = FALSE`. Collect the fixed-effect temporal matrix `B`,
-    between-effect matrix `Gamma`, random-intercept SDs (`mu_SD`), and
-    lmer residual SDs.
-
-5.  Contemporaneous network:
-    `cor2pcor(D %*% cov2cor(cor(resid)) %*% D)`.
-
-6.  Between-subjects network:
-    `cor2pcor(pseudoinverse(forcePositive(D (I - Gamma))))`.
-
-Validated to machine precision (max_diff \< 1e-10) against
-`mlVAR::mlVAR()` on 25 real ESM datasets from `openesm` and 20 simulated
-configurations (seeds 201-220). See `tmp/mlvar_equivalence_real20.R` and
-`tmp/mlvar_equivalence_20seeds.R`.
-
 ## Usage
 
 ``` r
@@ -144,6 +116,42 @@ if you need those. Structure:
 - `attr(fit, "standardize")`:
 
   Logical; whether pre-augmentation standardization was applied.
+
+## Details
+
+Estimation is delegated to
+[`idiographic::fit_mlvar()`](https://pak.dynasite.org/idiographic/reference/fit_mlvar.html)
+(the clean-room home of the temporal idiographic estimators), called
+with `estimator = "lmer"`, `temporal = "fixed"`,
+`contemporaneous = "fixed"`. The pipeline follows mlVAR's lmer path
+exactly:
+
+1.  Drop rows with NA in id/day/beep and optionally grand-mean
+    standardize each variable.
+
+2.  Expand the per-(id, day) beep grid and right-join original values,
+    producing the augmented panel (`augData`).
+
+3.  Add within-person lagged predictors (`L1_*`) and person-mean
+    predictors (`PM_*`).
+
+4.  For each outcome variable fit
+    `lmer(y ~ within + between-except-own-PM + (1 | id))` with
+    `REML = FALSE`. Collect the fixed-effect temporal matrix `B`,
+    between-effect matrix `Gamma`, random-intercept SDs (`mu_SD`), and
+    lmer residual SDs.
+
+5.  Contemporaneous network:
+    `cor2pcor(D %*% cov2cor(cor(resid)) %*% D)`.
+
+6.  Between-subjects network:
+    `cor2pcor(pseudoinverse(forcePositive(D (I - Gamma))))`.
+
+Validated to machine precision (max_diff \< 1e-10) against
+`mlVAR::mlVAR()` on 25 real ESM datasets from `openesm` and 20 simulated
+configurations, and to exact equality (max_diff == 0) against the
+pre-delegation Nestimate implementation on all layers, coefficients, and
+observation counts across lag/standardize/day/beep configurations.
 
 ## See also
 

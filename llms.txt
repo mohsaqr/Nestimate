@@ -924,9 +924,6 @@ Print, summary, and plot methods for package classes
 
   Print method for `net_entropy_trajectory`
 
-- [`print(`*`<net_gimme>`*`)`](https://saqr.me/Nestimate/reference/print.net_gimme.md)
-  : Print Method for net_gimme
-
 - [`print(`*`<net_hon>`*`)`](https://saqr.me/Nestimate/reference/print.net_hon.md)
   : Print Method for net_hon
 
@@ -1144,9 +1141,6 @@ Print, summary, and plot methods for package classes
 
   Summary method for `net_entropy_trajectory`
 
-- [`summary(`*`<net_gimme>`*`)`](https://saqr.me/Nestimate/reference/summary.net_gimme.md)
-  : Summary Method for net_gimme
-
 - [`summary(`*`<net_hon>`*`)`](https://saqr.me/Nestimate/reference/summary.net_hon.md)
   : Summary Method for net_hon
 
@@ -1277,9 +1271,6 @@ Print, summary, and plot methods for package classes
   :
 
   Plot method for `net_entropy_trajectory`
-
-- [`plot(`*`<net_gimme>`*`)`](https://saqr.me/Nestimate/reference/plot.net_gimme.md)
-  : Plot Method for net_gimme
 
 - [`plot(`*`<net_honem>`*`)`](https://saqr.me/Nestimate/reference/plot.net_honem.md)
   : Plot Method for net_honem

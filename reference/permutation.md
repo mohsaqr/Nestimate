@@ -93,7 +93,7 @@ permutation(
 
 - nlambda:
 
-  Integer. Number of lambda values for the `glassopath` regularisation
+  Integer. Number of lambda values for the EBIC-glasso regularisation
   path (only used when `method = "glasso"`). Higher values give finer
   lambda resolution at the cost of speed. Default: 50.
 
