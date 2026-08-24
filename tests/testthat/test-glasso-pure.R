@@ -1,4 +1,4 @@
-# Delegated EBIC-glasso: since 0.8.6 the solver lives in psychnets
+# Delegated EBIC-glasso: since 0.9.0 the solver lives in psychnets
 # (Imports), which certifies its own kernel against the KKT conditions.
 # What Nestimate still owns -- and what these tests pin -- is the public
 # surface: the estimator's return contract, the branch mapping

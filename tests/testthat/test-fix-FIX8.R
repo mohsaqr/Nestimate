@@ -79,7 +79,7 @@ test_that("build_gimme(exogenous=) changes the fitted model", {
 
   bs <- g1$syntax[[1]]
   # V4 is exogenous: no AR self-path, never an endogenous outcome. Since
-  # 0.8.6 (idiographic delegation, upstream-gimme convention) exogenous
+  # 0.9.0 (idiographic delegation, upstream-gimme convention) exogenous
   # variables are excluded from the coefs rows entirely rather than kept
   # as a zero row.
   expect_false(any(bs == "V4~V4lag"))

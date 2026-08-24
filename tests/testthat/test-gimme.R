@@ -1,7 +1,7 @@
 # ===========================================================================
 # Tests for build_gimme() — GIMME Network Analysis
 #
-# Since 0.8.6 the search is delegated to idiographic::fit_gimme(), whose
+# Since 0.9.0 the search is delegated to idiographic::fit_gimme(), whose
 # algorithm is upstream-gimme-exact (>= 10.0) and carries its own kernel
 # test suite. What Nestimate owns — and what this file pins — is the
 # public surface: the argument contract, the error surface, the net_gimme
@@ -214,7 +214,7 @@ test_that("gimme produces identical results with same seed", {
 
 
 # ===========================================================================
-# Section 7: S3 dispatch (idiographic's methods since 0.8.6)
+# Section 7: S3 dispatch (idiographic's methods since 0.9.0)
 # ===========================================================================
 test_that("print, summary, and plot dispatch without error", {
   skip_if_not_installed("lavaan")
