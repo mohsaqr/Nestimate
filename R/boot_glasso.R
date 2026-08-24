@@ -416,7 +416,7 @@ boot_glasso <- function(x,
 
 # ---- Internal helpers ----
 
-#' Single bootstrap iteration: cor -> glassopath -> EBIC -> pcor -> centrality
+#' Single bootstrap iteration: cor -> EBIC-glasso (psychnets) -> pcor -> centrality
 #' @noRd
 .bg_estimate_once <- function(data_mat, p, gamma, nlambda, penalize_diag,
                                cor_method, lambda_path, centrality,

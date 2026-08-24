@@ -48,7 +48,7 @@
 #'   the observed difference, an effect size (difference / SD of the permutation
 #'   null), and a permutation p-value, all using the same permuted networks as
 #'   the edge test. Not supported for \code{net_edge_betweenness} inputs.
-#' @param nlambda Integer. Number of lambda values for the \code{glassopath}
+#' @param nlambda Integer. Number of lambda values for the EBIC-glasso
 #'   regularisation path (only used when \code{method = "glasso"}).
 #'   Higher values give finer lambda resolution at the cost of speed.
 #'   Default: 50.
@@ -763,14 +763,12 @@ permutation <- function(x, y = NULL,
   # Select fast path based on method
   use_fast <- method %in% c("cor", "pcor", "glasso")
 
-  # Pre-compute glasso lambda path: narrowed around original lambdas,
-  # solved via glassopath (single Fortran call for entire path)
+  # Pre-compute the glasso lambda path once from the pooled correlation;
+  # every permutation iteration reuses it via psychnets::ebic_glasso
   if (use_fast && method == "glasso") {
     gamma <- .param_get(params_x, "gamma", 0.5)
     penalize_diag <- .param_get(params_x, "penalize.diagonal", FALSE)
 
-    # Compute lambda path from pooled correlation, using glassopath
-    # for the per-iteration solve (single Fortran call for full path)
     S_pooled <- cor(pooled_mat, method = cor_method)
     perm_rholist <- .compute_lambda_path(S_pooled, nlambda, 0.01)
     p_glasso <- ncol(pooled_mat)

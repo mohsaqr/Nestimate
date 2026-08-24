@@ -44,7 +44,7 @@ the observed difference, an effect size (difference / SD of the permutation
 null), and a permutation p-value, all using the same permuted networks as
 the edge test. Not supported for \code{net_edge_betweenness} inputs.}
 
-\item{nlambda}{Integer. Number of lambda values for the \code{glassopath}
+\item{nlambda}{Integer. Number of lambda values for the EBIC-glasso
 regularisation path (only used when \code{method = "glasso"}).
 Higher values give finer lambda resolution at the cost of speed.
 Default: 50.}
