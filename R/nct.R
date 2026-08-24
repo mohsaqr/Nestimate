@@ -78,12 +78,9 @@ nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
     cor_x <- stats::cor(x)
     cor_x <- as.matrix(Matrix::nearPD(cor_x, corr = TRUE)$mat)
     cor_x <- (cor_x + t(cor_x)) / 2
-    lambda_path <- .compute_lambda_path(cor_x, nlambda = 100L,
-                                          lambda.min.ratio = 0.01)
-    selected <- .select_ebic(cor_x, lambda_path,
-                              n = nrow(x), gamma = gamma,
-                              penalize_diagonal = FALSE)
-    .wi2net(selected$wi)
+    psychnets::ebic_glasso(cor_matrix = cor_x, n = nrow(x), gamma = gamma,
+                           nlambda = 100L, lambda_min_ratio = 0.01,
+                           native = TRUE)$weights
   }
 
   nw1 <- est(data1)
