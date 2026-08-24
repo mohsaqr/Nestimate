@@ -201,22 +201,25 @@ boot_glasso <- function(x,
   t_start <- proc.time()["elapsed"]
 
   # ---- Phase 1: Original estimation ----
+  # Solver delegated to psychnets. The lambda path is fixed once from the
+  # original S (fit_orig$lambda_path, identical to the former
+  # .compute_lambda_path) and reused across every resample; refit = FALSE
+  # reproduces the former select-from-path (no tight refit) semantics
+  # exactly (max abs delta 0 on the precision matrix).
   S <- cor(data_mat, method = cor_method)
-  lambda_path <- .compute_lambda_path(S, nlambda, 0.01)
 
-  gp_orig <- tryCatch(
-    .glassopath_fit(S = S, rholist = lambda_path,
-                    penalize.diagonal = FALSE),
+  fit_orig <- tryCatch(
+    psychnets::ebic_glasso(cor_matrix = S, n = n, gamma = gamma,
+                           nlambda = as.integer(nlambda),
+                           lambda_min_ratio = 0.01,
+                           refit = FALSE, native = TRUE),
     error = function(e) stop("glassopath failed on original data: ",
                               e$message, call. = FALSE)
   )
 
-  Wi_orig <- .select_ebic_from_path(gp_orig, S, n, gamma, p, lambda_path)
-  if (is.null(Wi_orig)) {
-    stop("EBIC selection failed on original data.", call. = FALSE) # nocov
-  }
-
-  lambda_selected <- .bg_find_selected_lambda(gp_orig, Wi_orig, lambda_path)
+  lambda_path <- fit_orig$lambda_path
+  Wi_orig <- fit_orig$precision
+  lambda_selected <- fit_orig$lambda
 
   pcor_orig <- .precision_to_pcor(Wi_orig, threshold = 0)
   pcor_orig <- (pcor_orig + t(pcor_orig)) / 2
@@ -431,15 +434,20 @@ boot_glasso <- function(x,
   # columns in bootstrap sample)
   if (any(is.na(S_boot))) return(NULL) # nocov
 
-  gp <- tryCatch(
-    .glassopath_fit(S = S_boot, rholist = lambda_path,
-                    penalize.diagonal = penalize_diag),
+  # Solver delegated to psychnets; the fixed lambda_path from the original
+  # S is reused (never recomputed from the resample), refit = FALSE keeps
+  # the former select-from-path semantics. Iteration-level failures stay
+  # NULL by the bootstrap contract (they are counted and reported upstream).
+  fit <- tryCatch(
+    psychnets::ebic_glasso(cor_matrix = S_boot, n = n_boot, gamma = gamma,
+                           lambda_path = lambda_path,
+                           penalize_diagonal = penalize_diag,
+                           refit = FALSE, native = TRUE),
     error = function(e) NULL
   )
-  if (is.null(gp)) return(NULL) # nocov
+  if (is.null(fit)) return(NULL) # nocov
 
-  Wi <- .select_ebic_from_path(gp, S_boot, n_boot, gamma, p, lambda_path)
-  if (is.null(Wi)) return(NULL) # nocov
+  Wi <- fit$precision
 
   pcor <- .precision_to_pcor(Wi, threshold = 0)
   pcor <- (pcor + t(pcor)) / 2
@@ -663,19 +671,6 @@ boot_glasso <- function(x,
 }
 
 
-#' Find the selected lambda value
-#' @noRd
-.bg_find_selected_lambda <- function(gp, Wi_orig, lambda_path) {
-  # Find which lambda in the path produced the selected Wi
-  for (k in seq_along(lambda_path)) {
-    wi_k <- gp$wi[, , k]
-    if (max(abs(wi_k - Wi_orig)) < 1e-8) {
-      return(lambda_path[k])
-    }
-  }
-  # Fallback: return NA
-  NA_real_
-}
 
 
 #' Pairwise edge difference p-values

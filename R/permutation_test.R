@@ -793,18 +793,20 @@ permutation <- function(x, y = NULL,
       glasso = function(mat_subset) {
         S <- cor(mat_subset, method = cor_method)
         n_obs <- nrow(mat_subset)
-        gp <- tryCatch(
-          .glassopath_fit(S = S, rholist = perm_rholist,
-                          penalize.diagonal = penalize_diag),
+        # Solver delegated to psychnets; the pooled lambda path is fixed
+        # once and reused per iteration, refit = FALSE reproduces the
+        # former select-from-path semantics exactly. Iteration-level
+        # failures stay NULL by the permutation contract (counted and
+        # reported upstream).
+        fit <- tryCatch(
+          psychnets::ebic_glasso(cor_matrix = S, n = n_obs, gamma = gamma,
+                                 lambda_path = perm_rholist,
+                                 penalize_diagonal = penalize_diag,
+                                 refit = FALSE, native = TRUE),
           error = function(e) NULL
         )
-        if (is.null(gp)) return(NULL) # nocov
-        # EBIC selection across the path
-        best_wi <- .select_ebic_from_path(
-          gp, S, n_obs, gamma, p_glasso, perm_rholist
-        )
-        if (is.null(best_wi)) return(NULL) # nocov
-        .precision_to_pcor(best_wi, threshold = 0)
+        if (is.null(fit)) return(NULL) # nocov
+        .precision_to_pcor(fit$precision, threshold = 0)
       }
     )
   } else {
@@ -882,36 +884,6 @@ permutation <- function(x, y = NULL,
     out$cent_sumsq <- cent_sumsq
   }
   out
-}
-
-
-#' Select best precision matrix from glassopath output via EBIC
-#'
-#' Vectorized EBIC computation over the 3D wi array from glassopath.
-#' @noRd
-.select_ebic_from_path <- function(gp, S, n, gamma, p, rholist) {
-  n_lambda <- length(rholist)
-  best_ebic <- Inf
-  best_wi <- NULL
-
-  for (k in seq_len(n_lambda)) {
-    wi_k <- gp$wi[, , k]
-
-    log_det <- determinant(wi_k, logarithm = TRUE)
-    if (log_det$sign <= 0) next # nocov
-    log_det_val <- as.numeric(log_det$modulus)
-
-    loglik <- (n / 2) * (log_det_val - sum(diag(S %*% wi_k)))
-    npar <- sum(abs(wi_k[upper.tri(wi_k)]) > 1e-10)
-    ebic <- -2 * loglik + npar * log(n) + 4 * npar * gamma * log(p)
-
-    if (ebic < best_ebic) {
-      best_ebic <- ebic
-      best_wi <- wi_k
-    }
-  }
-
-  best_wi
 }
 
 
