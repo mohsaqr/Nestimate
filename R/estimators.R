@@ -1357,8 +1357,11 @@
   S <- prepared$S
   n_obs <- prepared$n
 
-  net <- S
-  diag(net) <- 0
+  # Math delegated to psychnets (verified exact against the former
+  # in-package computation; see delegation-baseline.R in the local
+  # equivalence suite). The input layer above stays Nestimate's own.
+  fit <- psychnets::cor_network(cor_matrix = S, n = n_obs, threshold = 0)
+  net <- fit$weights
   net[abs(net) < threshold] <- 0
 
   nodes <- colnames(net)
@@ -1406,11 +1409,13 @@
     call. = FALSE)
   }
 
-  Wi <- solve(S)
-  colnames(Wi) <- rownames(Wi) <- colnames(S)
-
-  pcor <- .precision_to_pcor(Wi, threshold)
-  colnames(pcor) <- rownames(pcor) <- colnames(S)
+  # Math delegated to psychnets (max abs delta 5.6e-17 vs the former
+  # solve(S) path; see delegation-baseline.R). The singularity guards
+  # above stay Nestimate's own so the error surface is unchanged.
+  fit <- psychnets::pcor_network(cor_matrix = S, n = n_obs, threshold = 0)
+  Wi <- fit$precision
+  pcor <- fit$weights
+  pcor[abs(pcor) < threshold] <- 0
 
   nodes <- colnames(pcor)
   list(
@@ -1439,103 +1444,6 @@
   exp(seq(log(lambda_max), log(lambda_min), length.out = nlambda))
 }
 
-
-#' Select best lambda via EBIC using pure-R glasso fits with warm starts
-#'
-#' Two-tier strategy: the path is scanned at glasso's own \code{thr = 1e-4}
-#' tolerance (fast, and enough for EBIC selection since adjacent-lambda EBIC
-#' gaps dwarf 1e-4 fit noise and the lasso zeros inactive edges exactly), then
-#' the single selected lambda is re-fit to machine precision so the returned
-#' precision matrix is the certified global optimum (KKT ~1e-9, see
-#' \code{.glasso_kkt_violation}).
-#' @noRd
-.select_ebic <- function(S, lambda_path, n, gamma, penalize_diagonal,
-                         scan_tol = 1e-4, refit_tol = 1e-8) {
-  p <- ncol(S)
-  n_lambda <- length(lambda_path)
-  ebic_vals <- numeric(n_lambda)
-
-  w_prev <- NULL
-  beta_prev <- NULL
-  best_idx <- 1L
-  best_ebic <- Inf
-  have_best <- FALSE
-
-  for (i in seq_along(lambda_path)) {
-    lam <- lambda_path[i]
-
-    # Pure-R graphical lasso (see R/glasso_pure.R), warm-started down the path,
-    # at the fast scan tolerance.
-    fit <- tryCatch(
-      .glasso_fit(
-        S = S,
-        rho = lam,
-        penalize.diagonal = penalize_diagonal,
-        tol_outer = scan_tol, tol_inner = scan_tol,
-        w_init = w_prev,
-        beta_init = beta_prev
-      ),
-      error = function(e) NULL
-    )
-
-    if (is.null(fit)) {
-      ebic_vals[i] <- Inf # nocov start
-      next # nocov end
-    }
-
-    w_prev <- fit$w
-    beta_prev <- fit$beta
-
-    log_det <- determinant(fit$wi, logarithm = TRUE)
-    if (log_det$sign <= 0) {
-      ebic_vals[i] <- Inf # nocov start
-      next # nocov end
-    }
-    log_det_val <- as.numeric(log_det$modulus)
-
-    loglik <- (n / 2) * (log_det_val - sum(diag(S %*% fit$wi)))
-    npar <- sum(abs(fit$wi[upper.tri(fit$wi)]) > 1e-10)
-    ebic_vals[i] <- -2 * loglik + npar * log(n) +
-      4 * npar * gamma * log(p)
-
-    if (ebic_vals[i] < best_ebic) {
-      best_ebic <- ebic_vals[i]
-      best_idx <- i
-      have_best <- TRUE
-    }
-  }
-
-  if (!have_best) {
-    stop("All glasso fits failed. Check your input data.") # nocov
-  }
-
-  # Tight refit at the selected lambda -> certified optimum.
-  best_wi <- .glasso_fit(
-    S = S, rho = lambda_path[best_idx],
-    penalize.diagonal = penalize_diagonal,
-    tol_outer = refit_tol, tol_inner = refit_tol * 1e-2
-  )$wi
-  colnames(best_wi) <- rownames(best_wi) <- colnames(S)
-
-  list(
-    wi        = best_wi,
-    lambda    = lambda_path[best_idx],
-    ebic      = best_ebic,
-    ebic_path = ebic_vals
-  )
-}
-
-
-#' Convert precision matrix to partial correlations (qgraph-compatible)
-#' Uses cov2cor for numerical stability, matching qgraph::wi2net.
-#' @noRd
-.wi2net <- function(x) {
-  x <- -stats::cov2cor(x)
-  diag(x) <- 0
-  # forceSymmetric: copy upper triangle to lower (matches qgraph)
-  x[lower.tri(x)] <- t(x)[lower.tri(x)]
-  x
-}
 
 .precision_to_pcor <- function(Wi, threshold) {
   d <- sqrt(diag(Wi))
@@ -1575,30 +1483,21 @@
             lambda.min.ratio < 1)
   stopifnot(is.logical(penalize.diagonal), length(penalize.diagonal) == 1)
 
-  lambda_path <- .compute_lambda_path(S, nlambda, lambda.min.ratio)
-  selected <- .select_ebic(S, lambda_path, n_obs, gamma, penalize.diagonal)
+  # Math delegated to psychnets. Default branch is exact (max abs delta 0
+  # on weights/precision/lambda/EBIC path); penalize.diagonal is within
+  # 5.6e-17; refit = TRUE maps to psychnets refit = "unregularized" and is
+  # exact. See delegation-baseline.R. The input layer stays Nestimate's own.
+  fit <- psychnets::ebic_glasso(
+    cor_matrix = S, n = n_obs, gamma = gamma,
+    nlambda = as.integer(nlambda), lambda_min_ratio = lambda.min.ratio,
+    penalize_diagonal = penalize.diagonal,
+    refit = if (isTRUE(refit)) "unregularized" else TRUE,
+    native = TRUE
+  )
 
-  wi <- selected$wi
-
-  if (isTRUE(refit)) {
-    # Refit with zero-constrained unregularized glasso for unbiased estimates
-    net_pattern <- -.wi2net(wi)
-    zero_idx <- which(net_pattern == 0 & upper.tri(net_pattern), arr.ind = TRUE)
-    if (nrow(zero_idx) > 0L) {
-      refit_result <- .glasso_fit(
-        S, rho = 0, zero = zero_idx,
-        penalize.diagonal = penalize.diagonal)
-    } else {
-      refit_result <- .glasso_fit( # nocov start
-        S, rho = 0,
-        penalize.diagonal = penalize.diagonal) # nocov end
-    }
-    wi <- refit_result$wi
-  }
-
-  pcor <- .wi2net(wi)
+  wi <- fit$precision
+  pcor <- fit$weights
   pcor[abs(pcor) < threshold] <- 0
-  colnames(pcor) <- rownames(pcor) <- colnames(S)
 
   nodes <- colnames(pcor)
   list(
@@ -1608,10 +1507,10 @@
     cleaned_data = prepared$mat,
     precision_matrix = wi,
     cor_matrix = S,
-    lambda_selected = selected$lambda,
-    ebic_selected = selected$ebic,
-    lambda_path = lambda_path,
-    ebic_path = selected$ebic_path,
+    lambda_selected = fit$lambda,
+    ebic_selected = fit$ebic,
+    lambda_path = fit$lambda_path,
+    ebic_path = fit$ebic_path,
     gamma = gamma,
     n = n_obs,
     p = p

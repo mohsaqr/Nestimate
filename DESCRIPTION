@@ -32,7 +32,8 @@ Imports:
     scales,
     brglm2,
     nnet,
-    idiographic (>= 0.3.4)
+    idiographic (>= 0.3.4),
+    psychnets (>= 0.5.2)
 Suggests:
     testthat (>= 3.0.0),
     igraph,
