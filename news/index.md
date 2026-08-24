@@ -1,6 +1,6 @@
 # Changelog
 
-## Nestimate 0.8.6
+## Nestimate 0.9.0
 
 Delegation release: Nestimate stops owning psychometric-network math and
 delegates it to its two clean-room home packages, `psychnets`
@@ -62,7 +62,7 @@ pre-delegation baselines — every number is preserved.
   field contract are unchanged (the object gains idiographic’s netobject
   fields and now renders directly with cograph);
   `print`/`summary`/`plot` dispatch to idiographic’s methods. Treat
-  pre-0.8.6
+  pre-0.9.0
   [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
   individual-level results as superseded.
 
