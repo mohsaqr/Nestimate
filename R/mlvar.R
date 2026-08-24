@@ -10,7 +10,11 @@
 #'   residuals, and (3) an undirected between-subjects network of partial
 #'   correlations derived from the person-mean fixed effects.
 #'
-#' #' @details The algorithm follows mlVAR's lmer pipeline exactly:
+#' @details Estimation is delegated to [idiographic::fit_mlvar()] (the
+#' clean-room home of the temporal idiographic estimators), called with
+#' `estimator = "lmer"`, `temporal = "fixed"`,
+#' `contemporaneous = "fixed"`. The pipeline follows mlVAR's lmer path
+#' exactly:
 #' \enumerate{
 #'   \item Drop rows with NA in id/day/beep and optionally grand-mean
 #'         standardize each variable.
@@ -31,8 +35,9 @@
 #'
 #' Validated to machine precision (max_diff < 1e-10) against
 #' `mlVAR::mlVAR()` on 25 real ESM datasets from `openesm` and 20 simulated
-#' configurations (seeds 201-220). See `tmp/mlvar_equivalence_real20.R` and
-#' `tmp/mlvar_equivalence_20seeds.R`.
+#' configurations, and to exact equality (max_diff == 0) against the
+#' pre-delegation Nestimate implementation on all layers, coefficients,
+#' and observation counts across lag/standardize/day/beep configurations.
 #'
 #' @param data A `data.frame` containing the panel data.
 #' @param vars Character vector of variable column names to model.
@@ -115,49 +120,46 @@ build_mlvar <- function(data, vars, id,
          paste(missing_cols, collapse = ", "), call. = FALSE)
   }
 
-  if (!requireNamespace("lme4", quietly = TRUE)) {
-    stop("Package 'lme4' is required for build_mlvar().", call. = FALSE)
-  }
-  if (!requireNamespace("corpcor", quietly = TRUE)) {
-    stop("Package 'corpcor' is required for build_mlvar().", call. = FALSE)
-  }
-  if (!requireNamespace("data.table", quietly = TRUE)) {
-    stop("Package 'data.table' is required for build_mlvar().", call. = FALSE)
-  }
-
   lag <- as.integer(lag)
 
-  prepared <- .mlvar_prepare_data(data, vars, id, day, beep, standardize)
-  aug      <- .mlvar_augment_data(prepared, vars, id, day, beep, lag)
-  Res      <- .mlvar_estimate_lmer(aug$data, aug$predModel, vars, id)
+  # Estimation is owned by idiographic; verified exactly equal (max abs
+  # delta == 0 on all three layers, coefs, and n_obs) to the former
+  # in-package lmer pipeline across lag/standardize/day/beep configs.
+  fit <- idiographic::fit_mlvar(
+    data, vars = vars, id = id, day = day, beep = beep,
+    lags = lag,
+    estimator = "lmer", temporal = "fixed", contemporaneous = "fixed",
+    scale = standardize
+  )
 
-  # Wrap each of the three matrices as a full cograph_network netobject via
-  # the package-wide `.wrap_netobject()` constructor. Nestimate never calls
-  # cograph - plotting is handled by cograph's existing splot.netobject /
-  # splot.cograph_network dispatch, which fires automatically because each
-  # constituent here is a standard netobject.
-  temporal_net        <- .wrap_netobject(Res$temporal$B,
-                                         method   = "mlvar_temporal",
-                                         directed = TRUE)
-  contemporaneous_net <- .wrap_netobject(Res$contemporaneous,
-                                         method   = "mlvar_contemporaneous",
-                                         directed = FALSE)
-  between_net         <- .wrap_netobject(Res$between,
-                                         method   = "mlvar_between",
-                                         directed = FALSE)
+  stopifnot(
+    "idiographic::fit_mlvar() did not return the three network layers" =
+      all(c("temporal", "contemporaneous", "between") %in% names(fit)),
+    "idiographic::fit_mlvar() result carries no coefficient table" =
+      is.data.frame(attr(fit, "coefs"))
+  )
 
+  # Re-wrap each layer through Nestimate's own constructor so the return
+  # contract (fields, meta, class) is byte-identical to the pre-delegation
+  # object regardless of idiographic's internal netobject flavour.
   nets <- list(
-    temporal        = temporal_net,
-    contemporaneous = contemporaneous_net,
-    between         = between_net
+    temporal        = .wrap_netobject(fit$temporal$weights,
+                                      method   = "mlvar_temporal",
+                                      directed = TRUE),
+    contemporaneous = .wrap_netobject(fit$contemporaneous$weights,
+                                      method   = "mlvar_contemporaneous",
+                                      directed = FALSE),
+    between         = .wrap_netobject(fit$between$weights,
+                                      method   = "mlvar_between",
+                                      directed = FALSE)
   )
 
   # Model-level metadata lives in attributes so the list stays a pure
   # netobject_group (each element is a netobject). Use coefs(fit) to
   # retrieve the tidy coefs data.frame.
-  attr(nets, "coefs")       <- Res$temporal$coefs
-  attr(nets, "n_obs")       <- nrow(aug$data)
-  attr(nets, "n_subjects")  <- length(unique(aug$data[[id]]))
+  attr(nets, "coefs")       <- attr(fit, "coefs")
+  attr(nets, "n_obs")       <- attr(fit, "n_obs")
+  attr(nets, "n_subjects")  <- attr(fit, "n_subjects")
   attr(nets, "lag")         <- lag
   attr(nets, "standardize") <- standardize
   attr(nets, "group_col")   <- "network_type"
@@ -200,326 +202,6 @@ coefs.default <- function(x, ...) {
   stop("No coefs() method for object of class '",
        class(x)[1], "'", call. = FALSE)
 }
-
-# ---- Internal helpers --------------------------------------------------
-
-#' Drop rows with NA metadata and optionally grand-mean standardize
-#' @noRd
-.mlvar_prepare_data <- function(data, vars, id, day, beep, scale) {
-  df <- as.data.frame(data)
-
-  md_cols <- c(id,
-               if (!is.null(day))  day,
-               if (!is.null(beep)) beep)
-  df <- df[stats::complete.cases(df[, md_cols, drop = FALSE]), , drop = FALSE]
-
-  if (isTRUE(scale)) {
-    for (v in vars) {
-      x <- as.numeric(df[[v]])
-      sd_val <- stats::sd(x, na.rm = TRUE)
-      if (is.na(sd_val) || sd_val == 0) {
-        df[[v]] <- 0
-      } else {
-        df[[v]] <- (x - mean(x, na.rm = TRUE)) / sd_val
-      }
-    }
-  }
-  df
-}
-
-#' Beep-grid augmentation + within/between predictor construction
-#'
-#' Hybrid implementation: `data.table::CJ` + keyed join for the expensive
-#' grid construction, base R `ave()` for the within-group lag/center/mean
-#' arithmetic. The split matters because `data.table`'s optimized group
-#' aggregators (`gmean` et al.) accumulate sums in a different order than
-#' base R, which drifts at 1e-16 and amplifies through lmer into 1e-10
-#' coefficient diffs against mlVAR.
-#' @noRd
-.mlvar_augment_data <- function(data, vars, id, day, beep, lag) {
-  # Silence R CMD check NOTE for data.table NSE symbols
-  .first <- .last <- NULL
-
-  id_col   <- id
-  day_col  <- if (is.null(day))  ".day"  else day
-  beep_col <- if (is.null(beep)) ".beep" else beep
-
-  dt <- data.table::as.data.table(data)
-  if (is.null(day)) {
-    dt[, (day_col) := 1L]
-  }
-  if (is.null(beep)) {
-    dt[, (beep_col) := seq_len(.N), by = c(id_col, day_col)]
-  }
-
-  # Per-(id, day) beep range
-  first_last <- dt[, .(.first = min(get(beep_col), na.rm = TRUE),
-                       .last  = max(get(beep_col), na.rm = TRUE)),
-                   by = c(id_col, day_col)]
-
-  # Global beep grid, filtered down to each (id, day)'s actual range
-  gb_min <- min(dt[[beep_col]], na.rm = TRUE)
-  gb_max <- max(dt[[beep_col]], na.rm = TRUE)
-  allBeeps <- data.table::CJ(
-    V1 = unique(dt[[id_col]]),
-    V2 = unique(dt[[day_col]]),
-    V3 = seq(gb_min, gb_max),
-    sorted = FALSE
-  )
-  data.table::setnames(allBeeps, c("V1", "V2", "V3"),
-                       c(id_col, day_col, beep_col))
-  allBeeps <- allBeeps[first_last, on = c(id_col, day_col), nomatch = NULL]
-  allBeeps <- allBeeps[get(beep_col) >= .first & get(beep_col) <= .last]
-  allBeeps[, c(".first", ".last") := NULL]
-
-  # Right-join original data onto the grid (keeps all grid rows)
-  data.table::setkeyv(dt, c(id_col, day_col, beep_col))
-  data.table::setkeyv(allBeeps, c(id_col, day_col, beep_col))
-  augData <- dt[allBeeps, on = c(id_col, day_col, beep_col),
-                allow.cartesian = TRUE]
-  data.table::setkeyv(augData, c(id_col, day_col, beep_col))
-
-  # Drop back to a plain data.frame so subsequent `ave()` calls match
-  # mlVAR's accumulation order bit-for-bit.
-  augData <- as.data.frame(augData)
-  rownames(augData) <- NULL
-
-  predModel <- list()
-
-  # Within (lagged, person-centered) predictors
-  for (v in vars) {
-    p_id <- paste0("L", lag, "_", v)
-    augData[[p_id]] <- stats::ave(
-      augData[[v]], augData[[id_col]], augData[[day_col]],
-      FUN = function(x) .mlvar_aveLag(x, lag)
-    )
-    augData[[p_id]] <- stats::ave(
-      augData[[p_id]], augData[[id_col]],
-      FUN = function(x) x - mean(x, na.rm = TRUE)
-    )
-    predModel[[length(predModel) + 1L]] <- list(
-      dep = vars, pred = v, id = p_id, type = "within"
-    )
-  }
-
-  # Between (person-mean) predictors
-  for (v in vars) {
-    p_id <- paste0("PM_", v)
-    augData[[p_id]] <- stats::ave(
-      augData[[v]], augData[[id_col]],
-      FUN = function(x) mean(x, na.rm = TRUE)
-    )
-    predModel[[length(predModel) + 1L]] <- list(
-      dep = vars, pred = v, id = p_id, type = "between"
-    )
-  }
-
-  involved <- unique(c(vars, vapply(predModel, `[[`, character(1), "id")))
-  augData <- stats::na.omit(
-    augData[, c(involved, id_col, day_col, beep_col), drop = FALSE]
-  )
-  rownames(augData) <- NULL
-
-  list(data = augData, predModel = predModel)
-}
-
-#' Fit d outcome-specific lmer models and assemble the three networks
-#'
-#' Matches `mlVAR:::lmer_mlVAR` with `temporal = "fixed"`,
-#' `contemporaneous = "fixed"`. For each outcome k fits
-#' `outcome_k ~ L1_v1 + ... + L1_vd + PM_v_{-k} + (1 | id)` with
-#' `REML = FALSE`, then assembles Beta, Gamma, mu_SD, residuals.
-#' @noRd
-.mlvar_estimate_lmer <- function(augData, predModel, vars, id) {
-  d <- length(vars)
-  n_obs <- nrow(augData)
-
-  B             <- matrix(0, d, d, dimnames = list(vars, vars))
-  Gamma         <- matrix(0, d, d, dimnames = list(vars, vars))
-  mu_SD         <- stats::setNames(numeric(d), vars)
-  sigma_vec     <- stats::setNames(numeric(d), vars)
-  residuals_mat <- matrix(NA_real_, n_obs, d, dimnames = list(NULL, vars))
-
-  within_ids <- vapply(Filter(function(m) m$type == "within",  predModel),
-                       `[[`, character(1), "id")
-  between_ids <- vapply(Filter(function(m) m$type == "between", predModel),
-                        `[[`, character(1), "id")
-  var_to_within  <- stats::setNames(within_ids,  vars)
-  var_to_between <- stats::setNames(between_ids, vars)
-
-  z975 <- stats::qnorm(0.975)
-
-  # Tidy coefs: one row per (outcome, predictor) pair - fills d * d rows.
-  # Faster and cleaner than growing a list of per-outcome data.frames and
-  # `do.call(rbind, ...)` at the end.
-  n_coef_rows <- d * d
-  coefs_tidy <- data.frame(
-    outcome     = rep(vars, each = d),
-    predictor   = rep(vars, times = d),
-    beta        = numeric(n_coef_rows),
-    se          = numeric(n_coef_rows),
-    t           = numeric(n_coef_rows),
-    p           = numeric(n_coef_rows),
-    ci_lower    = numeric(n_coef_rows),
-    ci_upper    = numeric(n_coef_rows),
-    significant = logical(n_coef_rows),
-    stringsAsFactors = FALSE
-  )
-
-  for (k in seq_len(d)) {
-    outcome <- vars[k]
-    # Own PM excluded - matches mlVAR's `getModel` filter on `dep == outcome`
-    fixed_preds <- c(within_ids, var_to_between[-k])
-
-    # Random intercept only - matches mlVAR temporal="fixed".
-    fm_str <- paste0(outcome, " ~ ",
-                     paste(fixed_preds, collapse = " + "),
-                     " + (1 | ", id, ")")
-    fit <- suppressMessages(suppressWarnings(
-      lme4::lmer(stats::as.formula(fm_str), data = augData, REML = FALSE)
-    ))
-
-    # Convergence diagnostics - warn but don't stop (matches mlVAR behaviour)
-    if (lme4::isSingular(fit)) {
-      warning(sprintf(
-        "Model for '%s': singular fit (random-effects variance near zero).",
-        outcome
-      ), call. = FALSE)
-    }
-    conv_msgs <- fit@optinfo$conv$lme4$messages
-    if (length(conv_msgs) > 0L) {
-      warning(sprintf(
-        "Model for '%s': %s", outcome, paste(conv_msgs, collapse = "; ")
-      ), call. = FALSE)
-    }
-
-    fe <- lme4::fixef(fit)
-    B[k, ]        <- fe[var_to_within[vars]]
-    Gamma[k, -k]  <- fe[var_to_between[vars[-k]]]
-
-    vc <- lme4::VarCorr(fit)
-    ri_var <- as.numeric(vc[[id]][1, 1])
-    mu_SD[k] <- if (!is.na(ri_var) && ri_var > 0) sqrt(ri_var) else 0
-
-    sigma_vec[k] <- stats::sigma(fit)
-
-    # Align residuals to augData row order (lmer drops any NA rows)
-    res <- stats::residuals(fit)
-    row_names <- rownames(augData)
-    if (!is.null(row_names) && !is.null(names(res))) {
-      residuals_mat[, k] <- res[match(row_names, names(res))]
-    } else {
-      residuals_mat[, k] <- res
-    }
-
-    sfe    <- summary(fit)$coefficients
-    beta_k <- as.numeric(fe[var_to_within[vars]])
-    se_k   <- as.numeric(sfe[var_to_within[vars], "Std. Error"])
-    t_k    <- as.numeric(sfe[var_to_within[vars], "t value"])
-    p_k    <- 2 * (1 - stats::pnorm(abs(t_k)))
-
-    rows <- ((k - 1L) * d + 1L):(k * d)
-    coefs_tidy$beta[rows]        <- beta_k
-    coefs_tidy$se[rows]          <- se_k
-    coefs_tidy$t[rows]           <- t_k
-    coefs_tidy$p[rows]           <- p_k
-    coefs_tidy$ci_lower[rows]    <- beta_k - z975 * se_k
-    coefs_tidy$ci_upper[rows]    <- beta_k + z975 * se_k
-    coefs_tidy$significant[rows] <- p_k < 0.05
-  }
-
-  contemporaneous <- .mlvar_contemporaneous_fixed(residuals_mat, sigma_vec, vars)
-  between         <- .mlvar_compute_between_from_gamma(Gamma, mu_SD, vars)
-
-  list(temporal = list(B = B, coefs = coefs_tidy, residuals = residuals_mat),
-       contemporaneous = contemporaneous,
-       between = between)
-}
-
-#' Within-group lag (matches mlVAR:::aveLag)
-#'
-#' Uses a logical `NA` (not `NA_real_`) for the prepended entries so that
-#' integer input columns retain integer type. Preserving the integer type
-#' is critical because base R's `mean()` uses a two-pass summation
-#' correction for numeric input but a simple sum/n for integer input - the
-#' two paths drift by ~1.4e-14, which then amplifies through lmer into
-#' ~1e-10 coefficient diffs against mlVAR's integer-typed pipeline.
-#' @noRd
-.mlvar_aveLag <- function(x, lag = 1L) {
-  n <- length(x)
-  if (lag >= n) return(rep(NA, n))
-  c(rep(NA, lag), x[seq_len(n - lag)])
-}
-
-#' Force a symmetric matrix to be positive-definite - byte-for-byte replica
-#' of `mlVAR:::forcePositive`.
-#'
-#' Note the scalar-recycling quirk in the upstream implementation. In
-#' `x - (diag(n) * min_ev - 0.001)`, the `0.001` scalar is subtracted from
-#' every element of the diagonal matrix - so the final operation adds
-#' `|min_ev|` to the diagonal *and* `+0.001` to every off-diagonal element.
-#' This looks unintentional upstream but has to be replicated exactly for
-#' equivalence with `mlVAR::mlVAR()`.
-#' @noRd
-.mlvar_force_positive <- function(x) {
-  x <- (x + t(x)) / 2
-  ev <- eigen(x, symmetric = TRUE, only.values = TRUE)$values
-  if (any(ev < 0)) {
-    x - (diag(nrow(x)) * min(ev) - 0.001)
-  } else {
-    x
-  }
-}
-
-#' Between-subjects partial correlation from Gamma + mu_SD
-#'
-#' Matches mlVAR's Omega_mu branch:
-#'   `D = diag(1 / mu_SD^2)`
-#'   `inv = forcePositive(D (I - Gamma))`
-#'   `cov = corpcor::pseudoinverse(inv)`
-#'   `pcor = corpcor::cor2pcor(cov)`
-#' @noRd
-.mlvar_compute_between_from_gamma <- function(Gamma, mu_SD, vars) {
-  d <- length(vars)
-  if (any(mu_SD == 0)) {
-    return(matrix(0, d, d, dimnames = list(vars, vars)))
-  }
-
-  D <- diag(1 / mu_SD^2)
-  inv <- D %*% (diag(d) - Gamma)
-  inv <- (inv + t(inv)) / 2
-  inv <- .mlvar_force_positive(inv)
-
-  mu_cov <- corpcor::pseudoinverse(inv)
-  pcor <- corpcor::cor2pcor(mu_cov)
-  diag(pcor) <- 0
-  rownames(pcor) <- colnames(pcor) <- vars
-  pcor
-}
-
-#' Contemporaneous partial correlation via mlVAR's "fixed" path
-#'
-#' Replicates `mlVAR:::lmer_mlVAR` Theta assembly for
-#' `contemporaneous = "fixed"`: rescale the residual correlation by the
-#' per-outcome lmer residual SDs and take `cor2pcor` directly. No
-#' EBIC-GLASSO regularization. Note `cor2pcor` is scale-invariant, so the
-#' `D %*% . %*% D` rescaling does not affect the pcor output - it is kept
-#' only for parity with mlVAR's `cov`/`prec` slots.
-#' @noRd
-.mlvar_contemporaneous_fixed <- function(residuals_mat, sigma_vec, vars) {
-  d <- length(vars)
-  R <- stats::cor(residuals_mat, use = "pairwise.complete.obs")
-  if (any(is.na(R))) {
-    return(matrix(0, d, d, dimnames = list(vars, vars)))
-  }
-  D <- diag(sigma_vec)
-  Theta_cov <- D %*% stats::cov2cor(R) %*% D
-  pcor <- corpcor::cor2pcor(Theta_cov)
-  diag(pcor) <- 0
-  rownames(pcor) <- colnames(pcor) <- vars
-  pcor
-}
-
 
 # ---- S3 methods --------------------------------------------------------
 
@@ -599,4 +281,3 @@ summary.net_mlvar <- function(object, ...) {
 
   coef_df
 }
-

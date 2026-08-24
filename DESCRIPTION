@@ -31,7 +31,8 @@ Imports:
     cluster,
     scales,
     brglm2,
-    nnet
+    nnet,
+    idiographic (>= 0.3.4)
 Suggests:
     testthat (>= 3.0.0),
     igraph,

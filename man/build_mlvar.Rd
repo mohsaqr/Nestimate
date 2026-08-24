@@ -77,8 +77,13 @@ temporal network of fixed-effect lagged regression coefficients, (2)
 an undirected contemporaneous network of partial correlations among
 residuals, and (3) an undirected between-subjects network of partial
 correlations derived from the person-mean fixed effects.
-
-#' @details The algorithm follows mlVAR's lmer pipeline exactly:
+}
+\details{
+Estimation is delegated to \code{\link[idiographic:fit_mlvar]{idiographic::fit_mlvar()}} (the
+clean-room home of the temporal idiographic estimators), called with
+\code{estimator = "lmer"}, \code{temporal = "fixed"},
+\code{contemporaneous = "fixed"}. The pipeline follows mlVAR's lmer path
+exactly:
 \enumerate{
 \item Drop rows with NA in id/day/beep and optionally grand-mean
 standardize each variable.
@@ -99,8 +104,9 @@ and lmer residual SDs.
 
 Validated to machine precision (max_diff < 1e-10) against
 \code{mlVAR::mlVAR()} on 25 real ESM datasets from \code{openesm} and 20 simulated
-configurations (seeds 201-220). See \code{tmp/mlvar_equivalence_real20.R} and
-\code{tmp/mlvar_equivalence_20seeds.R}.
+configurations, and to exact equality (max_diff == 0) against the
+pre-delegation Nestimate implementation on all layers, coefficients,
+and observation counts across lag/standardize/day/beep configurations.
 }
 \examples{
 \dontrun{
