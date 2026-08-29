@@ -12,7 +12,15 @@
 #'   Built-in methods: \code{"relative"}, \code{"frequency"},
 #'   \code{"co_occurrence"}, \code{"cor"}, \code{"pcor"}, \code{"glasso"},
 #'   \code{"ising"}, \code{"mgm"}, \code{"attention"}, \code{"wtna"},
-#'   \code{"wtna_cooccurrence"}.
+#'   \code{"wtna_cooccurrence"}, \code{"ngram"}, \code{"gap"},
+#'   \code{"reverse"}. The last three mirror \code{tna::build_model()}
+#'   types \code{"n-gram"} (adjacent pairs counted once per n-gram window
+#'   containing them; \code{params = list(n_gram = 2)}), \code{"gap"}
+#'   (pairs up to \code{max_gap + 1} positions apart, weighted by
+#'   \code{1 / distance}; \code{params = list(max_gap = 1)}) and
+#'   \code{"reverse"} (reply network: the transpose of \code{"frequency"};
+#'   \code{params = list(weighted = FALSE)}). All three return raw weights;
+#'   add \code{scaling = "normalize"} for row probabilities.
 #'   Aliases: \code{"tna"} and \code{"transition"} map to \code{"relative"};
 #'   \code{"ftna"} and \code{"counts"} map to \code{"frequency"};
 #'   \code{"cna"} and \code{"wcna"} map to \code{"co_occurrence"};
@@ -22,7 +30,9 @@
 #'   \code{"isingfit"} maps to \code{"ising"};
 #'   \code{"atna"} maps to \code{"attention"};
 #'   \code{"mixed"} and \code{"mixed_graphical"} map to \code{"mgm"};
-#'   \code{"wtna_transition"} maps to \code{"wtna"}.
+#'   \code{"wtna_transition"} maps to \code{"wtna"};
+#'   \code{"co-occurrence"} maps to \code{"co_occurrence"};
+#'   \code{"n-gram"} and \code{"n_gram"} map to \code{"ngram"}.
 #' @param params Named list. Method-specific parameters passed to the estimator
 #'   function (e.g. \code{list(gamma = 0.5)} for glasso, or
 #'   \code{list(format = "wide")} for transition methods). This is the key
@@ -90,6 +100,10 @@
 #'   format session splitting. Set to \code{FALSE} to switch session-interval
 #'   splitting off, so each actor (or actor-session) forms a single sequence.
 #'   Default: \code{900}.
+#' @param timezone Character. Olson time zone used to interpret naive
+#'   timestamps in long-format data (offset-bearing timestamps such as
+#'   \code{...Z} or \code{+02:00} are converted from their offset). Passed to
+#'   \code{\link{prepare}}. Default: \code{"UTC"}.
 #' @param predictability Logical. If \code{TRUE} (default), compute and store
 #'   node predictability (R-squared) for undirected association methods
 #'   (glasso, pcor, cor). Stored in \code{$predictability} and auto-displayed
@@ -203,6 +217,7 @@ build_network <- function(data,
                           threshold = 0,
                           level = NULL,
                           time_threshold = 900,
+                          timezone = "UTC",
                           predictability = TRUE,
                           state_cols = NULL,
                           metadata_cols = NULL,
@@ -384,7 +399,8 @@ build_network <- function(data,
   begin_label <- .resolve_boundary(start, "Start", "start")
   end_label   <- .resolve_boundary(end,   "End",   "end")
   if (!is.null(begin_label) || !is.null(end_label)) {
-    boundary_methods <- c("relative", "frequency", "co_occurrence", "attention")
+    boundary_methods <- c("relative", "frequency", "co_occurrence", "attention",
+                          "ngram", "gap", "reverse")
     if (!method %in% boundary_methods) {
       stop("`start`/`end` boundary markers are only supported for the ",
            "transition methods (", paste(boundary_methods, collapse = ", "),
@@ -435,7 +451,8 @@ build_network <- function(data,
   # ---- Group dispatch: per-group networks ----
   if (!is.null(group)) {
     stopifnot(is.character(group))
-    transition_methods <- c("relative", "frequency", "co_occurrence", "attention")
+    transition_methods <- c("relative", "frequency", "co_occurrence", "attention",
+                            "ngram", "gap", "reverse")
     if (method %in% transition_methods && is.data.frame(data) &&
         is.null(.param_get(params, "alphabet"))) {
       if (!is.null(action) && action %in% names(data)) {
@@ -475,7 +492,7 @@ build_network <- function(data,
         group = NULL, format = format, window_size = window_size,
         mode = mode, scaling = scaling, threshold = threshold,
         level = level, time_threshold = time_threshold,
-        predictability = predictability,
+        timezone = timezone, predictability = predictability,
         state_cols = state_cols, metadata_cols = metadata_cols,
         params = child_params, ...
       )
@@ -530,6 +547,7 @@ build_network <- function(data,
     if (!is.null(session)) prep_args$session <- session # nocov start
     if (!is.null(order)) prep_args$order <- order # nocov end
     prep_args$time_threshold <- time_threshold
+    prep_args$timezone <- timezone
 
     prepared <- do.call(prepare, prep_args)
     data <- prepared$sequence_data
@@ -686,7 +704,7 @@ build_network <- function(data,
     net_matrix <- .apply_scaling(
       net_matrix, scaling,
       include_zeros = method %in% c("relative", "frequency", "co_occurrence",
-                                    "attention")
+                                    "attention", "ngram", "gap", "reverse")
     )
   }
 

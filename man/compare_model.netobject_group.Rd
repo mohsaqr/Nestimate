@@ -38,3 +38,7 @@ A \code{net_comparison} object.
 Selects two members of a \code{netobject_group} (by index or name) and
 dispatches to \code{compare_model.netobject()}.
 }
+\seealso{
+\code{\link[=compare_networks]{compare_networks()}}, the N-way successor with tidy tables and a
+dashboard plot.
+}

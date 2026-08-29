@@ -14,7 +14,8 @@ prepare(
   time_threshold = 900,
   custom_format = NULL,
   is_unix_time = FALSE,
-  unix_time_unit = c("seconds", "milliseconds", "microseconds")
+  unix_time_unit = c("seconds", "milliseconds", "microseconds"),
+  timezone = "UTC"
 )
 }
 \arguments{
@@ -55,6 +56,14 @@ timestamps. Default: FALSE (auto-detected for numeric columns).}
 \item{unix_time_unit}{Character. Unit for Unix timestamps:
 \code{"seconds"}, \code{"milliseconds"}, or \code{"microseconds"}.
 Default: \code{"seconds"}.}
+
+\item{timezone}{Character. An Olson time zone (see
+\code{\link[base]{OlsonNames}}) used to interpret timestamps that carry
+no zone information, and in which Unix timestamps are expressed.
+Timestamps that end in \code{Z}, \code{UTC}, \code{GMT} or a numeric
+offset such as \code{+02:00} are converted from that offset. Parsing is
+therefore independent of the machine's local time zone.
+Default: \code{"UTC"}.}
 }
 \value{
 A list with class \code{"nestimate_data"} containing:

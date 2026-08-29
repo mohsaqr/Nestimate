@@ -38,6 +38,13 @@
 #' @param unix_time_unit Character. Unit for Unix timestamps:
 #'   \code{"seconds"}, \code{"milliseconds"}, or \code{"microseconds"}.
 #'   Default: \code{"seconds"}.
+#' @param timezone Character. An Olson time zone (see
+#'   \code{\link[base]{OlsonNames}}) used to interpret timestamps that carry
+#'   no zone information, and in which Unix timestamps are expressed.
+#'   Timestamps that end in \code{Z}, \code{UTC}, \code{GMT} or a numeric
+#'   offset such as \code{+02:00} are converted from that offset. Parsing is
+#'   therefore independent of the machine's local time zone.
+#'   Default: \code{"UTC"}.
 #'
 #' @return A list with class \code{"nestimate_data"} containing:
 #' \describe{
@@ -73,8 +80,10 @@ prepare <- function(data,
                          custom_format = NULL,
                          is_unix_time = FALSE,
                          unix_time_unit = c("seconds", "milliseconds",
-                                            "microseconds")) {
+                                            "microseconds"),
+                         timezone = "UTC") {
   stopifnot(is.data.frame(data))
+  .check_timezone(timezone)
   stopifnot(is.character(action), length(action) == 1, action %in% names(data))
   # FALSE disables gap-based splitting. Inf makes the `gaps > time_threshold`
   # test below never fire, so no separate code path is needed.
@@ -149,7 +158,8 @@ prepare <- function(data,
 
     parsed <- .parse_time(df[[time]], custom_format = custom_format,
                           is_unix_time = is_unix_time,
-                          unix_time_unit = unix_time_unit)
+                          unix_time_unit = unix_time_unit,
+                          timezone = timezone)
     df$.parsed_time <- parsed
 
     # Sort by base_group + time + order
@@ -288,51 +298,118 @@ print.nestimate_data <- function(x, ...) {
 
 # ---- Time parsing ----
 
-#' Parse time values from various formats
+#' Validate an Olson time zone name
+#' @noRd
+.check_timezone <- function(timezone) {
+  stopifnot(
+    "`timezone` must be a single Olson time zone name (see OlsonNames())" =
+      is.character(timezone) && length(timezone) == 1L &&
+        !is.na(timezone) && timezone %in% OlsonNames()
+  )
+  invisible(timezone)
+}
+
+#' Parse character timestamps element-wise through a list of formats
 #'
-#' Tries 40+ date/time formats, Unix timestamps, and custom formats.
-#' Matches tna::parse_time logic.
+#' Each format is tried only on the elements still unparsed, so a column
+#' mixing several layouts is resolved completely instead of stopping at the
+#' first format that matches any element.
 #'
-#' @param time Character or numeric vector of time values.
-#' @param custom_format Character or NULL. Custom strptime format.
+#' @param time Character vector.
+#' @param formats Character vector of \code{strptime} formats, tried in order.
+#' @param timezone Olson time zone name.
+#' @return POSIXct vector (NA where no format matched).
+#' @noRd
+.parse_time_formats <- function(time, formats, timezone) {
+  out <- rep(NA_real_, length(time))
+  # Sequential fill: each format only sees what earlier formats left NA, so
+  # the loop is over formats (short), not elements.
+  for (fmt in formats) {
+    idx <- which(is.na(out) & !is.na(time))
+    if (length(idx) == 0L) break
+    parsed <- as.POSIXct(strptime(time[idx], format = fmt, tz = timezone))
+    ok <- !is.na(parsed)
+    out[idx[ok]] <- as.numeric(parsed[ok])
+  }
+  as.POSIXct(out, origin = "1970-01-01", tz = timezone)
+}
+
+#' Parse time values into POSIXct, independent of the machine time zone
+#'
+#' Ported from \code{tna:::parse_time()}. Handles POSIXct input, numeric Unix
+#' timestamps, ISO-8601 strings with \code{Z}/\code{UTC}/\code{GMT} markers or
+#' numeric offsets, a wide set of naive layouts, and a numeric-string Unix
+#' fallback. Naive strings are interpreted in \code{timezone}; offset strings
+#' are converted from their offset.
+#'
+#' @param time Vector of time values.
+#' @param custom_format Character or NULL. Custom strptime format tried first.
 #' @param is_unix_time Logical. Treat numeric as Unix timestamp.
 #' @param unix_time_unit Character. "seconds", "milliseconds", "microseconds".
-#' @return POSIXct vector.
+#' @param timezone Olson time zone name.
+#' @return POSIXct vector in \code{timezone}.
 #' @noRd
 .parse_time <- function(time, custom_format = NULL, is_unix_time = FALSE,
-                        unix_time_unit = "seconds") {
-  # Already POSIXct
-  if (inherits(time, c("POSIXct", "POSIXlt"))) return(time)
+                        unix_time_unit = "seconds", timezone = "UTC") {
+  .check_timezone(timezone)
+  unix_divisor <- switch(unix_time_unit,
+    seconds = 1, milliseconds = 1000, microseconds = 1e6,
+    stop("'unix_time_unit' must be seconds, milliseconds or microseconds.",
+         call. = FALSE)
+  )
+  as_unix <- function(x) {
+    as.POSIXct(x / unix_divisor, origin = "1970-01-01", tz = timezone)
+  }
 
-  # Numeric Unix timestamps
+  if (inherits(time, c("POSIXct", "POSIXlt"))) {
+    return(as.POSIXct(time))
+  }
   if (is.numeric(time) && is_unix_time) {
-    divisor <- switch(unix_time_unit,
-      seconds = 1,
-      milliseconds = 1000,
-      microseconds = 1e6
-    )
-    return(as.POSIXct(time / divisor, origin = "1970-01-01"))
+    return(as_unix(time))
   }
 
-  # Character parsing
+  time_original <- time
   time <- trimws(as.character(time))
-  # Strip fractional seconds and timezone suffixes for format matching
-  time_clean <- gsub("(\\.\\d{1,3})?[A-Za-z ]*$", "", time)
+  time_empty <- is.na(time) | !nzchar(time)
+  time[time_empty] <- NA_character_
+  parsed <- as.POSIXct(rep(NA_real_, length(time)), origin = "1970-01-01",
+                       tz = timezone)
 
-  # Custom format first
+  # 1. Custom format first; unmatched values fall through.
   if (!is.null(custom_format)) {
-    parsed <- as.POSIXct(strptime(time_clean, format = custom_format))
-    if (!all(is.na(parsed))) return(parsed)
+    custom_parsed <- .parse_time_formats(time, custom_format, timezone)
+    ok <- !is.na(custom_parsed)
+    parsed[ok] <- custom_parsed[ok]
   }
 
-  # Try standard formats
+  # 2. Offset-bearing strings: normalise Z/UTC/GMT and "+02:00" to "+0200"
+  #    so %z parses them consistently, then convert from that offset.
+  time_offset <- sub("(?:Z|UTC|GMT)$", "+0000", time,
+                     ignore.case = TRUE, perl = TRUE)
+  time_offset <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", time_offset,
+                     perl = TRUE)
+  has_timezone <- grepl(
+    "(?:Z|UTC|GMT|[+-][0-9]{2}:?[0-9]{2}|[A-Za-z]{2,})$",
+    time, ignore.case = TRUE, perl = TRUE
+  )
+  offset_formats <- c(
+    "%Y-%m-%dT%H:%M:%OS%z", "%Y-%m-%d %H:%M:%OS%z",
+    "%Y-%m-%dT%H:%M%z", "%Y-%m-%d %H:%M%z"
+  )
+  offset_idx <- which(is.na(parsed) & has_timezone & !time_empty)
+  if (length(offset_idx) > 0L) {
+    offset_parsed <- .parse_time_formats(time_offset[offset_idx],
+                                         offset_formats, timezone)
+    ok <- !is.na(offset_parsed)
+    parsed[offset_idx[ok]] <- offset_parsed[ok]
+  }
+
+  # 3. Naive strings, interpreted in `timezone`.
   formats <- c(
-    "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M",
+    "%Y-%m-%d %H:%M:%OS", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M",
     "%Y/%m/%d %H:%M:%S", "%Y/%m/%d %H:%M",
     "%Y.%m.%d %H:%M:%S", "%Y.%m.%d %H:%M",
-    "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%OS",
-    "%Y-%m-%d %H:%M:%S%z", "%Y-%m-%d %H:%M%z",
-    "%Y-%m-%d %H:%M:%S %z", "%Y-%m-%d %H:%M %z",
+    "%Y-%m-%dT%H:%M:%OS", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M",
     "%Y%m%d%H%M%S", "%Y%m%d%H%M",
     "%d-%m-%Y %H:%M:%S", "%d-%m-%Y %H:%M",
     "%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M",
@@ -351,24 +428,30 @@ print.nestimate_data <- function(x, ...) {
     "%m-%d-%Y", "%m/%d/%Y", "%m.%d.%Y",
     "%d %b %Y", "%d %B %Y", "%b %d %Y", "%B %d %Y"
   )
-
-  for (fmt in formats) {
-    parsed <- as.POSIXct(strptime(time_clean, format = fmt))
-    if (!all(is.na(parsed))) return(parsed)
+  naive_idx <- which(is.na(parsed) & !has_timezone & !time_empty)
+  if (length(naive_idx) > 0L) {
+    naive_parsed <- .parse_time_formats(time[naive_idx], formats, timezone)
+    ok <- !is.na(naive_parsed)
+    parsed[naive_idx[ok]] <- naive_parsed[ok]
   }
 
-  # Last resort: try as numeric Unix timestamp
-  numeric_time <- suppressWarnings(as.numeric(time))
-  if (!any(is.na(numeric_time))) {
-    divisor <- switch(unix_time_unit, # nocov start
-      seconds = 1, milliseconds = 1000, microseconds = 1e6
-    )
-    return(as.POSIXct(numeric_time / divisor, origin = "1970-01-01")) # nocov end
+  # 4. Anything left: numeric strings as Unix time.
+  unresolved <- which(is.na(parsed) & !time_empty)
+  if (length(unresolved) > 0L) {
+    numeric_time <- suppressWarnings(as.numeric(time[unresolved]))
+    ok <- !is.na(numeric_time)
+    parsed[unresolved[ok]] <- as_unix(numeric_time[ok])
   }
 
-  stop("Could not parse time values. Sample: ",
-       paste(utils::head(time, 3), collapse = ", "),
-       ". Use 'custom_format' argument.", call. = FALSE)
+  invalid <- which(is.na(parsed) & !time_empty)
+  if (length(invalid) > 0L) {
+    stop("Could not parse time values. Sample: ",
+         paste(utils::head(time_original[invalid], 3), collapse = ", "),
+         ". Supported: ISO-8601 (with Z/offset), YYYY-MM-DD HH:MM[:SS], ",
+         "DD-MM-YYYY, MM-DD-YYYY, month names, compact YYYYMMDDHHMMSS, ",
+         "Unix timestamps. Use 'custom_format' otherwise.", call. = FALSE)
+  }
+  parsed
 }
 
 

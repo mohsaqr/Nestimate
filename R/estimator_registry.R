@@ -171,6 +171,15 @@ remove_estimator <- function(name) {
                      directed = FALSE)
   register_estimator("attention", .estimator_attention,
                      "Decay-weighted attention transitions", directed = TRUE)
+  register_estimator("ngram", .estimator_ngram,
+                     "n-gram transitions (adjacent pairs per n-gram window)",
+                     directed = TRUE)
+  register_estimator("gap", .estimator_gap,
+                     "Gap-allowed transitions weighted by 1/distance",
+                     directed = TRUE)
+  register_estimator("reverse", .estimator_reverse,
+                     "Reverse (reply) transitions: transpose of frequency",
+                     directed = TRUE)
   register_estimator("wtna", .estimator_wtna,
                      "Window-based TNA transitions (one-hot)", directed = TRUE)
   register_estimator("wtna_cooccurrence",

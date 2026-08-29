@@ -346,7 +346,8 @@ permutation <- function(x, y = NULL,
     iter        = iter,
     alpha       = alpha,
     paired      = paired,
-    adjust      = adjust
+    adjust      = adjust,
+    global      = .build_permutation_global(perm_result$global, iter)
   )
 
   # ---- Centrality permutation block (tna-parity) ----
@@ -363,6 +364,21 @@ permutation <- function(x, y = NULL,
 
   class(result) <- "net_permutation"
   result
+}
+
+# ---- Global (NCT-style) statistics ----
+
+#' Global permutation statistics: M (sum |diff|) and S (max |diff|)
+#'
+#' Same permutation null as the edge test; p = (exceed + 1) / (iter + 1).
+#' @noRd
+.build_permutation_global <- function(g, iter) {
+  data.frame(
+    statistic = c("M", "S"),
+    observed = c(g$m_obs, g$s_obs),
+    p_value = (c(g$m_exceed, g$s_exceed) + 1L) / (iter + 1L),
+    stringsAsFactors = FALSE
+  )
 }
 
 # ---- Centrality permutation helpers (tna-parity) ----
@@ -647,6 +663,11 @@ permutation <- function(x, y = NULL,
   exceed_counts <- integer(nbins)
   sum_diffs <- numeric(nbins)
   sum_diffs_sq <- numeric(nbins)
+  # Global statistics (NCT-style): M = sum |diff|, S = max |diff|
+  m_obs <- sum(abs(obs_flat))
+  s_obs <- max(abs(obs_flat))
+  m_exceed <- 0L
+  s_exceed <- 0L
 
   for (i in seq_len(iter)) {
     if (paired) {
@@ -677,6 +698,8 @@ permutation <- function(x, y = NULL,
     exceed_counts <- exceed_counts + (abs(perm_diff) >= abs(obs_flat))
     sum_diffs <- sum_diffs + perm_diff
     sum_diffs_sq <- sum_diffs_sq + perm_diff^2
+    m_exceed <- m_exceed + (sum(abs(perm_diff)) >= m_obs)
+    s_exceed <- s_exceed + (max(abs(perm_diff)) >= s_obs)
 
     if (do_cent) {
       cd <- .perm_cent_diff_mat(mat_x, mat_y, nodes, directed, measures)
@@ -692,7 +715,9 @@ permutation <- function(x, y = NULL,
 
   out <- list(
     exceed_counts = exceed_counts,
-    perm_sd = perm_sd
+    perm_sd = perm_sd,
+    global = list(m_obs = m_obs, s_obs = s_obs,
+                  m_exceed = m_exceed, s_exceed = s_exceed)
   )
   if (do_cent) {
     out$cent_exceed <- cent_exceed
@@ -759,6 +784,10 @@ permutation <- function(x, y = NULL,
   scaling_x <- x$scaling
   scaling_y <- y$scaling
   obs_flat <- as.vector(obs_diff %||% (x$weights - y$weights))
+  m_obs <- sum(abs(obs_flat))
+  s_obs <- max(abs(obs_flat))
+  m_exceed <- 0L
+  s_exceed <- 0L
 
   # Select fast path based on method
   use_fast <- method %in% c("cor", "pcor", "glasso")
@@ -860,6 +889,8 @@ permutation <- function(x, y = NULL,
     exceed_counts <- exceed_counts + (abs(perm_diff) >= abs(obs_flat))
     sum_diffs <- sum_diffs + perm_diff
     sum_diffs_sq <- sum_diffs_sq + perm_diff^2
+    m_exceed <- m_exceed + (sum(abs(perm_diff)) >= m_obs)
+    s_exceed <- s_exceed + (max(abs(perm_diff)) >= s_obs)
 
     if (do_cent) {
       cd <- .perm_cent_diff_mat(mat_x, mat_y, nodes, directed, measures)
@@ -874,7 +905,9 @@ permutation <- function(x, y = NULL,
 
   out <- list(
     exceed_counts = exceed_counts,
-    perm_sd = perm_sd
+    perm_sd = perm_sd,
+    global = list(m_obs = m_obs, s_obs = s_obs,
+                  m_exceed = m_exceed, s_exceed = s_exceed)
   )
   if (do_cent) {
     out$cent_exceed <- cent_exceed

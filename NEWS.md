@@ -1,3 +1,69 @@
+# Nestimate 0.9.3
+
+## New verb: `compare_networks()`
+
+* Compares two or more networks (`netobject`, `netobject_group`, `tna`,
+  `group_tna`, `mcml`, `cograph_network`, matrices, or a list of them) in one
+  object. `summary()` returns the tidy one-row-per-pair overview, as every
+  other Nestimate `summary()` does; the full tables are their own verbs:
+  `edge_differences()`, `node_differences()`, `global_differences()`,
+  `network_metrics()`, each with a `pair` column. All pairs by default, or
+  every network against one `reference =`.
+* Ratios are guarded (`NA`, never `Inf`/`NaN`); every cell is kept, absent
+  edges appear at weight 0; `higher` (colour) and `status` (shape) columns
+  drive the plots.
+* `plot(x)` draws one view per call, selected with `type =` (the package-wide
+  argument name; `what =` is accepted as an alias): `"networks"` (default;
+  each network drawn once via `cograph::splot()`), `"difference"` (the signed
+  difference network of each pair), `"edges"` (ranked dumbbell), `"nodes"`,
+  `"global"`, `"heatmap"`, `"scatter"`, and `"inference"` (a forest of the
+  edge differences on the difference scale, with credible intervals when the
+  Bayesian backend ran, a filled marker for a significant edge and the
+  p-value in a right-hand column; it raises
+  `nestimate_compare_no_test` when `test = "none"`). One sign-to-colour
+  contract (`#4A6FE3` = first/reference higher, `#D33F6A` = second higher)
+  backed by line type and marker shape; the heatmap scale follows the data.
+* `plot(x, combined = FALSE)` splits a multi-pair view into a named list of
+  single-pair plots (one per pair) instead of facetting them into one figure,
+  matching the `combined` argument of `plot.net_reliability()`,
+  `plot.simplicial_complex()` and friends. The base-graphics views draw one
+  panel per page.
+* Optional inference on the same tables: `test = "permutation"`, `"bayes"`
+  (with an optional `rope`), `"bootstrap"`, combinable. Non-significant
+  results are faded, never deleted.
+* `permutation()` gains a `$global` data frame with NCT-style `M` (sum of
+  absolute differences) and `S` (largest absolute difference) statistics and
+  their permutation p-values, computed from the same null.
+* `compare_model()` is unchanged and will be soft-deprecated once
+  `compare_networks()` has been through one release.
+
+# Nestimate 0.9.1
+
+tna-parity release: sequence-side gaps against `tna::build_model()` and
+`tna::prepare_data()` closed.
+
+## New estimators
+
+* `build_network(method = "ngram")` (params `n_gram`, default 2),
+  `"gap"` (params `max_gap`, default 1) and `"reverse"` (params `weighted`)
+  mirror the tna types `"n-gram"`, `"gap"` and `"reverse"`. Weights are
+  numerically identical to tna on shared inputs (tested). All three accept
+  wide or long input, `start`/`end` boundary markers, `group =` dispatch and
+  `scaling = "normalize"` for row probabilities.
+* New aliases: `"n-gram"` / `"n_gram"` -> `"ngram"`, `"co-occurrence"` ->
+  `"co_occurrence"`.
+
+## Timezone-safe timestamp parsing
+
+* `prepare()` and `build_network()` gain `timezone = "UTC"` (Olson name).
+  Naive timestamps are interpreted in that zone; ISO-8601 `Z`/`UTC`/`GMT`
+  markers and numeric offsets (`+0200`, `+02:00`) are converted from their
+  offset. Parsing no longer depends on the machine's local time zone.
+* Fixes: `...Z` timestamps parsed to `NA` (the marker was stripped before
+  matching), offsets were silently ignored, and wall-clock readings inside a
+  DST gap could turn into spurious session boundaries. Unparsable values now
+  raise an error instead of becoming session breaks.
+
 # Nestimate 0.9.0
 
 Delegation release: Nestimate stops owning psychometric-network math and

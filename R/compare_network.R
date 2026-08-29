@@ -100,6 +100,8 @@ compare_model.matrix <- function(x, y, scaling = "none", measures = character(0)
 #' @param network See `compare_model()`.
 #' @param ... Passed to `compare_model.netobject()`.
 #' @return A `net_comparison` object.
+#' @seealso [compare_networks()], the N-way successor with tidy tables and a
+#'   dashboard plot.
 #' @export
 compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
                                     measures = character(0), network = TRUE,

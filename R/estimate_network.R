@@ -208,7 +208,10 @@ build_ising <- function(data, ...) {
     isingfit          = "ising",
     atna              = "attention",
     mixed_graphical   = "mgm",
-    mixed             = "mgm"
+    mixed             = "mgm",
+    `co-occurrence`   = "co_occurrence",
+    `n-gram`          = "ngram",
+    n_gram            = "ngram"
   )
   if (method %in% names(aliases)) {
     aliases[[method]]

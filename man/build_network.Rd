@@ -21,6 +21,7 @@ build_network(
   threshold = 0,
   level = NULL,
   time_threshold = 900,
+  timezone = "UTC",
   predictability = TRUE,
   state_cols = NULL,
   metadata_cols = NULL,
@@ -39,7 +40,15 @@ square symmetric matrix (correlation or covariance).}
 Built-in methods: \code{"relative"}, \code{"frequency"},
 \code{"co_occurrence"}, \code{"cor"}, \code{"pcor"}, \code{"glasso"},
 \code{"ising"}, \code{"mgm"}, \code{"attention"}, \code{"wtna"},
-\code{"wtna_cooccurrence"}.
+\code{"wtna_cooccurrence"}, \code{"ngram"}, \code{"gap"},
+\code{"reverse"}. The last three mirror \code{tna::build_model()}
+types \code{"n-gram"} (adjacent pairs counted once per n-gram window
+containing them; \code{params = list(n_gram = 2)}), \code{"gap"}
+(pairs up to \code{max_gap + 1} positions apart, weighted by
+\code{1 / distance}; \code{params = list(max_gap = 1)}) and
+\code{"reverse"} (reply network: the transpose of \code{"frequency"};
+\code{params = list(weighted = FALSE)}). All three return raw weights;
+add \code{scaling = "normalize"} for row probabilities.
 Aliases: \code{"tna"} and \code{"transition"} map to \code{"relative"};
 \code{"ftna"} and \code{"counts"} map to \code{"frequency"};
 \code{"cna"} and \code{"wcna"} map to \code{"co_occurrence"};
@@ -49,7 +58,9 @@ Aliases: \code{"tna"} and \code{"transition"} map to \code{"relative"};
 \code{"isingfit"} maps to \code{"ising"};
 \code{"atna"} maps to \code{"attention"};
 \code{"mixed"} and \code{"mixed_graphical"} map to \code{"mgm"};
-\code{"wtna_transition"} maps to \code{"wtna"}.}
+\code{"wtna_transition"} maps to \code{"wtna"};
+\code{"co-occurrence"} maps to \code{"co_occurrence"};
+\code{"n-gram"} and \code{"n_gram"} map to \code{"ngram"}.}
 
 \item{actor}{Character. Name of the actor/person ID column for sequence
 grouping. Default: \code{NULL}.}
@@ -98,6 +109,11 @@ methods. One of \code{NULL}, \code{"between"}, \code{"within"},
 format session splitting. Set to \code{FALSE} to switch session-interval
 splitting off, so each actor (or actor-session) forms a single sequence.
 Default: \code{900}.}
+
+\item{timezone}{Character. Olson time zone used to interpret naive
+timestamps in long-format data (offset-bearing timestamps such as
+\code{...Z} or \code{+02:00} are converted from their offset). Passed to
+\code{\link{prepare}}. Default: \code{"UTC"}.}
 
 \item{predictability}{Logical. If \code{TRUE} (default), compute and store
 node predictability (R-squared) for undirected association methods
