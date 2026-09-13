@@ -27,11 +27,14 @@ iterates. Default \code{1e-8}.}
 
 \item{normalize}{Logical. If \code{TRUE} (default), each returned
 centrality vector is L2-normalized to unit norm (compatible with
-\code{igraph::eigen_centrality()}'s scale for type \code{"clique"}).}
+\code{igraph::eigen_centrality()}'s scale for type \code{"clique"}). If
+\code{FALSE}, the vector is rescaled so its largest absolute entry is 1.}
 }
 \value{
-A named list; one component per requested \code{type}. Each
-component is a named numeric vector of length \code{hg$n_nodes}.
+A named list, one component per requested \code{type}, in the order
+given by \code{type}. Each component is a numeric vector of length
+\code{hg$n_nodes} named by \code{hg$nodes}. A hypergraph with no hyperedges
+yields all-zero vectors.
 }
 \description{
 Computes one or more eigenvector-style centralities on a

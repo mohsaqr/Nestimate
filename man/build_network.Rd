@@ -34,9 +34,14 @@ build_network(
 }
 \arguments{
 \item{data}{Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance).}
+square symmetric matrix (correlation or covariance). A fitted
+\code{net_clustering} or \code{net_mmm} object is also accepted: the
+per-cluster networks are (re)built and a \code{netobject_group} is
+returned.}
 
-\item{method}{Character. Required. Name of a registered estimator.
+\item{method}{Character. Required, except when \code{data} is a
+\code{net_clustering} or \code{net_mmm} object, where the fitted
+object's own network method is used. Name of a registered estimator.
 Built-in methods: \code{"relative"}, \code{"frequency"},
 \code{"co_occurrence"}, \code{"cor"}, \code{"pcor"}, \code{"glasso"},
 \code{"ising"}, \code{"mgm"}, \code{"attention"}, \code{"wtna"},
@@ -101,9 +106,11 @@ Default: \code{NULL} (no scaling).}
 \item{threshold}{Numeric. Absolute values below this are set to zero in the
 result matrix. Default: 0 (no thresholding).}
 
-\item{level}{Character or NULL. Multilevel decomposition for association
-methods. One of \code{NULL}, \code{"between"}, \code{"within"},
-\code{"both"}. Requires \code{id_col}. Default: \code{NULL}.}
+\item{level}{Character or NULL. Multilevel decomposition for the undirected
+association methods (\code{cor}, \code{pcor}, \code{glasso}); a directed
+estimator errors. One of \code{NULL}, \code{"between"}, \code{"within"},
+\code{"both"}. Requires an id column, supplied either as \code{actor} or
+as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.}
 
 \item{time_threshold}{Numeric or FALSE. Maximum time gap (seconds) for long
 format session splitting. Set to \code{FALSE} to switch session-interval
@@ -140,7 +147,8 @@ transition is \code{start -> first_observed}). \code{FALSE} (default)
 adds nothing; \code{TRUE} uses the label \code{"Start"}; a single string
 uses that string as the label. Only valid for the transition methods
 (\code{relative}, \code{frequency}, \code{co_occurrence},
-\code{attention}); errors otherwise.}
+\code{attention}, \code{ngram}, \code{gap}, \code{reverse}); errors
+otherwise (\code{wtna} included).}
 
 \item{end}{Boundary marker placed in the single cell after each sequence's
 last observed (non-\code{NA}) state, as an explicit terminal state (a
@@ -160,9 +168,9 @@ Transition estimators accept tna-style sequence options such as
 / \code{end_state}, of which \code{start} / \code{end} are the public
 form -- see those arguments).
 Column-like entries in \code{params} (\code{action}, \code{id},
-\code{id_col}, \code{time}, \code{session}, \code{order}, \code{codes},
-and \code{group}) are resolved before format detection and must name
-existing columns. If the same column role is supplied both directly and
+\code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order},
+\code{cols}, \code{codes}, and \code{group}) are resolved before format
+detection and must name existing columns. If the same column role is supplied both directly and
 through \code{params}, the names must agree.}
 
 \item{labels}{Optional name -> label remap applied after construction.
@@ -176,7 +184,9 @@ through unchanged.}
 \value{
 An object of class \code{c("netobject", "cograph_network")} containing:
 \describe{
-\item{data}{The input data used for estimation, as a data frame.}
+\item{data}{The state columns of the cleaned input data, as a data frame.}
+\item{metadata}{Data frame of the non-state columns of the cleaned input
+(and, for long input, the per-sequence metadata), or NULL.}
 \item{weights}{The estimated network weight matrix.}
 \item{nodes}{Data frame with columns \code{id}, \code{label}, \code{name},
 \code{x}, \code{y}. Node labels are in \code{$nodes$label}.}
@@ -190,6 +200,9 @@ An object of class \code{c("netobject", "cograph_network")} containing:
 \item{n_nodes}{Number of nodes.}
 \item{n_edges}{Number of non-zero edges.}
 \item{level}{Decomposition level used (or NULL).}
+\item{build_args}{The resolved column/format arguments (\code{actor},
+\code{action}, \code{time}, \code{session}, \code{order}, \code{codes},
+\code{format}, \code{window_size}, \code{mode}) used for this build.}
 \item{meta}{List with \code{source}, \code{layout}, and \code{tna} metadata
 (cograph-compatible).}
 \item{node_groups}{Node groupings data frame, or NULL.}
@@ -198,12 +211,19 @@ values per node (for undirected association methods when
 \code{predictability = TRUE}). NULL for directed methods.}
 }
 Method-specific extras (e.g. \code{precision_matrix}, \code{cor_matrix},
-\code{frequency_matrix}, \code{lambda_selected}, etc.) are preserved
-from the estimator output.
+\code{frequency_matrix}, \code{initial}, \code{lambda_selected}, etc.) are
+preserved from the estimator output.
 
 When \code{level = "both"}, returns an object of class
 \code{"netobject_ml"} with \code{$between} and \code{$within}
-sub-networks and a \code{$method} field.
+sub-networks and a \code{$method} field. \code{level = "between"} or
+\code{"within"} returns a single \code{netobject} estimated on the
+decomposed data.
+
+When \code{group} is supplied (or \code{data} is a \code{net_clustering} /
+\code{net_mmm} object), returns an object of class
+\code{"netobject_group"}: a named list of \code{netobject}s, one per group,
+carrying the grouping column in \code{attr(x, "group_col")}.
 }
 \description{
 Universal network estimation function that supports both transition

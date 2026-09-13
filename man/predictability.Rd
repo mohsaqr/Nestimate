@@ -16,27 +16,35 @@ predictability(object, ...)
 \method{predictability}{netobject_group}(object, ...)
 }
 \arguments{
-\item{object}{A \code{netobject} or \code{netobject_ml} object.}
+\item{object}{A \code{netobject}, \code{netobject_ml}, or
+\code{netobject_group} object.}
 
 \item{...}{Additional arguments (ignored).}
 
 \item{data}{Optional data frame of the original variables used to estimate
-the network. Required for \code{method = "cor"} (multiple-R\eqn{^2} regression
-of each node on its neighbours); ignored for the precision-matrix path used
-by \code{glasso}/\code{pcor}, which has no need of the raw data.}
+the network. R\eqn{^2} never needs it (it comes from the precision or
+correlation matrix stored on the object). It is used only for the
+\code{RMSE} column and defaults to \code{object$data}; when neither is
+available \code{RMSE} is \code{NA}.}
 }
 \value{
-For \code{netobject}: a named numeric vector of R\eqn{^2} values
-(one per node, between 0 and 1).
+For \code{netobject}: a data frame with one row per node and columns
+\code{node} (character), \code{R2} (numeric, between 0 and 1) and
+\code{RMSE} (numeric, \code{NA} when no data is available).
 
 For \code{netobject_ml}: a list with elements \code{$between} and
-\code{$within}, each a named numeric vector.
+\code{$within}, each such a data frame.
 
-A named numeric vector of predictability values per node.
+For \code{netobject_group}: a named list of such data frames, one per
+group.
 
-A list with \code{within} and \code{between} predictability vectors.
+A data frame with one row per node and columns \code{node},
+\code{R2} and \code{RMSE}.
 
-A named list of per-group predictability vectors.
+A list with \code{between} and \code{within} predictability data
+frames.
+
+A named list of per-group predictability data frames.
 }
 \description{
 Computes the proportion of variance explained (R\eqn{^2}) for each node in

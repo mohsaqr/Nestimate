@@ -88,10 +88,27 @@ An object of class \code{net_casedrop_reliability} with:
 \item{\code{cs}}{Scalar CS-coefficient - the maximum drop proportion for
 which the edge-vector correlation remains >= \code{threshold} in at
 least \code{certainty} of iterations. Zero if no proportion qualifies.}
+\item{\code{summary}}{Tidy data frame, one row per metric by drop
+proportion, with columns \code{metric} (\code{"mean_abs_dev"},
+\code{"median_abs_dev"}, \code{"correlation"}, \code{"max_abs_dev"}),
+\code{drop_prop}, \code{mean}, \code{sd}, \code{median}, \code{mad}, \code{q025}, \code{q975}.}
+\item{\code{metrics}}{Named list of four \code{iter} x \code{length(drop_prop)}
+matrices, one per metric, holding the raw per-iteration values.}
 \item{\code{correlations}}{\code{iter} x \code{length(drop_prop)} matrix of per-
-iteration correlations.}
-\item{\code{drop_prop}, \code{threshold}, \code{certainty}, \code{iter}, \code{method}}{Inputs.}
+iteration correlations (the \code{correlation} entry of \code{metrics}).}
+\item{\code{drop_prop}, \code{threshold}, \code{certainty}, \code{iter}, \code{method},
+\code{include_diag}}{Inputs.}
+\item{\code{n_cases}}{Number of cases resampled from (sequences for
+transition methods, rows of \verb{$data} otherwise).}
+\item{\code{n_edges}}{Length of the edge vector assessed.}
 }
+A \code{netobject_group} or \code{mcml} input instead returns a
+\code{net_casedrop_reliability_group}: a named list of one result per
+constituent network.
+
+When the original edge vector has zero variance a warning is issued and
+the object is returned with \code{cs = 0}, an empty \code{summary}, and all-\code{NA}
+metric matrices.
 
 The input \code{x} invisibly.
 
@@ -148,6 +165,7 @@ rows of \verb{$data} lack actor grouping), since dropping rows at random is
 a well-posed operation regardless of within-actor correlation.
 }
 \examples{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE),
   V2 = sample(LETTERS[1:4], 30, TRUE),

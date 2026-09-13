@@ -174,7 +174,8 @@
 #'
 #' @param x A `netobject`, `cograph_network`, `tna` model, transition
 #'   matrix, or sequence data.frame (passed through `build_network()` with
-#'   `method = "relative"`).
+#'   `method = "relative"`). A `netobject_group` is also accepted and
+#'   analysed constituent by constituent.
 #' @param normalize Logical. If `TRUE` (default), rows of the transition
 #'   matrix are renormalized to sum to 1 before analysis (see
 #'   [passage_time()] for the same convention).
@@ -187,7 +188,11 @@
 #'   independent of `tol` (so raising `tol` to ignore tiny transition
 #'   probabilities never reclassifies a near-deterministic state as
 #'   absorbing). Default `1e-10`.
-#' @return A `chain_structure` object: a list with elements
+#' @return For a `netobject_group`, a `c("chain_structure_group", "list")`:
+#'   a named list holding one `chain_structure` per constituent network,
+#'   with its own `print()` and `summary()` methods.
+#'
+#'   Otherwise a `chain_structure` object: a list with elements
 #'   \describe{
 #'     \item{`states`}{Character vector of state names.}
 #'     \item{`classification`}{Named character vector. One of `"absorbing"`,
@@ -497,18 +502,25 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
 #'
 #' Returns a single data.frame with one row per state, combining every
 #' per-state metric `chain_structure()` computes. Always includes
-#' `state`, `classification`, `period`, `return_probability` (the
-#' diagonal of the hitting matrix) and `persistence` (the diagonal of
-#' the transition matrix); adds `sojourn` whenever it is finite, the
-#' chain's `stationary_probability` when irreducible, and absorption
-#' columns when the chain has any absorbing states.
+#' `state`, `classification`, `period`, `persistence` (the diagonal of
+#' the transition matrix), `return_probability` (the diagonal of the
+#' hitting matrix) and `sojourn_steps` (`1 / (1 - persistence)`, which is
+#' `Inf` for an absorbing state). Adds the chain's
+#' `stationary_probability` when the chain is irreducible, and absorption
+#' columns when it has any absorbing states: `absorption_probability` for a
+#' single absorbing state or one `absorbed_in_<state>` column per state
+#' when there are several, plus `mean_absorption_time`.
 #'
 #' Columns are ordered for readability: identifiers first, classification
 #' second, dynamic per-state metrics last.
 #'
 #' @param object A `chain_structure` object.
 #' @param ... Ignored.
-#' @return A `data.frame` with one row per state. Columns described above.
+#' @return A `data.frame` with one row per state, of class
+#'   `c("summary_chain_structure", "data.frame")`, carrying the chain-level
+#'   flags (`is_regular`, `is_irreducible`, `is_aperiodic`,
+#'   `is_reversible`, `n_classes`, `absorbing_states`) as attributes, which
+#'   its `print()` method shows as a header. Columns as described above.
 #' @export
 summary.chain_structure <- function(object, ...) {
   state_names <- object$states

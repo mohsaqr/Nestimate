@@ -10,8 +10,9 @@
 #' Strips TraMineR void (\code{\%}), missing (\code{*}), empty strings,
 #' \code{"NA"}, \code{"NaN"}, and actual \code{NA}s from state values.
 #'
-#' @param x Character vector of state values.
-#' @return Character vector with void/missing markers removed.
+#' @param x Character vector (or matrix) of state values.
+#' @return Same shape as \code{x}, with void/missing markers replaced by
+#'   \code{NA}.
 #' @noRd
 .clean_states <- function(x) {
   x[x %in% .void_markers] <- NA
@@ -156,8 +157,15 @@
 #' @param id Character vector. ID column(s).
 #' @param time Character. Time column name (long format).
 #' @param cols Character vector. State columns (wide format).
+#' @param alphabet Character vector or NULL. Explicit state set; when NULL the
+#'   observed states (plus any boundary markers) are used.
+#' @param weighted Logical. Weight each transition by 1 / sequence length.
+#' @param concat Integer. Number of consecutive rows concatenated into one
+#'   sequence (wide format).
+#' @param begin_state,end_state Character or NULL. Boundary-marker labels.
 #'
-#' @return Square integer matrix with row/column names = sorted unique states.
+#' @return Square matrix with row/column names = states; integer counts, or
+#'   doubles when \code{weighted = TRUE}.
 #' @noRd
 .count_transitions <- function(data,
                                format = "auto",
@@ -1171,9 +1179,13 @@
 #'   Default: exp(-abs(ti - tj) / lambda).
 #' @param time_matrix Matrix or NULL. Custom time values per cell.
 #' @param duration Numeric vector or NULL. Per-column durations.
+#' @param alphabet Character vector or NULL. Explicit state set.
+#' @param concat Integer. Rows concatenated into one sequence (wide format).
+#' @param begin_state,end_state Character or NULL. Boundary-marker labels.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return A list with matrix, nodes, directed, cleaned_data.
+#' @return A list with \code{matrix}, \code{nodes}, \code{directed},
+#'   \code{cleaned_data} and \code{initial} (initial state probabilities).
 #' @noRd
 .estimator_attention <- function(data,
                                   format = "auto",

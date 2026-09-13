@@ -15,7 +15,7 @@ full list of violations.
 }
 \description{
 Enforces the structural contract that both Nestimate netobjects and
-\pkg{psychnet} objects must satisfy to be interchangeable across the package
+\pkg{psychnets} objects must satisfy to be interchangeable across the package
 boundary. This is the single place that says what "a network object" means,
 so a drift on either side (a renamed field, a mistyped edge column) fails
 loudly here rather than mis-rendering three layers downstream.

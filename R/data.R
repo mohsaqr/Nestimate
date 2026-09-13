@@ -10,9 +10,12 @@
 #'   \item{session_id}{Character. Unique session hash.}
 #'   \item{timestamp}{Integer. Unix timestamp for ordering.}
 #'   \item{session_date}{Character. Date of the session (YYYY-MM-DD).}
-#'   \item{code}{Character. Interaction code (17 action labels).}
-#'   \item{cluster}{Character. High-level cluster: Action, Communication,
-#'     Directive, Evaluative, Metacognitive, or Repair.}
+#'   \item{code}{Character. Interaction code. The two data frames use
+#'     disjoint code sets -- 9 labels in \code{human_long}, 8 in
+#'     \code{ai_long}, 17 in total.}
+#'   \item{cluster}{Character. High-level cluster. \code{human_long} uses
+#'     Directive, Evaluative and Metacognitive; \code{ai_long} uses Action,
+#'     Communication and Repair.}
 #'   \item{code_order}{Integer. Order of the code within the session.}
 #'   \item{order_in_session}{Integer. Absolute turn order within the session.}
 #' }
@@ -82,8 +85,10 @@ NULL
 #' Effort_Reg). Within-cluster correlations are moderate (0.3--0.6),
 #' cross-cluster correlations are weaker.
 #'
-#' @format A data frame with 250 rows and 9 columns. Each column is an
-#'   integer count of how often the student used that strategy.
+#' @format A data frame with 250 rows and 9 columns, one row per student.
+#'   Every column is numeric (double) and holds a whole-number count of how
+#'   often that student used the strategy; observed values range from 0
+#'   to 37.
 #'
 #' @examples
 #' net <- build_network(srl_strategies, method = "glasso",
@@ -155,9 +160,12 @@ NULL
 #' hold the engagement state for that week. States: \code{"Active"},
 #' \code{"Average"}, \code{"Disengaged"}. Missing weeks are \code{NA}.
 #'
-#' @format A character matrix with 138 rows and 15 columns. Entries are
-#'   one of \code{"Active"}, \code{"Average"}, \code{"Disengaged"}, or
-#'   \code{NA}.
+#' @format A character matrix with 138 rows and 15 columns, one row per
+#'   student. Columns are named \code{"1"}..\code{"15"} (the week). Entries
+#'   are one of \code{"Active"}, \code{"Average"}, \code{"Disengaged"}, or
+#'   \code{NA}; \code{NA} runs at the end of a row mark drop-out, which the
+#'   right-censored sequence verbs (\code{\link{actor_endpoints}},
+#'   \code{\link{mark_terminal_state}}) are built to read.
 #'
 #' @examples
 #' \donttest{

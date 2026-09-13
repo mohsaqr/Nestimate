@@ -1055,27 +1055,38 @@
 #'   pruning) or \code{"hon"} (original BuildHON with eager observation
 #'   building).
 #'
-#' @return An S3 object of class \code{"net_hon"} containing:
+#' @return An S3 object of class
+#'   \code{c("net_hon", "cograph_network")} containing:
 #' \describe{
-#'   \item{matrix}{Weighted adjacency matrix (rows = from, cols = to).
-#'     Rows and columns use readable arrow notation (e.g., \code{"A -> B"}).}
-#'   \item{edges}{Data frame with columns: \code{path} (full state sequence,
-#'     e.g., "A -> B -> C"), \code{from} (context/conditioning states),
-#'     \code{to} (predicted next state), \code{count} (raw frequency),
-#'     \code{probability} (transition probability), \code{from_order},
-#'     \code{to_order}.}
+#'   \item{weights, matrix}{The same weighted adjacency matrix (rows = from,
+#'     cols = to) under both names; \code{weights} is the
+#'     \code{cograph_network} slot, \code{matrix} the higher-order name kept
+#'     for back-compatibility. Rows and columns use readable arrow notation
+#'     (e.g., \code{"A -> B"}).}
+#'   \item{ho_edges}{The higher-order edge table: one row per HON edge, with
+#'     columns \code{path} (full state sequence, e.g., "A -> B -> C"),
+#'     \code{from} (context/conditioning states), \code{to} (predicted next
+#'     state), \code{count} (raw frequency), \code{probability} (transition
+#'     probability), \code{from_order}, \code{to_order}.}
+#'   \item{edges}{The \code{cograph_network} edge table: one row per non-zero
+#'     cell of \code{weights}, with \emph{integer} \code{from}/\code{to} node
+#'     indices into \code{nodes} and a numeric \code{weight}. This is
+#'     \strong{not} the arrow-notation table - use \code{ho_edges} for that.}
 #'   \item{nodes}{data.frame with columns \code{id}, \code{label},
 #'     \code{name} (one row per HON node; \code{label}/\code{name} are the
 #'     arrow-notation node names). Stored as a data.frame for
 #'     \code{cograph_network} compatibility.}
 #'   \item{n_nodes}{Number of HON nodes.}
-#'   \item{n_edges}{Number of edges.}
+#'   \item{n_edges}{Number of rows in \code{ho_edges}.}
 #'   \item{first_order_states}{Character vector of unique original states.}
 #'   \item{max_order_requested}{The \code{max_order} parameter used.}
 #'   \item{max_order_observed}{Highest order actually present.}
 #'   \item{min_freq}{The \code{min_freq} parameter used.}
 #'   \item{n_trajectories}{Number of trajectories after parsing.}
 #'   \item{directed}{Logical. Always \code{TRUE}.}
+#'   \item{meta}{\code{cograph_network} metadata list
+#'     (\code{source}, \code{layout}, \code{tna$method = "hon"}).}
+#'   \item{node_groups}{Always \code{NULL}.}
 #' }
 #'
 #' @details
@@ -1214,10 +1225,12 @@ print.net_hon <- function(x, ...) {
 #' @param object A \code{net_hon} object.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return The edge data.frame \code{object$edges} (columns \code{path},
-#'   \code{from}, \code{to}, \code{count}, \code{probability},
-#'   \code{from_order}, \code{to_order}), returned visibly; the summary text
-#'   is printed as a side effect.
+#' @return The \code{cograph_network} edge data.frame \code{object$edges}:
+#'   one row per non-zero cell of the adjacency matrix, with integer
+#'   \code{from}/\code{to} node indices and a numeric \code{weight}. Returned
+#'   visibly; the summary text (counts, first-order states, order
+#'   distribution) is printed as a side effect. The arrow-notation table with
+#'   \code{path}/\code{count}/\code{probability} is \code{object$ho_edges}.
 #'
 #' @examples
 #' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))

@@ -22,22 +22,31 @@
 \code{"over"}, or \code{"under"}.}
 
 \item{order_by}{Character. Ranking used within each anomaly direction:
-\code{"sig"} ranks by the active tail probability, \code{"freq"} by
-observed count, \code{"ratio"} by observed/expected ratio, and
-\code{"path"} alphabetically.}
+\code{"sig"} (default) ranks by the active tail probability,
+\code{"freq"} (or its alias \code{"frequency"}) by observed count,
+\code{"ratio"} by observed/expected ratio, and \code{"path"}
+alphabetically.}
 
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A data frame with path, observed, expected, ratio, p_tail, and
-direction columns.
+A data frame of the reported anomalies, at most \code{n} rows per
+direction, with columns \code{order} (the De Bruijn order the path was
+found at), \code{path}, \code{observed}, \code{expected}, \code{ratio},
+\code{p_tail} (the raw tail probability in the reported direction:
+\code{p_over} for over-represented paths, \code{p_under} for
+under-represented ones) and \code{direction}
+(\code{"over"}/\code{"under"}). Returned visibly; the summary text and
+the top-\code{n} tables are printed as a side effect. When no anomalies
+were detected, a zero-row data frame with the same columns except
+\code{order} is returned.
 }
 \description{
 Summary Method for net_hypa
 }
 \examples{
 seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
-hyp <- build_hypa(seqs, k = 2)
+hyp <- build_hypa(seqs, order = 2)
 summary(hyp)
 
 \donttest{
@@ -47,7 +56,7 @@ seqs <- data.frame(
   V3 = c("C","A","B","C","A","B","C","A","B","C"),
   V4 = c("A","B","C","A","B","C","A","B","C","A")
 )
-hypa <- build_hypa(seqs, k = 2L)
+hypa <- build_hypa(seqs, order = 2L)
 summary(hypa)
 summary(hypa, type = "over", n = 5)
 }

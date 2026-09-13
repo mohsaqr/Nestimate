@@ -115,6 +115,7 @@ reference:
       - cluster_network
       - build_mcml
       - build_mcml_pc
+      - macro_network
       - build_mmm
       - compare_mmm
 
@@ -122,6 +123,7 @@ reference:
     desc: Topological analysis of networks
     contents:
       - build_simplicial
+      - simplicial_features
       - persistent_homology
       - bottleneck_distance
       - persistence_landscape
@@ -175,6 +177,7 @@ reference:
       - mosaic_plot
       - mosaic_analysis
       - sequence_compare
+      - extract_pathways
       - association_rules
 
   - title: Link Prediction
@@ -182,6 +185,12 @@ reference:
     contents:
       - predict_links
       - evaluate_links
+
+  - title: Outcome Modelling
+    desc: Relate network and sequence features to an outcome
+    contents:
+      - outcome_model
+      - effects_table
 
   - title: Data
     desc: Example datasets

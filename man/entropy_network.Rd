@@ -64,8 +64,9 @@ built), the result is that network with entropy weights swapped in -
 \code{$inits}, \code{$meta}, \code{$node_groups}, and node coordinates
 are inherited, so it plots with the same TNA styling and layout as its
 source. \code{$method} is \code{"entropy"}. \code{$params} carries
-\code{base}, \code{weight}, \code{entropy_rate}, and the stationary
-distribution \code{stationary}.
+\code{base}, \code{weight}, \code{scaling}, \code{entropy_rate}, and the
+stationary distribution \code{stationary} (plus \code{production_rate}
+and \code{n_oneway_pairs} when \code{weight = "production"}).
 
 The object also declares the entropy house style through the
 \code{$meta$splot} producer contract (honoured by cograph >= 2.4.4):

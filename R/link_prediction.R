@@ -31,9 +31,16 @@
 #'
 #' @return An object of class \code{"net_link_prediction"} containing:
 #' \describe{
-#'   \item{predictions}{Data frame with columns: from, to, method, score, rank.
+#'   \item{predictions}{Data frame, one row per (node pair, method), with
+#'     columns \code{from}, \code{to}, \code{method}, \code{score},
+#'     \code{existing} (was the pair already an edge?) and \code{rank}.
 #'     Sorted by score (descending) within each method.}
+#'   \item{consensus}{Data frame, one row per node pair, with columns
+#'     \code{from}, \code{to}, \code{avg_rank}, \code{n_methods} and
+#'     \code{consensus_rank}, ordered by \code{avg_rank}. \code{NULL} when
+#'     only one method was requested.}
 #'   \item{scores}{Named list of score matrices (one per method).}
+#'   \item{adjacency}{Integer 0/1 adjacency matrix of the input network.}
 #'   \item{methods}{Character vector of methods used.}
 #'   \item{nodes}{Character vector of node names.}
 #'   \item{directed}{Logical.}
@@ -75,6 +82,13 @@
 #'
 #' Katz, L. (1953). A new status index derived from sociometric analysis.
 #' \emph{Psychometrika}, 18(1), 39--43.
+#'
+#' Jaccard, P. (1901). Etude comparative de la distribution florale dans une
+#' portion des Alpes et des Jura. \emph{Bulletin de la Societe Vaudoise des
+#' Sciences Naturelles}, 37, 547--579.
+#'
+#' Barabasi, A.-L. & Albert, R. (1999). Emergence of scaling in random
+#' networks. \emph{Science}, 286(5439), 509--512.
 #'
 #' @examples
 #' seqs <- data.frame(
@@ -423,10 +437,8 @@ predict_links <- function(x,
 #' net <- build_network(seqs, method = "relative")
 #' pred <- predict_links(net, exclude_existing = FALSE)
 #'
-#' # Evaluate: predict the network's own edges
-#' true <- data.frame(from = pred$predictions$from[1:5],
-#'                    to = pred$predictions$to[1:5])
-#' evaluate_links(pred, true)
+#' # Evaluate against the network's own edges as the known truth
+#' evaluate_links(pred, extract_edges(net, threshold = 0.001))
 #'
 #' @export
 evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
@@ -556,7 +568,9 @@ print.net_link_prediction <- function(x, ...) {
 #'
 #' @param object A \code{net_link_prediction} object.
 #' @param ... Additional arguments (ignored).
-#' @return A data frame with per-method summary statistics, invisibly.
+#' @return A data frame, one row per method, with columns \code{method},
+#'   \code{n_predictions}, \code{score_mean}, \code{score_sd},
+#'   \code{score_max} and \code{score_min}.
 #'
 #' @examples
 #' seqs <- data.frame(

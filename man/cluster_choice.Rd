@@ -31,7 +31,8 @@ cluster_choice(
 
 \item{...}{Other arguments forwarded to
 \code{\link{build_clusters}} (\code{weighted}, \code{lambda},
-\code{q}, \code{p}, \code{seed}, \code{na_syms}, \code{covariates}).
+\code{q}, \code{p}, \code{seed}, \code{na_syms}, \code{covariates},
+\code{estimator}).
 Note: \code{weighted = TRUE} only works with
 \code{dissimilarity = "hamming"} and is rejected up-front when
 sweeping mixed dissimilarities.}

@@ -32,16 +32,21 @@ Default: "V".}
 Default: TRUE.}
 }
 \value{
-A data frame in wide format where each row is a sequence and
-columns V1, V2, ... contain the actions at each time point.
+A data frame in wide format, one row per sequence: the
+\code{id_col} column followed by the time point columns
+\code{V1}, \code{V2}, ... (named with \code{time_prefix}) holding the
+action at each time point. With \code{fill_na = TRUE} short sequences
+are padded with \code{NA} so every row shares the same columns; with
+\code{fill_na = FALSE} only the time points present in every sequence
+are kept.
 }
 \description{
 Convert sequence data from long format (one row per action) to wide format
 (one row per sequence, columns as time points).
 }
 \details{
-This function converts long format data (like that from \code{simulate_long_data()})
-to the wide format expected by \code{tna::tna()} and related functions.
+Converts long format data (one row per action) to the wide format expected
+by \code{\link{build_network}}, \code{tna::tna()} and related functions.
 
 If \code{time_col} contains non-integer values (e.g., timestamps), the function
 will use the ordering within each sequence to create time indices.

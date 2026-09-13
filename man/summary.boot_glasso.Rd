@@ -16,7 +16,14 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A data frame or list of data frames depending on \code{type}.
+For \code{type = "edges"}, the \code{edge_ci} data frame
+(\code{edge}, \code{weight}, \code{ci_lower}, \code{ci_upper},
+\code{inclusion}) ordered by decreasing absolute weight; for
+\code{"cs"} the \code{cs_data} data frame; for
+\code{"predictability"} the \code{predictability_ci} data frame; for
+\code{"centrality"} a named list of one data frame per measure
+(\code{node}, \code{value}, \code{ci_lower}, \code{ci_upper}); for
+\code{"all"} a named list holding all four.
 }
 \description{
 Summary Method for boot_glasso

@@ -25,7 +25,10 @@
 #'
 #' @param x A \code{netobject} from \code{\link{build_network}}.
 #'   The data, method, params, scaling, threshold, and level are all
-#'   extracted from this object.
+#'   extracted from this object. A \code{cograph_network} is coerced
+#'   first; a \code{netobject_group} or \code{mcml} bootstraps every
+#'   constituent network, and a \code{wtna_mixed} bootstraps both of its
+#'   components (see \strong{Value}).
 #' @param iter Integer. Number of bootstrap iterations (default: 1000).
 #' @param ci_level Numeric. Significance level for CIs and p-values
 #'   (default: 0.05).
@@ -63,17 +66,28 @@
 #'   \item{ci_upper}{Upper CI bound matrix.}
 #'   \item{cr_lower}{Consistency range lower bound (stability only).}
 #'   \item{cr_upper}{Consistency range upper bound (stability only).}
-#'   \item{summary}{Long-format data frame of edge-level statistics.}
+#'   \item{summary}{Long-format data frame, one row per non-zero original
+#'     edge (undirected networks keep one row per unordered pair), with
+#'     columns \code{from}, \code{to}, \code{weight}, \code{mean},
+#'     \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower},
+#'     \code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when
+#'     \code{inference = "stability"}.}
 #'   \item{model}{Pruned \code{netobject} (non-significant edges zeroed).}
-#'   \item{method, params, iter, ci_level, inference}{Bootstrap config.}
+#'   \item{method, params, iter, ci_level, inference, ci_method}{Bootstrap
+#'     config.}
 #'   \item{consistency_range, edge_threshold}{Inference parameters.}
 #' }
+#' A \code{netobject_group} or \code{mcml} input returns a
+#' \code{"net_bootstrap_group"} (named list of \code{net_bootstrap}
+#' results); a \code{wtna_mixed} input returns a \code{"wtna_boot_mixed"}
+#' with \code{$transition} and \code{$cooccurrence} results.
 #'
 #' @examples
 #' net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
 #'   method = "relative")
 #' boot <- bootstrap_network(net, iter = 10)
 #' \donttest{
+#' set.seed(1)
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
 #'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
@@ -171,7 +185,7 @@ bootstrap_network <- function(x,
       "  * Use case-dropping rather than bootstrap:\n",
       "      - casedrop_reliability(x)  - model-level edge-weight reliability\n",
       "      - centrality_stability(x)  - per-centrality CS coefficient\n",
-      "  * permutation_test(x, y) for comparing two networks.",
+      "  * permutation(x, y) for comparing two networks.",
       call. = FALSE
     )
   }
@@ -792,7 +806,11 @@ print.net_bootstrap <- function(x, ...) {
 #' @param object A \code{net_bootstrap} object.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return A data frame with edge-level bootstrap statistics.
+#' @return The \code{$summary} data frame: one row per non-zero original
+#'   edge, with columns \code{from}, \code{to}, \code{weight},
+#'   \code{mean}, \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower},
+#'   \code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when the
+#'   bootstrap used \code{inference = "stability"}.
 #'
 #' @examples
 #' net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
@@ -913,7 +931,9 @@ print.net_bootstrap_group <- function(x, ...) {
 #' Summary Method for net_bootstrap_group
 #' @param object A \code{net_bootstrap_group} object.
 #' @param ... Ignored.
-#' @return A data frame with group, edge, and bootstrap statistics columns.
+#' @return The per-group summaries stacked into one data frame: the
+#'   columns of \code{\link{summary.net_bootstrap}} prefixed by a
+#'   \code{group} column naming the network each row came from.
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","C","A"),
 #'   V3 = c("C","A","B","B"), grp = c("X","X","Y","Y"))

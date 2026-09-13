@@ -22,8 +22,10 @@ table is allocated.}
 \item{...}{Arguments passed to \code{\link{build_mmm}}.}
 }
 \value{
-A \code{mmm_compare} data frame with BIC, AIC, ICL, AvePP,
-entropy per k. When \code{return_fits = TRUE}, the fitted models are
+A \code{mmm_compare} data frame, one row per requested \code{k},
+with columns \code{k}, \code{log_likelihood}, \code{AIC}, \code{BIC},
+\code{ICL}, \code{AvePP}, \code{Entropy} and \code{converged}. When
+\code{return_fits = TRUE}, the fitted \code{net_mmm} models are
 attached as \code{attr(result, "fits")}.
 }
 \description{
@@ -42,10 +44,10 @@ seqs <- data.frame(
 comp <- compare_mmm(seqs, k = 2:3, seed = 42)
 print(comp)
 
-# Retain fits to avoid a re-fit after picking the BIC-min model.
+# Retain the fits so the chosen model needs no re-run; summary() marks
+# the minimum-BIC and minimum-ICL rows in its `best` column.
 comp_with_fits <- compare_mmm(seqs, k = 2:3, seed = 42, return_fits = TRUE)
-best_k <- comp_with_fits$k[which.min(comp_with_fits$BIC)]
-best_fit <- attr(comp_with_fits, "fits")[[as.character(best_k)]]
+summary(comp_with_fits)
 }
 
 }

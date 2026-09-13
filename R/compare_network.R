@@ -51,9 +51,12 @@
 #'   compatible with `network = TRUE` because the side-by-side metrics use
 #'   Nestimate's base-R Floyd-Warshall, which handles negative weights.
 #' @param measures Character vector of centrality measures to compare. Empty
-#'   by default (no centrality block). Valid names are \code{"InStrength"},
-#'   \code{"OutStrength"}, and \code{"Betweenness"}. Unknown names are
-#'   ignored with a warning.
+#'   by default (no centrality block). Any built-in measure is valid:
+#'   \code{"OutStrength"}, \code{"InStrength"}, \code{"ClosenessIn"},
+#'   \code{"ClosenessOut"}, \code{"Closeness"}, \code{"Betweenness"},
+#'   \code{"BetweennessRSP"}, \code{"Diffusion"}, \code{"Clustering"},
+#'   \code{"InCloseness"}, \code{"OutCloseness"}. Unknown names are ignored
+#'   with a warning.
 #' @param network Logical. Include side-by-side network metrics from
 #'   `summary()`? Default `TRUE`.
 #' @param ... Ignored.
@@ -101,7 +104,7 @@ compare_model.matrix <- function(x, y, scaling = "none", measures = character(0)
 #' @param ... Passed to `compare_model.netobject()`.
 #' @return A `net_comparison` object.
 #' @seealso [compare_networks()], the N-way successor with tidy tables and a
-#'   dashboard plot.
+#'   `plot()` that draws one view per call.
 #' @export
 compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
                                     measures = character(0), network = TRUE,

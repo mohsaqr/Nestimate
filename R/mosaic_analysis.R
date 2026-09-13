@@ -76,16 +76,19 @@
 #'   \item{table}{The filtered contingency \code{table}.}
 #'   \item{removed}{List of dropped \code{var1} / \code{var2} categories.}
 #'   \item{n_original, n_filtered}{Row counts before/after filtering.}
+#'   \item{vars}{Named character vector \code{c(var1 = , var2 = )}.}
+#'   \item{plot_parts, plot_args}{The residual matrix, table, and styling
+#'     arguments retained so \code{plot()} can re-render without re-testing.}
 #' }
+#' Use \code{print()} for the test summary and \code{summary()} for the tidy
+#' per-cell table.
 #'
 #' @examples
-#' df <- data.frame(
-#'   gender = sample(c("F", "M"), 200, replace = TRUE),
-#'   level  = sample(c("Low", "Mid", "High"), 200, replace = TRUE)
-#' )
-#' res <- mosaic_analysis(df, "gender", "level", min_count = 5)
-#' res$stats
-#' res$counts
+#' data(group_regulation_long, package = "Nestimate")
+#' res <- mosaic_analysis(group_regulation_long, "Course", "Action",
+#'                        min_count = 20)
+#' res
+#' head(summary(res))
 #' \donttest{
 #' plot(res, tile_label = "percent")
 #' }
@@ -232,14 +235,13 @@ mosaic_analysis <- function(data, var1, var2, min_count = 10L,
 #'
 #' @param x A \code{mosaic_analysis} object.
 #' @param ... Styling overrides forwarded to the flat renderer.
-#' @return The \code{ggplot} object, invisibly (drawn as a side effect).
+#' @return The re-rendered flat mosaic \code{ggplot} object, invisibly; the
+#'   plot is drawn on the active device as a side effect.
 #' @examples
-#' df <- data.frame(
-#'   a = sample(c("X", "Y", "Z"), 200, replace = TRUE),
-#'   b = sample(c("P", "Q"), 200, replace = TRUE)
-#' )
-#' res <- mosaic_analysis(df, "a", "b", min_count = 5)
 #' \donttest{
+#' data(group_regulation_long, package = "Nestimate")
+#' res <- mosaic_analysis(group_regulation_long, "Course", "Action",
+#'                        min_count = 20)
 #' plot(res, tile_label = "percent", legend_position = "bottom")
 #' }
 #' @export
@@ -284,8 +286,11 @@ print.mosaic_analysis <- function(x, ...) {
 #'
 #' @param object A \code{mosaic_analysis} object.
 #' @param ... Ignored.
-#' @return The tidy per-cell \code{counts} data.frame, with the \code{stats}
-#'   row attached as an attribute.
+#' @return The tidy per-cell \code{data.frame}: one row per (var1, var2)
+#'   cell, with the two variable columns (named after \code{var1} /
+#'   \code{var2}) plus \code{observed}, \code{expected}, \code{residual} and
+#'   \code{pct}. The one-row test summary is attached as the \code{"stats"}
+#'   attribute.
 #' @export
 summary.mosaic_analysis <- function(object, ...) {
   out <- object$counts

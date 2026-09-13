@@ -12,7 +12,8 @@
 \item{...}{Styling overrides forwarded to the flat renderer.}
 }
 \value{
-The \code{ggplot} object, invisibly (drawn as a side effect).
+The re-rendered flat mosaic \code{ggplot} object, invisibly; the
+plot is drawn on the active device as a side effect.
 }
 \description{
 Re-renders the flat mosaic from the stored contingency table and residuals,
@@ -21,12 +22,10 @@ styling argument (\code{tile_label}, \code{pct_base}, \code{col_label_side},
 \code{legend_size}, ...) may be overridden via \code{...}.
 }
 \examples{
-df <- data.frame(
-  a = sample(c("X", "Y", "Z"), 200, replace = TRUE),
-  b = sample(c("P", "Q"), 200, replace = TRUE)
-)
-res <- mosaic_analysis(df, "a", "b", min_count = 5)
 \donttest{
+data(group_regulation_long, package = "Nestimate")
+res <- mosaic_analysis(group_regulation_long, "Course", "Action",
+                       min_count = 20)
 plot(res, tile_label = "percent", legend_position = "bottom")
 }
 }

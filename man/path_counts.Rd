@@ -10,17 +10,19 @@ path_counts(data, k = 2L, top = NULL)
 \item{data}{A list of character vectors (trajectories) or a data.frame
 (rows = trajectories, columns = time points).}
 
-\item{k}{Integer. Length of the path / n-gram (default 2). A k of 2 counts
-individual transitions; k of 3 counts two-step paths, etc. Must be a
-whole number; a non-integer value is an error rather than being
+\item{k}{Integer >= 2. Length of the path / n-gram (default 2). A k of 2
+counts individual transitions; k of 3 counts two-step paths, etc. Must be
+a whole number; a non-integer value is an error rather than being
 silently truncated.}
 
 \item{top}{Integer or NULL. If set, returns only the top N most frequent
 paths (default NULL = all).}
 }
 \value{
-A data frame with columns: \code{path}, \code{count},
-\code{proportion}.
+A data frame with one row per distinct k-gram, sorted by
+\code{count} (descending), with columns \code{path} (the k states in
+arrow notation, e.g. "A -> B"), \code{count} and \code{proportion}
+(share of all k-grams, rounded to 4 decimal places).
 }
 \description{
 Counts the frequency of k-step paths (k-grams) across all trajectories.

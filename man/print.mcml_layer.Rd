@@ -7,15 +7,18 @@
 \method{print}{mcml_layer}(x, ...)
 }
 \arguments{
-\item{x}{An \code{mcml_layer}.}
+\item{x}{An \code{mcml_layer}, as held in \code{$macro} and in each
+element of \code{$clusters} of an \code{mcml}.}
 
-\item{...}{Unused.}
+\item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{
-The input, invisibly.
+The input \code{mcml_layer}, invisibly.
 }
 \description{
-Compact summary of one mcml layer (macro or a single within-cluster
-network) -- nodes, edges, weight matrix dimensions -- without spilling
-the full \code{$weights}, \code{$inits}, or \code{$data} contents.
+Compact view of one mcml layer (the macro layer or a single
+within-cluster network): a header line with the node and non-zero edge
+counts and the weight range, the rounded weight matrix, the initial
+probabilities as a bar chart, and the dimensions of any attached data --
+rather than the raw list contents.
 }

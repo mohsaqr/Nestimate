@@ -22,7 +22,11 @@ permutation(
 
 \item{y}{A \code{netobject} (from \code{\link{build_network}}) or a
 \code{\link{net_edge_betweenness}} object.
-Must use the same method and have the same nodes as \code{x}.}
+Must use the same method and have the same nodes as \code{x}.
+Default \code{NULL}: when \code{x} is a \code{netobject_group} (or an
+\code{mcml}) and \code{y} is left \code{NULL}, every pair of groups is
+tested and the result is a \code{net_permutation_group} named
+\code{"<group i> vs <group j>"}.}
 
 \item{iter}{Integer. Number of permutation iterations (default: 1000).}
 
@@ -60,7 +64,16 @@ An object of class \code{"net_permutation"} containing:
 \item{diff_sig}{Observed difference where \code{p < alpha}, else 0.}
 \item{p_values}{P-value matrix (adjusted if \code{adjust != "none"}).}
 \item{effect_size}{Effect size matrix (observed diff / SD of permutation diffs).}
-\item{summary}{Long-format data frame of edge-level results.}
+\item{summary}{Long-format data frame, one row per edge present in
+either network (undirected networks keep one row per unordered
+pair), with columns \code{from}, \code{to}, \code{weight_x},
+\code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value},
+\code{sig}.}
+\item{global}{Data frame of the two NCT-style global statistics, one
+row each: \code{statistic} (\code{"M"}, the sum of absolute edge
+differences, and \code{"S"}, the largest absolute edge difference),
+\code{observed}, and \code{p_value} from the same permutation null
+as the edge test. Absent on the edge-betweenness path.}
 \item{method}{The network estimation method.}
 \item{source_method}{For edge-betweenness tests, the source network method.}
 \item{iter}{Number of permutation iterations.}
@@ -73,6 +86,12 @@ with \code{stats} (one row per state-by-measure: \code{state},
 \code{diffs_true} (wide observed differences), and \code{diffs_sig}
 (observed differences where \code{p < alpha}, else 0).}
 }
+Grouped input returns a \code{"net_permutation_group"} (a named list of
+\code{net_permutation} results): one element per matching group name
+when both \code{x} and \code{y} are \code{netobject_group}s, or one per
+group pair when \code{y} is \code{NULL}. Two \code{wtna_mixed} inputs
+return a \code{"wtna_perm_mixed"} with \code{$transition} and
+\code{$cooccurrence} results.
 }
 \description{
 Compares two networks estimated by \code{\link{build_network}} using a

@@ -45,7 +45,10 @@ variables are standardized per person before estimation.}
 whom a path must be significant to be added at group level.
 Default \code{0.75}.}
 
-\item{subcutoff}{Numeric. Not used (reserved for future subgrouping).}
+\item{subcutoff}{Numeric. Not used (reserved for future subgrouping);
+accepted for API compatibility and \emph{not} forwarded to
+\code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}}, which does not implement subgrouping
+either. Default \code{0.50}.}
 
 \item{paths}{Character vector of lavaan-syntax paths to force into the model
 (e.g., \code{"V2~V1lag"}). Default \code{NULL}.}
@@ -70,7 +73,12 @@ stop individual search. Default \code{2}.}
 \item{seed}{Integer or \code{NULL}. Random seed for reproducibility.}
 }
 \value{
-An S3 object of class \code{"net_gimme"} containing:
+The object returned by \code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}}: an S3 object of
+class \code{c("net_gimme", "cograph_network", "list")}. It is a
+\emph{superset} of the pre-0.9.0 in-package field contract -- every
+element below is present, alongside idiographic's own additions
+(\code{contemp_cov}, \code{contemp_cov_avg}, \code{contemp_is_cov}).
+Elements:
 \describe{
 \item{\code{temporal}}{p x p matrix of group-level temporal (lagged)
 path counts -- entry \code{[i,j]} = number of individuals with path j(t-1)->i(t).}
@@ -95,9 +103,11 @@ individual-level paths (beyond group).}
 \item{\code{config}}{List of configuration parameters.}
 }
 The object additionally carries idiographic's netobject fields
-(\code{weights}, \code{nodes}, \code{edges}, ...) so it renders directly
-with cograph, and dispatches to idiographic's \code{print}, \code{summary},
-and \code{plot} methods.
+(\code{weights}, \code{nodes}, \code{edges}, \code{directed},
+\code{data}, \code{meta}, \code{node_groups}) so it renders directly with
+cograph. \code{print()}, \code{summary()} and \code{plot()} dispatch to
+\pkg{idiographic}'s methods, not to Nestimate's: in particular
+\code{summary()} returns a tidy \code{data.frame} rather than printing.
 }
 \description{
 Estimates person-specific directed networks from intensive longitudinal data
@@ -118,6 +128,16 @@ parity suite). Uses \code{lavaan} for SEM estimation and modification
 indices. Accepts a single data frame with an ID column (not CSV
 directories).
 }
+\section{Results changed in 0.9.0}{
+
+Before 0.9.0 the search ran in an in-package implementation that was
+\emph{not} upstream-gimme-exact. Delegating to
+\code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}} changed which paths the search selects on the
+same data -- individual-level paths in particular -- so numeric results
+are not comparable with Nestimate <= 0.8.5. The returned object also
+gained fields (see \strong{Value}); nothing was removed.
+}
+
 \examples{
 \dontshow{if (requireNamespace("lavaan", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{

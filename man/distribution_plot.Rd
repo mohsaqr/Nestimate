@@ -43,7 +43,9 @@ distribution_plot(
 one panel is drawn per cluster.}
 
 \item{group}{Optional grouping vector (length \code{nrow(x)}) producing
-one panel per group. Ignored if \code{x} is a \code{net_clustering}.}
+one panel per group. \code{NULL} (default) falls back to the cluster
+assignments carried by a \code{net_clustering} / \code{net_mmm} /
+\code{netobject_group} input; supplying \code{group} overrides them.}
 
 \item{scale}{\code{"proportion"} (default) divides each column by its
 total so bands fill 0..1. \code{"count"} keeps raw counts.}
@@ -70,9 +72,10 @@ own length quantile (panels can differ in width). See
 \item{state_colors}{Vector of colours, one per state. Defaults to
 Okabe-Ito.}
 
-\item{na_color}{Colour for the \code{NA} band.}
+\item{na_color}{Colour for the \code{NA} band. Default \code{"grey90"}.}
 
-\item{frame}{If \code{TRUE} (default), draw a box around each panel.}
+\item{frame}{\code{FALSE} (default) draws no panel box; \code{TRUE} draws
+a box around each panel.}
 
 \item{width, height}{Optional device dimensions. See
 \code{\link{sequence_plot}}.}
@@ -119,8 +122,20 @@ from device width (clamped to \code{[0.65, 1.2]}).}
 \item{legend_bty}{\code{"n"} (borderless) or \code{"o"} (boxed).}
 }
 \value{
-Invisibly, a list with \code{counts}, \code{proportions},
-\code{levels}, \code{palette}, and \code{groups}.
+Invisibly, a list describing the drawn figure:
+\describe{
+\item{counts}{Named list, one entry per group, each a
+(state x time point) numeric matrix of cell counts. Rows are named
+by \code{levels}; columns are the retained time points.}
+\item{proportions}{Same shape as \code{counts}, each column divided
+by its total.}
+\item{levels}{Character vector of state labels in plotting order,
+with \code{"NA"} appended when \code{na = TRUE}.}
+\item{palette}{Character vector of fill colours, parallel to
+\code{levels}.}
+\item{groups}{Character vector of group labels (\code{"all"} when
+ungrouped), parallel to \code{counts} / \code{proportions}.}
+}
 }
 \description{
 Draws how state proportions (or counts) evolve across time points. For

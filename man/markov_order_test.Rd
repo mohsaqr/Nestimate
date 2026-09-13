@@ -15,9 +15,11 @@ markov_order_test(
 )
 }
 \arguments{
-\item{data}{A data.frame (wide format, one sequence per row) or list
-of character vectors (one per trajectory). NAs are treated as end
-of sequence.}
+\item{data}{A data.frame (wide format, one sequence per row), a list
+of character vectors (one per trajectory), a \code{netobject} or
+\code{netobject_group} carrying its \code{$data}, or a
+\code{\link{prepare}} result (its \code{sequence_data} is used).
+NAs are treated as end of sequence.}
 
 \item{max_order}{Integer. Highest Markov order to test. Default 3.}
 
@@ -59,8 +61,13 @@ AIC / BIC columns.}
 \item{transition_matrices}{List of fitted transition matrices.}
 \item{states}{Character vector of observed state labels.}
 \item{n_sequences, n_observations}{Data summary.}
-\item{n_perm, alpha, max_order}{Call settings.}
+\item{n_perm, alpha, max_order}{Call settings. \code{max_order} is the
+order actually tested, which is capped at
+\code{length(longest sequence) - 1} with a message.}
 }
+For a \code{netobject_group} the result is a
+\code{"net_markov_order_group"}: a named list holding one
+\code{net_markov_order} per group.
 }
 \description{
 Principled test of whether a categorical sequence is best described
@@ -80,25 +87,19 @@ exchangeable under \eqn{H_0}, so shuffling \eqn{s} within each
 No plug-in MLE bias and no refitting per replicate. An asymptotic
 \eqn{\chi^2} p-value is reported alongside for reference.
 
-The optimal order is the smallest \eqn{k} that is \strong{not}
-significantly better than \eqn{k - 1} at level \code{alpha}: we
-keep raising the order while the test rejects, and stop at the first
-non-rejection.
+Order selection is sequential: the order is raised while the test
+rejects, and stops at the first non-rejection. The reported
+\code{optimal_order} is therefore the highest \eqn{k} whose test - and
+every test below it - rejected at level \code{alpha}, i.e. one below the
+first non-rejection; it is \code{0} when order 1 is already not
+rejected, and \code{max_order} when no test accepts.
 }
 \examples{
 \donttest{
-# First-order Markov data: test should select order 1
-set.seed(1)
-states <- letters[1:4]
-tm <- matrix(runif(16), 4, 4, dimnames = list(states, states))
-tm <- tm / rowSums(tm)
-seqs <- lapply(1:30, function(.) {
-  s <- character(50); s[1] <- sample(states, 1)
-  for (i in 2:50) s[i] <- sample(states, 1, prob = tm[s[i - 1], ])
-  s
-})
-res <- markov_order_test(seqs, max_order = 3, n_perm = 300, seed = 1)
-res$optimal_order
+# Is one previous state enough to predict the next one?
+res <- markov_order_test(as.data.frame(trajectories),
+                         max_order = 2, n_perm = 99, seed = 1)
+res
 summary(res)
 plot(res)
 }

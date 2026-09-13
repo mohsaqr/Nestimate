@@ -41,10 +41,27 @@
 #'   \item{`cs`}{Scalar CS-coefficient - the maximum drop proportion for
 #'     which the edge-vector correlation remains >= `threshold` in at
 #'     least `certainty` of iterations. Zero if no proportion qualifies.}
+#'   \item{`summary`}{Tidy data frame, one row per metric by drop
+#'     proportion, with columns `metric` (`"mean_abs_dev"`,
+#'     `"median_abs_dev"`, `"correlation"`, `"max_abs_dev"`),
+#'     `drop_prop`, `mean`, `sd`, `median`, `mad`, `q025`, `q975`.}
+#'   \item{`metrics`}{Named list of four `iter` x `length(drop_prop)`
+#'     matrices, one per metric, holding the raw per-iteration values.}
 #'   \item{`correlations`}{`iter` x `length(drop_prop)` matrix of per-
-#'     iteration correlations.}
-#'   \item{`drop_prop`, `threshold`, `certainty`, `iter`, `method`}{Inputs.}
+#'     iteration correlations (the `correlation` entry of `metrics`).}
+#'   \item{`drop_prop`, `threshold`, `certainty`, `iter`, `method`,
+#'     `include_diag`}{Inputs.}
+#'   \item{`n_cases`}{Number of cases resampled from (sequences for
+#'     transition methods, rows of `$data` otherwise).}
+#'   \item{`n_edges`}{Length of the edge vector assessed.}
 #' }
+#' A `netobject_group` or `mcml` input instead returns a
+#' `net_casedrop_reliability_group`: a named list of one result per
+#' constituent network.
+#'
+#' When the original edge vector has zero variance a warning is issued and
+#' the object is returned with `cs = 0`, an empty `summary`, and all-`NA`
+#' metric matrices.
 #'
 #' @details
 #' For each `drop_prop` p and each iteration, a size `n_cases * (1 - p)`
@@ -65,6 +82,7 @@
 #' @seealso [centrality_stability()], [bootstrap_network()].
 #'
 #' @examples
+#' set.seed(1)
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE),
 #'   V2 = sample(LETTERS[1:4], 30, TRUE),

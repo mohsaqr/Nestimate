@@ -131,6 +131,11 @@ for hierarchical methods).}
 \item{seed}{Seed used (or NULL).}
 \item{weighted}{Logical, whether weighted Hamming was used.}
 \item{lambda}{Lambda value used (0 if not weighted).}
+\item{covariates}{The post-hoc covariate analysis (a list; see the
+\code{estimator} argument), or NULL when \code{covariates = NULL}.}
+\item{network_method, build_args}{For \code{netobject} input, the
+source network's method and stored build arguments, so per-cluster
+networks can be rebuilt the same way. NULL otherwise.}
 \item{htna_partition}{For HTNA input, the preserved node-to-actor
 partition used to restore HTNA children when networks are built.}
 }

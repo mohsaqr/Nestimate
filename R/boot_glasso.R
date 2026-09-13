@@ -13,8 +13,11 @@
 #'   a \code{netobject} with \code{method = "glasso"}.
 #' @param iter Integer. Number of nonparametric bootstrap iterations
 #'   (default: 1000).
-#' @param cs_iter Integer. Number of case-dropping iterations per drop
-#'   proportion (default: 500).
+#' @param cs_iter Integer. Total number of case-dropping iterations
+#'   (default: 500). Following \pkg{bootnet}, each iteration draws one
+#'   drop proportion at random from \code{cs_drop}, so the iterations are
+#'   spread across the proportions rather than repeated \code{cs_iter}
+#'   times at each one.
 #' @param cs_drop Numeric vector. Drop proportions for CS-coefficient
 #'   computation (default: \code{seq(0.1, 0.9, by = 0.1)}).
 #' @param alpha Numeric. Significance level for CIs (default: 0.05).
@@ -60,9 +63,13 @@
 #'     ci_upper) per centrality measure.}
 #'   \item{cs_coefficient}{Named numeric vector of CS-coefficients per
 #'     centrality measure.}
-#'   \item{cs_data}{Data frame of case-dropping correlations (drop_prop,
-#'     measure, correlation).}
-#'   \item{edge_diff_p}{Symmetric matrix of pairwise edge difference p-values.}
+#'   \item{cs_data}{Data frame of case-dropping results, one row per
+#'     drop proportion by measure, with columns \code{drop_prop},
+#'     \code{measure}, \code{mean_cor}, \code{prop_above} (fraction of
+#'     that proportion's iterations correlating above 0.7) and
+#'     \code{n_samples} (iterations that landed on that proportion).}
+#'   \item{edge_diff_p}{Symmetric matrix of pairwise edge difference
+#'     p-values; \code{NULL} when the network has more than 500 edges.}
 #'   \item{centrality_diff_p}{Named list of symmetric p-value matrices per
 #'     centrality measure.}
 #'   \item{predictability_ci}{Data frame of node predictability CIs (node,
@@ -102,6 +109,14 @@
 #' print(boot)
 #' summary(boot, type = "edges")
 #' }
+#'
+#' @references
+#' Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
+#' psychological networks and their accuracy: A tutorial paper.
+#' \emph{Behavior Research Methods} 50(1), 195-212.
+#' \doi{10.3758/s13428-017-0862-1}
+#' (source of the CS-coefficient and of the case-dropping,
+#' edge-difference and centrality-difference procedures reproduced here.)
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{bootstrap_network}}
 #'
@@ -467,16 +482,18 @@ boot_glasso <- function(x,
 
 #' Compute requested centrality measures
 #'
-#' strength and expected_influence use rowSums (fast, no dependencies).
-#' closeness and betweenness require a user-supplied \code{centrality_fn}.
+#' All four built-ins are dependency-free: strength and expected_influence
+#' use rowSums; betweenness and closeness use the internal Floyd-Warshall
+#' routines on the absolute partial correlations (undirected, inverted
+#' weights). Only measures outside those four need a \code{centrality_fn}.
 #'
 #' @param pcor Partial correlation matrix.
 #' @param p Number of nodes.
 #' @param nodes Character vector of node names.
 #' @param measures Character vector of requested measures.
 #' @param centrality_fn Optional function taking a weight matrix and
-#'   returning a named list of centrality vectors. Required for
-#'   measures other than strength/expected_influence.
+#'   returning a named list of centrality vectors. Required only for
+#'   measures outside strength/expected_influence/betweenness/closeness.
 #' @noRd
 .bg_compute_centrality <- function(pcor, p, nodes, measures,
                                     centrality_fn = NULL) {
@@ -648,7 +665,8 @@ boot_glasso <- function(x,
 #' prop_threshold (default 0.95).
 #'
 #' @param cors_per_prop List of numeric vectors, one per drop proportion.
-#'   Each vector contains per-iteration Spearman correlations.
+#'   Each vector contains the per-iteration Pearson correlations with the
+#'   original centralities (matching bootnet::cor0's default).
 #' @param cs_drop Numeric vector of drop proportions.
 #' @param cor_threshold Numeric. Correlation threshold (default 0.7).
 #' @param prop_threshold Numeric. Required proportion above threshold
@@ -857,7 +875,14 @@ print.boot_glasso <- function(x, ...) {
 #'   \code{"all"}.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return A data frame or list of data frames depending on \code{type}.
+#' @return For \code{type = "edges"}, the \code{edge_ci} data frame
+#'   (\code{edge}, \code{weight}, \code{ci_lower}, \code{ci_upper},
+#'   \code{inclusion}) ordered by decreasing absolute weight; for
+#'   \code{"cs"} the \code{cs_data} data frame; for
+#'   \code{"predictability"} the \code{predictability_ci} data frame; for
+#'   \code{"centrality"} a named list of one data frame per measure
+#'   (\code{node}, \code{value}, \code{ci_lower}, \code{ci_upper}); for
+#'   \code{"all"} a named list holding all four.
 #'
 #' @examples
 #' set.seed(1)
@@ -923,7 +948,8 @@ summary.boot_glasso <- function(object, type = "edges", ...) {
 #'   accepts \code{order}: \code{"sample"} (default, sorted by value)
 #'   or \code{"id"} (alphabetical).
 #'
-#' @return A \code{ggplot} object, invisibly.
+#' @return A \code{ggplot} object (returned, and so printed when the call
+#'   is made at the top level).
 #'
 #' @examples
 #' set.seed(1)

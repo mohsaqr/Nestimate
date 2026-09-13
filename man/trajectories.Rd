@@ -5,9 +5,12 @@
 \alias{trajectories}
 \title{Student Engagement Trajectories}
 \format{
-A character matrix with 138 rows and 15 columns. Entries are
-one of \code{"Active"}, \code{"Average"}, \code{"Disengaged"}, or
-\code{NA}.
+A character matrix with 138 rows and 15 columns, one row per
+student. Columns are named \code{"1"}..\code{"15"} (the week). Entries
+are one of \code{"Active"}, \code{"Average"}, \code{"Disengaged"}, or
+\code{NA}; \code{NA} runs at the end of a row mark drop-out, which the
+right-censored sequence verbs (\code{\link{actor_endpoints}},
+\code{\link{mark_terminal_state}}) are built to read.
 }
 \usage{
 trajectories

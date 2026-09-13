@@ -48,7 +48,8 @@ index when no \code{time} column), \code{time_start},
 \code{time_end}, \code{n_transitions}, \code{n_states} (distinct
 states in the window), \code{entropy} (bits per transition) and
 \code{entropy_norm} (divided by \eqn{\log_b} of the window's
-active-state count; in \eqn{[0, 1]}).}
+active-state count, floored at 2 states so the ceiling is never
+zero; in \eqn{[0, 1]}).}
 \item{window, step, base, states}{Call metadata; \code{states} is the
 global state set.}
 }

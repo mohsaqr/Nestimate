@@ -25,7 +25,8 @@ Not needed for \code{netobject_group}.}
 \item{sub}{Integer vector. Pattern lengths to analyze. Default: \code{3:5}.}
 
 \item{min_freq}{Integer. Minimum frequency in each group for a pattern
-to be included. Default: 5.}
+to be included: a pattern is kept only when its count reaches this
+threshold in \emph{every} group. Default: 5.}
 
 \item{test}{Character. Inference method: one of \code{"permutation"}
 (default), \code{"chisq"}, or \code{"none"}. See Details.}
@@ -39,13 +40,17 @@ to be included. Default: 5.}
 \value{
 An object of class \code{"net_sequence_comparison"} containing:
 \describe{
-\item{patterns}{Tidy data.frame. Always present:
-\code{pattern}, \code{length}, \code{freq_<group>},
-\code{prop_<group>}, \code{resid_<group>}. If
-\code{test = "permutation"}: \code{effect_size}, \code{p_value}.
-If \code{test = "chisq"}: \code{statistic}, \code{p_value}.}
-\item{groups}{Character vector of group names.}
-\item{n_patterns}{Integer. Number of patterns passing min_freq.}
+\item{patterns}{Tidy data.frame, one row per retained k-gram pattern.
+Always present: \code{pattern}, \code{length}, and one
+\code{freq_<group>}, \code{prop_<group>} and \code{resid_<group>}
+column per group. If \code{test = "permutation"}: \code{effect_size},
+\code{p_value}. If \code{test = "chisq"}: \code{statistic},
+\code{p_value}. Rows are ordered by ascending adjusted \code{p_value}
+when a test was run, and by descending maximum absolute residual
+otherwise.}
+\item{groups}{Character vector of group names, sorted.}
+\item{n_patterns}{Integer. Number of rows in \code{patterns}, i.e. the
+patterns meeting \code{min_freq} in every group.}
 \item{params}{List of sub, min_freq, test, iter, adjust.}
 }
 }
@@ -84,6 +89,7 @@ any method supported by \code{\link[stats]{p.adjust}}. The default is
 \code{"fdr"} (Benjamini-Hochberg).
 }
 \examples{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 60, TRUE),
   V2 = sample(LETTERS[1:4], 60, TRUE),
@@ -94,4 +100,12 @@ grp <- rep(c("X", "Y"), 30)
 net <- build_network(seqs, method = "relative")
 res <- sequence_compare(net, group = grp, sub = 2:3, test = "chisq")
 
+}
+\references{
+Haberman, S. J. (1973). The analysis of residuals in cross-classified
+tables. \emph{Biometrics}, 29(1), 205--220. (standardized residuals)
+
+Benjamini, Y. & Hochberg, Y. (1995). Controlling the false discovery rate.
+\emph{Journal of the Royal Statistical Society B}, 57(1), 289--300.
+(the default \code{adjust = "fdr"})
 }

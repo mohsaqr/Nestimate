@@ -33,7 +33,7 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 sc  <- build_simplicial(net, type = "clique")
 qa  <- q_analysis(sc)
-plot(qa)
+if (requireNamespace("gridExtra", quietly = TRUE)) plot(qa)
 }
 
 }

@@ -20,8 +20,10 @@ cluster_mmm(
 )
 }
 \arguments{
-\item{data}{A data.frame (wide format), \code{netobject}, or
-\code{tna} model. For tna objects, extracts the stored data.}
+\item{data}{A data.frame (wide format), \code{netobject},
+\code{cograph_network}, or \code{tna} model. For tna and
+cograph_network objects the stored (integer-encoded) data is
+extracted and decoded to state labels.}
 
 \item{k}{Integer. Whole finite number of mixture components, >= 2.
 Default: 2.}
@@ -98,8 +100,8 @@ construction in one call.
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))
 fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-fit$assignments
-fit$posterior
+fit
+cluster_diagnostics(fit)
 \donttest{
 # Visualise with sequence_plot
 seqs <- data.frame(

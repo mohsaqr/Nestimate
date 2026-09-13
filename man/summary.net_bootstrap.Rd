@@ -12,7 +12,11 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A data frame with edge-level bootstrap statistics.
+The \code{$summary} data frame: one row per non-zero original
+edge, with columns \code{from}, \code{to}, \code{weight},
+\code{mean}, \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower},
+\code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when the
+bootstrap used \code{inference = "stability"}.
 }
 \description{
 Summary Method for net_bootstrap

@@ -14,7 +14,11 @@ persistent_homology(
 }
 \arguments{
 \item{x}{A square matrix, \code{tna}, or \code{netobject}. For
-\code{type = "vr"}, must be a non-negative distance matrix.}
+\code{type = "vr"}, must be a non-negative distance matrix.
+A \code{simplicial_complex} carrying a \code{$filtration} vector (as
+returned by \code{build_simplicial(type = "vr")}) is also accepted and
+is used directly: its stored filtration values are reduced as they are,
+so \code{type} is taken from the complex rather than this argument.}
 
 \item{n_steps}{Number of grid points for the reported Betti curve
 (default 20). The persistence diagram itself is exact - it does not
@@ -34,9 +38,13 @@ A \code{persistent_homology} object with:
 \describe{
 \item{betti_curve}{Data frame: \code{threshold}, \code{dimension},
 \code{betti}.}
-\item{persistence}{Data frame of birth-death pairs:
-\code{dimension}, \code{birth}, \code{death}, \code{persistence}.
-Sorted by descending persistence.}
+\item{persistence}{Data frame of birth-death pairs, one row per
+homology class: \code{dimension}, \code{birth}, \code{death},
+\code{persistence}. Sorted by descending persistence. Essential
+classes are included, with \code{death = 0} and
+\code{persistence = birth} in clique mode, and \code{death = Inf},
+\code{persistence = Inf} in VR mode (the plot method caps those for
+display only).}
 \item{thresholds}{Numeric vector of grid thresholds.}
 \item{mode}{Either \code{"clique"} or \code{"vr"}.}
 }
@@ -71,6 +79,7 @@ print(ph)
 }
 \references{
 Edelsbrunner, H., Letscher, D., & Zomorodian, A. (2000). Topological
-persistence and simplification. \emph{Discrete & Computational Geometry}
-\strong{28}, 511-533.
+persistence and simplification. In \emph{Proceedings of the 41st Annual
+Symposium on Foundations of Computer Science}, 454-463. Journal version:
+\emph{Discrete & Computational Geometry} (2002) \strong{28}, 511-533.
 }

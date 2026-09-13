@@ -7,8 +7,13 @@
 #' estimator registry, so custom estimators can also be used.
 #'
 #' @param data Data frame (sequences or per-observation frequencies) or a
-#'   square symmetric matrix (correlation or covariance).
-#' @param method Character. Required. Name of a registered estimator.
+#'   square symmetric matrix (correlation or covariance). A fitted
+#'   \code{net_clustering} or \code{net_mmm} object is also accepted: the
+#'   per-cluster networks are (re)built and a \code{netobject_group} is
+#'   returned.
+#' @param method Character. Required, except when \code{data} is a
+#'   \code{net_clustering} or \code{net_mmm} object, where the fitted
+#'   object's own network method is used. Name of a registered estimator.
 #'   Built-in methods: \code{"relative"}, \code{"frequency"},
 #'   \code{"co_occurrence"}, \code{"cor"}, \code{"pcor"}, \code{"glasso"},
 #'   \code{"ising"}, \code{"mgm"}, \code{"attention"}, \code{"wtna"},
@@ -43,9 +48,9 @@
 #'   / \code{end_state}, of which \code{start} / \code{end} are the public
 #'   form -- see those arguments).
 #'   Column-like entries in \code{params} (\code{action}, \code{id},
-#'   \code{id_col}, \code{time}, \code{session}, \code{order}, \code{codes},
-#'   and \code{group}) are resolved before format detection and must name
-#'   existing columns. If the same column role is supplied both directly and
+#'   \code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order},
+#'   \code{cols}, \code{codes}, and \code{group}) are resolved before format
+#'   detection and must name existing columns. If the same column role is supplied both directly and
 #'   through \code{params}, the names must agree.
 #' @param start Boundary marker prepended to every sequence as an explicit
 #'   start state (a pure source: no incoming edges, every sequence's first
@@ -53,7 +58,8 @@
 #'   adds nothing; \code{TRUE} uses the label \code{"Start"}; a single string
 #'   uses that string as the label. Only valid for the transition methods
 #'   (\code{relative}, \code{frequency}, \code{co_occurrence},
-#'   \code{attention}); errors otherwise.
+#'   \code{attention}, \code{ngram}, \code{gap}, \code{reverse}); errors
+#'   otherwise (\code{wtna} included).
 #' @param end Boundary marker placed in the single cell after each sequence's
 #'   last observed (non-\code{NA}) state, as an explicit terminal state (a
 #'   pure sink: no outgoing edges, no self-loop -- distinct from
@@ -72,9 +78,11 @@
 #'   Default: \code{NULL} (no scaling).
 #' @param threshold Numeric. Absolute values below this are set to zero in the
 #'   result matrix. Default: 0 (no thresholding).
-#' @param level Character or NULL. Multilevel decomposition for association
-#'   methods. One of \code{NULL}, \code{"between"}, \code{"within"},
-#'   \code{"both"}. Requires \code{id_col}. Default: \code{NULL}.
+#' @param level Character or NULL. Multilevel decomposition for the undirected
+#'   association methods (\code{cor}, \code{pcor}, \code{glasso}); a directed
+#'   estimator errors. One of \code{NULL}, \code{"between"}, \code{"within"},
+#'   \code{"both"}. Requires an id column, supplied either as \code{actor} or
+#'   as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.
 #' @param actor Character. Name of the actor/person ID column for sequence
 #'   grouping. Default: \code{NULL}.
 #' @param action Character. Name of the action/state column (long format).
@@ -124,7 +132,9 @@
 #'
 #' @return An object of class \code{c("netobject", "cograph_network")} containing:
 #' \describe{
-#'   \item{data}{The input data used for estimation, as a data frame.}
+#'   \item{data}{The state columns of the cleaned input data, as a data frame.}
+#'   \item{metadata}{Data frame of the non-state columns of the cleaned input
+#'     (and, for long input, the per-sequence metadata), or NULL.}
 #'   \item{weights}{The estimated network weight matrix.}
 #'   \item{nodes}{Data frame with columns \code{id}, \code{label}, \code{name},
 #'     \code{x}, \code{y}. Node labels are in \code{$nodes$label}.}
@@ -138,6 +148,9 @@
 #'   \item{n_nodes}{Number of nodes.}
 #'   \item{n_edges}{Number of non-zero edges.}
 #'   \item{level}{Decomposition level used (or NULL).}
+#'   \item{build_args}{The resolved column/format arguments (\code{actor},
+#'     \code{action}, \code{time}, \code{session}, \code{order}, \code{codes},
+#'     \code{format}, \code{window_size}, \code{mode}) used for this build.}
 #'   \item{meta}{List with \code{source}, \code{layout}, and \code{tna} metadata
 #'     (cograph-compatible).}
 #'   \item{node_groups}{Node groupings data frame, or NULL.}
@@ -146,12 +159,19 @@
 #'     \code{predictability = TRUE}). NULL for directed methods.}
 #' }
 #' Method-specific extras (e.g. \code{precision_matrix}, \code{cor_matrix},
-#' \code{frequency_matrix}, \code{lambda_selected}, etc.) are preserved
-#' from the estimator output.
+#' \code{frequency_matrix}, \code{initial}, \code{lambda_selected}, etc.) are
+#' preserved from the estimator output.
 #'
 #' When \code{level = "both"}, returns an object of class
 #' \code{"netobject_ml"} with \code{$between} and \code{$within}
-#' sub-networks and a \code{$method} field.
+#' sub-networks and a \code{$method} field. \code{level = "between"} or
+#' \code{"within"} returns a single \code{netobject} estimated on the
+#' decomposed data.
+#'
+#' When \code{group} is supplied (or \code{data} is a \code{net_clustering} /
+#' \code{net_mmm} object), returns an object of class
+#' \code{"netobject_group"}: a named list of \code{netobject}s, one per group,
+#' carrying the grouping column in \code{attr(x, "group_col")}.
 #'
 #' @details
 #' The function works as follows:
@@ -1297,18 +1317,24 @@ print.netobject_ml <- function(x, ...) {
 #' For \code{method = "cor"}, predictability is the multiple R\eqn{^2} from
 #' regressing each node on its network neighbors (nodes with non-zero edges).
 #'
-#' @param object A \code{netobject} or \code{netobject_ml} object.
+#' @param object A \code{netobject}, \code{netobject_ml}, or
+#'   \code{netobject_group} object.
 #' @param data Optional data frame of the original variables used to estimate
-#'   the network. Required for \code{method = "cor"} (multiple-R\eqn{^2} regression
-#'   of each node on its neighbours); ignored for the precision-matrix path used
-#'   by \code{glasso}/\code{pcor}, which has no need of the raw data.
+#'   the network. R\eqn{^2} never needs it (it comes from the precision or
+#'   correlation matrix stored on the object). It is used only for the
+#'   \code{RMSE} column and defaults to \code{object$data}; when neither is
+#'   available \code{RMSE} is \code{NA}.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return For \code{netobject}: a named numeric vector of R\eqn{^2} values
-#'   (one per node, between 0 and 1).
+#' @return For \code{netobject}: a data frame with one row per node and columns
+#'   \code{node} (character), \code{R2} (numeric, between 0 and 1) and
+#'   \code{RMSE} (numeric, \code{NA} when no data is available).
 #'
 #'   For \code{netobject_ml}: a list with elements \code{$between} and
-#'   \code{$within}, each a named numeric vector.
+#'   \code{$within}, each such a data frame.
+#'
+#'   For \code{netobject_group}: a named list of such data frames, one per
+#'   group.
 #'
 #' @references
 #' Haslbeck, J. M. B., & Waldorp, L. J. (2018). How well do network models
@@ -1330,7 +1356,8 @@ predictability <- function(object, ...) {
 
 
 #' @rdname predictability
-#' @return A named numeric vector of predictability values per node.
+#' @return A data frame with one row per node and columns \code{node},
+#'   \code{R2} and \code{RMSE}.
 #' @export
 predictability.netobject <- function(object, data = NULL, ...) {
   labels <- object$nodes$label
@@ -1403,7 +1430,8 @@ predictability.netobject <- function(object, data = NULL, ...) {
 
 
 #' @rdname predictability
-#' @return A list with \code{within} and \code{between} predictability vectors.
+#' @return A list with \code{between} and \code{within} predictability data
+#'   frames.
 #' @export
 predictability.netobject_ml <- function(object, ...) {
   list(
@@ -1414,7 +1442,7 @@ predictability.netobject_ml <- function(object, ...) {
 
 
 #' @rdname predictability
-#' @return A named list of per-group predictability vectors.
+#' @return A named list of per-group predictability data frames.
 #' @export
 predictability.netobject_group <- function(object, ...) {
   lapply(object, predictability)

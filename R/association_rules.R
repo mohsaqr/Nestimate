@@ -27,10 +27,17 @@
 #'
 #' @return An object of class \code{"net_association_rules"} containing:
 #' \describe{
-#'   \item{rules}{Data frame with columns: antecedent (list), consequent (list),
-#'     support, confidence, lift, conviction, count, n_transactions.}
-#'   \item{frequent_itemsets}{List of frequent itemsets per level k.}
-#'   \item{items}{Character vector of all items.}
+#'   \item{rules}{Tidy data frame, one row per rule, ordered by descending
+#'     lift then confidence, with columns \code{antecedent} and
+#'     \code{consequent} (the itemsets as comma-separated character strings),
+#'     \code{support}, \code{confidence}, \code{lift}, \code{conviction},
+#'     \code{count} and \code{n_transactions}.}
+#'   \item{frequent}{Tidy data frame, one row per frequent itemset, with
+#'     columns \code{itemset}, \code{size}, \code{support} and \code{count}.}
+#'   \item{frequent_itemsets}{List of frequent itemsets per level k, each
+#'     entry a list of \code{items} / \code{count} / \code{support}.}
+#'   \item{items}{Character vector of the frequent 1-itemsets the mining ran
+#'     on (all items when no item clears \code{min_support}).}
 #'   \item{n_transactions}{Integer.}
 #'   \item{n_rules}{Integer.}
 #'   \item{params}{List of min_support, min_confidence, min_lift, max_length.}
@@ -60,6 +67,10 @@
 #' @references
 #' Agrawal, R. & Srikant, R. (1994). Fast algorithms for mining association
 #' rules. In \emph{Proc. 20th VLDB Conference}, 487--499.
+#'
+#' Brin, S., Motwani, R., Ullman, J. D. & Tsur, S. (1997). Dynamic itemset
+#' counting and implication rules for market basket data. In \emph{Proc. ACM
+#' SIGMOD}, 255--264. (lift and conviction)
 #'
 #' @examples
 #' # From a list of transactions
@@ -547,7 +558,9 @@ print.net_association_rules <- function(x, ...) {
 #'
 #' @param object A \code{net_association_rules} object.
 #' @param ... Additional arguments (ignored).
-#' @return A data frame summarizing the rules, invisibly.
+#' @return The tidy rules data frame: one row per rule, with columns
+#'   \code{antecedent}, \code{consequent}, \code{support}, \code{confidence},
+#'   \code{lift}, \code{conviction}, \code{count} and \code{n_transactions}.
 #'
 #' @examples
 #' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
@@ -571,7 +584,8 @@ summary.net_association_rules <- function(object, ...) {
 #'
 #' @param x A \code{net_association_rules} object.
 #' @param ... Additional arguments passed to \code{ggplot2} functions.
-#' @return A \code{ggplot} object, invisibly.
+#' @return The drawn \code{ggplot} object, invisibly (the plot is also
+#'   printed). \code{NULL}, invisibly, when no rule was found.
 #'
 #' @examples
 #' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"),

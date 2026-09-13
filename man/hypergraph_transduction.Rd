@@ -31,8 +31,9 @@ An object of class \code{net_hypergraph_transduction}: a list with
 \verb{$predictions} (data.frame, one row per node: \code{node}, \code{label} (given,
 \code{NA} if unlabeled), \code{predicted}, \code{score} (winning class score),
 \code{margin} (winning minus runner-up score)), \verb{$classes}, \verb{$scores}
-(node x class score matrix), \verb{$xi}, \verb{$type}, \verb{$n_labeled} and
-\verb{$params}. Has \code{print}, \code{summary}, \code{plot} and \code{as.data.frame} methods;
+(node x class score matrix), \verb{$xi}, \verb{$type}, \verb{$n_labeled}, \verb{$n_nodes}
+and \verb{$params} (the \code{edge_weights} used).
+Has \code{print}, \code{summary}, \code{plot} and \code{as.data.frame} methods;
 \code{as.data.frame(x, what = "scores")} returns the tidy long score table.
 }
 \description{

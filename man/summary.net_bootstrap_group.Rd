@@ -12,7 +12,9 @@
 \item{...}{Ignored.}
 }
 \value{
-A data frame with group, edge, and bootstrap statistics columns.
+The per-group summaries stacked into one data frame: the
+columns of \code{\link{summary.net_bootstrap}} prefixed by a
+\code{group} column naming the network each row came from.
 }
 \description{
 Summary Method for net_bootstrap_group

@@ -13,11 +13,14 @@
 #' Descriptive by default; `test =` adds permutation, Bayesian and bootstrap
 #' evidence to the same tables. `plot()` draws one view per call.
 #'
-#' @param ... Two or more networks, in any mix of: `netobject`,
-#'   `netobject_group` (members are flattened and keep their names),
-#'   `cograph_network` / `psychnet`, `mcml`, `tna`, `group_tna`, square numeric
-#'   matrices, or one unnamed `list` of these. Name the arguments to name the
-#'   networks (`compare_networks(early = a, late = b)`).
+#' @param ... For `compare_networks()`: two or more networks, in any mix of:
+#'   `netobject`, `netobject_group` (members are flattened and keep their
+#'   names), `cograph_network` / `psychnet`, `mcml`, `tna`, `group_tna`,
+#'   square numeric matrices, or one unnamed `list` of these. Name the
+#'   arguments to name the networks (`compare_networks(early = a, late = b)`).
+#'   For `plot()`: passed to `cograph::splot()` for the network views (e.g.
+#'   `layout`, `node_size`, `minimum`); ignored by the other views and by
+#'   `print()`.
 #' @param reference `NULL` (default) compares all pairs. A single network name
 #'   or index compares every other network against that one; the reference is
 #'   always `network_a`, so `diff = reference - other`.
@@ -28,10 +31,14 @@
 #'   the networks as estimated.
 #' @param measures Centrality measures for the node table. Any of
 #'   `OutStrength`, `InStrength`, `ClosenessIn`, `ClosenessOut`, `Closeness`,
-#'   `Betweenness`, `BetweennessRSP`, `Diffusion`, `Clustering`. `NULL` or
-#'   `character(0)` skips the node table.
-#' @param labels Optional character vector naming the networks (one per
-#'   network after flattening groups); overrides argument names.
+#'   `Betweenness`, `BetweennessRSP`, `Diffusion`, `Clustering`; `"all"`
+#'   selects those nine. `NULL` or `character(0)` skips the node table.
+#'   Unknown names are dropped with a warning.
+#' @param labels For `compare_networks()`: optional character vector naming
+#'   the networks (one per network after flattening groups); overrides
+#'   argument names. For `plot()`: logical; print the signed difference on
+#'   the edge and node views, default `TRUE` (the heatmap always shows its
+#'   values).
 #' @param test Character vector of inference backends, any of `"none"`
 #'   (default), `"permutation"`, `"bayes"`, `"bootstrap"`. Several may be
 #'   combined; each fills the columns it supports (see Details).
@@ -69,8 +76,9 @@
 #' `"bootstrap"` (via [vertex_compare()]) appends structural rows
 #' (density, mean weight, centralization, reciprocity) to `global` with
 #' `boot_se`, `boot_ci_lower`, `boot_ci_upper`, `boot_z`, `boot_p`,
-#' `boot_sig`. Unified `sig` and `evidence` columns on `edges`/`nodes` take
-#' the permutation result when run, else the Bayesian one.
+#' `boot_sig`. Unified `sig` and `evidence` columns take the permutation
+#' result when run (on both `edges` and `nodes`), else the Bayesian one (on
+#' `edges` only -- the Bayesian backend is edge-level).
 #' Permutation and Bayesian tests need networks that carry their data
 #' (`build_network()` output, or `tna` objects, which are rebuilt); plain
 #' matrices support `"bootstrap"` only.
@@ -109,8 +117,10 @@
 #' Classed conditions (`nestimate_compare_*`): `too_few`, `bad_input`,
 #' `dim_mismatch`, `node_mismatch`, `na_weights`, `reference_unknown`,
 #' `labels_length`, `scaling_domain`, `scaling_inference`,
-#' `test_unsupported`, `unknown_pair`, `no_nodes`; warning
-#' `unknown_measure`.
+#' `test_unsupported`, `unknown_pair`, `no_nodes`, `no_test`
+#' (`plot(type = "inference")` under `test = "none"`), `unknown_measure`
+#' (selecting a measure the object does not carry); warning
+#' `unknown_measure` (an unknown name in `measures`).
 #'
 #' @seealso [compare_model()] (two-network predecessor), [permutation()],
 #'   [bayes_compare()], [vertex_compare()], [subtract_networks()].
@@ -911,7 +921,8 @@ print.net_network_comparison <- function(x, digits = 2L, ...) {
 #'
 #' Every table is a data frame of class `net_table` whose `print()` shows
 #' whole numbers without decimals, exact zeros as `0`, other values with
-#' `digits` decimals, and p-values with three decimals.
+#' `digits` decimals, and p-values with three decimals; `print()` itself
+#' returns the table invisibly.
 #' @examples
 #' achievers <- build_network(group_regulation_long, method = "relative",
 #'                            actor = "Actor", action = "Action",

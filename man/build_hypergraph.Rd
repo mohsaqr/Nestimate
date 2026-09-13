@@ -71,9 +71,12 @@ of each size, named \code{size_2}, \code{size_3}, ...}
 \code{include_pairwise}, \code{max_size}, \code{threshold}, \code{seed}.}
 }
 
-The input \code{x} invisibly.
+For \code{print()}, the input \code{x} invisibly.
 
-The input \code{object} invisibly.
+For \code{summary()}, a data.frame with one row per node and columns
+\code{node} (node name) and \code{degree} (number of hyperedges containing the
+node), returned visibly; the summary block (node / hyperedge counts,
+mean and maximum hyperedge size) is printed as a side effect.
 }
 \description{
 Takes a network and produces a hypergraph by promoting k-cliques (k >= 3)

@@ -452,3 +452,43 @@ test_that("convert_sequence_format follows handles single-action sequences", {
   expect_equal(result$act, "B")
   expect_equal(result$follows, "A")
 })
+
+test_that("frequency format keeps character sequence ids", {
+  # Regression: .fmt_frequency coerced the id to integer, so a character id
+  # became NA and the merge returned a zero-row frame with no warning that
+  # anything had been lost.
+  long <- data.frame(
+    StepID = c("a_1", "a_1", "a_1", "b_2", "b_2"),
+    Action = c("Try", "Wrong", "Retry", "Try", "Right"),
+    stringsAsFactors = FALSE
+  )
+  res <- convert_sequence_format(long, id_col = "StepID", action = "Action",
+                                 format = "frequency")
+
+  expect_equal(nrow(res), 2L)
+  expect_setequal(res$StepID, c("a_1", "b_2"))
+  expect_type(res$StepID, "character")
+  expect_equal(res[res$StepID == "a_1", "Try"], 1L)
+  expect_equal(res[res$StepID == "a_1", "Wrong"], 1L)
+  expect_equal(res[res$StepID == "a_1", "Retry"], 1L)
+  expect_equal(res[res$StepID == "b_2", "Right"], 1L)
+  expect_equal(res[res$StepID == "b_2", "Wrong"], 0L)
+})
+
+test_that("frequency and onehot agree on which ids they return", {
+  long <- data.frame(
+    id  = c("s10", "s10", "s9", "s9"),
+    act = c("A", "B", "B", "B"),
+    stringsAsFactors = FALSE
+  )
+  fq <- convert_sequence_format(long, id_col = "id", action = "act",
+                                format = "frequency")
+  oh <- convert_sequence_format(long, id_col = "id", action = "act",
+                                format = "onehot")
+
+  expect_setequal(fq$id, oh$id)
+  # counts vs presence: s9 has two Bs, one of them
+  expect_equal(fq[fq$id == "s9", "B"], 2L)
+  expect_equal(oh[oh$id == "s9", "B"], 1L)
+  expect_equal(fq[fq$id == "s10", "A"], 1L)
+})

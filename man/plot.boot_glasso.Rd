@@ -22,7 +22,8 @@ accepts \code{order}: \code{"sample"} (default, sorted by value)
 or \code{"id"} (alphabetical).}
 }
 \value{
-A \code{ggplot} object, invisibly.
+A \code{ggplot} object (returned, and so printed when the call
+is made at the top level).
 }
 \description{
 Plots bootstrap results for GLASSO networks.

@@ -49,6 +49,9 @@ entropy removed by order-1 memory), \strong{not}
 \item{base}{Logarithm base used.}
 \item{states}{Character vector of state names.}
 }
+For a \code{netobject_group} the result is a
+\code{"net_transition_entropy_group"}: a named list holding one such
+object per group.
 }
 \description{
 Computes per-state branching entropy, stationary entropy, and the

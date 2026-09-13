@@ -83,7 +83,7 @@ s2 <- data.frame(
 net1 <- build_network(s1, method = "relative")
 net2 <- build_network(s2, method = "relative")
 cmp <- vertex_compare(net1, net2, iter = 100, seed = 1)
-cmp$summary
+summary(cmp)
 
 }
 \references{

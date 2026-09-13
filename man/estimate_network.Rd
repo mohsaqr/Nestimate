@@ -16,7 +16,10 @@ estimate_network(
 }
 \arguments{
 \item{data}{Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance).}
+square symmetric matrix (correlation or covariance). A fitted
+\code{net_clustering} or \code{net_mmm} object is also accepted: the
+per-cluster networks are (re)built and a \code{netobject_group} is
+returned.}
 
 \item{method}{Character. Defaults to \code{"relative"} for backward
 compatibility.}
@@ -31,9 +34,9 @@ Transition estimators accept tna-style sequence options such as
 / \code{end_state}, of which \code{start} / \code{end} are the public
 form -- see those arguments).
 Column-like entries in \code{params} (\code{action}, \code{id},
-\code{id_col}, \code{time}, \code{session}, \code{order}, \code{codes},
-and \code{group}) are resolved before format detection and must name
-existing columns. If the same column role is supplied both directly and
+\code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order},
+\code{cols}, \code{codes}, and \code{group}) are resolved before format
+detection and must name existing columns. If the same column role is supplied both directly and
 through \code{params}, the names must agree.}
 
 \item{scaling}{Character vector or NULL. Post-estimation scaling to apply
@@ -44,9 +47,11 @@ Default: \code{NULL} (no scaling).}
 \item{threshold}{Numeric. Absolute values below this are set to zero in the
 result matrix. Default: 0 (no thresholding).}
 
-\item{level}{Character or NULL. Multilevel decomposition for association
-methods. One of \code{NULL}, \code{"between"}, \code{"within"},
-\code{"both"}. Requires \code{id_col}. Default: \code{NULL}.}
+\item{level}{Character or NULL. Multilevel decomposition for the undirected
+association methods (\code{cor}, \code{pcor}, \code{glasso}); a directed
+estimator errors. One of \code{NULL}, \code{"between"}, \code{"within"},
+\code{"both"}. Requires an id column, supplied either as \code{actor} or
+as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.}
 
 \item{...}{Additional arguments passed to \code{\link{build_network}}.}
 }

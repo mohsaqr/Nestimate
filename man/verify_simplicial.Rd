@@ -12,9 +12,11 @@ verify_simplicial(mat, threshold = 0)
 \item{threshold}{Edge weight threshold.}
 }
 \value{
-A list with \code{$cliques_match} (logical),
-\code{$n_simplices_ours}, \code{$n_simplices_igraph},
-\code{$betti}, and \code{$euler}.
+Invisibly, a list with \code{cliques_match} (logical: do the
+simplices match \code{igraph::cliques()} exactly),
+\code{n_simplices_ours}, \code{n_simplices_igraph}, \code{betti},
+\code{euler}, and \code{f_vector}. The comparison is also printed to
+the console.
 }
 \description{
 Cross-validates clique finding and Betti numbers against igraph

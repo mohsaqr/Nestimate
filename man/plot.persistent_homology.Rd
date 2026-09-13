@@ -23,7 +23,9 @@ of two ggplots when \code{combined = FALSE}.
 Two panels: Betti curve (threshold vs Betti number) and persistence
 diagram (birth vs death). Persistence pairs come from full boundary-
 matrix reduction; essential classes are shown at the filtration boundary
-(\code{death = 0} in clique mode, \code{death = max_scale} in VR mode).
+(\code{death = 0} in clique mode; in VR mode their stored
+\code{death = Inf} is capped for display at the largest finite value in
+the diagram or on the threshold grid, so they still render).
 }
 \examples{
 \donttest{

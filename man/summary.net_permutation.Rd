@@ -12,7 +12,10 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A data frame with edge-level permutation test results.
+The \code{$summary} data frame: one row per edge present in
+either network, with columns \code{from}, \code{to},
+\code{weight_x}, \code{weight_y}, \code{diff}, \code{effect_size},
+\code{p_value}, \code{sig}.
 }
 \description{
 Summary Method for net_permutation

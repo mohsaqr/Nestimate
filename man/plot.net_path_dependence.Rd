@@ -11,7 +11,8 @@
 
 \item{top}{Integer. Number of contexts to show (top by KL). Default 15.}
 
-\item{title}{Character. Plot title.}
+\item{title}{Character or \code{NULL}. Plot title. Default \code{NULL}, which
+builds "Path dependence: order k vs order 1" from the fitted order.}
 
 \item{...}{Ignored.}
 }

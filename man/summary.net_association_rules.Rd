@@ -12,7 +12,9 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A data frame summarizing the rules, invisibly.
+The tidy rules data frame: one row per rule, with columns
+\code{antecedent}, \code{consequent}, \code{support}, \code{confidence},
+\code{lift}, \code{conviction}, \code{count} and \code{n_transactions}.
 }
 \description{
 Summary Method for net_association_rules

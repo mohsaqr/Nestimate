@@ -233,6 +233,13 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 #' \eqn{t}. Landscapes are stable under bottleneck distance and form a
 #' Banach-space embedding of persistence diagrams.
 #'
+#' Essential classes are excluded: a tent function is undefined for an
+#' infinitely-lived class on a finite grid, so pairs with
+#' \code{death = Inf} (VR mode) and pairs with \code{death = 0} but
+#' \code{birth > 0} (the clique-mode encoding of an essential class) are
+#' dropped before the landscape is built. When no finite pair remains in
+#' the requested dimension, every landscape function is zero on the grid.
+#'
 #' @param ph A \code{persistent_homology} object or a data.frame with
 #'   columns \code{dimension}, \code{birth}, \code{death}.
 #' @param k_max Maximum landscape index to compute (default 5). Must be a

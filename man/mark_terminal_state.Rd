@@ -12,13 +12,18 @@ cols = time steps) of state labels with \code{NA} for missing
 observations.}
 
 \item{state}{Character. Label to insert in terminal-NA cells.
-Default \code{"End"}.}
+Default \code{"End"}. If the label already occurs somewhere in \code{data}, the
+function warns and appends \verb{_1}, \verb{_2}, ... until it is unique, so the
+absorbing marker is never confused with an observed state.}
 
 \item{cols}{Optional state-column names; otherwise all columns.}
 }
 \value{
-A \code{data.frame} of the same shape as \code{data} with terminal
-NAs filled by \code{state}.
+A character \code{data.frame} of the same shape as \code{data} (or of
+\code{data[cols]} when \code{cols} is given) with terminal NAs filled by
+\code{state}. The label actually used is attached as the
+\code{"terminal_state"} attribute, which matters when it had to be made
+unique.
 }
 \description{
 Replaces every cell after each row's last observed state with the

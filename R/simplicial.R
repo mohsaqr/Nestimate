@@ -40,7 +40,8 @@
 #' @param threshold For \code{type = "clique"}: minimum non-zero absolute
 #'   edge weight to include an edge (default 0). Edges below this are
 #'   ignored; zero-weight non-edges are never included. Ignored for
-#'   \code{type = "vr"} - use \code{max_scale} instead.
+#'   \code{type = "vr"} (use \code{max_scale} instead) and for
+#'   \code{type = "pathway"}.
 #' @param max_dim Maximum simplex dimension (default 10). Must be a single
 #'   non-negative integer. A k-simplex has k+1 nodes.
 #' @param max_pathways For \code{type = "pathway"}: maximum number of
@@ -55,9 +56,28 @@
 #' @param ... Additional arguments passed to \code{build_hon()} when
 #'   \code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.
 #'
-#' @return A \code{simplicial_complex} object. For \code{type = "vr"} an
-#'   additional \code{$filtration} numeric vector is attached (parallel to
-#'   \code{$simplices}).
+#' @return A \code{simplicial_complex} object - a list with:
+#' \describe{
+#'   \item{simplices}{List of integer vectors, one per simplex, each holding
+#'     the (sorted) node indices it spans. Every face of every simplex is
+#'     present, including all 0-simplices (isolated vertices included).}
+#'   \item{nodes}{Character vector of node labels; \code{simplices} index
+#'     into it.}
+#'   \item{n_nodes, n_simplices}{Integer counts.}
+#'   \item{dimension}{Integer. Highest simplex dimension present
+#'     (a k-simplex has k+1 nodes).}
+#'   \item{f_vector}{Named integer vector \code{dim_0}, \code{dim_1}, ... -
+#'     the number of simplices of each dimension.}
+#'   \item{density}{Numeric. \code{n_simplices} divided by the number of
+#'     simplices a complete complex on \code{n_nodes} would have up to
+#'     \code{dimension}.}
+#'   \item{mean_dim}{Numeric. Mean simplex dimension.}
+#'   \item{type}{\code{"clique"}, \code{"pathway"}, or \code{"vr"}.}
+#' }
+#'   For \code{type = "vr"} two further elements are attached:
+#'   \code{$filtration} (numeric, parallel to \code{$simplices}: the value at
+#'   which each simplex enters) and \code{$max_scale} (the cap actually
+#'   used). \code{persistent_homology()} consumes them directly.
 #'
 #' @examples
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
@@ -784,6 +804,10 @@ euler_characteristic <- function(sc) {
 #'
 #' @param x A square matrix, \code{tna}, or \code{netobject}. For
 #'   \code{type = "vr"}, must be a non-negative distance matrix.
+#'   A \code{simplicial_complex} carrying a \code{$filtration} vector (as
+#'   returned by \code{build_simplicial(type = "vr")}) is also accepted and
+#'   is used directly: its stored filtration values are reduced as they are,
+#'   so \code{type} is taken from the complex rather than this argument.
 #' @param n_steps Number of grid points for the reported Betti curve
 #'   (default 20). The persistence diagram itself is exact - it does not
 #'   depend on \code{n_steps}.
@@ -798,17 +822,22 @@ euler_characteristic <- function(sc) {
 #' \describe{
 #'   \item{betti_curve}{Data frame: \code{threshold}, \code{dimension},
 #'     \code{betti}.}
-#'   \item{persistence}{Data frame of birth-death pairs:
-#'     \code{dimension}, \code{birth}, \code{death}, \code{persistence}.
-#'     Sorted by descending persistence.}
+#'   \item{persistence}{Data frame of birth-death pairs, one row per
+#'     homology class: \code{dimension}, \code{birth}, \code{death},
+#'     \code{persistence}. Sorted by descending persistence. Essential
+#'     classes are included, with \code{death = 0} and
+#'     \code{persistence = birth} in clique mode, and \code{death = Inf},
+#'     \code{persistence = Inf} in VR mode (the plot method caps those for
+#'     display only).}
 #'   \item{thresholds}{Numeric vector of grid thresholds.}
 #'   \item{mode}{Either \code{"clique"} or \code{"vr"}.}
 #' }
 #'
 #' @references
 #' Edelsbrunner, H., Letscher, D., & Zomorodian, A. (2000). Topological
-#' persistence and simplification. \emph{Discrete & Computational Geometry}
-#' \strong{28}, 511-533.
+#' persistence and simplification. In \emph{Proceedings of the 41st Annual
+#' Symposium on Foundations of Computer Science}, 454-463. Journal version:
+#' \emph{Discrete & Computational Geometry} (2002) \strong{28}, 511-533.
 #'
 #' @examples
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
@@ -1076,9 +1105,11 @@ q_analysis <- function(sc) {
 #' @param mat A square adjacency matrix.
 #' @param threshold Edge weight threshold.
 #'
-#' @return A list with \code{$cliques_match} (logical),
-#'   \code{$n_simplices_ours}, \code{$n_simplices_igraph},
-#'   \code{$betti}, and \code{$euler}.
+#' @return Invisibly, a list with \code{cliques_match} (logical: do the
+#'   simplices match \code{igraph::cliques()} exactly),
+#'   \code{n_simplices_ours}, \code{n_simplices_igraph}, \code{betti},
+#'   \code{euler}, and \code{f_vector}. The comparison is also printed to
+#'   the console.
 #' @examplesIf requireNamespace("igraph", quietly = TRUE)
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
@@ -1282,8 +1313,8 @@ print.q_analysis <- function(x, ...) {
 
 #' Plot a Simplicial Complex
 #'
-#' Produces a multi-panel summary: f-vector, simplicial degree ranking,
-#' and degree-by-dimension heatmap.
+#' Produces a four-panel summary: f-vector, Betti numbers, simplicial
+#' degree ranking, and degree-by-dimension heatmap.
 #'
 #' @param x A \code{simplicial_complex} object.
 #' @param combined When `TRUE` (default), the four panels are stitched into
@@ -1388,7 +1419,9 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
 #' Two panels: Betti curve (threshold vs Betti number) and persistence
 #' diagram (birth vs death). Persistence pairs come from full boundary-
 #' matrix reduction; essential classes are shown at the filtration boundary
-#' (\code{death = 0} in clique mode, \code{death = max_scale} in VR mode).
+#' (\code{death = 0} in clique mode; in VR mode their stored
+#' \code{death = Inf} is capped for display at the largest finite value in
+#' the diagram or on the threshold grid, so they still render).
 #'
 #' @param x A \code{persistent_homology} object.
 #' @param combined When `TRUE` (default), the two panels are stitched
@@ -1506,7 +1539,7 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
 #' net <- build_network(seqs, method = "relative")
 #' sc  <- build_simplicial(net, type = "clique")
 #' qa  <- q_analysis(sc)
-#' plot(qa)
+#' if (requireNamespace("gridExtra", quietly = TRUE)) plot(qa)
 #' }
 #'
 #' @export

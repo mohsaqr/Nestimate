@@ -12,16 +12,23 @@
 \item{...}{Ignored.}
 }
 \value{
-A \code{data.frame} with one row per state. Columns described above.
+A \code{data.frame} with one row per state, of class
+\code{c("summary_chain_structure", "data.frame")}, carrying the chain-level
+flags (\code{is_regular}, \code{is_irreducible}, \code{is_aperiodic},
+\code{is_reversible}, \code{n_classes}, \code{absorbing_states}) as attributes, which
+its \code{print()} method shows as a header. Columns as described above.
 }
 \description{
 Returns a single data.frame with one row per state, combining every
 per-state metric \code{chain_structure()} computes. Always includes
-\code{state}, \code{classification}, \code{period}, \code{return_probability} (the
-diagonal of the hitting matrix) and \code{persistence} (the diagonal of
-the transition matrix); adds \code{sojourn} whenever it is finite, the
-chain's \code{stationary_probability} when irreducible, and absorption
-columns when the chain has any absorbing states.
+\code{state}, \code{classification}, \code{period}, \code{persistence} (the diagonal of
+the transition matrix), \code{return_probability} (the diagonal of the
+hitting matrix) and \code{sojourn_steps} (\code{1 / (1 - persistence)}, which is
+\code{Inf} for an absorbing state). Adds the chain's
+\code{stationary_probability} when the chain is irreducible, and absorption
+columns when it has any absorbing states: \code{absorption_probability} for a
+single absorbing state or one \verb{absorbed_in_<state>} column per state
+when there are several, plus \code{mean_absorption_time}.
 }
 \details{
 Columns are ordered for readability: identifiers first, classification

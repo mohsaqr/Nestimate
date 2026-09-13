@@ -8,7 +8,7 @@
 #'
 #' @description
 #' Register a custom or built-in network estimator function by name.
-#' Estimators registered here can be used by \code{\link{estimate_network}}
+#' Estimators registered here can be used by \code{\link{build_network}}
 #' via the \code{method} parameter.
 #'
 #' @param name Character. Unique name for the estimator (e.g. \code{"relative"},
@@ -34,7 +34,7 @@
 #' remove_estimator("my_cor")
 #'
 #' @seealso \code{\link{get_estimator}}, \code{\link{list_estimators}},
-#'   \code{\link{remove_estimator}}, \code{\link{estimate_network}}
+#'   \code{\link{remove_estimator}}, \code{\link{build_network}}
 #'
 #' @export
 register_estimator <- function(name, fn, description, directed) {

@@ -12,7 +12,8 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A ggplot object, invisibly printable.
+A ggplot object (the score heatmap), returned visibly so that
+\code{plot(x)} draws it.
 }
 \description{
 Heatmap of the full node-by-class score matrix: rows are nodes (grouped

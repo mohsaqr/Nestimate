@@ -24,15 +24,15 @@
 #'   as `net_mlvar`).
 #' @param new_names A character vector of new names. Must have the same
 #'   length as `x`, contain no `NA` or empty strings, and be unique.
-#' @return A `netobject_group` of the same class with renamed members.
+#' @return A `netobject_group` of the same class and length as `x`, with
+#'   `names()` replaced by `new_names`. The constituent networks are
+#'   returned unchanged.
 #' @examples
-#' \dontrun{
-#'   d   <- tna::group_regulation
-#'   grp <- build_network(d, method = "tna",
-#'                        group = sample(c("a", "b"), nrow(d), TRUE))
-#'   grp <- rename_models(grp, c("High", "Low"))
-#'   names(grp)
-#' }
+#' grp <- build_network(group_regulation_long, method = "tna",
+#'                      actor = "Actor", action = "Action", time = "Time",
+#'                      group = "Achiever")
+#' names(grp)
+#' names(rename_models(grp, c("High achievers", "Low achievers")))
 #' @export
 rename_models <- function(x, new_names) {
   UseMethod("rename_models")

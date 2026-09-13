@@ -12,7 +12,8 @@
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{
-The input object, invisibly.
+The comparison table, invisibly, with the printed \code{best}
+marker column (\code{"<-- BIC"} / \code{"<-- ICL"}) added.
 }
 \description{
 Print Method for mmm_compare

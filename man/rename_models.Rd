@@ -20,7 +20,9 @@ as \code{net_mlvar}).}
 length as \code{x}, contain no \code{NA} or empty strings, and be unique.}
 }
 \value{
-A \code{netobject_group} of the same class with renamed members.
+A \code{netobject_group} of the same class and length as \code{x}, with
+\code{names()} replaced by \code{new_names}. The constituent networks are
+returned unchanged.
 }
 \description{
 Replaces the names of the constituent networks in a \code{netobject_group}
@@ -30,11 +32,9 @@ want to substitute meaningful ones (e.g. \code{"High engagement"},
 \code{"Low engagement"}).
 }
 \examples{
-\dontrun{
-  d   <- tna::group_regulation
-  grp <- build_network(d, method = "tna",
-                       group = sample(c("a", "b"), nrow(d), TRUE))
-  grp <- rename_models(grp, c("High", "Low"))
-  names(grp)
-}
+grp <- build_network(group_regulation_long, method = "tna",
+                     actor = "Actor", action = "Action", time = "Time",
+                     group = "Achiever")
+names(grp)
+names(rename_models(grp, c("High achievers", "Low achievers")))
 }

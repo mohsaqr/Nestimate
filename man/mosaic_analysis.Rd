@@ -63,7 +63,12 @@ An object of class \code{"mosaic_analysis"}: a list with
 \item{table}{The filtered contingency \code{table}.}
 \item{removed}{List of dropped \code{var1} / \code{var2} categories.}
 \item{n_original, n_filtered}{Row counts before/after filtering.}
+\item{vars}{Named character vector \code{c(var1 = , var2 = )}.}
+\item{plot_parts, plot_args}{The residual matrix, table, and styling
+arguments retained so \code{plot()} can re-render without re-testing.}
 }
+Use \code{print()} for the test summary and \code{summary()} for the tidy
+per-cell table.
 }
 \description{
 Analyses the association between two categorical columns of a data.frame.
@@ -75,13 +80,11 @@ standardized Pearson residual (Nestimate diverging palette). All tabular
 output is a tidy one-row-per-cell \code{data.frame}.
 }
 \examples{
-df <- data.frame(
-  gender = sample(c("F", "M"), 200, replace = TRUE),
-  level  = sample(c("Low", "Mid", "High"), 200, replace = TRUE)
-)
-res <- mosaic_analysis(df, "gender", "level", min_count = 5)
-res$stats
-res$counts
+data(group_regulation_long, package = "Nestimate")
+res <- mosaic_analysis(group_regulation_long, "Course", "Action",
+                       min_count = 20)
+res
+head(summary(res))
 \donttest{
 plot(res, tile_label = "percent")
 }

@@ -12,14 +12,15 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-The patterns data.frame (tidy: one row per k-gram pattern, per
-group, with frequency and proportion columns; includes p-values when a
-permutation test was run).
+The \code{patterns} data.frame: tidy, one row per k-gram pattern,
+with a frequency, proportion and standardized-residual column per group,
+and the test columns when \code{test} was not \code{"none"}.
 }
 \description{
 Summary Method for net_sequence_comparison
 }
 \examples{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 60, TRUE),
   V2 = sample(LETTERS[1:4], 60, TRUE),

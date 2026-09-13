@@ -16,21 +16,27 @@
 \arguments{
 \item{x}{A \code{state_freq} object.}
 
-\item{digits}{Number of decimal places for proportion / share columns.}
+\item{digits}{Number of decimal places for proportion / share columns.
+Default 1.}
 
-\item{max_states}{Cap on rows shown per group in the per-state table.
-The full table remains available via \code{x$table}.}
+\item{max_states}{Cap on rows shown per group in the per-state table
+(default 20); the surplus is folded into a single \code{"(+k more)"}
+row. The full, uncapped table is returned by
+\code{as.data.frame(x)}.}
 
 \item{...}{Unused.}
 }
 \value{
-\code{print()} returns \code{invisible(x)}; \code{plot()} returns
-\code{invisible(NULL)} after drawing; \code{as.data.frame()} returns
-\code{x$table}.
+\code{print()} returns \code{x} invisibly (after printing the
+table and drawing the chart); \code{plot()} returns \code{invisible(NULL)}
+after drawing; \code{as.data.frame()} returns the tidy
+\code{data.frame}, one row per (group, state) cell with columns
+\code{group}, \code{state}, \code{count}, \code{proportion}.
 }
 \description{
 \code{plot_state_frequencies()} returns a \code{state_freq} object holding
 both the rendered chart and the tidy frequency table. \code{print()} shows
-the table in the console, \code{plot()} renders the chart, and
-\code{as.data.frame()} returns the tidy table for downstream piping.
+the table in the console \emph{and} draws the chart on the active graphics
+device, \code{plot()} draws the chart alone, and \code{as.data.frame()}
+returns the tidy table for downstream piping.
 }

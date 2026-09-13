@@ -232,7 +232,7 @@ build_hypergraph <- function(net,
 #' @param x A `net_hypergraph` object (for `print`).
 #' @param object A `net_hypergraph` object (for `summary`).
 #' @param ... Additional arguments (ignored).
-#' @return The input `x` invisibly.
+#' @return For `print()`, the input `x` invisibly.
 #' @rdname build_hypergraph
 #' @export
 print.net_hypergraph <- function(x, ...) {
@@ -250,7 +250,10 @@ print.net_hypergraph <- function(x, ...) {
   invisible(x)
 }
 
-#' @return The input `object` invisibly.
+#' @return For `summary()`, a data.frame with one row per node and columns
+#'   `node` (node name) and `degree` (number of hyperedges containing the
+#'   node), returned visibly; the summary block (node / hyperedge counts,
+#'   mean and maximum hyperedge size) is printed as a side effect.
 #' @rdname build_hypergraph
 #' @export
 summary.net_hypergraph <- function(object, ...) {

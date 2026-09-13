@@ -31,21 +31,27 @@ Default: "Time".}
 \item{drop_na}{Logical. Whether to drop NA values. Default: TRUE.}
 }
 \value{
-A data frame in long format with columns:
+A data frame in long format, one row per (sequence, time point),
+sorted by identifier then time, with columns:
 \describe{
-\item{id}{Sequence identifier (integer).}
-\item{Time}{Time point within the sequence (integer).}
-\item{Action}{The action/state at that time point (character).}
+\item{id}{Sequence identifier. Named by \code{id_col}; when that is
+\code{NULL} the column is called \code{id} and holds the row number
+of the wide input (integer).}
+\item{Time}{Time point within the sequence (integer), taken from the
+numeric suffix of the wide column name. Named by \code{time_col}.}
+\item{Action}{The action/state at that time point. Named by
+\code{action_col}.}
 }
-Any additional columns from the original data are preserved.
+Any additional non-time columns from the original data are preserved and
+repeated on every row of their sequence.
 }
 \description{
 Convert sequence data from wide format (one row per sequence, columns as
 time points) to long format (one row per action).
 }
 \details{
-This function converts data from the format produced by \code{simulate_sequences()}
-to the long format used by many TNA functions and analyses.
+Converts wide sequence data (one row per sequence, one column per time
+point) to the long format used by many TNA functions and analyses.
 }
 \examples{
 wide_data <- data.frame(

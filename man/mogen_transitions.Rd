@@ -9,22 +9,29 @@ mogen_transitions(x, order = NULL, min_count = 1L)
 \arguments{
 \item{x}{A \code{net_mogen} object from \code{build_mogen()}.}
 
-\item{order}{Integer. Which order's transitions to extract. Must be a
-whole number; a non-integer value is an error rather than being
-silently truncated. Defaults to the optimal order selected by the model.}
+\item{order}{Integer >= 1 and at most the highest order tested. Which
+order's transitions to extract. Must be a whole number; a non-integer
+value is an error rather than being silently truncated. Defaults to the
+optimal order selected by the model - pass an explicit \code{order} when
+that optimal order is 0, which has no transition table and therefore
+errors.}
 
 \item{min_count}{Integer. Minimum observed count to include (default 1).
 Use this to filter out rare transitions that have unreliable probabilities.}
 }
 \value{
-A data frame with columns:
+A data frame with one row per retained transition, sorted by
+\code{count} (descending), with columns:
 \describe{
 \item{path}{The full state sequence (e.g., "AI -> FAIL -> SOLVE").}
 \item{count}{Number of times this transition was observed.}
-\item{probability}{Transition probability P(to | from).}
+\item{probability}{Transition probability P(to | from), rounded to 4
+decimal places.}
 \item{from}{The context / conditioning states (k-gram source node).}
 \item{to}{The predicted next state.}
 }
+A zero-row data frame with the same columns when no transition reaches
+\code{min_count}.
 }
 \description{
 Returns a data frame of all transitions at a given Markov order,

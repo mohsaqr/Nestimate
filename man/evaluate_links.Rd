@@ -33,9 +33,7 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net, exclude_existing = FALSE)
 
-# Evaluate: predict the network's own edges
-true <- data.frame(from = pred$predictions$from[1:5],
-                   to = pred$predictions$to[1:5])
-evaluate_links(pred, true)
+# Evaluate against the network's own edges as the known truth
+evaluate_links(pred, extract_edges(net, threshold = 0.001))
 
 }

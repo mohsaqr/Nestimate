@@ -58,6 +58,9 @@ means where \code{credible}, \code{0} elsewhere.}
 draws (for further analysis or plotting).}
 \item{prior, draws, ci, min_share, base, states_names}{Call metadata.}
 }
+For a \code{netobject_group} the result is a
+\code{"net_entropy_bayes_group"}: a named list holding one such object
+per group.
 }
 \description{
 Bayesian estimation of the transition entropy quantities of

@@ -17,6 +17,10 @@ build_mcml(
   order = NULL,
   session = NULL,
   time_threshold = 900,
+  exclude = NULL,
+  trim = NULL,
+  end = FALSE,
+  end_by = NULL,
   labels = NULL
 )
 }
@@ -33,7 +37,7 @@ transitions.}
 the raw data. Otherwise falls back to \code{\link{cluster_summary}}.}
 \item{netobject}{If \code{x$data} is non-NULL, detects edge list
 vs sequence data. Otherwise falls back to \code{\link{cluster_summary}}.}
-\item{cluster_summary}{Returns as-is.}
+\item{mcml}{An \code{mcml} object is returned unchanged.}
 \item{square numeric matrix}{Falls back to \code{\link{cluster_summary}}.}
 \item{non-square or character matrix}{Treated as sequence data.}
 }}
@@ -59,8 +63,11 @@ edge lists where a single node may be source in some rows and target
 in others, or where source and target belong to different groups,
 pass an explicit named list (\code{list(G1 = c("N1","N2"), ...)})
 or a two-column data frame \code{data.frame(node, group)} instead.}
-\item{NULL}{Auto-detect from \code{netobject$nodes} or
-\code{$node_groups} (same logic as \code{\link{cluster_summary}}).}
+\item{NULL}{Auto-detect from a \code{netobject}'s node table (a
+\code{clusters}/\code{cluster}/\code{groups}/\code{group} column) or
+from its \code{node_groups}. Only \code{netobject} input can
+auto-detect; data frames and matrices require an explicit
+assignment.}
 }}
 
 \item{method}{Aggregation method for combining edge weights: "sum", "mean",
@@ -99,6 +106,31 @@ is passed through \code{prepare()} to derive a wide sequence, which is
 then routed to the existing sequence path. Behaves identically to
 \code{prepare(...) |> build_network() |> build_mcml()}.}
 
+\item{exclude}{Optional character vector of state labels to drop before
+the network is built (e.g. a technical-void marker). On long-format
+input the matching events are removed before sequences are formed, so a
+dropped state never occupies a sequence position; on wide sequence input
+the matching cells are set to \code{NA}.}
+
+\item{trim}{Optional truncation of each sequence. \code{NULL} (default)
+keeps every time point. A fraction in \code{(0, 1)} keeps the columns
+covering that quantile of sequence lengths (\code{trim = 0.95} keeps the
+shortest 95\\%); a value \code{>= 1} is an absolute cut
+(\code{trim = 10} keeps the first 10 time points). Same semantics as
+\code{\link{sequence_plot}}'s \code{trim}.}
+
+\item{end}{Terminal state appended after each sequence's last observed
+state. \code{FALSE} (default) adds none, \code{TRUE} adds one labelled
+\code{"End"}, and a string supplies the label. Applied \emph{after}
+\code{trim}, so trimming can never remove the marker.}
+
+\item{end_by}{Optional column name(s) grouping the terminal marker at a
+coarser unit than the sequence. \code{NULL} (default) marks every
+sequence. When supplied, only the \emph{last} sequence of each group is
+marked -- e.g. \code{session = "AttemptID", end = "Conclude",
+  end_by = "SkillID"} closes each skill once, not each attempt. Requires
+long-format input, since the grouping column lives there.}
+
 \item{labels}{Optional name -> label remap applied to within-cluster nodes
 (the macro layer is left untouched because its labels are cluster
 names). Accepts a 2-column data.frame \code{(name, label)}, a named
@@ -106,9 +138,19 @@ character vector \code{c(name = "label")}, or a named list. Unmapped
 names pass through unchanged.}
 }
 \value{
-A \code{cluster_summary} object with \code{meta$source = "transitions"},
-fully compatible with \code{plot()}, \code{as_tna()}, and
-\code{plot()}.
+An \code{mcml} object with the same layout as the return value of
+\code{\link{cluster_summary}} (\code{macro}, \code{clusters},
+\code{cluster_members}, \code{edges}, \code{meta}). On the sequence and
+edge-list paths \code{meta$source} is \code{"transitions"},
+\code{meta$type} records the \code{type} post-processing, and
+\code{edges} is a tidy data frame with one row per observed node-level
+transition and columns \code{from}, \code{to}, \code{weight},
+\code{cluster_from}, \code{cluster_to}, \code{type}
+(\code{"within"}/\code{"between"}). Matrix input falls through to
+\code{\link{cluster_summary}}, so \code{meta$source} is \code{"matrix"}
+and \code{edges} is \code{NULL}. Works with \code{print()},
+\code{summary()}, \code{\link{as_tna}}, \code{\link{as_htna}} and
+\code{\link{macro_network}}.
 }
 \description{
 Builds a Multi-Cluster Multi-Level (MCML) model from raw transition data
@@ -125,8 +167,7 @@ edges <- data.frame(
   weight = c(1, 2, 1, 3, 1, 2)
 )
 clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
-cs <- build_mcml(edges, clusters)
-cs$macro$weights
+build_mcml(edges, clusters)
 
 # Sequence data with clusters
 seqs <- data.frame(
@@ -136,10 +177,12 @@ seqs <- data.frame(
   T4 = c("D", "A", "C")
 )
 cs <- build_mcml(seqs, clusters, type = "raw")
-cs$macro$weights
+cs
+summary(cs)
 }
 \seealso{
 \code{\link{cluster_summary}} for matrix-based aggregation,
-\code{net_as_tna()} to convert to tna objects,
-\code{plot()} for visualization
+\code{\link{as_tna}} to promote the layers to netobjects,
+\code{\link{macro_network}} for the cluster-level network with one
+cluster expanded
 }

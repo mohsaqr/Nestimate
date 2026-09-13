@@ -59,11 +59,18 @@ Diagonal = mean recurrence time \eqn{1/\pi_i}.}
 \item{return_times}{Named numeric vector: \eqn{1/\pi_i} per state.}
 \item{states}{Character vector of state names.}
 }
+For a \code{netobject_group} the result is a \code{"net_mpt_group"}: a
+named list holding one \code{net_mpt} per group.
 
-\code{summary.net_mpt} returns a data frame with one row per state
-and columns \code{state}, \code{return_time}, \code{stationary},
-\code{mean_out} (mean steps to other states), \code{mean_in} (mean steps
-from other states).
+\code{summary.net_mpt} returns an object of class
+\code{"summary.net_mpt"}: a list whose \code{table} is a data frame with
+one row per state and columns \code{state}, \code{return_time},
+\code{stationary}, \code{mean_out} (mean steps to other states) and
+\code{mean_in} (mean steps from other states), and whose \code{object}
+is the \code{net_mpt} it summarises. Its print method shows the table.
+
+\code{plot.net_mpt} returns a ggplot object: a from-by-to heatmap
+of the mean first passage time matrix.
 }
 \description{
 Computes the full matrix of mean first passage times (MFPT) for a Markov

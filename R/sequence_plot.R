@@ -115,8 +115,8 @@
 #'       \code{\link{build_network}} on a clustering. Extracts data and
 #'       assignments from \code{attr(, "clustering")}.
 #'     }
-#'     \item{net_mmm}{From \code{\link{build_mmm}}. Uses \code{$models[[1]]$data}
-#'       and \code{$assignments}.}
+#'     \item{net_mmm}{From \code{\link{build_mmm}}. Uses \code{$data} (falling
+#'       back to \code{$models[[1]]$data}) and \code{$assignments}.}
 #'     \item{tna}{From the tna package. Decodes integer-encoded sequences.}
 #'     \item{mcml}{From \code{\link{build_mcml}} (built from sequences).
 #'       Produces a \strong{multichannel} plot: one panel per cluster plus a
@@ -144,6 +144,19 @@
 #'   \code{TRUE}, each time point is normalised to sum to 1 within its channel
 #'   (TraMineR-style \code{seqdplot} composition); when \code{FALSE} (default)
 #'   the stack shows prevalence and is capped with an \code{NA} band.
+#' @param expand For an \code{mcml}, names of clusters whose member states
+#'   are shown individually in the Summary band; \code{"all"} or \code{TRUE}
+#'   expands every cluster. The per-cluster channels are unaffected. Default
+#'   \code{NULL} keys the Summary band by cluster.
+#' @param panel \code{mcml} + \code{type = "distribution"} only. Which panel
+#'   to draw, as a single \code{ggplot}. \code{"both"} (default) puts the
+#'   macro \code{Summary} channel and the per-cluster channels on one figure
+#'   sharing a fill scale; \code{"summary"} draws the macro channel alone,
+#'   keyed and coloured by cluster; \code{"channels"} draws the per-cluster
+#'   channels alone, keyed and coloured by state. The macro channel is keyed
+#'   by cluster and the rest by state, so on a shared scale a cluster and a
+#'   state can land on the same colour -- drawing one panel avoids that and
+#'   gives it its own legend and default title.
 #' @param trim Optional time-axis truncation, to stop a few long
 #'   sequences from stretching the plot. Applies to all three types
 #'   (including the \code{mcml} multichannel view). \code{NULL} (default)
@@ -174,9 +187,9 @@
 #'   \code{2.5}.
 #' @param state_colors Vector of colours, one per state.
 #' @param na_color Colour for \code{NA} cells.
-#' @param cell_border Cell border colour. \code{NA} = off.
-#' @param frame If \code{TRUE} (default), draw a box around each panel.
-#'   If \code{FALSE}, no box - axis ticks and labels still appear.
+#' @param cell_border Cell border colour. \code{NA} (default) = off.
+#' @param frame \code{FALSE} (default) draws no box - axis ticks and labels
+#'   still appear. \code{TRUE} draws a box around each panel.
 #' @param width,height Optional device dimensions in inches. When supplied,
 #'   opens a new graphics device via \code{grDevices::dev.new()}. In knitr
 #'   chunks use the \code{fig.width} / \code{fig.height} chunk options
@@ -195,7 +208,8 @@
 #'   legend). Single-group calls (\code{G == 1}) ignore this argument.
 #'   Heatmap is always single-figure.
 #' @param legend Legend position: \code{"bottom"}, \code{"right"}, or
-#'   \code{"none"}. Default varies by type.
+#'   \code{"none"}. \code{NULL} (default) resolves to \code{"right"} for
+#'   every type.
 #' @param legend_size Legend text size. \code{NULL} (default) auto-scales
 #'   from the device width so the legend looks proportional at 5 in vs
 #'   12 in figures (clamped to \code{[0.65, 1.2]}).
@@ -204,9 +218,23 @@
 #' @param legend_border Swatch border colour.
 #' @param legend_bty \code{"n"} or \code{"o"}.
 #'
-#' @return For base-graphics types, invisibly a list describing the plot
-#'   (shape depends on \code{type}). For an \code{mcml} input, a \code{ggplot}
-#'   object.
+#' @return An \code{mcml} input returns a \code{ggplot} object (the
+#'   multichannel figure). Every other input draws with base graphics and
+#'   returns, invisibly, a list whose shape depends on \code{type}:
+#'   \describe{
+#'     \item{\code{"heatmap"}}{\code{ord} (integer row order actually
+#'       plotted), \code{codes} (the integer-encoded, trimmed sequence
+#'       matrix), \code{palette}, \code{levels} (state labels, parallel to
+#'       \code{palette}), and \code{sort_used} (the ordering strategy
+#'       applied, \code{"net_clustering"} when a clustering dendrogram was
+#'       used).}
+#'     \item{\code{"index"}}{\code{codes}, \code{palette}, \code{levels},
+#'       \code{orders} (list of integer row orders, one per panel, indexing
+#'       the original rows) and \code{groups} (panel labels).}
+#'     \item{\code{"distribution"}}{Whatever
+#'       \code{\link{distribution_plot}} returns: \code{counts},
+#'       \code{proportions}, \code{levels}, \code{palette}, \code{groups}.}
+#'   }
 #' @seealso \code{\link{distribution_plot}}, \code{\link{build_clusters}},
 #'   \code{\link{build_mcml}}
 #' @examples
@@ -242,6 +270,9 @@ sequence_plot <- function(x,
                           na               = TRUE,
                           normalize        = FALSE,
                           trim             = NULL,
+                          panel            = c("both", "summary",
+                                               "channels"),
+                          expand           = NULL,
                           trim_clusterwise = FALSE,
                           row_gap          = 0,
                           dendrogram_width = 1.2,
@@ -285,7 +316,8 @@ sequence_plot <- function(x,
     return(.sequence_plot_mcml(
       x, type = type, normalize = isTRUE(normalize),
       state_colors = state_colors, na_color = na_color,
-      main = main, time_label = time_label, trim = trim))
+      main = main, time_label = time_label, trim = trim,
+      panel = match.arg(panel), expand = expand))
   }
 
   # Open a new device when width/height supplied (interactive use). In

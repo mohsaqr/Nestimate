@@ -630,6 +630,11 @@
 #'   \item{seed}{Seed used (or NULL).}
 #'   \item{weighted}{Logical, whether weighted Hamming was used.}
 #'   \item{lambda}{Lambda value used (0 if not weighted).}
+#'   \item{covariates}{The post-hoc covariate analysis (a list; see the
+#'     \code{estimator} argument), or NULL when \code{covariates = NULL}.}
+#'   \item{network_method, build_args}{For \code{netobject} input, the
+#'     source network's method and stored build arguments, so per-cluster
+#'     networks can be rebuilt the same way. NULL otherwise.}
 #'   \item{htna_partition}{For HTNA input, the preserved node-to-actor
 #'     partition used to restore HTNA children when networks are built.}
 #' }
@@ -987,7 +992,13 @@ print.net_clustering <- function(x, digits = 3L, ...) {
 #' @param object A \code{net_clustering} object.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
 #'
-#' @return The input object, invisibly.
+#' @return A data frame of per-cluster statistics, one row per cluster,
+#'   with columns \code{cluster}, \code{size} and \code{mean_within_dist},
+#'   returned \emph{visibly}. When the clustering was fitted with
+#'   \code{covariates}, a \code{tidy_covariates}/\code{data.frame} (the
+#'   tidied covariate table, with cluster sizes, fit statistics and
+#'   profiles attached as attributes) is returned \emph{invisibly}
+#'   instead. In both cases the printed summary is a side effect.
 #'
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
@@ -1046,15 +1057,19 @@ summary.net_clustering <- function(object, ...) {
 #'
 #' @param x A \code{net_clustering} object.
 #' @param type Character. Plot type: \code{"silhouette"} (per-observation
-#'   silhouette bars), \code{"mds"} (2D MDS projection), or
-#'   \code{"heatmap"} (distance matrix heatmap ordered by cluster).
-#'   Default: \code{"silhouette"}.
+#'   silhouette bars), \code{"mds"} (2D MDS projection),
+#'   \code{"heatmap"} (distance matrix heatmap ordered by cluster), or
+#'   \code{"predictors"} (odds-ratio forest plot of the post-hoc
+#'   covariate analysis; requires \code{covariates} and an estimator that
+#'   produces coefficients). Default: \code{"silhouette"}.
 #' @param combined Logical. For \code{type = "predictors"} only: when
 #'   \code{TRUE} (default), covariate forest panels are combined into a
 #'   single faceted plot; when \code{FALSE}, a list of separate ggplots is
 #'   returned.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return A \code{ggplot} object (invisibly).
+#' @return A \code{ggplot} object (invisibly); for
+#'   \code{type = "predictors"} with \code{combined = FALSE}, a list of
+#'   \code{ggplot} objects named by cluster (invisibly).
 #'
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
@@ -1395,7 +1410,12 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 #'
 #' Dispatches on `estimator`:
 #' \itemize{
-#'   \item `"firth"` (default) - Firth's penalised multinomial logit via
+#'   \item `"auto"` (default) - resolves to `"firth"` when
+#'     `.detect_separation_risk()` finds a cluster x covariate cell with
+#'     fewer than 5 observations, and to `"multinom"` otherwise. The
+#'     resolved choice and its reason are stored on the `profiles` object
+#'     as the `auto_choice` / `auto_reason` attributes.
+#'   \item `"firth"` - Firth's penalised multinomial logit via
 #'     `brglm2::brmultinom`. Bias-reduced; estimates stay finite under
 #'     quasi-complete separation. AIC/BIC/McFadden derived from the same
 #'     log-likelihood scale as the ML fit, so they remain comparable.

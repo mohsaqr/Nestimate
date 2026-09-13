@@ -28,7 +28,10 @@ If NULL, uses all unique values. Default: NULL.}
 \item{prefix}{Character. Prefix for state column names. Default: "".}
 }
 \value{
-Data frame with one-hot encoded columns (0/1 integers).
+The input data frame with one 0/1 integer column appended per
+state (named \code{paste0(prefix, state)}). All other columns are kept;
+the original action column is removed unless
+\code{drop_action = FALSE}.
 }
 \description{
 Convert a categorical Action column to one-hot (binary indicator) columns.

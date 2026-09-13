@@ -41,8 +41,8 @@
 #'
 #' @param adj Adjacency matrix (edge weights = path frequencies).
 #' @param xi Fitted propensity matrix.
-#' @return Data frame with from, to, observed, expected, ratio, p_value,
-#'   p_under, p_over, and anomaly.
+#' @return Data frame with path, from, to, observed, expected, ratio,
+#'   p_value, p_under, p_over, and anomaly.
 #' @noRd
 .hypa_compute_scores <- function(adj, xi) {
   n <- nrow(adj)
@@ -207,9 +207,12 @@
 #'   edges is dropped from \code{$by_order}, \code{$order} and \code{$k}),
 #'   regardless of the order in which the vector is given; \code{$scores}
 #'   aggregates every built order.
-#' @param alpha Numeric. Significance threshold for anomaly classification
-#'   (default 0.05). Paths with HYPA score < alpha are under-represented;
-#'   paths with score > 1-alpha are over-represented.
+#' @param alpha Numeric in `(0, 0.5)`. Significance threshold for anomaly
+#'   classification (default 0.05). A path is labelled \code{"under"} when its
+#'   adjusted lower-tail p-value \code{p_adjusted_under} is below
+#'   \code{alpha}, \code{"over"} when its adjusted upper-tail p-value
+#'   \code{p_adjusted_over} is below \code{alpha}, and \code{"normal"}
+#'   otherwise (the under-representation test is applied first).
 #' @param min_count Integer. Minimum observed count for a path to be
 #'   classified as anomalous (default 5). Paths with fewer observations
 #'   are always classified as \code{"normal"} regardless of their
@@ -376,7 +379,7 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
 #'
 #' @examples
 #' seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
-#' hyp <- build_hypa(seqs, k = 2)
+#' hyp <- build_hypa(seqs, order = 2)
 #' print(hyp)
 #'
 #' \donttest{
@@ -386,7 +389,7 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
 #'   V3 = c("C","A","B","C","A","B","C","A","B","C"),
 #'   V4 = c("A","B","C","A","B","C","A","B","C","A")
 #' )
-#' hypa <- build_hypa(seqs, k = 2L)
+#' hypa <- build_hypa(seqs, order = 2L)
 #' print(hypa)
 #' }
 #'
@@ -419,17 +422,26 @@ print.net_hypa <- function(x, ...) {
 #' @param type Character. Which anomalies to show: \code{"all"} (default),
 #'   \code{"over"}, or \code{"under"}.
 #' @param order_by Character. Ranking used within each anomaly direction:
-#'   \code{"sig"} ranks by the active tail probability, \code{"freq"} by
-#'   observed count, \code{"ratio"} by observed/expected ratio, and
-#'   \code{"path"} alphabetically.
+#'   \code{"sig"} (default) ranks by the active tail probability,
+#'   \code{"freq"} (or its alias \code{"frequency"}) by observed count,
+#'   \code{"ratio"} by observed/expected ratio, and \code{"path"}
+#'   alphabetically.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return A data frame with path, observed, expected, ratio, p_tail, and
-#'   direction columns.
+#' @return A data frame of the reported anomalies, at most \code{n} rows per
+#'   direction, with columns \code{order} (the De Bruijn order the path was
+#'   found at), \code{path}, \code{observed}, \code{expected}, \code{ratio},
+#'   \code{p_tail} (the raw tail probability in the reported direction:
+#'   \code{p_over} for over-represented paths, \code{p_under} for
+#'   under-represented ones) and \code{direction}
+#'   (\code{"over"}/\code{"under"}). Returned visibly; the summary text and
+#'   the top-\code{n} tables are printed as a side effect. When no anomalies
+#'   were detected, a zero-row data frame with the same columns except
+#'   \code{order} is returned.
 #'
 #' @examples
 #' seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
-#' hyp <- build_hypa(seqs, k = 2)
+#' hyp <- build_hypa(seqs, order = 2)
 #' summary(hyp)
 #'
 #' \donttest{
@@ -439,7 +451,7 @@ print.net_hypa <- function(x, ...) {
 #'   V3 = c("C","A","B","C","A","B","C","A","B","C"),
 #'   V4 = c("A","B","C","A","B","C","A","B","C","A")
 #' )
-#' hypa <- build_hypa(seqs, k = 2L)
+#' hypa <- build_hypa(seqs, order = 2L)
 #' summary(hypa)
 #' summary(hypa, type = "over", n = 5)
 #' }

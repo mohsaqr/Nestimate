@@ -111,9 +111,8 @@ utils::globalVariables(c(
 #'                             actor = "Actor", action = "Action",
 #'                             time = "Time")
 #' print(fit)
-#' # Edges most promoted by row-normalization (rare-source transitions):
-#' head(fit$edges[order(-fit$edges$signed), c("from", "to", "ftna", "tna")])
 #' \donttest{
+#' # The polar portrait shows which edges row-normalization promotes.
 #' plot(fit)                       # stacked polar portrait
 #' plot(fit, type = "circular")    # chord-style diagram
 #' }

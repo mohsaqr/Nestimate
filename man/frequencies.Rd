@@ -2,7 +2,7 @@
 % Please edit documentation in R/frequencies.R
 \name{frequencies}
 \alias{frequencies}
-\title{Sequence Data Conversion Functions}
+\title{Build a Transition Frequency Matrix}
 \usage{
 frequencies(
   data,
@@ -33,15 +33,15 @@ format). If NULL, all non-ID columns are used. Default: NULL.}
 "long", or "wide". Default: "auto".}
 }
 \value{
-A square integer matrix of transition frequencies where
+A square integer matrix of transition frequencies, of class
+\code{c("nest_transition_counts", "matrix", "array")}, where
 \code{mat[i, j]} is the number of times state i was followed by state j.
-Row and column names are the sorted unique states. Can be passed directly
-to \code{tna::tna()}.
+Row and column names are the sorted unique states. It behaves as an
+ordinary matrix and can be passed directly to \code{tna::tna()}; the
+class stamp only adds a \code{summary()} method, which returns the same
+counts as a tidy \code{from}/\code{to}/\code{count} data frame.
 }
 \description{
-Functions for converting sequence data (long or wide format) into
-transition frequency matrices and other useful representations.
-
 Convert long or wide format sequence data into a transition frequency matrix.
 Counts how many times each transition from state_i to state_j occurs across
 all sequences.

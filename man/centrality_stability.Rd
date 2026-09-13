@@ -21,7 +21,10 @@ centrality_stability(
 )
 }
 \arguments{
-\item{x}{A \code{netobject} from \code{\link{build_network}}.}
+\item{x}{A \code{netobject} from \code{\link{build_network}}, a
+\code{cograph_network}, or a \code{netobject_group} / \code{mcml}
+(each constituent network is assessed and a
+\code{net_stability_group} is returned).}
 
 \item{measures}{Character vector. Centrality measures to assess.
 Defaults to \code{c("InStrength", "OutStrength", "Betweenness")}. Pass
@@ -52,12 +55,14 @@ threshold (default: 0.95).}
 that takes a weight matrix and returns a named list of centrality
 vectors. When \code{NULL} (default), all built-in measures are
 computed internally: \code{"InStrength"}/\code{"OutStrength"} via
-\code{colSums}/\code{rowSums}, and \code{"Betweenness"}/
-\code{"InCloseness"}/\code{"OutCloseness"}/\code{"Closeness"} via an
-internal Floyd-Warshall shortest-path routine. When provided, the
-function is called as \code{centrality_fn(mat)} and is used only for
-requested measures that are not one of the six built-ins; it should
-return a named list (e.g., \code{list(my_metric = ...)}).}
+\code{colSums}/\code{rowSums}, \code{"Betweenness"}/
+\code{"ClosenessIn"}/\code{"ClosenessOut"}/\code{"Closeness"} via an
+internal Floyd-Warshall shortest-path routine, and
+\code{"BetweennessRSP"}, \code{"Diffusion"} and \code{"Clustering"}
+from the weight matrix directly. When provided, the function is
+called as \code{centrality_fn(mat)} and is used only for requested
+measures that are not one of the built-ins; it should return a named
+list (e.g., \code{list(my_metric = ...)}).}
 
 \item{loops}{Logical. If \code{FALSE} (default), self-loops (diagonal)
 are excluded from centrality computation. This does not modify the
@@ -76,18 +81,33 @@ when \code{normalize = FALSE}. Default: \code{TRUE}.}
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
 }
 \value{
-An object of class \code{"net_stability"} containing:
+An object of class \code{"net_stability"}: a list with
 \describe{
-\item{cs}{Named numeric vector of CS-coefficients per measure.}
-\item{correlations}{Named list of matrices (iter x n_prop) of
-correlation values per measure.}
-\item{measures}{Character vector of measures assessed.}
+\item{cs}{Named numeric vector of CS-coefficients, one per retained
+measure.}
+\item{correlations}{Named list of \code{iter} x
+\code{length(drop_prop)} matrices of correlation values, one per
+retained measure.}
+\item{measures}{Character vector of the measures actually assessed
+(see the zero-variance rule below).}
 \item{drop_prop}{Drop proportions used.}
 \item{threshold}{Stability threshold.}
 \item{certainty}{Required certainty level.}
 \item{iter}{Number of iterations.}
 \item{method}{Correlation method.}
 }
+A \code{netobject_group} or \code{mcml} input instead returns a
+\code{"net_stability_group"}: a named list of one \code{net_stability}
+per constituent network.
+
+Zero-variance measures are handled by two different rules, both
+long-standing behaviour. When \emph{some} requested measures have zero
+variance on the original network (for example \code{"OutStrength"} on a
+row-normalised transition network), those measures are \strong{dropped}:
+\code{$cs}, \code{$correlations} and \code{$measures} cover only the
+retained ones. When \emph{every} requested measure has zero variance a
+warning is issued and \strong{all} requested names are returned with
+\code{cs = 0} and all-\code{NA} correlation matrices.
 }
 \description{
 Estimates the stability of centrality indices under case-dropping.
@@ -103,10 +123,16 @@ for fast resampling. Strength centralities (InStrength, OutStrength)
 are computed directly from the matrix without igraph.
 }
 \examples{
-net <- build_network(data.frame(V1 = c("A","B","C","A"),
-  V2 = c("B","C","A","B")), method = "relative")
-cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+seqs <- data.frame(
+  T1 = c("plan", "code", "debug", "plan", "test", "code"),
+  T2 = c("code", "debug", "code", "plan", "code", "test"),
+  T3 = c("debug", "code", "plan", "code", "debug", "plan"),
+  T4 = c("test", "plan", "test", "debug", "plan", "code")
+)
+net <- build_network(seqs, method = "relative")
+cs <- centrality_stability(net, iter = 10, drop_prop = 0.3, seed = 1)
 \donttest{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
@@ -117,6 +143,12 @@ cs <- centrality_stability(net, iter = 100, seed = 42,
 print(cs)
 }
 
+}
+\references{
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
+psychological networks and their accuracy: A tutorial paper.
+\emph{Behavior Research Methods} 50(1), 195-212.
+\doi{10.3758/s13428-017-0862-1}
 }
 \seealso{
 \code{\link{build_network}}, \code{\link{network_reliability}}

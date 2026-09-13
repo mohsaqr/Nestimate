@@ -32,9 +32,12 @@ edges is dropped from \code{$by_order}, \code{$order} and \code{$k}),
 regardless of the order in which the vector is given; \code{$scores}
 aggregates every built order.}
 
-\item{alpha}{Numeric. Significance threshold for anomaly classification
-(default 0.05). Paths with HYPA score < alpha are under-represented;
-paths with score > 1-alpha are over-represented.}
+\item{alpha}{Numeric in \verb{(0, 0.5)}. Significance threshold for anomaly
+classification (default 0.05). A path is labelled \code{"under"} when its
+adjusted lower-tail p-value \code{p_adjusted_under} is below
+\code{alpha}, \code{"over"} when its adjusted upper-tail p-value
+\code{p_adjusted_over} is below \code{alpha}, and \code{"normal"}
+otherwise (the under-representation test is applied first).}
 
 \item{min_count}{Integer. Minimum observed count for a path to be
 classified as anomalous (default 5). Paths with fewer observations

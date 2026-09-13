@@ -1,12 +1,11 @@
-#' Sequence Data Conversion Functions
-#'
-#' @description
-#' Functions for converting sequence data (long or wide format) into
-#' transition frequency matrices and other useful representations.
-#'
-#' @name frequencies
-NULL
-
+# Sequence data conversion. This file holds frequencies() (long/wide ->
+# transition count matrix) and convert_sequence_format() (long/wide ->
+# frequency / one-hot / edgelist / follows), each with its own Rd topic.
+#
+# NOTE: do not reintroduce a file-header roxygen block with
+# `@name frequencies`. roxygen merges it into frequencies.Rd, overwriting
+# the function's own title with the header's and duplicating the
+# description.
 
 #' Build a Transition Frequency Matrix
 #'
@@ -28,10 +27,13 @@ NULL
 #' @param format Character. Format of input data: "auto" (detect automatically),
 #'   "long", or "wide". Default: "auto".
 #'
-#' @return A square integer matrix of transition frequencies where
+#' @return A square integer matrix of transition frequencies, of class
+#'   \code{c("nest_transition_counts", "matrix", "array")}, where
 #'   \code{mat[i, j]} is the number of times state i was followed by state j.
-#'   Row and column names are the sorted unique states. Can be passed directly
-#'   to \code{tna::tna()}.
+#'   Row and column names are the sorted unique states. It behaves as an
+#'   ordinary matrix and can be passed directly to \code{tna::tna()}; the
+#'   class stamp only adds a \code{summary()} method, which returns the same
+#'   counts as a tidy \code{from}/\code{to}/\code{count} data frame.
 #'
 #' @details
 #' For \strong{long format} data, each row is a single action/event. Sequences
@@ -327,9 +329,17 @@ convert_sequence_format <- function(data,
 .fmt_frequency <- function(long, id_col) {
   tab <- table(long$rid, long$act)
   freq_df <- as.data.frame.matrix(tab)
-  freq_df$rid <- as.integer(rownames(freq_df))
+  # `rid` is whatever identifies a sequence: an integer row index for wide
+  # data, but the raw id value for long data -- often character, sometimes a
+  # factor from a multi-column interaction. table() hands its levels back as
+  # character rownames, so align on the character form. Coercing them with
+  # as.integer() turned every character id into NA and the merge then
+  # returned zero rows, silently.
   id_map <- unique(long[, c(id_col, "rid"), drop = FALSE])
-  result <- merge(id_map, freq_df, by = "rid")
+  freq_df <- freq_df[match(as.character(id_map$rid), rownames(freq_df)), ,
+                     drop = FALSE]
+  result <- cbind(id_map, freq_df)
+  rownames(result) <- NULL
   as.data.frame(result)
 }
 

@@ -23,7 +23,12 @@
 #'
 #' @return A `netobject` (also `cograph_network`) with `method =
 #'   "clique_expansion"`, undirected, with weighted symmetric adjacency
-#'   `W = incidence %*% t(incidence)` and zero diagonal.
+#'   `W = incidence %*% t(incidence)` and zero diagonal. The standard
+#'   `netobject` fields are present (`$weights`, `$nodes`, `$edges` - one row
+#'   per non-zero upper-triangle cell with integer `from`/`to` node indices
+#'   and `weight` - `$n_nodes`, `$n_edges`, `$meta`); `$params` records
+#'   `source`, `weighted`, `n_hyperedges` and
+#'   `hypergraph_size_distribution`.
 #'
 #' @details
 #' The clique expansion is the standard "loss-y but lossless-on-pairwise"
@@ -49,11 +54,11 @@
 #' )
 #' hg  <- bipartite_groups(df, player = "player", group = "session")
 #' net <- clique_expansion(hg)
-#' net$weights
+#' extract_edges(net, threshold = 1)
 #'
 #' @references
-#' Tian, Y., & Zafarani, R. (2024). Higher-order network analysis methods.
-#' \emph{SIGKDD Explorations} 26(1), Section 5.1.5.
+#' Tian, H., & Zafarani, R. (2024). Higher-order networks representation and
+#' learning: A survey. \emph{ACM SIGKDD Explorations Newsletter} 26(1), 1-18.
 #'
 #' @note (experimental) Validated against `tcrossprod(incidence)` with zero
 #'   diagonal. No external R package exposes clique expansion as a primitive;

@@ -25,21 +25,29 @@ pathways(x, ...)
 \method{pathways}{net_mogen}(x, order = NULL, min_count = 1L, min_prob = 0, top = NULL, ...)
 }
 \arguments{
-\item{x}{A higher-order network object (\code{net_hon},
-\code{net_hypa}, or \code{net_mogen}).}
+\item{x}{A higher-order network object (\code{net_hon}, \code{net_hypa},
+\code{net_mogen}), a \code{netobject}, a \code{net_association_rules}
+or a \code{net_link_prediction}.}
 
-\item{...}{Additional arguments.}
+\item{...}{Additional arguments passed on to the method.}
 
 \item{min_count}{Integer. Minimum transition count to include
-(default: 1).}
+(default: 1). Filters noise from rare observations. Used by the
+\code{net_hon} and \code{net_mogen} methods.}
 
 \item{min_prob}{Numeric. Minimum transition probability to include
-(default: 0).}
+(default: 0). Useful for filtering weak transitions. Used by the
+\code{net_hon} and \code{net_mogen} methods.}
 
-\item{top}{Integer or NULL. Return only the top N pathways ranked
-by count (default: NULL = all).}
+\item{top}{Integer or NULL. Keep only the top N pathways: ranked by count
+for \code{net_hon} and \code{net_mogen}, by lift then confidence for
+\code{net_association_rules}, and by score for
+\code{net_link_prediction}. Default \code{NULL} (all) everywhere except
+\code{net_link_prediction}, whose default is \code{10}.}
 
-\item{order}{Integer or NULL. Markov order to extract. Default:
+\item{order}{Integer or NULL. For \code{net_hon}, keep only pathways whose
+source is of this order; default \code{NULL} = every order above 1. For
+\code{net_mogen}, the Markov order to extract; default \code{NULL} = the
 optimal order from model selection.}
 
 \item{type}{Character. Which anomalies to include: \code{"all"}
@@ -66,19 +74,8 @@ pathway (default: 3).}
 \value{
 A character vector of pathway strings in arrow notation
 (e.g. \code{"A B -> C"}), suitable for
-\code{cograph::plot_simplicial()}.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
+\code{cograph::plot_simplicial()}. Every method returns this shape, and
+\code{character(0)} when nothing survives its filters.
 }
 \description{
 Extracts higher-order pathway strings suitable for
@@ -112,6 +109,9 @@ built from sequence data (has \code{$data}).
 Converts association rules \code{{A, B} => {C}} into pathway strings
 \code{"A B -> C"} suitable for \code{cograph::plot_simplicial()}.
 Antecedent items become source nodes; consequent items become the target.
+Rules whose antecedent and consequent share the same item set describe the
+same simplex, so only the highest-lift rule per item set is returned;
+\code{top} is applied after that de-duplication.
 
 \item \code{pathways(net_link_prediction)}: Extract pathways from link predictions
 

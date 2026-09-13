@@ -8,7 +8,10 @@ build_tna(data, start = FALSE, end = FALSE, ...)
 }
 \arguments{
 \item{data}{Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance).}
+square symmetric matrix (correlation or covariance). A fitted
+\code{net_clustering} or \code{net_mmm} object is also accepted: the
+per-cluster networks are (re)built and a \code{netobject_group} is
+returned.}
 
 \item{start}{Boundary marker prepended to every sequence as an explicit
 start state (a pure source: no incoming edges, every sequence's first
@@ -16,7 +19,8 @@ transition is \code{start -> first_observed}). \code{FALSE} (default)
 adds nothing; \code{TRUE} uses the label \code{"Start"}; a single string
 uses that string as the label. Only valid for the transition methods
 (\code{relative}, \code{frequency}, \code{co_occurrence},
-\code{attention}); errors otherwise.}
+\code{attention}, \code{ngram}, \code{gap}, \code{reverse}); errors
+otherwise (\code{wtna} included).}
 
 \item{end}{Boundary marker placed in the single cell after each sequence's
 last observed (non-\code{NA}) state, as an explicit terminal state (a

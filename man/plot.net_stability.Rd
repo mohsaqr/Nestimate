@@ -19,9 +19,15 @@ Plots mean correlation vs drop proportion for each centrality measure.
 The CS-coefficient is marked where the curve crosses the threshold.
 }
 \examples{
-net <- build_network(data.frame(V1 = c("A","B","C","A"),
-  V2 = c("B","C","A","B")), method = "relative")
-cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
+seqs <- data.frame(
+  T1 = c("plan", "code", "debug", "plan", "test", "code"),
+  T2 = c("code", "debug", "code", "plan", "code", "test"),
+  T3 = c("debug", "code", "plan", "code", "debug", "plan"),
+  T4 = c("test", "plan", "test", "debug", "plan", "code")
+)
+net <- build_network(seqs, method = "relative")
+cs <- centrality_stability(net, iter = 10,
+  drop_prop = c(0.1, 0.3, 0.5), seed = 1)
 plot(cs)
 \donttest{
 set.seed(1)

@@ -48,7 +48,8 @@ utils::globalVariables(c(
 #'   Not needed for \code{netobject_group}.
 #' @param sub Integer vector. Pattern lengths to analyze. Default: \code{3:5}.
 #' @param min_freq Integer. Minimum frequency in each group for a pattern
-#'   to be included. Default: 5.
+#'   to be included: a pattern is kept only when its count reaches this
+#'   threshold in \emph{every} group. Default: 5.
 #' @param test Character. Inference method: one of \code{"permutation"}
 #'   (default), \code{"chisq"}, or \code{"none"}. See Details.
 #' @param iter Integer. Permutation iterations. Only used when
@@ -58,17 +59,30 @@ utils::globalVariables(c(
 #'
 #' @return An object of class \code{"net_sequence_comparison"} containing:
 #' \describe{
-#'   \item{patterns}{Tidy data.frame. Always present:
-#'     \code{pattern}, \code{length}, \code{freq_<group>},
-#'     \code{prop_<group>}, \code{resid_<group>}. If
-#'     \code{test = "permutation"}: \code{effect_size}, \code{p_value}.
-#'     If \code{test = "chisq"}: \code{statistic}, \code{p_value}.}
-#'   \item{groups}{Character vector of group names.}
-#'   \item{n_patterns}{Integer. Number of patterns passing min_freq.}
+#'   \item{patterns}{Tidy data.frame, one row per retained k-gram pattern.
+#'     Always present: \code{pattern}, \code{length}, and one
+#'     \code{freq_<group>}, \code{prop_<group>} and \code{resid_<group>}
+#'     column per group. If \code{test = "permutation"}: \code{effect_size},
+#'     \code{p_value}. If \code{test = "chisq"}: \code{statistic},
+#'     \code{p_value}. Rows are ordered by ascending adjusted \code{p_value}
+#'     when a test was run, and by descending maximum absolute residual
+#'     otherwise.}
+#'   \item{groups}{Character vector of group names, sorted.}
+#'   \item{n_patterns}{Integer. Number of rows in \code{patterns}, i.e. the
+#'     patterns meeting \code{min_freq} in every group.}
 #'   \item{params}{List of sub, min_freq, test, iter, adjust.}
 #' }
 #'
+#' @references
+#' Haberman, S. J. (1973). The analysis of residuals in cross-classified
+#' tables. \emph{Biometrics}, 29(1), 205--220. (standardized residuals)
+#'
+#' Benjamini, Y. & Hochberg, Y. (1995). Controlling the false discovery rate.
+#' \emph{Journal of the Royal Statistical Society B}, 57(1), 289--300.
+#' (the default \code{adjust = "fdr"})
+#'
 #' @examples
+#' set.seed(1)
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 60, TRUE),
 #'   V2 = sample(LETTERS[1:4], 60, TRUE),
@@ -414,9 +428,9 @@ print.net_sequence_comparison <- function(x, ...) {
 #'
 #' @param object A \code{net_sequence_comparison} object.
 #' @param ... Additional arguments (ignored).
-#' @return The patterns data.frame (tidy: one row per k-gram pattern, per
-#'   group, with frequency and proportion columns; includes p-values when a
-#'   permutation test was run).
+#' @return The \code{patterns} data.frame: tidy, one row per k-gram pattern,
+#'   with a frequency, proportion and standardized-residual column per group,
+#'   and the test columns when \code{test} was not \code{"none"}.
 #' @inherit sequence_compare examples
 #' @export
 summary.net_sequence_comparison <- function(object, ...) {
@@ -428,10 +442,12 @@ summary.net_sequence_comparison <- function(object, ...) {
 #'
 #' @description
 #' Visualizes pattern-level standardized residuals across groups. Two styles
-#' are available:
+#' are available, and \code{style = "auto"} (the default) picks between them
+#' by the number of groups:
 #' \describe{
 #'   \item{\code{"pyramid"}}{Back-to-back bars of pattern proportions, shaded
-#'     by each side's standardized residual. Requires exactly 2 groups.}
+#'     by each side's standardized residual. Requires exactly 2 groups; an
+#'     explicit \code{style = "pyramid"} on any other number is an error.}
 #'   \item{\code{"heatmap"}}{One tile per (pattern, group) cell, colored by
 #'     standardized residual. Works for any number of groups.}
 #' }
@@ -454,7 +470,8 @@ summary.net_sequence_comparison <- function(object, ...) {
 #'   residual value inside each pyramid bar. Default: \code{FALSE}. Ignored
 #'   for the heatmap (which always shows residuals).
 #' @param ... Additional arguments (ignored).
-#' @return A \code{ggplot} object, invisibly.
+#' @return The drawn \code{ggplot} object, invisibly (the plot is also
+#'   printed). \code{NULL}, invisibly, when the object holds no patterns.
 #' @inherit sequence_compare examples
 #' @import ggplot2
 #' @export

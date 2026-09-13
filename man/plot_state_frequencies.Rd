@@ -129,9 +129,11 @@ vocabularies differ per panel, so each gets its own legend);
 \code{"bottom"} for single-network and \code{netobject_group}
 treemaps (shared state vocabulary, one shared legend).
 Override with any of \code{"bottom"}, \code{"top"}, \code{"right"},
-\code{"left"}, \code{"none"}, or \code{"per_facet"}. The
-\code{"per_facet"} option requires the \pkg{gridExtra} package and
-returns a \code{gtable}.}
+\code{"left"}, \code{"none"}, or \code{"per_facet"}. \code{"per_facet"}
+is silently demoted to \code{"bottom"} when every group shares the same
+state vocabulary (repeating one legend per panel would be redundant);
+when it does take effect it returns a \code{gtable} (requiring the
+\pkg{gridExtra} package) or a list of ggplots, per \code{combine}.}
 
 \item{legend_dir}{Legend internal layout: \code{"auto"} (default --
 horizontal for top/bottom, vertical for left/right), or force
@@ -156,7 +158,8 @@ full names; \code{TRUE} truncates to the first 3 characters via
 \code{base::abbreviate()} (which extends the truncation as needed to
 keep names unique after collision); a positive integer sets the
 target minimum length explicitly (e.g. \code{abbreviate = 4}).
-Affects tile labels, legend, and the returned \code{$table}.}
+Affects tile labels, the legend, and the tidy table returned by
+\code{as.data.frame()}.}
 
 \item{include_macro}{For \code{mcml} only: prepend a \code{"macro"}
 reference column showing aggregate state frequencies across all
@@ -181,12 +184,14 @@ collapse onto a smaller categorical legend.}
 }
 \value{
 A \code{state_freq} object: a list with the rendered \code{$plot}
-(a \code{ggplot} or \code{gtable}), the tidy \code{$table} (a
+(a \code{ggplot}; a \code{gtable} or a list of ggplots under
+\code{legend = "per_facet"}, per \code{combine}), the tidy \code{$table} (a
 \code{data.frame} with columns \code{group}, \code{state}, \code{count},
-\code{proportion}), and the call's \code{$style}, \code{$metric},
-\code{$source_class}. The class supports \code{print()} (shows the
-tidy table in the console), \code{plot()} (renders the chart), and
-\code{as.data.frame()} (returns the table).
+\code{proportion}, one row per (group, state) cell), and the call's
+\code{$style}, \code{$metric}, \code{$source_class}. The class supports
+\code{print()} (prints the tidy table and draws the chart),
+\code{plot()} (draws the chart alone), and \code{as.data.frame()}
+(returns the tidy table) -- see \code{\link{state_freq}}.
 }
 \description{
 Visualise state (node) frequency distributions across groups for any

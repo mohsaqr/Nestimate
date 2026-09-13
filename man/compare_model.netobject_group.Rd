@@ -40,5 +40,5 @@ dispatches to \code{compare_model.netobject()}.
 }
 \seealso{
 \code{\link[=compare_networks]{compare_networks()}}, the N-way successor with tidy tables and a
-dashboard plot.
+\code{plot()} that draws one view per call.
 }

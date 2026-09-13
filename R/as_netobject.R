@@ -5,7 +5,7 @@
 
 #' Coerce a network object to a Nestimate netobject
 #'
-#' Promotes a \pkg{psychnet} result (class \code{c("psychnet",
+#' Promotes a \pkg{psychnets} result (class \code{c("psychnet",
 #' "cograph_network")}) or any bare \code{cograph_network} to the dual-class
 #' \code{c("netobject", "cograph_network")} used throughout Nestimate, so it
 #' dispatches to the package's verbs (\code{centrality()}, \code{plot()},
@@ -68,7 +68,7 @@ as_netobject.default <- function(x) {
 #' Validate a netobject / cograph_network against the shared schema
 #'
 #' Enforces the structural contract that both Nestimate netobjects and
-#' \pkg{psychnet} objects must satisfy to be interchangeable across the package
+#' \pkg{psychnets} objects must satisfy to be interchangeable across the package
 #' boundary. This is the single place that says what "a network object" means,
 #' so a drift on either side (a renamed field, a mistyped edge column) fails
 #' loudly here rather than mis-rendering three layers downstream.

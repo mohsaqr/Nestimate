@@ -39,8 +39,14 @@ compare_networks(
 )
 }
 \arguments{
-\item{...}{Passed to \code{cograph::splot()} for the network views (e.g.
-\code{layout}, \code{node_size}, \code{minimum}); ignored by the other views.}
+\item{...}{For \code{compare_networks()}: two or more networks, in any mix of:
+\code{netobject}, \code{netobject_group} (members are flattened and keep their
+names), \code{cograph_network} / \code{psychnet}, \code{mcml}, \code{tna}, \code{group_tna},
+square numeric matrices, or one unnamed \code{list} of these. Name the
+arguments to name the networks (\code{compare_networks(early = a, late = b)}).
+For \code{plot()}: passed to \code{cograph::splot()} for the network views (e.g.
+\code{layout}, \code{node_size}, \code{minimum}); ignored by the other views and by
+\code{print()}.}
 
 \item{reference}{\code{NULL} (default) compares all pairs. A single network name
 or index compares every other network against that one; the reference is
@@ -54,11 +60,15 @@ the networks as estimated.}
 
 \item{measures}{Centrality measures for the node table. Any of
 \code{OutStrength}, \code{InStrength}, \code{ClosenessIn}, \code{ClosenessOut}, \code{Closeness},
-\code{Betweenness}, \code{BetweennessRSP}, \code{Diffusion}, \code{Clustering}. \code{NULL} or
-\code{character(0)} skips the node table.}
+\code{Betweenness}, \code{BetweennessRSP}, \code{Diffusion}, \code{Clustering}; \code{"all"}
+selects those nine. \code{NULL} or \code{character(0)} skips the node table.
+Unknown names are dropped with a warning.}
 
-\item{labels}{Logical; print the signed difference on the edge and node
-views. Default \code{TRUE}. The heatmap always shows its values.}
+\item{labels}{For \code{compare_networks()}: optional character vector naming
+the networks (one per network after flattening groups); overrides
+argument names. For \code{plot()}: logical; print the signed difference on
+the edge and node views, default \code{TRUE} (the heatmap always shows its
+values).}
 
 \item{test}{Character vector of inference backends, any of \code{"none"}
 (default), \code{"permutation"}, \code{"bayes"}, \code{"bootstrap"}. Several may be
@@ -189,8 +199,9 @@ approximation from the posterior mean and SD) and \code{bayes_decision}.
 \code{"bootstrap"} (via \code{\link[=vertex_compare]{vertex_compare()}}) appends structural rows
 (density, mean weight, centralization, reciprocity) to \code{global} with
 \code{boot_se}, \code{boot_ci_lower}, \code{boot_ci_upper}, \code{boot_z}, \code{boot_p},
-\code{boot_sig}. Unified \code{sig} and \code{evidence} columns on \code{edges}/\code{nodes} take
-the permutation result when run, else the Bayesian one.
+\code{boot_sig}. Unified \code{sig} and \code{evidence} columns take the permutation
+result when run (on both \code{edges} and \code{nodes}), else the Bayesian one (on
+\code{edges} only -- the Bayesian backend is edge-level).
 Permutation and Bayesian tests need networks that carry their data
 (\code{build_network()} output, or \code{tna} objects, which are rebuilt); plain
 matrices support \code{"bootstrap"} only.
@@ -200,8 +211,23 @@ matrices support \code{"bootstrap"} only.
 Classed conditions (\verb{nestimate_compare_*}): \code{too_few}, \code{bad_input},
 \code{dim_mismatch}, \code{node_mismatch}, \code{na_weights}, \code{reference_unknown},
 \code{labels_length}, \code{scaling_domain}, \code{scaling_inference},
-\code{test_unsupported}, \code{unknown_pair}, \code{no_nodes}; warning
-\code{unknown_measure}.
+\code{test_unsupported}, \code{unknown_pair}, \code{no_nodes}, \code{no_test}
+(\code{plot(type = "inference")} under \code{test = "none"}), \code{unknown_measure}
+(selecting a measure the object does not carry); warning
+\code{unknown_measure} (an unknown name in \code{measures}).
+}
+
+\section{Reading the figures}{
+
+One colour contract in every view and every backend: \code{"#4A6FE3"} marks
+\code{network_a} (the reference, when one is set) as the higher of the two,
+\code{"#D33F6A"} marks \code{network_b}, and grey marks no difference; the plotted
+quantity is always \code{diff = a - b}. Colour never carries the sign alone --
+a solid line and a circular marker repeat "\code{a} higher", a dashed line and
+a square marker repeat "\code{b} higher", and the printed value carries its
+sign. When \code{test} was run, evidence is shown by opacity and a starred
+(edge and node views) or annotated (inference view) label: a
+non-significant difference is faded, never deleted.
 }
 
 \examples{

@@ -8,7 +8,10 @@ build_glasso(data, ...)
 }
 \arguments{
 \item{data}{Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance).}
+square symmetric matrix (correlation or covariance). A fitted
+\code{net_clustering} or \code{net_mmm} object is also accepted: the
+per-cluster networks are (re)built and a \code{netobject_group} is
+returned.}
 
 \item{...}{Additional arguments passed to \code{\link{build_network}}.}
 }

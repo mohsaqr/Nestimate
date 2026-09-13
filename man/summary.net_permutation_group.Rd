@@ -12,7 +12,10 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A data frame with group, edge, p_value, and sig columns.
+The per-group summaries stacked into one data frame: the
+columns of \code{\link{summary.net_permutation}} prefixed by a
+\code{group} column naming the group (or group pair) each row came
+from.
 }
 \description{
 Returns a combined summary data frame across all groups.

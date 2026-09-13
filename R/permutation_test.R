@@ -33,6 +33,10 @@
 #' @param y A \code{netobject} (from \code{\link{build_network}}) or a
 #'   \code{\link{net_edge_betweenness}} object.
 #'   Must use the same method and have the same nodes as \code{x}.
+#'   Default \code{NULL}: when \code{x} is a \code{netobject_group} (or an
+#'   \code{mcml}) and \code{y} is left \code{NULL}, every pair of groups is
+#'   tested and the result is a \code{net_permutation_group} named
+#'   \code{"<group i> vs <group j>"}.
 #' @param iter Integer. Number of permutation iterations (default: 1000).
 #' @param alpha Numeric. Significance level (default: 0.05).
 #' @param paired Logical. If \code{TRUE}, permute within pairs (requires
@@ -62,7 +66,16 @@
 #'   \item{diff_sig}{Observed difference where \code{p < alpha}, else 0.}
 #'   \item{p_values}{P-value matrix (adjusted if \code{adjust != "none"}).}
 #'   \item{effect_size}{Effect size matrix (observed diff / SD of permutation diffs).}
-#'   \item{summary}{Long-format data frame of edge-level results.}
+#'   \item{summary}{Long-format data frame, one row per edge present in
+#'     either network (undirected networks keep one row per unordered
+#'     pair), with columns \code{from}, \code{to}, \code{weight_x},
+#'     \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value},
+#'     \code{sig}.}
+#'   \item{global}{Data frame of the two NCT-style global statistics, one
+#'     row each: \code{statistic} (\code{"M"}, the sum of absolute edge
+#'     differences, and \code{"S"}, the largest absolute edge difference),
+#'     \code{observed}, and \code{p_value} from the same permutation null
+#'     as the edge test. Absent on the edge-betweenness path.}
 #'   \item{method}{The network estimation method.}
 #'   \item{source_method}{For edge-betweenness tests, the source network method.}
 #'   \item{iter}{Number of permutation iterations.}
@@ -75,6 +88,12 @@
 #'     \code{diffs_true} (wide observed differences), and \code{diffs_sig}
 #'     (observed differences where \code{p < alpha}, else 0).}
 #' }
+#' Grouped input returns a \code{"net_permutation_group"} (a named list of
+#' \code{net_permutation} results): one element per matching group name
+#' when both \code{x} and \code{y} are \code{netobject_group}s, or one per
+#' group pair when \code{y} is \code{NULL}. Two \code{wtna_mixed} inputs
+#' return a \code{"wtna_perm_mixed"} with \code{$transition} and
+#' \code{$cooccurrence} results.
 #'
 #' @examples
 #' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
@@ -1018,7 +1037,10 @@ print.net_permutation <- function(x, ...) {
 #' @param object A \code{net_permutation} object.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return A data frame with edge-level permutation test results.
+#' @return The \code{$summary} data frame: one row per edge present in
+#'   either network, with columns \code{from}, \code{to},
+#'   \code{weight_x}, \code{weight_y}, \code{diff}, \code{effect_size},
+#'   \code{p_value}, \code{sig}.
 #'
 #' @examples
 #' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
@@ -1084,7 +1106,10 @@ print.net_permutation_group <- function(x, ...) {
 #'
 #' @param object A \code{net_permutation_group} object.
 #' @param ... Additional arguments (ignored).
-#' @return A data frame with group, edge, p_value, and sig columns.
+#' @return The per-group summaries stacked into one data frame: the
+#'   columns of \code{\link{summary.net_permutation}} prefixed by a
+#'   \code{group} column naming the group (or group pair) each row came
+#'   from.
 #' @examples
 #' s1 <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
 #'   V3 = c("C","A","C","B"), grp = c("X","X","Y","Y"))

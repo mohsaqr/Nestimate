@@ -65,7 +65,8 @@ and columns.
 
 Every table is a data frame of class \code{net_table} whose \code{print()} shows
 whole numbers without decimals, exact zeros as \code{0}, other values with
-\code{digits} decimals, and p-values with three decimals.
+\code{digits} decimals, and p-values with three decimals; \code{print()} itself
+returns the table invisibly.
 }
 \description{
 Named accessors for the tables inside a \code{net_network_comparison} object

@@ -19,7 +19,10 @@ bootstrap_network(
 \arguments{
 \item{x}{A \code{netobject} from \code{\link{build_network}}.
 The data, method, params, scaling, threshold, and level are all
-extracted from this object.}
+extracted from this object. A \code{cograph_network} is coerced
+first; a \code{netobject_group} or \code{mcml} bootstraps every
+constituent network, and a \code{wtna_mixed} bootstraps both of its
+components (see \strong{Value}).}
 
 \item{iter}{Integer. Number of bootstrap iterations (default: 1000).}
 
@@ -66,11 +69,21 @@ An object of class \code{"net_bootstrap"} containing:
 \item{ci_upper}{Upper CI bound matrix.}
 \item{cr_lower}{Consistency range lower bound (stability only).}
 \item{cr_upper}{Consistency range upper bound (stability only).}
-\item{summary}{Long-format data frame of edge-level statistics.}
+\item{summary}{Long-format data frame, one row per non-zero original
+edge (undirected networks keep one row per unordered pair), with
+columns \code{from}, \code{to}, \code{weight}, \code{mean},
+\code{sd}, \code{p_value}, \code{sig}, \code{ci_lower},
+\code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when
+\code{inference = "stability"}.}
 \item{model}{Pruned \code{netobject} (non-significant edges zeroed).}
-\item{method, params, iter, ci_level, inference}{Bootstrap config.}
+\item{method, params, iter, ci_level, inference, ci_method}{Bootstrap
+config.}
 \item{consistency_range, edge_threshold}{Inference parameters.}
 }
+A \code{netobject_group} or \code{mcml} input returns a
+\code{"net_bootstrap_group"} (named list of \code{net_bootstrap}
+results); a \code{wtna_mixed} input returns a \code{"wtna_boot_mixed"}
+with \code{$transition} and \code{$cooccurrence} results.
 }
 \description{
 Non-parametric bootstrap for any network estimated by
@@ -98,6 +111,7 @@ net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
   method = "relative")
 boot <- bootstrap_network(net, iter = 10)
 \donttest{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)

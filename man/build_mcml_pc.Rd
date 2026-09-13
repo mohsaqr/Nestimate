@@ -183,11 +183,16 @@ node-level network is available.}
 based on (kept for diagnostics and \code{loading_stability}).}
 \item{data}{The raw data (data.frame) when available, else
 \code{NULL}.}
-\item{meta}{List: \code{aggregation}, \code{method},
-\code{within}, \code{scale}, \code{cor_method}, \code{signed},
-\code{n_nodes}, \code{n_clusters}, \code{cluster_sizes},
-\code{n_misfit}, \code{n_flipped}, \code{directed = FALSE},
-\code{source = "pc"}, \code{experimental = TRUE}.}
+\item{meta}{List: \code{aggregation} (the name as the caller spelled
+it), \code{method}, \code{within}, \code{weighting},
+\code{fa_method}, \code{fa_args}, \code{scale}, \code{cor_method},
+\code{signed}, \code{n_nodes}, \code{n_clusters},
+\code{cluster_sizes}, \code{n_misfit}, \code{n_flipped},
+\code{directed = FALSE}, \code{source = "pc"},
+\code{experimental = TRUE}. \code{method} and \code{weighting} are
+\code{NA} on the descriptive paths that re-estimate nothing, and
+\code{fa_method}/\code{fa_args} are set only for
+\code{weighting = "factor"}.}
 }
 }
 \description{
@@ -201,9 +206,10 @@ exact aggregation formulas may change between releases.
 Unlike transition counts, partial correlations do not aggregate by
 arithmetic: the submatrix of a pcor matrix is \emph{not} the pcor
 network of the subsystem (the conditioning set changes), and averaging
-pcor entries across blocks is descriptive only. The five
+pcor entries across blocks is descriptive only. The
 \code{aggregation} methods therefore have explicitly different
-statuses:
+statuses (the full list of accepted values is under
+\code{aggregation} below):
 
 \describe{
 \item{\code{"average"} (descriptive)}{Macro edge A--B = mean of the
@@ -226,13 +232,13 @@ cluster contribute more to its composite. This is Nestimate's own
 weighting - related in spirit to network loadings
 (Christensen & Golino 2021) but not a reimplementation of any
 EGA-family estimator. Requires raw data.}
-\item{\code{"rv"} (descriptive, multivariate)}{Macro edge A--B =
+\item{\code{"escoufier"} (descriptive, multivariate)}{Macro edge A--B =
 Escoufier's RV coefficient between the member blocks - a matrix
 correlation in \verb{[0, 1]} computed from the block covariance
 structure. No composites are formed and no estimator is re-fit,
 so nothing is lost to averaging; signs are not represented.
 Requires raw data.}
-\item{\code{"canonical"} (descriptive, multivariate)}{Macro edge
+\item{\code{"cancor"} (descriptive, multivariate)}{Macro edge
 A--B = the first canonical correlation between the member blocks:
 the strongest linear relationship any weighting of A's items can
 have with any weighting of B's items - an upper bound on what
@@ -305,8 +311,9 @@ clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 
 fit <- build_mcml_pc(df, clusters, aggregation = "composite",
                      method = "cor")
-fit$macro$weights
-fit$loadings
+fit            # macro (cluster-level) weights
+summary(fit)   # one row per macro edge
+plot(fit)      # heatmap of the same weights
 
 }
 \references{

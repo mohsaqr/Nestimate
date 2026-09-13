@@ -7,7 +7,8 @@
 extract_edges(model, threshold = 0, include_self = FALSE, sort_by = "weight")
 }
 \arguments{
-\item{model}{A TNA model object or a matrix of weights.}
+\item{model}{A \code{netobject}, TNA model object, \code{mcml} object, or
+a matrix of weights.}
 
 \item{threshold}{Numeric. Minimum weight to include an edge. Default: 0.}
 
@@ -17,12 +18,16 @@ extract_edges(model, threshold = 0, include_self = FALSE, sort_by = "weight")
 "from", "to", or NULL for no sorting. Default: "weight".}
 }
 \value{
-A data frame with columns:
+For a single network: a data frame with one row per retained edge
+and columns:
 \describe{
 \item{from}{Source state name.}
 \item{to}{Target state name.}
 \item{weight}{Edge weight (transition probability).}
 }
+
+For an \code{mcml} object: a named list of such data frames, with
+\code{macro} first and then one element per cluster.
 }
 \description{
 Extract an edge list from a TNA model, representing the network as a

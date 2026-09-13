@@ -14,8 +14,11 @@ network_reliability(
 }
 \arguments{
 \item{...}{One or more \code{netobject}s (from \code{\link{build_network}}).
-If unnamed, each model is auto-named from its \code{$method}.
-A \code{netobject_group} is flattened into its constituent models.}
+If unnamed, each model is auto-named from its \code{$method}; duplicate
+names are made unique with \code{make.unique()}. A
+\code{netobject_group} is flattened into its constituent models (named
+by group), and an \code{mcml} or \code{cograph_network} is converted
+first.}
 
 \item{iter}{Integer. Number of split-half iterations (default: 1000).}
 
@@ -61,6 +64,7 @@ net <- build_network(data.frame(V1 = c("A","B","C","A"),
   V2 = c("B","C","A","B")), method = "relative")
 rel <- network_reliability(net, iter = 10)
 \donttest{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)

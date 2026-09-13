@@ -63,6 +63,9 @@
 #'   \item{base}{Logarithm base used.}
 #'   \item{states}{Character vector of state names.}
 #' }
+#'   For a \code{netobject_group} the result is a
+#'   \code{"net_transition_entropy_group"}: a named list holding one such
+#'   object per group.
 #'
 #' @details
 #' Convention \eqn{0 \log 0 := 0} is applied, so absorbing or
@@ -236,8 +239,9 @@ transition_entropy <- function(x, base = 2, normalize = TRUE) {
 #'   \code{$inits}, \code{$meta}, \code{$node_groups}, and node coordinates
 #'   are inherited, so it plots with the same TNA styling and layout as its
 #'   source. \code{$method} is \code{"entropy"}. \code{$params} carries
-#'   \code{base}, \code{weight}, \code{entropy_rate}, and the stationary
-#'   distribution \code{stationary}.
+#'   \code{base}, \code{weight}, \code{scaling}, \code{entropy_rate}, and the
+#'   stationary distribution \code{stationary} (plus \code{production_rate}
+#'   and \code{n_oneway_pairs} when \code{weight = "production"}).
 #'
 #'   The object also declares the entropy house style through the
 #'   \code{$meta$splot} producer contract (honoured by cograph >= 2.4.4):
@@ -466,7 +470,8 @@ entropy_network <- function(x, base = 2,
 #'     \code{time_end}, \code{n_transitions}, \code{n_states} (distinct
 #'     states in the window), \code{entropy} (bits per transition) and
 #'     \code{entropy_norm} (divided by \eqn{\log_b} of the window's
-#'     active-state count; in \eqn{[0, 1]}).}
+#'     active-state count, floored at 2 states so the ceiling is never
+#'     zero; in \eqn{[0, 1]}).}
 #'   \item{window, step, base, states}{Call metadata; \code{states} is the
 #'     global state set.}
 #' }
@@ -811,6 +816,9 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #'     draws (for further analysis or plotting).}
 #'   \item{prior, draws, ci, min_share, base, states_names}{Call metadata.}
 #' }
+#'   For a \code{netobject_group} the result is a
+#'   \code{"net_entropy_bayes_group"}: a named list holding one such object
+#'   per group.
 #'
 #' @details
 #' With \code{prior > 0} the posterior puts mass on every transition, so
@@ -1032,8 +1040,9 @@ print.net_entropy_bayes_group <- function(x, ...) {
 #'
 #' @param object A `net_entropy_bayes` object.
 #' @param ... Ignored.
-#' @return The tidy edge table (data.frame), sorted by posterior mean
-#'   contribution, invisibly printed with the chain-level summary.
+#' @return The tidy edge table (data.frame), one row per observed
+#'   transition, sorted by posterior mean contribution, returned invisibly.
+#'   The chain-level and per-edge tables are printed as a side effect.
 #' @export
 summary.net_entropy_bayes <- function(object, ...) {
   cat("Chain-level posterior:\n")

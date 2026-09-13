@@ -108,13 +108,16 @@ plain numeric \code{matrix} for ad-hoc plotting.}
 \item{...}{Flat styling overrides forwarded to the flat renderer when
 \code{style = "flat"} (otherwise ignored).}
 
-\item{xlab, ylab}{Axis labels. \code{NULL} (default) draws no axis title.
-Pass any string to add one.}
+\item{xlab, ylab}{Axis labels. \code{NULL} (default) draws no axis title
+on the four data-bearing methods; the \code{table} / \code{matrix}
+methods default to \code{"Row"} and \code{"Column"}. Pass any string to
+set one.}
 
 \item{range}{Numeric of length 2 giving the lower and upper colour-scale
 limits for the standardized residual. \code{NULL} (default) auto-fits
 the limits to the symmetric range \code{c(-M, M)} where
-\code{M = max(|stdres|)}, so no signal is squished. Pass an explicit
+\code{M = max(|stdres|)} floored at 1, so no signal is squished and the
+legend stays readable on a near-independent table. Pass an explicit
 range (e.g. \code{c(-4, 4)} for tna-style display, \code{c(-6, 6)} for
 moderate clipping) to clamp the colour scale.}
 
@@ -161,13 +164,18 @@ single mosaic of \code{x$macro$weights} (the cluster-by-cluster
 aggregate); \code{"clusters"} draws one mosaic per cluster from
 \code{x$clusters[[k]]$weights}, faceted into one combined ggplot.}
 
-\item{ncol}{For \code{netobject_group}: number of columns in the small-
-multiples layout. Default 2.}
+\item{ncol}{Number of columns in the multi-panel layout. Default 2.
+Effective only for \code{mcml} with \code{level = "clusters"}, the one
+multi-panel case; \code{netobject_group} is drawn as a single
+(group x state) mosaic, so \code{ncol} is accepted but has no effect
+there.}
 }
 \value{
-A \code{ggplot} object (or a \code{gtable} from
-\code{gridExtra::arrangeGrob} for \code{netobject_group} when
-\pkg{gridExtra} is available).
+A \code{ggplot} object: one \code{geom_rect} layer with one
+rectangle per contingency-table cell, filled by the standardized
+residual. \code{mcml} with \code{level = "clusters"} returns a single
+\code{facet_wrap}-ed \code{ggplot} (one panel per cluster, shared fill
+scale); every other input returns a single-panel \code{ggplot}.
 }
 \description{
 Draws a Hartigan-Friendly mosaic (marimekko geometry, chi-square
@@ -179,8 +187,11 @@ avoid an export clash when both packages are attached.
 Column widths are proportional to row marginals of the weight matrix
 (incoming totals when the matrix is transposed, as for transitions). Within
 each column, segment heights are proportional to that row's conditional
-distribution. Cell fill is the standardized residual from
-\code{stats::chisq.test()}, with a diverging palette clipped to \eqn{\pm 4}.
+distribution. Cell fill is the standardized residual under the independence
+null -- a permutation z-score by default, or the closed-form
+\code{stats::chisq.test()} residual with \code{residuals = "asymptotic"}
+(see \code{residuals}) -- on a diverging palette whose limits auto-fit the
+observed residuals unless \code{range} is supplied.
 Mosaics need integer counts: when \code{$weights} is already integer
 (\code{method = "frequency"} / \code{"co_occurrence"}) it is used directly;
 for a single \code{netobject} / \code{htna} otherwise (relative, glasso,
@@ -189,9 +200,12 @@ sequences. The function errors only when neither integer weights nor
 \code{$data} are available.
 }
 \examples{
-\dontrun{
-  net <- build_network(group_regulation, method = "frequency")
-  mosaic_plot(net)
+\donttest{
+data(group_regulation_long, package = "Nestimate")
+net <- build_network(group_regulation_long, method = "frequency",
+                     format = "long", actor = "Actor", action = "Action",
+                     order = "Time")
+mosaic_plot(net, seed = 1)
 }
 }
 \seealso{

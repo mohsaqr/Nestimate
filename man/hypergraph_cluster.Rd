@@ -32,7 +32,9 @@ An object of class \code{net_hypergraph_cluster}: a list with
 k-means, dims \code{dim1..dimk}), \verb{$k}, \verb{$type}, \verb{$eigenvalues} (full
 Laplacian spectrum, increasing), \verb{$eigengap} (gap after the k-th
 eigenvalue), \verb{$sizes} (data.frame \code{cluster}/\code{size}), \verb{$pi}
-(stationary distribution) and \verb{$params}. Has \code{print}, \code{summary},
+(named stationary distribution), \verb{$n_nodes}, \verb{$n_hyperedges} and
+\verb{$params} (the \code{edge_weights} used, \code{nstart}, \code{seed},
+\code{tot_withinss}). Has \code{print}, \code{summary},
 \code{plot} and \code{as.data.frame} methods; \code{as.data.frame()} returns one row
 per node with \code{node}, \code{cluster}, the stationary probability \code{pi}, and
 the embedding coordinates.

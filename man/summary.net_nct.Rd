@@ -28,7 +28,7 @@ x1 <- matrix(rnorm(200 * 5), 200, 5)
 x2 <- matrix(rnorm(200 * 5), 200, 5)
 colnames(x1) <- colnames(x2) <- paste0("V", 1:5)
 res <- nct(x1, x2, iter = 100)
-res$M$p_value
-res$S$p_value
+res
+summary(res)
 }
 }

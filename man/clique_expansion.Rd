@@ -18,7 +18,12 @@ shared hyperedges.}
 }
 \value{
 A \code{netobject} (also \code{cograph_network}) with \code{method = "clique_expansion"}, undirected, with weighted symmetric adjacency
-\code{W = incidence \%*\% t(incidence)} and zero diagonal.
+\code{W = incidence \%*\% t(incidence)} and zero diagonal. The standard
+\code{netobject} fields are present (\verb{$weights}, \verb{$nodes}, \verb{$edges} - one row
+per non-zero upper-triangle cell with integer \code{from}/\code{to} node indices
+and \code{weight} - \verb{$n_nodes}, \verb{$n_edges}, \verb{$meta}); \verb{$params} records
+\code{source}, \code{weighted}, \code{n_hyperedges} and
+\code{hypergraph_size_distribution}.
 }
 \description{
 Projects a \link[=build_hypergraph]{net_hypergraph} to a standard pairwise
@@ -56,12 +61,12 @@ df <- data.frame(
 )
 hg  <- bipartite_groups(df, player = "player", group = "session")
 net <- clique_expansion(hg)
-net$weights
+extract_edges(net, threshold = 1)
 
 }
 \references{
-Tian, Y., & Zafarani, R. (2024). Higher-order network analysis methods.
-\emph{SIGKDD Explorations} 26(1), Section 5.1.5.
+Tian, H., & Zafarani, R. (2024). Higher-order networks representation and
+learning: A survey. \emph{ACM SIGKDD Explorations Newsletter} 26(1), 1-18.
 }
 \seealso{
 \code{\link[=build_hypergraph]{build_hypergraph()}}, \code{\link[=bipartite_groups]{bipartite_groups()}}, \code{\link[=build_network]{build_network()}}.

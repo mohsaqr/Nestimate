@@ -18,8 +18,9 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 \arguments{
 \item{x}{Data accepted by \code{\link{build_network}} (sequence data frame,
 edgelist, transition matrix, \code{netobject}, or \code{tna}); or an
-\code{mcml} object, in which case the original \code{data} must also be
-supplied and the mcml provides the node-cluster membership; or a fitted
+\code{mcml} object, which provides the node-cluster membership and, when
+it was built from wide sequence data, the retained source as well (see
+\code{data}); or a fitted
 \code{net_mmm} object, which is materialized into one HTNA per sequence
 cluster using its preserved actor partition.}
 
@@ -34,11 +35,12 @@ and \code{x} carries node groups (or is an \code{mcml}), those are used.}
 (e.g. \code{actor}, \code{action}, \code{time} for long-format data).}
 
 \item{data}{For the \code{mcml} method, the original data the mcml was built
-from (sequence/edgelist/etc.). Optional when the mcml was built from
-sequence/edgelist data: \code{build_mcml()} stashes that source (and the
-\code{actor}/\code{action}/\code{time} roles), so \code{as_htna(mcml)}
-works on its own. Required for an mcml built from a matrix/aggregate,
-which retains no node-level data.}
+from (sequence/edgelist/etc.). Optional when the mcml was built from wide
+sequence data (long-format input counts, since \code{build_mcml()} widens
+it first): that source is stashed on the object, so
+\code{as_htna(mcml)} works on its own. Required for an mcml built from a
+matrix, an aggregate, or an edge list, none of which retain a usable
+node-level source.}
 }
 \value{
 For data and \code{mcml} inputs, a single \code{htna} (also a \code{netobject} and
@@ -82,7 +84,7 @@ seqs <- data.frame(
 )
 clusters <- list(C1 = c("A", "B"), C2 = c("C", "D"), C3 = c("E", "F"))
 net <- as_htna(seqs, clusters)
-net$nodes$cluster
+net
 \dontrun{
 cograph::plot_htna(net)
 }

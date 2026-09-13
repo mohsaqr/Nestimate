@@ -10,7 +10,9 @@ build_honem(hon, dim = 32L, max_power = 10L)
 \item{hon}{A \code{net_hon} object from \code{\link{build_hon}}, or a
 square weighted adjacency matrix.}
 
-\item{dim}{Integer. Embedding dimension (default 32).}
+\item{dim}{Integer. Embedding dimension (default 32). Silently capped at
+\code{n_nodes - 1}; the dimension actually used is reported in the
+returned \code{dim} component.}
 
 \item{max_power}{Integer. Maximum walk length for neighborhood computation
 (default 10). Higher values capture longer-range structure.}
@@ -18,7 +20,9 @@ square weighted adjacency matrix.}
 \value{
 An object of class \code{net_honem} with components:
 \describe{
-\item{embeddings}{Numeric matrix (n_nodes x dim) of node embeddings.}
+\item{embeddings}{Numeric matrix (n_nodes x dim) of node embeddings,
+row names = node names, column names \code{dim_1}, \code{dim_2},
+...}
 \item{nodes}{Character vector of node names.}
 \item{singular_values}{Numeric vector of top singular values.}
 \item{explained_variance}{Proportion of variance explained.}
@@ -51,7 +55,7 @@ plot(emb)
 
 }
 \references{
-Saebi, M., Ciampaglia, G. L., Kazemzadeh, S., & Meyur, R. (2020).
+Saebi, M., Ciampaglia, G. L., Kaplan, L. M., & Chawla, N. V. (2020).
 HONEM: Learning Embedding for Higher Order Networks. \emph{Big Data},
 8(4), 255-269.
 }

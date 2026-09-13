@@ -199,37 +199,62 @@
 #' between overlapping k-tuples. The model tests increasingly complex Markov
 #' orders and selects the one that best balances fit and parsimony.
 #'
-#' @param data A data.frame (rows = trajectories, columns = time points) or
-#'   a list of character/numeric vectors (one per trajectory).
+#' @param data A data.frame (rows = trajectories, columns = time points), a
+#'   list of character/numeric vectors (one per trajectory), a \code{tna}
+#'   object, or a \code{netobject} with sequence data. For
+#'   \code{tna}/\code{netobject}, numeric state IDs are automatically
+#'   converted to label names.
 #' @param max_order Integer. Maximum Markov order to test (default 5).
 #'   Must be a whole number; a non-integer value (e.g. \code{2.7}) is an
-#'   error rather than being silently truncated.
+#'   error rather than being silently truncated. A \code{max_order} at or
+#'   above the longest trajectory is capped at (longest path - 1) with a
+#'   message.
 #' @param criterion Character. Model selection criterion: \code{"aic"}
 #'   (default), \code{"bic"}, or \code{"lrt"} (likelihood ratio test).
 #' @param lrt_alpha Numeric. Significance threshold for LRT (default 0.01).
-#' @return An object of class \code{net_mogen} with components:
+#' @return An object of class \code{c("net_mogen", "cograph_network")} with
+#'   components:
 #'   \describe{
 #'     \item{optimal_order}{Selected optimal Markov order.}
 #'     \item{criterion}{Which criterion was used for selection.}
-#'     \item{orders}{Integer vector of tested orders (0 to max_order).}
+#'     \item{orders}{Integer vector of tested orders (0 to max_order, after
+#'       any capping).}
 #'     \item{aic}{Named numeric vector of AIC values per order.}
 #'     \item{bic}{Named numeric vector of BIC values per order.}
 #'     \item{log_likelihood}{Named numeric vector of log-likelihoods.}
 #'     \item{dof}{Named integer vector of cumulative DOF per model.}
 #'     \item{layer_dof}{Named integer vector of per-layer DOF.}
-#'     \item{transition_matrices}{List of transition matrices (index 1 = order 0).}
+#'     \item{transition_matrices}{List of row-stochastic transition matrices
+#'       (index 1 = order 0, held as the marginal named numeric vector).}
+#'     \item{count_matrices}{List of the matching raw count matrices, same
+#'       indexing; read by \code{\link{mogen_transitions}()}.}
 #'     \item{states}{Unique first-order states.}
 #'     \item{n_paths}{Number of trajectories.}
 #'     \item{n_observations}{Total number of state observations.}
+#'     \item{weights}{\code{cograph_network} weight matrix: the transition
+#'       matrix of the selected optimal order (a 1 x n matrix named
+#'       \code{"marginal"} when the optimal order is 0). Its dimnames are the
+#'       internal k-gram keys (states joined by a non-printing separator),
+#'       not arrow notation.}
+#'     \item{nodes}{data.frame (\code{id}, \code{label}, \code{name}) of the
+#'       optimal-order De Bruijn nodes.}
+#'     \item{edges}{\code{cograph_network} edge data.frame with integer
+#'       \code{from}/\code{to} node indices and a numeric \code{weight}. The
+#'       readable arrow-notation table is
+#'       \code{\link{mogen_transitions}()}.}
+#'     \item{directed}{Logical. Always \code{TRUE}.}
+#'     \item{n_nodes, n_edges}{Counts for the optimal-order graph.}
+#'     \item{meta}{\code{cograph_network} metadata list.}
+#'     \item{node_groups}{Always \code{NULL}.}
 #'   }
 #'
 #' @references
 #' Scholtes, I. (2017). When is a Network a Network? Multi-Order Graphical
 #' Model Selection in Pathways and Temporal Networks. \emph{KDD 2017}.
 #'
-#' Gote, C. & Scholtes, I. (2023). Predicting variable-length paths in
-#' networked systems using multi-order generative models. \emph{Applied
-#' Network Science}, 8, 62.
+#' Gote, C., Casiraghi, G., Schweitzer, F., & Scholtes, I. (2023). Predicting
+#' variable-length paths in networked systems using multi-order generative
+#' models. \emph{Applied Network Science}, 8, 68.
 #'
 #' @examples
 #' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
@@ -396,19 +421,26 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
 #' The \code{path} column reconstructs this full sequence for readability.
 #'
 #' @param x A \code{net_mogen} object from \code{build_mogen()}.
-#' @param order Integer. Which order's transitions to extract. Must be a
-#'   whole number; a non-integer value is an error rather than being
-#'   silently truncated. Defaults to the optimal order selected by the model.
+#' @param order Integer >= 1 and at most the highest order tested. Which
+#'   order's transitions to extract. Must be a whole number; a non-integer
+#'   value is an error rather than being silently truncated. Defaults to the
+#'   optimal order selected by the model - pass an explicit \code{order} when
+#'   that optimal order is 0, which has no transition table and therefore
+#'   errors.
 #' @param min_count Integer. Minimum observed count to include (default 1).
 #'   Use this to filter out rare transitions that have unreliable probabilities.
-#' @return A data frame with columns:
+#' @return A data frame with one row per retained transition, sorted by
+#'   \code{count} (descending), with columns:
 #'   \describe{
 #'     \item{path}{The full state sequence (e.g., "AI -> FAIL -> SOLVE").}
 #'     \item{count}{Number of times this transition was observed.}
-#'     \item{probability}{Transition probability P(to | from).}
+#'     \item{probability}{Transition probability P(to | from), rounded to 4
+#'       decimal places.}
 #'     \item{from}{The context / conditioning states (k-gram source node).}
 #'     \item{to}{The predicted next state.}
 #'   }
+#'   A zero-row data frame with the same columns when no transition reaches
+#'   \code{min_count}.
 #'
 #' @examples
 #' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
@@ -490,14 +522,16 @@ mogen_transitions <- function(x, order = NULL, min_count = 1L) {
 #'
 #' @param data A list of character vectors (trajectories) or a data.frame
 #'   (rows = trajectories, columns = time points).
-#' @param k Integer. Length of the path / n-gram (default 2). A k of 2 counts
-#'   individual transitions; k of 3 counts two-step paths, etc. Must be a
-#'   whole number; a non-integer value is an error rather than being
+#' @param k Integer >= 2. Length of the path / n-gram (default 2). A k of 2
+#'   counts individual transitions; k of 3 counts two-step paths, etc. Must be
+#'   a whole number; a non-integer value is an error rather than being
 #'   silently truncated.
 #' @param top Integer or NULL. If set, returns only the top N most frequent
 #'   paths (default NULL = all).
-#' @return A data frame with columns: \code{path}, \code{count},
-#'   \code{proportion}.
+#' @return A data frame with one row per distinct k-gram, sorted by
+#'   \code{count} (descending), with columns \code{path} (the k states in
+#'   arrow notation, e.g. "A -> B"), \code{count} and \code{proportion}
+#'   (share of all k-grams, rounded to 4 decimal places).
 #'
 #' @examples
 #' trajs <- list(c("A","B","C","D"), c("A","B","D","C"))
@@ -558,8 +592,10 @@ path_counts <- function(data, k = 2L, top = NULL) {
 #' data frame sorted by frequency (descending).
 #'
 #' @param data A list of character vectors (trajectories) or a data.frame.
-#' @return A data frame with columns: \code{state}, \code{count},
-#'   \code{proportion}.
+#' @return A data frame with one row per distinct state, sorted by
+#'   \code{count} (descending), with columns \code{state}, \code{count} and
+#'   \code{proportion} (share of all observations, rounded to 4 decimal
+#'   places).
 #'
 #' @examples
 #' trajs <- list(c("A","B","C"), c("A","B","A"))

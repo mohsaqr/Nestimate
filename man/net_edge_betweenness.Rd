@@ -25,9 +25,10 @@ and frequency networks).}
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-For a \code{netobject}: a new \code{netobject} (class
-\code{c("netobject", "cograph_network")}) whose \code{$weights} are the
-edge-betweenness scores, with \code{method = "edge_betweenness"}. Call
+For a \code{netobject}: a new network of class
+\code{c("net_edge_betweenness", "netobject", "cograph_network")} whose
+\code{$weights} are the edge-betweenness scores, with
+\code{method = "edge_betweenness"}. Call
 \code{extract_edges()} on it for a tidy per-edge table, or \code{plot()}
 to render it. The object preserves source-network metadata so
 \code{\link{permutation}} can test edge-betweenness differences by

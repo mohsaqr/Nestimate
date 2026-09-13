@@ -43,9 +43,16 @@ Default: \code{NULL}.}
 \value{
 An object of class \code{"net_link_prediction"} containing:
 \describe{
-\item{predictions}{Data frame with columns: from, to, method, score, rank.
+\item{predictions}{Data frame, one row per (node pair, method), with
+columns \code{from}, \code{to}, \code{method}, \code{score},
+\code{existing} (was the pair already an edge?) and \code{rank}.
 Sorted by score (descending) within each method.}
+\item{consensus}{Data frame, one row per node pair, with columns
+\code{from}, \code{to}, \code{avg_rank}, \code{n_methods} and
+\code{consensus_rank}, ordered by \code{avg_rank}. \code{NULL} when
+only one method was requested.}
 \item{scores}{Named list of score matrices (one per method).}
+\item{adjacency}{Integer 0/1 adjacency matrix of the input network.}
 \item{methods}{Character vector of methods used.}
 \item{nodes}{Character vector of node names.}
 \item{directed}{Logical.}
@@ -109,6 +116,13 @@ Adamic, L. A. & Adar, E. (2003). Friends and neighbors on the Web.
 
 Katz, L. (1953). A new status index derived from sociometric analysis.
 \emph{Psychometrika}, 18(1), 39--43.
+
+Jaccard, P. (1901). Etude comparative de la distribution florale dans une
+portion des Alpes et des Jura. \emph{Bulletin de la Societe Vaudoise des
+Sciences Naturelles}, 37, 547--579.
+
+Barabasi, A.-L. & Albert, R. (1999). Emergence of scaling in random
+networks. \emph{Science}, 286(5439), 509--512.
 }
 \seealso{
 \code{\link{evaluate_links}} for prediction evaluation,

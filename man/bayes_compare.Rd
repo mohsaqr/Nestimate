@@ -58,14 +58,18 @@ the analogue of the permutation observed difference.}
 \item{difference_matrix}{Alias of \code{diff} for cograph
 \code{netdifference} helpers.}
 \item{diff_sig}{Difference where \code{sig}, else 0.}
-\item{p_values}{P-value matrix (the two-sided Bayesian p-equivalent).}
+\item{p_values}{The two-sided Bayesian p-equivalent, in the field a
+\code{net_permutation} consumer reads as p-values (see
+\code{p_bayes}).}
 \item{effect_size}{Posterior mean difference over its posterior SD.}
 \item{ci_lower, ci_upper}{Credible-interval bound matrices.}
 \item{p_difference}{Probability of the difference: the share of
 posterior mass on the dominant side of zero, in \eqn{[0.5, 1]}
 (\eqn{P(\mathrm{High} > \mathrm{Low})} for a positive difference).}
-\item{p_bayes}{Alias of \code{p_values} (two-sided Bayesian p,
-\eqn{2(1-\mathrm{p\_difference})}).}
+\item{p_bayes}{Alias of \code{p_values}: the two-sided Bayesian
+p-\emph{equivalent} \eqn{2(1-\mathrm{p\_difference})}. It summarises
+posterior mass, not a frequentist tail probability, so it is not a
+p-value and should not be reported as one.}
 \item{prob_x, prob_y}{Posterior mean transition-probability matrices.}
 \item{sig}{Logical significance matrix (CI excludes zero, mean and
 nearest bound exceed their thresholds).}

@@ -45,10 +45,18 @@ computation. If NULL, treats all rows as one group. Default: NULL.}
 }
 \value{
 For \code{method = "transition"} or \code{"cooccurrence"}: a
-\code{netobject} (see \code{\link{build_network}}).
+\code{c("netobject", "cograph_network")} object (see
+\code{\link{build_network}}) with \code{method} set to
+\code{"wtna_transition"} or \code{"wtna_cooccurrence"},
+\code{directed = TRUE} only for transitions, and the windowing
+settings (\code{type}, \code{window_size}, \code{mode}, \code{codes},
+\code{actor}) recorded in \code{$params}. Transition networks also
+carry \code{$initial}, the per-actor-averaged initial state
+distribution.
 
-For \code{method = "both"}: a \code{wtna_mixed} object with elements
-\code{$transition} and \code{$cooccurrence}, each a \code{netobject}.
+For \code{method = "both"}: a \code{wtna_mixed} object - a list with
+elements \code{$transition} and \code{$cooccurrence} (each a
+\code{netobject} as above) and \code{$method = "wtna_both"}.
 }
 \description{
 Computes networks from one-hot (binary indicator) data using temporal

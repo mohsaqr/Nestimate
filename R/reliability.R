@@ -15,8 +15,11 @@
 #' \code{\link{bootstrap_network}}).
 #'
 #' @param ... One or more \code{netobject}s (from \code{\link{build_network}}).
-#'   If unnamed, each model is auto-named from its \code{$method}.
-#'   A \code{netobject_group} is flattened into its constituent models.
+#'   If unnamed, each model is auto-named from its \code{$method}; duplicate
+#'   names are made unique with \code{make.unique()}. A
+#'   \code{netobject_group} is flattened into its constituent models (named
+#'   by group), and an \code{mcml} or \code{cograph_network} is converted
+#'   first.
 #' @param iter Integer. Number of split-half iterations (default: 1000).
 #' @param split Numeric. Fraction of sequences assigned to the first half
 #'   (default: 0.5).
@@ -45,6 +48,7 @@
 #'   V2 = c("B","C","A","B")), method = "relative")
 #' rel <- network_reliability(net, iter = 10)
 #' \donttest{
+#' set.seed(1)
 #' seqs <- data.frame(
 #'   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
 #'   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)

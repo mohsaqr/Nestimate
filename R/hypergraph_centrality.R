@@ -26,10 +26,13 @@
 #'   iterates. Default `1e-8`.
 #' @param normalize Logical. If `TRUE` (default), each returned
 #'   centrality vector is L2-normalized to unit norm (compatible with
-#'   `igraph::eigen_centrality()`'s scale for type `"clique"`).
+#'   `igraph::eigen_centrality()`'s scale for type `"clique"`). If
+#'   `FALSE`, the vector is rescaled so its largest absolute entry is 1.
 #'
-#' @return A named list; one component per requested `type`. Each
-#'   component is a named numeric vector of length `hg$n_nodes`.
+#' @return A named list, one component per requested `type`, in the order
+#'   given by `type`. Each component is a numeric vector of length
+#'   `hg$n_nodes` named by `hg$nodes`. A hypergraph with no hyperedges
+#'   yields all-zero vectors.
 #'
 #' @details
 #' **Clique-motif eigenvector centrality (CEC)**: forms the

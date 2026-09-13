@@ -16,7 +16,7 @@ net_centrality(
 )
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, or
+\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml}, or
 \code{cograph_network}.}
 
 \item{measures}{Character vector. Centrality measures to compute.
@@ -46,17 +46,21 @@ takes a weight matrix and returns a named list of centrality vectors.}
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-For a \code{netobject}: a \code{net_centrality} data frame with
-node names as rows, a \code{state} column, and one column per centrality
-measure. For a \code{netobject_group}: a \code{net_centrality_group}
-list of such data frames.
+For a \code{netobject} or \code{cograph_network}: a
+\code{net_centrality} data frame, one row per node, with a \code{state}
+column and one further column per requested measure (node names are also
+the row names). For a \code{netobject_group} or an \code{mcml}: a
+\code{net_centrality_group} list of such data frames, one per group.
 }
 \description{
 Computes centrality measures from a \code{netobject},
 \code{netobject_group}, \code{mcml}, or \code{cograph_network}. The built-in
 measures match \code{tna::centralities()} without importing \code{tna} or
-\code{igraph}. The only intentional default difference is that
-\code{Diffusion} is range-normalized by default.
+\code{igraph}: strength is taken from the weight matrix directly, and the
+path-based measures (betweenness, closeness) come from all-pairs shortest
+paths computed in-package by Floyd-Warshall. The only intentional default
+difference from \code{tna} is that \code{Diffusion} is range-normalized by
+default.
 }
 \examples{
 seqs <- data.frame(
@@ -65,4 +69,25 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 net_centrality(net)
 
+}
+\references{
+Freeman, L. C. (1978). Centrality in social networks: conceptual
+clarification. \emph{Social Networks}, 1(3), 215--239. (betweenness,
+closeness)
+
+Opsahl, T., Agneessens, F. & Skvoretz, J. (2010). Node centrality in
+weighted networks: generalizing degree and shortest paths.
+\emph{Social Networks}, 32(3), 245--251. (weighted strength and geodesics)
+
+Kivimaki, I., Lebichot, B., Saramaki, J. & Saerens, M. (2016). Two
+betweenness centrality measures based on randomized shortest paths.
+\emph{Scientific Reports}, 6, 19668. (\code{BetweennessRSP})
+
+Banerjee, A., Chandrasekhar, A. G., Duflo, E. & Jackson, M. O. (2013). The
+diffusion of microfinance. \emph{Science}, 341(6144), 1236498.
+(\code{Diffusion})
+
+Onnela, J.-P., Saramaki, J., Kertesz, J. & Kaski, K. (2005). Intensity and
+coherence of motifs in weighted complex networks. \emph{Physical Review E},
+71, 065103. (\code{Clustering})
 }

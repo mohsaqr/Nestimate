@@ -18,7 +18,10 @@ values for distance: \code{"silhouette"} (default), \code{"mds"},
 \item{...}{Forwarded to the underlying plot method.}
 }
 \value{
-A \code{ggplot} object, invisibly.
+Whatever the underlying plot method returns: a \code{ggplot}
+object, invisibly; or, for the covariate forest views called with
+\code{combined = FALSE}, a list of \code{ggplot} objects named by
+cluster (invisibly).
 }
 \description{
 Delegates to the original clustering object's plot method

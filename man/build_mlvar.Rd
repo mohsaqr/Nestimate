@@ -40,12 +40,10 @@ named list of three full netobjects, one per network, plus
 model-level metadata stored as attributes. Each element is a
 standard \code{c("netobject", "cograph_network")} weight-matrix wrapper
 (no raw \verb{$data}), so \code{print()}, \code{summary()}, \code{\link[=coefs]{coefs()}}, and
-\code{cograph::splot(fit$temporal)} work directly. The three constituents
-are matrix-wrapped and carry no underlying panel data, so
-data-resampling verbs such as \code{\link[=bootstrap_network]{bootstrap_network()}} (and
-reliability/stability) cannot iterate over them - extract a single
-constituent and rebuild via \code{\link[=build_network]{build_network()}} if you need those.
-Structure:
+\code{cograph::splot(fit$temporal)} work directly. See
+\strong{Dispatch limitation} for the verbs that do \emph{not} work on this
+object (\code{plot()}, \code{\link[=bootstrap_network]{bootstrap_network()}}, \code{centrality()},
+reliability/stability). Structure:
 \describe{
 \item{\code{fit$temporal}}{Directed netobject for the \verb{d x d} matrix of
 fixed-effect lagged coefficients. \verb{$weights[i, j]} is the effect
@@ -107,14 +105,50 @@ Validated to machine precision (max_diff < 1e-10) against
 configurations, and to exact equality (max_diff == 0) against the
 pre-delegation Nestimate implementation on all layers, coefficients,
 and observation counts across lag/standardize/day/beep configurations.
+
+When the data carry no between-person variance (a random-intercept SD of
+zero), the between-subjects network is not estimable. Since 0.9.0 this
+raises a warning from \pkg{idiographic} and still returns the zero matrix
+by convention; before 0.9.0 the zero matrix was returned silently.
 }
+\section{Dispatch limitation}{
+
+There is no \code{plot()} method for \code{net_mlvar} - plot a single constituent
+(\code{cograph::splot(fit$temporal)}) instead. The three constituents are
+matrix-wrapped and carry no \verb{$data}, so the data-resampling and
+data-reading verbs do \strong{not} work on the fitted object or its parts:
+\code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=certainty]{certainty()}}, \code{\link[=network_reliability]{network_reliability()}},
+\code{\link[=centrality_stability]{centrality_stability()}} and \code{centrality()} all need the source panel.
+Extract a constituent and rebuild it through \code{\link[=build_network]{build_network()}} if you
+need those. Use \code{\link[=coefs]{coefs()}} for the tidy model output.
+}
+
 \examples{
-\dontrun{
-d <- simulate_data("mlvar", seed = 1)
-fit <- build_mlvar(d, vars = attr(d, "vars"),
-                   id = "id", day = "day", beep = "beep")
-print(fit)
-summary(fit)
+\donttest{
+# A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by
+# `happy` one beep earlier, so the temporal network should recover it.
+if (requireNamespace("lme4", quietly = TRUE)) {
+  set.seed(1)
+  n_beep <- 20
+  ar1 <- function(n, phi) as.numeric(stats::filter(stats::rnorm(n), phi,
+                                                   method = "recursive"))
+  panel <- do.call(rbind, lapply(seq_len(20), function(i) {
+    happy <- ar1(n_beep, 0.4)
+    data.frame(
+      id    = i,
+      beep  = seq_len(n_beep),
+      happy = happy + stats::rnorm(1),
+      calm  = ar1(n_beep, 0.3) + stats::rnorm(1),
+      tired = 0.5 * c(0, happy[-n_beep]) + stats::rnorm(n_beep) +
+              stats::rnorm(1)
+    )
+  }))
+  fit <- build_mlvar(panel, vars = c("happy", "calm", "tired"),
+                     id = "id", beep = "beep")
+  fit
+  coefs(fit)
+  summary(fit)
+}
 }
 
 }

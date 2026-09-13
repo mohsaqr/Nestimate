@@ -32,9 +32,11 @@ state_distribution(x, ...)
 the other classes.}
 }
 \value{
-A \code{data.frame} with columns \code{group} (character),
-\code{state} (character), \code{count} (integer), and
-\code{proportion} (numeric, within-group share).
+A \code{data.frame} with one row per (group, state) cell and
+columns \code{group} (character), \code{state} (character),
+\code{count} (integer), and \code{proportion} (numeric, within-group
+share). A single ungrouped network yields a single group labelled
+\code{"all"}.
 }
 \description{
 Returns a tidy \code{data.frame(group, state, count, proportion)} with one
@@ -50,11 +52,11 @@ behind every chart, and surfaced as the \code{$table} slot of the
 returned \code{state_freq} object.
 }
 \examples{
-\dontrun{
-  data(ai_long)
-  net <- build_network(ai_long, method = "frequency",
-                       id_col = "session_id",
-                       time_col = "order_in_session", action = "code")
-  state_distribution(net)
+\donttest{
+data(group_regulation_long, package = "Nestimate")
+net <- build_network(group_regulation_long, method = "frequency",
+                     format = "long", actor = "Actor", action = "Action",
+                     order = "Time", group = "Course")
+state_distribution(net)
 }
 }

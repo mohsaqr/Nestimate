@@ -1954,3 +1954,99 @@ test_that("meta$directed records effective directedness, not the argument", {
   expect_false(fit_undir$meta$directed)
   expect_true(isSymmetric(unname(fit_undir$macro$weights)))
 })
+
+# ---- build_mcml(exclude=, trim=, end=, end_by=) ------------------------------
+
+make_long <- function() {
+  data.frame(
+    ds    = "A", id = 1L,
+    skill = c("k1", "k1", "k1", "k1", "k2", "k2", "k2"),
+    att   = c("a1", "a1", "a2", "a2", "a3", "a3", "a3"),
+    act   = c("x", "VOID", "y", "x", "y", "x", "y"),
+    stringsAsFactors = FALSE
+  )
+}
+
+test_that("exclude drops states before sequences are formed", {
+  fit <- build_mcml(make_long(), clusters = list(G = c("x", "y")),
+                    actor = c("ds", "id"), action = "act", session = "att",
+                    exclude = "VOID")
+  expect_false("VOID" %in% unlist(fit$cluster_members, use.names = FALSE))
+  expect_false(any(as.matrix(attr(fit, "htna_source")) == "VOID", na.rm = TRUE))
+})
+
+test_that("end marks every sequence, end_by marks one per group", {
+  cl <- list(G = c("x", "y"), Fin = "Conclude")
+  every <- build_mcml(make_long(), clusters = cl, actor = c("ds", "id"),
+                      action = "act", session = "att", exclude = "VOID",
+                      end = "Conclude")
+  grouped <- build_mcml(make_long(), clusters = cl, actor = c("ds", "id"),
+                        action = "act", session = "att", exclude = "VOID",
+                        end = "Conclude", end_by = "skill")
+
+  n_end <- function(f) sum(as.matrix(attr(f, "htna_source")) == "Conclude",
+                           na.rm = TRUE)
+  expect_equal(n_end(every), 3L)    # one per attempt-session
+  expect_equal(n_end(grouped), 2L)  # one per skill
+})
+
+test_that("end is applied after trim, so trimming cannot remove the marker", {
+  # a3 runs y,x,y; trimmed to 2 it is y,x -- the marker must still land.
+  fit <- build_mcml(make_long(), clusters = list(G = c("x", "y"), Fin = "Conclude"),
+                    actor = c("ds", "id"), action = "act", session = "att",
+                    exclude = "VOID", trim = 2,
+                    end = "Conclude", end_by = "skill")
+  src <- as.matrix(attr(fit, "htna_source"))
+  expect_equal(sum(src == "Conclude", na.rm = TRUE), 2L)
+  expect_true(all(rowSums(!is.na(src)) <= 3L))   # 2 states + marker
+})
+
+test_that("end_by keys on the group's last EVENT, not its last-sorted session", {
+  # Session labels sort lexicographically, so try "10" sorts before try "9"
+  # while occurring later. The marker must follow event order, not sort order.
+  df <- data.frame(
+    ds = "A", id = 1L, skill = "k1",
+    att = c("t9", "t9", "t10", "t10"),
+    act = c("x", "y", "y", "x"),
+    stringsAsFactors = FALSE
+  )
+  fit <- build_mcml(df, clusters = list(G = c("x", "y"), Fin = "Conclude"),
+                    actor = c("ds", "id"), action = "act", session = "att",
+                    end = "Conclude", end_by = "skill")
+  src <- as.matrix(attr(fit, "htna_source"))
+  expect_equal(sum(src == "Conclude", na.rm = TRUE), 1L)
+  # t10 holds the last event, so its row -- ending y,x -- carries the marker.
+  marked <- which(rowSums(src == "Conclude", na.rm = TRUE) > 0L)
+  expect_equal(unname(src[marked, 1:2]), c("y", "x"))
+})
+
+test_that("the sequence arguments are validated and refuse bad input", {
+  df <- make_long()
+  expect_error(build_mcml(df, clusters = list(G = c("x", "y")),
+                          actor = c("ds", "id"), action = "act",
+                          session = "att", end_by = "skill"),
+               "needs `end`")
+  expect_error(build_mcml(df, clusters = list(G = c("x", "y")),
+                          actor = c("ds", "id"), action = "act",
+                          session = "att", end = "E", end_by = "nope"),
+               "not found")
+  expect_error(build_mcml(df, clusters = list(G = c("x", "y")),
+                          actor = c("ds", "id"), action = "act",
+                          session = "att", trim = -1),
+               "`trim` must be")
+})
+
+test_that("as_tna(expand =) changes the macro layer and nothing else", {
+  seqs <- data.frame(
+    t1 = c("A", "C", "A", "B"), t2 = c("B", "D", "C", "A"),
+    t3 = c("C", "A", "D", "C"), stringsAsFactors = FALSE
+  )
+  mc <- build_mcml(seqs, clusters = list(G1 = c("A", "B"), G2 = c("C", "D")))
+  plain <- as_tna(mc)
+  open  <- as_tna(mc, expand = "G2")
+
+  expect_equal(rownames(plain$macro$weights), c("G1", "G2"))
+  expect_equal(rownames(open$macro$weights), c("C", "D", "G1"))
+  expect_equal(open$G1, plain$G1)
+  expect_equal(open$G2, plain$G2)
+})

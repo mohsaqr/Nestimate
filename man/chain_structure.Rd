@@ -9,7 +9,8 @@ chain_structure(x, normalize = TRUE, tol = 1e-10)
 \arguments{
 \item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} model, transition
 matrix, or sequence data.frame (passed through \code{build_network()} with
-\code{method = "relative"}).}
+\code{method = "relative"}). A \code{netobject_group} is also accepted and
+analysed constituent by constituent.}
 
 \item{normalize}{Logical. If \code{TRUE} (default), rows of the transition
 matrix are renormalized to sum to 1 before analysis (see
@@ -26,7 +27,11 @@ probabilities never reclassifies a near-deterministic state as
 absorbing). Default \code{1e-10}.}
 }
 \value{
-A \code{chain_structure} object: a list with elements
+For a \code{netobject_group}, a \code{c("chain_structure_group", "list")}:
+a named list holding one \code{chain_structure} per constituent network,
+with its own \code{print()} and \code{summary()} methods.
+
+Otherwise a \code{chain_structure} object: a list with elements
 \describe{
 \item{\code{states}}{Character vector of state names.}
 \item{\code{classification}}{Named character vector. One of \code{"absorbing"},

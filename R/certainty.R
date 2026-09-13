@@ -59,13 +59,19 @@
 #'   \code{inference = "threshold"}. If NULL, defaults to the 10th percentile of
 #'   non-zero edge weights.
 #'
-#' @return An object of class \code{c("net_certainty", "net_bootstrap")} with the
-#'   same fields as \code{\link{bootstrap_network}}: \code{original}, \code{mean},
+#' @return For a \code{netobject}: an object of class
+#'   \code{c("net_certainty", "net_bootstrap")} with the same fields as
+#'   \code{\link{bootstrap_network}}: \code{original}, \code{mean},
 #'   \code{sd}, \code{p_values}, \code{significant}, \code{ci_lower},
 #'   \code{ci_upper}, \code{cr_lower}, \code{cr_upper}, \code{summary},
 #'   \code{model}, \code{method}, \code{params}, \code{ci_level},
 #'   \code{inference}, \code{consistency_range}, \code{edge_threshold}, plus
-#'   \code{prior} and \code{iter = NA} (no iterations).
+#'   \code{prior}, \code{ci_method = "analytic"} and \code{iter = NA} (no
+#'   iterations).
+#'
+#'   For a \code{netobject_group}: a named list of those objects, one per
+#'   constituent network, of class
+#'   \code{c("net_certainty_group", "net_bootstrap_group", "list")}.
 #'
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),

@@ -53,11 +53,15 @@
 #'   \item{long_data}{The processed long-format data with session IDs.}
 #'   \item{meta_data}{Session-level metadata (session ID, actor).}
 #'   \item{time_data}{Parsed time values in wide format (if time provided).}
-#'   \item{statistics}{List with total_sessions, total_actions,
-#'     max_sequence_length, unique_actors, etc.}
+#'   \item{statistics}{List with \code{total_sessions},
+#'     \code{total_actions} and \code{max_sequence_length}, plus
+#'     \code{unique_actors} only when \code{actor} was supplied (with no
+#'     \code{actor} every row belongs to one synthetic actor, so the count
+#'     would be meaningless).}
 #' }
 #'
 #' @examples
+#' set.seed(1)
 #' df <- data.frame(
 #'   student = rep(1:3, each = 5),
 #'   code = sample(c("read", "write", "test"), 15, replace = TRUE),

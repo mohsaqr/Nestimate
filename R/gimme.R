@@ -21,6 +21,14 @@
 #' indices. Accepts a single data frame with an ID column (not CSV
 #' directories).
 #'
+#' @section Results changed in 0.9.0:
+#' Before 0.9.0 the search ran in an in-package implementation that was
+#' \emph{not} upstream-gimme-exact. Delegating to
+#' [idiographic::fit_gimme()] changed which paths the search selects on the
+#' same data -- individual-level paths in particular -- so numeric results
+#' are not comparable with Nestimate <= 0.8.5. The returned object also
+#' gained fields (see \strong{Value}); nothing was removed.
+#'
 #' @param data A \code{data.frame} in long format with columns for person ID,
 #'   time-varying variables, and optionally a time/beep column.
 #' @param vars Character vector of variable names to model.
@@ -34,7 +42,10 @@
 #' @param groupcutoff Numeric between 0 and 1. Proportion of individuals for
 #'   whom a path must be significant to be added at group level.
 #'   Default \code{0.75}.
-#' @param subcutoff Numeric. Not used (reserved for future subgrouping).
+#' @param subcutoff Numeric. Not used (reserved for future subgrouping);
+#'   accepted for API compatibility and \emph{not} forwarded to
+#'   [idiographic::fit_gimme()], which does not implement subgrouping
+#'   either. Default \code{0.50}.
 #' @param paths Character vector of lavaan-syntax paths to force into the model
 #'   (e.g., \code{"V2~V1lag"}). Default \code{NULL}.
 #' @param exogenous Character vector of variable names to treat as exogenous.
@@ -49,7 +60,12 @@
 #'   stop individual search. Default \code{2}.
 #' @param seed Integer or \code{NULL}. Random seed for reproducibility.
 #'
-#' @return An S3 object of class \code{"net_gimme"} containing:
+#' @return The object returned by [idiographic::fit_gimme()]: an S3 object of
+#'   class \code{c("net_gimme", "cograph_network", "list")}. It is a
+#'   \emph{superset} of the pre-0.9.0 in-package field contract -- every
+#'   element below is present, alongside idiographic's own additions
+#'   (\code{contemp_cov}, \code{contemp_cov_avg}, \code{contemp_is_cov}).
+#'   Elements:
 #' \describe{
 #'   \item{\code{temporal}}{p x p matrix of group-level temporal (lagged)
 #'     path counts -- entry \code{[i,j]} = number of individuals with path j(t-1)->i(t).}
@@ -74,9 +90,11 @@
 #'   \item{\code{config}}{List of configuration parameters.}
 #' }
 #' The object additionally carries idiographic's netobject fields
-#' (\code{weights}, \code{nodes}, \code{edges}, ...) so it renders directly
-#' with cograph, and dispatches to idiographic's \code{print}, \code{summary},
-#' and \code{plot} methods.
+#' (\code{weights}, \code{nodes}, \code{edges}, \code{directed},
+#' \code{data}, \code{meta}, \code{node_groups}) so it renders directly with
+#' cograph. \code{print()}, \code{summary()} and \code{plot()} dispatch to
+#' \pkg{idiographic}'s methods, not to Nestimate's: in particular
+#' \code{summary()} returns a tidy \code{data.frame} rather than printing.
 #'
 #' @examplesIf requireNamespace("lavaan", quietly = TRUE)
 #' \donttest{

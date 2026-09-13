@@ -16,8 +16,16 @@
 #' @param tol Log-likelihood convergence tolerance
 #' @param smooth Laplace smoothing
 #' @param K Number of states
-#' @param from_ind Pre-computed K^2 x K indicator grouping by "from" state
-#' @return List with P_all, init_all, pi_mix, posterior, ll, iterations, converged
+#' @param init_posterior Optional N x n_comp starting posterior. When NULL a
+#'   uniform-random row-normalised posterior is drawn.
+#' @param from_ind Accepted for call-site symmetry with the screen/refine
+#'   driver and currently unused: the from-state grouping is recomputed
+#'   internally as `rep(seq_len(K), each = K)`.
+#' @param cov_df Optional data.frame of covariates. When supplied, the
+#'   mixing proportions become covariate-dependent (softmax M-step) instead
+#'   of a single vector.
+#' @return List with P_all, init_all, pi_mix, posterior, ll, iterations,
+#'   converged, and cov_beta (the softmax coefficients, NULL without cov_df)
 #' @noRd
 .mmm_em <- function(counts, init_state, n_comp, max_iter, tol, smooth, K,
                     init_posterior = NULL, from_ind = NULL, cov_df = NULL) {
@@ -373,8 +381,10 @@
 #' Expectation-Maximization. Each mixture component has its own transition
 #' matrix. Sequences are probabilistically assigned to components.
 #'
-#' @param data A data.frame (wide format), \code{netobject}, or
-#'   \code{tna} model. For tna objects, extracts the stored data.
+#' @param data A data.frame (wide format), \code{netobject},
+#'   \code{cograph_network}, or \code{tna} model. For tna and
+#'   cograph_network objects the stored (integer-encoded) data is
+#'   extracted and decoded to state labels.
 #' @param k Integer. Whole finite number of mixture components, >= 2.
 #'   Default: 2.
 #' @param n_starts Integer. Positive whole finite number of random restarts.
@@ -426,9 +436,22 @@
 #'     \item{assignments}{Integer vector of hard assignments (1..k).}
 #'     \item{quality}{List: \code{avepp} (per-class), \code{avepp_overall},
 #'       \code{entropy}, \code{relative_entropy},
-#'       \code{classification_error}.}
+#'       \code{classification_error}, \code{class_entropy}.}
 #'     \item{log_likelihood, BIC, AIC, ICL}{Model fit statistics.}
+#'     \item{n_params}{Number of free parameters behind BIC/AIC/ICL. With
+#'       \code{covariate_effect = "em"} it grows by \code{(k - 1) * p} for
+#'       \code{p} covariate columns.}
+#'     \item{iterations, converged}{EM iterations used by the retained fit
+#'       and whether it met \code{tol}.}
 #'     \item{states}{Character vector of state names.}
+#'     \item{n_sequences}{Number of sequences actually fitted (rows with
+#'       missing covariates are dropped under
+#'       \code{covariate_effect = "em"}).}
+#'     \item{covariates}{The post-hoc covariate analysis (list), or NULL
+#'       when \code{covariates = NULL}.}
+#'     \item{network_method, build_args, htna_partition}{Provenance kept
+#'       from \code{netobject} / HTNA input so per-cluster networks can be
+#'       rebuilt the same way; NULL otherwise.}
 #'   }
 #'
 #' @examples
@@ -804,8 +827,10 @@ build_mmm <- function(data,
 #'   table is allocated.
 #' @param ... Arguments passed to \code{\link{build_mmm}}.
 #'
-#' @return A \code{mmm_compare} data frame with BIC, AIC, ICL, AvePP,
-#'   entropy per k. When \code{return_fits = TRUE}, the fitted models are
+#' @return A \code{mmm_compare} data frame, one row per requested \code{k},
+#'   with columns \code{k}, \code{log_likelihood}, \code{AIC}, \code{BIC},
+#'   \code{ICL}, \code{AvePP}, \code{Entropy} and \code{converged}. When
+#'   \code{return_fits = TRUE}, the fitted \code{net_mmm} models are
 #'   attached as \code{attr(result, "fits")}.
 #'
 #' @examples
@@ -821,10 +846,10 @@ build_mmm <- function(data,
 #' comp <- compare_mmm(seqs, k = 2:3, seed = 42)
 #' print(comp)
 #'
-#' # Retain fits to avoid a re-fit after picking the BIC-min model.
+#' # Retain the fits so the chosen model needs no re-run; summary() marks
+#' # the minimum-BIC and minimum-ICL rows in its `best` column.
 #' comp_with_fits <- compare_mmm(seqs, k = 2:3, seed = 42, return_fits = TRUE)
-#' best_k <- comp_with_fits$k[which.min(comp_with_fits$BIC)]
-#' best_fit <- attr(comp_with_fits, "fits")[[as.character(best_k)]]
+#' summary(comp_with_fits)
 #' }
 #'
 #' @export
@@ -1037,7 +1062,9 @@ summary.net_mmm <- function(object, ...) {
 #'   is returned.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
 #'
-#' @return A \code{ggplot} object, invisibly.
+#' @return A \code{ggplot} object, invisibly; for
+#'   \code{type = "covariates"} with \code{combined = FALSE}, a list of
+#'   \code{ggplot} objects named by cluster (invisibly).
 #'
 #' @examples
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
@@ -1109,7 +1136,8 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"),
 #' @param x An \code{mmm_compare} object.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
 #'
-#' @return The input object, invisibly.
+#' @return The comparison table, invisibly, with the printed \code{best}
+#'   marker column (\code{"<-- BIC"} / \code{"<-- ICL"}) added.
 #'
 #' @examples
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
@@ -1307,8 +1335,8 @@ plot.mmm_compare <- function(x, ...) {
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
 #'                    V2 = sample(c("A","B","C"), 30, TRUE))
 #' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-#' fit$assignments
-#' fit$posterior
+#' fit
+#' cluster_diagnostics(fit)
 #' \donttest{
 #' # Visualise with sequence_plot
 #' seqs <- data.frame(
@@ -1441,7 +1469,10 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
 #'   are combined into a single faceted plot; when \code{FALSE}, a list
 #'   of separate ggplots is returned.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return A \code{ggplot} object, invisibly.
+#' @return A \code{ggplot} object, invisibly; for
+#'   \code{type = "covariates"} / \code{"predictors"} with
+#'   \code{combined = FALSE}, a list of \code{ggplot} objects named by
+#'   cluster (invisibly).
 #'
 #' @examples
 #' \donttest{

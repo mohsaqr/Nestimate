@@ -42,10 +42,12 @@ Default: \code{"non-overlapping"}.}
 taking the first non-NA indicator per column. Default: FALSE.}
 }
 \value{
-A data frame in wide format with columns named
-\code{W{window}_T{time}} where each cell contains a state name or NA.
-Attributes \code{windowed}, \code{window_size}, \code{window_span}
-are set on the result.
+A data frame in wide format, one row per actor/session sequence,
+with columns named \code{W<window>_T<slot>} where each cell contains a
+state name or \code{NA}. Attributes \code{windowed} (always
+\code{TRUE}), \code{window_size}, \code{window_span} (the number of
+\code{cols}) and \code{codes} (the \code{cols} themselves) are set on
+the result.
 }
 \description{
 Converts binary indicator (one-hot) data into the wide sequence format

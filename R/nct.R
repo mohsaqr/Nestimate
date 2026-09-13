@@ -8,12 +8,14 @@
 #' \strong{individual edges} (E-statistic per edge). Inference is via
 #' permutation of group labels.
 #'
-#' Implementation matches \code{NetworkComparisonTest::NCT()} with defaults
-#' \code{abs = TRUE}, \code{weighted = TRUE}, \code{paired = FALSE} at
-#' machine precision when the same seed is used. The network estimator is
-#' EBIC-selected glasso applied to a Pearson correlation matrix, with
-#' \code{Matrix::nearPD} symmetrization (matching NCT's
-#' \code{NCT_estimator_GGM} default).
+#' Follows \code{NetworkComparisonTest::NCT()} with defaults
+#' \code{abs = TRUE}, \code{weighted = TRUE}, \code{paired = FALSE}. The
+#' network estimator is EBIC-selected glasso applied to a Pearson
+#' correlation matrix, with \code{Matrix::nearPD} symmetrization (matching
+#' NCT's \code{NCT_estimator_GGM} default). The glasso solver is not the
+#' Fortran one NCT wraps, so results agree to independent-solver precision
+#' (of the order of \code{1e-4} on the test statistics) rather than
+#' bit-for-bit, even under the same seed.
 #'
 #' @param data1 A numeric matrix or data.frame of observations from group 1.
 #' @param data2 A numeric matrix or data.frame of observations from group 2.
@@ -33,11 +35,18 @@
 #' \describe{
 #'   \item{nw1, nw2}{Estimated weighted adjacency matrices.}
 #'   \item{M}{List with \code{observed}, \code{perm}, \code{p_value} for
-#'     the global strength test.}
+#'     the global strength test. P-values are permutation p-values,
+#'     \code{(sum(perm >= observed) + 1) / (iter + 1)}.}
 #'   \item{S}{Same structure for the maximum absolute edge difference.}
-#'   \item{E}{Same structure for per-edge tests.}
+#'   \item{E}{Same structure for the per-edge tests (\code{observed} and
+#'     \code{p_value} are one value per upper-triangle edge, \code{perm} an
+#'     \code{iter} by edges matrix), plus \code{edge_names}, a two-column
+#'     data frame of the node pairs (\code{NULL} when \code{data1} has no
+#'     column names).}
 #'   \item{n_iter}{Number of permutations.}
 #'   \item{paired}{Whether a paired test was used.}
+#'   \item{params}{List of the settings used: \code{gamma}, \code{abs},
+#'     \code{weighted}, \code{p_adjust}.}
 #' }
 #' @examples
 #' \dontrun{
@@ -46,8 +55,8 @@
 #' x2 <- matrix(rnorm(200 * 5), 200, 5)
 #' colnames(x1) <- colnames(x2) <- paste0("V", 1:5)
 #' res <- nct(x1, x2, iter = 100)
-#' res$M$p_value
-#' res$S$p_value
+#' res
+#' summary(res)
 #' }
 #' @export
 nct <- function(data1, data2, iter = 1000L, gamma = 0.5,

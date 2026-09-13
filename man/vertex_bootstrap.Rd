@@ -105,7 +105,7 @@ seqs <- data.frame(
 )
 net <- build_network(seqs, method = "relative")
 vb <- vertex_bootstrap(net, iter = 100, seed = 1)
-vb$summary
+summary(vb)
 \donttest{
 plot(vb)
 }

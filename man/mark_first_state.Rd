@@ -12,13 +12,17 @@ cols = time steps) of state labels with \code{NA} for missing
 observations.}
 
 \item{state}{Character. Label to insert in leading-NA cells.
-Default \code{"Start"}.}
+Default \code{"Start"}. If the label already occurs somewhere in \code{data},
+the function warns and appends \verb{_1}, \verb{_2}, ... until it is unique, so
+the inserted marker is never confused with an observed state.}
 
 \item{cols}{Optional state-column names; otherwise all columns.}
 }
 \value{
-A \code{data.frame} of the same shape as \code{data} with leading
-NAs filled by \code{state}.
+A character \code{data.frame} of the same shape as \code{data} (or of
+\code{data[cols]} when \code{cols} is given) with leading NAs filled by \code{state}.
+The label actually used is attached as the \code{"leading_state"}
+attribute, which matters when it had to be made unique.
 }
 \description{
 Mirror of \code{\link[=mark_terminal_state]{mark_terminal_state()}} for \emph{left-censored} sequence data.

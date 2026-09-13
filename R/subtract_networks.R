@@ -15,11 +15,14 @@
 #'   the source matrices \code{$x} and \code{$y}.
 #'
 #' @examples
-#' seqs <- data.frame(
-#'   V1 = c("A","B","A","C","B","A"), V2 = c("B","C","B","A","C","B"),
-#'   V3 = c("C","A","C","B","A","C"))
-#' a <- build_network(seqs, method = "relative")
-#' b <- build_network(seqs[1:4, ], method = "relative")
+#' early <- data.frame(
+#'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
+#'   V3 = c("C","A","C","B"))
+#' late <- data.frame(
+#'   V1 = c("B","A","C","B"), V2 = c("C","B","A","C"),
+#'   V3 = c("A","C","B","A"))
+#' a <- build_network(early, method = "relative")
+#' b <- build_network(late, method = "relative")
 #' subtract_networks(a, b)
 #' # edge-betweenness difference:
 #' subtract_networks(net_edge_betweenness(a), net_edge_betweenness(b))

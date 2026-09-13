@@ -16,7 +16,9 @@
 #'   \code{net_mmm}, or \code{tna}. When clustering info is available,
 #'   one panel is drawn per cluster.
 #' @param group Optional grouping vector (length \code{nrow(x)}) producing
-#'   one panel per group. Ignored if \code{x} is a \code{net_clustering}.
+#'   one panel per group. \code{NULL} (default) falls back to the cluster
+#'   assignments carried by a \code{net_clustering} / \code{net_mmm} /
+#'   \code{netobject_group} input; supplying \code{group} overrides them.
 #' @param scale \code{"proportion"} (default) divides each column by its
 #'   total so bands fill 0..1. \code{"count"} keeps raw counts.
 #' @param geom \code{"area"} (default) draws stacked polygons;
@@ -36,8 +38,9 @@
 #'   \code{\link{sequence_plot}}.
 #' @param state_colors Vector of colours, one per state. Defaults to
 #'   Okabe-Ito.
-#' @param na_color Colour for the \code{NA} band.
-#' @param frame If \code{TRUE} (default), draw a box around each panel.
+#' @param na_color Colour for the \code{NA} band. Default \code{"grey90"}.
+#' @param frame \code{FALSE} (default) draws no panel box; \code{TRUE} draws
+#'   a box around each panel.
 #' @param width,height Optional device dimensions. See
 #'   \code{\link{sequence_plot}}.
 #' @param main Plot title.
@@ -67,8 +70,20 @@
 #' @param legend_border Swatch border colour.
 #' @param legend_bty \code{"n"} (borderless) or \code{"o"} (boxed).
 #'
-#' @return Invisibly, a list with \code{counts}, \code{proportions},
-#'   \code{levels}, \code{palette}, and \code{groups}.
+#' @return Invisibly, a list describing the drawn figure:
+#'   \describe{
+#'     \item{counts}{Named list, one entry per group, each a
+#'       (state x time point) numeric matrix of cell counts. Rows are named
+#'       by \code{levels}; columns are the retained time points.}
+#'     \item{proportions}{Same shape as \code{counts}, each column divided
+#'       by its total.}
+#'     \item{levels}{Character vector of state labels in plotting order,
+#'       with \code{"NA"} appended when \code{na = TRUE}.}
+#'     \item{palette}{Character vector of fill colours, parallel to
+#'       \code{levels}.}
+#'     \item{groups}{Character vector of group labels (\code{"all"} when
+#'       ungrouped), parallel to \code{counts} / \code{proportions}.}
+#'   }
 #' @seealso \code{\link{sequence_plot}}, \code{\link{build_clusters}}
 #' @examples
 #' \donttest{

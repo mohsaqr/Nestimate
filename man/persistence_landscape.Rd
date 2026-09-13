@@ -36,6 +36,13 @@ The \eqn{k}-th landscape function \eqn{\lambda^{(k)}(t)} is the
 \eqn{k}-th largest of \eqn{\{\Lambda_{(b_i,d_i)}(t)\}_i} at each
 \eqn{t}. Landscapes are stable under bottleneck distance and form a
 Banach-space embedding of persistence diagrams.
+
+Essential classes are excluded: a tent function is undefined for an
+infinitely-lived class on a finite grid, so pairs with
+\code{death = Inf} (VR mode) and pairs with \code{death = 0} but
+\code{birth > 0} (the clique-mode encoding of an essential class) are
+dropped before the landscape is built. When no finite pair remains in
+the requested dimension, every landscape function is zero on the grid.
 }
 \examples{
 mat <- matrix(c(0, .6, .5, .6, 0, .4, .5, .4, 0), 3, 3)

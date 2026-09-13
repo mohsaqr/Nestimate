@@ -50,7 +50,14 @@
 #'   (with \code{attr(, "clustering")} attached by \code{cluster_network()}
 #'   or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}.
 #' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return A \code{net_cluster_diagnostics} object.
+#' @return \code{cluster_diagnostics()} returns a
+#'   \code{net_cluster_diagnostics} object: a list carrying
+#'   \code{family}, \code{k}, \code{n}, \code{sizes}, the
+#'   \code{per_cluster} data frame (one row per cluster), \code{overall},
+#'   \code{ics}, \code{metadata} and \code{source}, as detailed above.
+#'   \code{as.data.frame()} on that object returns the
+#'   \code{per_cluster} data frame itself -- one row per cluster, with
+#'   family-specific columns.
 #' @seealso \code{\link{print.net_cluster_diagnostics}},
 #'   \code{\link{plot.net_cluster_diagnostics}},
 #'   \code{\link{compare_mmm}} for k-sweep model selection (MMM only).
@@ -388,7 +395,10 @@ print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
 #'   \code{"posterior"} (default), \code{"covariates"} /
 #'   \code{"predictors"}.
 #' @param ... Forwarded to the underlying plot method.
-#' @return A \code{ggplot} object, invisibly.
+#' @return Whatever the underlying plot method returns: a \code{ggplot}
+#'   object, invisibly; or, for the covariate forest views called with
+#'   \code{combined = FALSE}, a list of \code{ggplot} objects named by
+#'   cluster (invisibly).
 #' @export
 plot.net_cluster_diagnostics <- function(x, type = NULL, ...) {
   if (is.null(type)) {

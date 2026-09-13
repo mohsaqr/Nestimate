@@ -26,9 +26,16 @@
 #' @param threshold Coefficient thresholding rule. \code{"LW"} (default) or
 #'   \code{"none"}.
 #' @param scale Logical. Standardize continuous columns before fitting.
-#'   Default \code{TRUE}.
-#' @return A list with the symmetric weighted adjacency matrix \code{wadj}
-#'   and per-node fit metadata.
+#'   Default \code{TRUE}. Note this scales the \emph{whole} data matrix once
+#'   up front, so the outcome \code{y} of each nodewise regression is scaled
+#'   along with its predictors -- not just the predictor block. This mirrors
+#'   \code{mgm::mgm()}, which scales the full data matrix at the top of its
+#'   main function, and is required for the machine-precision equivalence.
+#' @return A list with two elements: \code{wadj}, the symmetric \code{p x p}
+#'   weighted adjacency matrix (row/column names taken from \code{data}), and
+#'   \code{fits}, a length-\code{p} list of per-node fit metadata
+#'   (\code{beta_sel}, \code{npar}, \code{pred_var}, \code{lambda},
+#'   \code{multinomial}).
 #' @noRd
 .mgm_estimate <- function(data, type, level,
                           lambdaGam = 0.25,
@@ -163,6 +170,39 @@
 
 #' MGM estimator hook for the registry
 #'
+#' Registered under \code{method = "mgm"} (aliases \code{"mixed"},
+#' \code{"mixed_graphical"}). Pure base R plus \pkg{glmnet}; the \pkg{mgm}
+#' package is never loaded at runtime.
+#'
+#' @param data Data frame or matrix, one column per variable.
+#' @param type Character vector of \code{"g"}/\code{"c"} per column, or
+#'   \code{NULL} (default) to auto-detect: factor or character becomes
+#'   \code{"c"}; a numeric column whose non-NA values are whole numbers with
+#'   at most 10 distinct values becomes \code{"c"} (and a warning names it,
+#'   because that silently switches the node from Gaussian to multinomial);
+#'   everything else becomes \code{"g"}. The rule is copied from
+#'   \code{mgm::mgm()} so the equivalence holds.
+#' @param level Integer vector of category counts per column, or \code{NULL}
+#'   (default) to derive it from \code{type}. Kept only for
+#'   \code{mgm::mgm()} API parity -- it is length-validated and echoed back,
+#'   never used in the fit (see \code{.mgm_estimate()}). \strong{Name
+#'   collision:} \code{build_network()} has its own \code{level} argument
+#'   for multilevel decomposition, so \code{level} passed through
+#'   \code{build_network()} does not reach this estimator. Call
+#'   \code{.estimator_mgm()} directly with explicit \code{type} and
+#'   \code{level}, or pre-coerce the categorical columns with
+#'   \code{as.factor()}, when the auto-detection is wrong.
+#' @param lambdaGam EBIC gamma. Default 0.25.
+#' @param ruleReg Symmetrization rule, \code{"AND"} (default) or \code{"OR"}.
+#' @param threshold Thresholding rule, \code{"LW"} (default) or
+#'   \code{"none"}.
+#' @param scale Logical. Standardize continuous columns (including each
+#'   node's own outcome) before fitting. Default \code{TRUE}.
+#' @param ... Ignored.
+#' @return The standard estimator list: \code{matrix} (the symmetric
+#'   weighted adjacency), \code{nodes}, \code{directed} (always
+#'   \code{FALSE}), \code{cleaned_data}, plus the resolved \code{type} and
+#'   \code{level} vectors.
 #' @noRd
 .estimator_mgm <- function(data, type = NULL, level = NULL,
                             lambdaGam = 0.25, ruleReg = "AND",

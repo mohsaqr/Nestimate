@@ -92,10 +92,14 @@ actor_endpoints <- function(data, cols = NULL) {
 #'   cols = time steps) of state labels with `NA` for missing
 #'   observations.
 #' @param state Character. Label to insert in leading-NA cells.
-#'   Default `"Start"`.
+#'   Default `"Start"`. If the label already occurs somewhere in `data`,
+#'   the function warns and appends `_1`, `_2`, ... until it is unique, so
+#'   the inserted marker is never confused with an observed state.
 #' @param cols Optional state-column names; otherwise all columns.
-#' @return A `data.frame` of the same shape as `data` with leading
-#'   NAs filled by `state`.
+#' @return A character `data.frame` of the same shape as `data` (or of
+#'   `data[cols]` when `cols` is given) with leading NAs filled by `state`.
+#'   The label actually used is attached as the `"leading_state"`
+#'   attribute, which matters when it had to be made unique.
 #' @details
 #'   Unlike [mark_terminal_state()], the marked state is **not**
 #'   absorbing in the resulting transition matrix - every transition
@@ -150,10 +154,15 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
 #'   cols = time steps) of state labels with `NA` for missing
 #'   observations.
 #' @param state Character. Label to insert in terminal-NA cells.
-#'   Default `"End"`.
+#'   Default `"End"`. If the label already occurs somewhere in `data`, the
+#'   function warns and appends `_1`, `_2`, ... until it is unique, so the
+#'   absorbing marker is never confused with an observed state.
 #' @param cols Optional state-column names; otherwise all columns.
-#' @return A `data.frame` of the same shape as `data` with terminal
-#'   NAs filled by `state`.
+#' @return A character `data.frame` of the same shape as `data` (or of
+#'   `data[cols]` when `cols` is given) with terminal NAs filled by
+#'   `state`. The label actually used is attached as the
+#'   `"terminal_state"` attribute, which matters when it had to be made
+#'   unique.
 #' @details
 #'   This is the small piece of pre-processing required to turn
 #'   right-censored sequence data into an absorbing-chain model. The

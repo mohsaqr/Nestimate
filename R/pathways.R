@@ -17,13 +17,15 @@
 #' For \code{net_mogen}: extracts all transitions at the optimal order
 #' (or a specified order).
 #'
-#' @param x A higher-order network object (\code{net_hon},
-#'   \code{net_hypa}, or \code{net_mogen}).
-#' @param ... Additional arguments.
+#' @param x A higher-order network object (\code{net_hon}, \code{net_hypa},
+#'   \code{net_mogen}), a \code{netobject}, a \code{net_association_rules}
+#'   or a \code{net_link_prediction}.
+#' @param ... Additional arguments passed on to the method.
 #'
 #' @return A character vector of pathway strings in arrow notation
 #'   (e.g. \code{"A B -> C"}), suitable for
-#'   \code{cograph::plot_simplicial()}.
+#'   \code{cograph::plot_simplicial()}. Every method returns this shape, and
+#'   \code{character(0)} when nothing survives its filters.
 #'
 #' @examples
 #' \donttest{
@@ -41,15 +43,20 @@ pathways <- function(x, ...) {
 #' @describeIn pathways Extract higher-order pathways from HON
 #'
 #' @param min_count Integer. Minimum transition count to include
-#'   (default: 1). Filters noise from rare observations.
+#'   (default: 1). Filters noise from rare observations. Used by the
+#'   \code{net_hon} and \code{net_mogen} methods.
 #' @param min_prob Numeric. Minimum transition probability to include
-#'   (default: 0). Useful for filtering weak transitions.
-#' @param top Integer or NULL. Return only the top N pathways ranked
-#'   by count (default: NULL = all).
-#' @param order Integer or NULL. If specified, only include pathways
-#'   at this source order. Default: all orders > 1.
-#'
-#' @return A character vector of pathway strings.
+#'   (default: 0). Useful for filtering weak transitions. Used by the
+#'   \code{net_hon} and \code{net_mogen} methods.
+#' @param top Integer or NULL. Keep only the top N pathways: ranked by count
+#'   for \code{net_hon} and \code{net_mogen}, by lift then confidence for
+#'   \code{net_association_rules}, and by score for
+#'   \code{net_link_prediction}. Default \code{NULL} (all) everywhere except
+#'   \code{net_link_prediction}, whose default is \code{10}.
+#' @param order Integer or NULL. For \code{net_hon}, keep only pathways whose
+#'   source is of this order; default \code{NULL} = every order above 1. For
+#'   \code{net_mogen}, the Markov order to extract; default \code{NULL} = the
+#'   optimal order from model selection.
 #'
 #' @export
 pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
@@ -91,8 +98,6 @@ pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
 #' @param type Character. Which anomalies to include: \code{"all"}
 #'   (default), \code{"over"}, or \code{"under"}.
 #'
-#' @return A character vector of pathway strings.
-#'
 #' @export
 pathways.net_hypa <- function(x, type = "all", ...) {
   type <- match.arg(type, c("all", "over", "under"))
@@ -126,8 +131,6 @@ pathways.net_hypa <- function(x, type = "all", ...) {
 #' @param ho_method Character. Higher-order method: \code{"hon"} (default) or
 #'   \code{"hypa"}.
 #'
-#' @return A character vector of pathway strings.
-#'
 #' @export
 pathways.netobject <- function(x, ho_method = c("hon", "hypa"), ...) {
   ho_method <- match.arg(ho_method)
@@ -144,15 +147,14 @@ pathways.netobject <- function(x, ho_method = c("hon", "hypa"), ...) {
 #' Converts association rules \code{{A, B} => {C}} into pathway strings
 #' \code{"A B -> C"} suitable for \code{cograph::plot_simplicial()}.
 #' Antecedent items become source nodes; consequent items become the target.
+#' Rules whose antecedent and consequent share the same item set describe the
+#' same simplex, so only the highest-lift rule per item set is returned;
+#' \code{top} is applied after that de-duplication.
 #'
-#' @param top Integer or NULL. Return only the top N rules ranked by lift
-#'   (default: NULL = all).
 #' @param min_lift Numeric or NULL. Additional lift filter applied on top of
 #'   the object's original threshold (default: NULL).
 #' @param min_confidence Numeric or NULL. Additional confidence filter
 #'   (default: NULL).
-#'
-#' @return A character vector of pathway strings.
 #'
 #' @examples
 #' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
@@ -211,13 +213,10 @@ pathways.net_association_rules <- function(x, top = NULL, min_lift = NULL,
 #'
 #' @param method Character or NULL. Which prediction method to use.
 #'   Default: first method in the object.
-#' @param top Integer. Number of top predictions to include (default: 10).
 #' @param evidence Logical. If TRUE, include common neighbor evidence
 #'   nodes in each pathway. Default: TRUE.
 #' @param max_evidence Integer. Maximum number of evidence nodes per
 #'   pathway (default: 3).
-#'
-#' @return A character vector of pathway strings.
 #'
 #' @examples
 #' seqs <- data.frame(
@@ -277,17 +276,6 @@ pathways.net_link_prediction <- function(x, method = NULL, top = 10L,
 
 
 #' @describeIn pathways Extract transition pathways from MOGen
-#'
-#' @param order Integer or NULL. Markov order to extract. Default:
-#'   optimal order from model selection.
-#' @param min_count Integer. Minimum transition count to include
-#'   (default: 1).
-#' @param min_prob Numeric. Minimum transition probability to include
-#'   (default: 0).
-#' @param top Integer or NULL. Return only the top N pathways ranked
-#'   by count (default: NULL = all).
-#'
-#' @return A character vector of pathway strings.
 #'
 #' @export
 pathways.net_mogen <- function(x, order = NULL, min_count = 1L,

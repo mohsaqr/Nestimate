@@ -18,19 +18,19 @@ cluster_summary(
 \item{matrix}{Numeric adjacency/weight matrix. Row and column names are
 used as node labels. Values represent edge weights (e.g., transition
 counts, co-occurrence frequencies, or probabilities).}
-\item{netobject}{A cograph network object. The function extracts
-the weight matrix from \code{x$weights} or converts via
-\code{to_matrix()}. Clusters can be auto-detected from node attributes.}
+\item{netobject}{A network object built by \code{\link{build_network}}.
+Its weight matrix \code{x$weights} is aggregated; a bare
+\code{cograph_network} is coerced to a netobject first.}
 \item{tna}{A tna object from the tna package. Extracts \code{x$weights}.}
-\item{cluster_summary}{If already a cluster_summary, returns unchanged.}
+\item{mcml}{An \code{mcml} object is returned unchanged.}
 }}
 
 \item{clusters}{Cluster/group assignments for nodes. Accepts multiple formats:
 \describe{
-\item{NULL}{(default) Auto-detect from netobject. Looks for columns
-named 'clusters', 'cluster', 'groups', or 'group' in \code{x$nodes}.
-Throws an error if no cluster column is found.
-This option only works when \code{x} is a netobject.}
+\item{NULL}{(default) Not usable here: \code{clusters} is required and
+\code{NULL} raises an error. Auto-detection of a cluster column in a
+\code{netobject}'s node table happens in \code{\link{build_mcml}},
+which then calls this function with the detected assignment.}
 \item{vector}{Cluster membership for each node, in the same order as the
 matrix rows/columns. Can be numeric (1, 2, 3) or character ("A", "B").
 Cluster names will be derived from unique values.
@@ -78,38 +78,30 @@ Set to \code{FALSE} to skip this computation for better performance when
 only between-cluster summary is needed.}
 }
 \value{
-A \code{cluster_summary} object (S3 class) containing:
+An \code{mcml} object (S3 class): a list with
 \describe{
-\item{between}{List with two elements:
-\describe{
-\item{weights}{k x k matrix of cluster-to-cluster weights, where k is
-the number of clusters. Row i, column j contains the elementwise
-aggregation (per \code{method}) of all edges from nodes in cluster
-i to nodes in cluster j. Diagonal contains within-cluster totals.
-Pure arithmetic -- no row normalization.}
-\item{inits}{Numeric vector of length k. Initial state distribution
-across clusters, computed from column sums of the original matrix.
-Represents the proportion of incoming edges to each cluster.}
-}
-}
-\item{within}{Named list with one element per cluster. Each element contains:
-\describe{
-\item{weights}{n_i x n_i matrix for nodes within that cluster.
-Shows internal transitions between nodes in the same cluster.}
-\item{inits}{Initial distribution within the cluster.}
-}
-NULL if \code{compute_within = FALSE}.}
-\item{clusters}{Named list mapping cluster names to their member node labels.
-Example: \code{list(A = c("n1", "n2"), B = c("n3", "n4", "n5"))}}
-\item{meta}{List of metadata:
-\describe{
-\item{method}{The \code{method} argument used ("sum", "mean", etc.)}
-\item{directed}{Logical, whether network was treated as directed}
-\item{n_nodes}{Total number of nodes in original network}
-\item{n_clusters}{Number of clusters}
-\item{cluster_sizes}{Named vector of cluster sizes}
-}
-}
+\item{macro}{An \code{mcml_layer} holding the cluster-level network:
+\code{$weights}, the k x k matrix whose entry (i, j) is the
+aggregation (per \code{method}) of all edges from nodes in cluster i
+to nodes in cluster j, with the diagonal holding the within-cluster
+edges -- pure arithmetic, no row normalization; \code{$inits}, the
+length-k column sums of that matrix normalized to sum to 1;
+\code{$labels}, the cluster names; and \code{$data}, \code{NULL} on
+this path.}
+\item{clusters}{Named list with one \code{mcml_layer} per cluster.
+Its \code{$weights} is the n_i x n_i submatrix of the nodes in that
+cluster and its \code{$inits} the normalized column sums of that
+submatrix. \code{NULL} when \code{compute_within = FALSE}.}
+\item{cluster_members}{Named list mapping cluster names to their member
+node labels, e.g.
+\code{list(A = c("n1", "n2"), B = c("n3", "n4", "n5"))}.}
+\item{edges}{\code{NULL} on this path -- a matrix carries no node-level
+transitions. The sequence and edge-list paths of
+\code{\link{build_mcml}} fill in a tidy edge table here.}
+\item{meta}{List with \code{type} (always \code{"aggregate"} here),
+\code{method}, \code{directed}, \code{n_nodes}, \code{n_clusters},
+\code{cluster_sizes} (named integer vector) and \code{source}
+(\code{"matrix"}).}
 }
 }
 \description{
@@ -125,19 +117,18 @@ analysis with the tna package.
 
 Typical MCML analysis workflow:
 \preformatted{
-# 1. Create network
+# 1. Create the node-level network
 net <- build_network(data, method = "relative")
-net$nodes$clusters <- group_assignments
 
-# 2. Compute cluster summary (arithmetic aggregation over edges)
-cs <- cluster_summary(net, method = "sum")
+# 2. Aggregate its edges to cluster level (arithmetic aggregation)
+cs <- cluster_summary(net, clusters = group_assignments, method = "sum")
 
-# 3. Convert to tna models (normalization happens in as_tna)
-tna_models <- as_tna(cs)
+# 3. Read the result
+print(cs)      # macro weights
+summary(cs)    # one row per cluster
 
-# 4. Analyze/visualize
-plot(tna_models$macro)
-tna::centralities(tna_models$macro)
+# 4. Promote the layers to netobjects for downstream verbs
+nets <- as_tna(cs)
 }
 }
 
@@ -176,17 +167,13 @@ Dense weighted \tab \code{"max"} / \code{"median"} \tab Robust summary \cr
 # -----------------------------------------------------
 # Basic usage with matrix and cluster vector
 # -----------------------------------------------------
+set.seed(1)
 mat <- matrix(runif(100), 10, 10)
 rownames(mat) <- colnames(mat) <- LETTERS[1:10]
 
-clusters <- c(1, 1, 1, 2, 2, 2, 3, 3, 3, 3)
-cs <- cluster_summary(mat, clusters)
-
-# Access results
-cs$macro$weights    # 3x3 cluster transition matrix
-cs$macro$inits      # Initial distribution
-cs$clusters$`1`$weights # Within-cluster 1 transitions
-cs$meta               # Metadata
+cs <- cluster_summary(mat, c(1, 1, 1, 2, 2, 2, 3, 3, 3, 3))
+cs            # cluster-level (macro) weights
+summary(cs)   # one row per cluster
 
 # -----------------------------------------------------
 # Named list clusters (more readable)
@@ -196,46 +183,40 @@ clusters <- list(
   Beta = c("D", "E", "F"),
   Gamma = c("G", "H", "I", "J")
 )
-cs <- cluster_summary(mat, clusters)
-cs$macro$weights    # Rows/cols named Alpha, Beta, Gamma
-cs$clusters$Alpha       # Within Alpha cluster
+cluster_summary(mat, clusters)
 
 # -----------------------------------------------------
-# Auto-detect clusters from netobject
+# A netobject as input: its weight matrix is aggregated
 # -----------------------------------------------------
-\donttest{
 seqs <- data.frame(
-  V1 = sample(LETTERS[1:10], 30, TRUE), V2 = sample(LETTERS[1:10], 30, TRUE),
-  V3 = sample(LETTERS[1:10], 30, TRUE)
+  T1 = c("A", "C", "B", "D"), T2 = c("B", "D", "A", "C"),
+  T3 = c("C", "A", "D", "B")
 )
 net <- build_network(seqs, method = "relative")
-cs2 <- cluster_summary(net, c(1, 1, 1, 2, 2, 2, 3, 3, 3, 3))
-}
+cluster_summary(net, list(G1 = c("A", "B"), G2 = c("C", "D")))
 
 # -----------------------------------------------------
 # Different aggregation methods
 # -----------------------------------------------------
-cs_sum <- cluster_summary(mat, clusters, method = "sum")   # Total flow
-cs_mean <- cluster_summary(mat, clusters, method = "mean") # Average
-cs_max <- cluster_summary(mat, clusters, method = "max")   # Strongest
+summary(cluster_summary(mat, clusters, method = "sum"))   # total flow
+summary(cluster_summary(mat, clusters, method = "mean"))  # average
+summary(cluster_summary(mat, clusters, method = "max"))   # strongest
 
 # -----------------------------------------------------
 # Skip within-cluster computation for speed
 # -----------------------------------------------------
-cs_fast <- cluster_summary(mat, clusters, compute_within = FALSE)
-cs_fast$clusters  # NULL
+cluster_summary(mat, clusters, compute_within = FALSE)
 
 # -----------------------------------------------------
-# Convert to tna objects for tna package
-# (as_tna() applies its own row normalisation)
+# Promote the layers to netobjects
+# (as_tna() stores the aggregated weights as they are)
 # -----------------------------------------------------
-cs <- cluster_summary(mat, clusters, method = "sum")
-tna_models <- as_tna(cs)
-# tna_models$macro      # tna object
-# tna_models$clusters$Alpha # tna object
+as_tna(cluster_summary(mat, clusters, method = "sum"))
 }
 \seealso{
-\code{as_tna()} to convert results to tna objects,
-\code{plot()} for two-layer visualization,
-\code{plot()} for flat cluster visualization
+\code{\link{build_mcml}} to build an mcml from raw transitions instead
+of a weight matrix,
+\code{\link{as_tna}} to promote the layers to netobjects,
+\code{\link{macro_network}} for the cluster-level network with one
+cluster expanded back into its member states
 }

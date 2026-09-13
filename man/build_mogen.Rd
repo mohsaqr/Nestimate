@@ -12,12 +12,17 @@ build_mogen(
 )
 }
 \arguments{
-\item{data}{A data.frame (rows = trajectories, columns = time points) or
-a list of character/numeric vectors (one per trajectory).}
+\item{data}{A data.frame (rows = trajectories, columns = time points), a
+list of character/numeric vectors (one per trajectory), a \code{tna}
+object, or a \code{netobject} with sequence data. For
+\code{tna}/\code{netobject}, numeric state IDs are automatically
+converted to label names.}
 
 \item{max_order}{Integer. Maximum Markov order to test (default 5).
 Must be a whole number; a non-integer value (e.g. \code{2.7}) is an
-error rather than being silently truncated.}
+error rather than being silently truncated. A \code{max_order} at or
+above the longest trajectory is capped at (longest path - 1) with a
+message.}
 
 \item{criterion}{Character. Model selection criterion: \code{"aic"}
 (default), \code{"bic"}, or \code{"lrt"} (likelihood ratio test).}
@@ -25,20 +30,40 @@ error rather than being silently truncated.}
 \item{lrt_alpha}{Numeric. Significance threshold for LRT (default 0.01).}
 }
 \value{
-An object of class \code{net_mogen} with components:
+An object of class \code{c("net_mogen", "cograph_network")} with
+components:
 \describe{
 \item{optimal_order}{Selected optimal Markov order.}
 \item{criterion}{Which criterion was used for selection.}
-\item{orders}{Integer vector of tested orders (0 to max_order).}
+\item{orders}{Integer vector of tested orders (0 to max_order, after
+any capping).}
 \item{aic}{Named numeric vector of AIC values per order.}
 \item{bic}{Named numeric vector of BIC values per order.}
 \item{log_likelihood}{Named numeric vector of log-likelihoods.}
 \item{dof}{Named integer vector of cumulative DOF per model.}
 \item{layer_dof}{Named integer vector of per-layer DOF.}
-\item{transition_matrices}{List of transition matrices (index 1 = order 0).}
+\item{transition_matrices}{List of row-stochastic transition matrices
+(index 1 = order 0, held as the marginal named numeric vector).}
+\item{count_matrices}{List of the matching raw count matrices, same
+indexing; read by \code{\link{mogen_transitions}()}.}
 \item{states}{Unique first-order states.}
 \item{n_paths}{Number of trajectories.}
 \item{n_observations}{Total number of state observations.}
+\item{weights}{\code{cograph_network} weight matrix: the transition
+matrix of the selected optimal order (a 1 x n matrix named
+\code{"marginal"} when the optimal order is 0). Its dimnames are the
+internal k-gram keys (states joined by a non-printing separator),
+not arrow notation.}
+\item{nodes}{data.frame (\code{id}, \code{label}, \code{name}) of the
+optimal-order De Bruijn nodes.}
+\item{edges}{\code{cograph_network} edge data.frame with integer
+\code{from}/\code{to} node indices and a numeric \code{weight}. The
+readable arrow-notation table is
+\code{\link{mogen_transitions}()}.}
+\item{directed}{Logical. Always \code{TRUE}.}
+\item{n_nodes, n_edges}{Counts for the optimal-order graph.}
+\item{meta}{\code{cograph_network} metadata list.}
+\item{node_groups}{Always \code{NULL}.}
 }
 }
 \description{
@@ -67,7 +92,7 @@ plot(m)
 Scholtes, I. (2017). When is a Network a Network? Multi-Order Graphical
 Model Selection in Pathways and Temporal Networks. \emph{KDD 2017}.
 
-Gote, C. & Scholtes, I. (2023). Predicting variable-length paths in
-networked systems using multi-order generative models. \emph{Applied
-Network Science}, 8, 62.
+Gote, C., Casiraghi, G., Schweitzer, F., & Scholtes, I. (2023). Predicting
+variable-length paths in networked systems using multi-order generative
+models. \emph{Applied Network Science}, 8, 68.
 }

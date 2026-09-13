@@ -4,71 +4,63 @@
 \alias{as_tna}
 \alias{as_tna.mcml}
 \alias{as_tna.default}
-\title{Convert cluster_summary to tna Objects}
+\title{Promote the Layers of an mcml to Networks}
 \usage{
-as_tna(x)
+as_tna(x, ...)
 
-\method{as_tna}{mcml}(x)
+\method{as_tna}{mcml}(x, expand = NULL, ...)
 
-\method{as_tna}{default}(x)
+\method{as_tna}{default}(x, ...)
 }
 \arguments{
-\item{x}{A \code{cluster_summary} object created by
-\code{\link{cluster_summary}}. The aggregated weights are passed to
-\code{tna::tna()}, which row-normalises them as needed.}
+\item{x}{An \code{mcml} object created by \code{\link{cluster_summary}} or
+\code{\link{build_mcml}}.}
+
+\item{...}{Passed to methods.}
+
+\item{expand}{For the \code{mcml} method, names of clusters whose member
+states replace the collapsed cluster node in the \code{macro} layer (see
+\code{\link{macro_network}}). \code{NULL} (default) keeps the macro
+fully collapsed. The per-cluster layers are unaffected.}
 }
 \value{
-A \code{cluster_tna} object (S3 class) containing:
-\describe{
-\item{between}{A tna object representing cluster-level transitions.
-Contains \code{$weights} (k x k transition matrix), \code{$inits}
-(initial distribution), and \code{$labels} (cluster names).
-Use this for analyzing how learners/entities move between high-level
-groups or phases.}
-\item{within}{Named list of tna objects, one per cluster. Each tna object
-represents internal transitions within that cluster. Contains
-\code{$weights} (n_i x n_i matrix), \code{$inits} (initial distribution),
-and \code{$labels} (node labels). Clusters with single nodes or zero-row
-nodes are excluded (tna requires positive row sums).}
-}
+A \code{netobject_group}: a named list whose first element is
+\code{macro} (the k x k cluster-level network) followed by one element
+per cluster, each a \code{netobject}/\code{cograph_network} carrying
+\code{$weights}, \code{$inits}, \code{$nodes}, \code{$edges} and the
+recorded \code{$method} (\code{"relative"} for an mcml whose weights are
+already row-normalised, \code{"frequency"} otherwise).
 
-A \code{netobject_group} with data preserved from each sub-network.
+The \code{mcml} method returns that \code{netobject_group}, each
+layer keeping the data the corresponding \code{mcml} layer carried. With
+\code{expand}, its \code{macro} element is the mixed-resolution network
+of \code{\link{macro_network}} rather than the fully collapsed one.
 
-A \code{tna} object constructed from the input.
+The default method returns the input unchanged when it already
+inherits from \code{tna}, and otherwise raises an error.
 }
 \description{
-Converts a \code{cluster_summary} object to proper tna objects that can be
-used with all functions from the tna package. Creates both a between-cluster
-tna model (cluster-level transitions) and within-cluster tna models (internal
-transitions within each cluster).
+Converts an \code{mcml} object into a \code{netobject_group}: one
+netobject for the cluster-level (macro) layer, and one per cluster for the
+within-cluster layers. The stored weights are carried over as they are --
+nothing is re-normalised here, so the aggregation chosen when the
+\code{mcml} was built is what the networks hold.
 }
 \details{
-This is the final step in the MCML workflow, enabling full integration with
-the tna package for centrality analysis, bootstrap validation, permutation
-tests, and visualization.
-\subsection{Requirements}{
-
-The tna package must be installed. If not available, the function throws
-an error with installation instructions.
-}
-
+This is the step that lets an MCML result flow into the verbs that take a
+group of networks (printing, network-metric summaries, rendering with
+cograph).
 \subsection{Workflow}{
 
 \preformatted{
 # Full MCML workflow
 net <- build_network(data, method = "relative")
-net$nodes$clusters <- group_assignments
-cs <- cluster_summary(net)
-tna_models <- as_tna(cs)
+cs   <- cluster_summary(net, clusters = group_assignments)
+nets <- as_tna(cs)
 
-# Now use tna package functions
-plot(tna_models$macro)
-tna::centralities(tna_models$macro)
-tna::bootstrap(tna_models$macro, iter = 1000)
-
-# Analyze within-cluster patterns
-plot(tna_models$clusters$ClusterA)
-tna::centralities(tna_models$clusters$ClusterA)
+# Every layer is an ordinary netobject
+print(nets)      # one line per layer
+summary(nets)    # network metrics per layer
 }
 }
 
@@ -83,16 +75,18 @@ Inspect \code{rowSums(x$clusters[[cl]]$weights)} to find sink nodes.
 }
 }
 \examples{
+set.seed(1)
 mat <- matrix(runif(36), 6, 6)
 rownames(mat) <- colnames(mat) <- LETTERS[1:6]
 clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"), G3 = c("E", "F"))
 cs <- cluster_summary(mat, clusters)
-tna_models <- as_tna(cs)
-tna_models
-tna_models$macro$weights
+nets <- as_tna(cs)
+nets
+summary(nets)
 }
 \seealso{
-\code{\link{cluster_summary}} to create the input object,
-\code{plot()} for visualization without conversion,
-\code{tna::tna} for the underlying tna constructor
+\code{\link{cluster_summary}} and \code{\link{build_mcml}} to create the
+input object,
+\code{\link{macro_network}} for a macro layer with one cluster expanded,
+\code{\link{as_networks}} for the psychometric-network counterpart
 }

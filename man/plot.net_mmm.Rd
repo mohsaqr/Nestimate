@@ -19,7 +19,9 @@ is returned.}
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{
-A \code{ggplot} object, invisibly.
+A \code{ggplot} object, invisibly; for
+\code{type = "covariates"} with \code{combined = FALSE}, a list of
+\code{ggplot} objects named by cluster (invisibly).
 }
 \description{
 Plot Method for net_mmm

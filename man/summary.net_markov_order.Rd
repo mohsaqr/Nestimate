@@ -12,26 +12,19 @@
 \item{...}{Ignored.}
 }
 \value{
-The tidy \code{test_table} data.frame, with the selected
-\code{optimal_order} attached as an attribute.
+The tidy \code{test_table} data.frame - one row per order tested -
+carrying the selection context as attributes: \code{optimal_order},
+\code{bic_order}, \code{aic_order}, \code{alpha} and \code{n_perm}.
 }
 \description{
 Summary Method for net_markov_order
 }
 \examples{
 \donttest{
-# First-order Markov data: test should select order 1
-set.seed(1)
-states <- letters[1:4]
-tm <- matrix(runif(16), 4, 4, dimnames = list(states, states))
-tm <- tm / rowSums(tm)
-seqs <- lapply(1:30, function(.) {
-  s <- character(50); s[1] <- sample(states, 1)
-  for (i in 2:50) s[i] <- sample(states, 1, prob = tm[s[i - 1], ])
-  s
-})
-res <- markov_order_test(seqs, max_order = 3, n_perm = 300, seed = 1)
-res$optimal_order
+# Is one previous state enough to predict the next one?
+res <- markov_order_test(as.data.frame(trajectories),
+                         max_order = 2, n_perm = 99, seed = 1)
+res
 summary(res)
 plot(res)
 }

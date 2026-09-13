@@ -1,3 +1,63 @@
+# Nestimate 0.9.5
+
+## New verbs
+
+* `macro_network()` returns the macro (cluster-level) network of an `mcml`
+  with one or more named clusters expanded back into their member states and
+  every other cluster left collapsed — a network at mixed resolution. It
+  re-counts from the recoded sequence data rather than splitting the k x k
+  aggregate, which cannot be disaggregated; a matrix-derived `mcml` raises
+  `nestimate_no_expand_source`. `$node_groups` maps each expanded state back
+  to its parent cluster, so the result plots grouped.
+* `extract_pathways()` cuts a long event log into pathways and returns one
+  row per pathway. Three cuts via `type =`: `"unit"` (one pathway per group),
+  `"segments"` (one per contiguous run), `"anchored"` (spans around an anchor
+  event). `resolve =` appends a resolution label as the closing state.
+* `outcome_model()` regresses a unit-level outcome on sequence or network
+  predictors — pattern indicators, `simplicial_features()` output, or any
+  numeric covariate — with family auto-detection, an optional `lme4` random
+  intercept, `select = "split"` hold-out selection, BH-corrected p-values,
+  confidence intervals and odds ratios. `effects_table()` is the tidy
+  accessor; `summary()` returns the same table.
+* `simplicial_features()` returns topological summaries of one or many
+  networks as a tidy data.frame, one row per network per threshold, ready to
+  use as regression predictors. Accepts a `netobject`, `netobject_group`,
+  `mcml`, a square weight matrix, or a named list of any of these.
+
+## Extended
+
+* `build_mcml()` gains the `exclude`, `trim`, `end` and `end_by` sequence
+  arguments, applied in that fixed order.
+* `as_tna()` is now a generic. `as_tna.mcml(expand =)` delegates to
+  `macro_network()` for the macro layer only; per-cluster layers are
+  untouched. An `as_tna.default()` covers everything else.
+* `sequence_plot()` and its `mcml` method gain
+  `panel = c("both", "summary", "channels")`.
+
+## Fixes
+
+* `frequencies(format = "frequency")` returned zero rows for any long-format
+  data whose id column was not integer-valued. The sequence key was coerced
+  with `as.integer()` before the merge, turning every character id into `NA`;
+  the merge then matched nothing and failed silently. Sequence keys are now
+  aligned in their character form.
+* `sequence_plot()` on an `mcml` errored whenever a singleton cluster was
+  named after its own state: the shared fill scale built its levels with
+  `factor(levels = c(states, clusters))`, and duplicate levels are an error.
+  Levels and values are now de-duplicated.
+* `as.data.frame()` methods for `net_hypergraph_transduction` and
+  `net_hypergraph_cluster` placed `what` in the generic's `row.names` slot,
+  so `as.data.frame(x, "scores")` bound `"scores"` to `row.names`. The
+  generic's arguments now come first and `row.names` is honoured
+  (`R CMD check` "S3 generic/method consistency").
+
+# Nestimate 0.9.4
+
+* pkgdown reference index repaired: the five topics added in 0.9.3 were
+  unindexed and `build_reference_index()` failed. The S3 Methods section now
+  wildcards `as.data.frame.` alongside `print.`, `summary.` and `plot.`, so a
+  future result class with the house-standard accessor cannot repeat it.
+
 # Nestimate 0.9.3
 
 ## New verb: `compare_networks()`
@@ -36,6 +96,24 @@
   their permutation p-values, computed from the same null.
 * `compare_model()` is unchanged and will be soft-deprecated once
   `compare_networks()` has been through one release.
+
+## Hypergraph suite
+
+* `build_hypergraph()` promotes a network's k-cliques (k >= 3) to hyperedges,
+  following Burgio, Matamalas, Gomez and Arenas (2020); underlying pairwise
+  edges are retained. `clique_expansion()` projects a hypergraph back to a
+  pairwise network in one `tcrossprod()` call, closing the
+  event data -> `bipartite_groups()` -> hypergraph -> network cycle.
+* `hypergraph_measures()` returns the structural-statistics suite (Lee, Choe
+  and Shin 2024); an empty hypergraph returns trivial zeros rather than
+  erroring. `hypergraph_centrality()` computes Benson's (2019) three
+  eigenvector centralities.
+* `hypergraph_laplacian()` computes the normalized Laplacian, either the
+  Zhou, Huang and Scholkopf (2006) form on the binary incidence pattern or
+  the Hayashi, Aksoy, Park and Park (2020) weighted form. Built on it:
+  `hypergraph_cluster()` (spectral clustering) and
+  `hypergraph_transduction()` (semi-supervised label propagation), each with
+  print, summary, plot and `as.data.frame()` methods.
 
 # Nestimate 0.9.1
 

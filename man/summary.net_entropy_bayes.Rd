@@ -12,8 +12,9 @@
 \item{...}{Ignored.}
 }
 \value{
-The tidy edge table (data.frame), sorted by posterior mean
-contribution, invisibly printed with the chain-level summary.
+The tidy edge table (data.frame), one row per observed
+transition, sorted by posterior mean contribution, returned invisibly.
+The chain-level and per-edge tables are printed as a side effect.
 }
 \description{
 Summary method for \code{net_entropy_bayes}

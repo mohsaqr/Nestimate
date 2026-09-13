@@ -26,8 +26,11 @@ a \code{netobject} with \code{method = "glasso"}.}
 \item{iter}{Integer. Number of nonparametric bootstrap iterations
 (default: 1000).}
 
-\item{cs_iter}{Integer. Number of case-dropping iterations per drop
-proportion (default: 500).}
+\item{cs_iter}{Integer. Total number of case-dropping iterations
+(default: 500). Following \pkg{bootnet}, each iteration draws one
+drop proportion at random from \code{cs_drop}, so the iterations are
+spread across the proportions rather than repeated \code{cs_iter}
+times at each one.}
 
 \item{cs_drop}{Numeric vector. Drop proportions for CS-coefficient
 computation (default: \code{seq(0.1, 0.9, by = 0.1)}).}
@@ -83,9 +86,13 @@ edges zeroed.}
 ci_upper) per centrality measure.}
 \item{cs_coefficient}{Named numeric vector of CS-coefficients per
 centrality measure.}
-\item{cs_data}{Data frame of case-dropping correlations (drop_prop,
-measure, correlation).}
-\item{edge_diff_p}{Symmetric matrix of pairwise edge difference p-values.}
+\item{cs_data}{Data frame of case-dropping results, one row per
+drop proportion by measure, with columns \code{drop_prop},
+\code{measure}, \code{mean_cor}, \code{prop_above} (fraction of
+that proportion's iterations correlating above 0.7) and
+\code{n_samples} (iterations that landed on that proportion).}
+\item{edge_diff_p}{Symmetric matrix of pairwise edge difference
+p-values; \code{NULL} when the network has more than 500 edges.}
 \item{centrality_diff_p}{Named list of symmetric p-value matrices per
 centrality measure.}
 \item{predictability_ci}{Data frame of node predictability CIs (node,
@@ -133,6 +140,14 @@ print(boot)
 summary(boot, type = "edges")
 }
 
+}
+\references{
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
+psychological networks and their accuracy: A tutorial paper.
+\emph{Behavior Research Methods} 50(1), 195-212.
+\doi{10.3758/s13428-017-0862-1}
+(source of the CS-coefficient and of the case-dropping,
+edge-difference and centrality-difference procedures reproduced here.)
 }
 \seealso{
 \code{\link{build_network}}, \code{\link{bootstrap_network}}

@@ -4,10 +4,22 @@
 \alias{as.data.frame.net_hypergraph_transduction}
 \title{Coerce a net_hypergraph_transduction to a data.frame}
 \usage{
-\method{as.data.frame}{net_hypergraph_transduction}(x, what = c("predictions", "scores"), ...)
+\method{as.data.frame}{net_hypergraph_transduction}(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  what = c("predictions", "scores"),
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{net_hypergraph_transduction} object.}
+
+\item{row.names}{\code{NULL} (default) or a character vector of row names for
+the returned data frame.}
+
+\item{optional}{Ignored; present so the method matches the signature of
+the \code{\link[=as.data.frame]{as.data.frame()}} generic.}
 
 \item{what}{Character. \code{"predictions"} (default) for the one-row-per-node
 table, \code{"scores"} for the tidy long score table (one row per node x
@@ -16,7 +28,10 @@ class: \code{node}, \code{class}, \code{score}).}
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A data.frame as selected by \code{what}.
+A data.frame selected by \code{what}: for \code{"predictions"}, one row per
+node with columns \code{node}, \code{label} (the given label, \code{NA} if unlabeled),
+\code{predicted}, \code{score} and \code{margin}; for \code{"scores"}, one row per node x
+class with columns \code{node}, \code{class} and \code{score}.
 }
 \description{
 Coerce a net_hypergraph_transduction to a data.frame

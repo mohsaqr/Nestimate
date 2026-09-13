@@ -18,8 +18,10 @@ build_mmm(
 )
 }
 \arguments{
-\item{data}{A data.frame (wide format), \code{netobject}, or
-\code{tna} model. For tna objects, extracts the stored data.}
+\item{data}{A data.frame (wide format), \code{netobject},
+\code{cograph_network}, or \code{tna} model. For tna and
+cograph_network objects the stored (integer-encoded) data is
+extracted and decoded to state labels.}
 
 \item{k}{Integer. Whole finite number of mixture components, >= 2.
 Default: 2.}
@@ -81,9 +83,22 @@ component transition matrix.}
 \item{assignments}{Integer vector of hard assignments (1..k).}
 \item{quality}{List: \code{avepp} (per-class), \code{avepp_overall},
 \code{entropy}, \code{relative_entropy},
-\code{classification_error}.}
+\code{classification_error}, \code{class_entropy}.}
 \item{log_likelihood, BIC, AIC, ICL}{Model fit statistics.}
+\item{n_params}{Number of free parameters behind BIC/AIC/ICL. With
+\code{covariate_effect = "em"} it grows by \code{(k - 1) * p} for
+\code{p} covariate columns.}
+\item{iterations, converged}{EM iterations used by the retained fit
+and whether it met \code{tol}.}
 \item{states}{Character vector of state names.}
+\item{n_sequences}{Number of sequences actually fitted (rows with
+missing covariates are dropped under
+\code{covariate_effect = "em"}).}
+\item{covariates}{The post-hoc covariate analysis (list), or NULL
+when \code{covariates = NULL}.}
+\item{network_method, build_args, htna_partition}{Provenance kept
+from \code{netobject} / HTNA input so per-cluster networks can be
+rebuilt the same way; NULL otherwise.}
 }
 }
 \description{

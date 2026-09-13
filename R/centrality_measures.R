@@ -297,10 +297,13 @@ centrality <- function(x, ...) {
 #' Computes centrality measures from a \code{netobject},
 #' \code{netobject_group}, \code{mcml}, or \code{cograph_network}. The built-in
 #' measures match \code{tna::centralities()} without importing \code{tna} or
-#' \code{igraph}. The only intentional default difference is that
-#' \code{Diffusion} is range-normalized by default.
+#' \code{igraph}: strength is taken from the weight matrix directly, and the
+#' path-based measures (betweenness, closeness) come from all-pairs shortest
+#' paths computed in-package by Floyd-Warshall. The only intentional default
+#' difference from \code{tna} is that \code{Diffusion} is range-normalized by
+#' default.
 #'
-#' @param x A \code{netobject}, \code{netobject_group}, or
+#' @param x A \code{netobject}, \code{netobject_group}, \code{mcml}, or
 #'   \code{cograph_network}.
 #' @param measures Character vector. Centrality measures to compute.
 #'   Defaults to \code{c("InStrength", "Betweenness", "Diffusion")}. Pass
@@ -322,10 +325,32 @@ centrality <- function(x, ...) {
 #'   takes a weight matrix and returns a named list of centrality vectors.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return For a \code{netobject}: a \code{net_centrality} data frame with
-#'   node names as rows, a \code{state} column, and one column per centrality
-#'   measure. For a \code{netobject_group}: a \code{net_centrality_group}
-#'   list of such data frames.
+#' @return For a \code{netobject} or \code{cograph_network}: a
+#'   \code{net_centrality} data frame, one row per node, with a \code{state}
+#'   column and one further column per requested measure (node names are also
+#'   the row names). For a \code{netobject_group} or an \code{mcml}: a
+#'   \code{net_centrality_group} list of such data frames, one per group.
+#'
+#' @references
+#' Freeman, L. C. (1978). Centrality in social networks: conceptual
+#' clarification. \emph{Social Networks}, 1(3), 215--239. (betweenness,
+#' closeness)
+#'
+#' Opsahl, T., Agneessens, F. & Skvoretz, J. (2010). Node centrality in
+#' weighted networks: generalizing degree and shortest paths.
+#' \emph{Social Networks}, 32(3), 245--251. (weighted strength and geodesics)
+#'
+#' Kivimaki, I., Lebichot, B., Saramaki, J. & Saerens, M. (2016). Two
+#' betweenness centrality measures based on randomized shortest paths.
+#' \emph{Scientific Reports}, 6, 19668. (\code{BetweennessRSP})
+#'
+#' Banerjee, A., Chandrasekhar, A. G., Duflo, E. & Jackson, M. O. (2013). The
+#' diffusion of microfinance. \emph{Science}, 341(6144), 1236498.
+#' (\code{Diffusion})
+#'
+#' Onnela, J.-P., Saramaki, J., Kertesz, J. & Kaski, K. (2005). Intensity and
+#' coherence of motifs in weighted complex networks. \emph{Physical Review E},
+#' 71, 065103. (\code{Clustering})
 #'
 #' @examples
 #' seqs <- data.frame(
@@ -424,14 +449,14 @@ centrality.mcml <- function(x, measures = NULL, loops = FALSE,
 #'   (the value \code{"profile"} is still accepted as an alias);
 #'   \code{"heatmap"} shows a states-by-measures tile grid, each measure
 #'   scaled to 0--1 for cross-measure comparability with the raw value
-#'   printed in the tile.
-#' @param ncol Integer. Number of facet columns.
-#' @param scales Facet scale mode. \code{"free_x"} uses free centrality axes;
-#'   \code{"fixed"} keeps a common centrality axis.
+#'   printed in the tile. Default: \code{"bar"}.
+#' @param ncol Integer. Number of facet columns. Default: \code{3}.
+#' @param scales Facet scale mode. \code{"free_x"} (default) uses free
+#'   centrality axes; \code{"fixed"} keeps a common centrality axis.
 #' @param profile_scale Scaling used by \code{type = "line"}.
-#'   \code{"measure"} rescales each centrality measure to 0--1 before drawing
-#'   cross-measure profiles; \code{"none"} uses raw values.
-#' @param labels Logical. Add compact value labels.
+#'   \code{"measure"} (default) rescales each centrality measure to 0--1
+#'   before drawing cross-measure profiles; \code{"none"} uses raw values.
+#' @param labels Logical. Add compact value labels. Default: \code{TRUE}.
 #' @param drop_zero Logical. Drop measures whose values are all (near) zero
 #'   so empty panels do not waste space. Default: \code{FALSE} (every
 #'   requested measure is shown).
@@ -505,14 +530,15 @@ plot.net_centrality <- function(x, reorder = TRUE, ncol = 3L,
 #'   differences. With two groups it is the per-state difference (second group
 #'   minus first); with three or more groups it is each group's deviation from
 #'   the per-state group mean, so the largest gaps stand out either way.
-#' @param ncol Integer. Number of facet columns.
-#' @param scales Facet scale mode. \code{"free_x"} uses free centrality axes;
-#'   \code{"fixed"} keeps a common centrality axis.
-#' @param palette Brewer palette for groups.
+#'   Default: \code{"bar"}.
+#' @param ncol Integer. Number of facet columns. Default: \code{3}.
+#' @param scales Facet scale mode. \code{"free_x"} (default) uses free
+#'   centrality axes; \code{"fixed"} keeps a common centrality axis.
+#' @param palette Brewer palette for groups. Default: \code{"Set2"}.
 #' @param profile_scale Scaling used by \code{type = "line"}.
-#'   \code{"measure"} rescales each centrality measure to 0--1 before drawing
-#'   cross-measure profiles; \code{"none"} uses raw values.
-#' @param labels Logical. Add compact value labels.
+#'   \code{"measure"} (default) rescales each centrality measure to 0--1
+#'   before drawing cross-measure profiles; \code{"none"} uses raw values.
+#' @param labels Logical. Add compact value labels. Default: \code{FALSE}.
 #' @param drop_zero Logical. Drop measures whose values are all (near) zero
 #'   so empty panels do not waste space. Default: \code{FALSE}.
 #' @param ... Additional arguments ignored.
@@ -906,9 +932,10 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
 #'   and frequency networks).
 #' @param ... Additional arguments (ignored).
 #'
-#' @return For a \code{netobject}: a new \code{netobject} (class
-#'   \code{c("netobject", "cograph_network")}) whose \code{$weights} are the
-#'   edge-betweenness scores, with \code{method = "edge_betweenness"}. Call
+#' @return For a \code{netobject}: a new network of class
+#'   \code{c("net_edge_betweenness", "netobject", "cograph_network")} whose
+#'   \code{$weights} are the edge-betweenness scores, with
+#'   \code{method = "edge_betweenness"}. Call
 #'   \code{extract_edges()} on it for a tidy per-edge table, or \code{plot()}
 #'   to render it. The object preserves source-network metadata so
 #'   \code{\link{permutation}} can test edge-betweenness differences by

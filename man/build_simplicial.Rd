@@ -25,7 +25,8 @@ or \code{"vr"} (alias \code{"rips"}).}
 \item{threshold}{For \code{type = "clique"}: minimum non-zero absolute
 edge weight to include an edge (default 0). Edges below this are
 ignored; zero-weight non-edges are never included. Ignored for
-\code{type = "vr"} - use \code{max_scale} instead.}
+\code{type = "vr"} (use \code{max_scale} instead) and for
+\code{type = "pathway"}.}
 
 \item{max_dim}{Maximum simplex dimension (default 10). Must be a single
 non-negative integer. A k-simplex has k+1 nodes.}
@@ -46,9 +47,28 @@ in the filtration. \code{NULL} (default) uses \code{max(d)}.}
 \code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.}
 }
 \value{
-A \code{simplicial_complex} object. For \code{type = "vr"} an
-additional \code{$filtration} numeric vector is attached (parallel to
-\code{$simplices}).
+A \code{simplicial_complex} object - a list with:
+\describe{
+\item{simplices}{List of integer vectors, one per simplex, each holding
+the (sorted) node indices it spans. Every face of every simplex is
+present, including all 0-simplices (isolated vertices included).}
+\item{nodes}{Character vector of node labels; \code{simplices} index
+into it.}
+\item{n_nodes, n_simplices}{Integer counts.}
+\item{dimension}{Integer. Highest simplex dimension present
+(a k-simplex has k+1 nodes).}
+\item{f_vector}{Named integer vector \code{dim_0}, \code{dim_1}, ... -
+the number of simplices of each dimension.}
+\item{density}{Numeric. \code{n_simplices} divided by the number of
+simplices a complete complex on \code{n_nodes} would have up to
+\code{dimension}.}
+\item{mean_dim}{Numeric. Mean simplex dimension.}
+\item{type}{\code{"clique"}, \code{"pathway"}, or \code{"vr"}.}
+}
+For \code{type = "vr"} two further elements are attached:
+\code{$filtration} (numeric, parallel to \code{$simplices}: the value at
+which each simplex enters) and \code{$max_scale} (the cap actually
+used). \code{persistent_homology()} consumes them directly.
 }
 \description{
 Constructs a simplicial complex from a network or higher-order pathway

@@ -373,7 +373,8 @@ print.summary.net_path_dependence <- function(x, digits = 3L, ...) {
 #'
 #' @param x A `net_path_dependence` object.
 #' @param top Integer. Number of contexts to show (top by KL). Default 15.
-#' @param title Character. Plot title.
+#' @param title Character or `NULL`. Plot title. Default `NULL`, which
+#'   builds "Path dependence: order k vs order 1" from the fitted order.
 #' @param ... Ignored.
 #' @return A ggplot object.
 #' @export

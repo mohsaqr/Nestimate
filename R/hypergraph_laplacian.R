@@ -115,7 +115,9 @@ hypergraph_laplacian <- function(hg,
 #'   k-means, dims `dim1..dimk`), `$k`, `$type`, `$eigenvalues` (full
 #'   Laplacian spectrum, increasing), `$eigengap` (gap after the k-th
 #'   eigenvalue), `$sizes` (data.frame `cluster`/`size`), `$pi`
-#'   (stationary distribution) and `$params`. Has `print`, `summary`,
+#'   (named stationary distribution), `$n_nodes`, `$n_hyperedges` and
+#'   `$params` (the `edge_weights` used, `nstart`, `seed`,
+#'   `tot_withinss`). Has `print`, `summary`,
 #'   `plot` and `as.data.frame` methods; `as.data.frame()` returns one row
 #'   per node with `node`, `cluster`, the stationary probability `pi`, and
 #'   the embedding coordinates.
@@ -234,8 +236,9 @@ hypergraph_cluster <- function(hg, k,
 #'   `$predictions` (data.frame, one row per node: `node`, `label` (given,
 #'   `NA` if unlabeled), `predicted`, `score` (winning class score),
 #'   `margin` (winning minus runner-up score)), `$classes`, `$scores`
-#'   (node x class score matrix), `$xi`, `$type`, `$n_labeled` and
-#'   `$params`. Has `print`, `summary`, `plot` and `as.data.frame` methods;
+#'   (node x class score matrix), `$xi`, `$type`, `$n_labeled`, `$n_nodes`
+#'   and `$params` (the `edge_weights` used).
+#'   Has `print`, `summary`, `plot` and `as.data.frame` methods;
 #'   `as.data.frame(x, what = "scores")` returns the tidy long score table.
 #'
 #' @references
@@ -621,22 +624,35 @@ summary.net_hypergraph_transduction <- function(object, ...) {
 #' Coerce a net_hypergraph_transduction to a data.frame
 #'
 #' @param x A `net_hypergraph_transduction` object.
+#' @param row.names `NULL` (default) or a character vector of row names for
+#'   the returned data frame.
+#' @param optional Ignored; present so the method matches the signature of
+#'   the [as.data.frame()] generic.
 #' @param what Character. `"predictions"` (default) for the one-row-per-node
 #'   table, `"scores"` for the tidy long score table (one row per node x
 #'   class: `node`, `class`, `score`).
 #' @param ... Additional arguments (ignored).
-#' @return A data.frame as selected by `what`.
+#' @return A data.frame selected by `what`: for `"predictions"`, one row per
+#'   node with columns `node`, `label` (the given label, `NA` if unlabeled),
+#'   `predicted`, `score` and `margin`; for `"scores"`, one row per node x
+#'   class with columns `node`, `class` and `score`.
 #' @export
 as.data.frame.net_hypergraph_transduction <- function(
-    x, what = c("predictions", "scores"), ...) {
+    x, row.names = NULL, optional = FALSE,
+    what = c("predictions", "scores"), ...) {
   what <- match.arg(what)
-  if (what == "predictions") return(x$predictions)
-  data.frame(
-    node  = rep(rownames(x$scores), times = ncol(x$scores)),
-    class = rep(colnames(x$scores), each = nrow(x$scores)),
-    score = as.vector(x$scores),
-    stringsAsFactors = FALSE
-  )
+  out <- if (what == "predictions") {
+    x$predictions
+  } else {
+    data.frame(
+      node  = rep(rownames(x$scores), times = ncol(x$scores)),
+      class = rep(colnames(x$scores), each = nrow(x$scores)),
+      score = as.vector(x$scores),
+      stringsAsFactors = FALSE
+    )
+  }
+  if (!is.null(row.names)) rownames(out) <- row.names
+  out
 }
 
 #' Plot method for net_hypergraph_transduction
@@ -651,7 +667,8 @@ as.data.frame.net_hypergraph_transduction <- function(
 #'
 #' @param x A `net_hypergraph_transduction` object.
 #' @param ... Additional arguments (ignored).
-#' @return A ggplot object, invisibly printable.
+#' @return A ggplot object (the score heatmap), returned visibly so that
+#'   `plot(x)` draws it.
 #' @export
 plot.net_hypergraph_transduction <- function(x, ...) {
   sc <- as.data.frame(x, what = "scores")

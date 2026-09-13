@@ -42,8 +42,8 @@ names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
 cl <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, cl, aggregation = "loadings",
                      method = "cor")
-ls <- loading_stability(fit, iter = 50, seed = 1)
-ls$summary
+stability <- loading_stability(fit, iter = 50, seed = 1)
+stability
 }
 
 }

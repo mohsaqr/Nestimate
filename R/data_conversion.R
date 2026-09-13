@@ -15,17 +15,23 @@
 #'   Default: "Time".
 #' @param drop_na Logical. Whether to drop NA values. Default: TRUE.
 #'
-#' @return A data frame in long format with columns:
+#' @return A data frame in long format, one row per (sequence, time point),
+#'   sorted by identifier then time, with columns:
 #' \describe{
-#'   \item{id}{Sequence identifier (integer).}
-#'   \item{Time}{Time point within the sequence (integer).}
-#'   \item{Action}{The action/state at that time point (character).}
+#'   \item{id}{Sequence identifier. Named by \code{id_col}; when that is
+#'     \code{NULL} the column is called \code{id} and holds the row number
+#'     of the wide input (integer).}
+#'   \item{Time}{Time point within the sequence (integer), taken from the
+#'     numeric suffix of the wide column name. Named by \code{time_col}.}
+#'   \item{Action}{The action/state at that time point. Named by
+#'     \code{action_col}.}
 #' }
-#' Any additional columns from the original data are preserved.
+#' Any additional non-time columns from the original data are preserved and
+#' repeated on every row of their sequence.
 #'
 #' @details
-#' This function converts data from the format produced by `simulate_sequences()`
-#' to the long format used by many TNA functions and analyses.
+#' Converts wide sequence data (one row per sequence, one column per time
+#' point) to the long format used by many TNA functions and analyses.
 #'
 #' @examples
 #' wide_data <- data.frame(
@@ -113,12 +119,17 @@ wide_to_long <- function(data,
 #' @param fill_na Logical. Whether to fill missing time points with NA.
 #'   Default: TRUE.
 #'
-#' @return A data frame in wide format where each row is a sequence and
-#'   columns V1, V2, ... contain the actions at each time point.
+#' @return A data frame in wide format, one row per sequence: the
+#'   \code{id_col} column followed by the time point columns
+#'   \code{V1}, \code{V2}, ... (named with \code{time_prefix}) holding the
+#'   action at each time point. With \code{fill_na = TRUE} short sequences
+#'   are padded with \code{NA} so every row shares the same columns; with
+#'   \code{fill_na = FALSE} only the time points present in every sequence
+#'   are kept.
 #'
 #' @details
-#' This function converts long format data (like that from `simulate_long_data()`)
-#' to the wide format expected by `tna::tna()` and related functions.
+#' Converts long format data (one row per action) to the wide format expected
+#' by \code{\link{build_network}}, \code{tna::tna()} and related functions.
 #'
 #' If `time_col` contains non-integer values (e.g., timestamps), the function
 #' will use the ordering within each sequence to create time indices.
@@ -376,7 +387,10 @@ prepare_for_tna <- function(data,
 #' @param sort_states Logical. Sort state columns alphabetically. Default: FALSE.
 #' @param prefix Character. Prefix for state column names. Default: "".
 #'
-#' @return Data frame with one-hot encoded columns (0/1 integers).
+#' @return The input data frame with one 0/1 integer column appended per
+#'   state (named \code{paste0(prefix, state)}). All other columns are kept;
+#'   the original action column is removed unless
+#'   \code{drop_action = FALSE}.
 #'
 #' @examples
 #' long_data <- data.frame(
@@ -447,10 +461,12 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
 #' @param aggregate Logical. If TRUE, aggregate within each window by
 #'   taking the first non-NA indicator per column. Default: FALSE.
 #'
-#' @return A data frame in wide format with columns named
-#'   \code{W{window}_T{time}} where each cell contains a state name or NA.
-#'   Attributes \code{windowed}, \code{window_size}, \code{window_span}
-#'   are set on the result.
+#' @return A data frame in wide format, one row per actor/session sequence,
+#'   with columns named \code{W<window>_T<slot>} where each cell contains a
+#'   state name or \code{NA}. Attributes \code{windowed} (always
+#'   \code{TRUE}), \code{window_size}, \code{window_span} (the number of
+#'   \code{cols}) and \code{codes} (the \code{cols} themselves) are set on
+#'   the result.
 #'
 #' @examples
 #' # Simple binary data

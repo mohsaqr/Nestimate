@@ -95,9 +95,9 @@ m$jaccard             # symmetric overlap between sessions
 
 }
 \references{
-Lee, G., Choe, M., & Shin, K. (2024). A survey on hypergraph
-representation, learning and mining. \emph{Data Mining & Knowledge
-Discovery} 37, 1-39.
+Lee, G., Choe, M., & Shin, K. (2021). How do hyperedges overlap in
+real-world hypergraphs? Patterns, measures, and generators.
+\emph{Proceedings of the Web Conference 2021}, 3396-3407.
 
 Do, M. T., Yoon, S., Hooi, B., & Shin, K. (2020). Structural patterns
 and generative models of real-world hypergraphs. arXiv:2006.07060.

@@ -12,7 +12,9 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A data frame with per-method summary statistics, invisibly.
+A data frame, one row per method, with columns \code{method},
+\code{n_predictions}, \code{score_mean}, \code{score_sd},
+\code{score_max} and \code{score_min}.
 }
 \description{
 Summary Method for net_link_prediction

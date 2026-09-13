@@ -56,10 +56,17 @@
 #'   \code{top_n} edges by weight. Default \code{NULL} (all edges).
 #' @param ... Currently unused.
 #'
-#' @return A \code{netobject} (undirected) with \code{method = "co_occurrence_fn"}.
-#'   The \code{$weights} matrix contains similarity (or raw) co-occurrence values.
-#'   The \code{$params} list stores the similarity method, threshold, and
-#'   the number of transactions.
+#' @return A \code{netobject} (undirected, class
+#'   \code{c("netobject", "cograph_network")}) with
+#'   \code{method = "co_occurrence_fn"} and \code{$data = NULL} - this
+#'   function does \emph{not} go through \code{\link{build_network}}, so the
+#'   result carries no source data and the data-resampling verbs
+#'   (\code{\link{bootstrap_network}}, \code{\link{permutation}}) cannot be
+#'   run on it. The \code{$weights} matrix holds the similarity (or raw)
+#'   co-occurrence values, one row/column per retained item. The
+#'   \code{$params} list records \code{similarity}, \code{threshold},
+#'   \code{min_occur}, \code{diagonal}, \code{top_n},
+#'   \code{n_transactions} and \code{n_items}.
 #'
 #' @details
 #' Six input formats are supported, auto-detected from the combination of

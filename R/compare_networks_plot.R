@@ -141,13 +141,32 @@
 #' @param top_n Number of edges shown in the edge view (largest absolute
 #'   differences first). Default `20`.
 #' @param measure Optional centrality measure(s) to restrict the node view.
-#' @param labels Logical; print the signed difference on the edge and node
-#'   views. Default `TRUE`. The heatmap always shows its values.
+#' @param labels For `compare_networks()`: optional character vector naming
+#'   the networks (one per network after flattening groups); overrides
+#'   argument names. For `plot()`: logical; print the signed difference on
+#'   the edge and node views, default `TRUE` (the heatmap always shows its
+#'   values).
 #' @param digits Decimals in printed values. Default `2`.
 #' @param what Deprecated alias for `type`, kept so existing calls keep
 #'   working.
-#' @param ... Passed to `cograph::splot()` for the network views (e.g.
-#'   `layout`, `node_size`, `minimum`); ignored by the other views.
+#' @param ... For `compare_networks()`: two or more networks, in any mix of:
+#'   `netobject`, `netobject_group` (members are flattened and keep their
+#'   names), `cograph_network` / `psychnet`, `mcml`, `tna`, `group_tna`,
+#'   square numeric matrices, or one unnamed `list` of these. Name the
+#'   arguments to name the networks (`compare_networks(early = a, late = b)`).
+#'   For `plot()`: passed to `cograph::splot()` for the network views (e.g.
+#'   `layout`, `node_size`, `minimum`); ignored by the other views and by
+#'   `print()`.
+#' @section Reading the figures:
+#' One colour contract in every view and every backend: `"#4A6FE3"` marks
+#' `network_a` (the reference, when one is set) as the higher of the two,
+#' `"#D33F6A"` marks `network_b`, and grey marks no difference; the plotted
+#' quantity is always `diff = a - b`. Colour never carries the sign alone --
+#' a solid line and a circular marker repeat "`a` higher", a dashed line and
+#' a square marker repeat "`b` higher", and the printed value carries its
+#' sign. When `test` was run, evidence is shown by opacity and a starred
+#' (edge and node views) or annotated (inference view) label: a
+#' non-significant difference is faded, never deleted.
 #' @return `plot()` returns a `ggplot` for `type = "edges"`, `"nodes"`,
 #'   `"global"`, `"heatmap"`, `"scatter"` and `"inference"`, or a named list of such plots
 #'   (one per pair) when `combined = FALSE`. `type = "networks"` and

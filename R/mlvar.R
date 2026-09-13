@@ -39,6 +39,21 @@
 #' pre-delegation Nestimate implementation on all layers, coefficients,
 #' and observation counts across lag/standardize/day/beep configurations.
 #'
+#' When the data carry no between-person variance (a random-intercept SD of
+#' zero), the between-subjects network is not estimable. Since 0.9.0 this
+#' raises a warning from \pkg{idiographic} and still returns the zero matrix
+#' by convention; before 0.9.0 the zero matrix was returned silently.
+#'
+#' @section Dispatch limitation:
+#' There is no `plot()` method for `net_mlvar` - plot a single constituent
+#' (`cograph::splot(fit$temporal)`) instead. The three constituents are
+#' matrix-wrapped and carry no `$data`, so the data-resampling and
+#' data-reading verbs do **not** work on the fitted object or its parts:
+#' [bootstrap_network()], [certainty()], [network_reliability()],
+#' [centrality_stability()] and `centrality()` all need the source panel.
+#' Extract a constituent and rebuild it through [build_network()] if you
+#' need those. Use [coefs()] for the tidy model output.
+#'
 #' @param data A `data.frame` containing the panel data.
 #' @param vars Character vector of variable column names to model.
 #' @param id Character string naming the person-ID column.
@@ -57,12 +72,10 @@
 #'   model-level metadata stored as attributes. Each element is a
 #'   standard `c("netobject", "cograph_network")` weight-matrix wrapper
 #'   (no raw `$data`), so `print()`, `summary()`, [coefs()], and
-#'   `cograph::splot(fit$temporal)` work directly. The three constituents
-#'   are matrix-wrapped and carry no underlying panel data, so
-#'   data-resampling verbs such as [bootstrap_network()] (and
-#'   reliability/stability) cannot iterate over them - extract a single
-#'   constituent and rebuild via [build_network()] if you need those.
-#'   Structure:
+#'   `cograph::splot(fit$temporal)` work directly. See
+#'   \strong{Dispatch limitation} for the verbs that do *not* work on this
+#'   object (`plot()`, [bootstrap_network()], `centrality()`,
+#'   reliability/stability). Structure:
 #'   \describe{
 #'     \item{`fit$temporal`}{Directed netobject for the `d x d` matrix of
 #'       fixed-effect lagged coefficients. `$weights[i, j]` is the effect
@@ -88,12 +101,31 @@
 #'   }
 #'
 #' @examples
-#' \dontrun{
-#' d <- simulate_data("mlvar", seed = 1)
-#' fit <- build_mlvar(d, vars = attr(d, "vars"),
-#'                    id = "id", day = "day", beep = "beep")
-#' print(fit)
-#' summary(fit)
+#' \donttest{
+#' # A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by
+#' # `happy` one beep earlier, so the temporal network should recover it.
+#' if (requireNamespace("lme4", quietly = TRUE)) {
+#'   set.seed(1)
+#'   n_beep <- 20
+#'   ar1 <- function(n, phi) as.numeric(stats::filter(stats::rnorm(n), phi,
+#'                                                    method = "recursive"))
+#'   panel <- do.call(rbind, lapply(seq_len(20), function(i) {
+#'     happy <- ar1(n_beep, 0.4)
+#'     data.frame(
+#'       id    = i,
+#'       beep  = seq_len(n_beep),
+#'       happy = happy + stats::rnorm(1),
+#'       calm  = ar1(n_beep, 0.3) + stats::rnorm(1),
+#'       tired = 0.5 * c(0, happy[-n_beep]) + stats::rnorm(n_beep) +
+#'               stats::rnorm(1)
+#'     )
+#'   }))
+#'   fit <- build_mlvar(panel, vars = c("happy", "calm", "tired"),
+#'                      id = "id", beep = "beep")
+#'   fit
+#'   coefs(fit)
+#'   summary(fit)
+#' }
 #' }
 #'
 #' @seealso [build_network()]
@@ -234,9 +266,16 @@ print.net_mlvar <- function(x, ...) {
 
 #' Summary method for net_mlvar
 #'
+#' Prints the three weight matrices and the significant temporal edges, then
+#' returns the tidy coefficient table.
+#'
 #' @param object A `net_mlvar` object returned by [build_mlvar()].
 #' @param ... Unused; present for S3 consistency.
-#' @return Invisibly returns `object`.
+#' @return The tidy coefficient `data.frame` - the same table [coefs()]
+#'   returns, with one row per `(outcome, predictor)` pair and columns
+#'   `outcome`, `predictor`, `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`,
+#'   `significant`. Returned visibly, so calling `summary(fit)` at the
+#'   console prints the matrices and then the table.
 #' @inherit build_mlvar examples
 #' @export
 summary.net_mlvar <- function(object, ...) {

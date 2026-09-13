@@ -12,7 +12,8 @@
 \item{...}{Additional arguments passed to \code{ggplot2} functions.}
 }
 \value{
-A \code{ggplot} object, invisibly.
+The drawn \code{ggplot} object, invisibly (the plot is also
+printed). \code{NULL}, invisibly, when no rule was found.
 }
 \description{
 Scatter plot of association rules: support vs confidence, with point

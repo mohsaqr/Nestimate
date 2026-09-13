@@ -26,7 +26,7 @@ as_netobject(x)
 A \code{c("netobject", "cograph_network")} object.
 }
 \description{
-Promotes a \pkg{psychnet} result (class \code{c("psychnet",
+Promotes a \pkg{psychnets} result (class \code{c("psychnet",
 "cograph_network")}) or any bare \code{cograph_network} to the dual-class
 \code{c("netobject", "cograph_network")} used throughout Nestimate, so it
 dispatches to the package's verbs (\code{centrality()}, \code{plot()},

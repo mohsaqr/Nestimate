@@ -15,9 +15,11 @@
 \item{x}{A \code{net_clustering} object.}
 
 \item{type}{Character. Plot type: \code{"silhouette"} (per-observation
-silhouette bars), \code{"mds"} (2D MDS projection), or
-\code{"heatmap"} (distance matrix heatmap ordered by cluster).
-Default: \code{"silhouette"}.}
+silhouette bars), \code{"mds"} (2D MDS projection),
+\code{"heatmap"} (distance matrix heatmap ordered by cluster), or
+\code{"predictors"} (odds-ratio forest plot of the post-hoc
+covariate analysis; requires \code{covariates} and an estimator that
+produces coefficients). Default: \code{"silhouette"}.}
 
 \item{combined}{Logical. For \code{type = "predictors"} only: when
 \code{TRUE} (default), covariate forest panels are combined into a
@@ -27,7 +29,9 @@ returned.}
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{
-A \code{ggplot} object (invisibly).
+A \code{ggplot} object (invisibly); for
+\code{type = "predictors"} with \code{combined = FALSE}, a list of
+\code{ggplot} objects named by cluster (invisibly).
 }
 \description{
 Plot Sequence Clustering Results

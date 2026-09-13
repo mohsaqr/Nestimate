@@ -12,7 +12,13 @@
 \item{...}{Unsupported. Supplying unused arguments raises an error.}
 }
 \value{
-The input object, invisibly.
+A data frame of per-cluster statistics, one row per cluster,
+with columns \code{cluster}, \code{size} and \code{mean_within_dist},
+returned \emph{visibly}. When the clustering was fitted with
+\code{covariates}, a \code{tidy_covariates}/\code{data.frame} (the
+tidied covariate table, with cluster sizes, fit statistics and
+profiles attached as attributes) is returned \emph{invisibly}
+instead. In both cases the printed summary is a side effect.
 }
 \description{
 Summary Method for net_clustering

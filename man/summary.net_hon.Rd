@@ -12,10 +12,12 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-The edge data.frame \code{object$edges} (columns \code{path},
-\code{from}, \code{to}, \code{count}, \code{probability},
-\code{from_order}, \code{to_order}), returned visibly; the summary text
-is printed as a side effect.
+The \code{cograph_network} edge data.frame \code{object$edges}:
+one row per non-zero cell of the adjacency matrix, with integer
+\code{from}/\code{to} node indices and a numeric \code{weight}. Returned
+visibly; the summary text (counts, first-order states, order
+distribution) is printed as a side effect. The arrow-notation table with
+\code{path}/\code{count}/\code{probability} is \code{object$ho_edges}.
 }
 \description{
 Summary Method for net_hon

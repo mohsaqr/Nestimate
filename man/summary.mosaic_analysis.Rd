@@ -12,8 +12,11 @@
 \item{...}{Ignored.}
 }
 \value{
-The tidy per-cell \code{counts} data.frame, with the \code{stats}
-row attached as an attribute.
+The tidy per-cell \code{data.frame}: one row per (var1, var2)
+cell, with the two variable columns (named after \code{var1} /
+\code{var2}) plus \code{observed}, \code{expected}, \code{residual} and
+\code{pct}. The one-row test summary is attached as the \code{"stats"}
+attribute.
 }
 \description{
 Summary method for mosaic_analysis objects

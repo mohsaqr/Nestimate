@@ -20,7 +20,14 @@ or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}.}
 (ignored).}
 }
 \value{
-A \code{net_cluster_diagnostics} object.
+\code{cluster_diagnostics()} returns a
+\code{net_cluster_diagnostics} object: a list carrying
+\code{family}, \code{k}, \code{n}, \code{sizes}, the
+\code{per_cluster} data frame (one row per cluster), \code{overall},
+\code{ics}, \code{metadata} and \code{source}, as detailed above.
+\code{as.data.frame()} on that object returns the
+\code{per_cluster} data frame itself -- one row per cluster, with
+family-specific columns.
 }
 \description{
 Unified entry point for clustering quality information. Returns a

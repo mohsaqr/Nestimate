@@ -10,8 +10,10 @@ state_frequencies(data)
 \item{data}{A list of character vectors (trajectories) or a data.frame.}
 }
 \value{
-A data frame with columns: \code{state}, \code{count},
-\code{proportion}.
+A data frame with one row per distinct state, sorted by
+\code{count} (descending), with columns \code{state}, \code{count} and
+\code{proportion} (share of all observations, rounded to 4 decimal
+places).
 }
 \description{
 Counts how often each state appears across all trajectories. Returns a

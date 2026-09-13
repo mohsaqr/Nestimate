@@ -28,7 +28,8 @@ for density calculation. When omitted, \code{"density"} falls back to
 \code{n_i * n_j}) for a true edge density.}
 }
 \value{
-Single aggregated value
+A single numeric value: the chosen aggregation of the non-zero,
+non-\code{NA} weights, or \code{0} when none remain.
 }
 \description{
 Aggregates a vector of edge weights using various methods.

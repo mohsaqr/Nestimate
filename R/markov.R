@@ -103,6 +103,8 @@
 #'   \item{return_times}{Named numeric vector: \eqn{1/\pi_i} per state.}
 #'   \item{states}{Character vector of state names.}
 #' }
+#'   For a \code{netobject_group} the result is a \code{"net_mpt_group"}: a
+#'   named list holding one \code{net_mpt} per group.
 #'
 #' @details
 #' Uses the Kemeny-Snell fundamental matrix formula:
@@ -201,10 +203,12 @@ print.net_mpt_group <- function(x, ...) {
   invisible(x)
 }
 
-#' @return \code{summary.net_mpt} returns a data frame with one row per state
-#'   and columns \code{state}, \code{return_time}, \code{stationary},
-#'   \code{mean_out} (mean steps to other states), \code{mean_in} (mean steps
-#'   from other states).
+#' @return \code{summary.net_mpt} returns an object of class
+#'   \code{"summary.net_mpt"}: a list whose \code{table} is a data frame with
+#'   one row per state and columns \code{state}, \code{return_time},
+#'   \code{stationary}, \code{mean_out} (mean steps to other states) and
+#'   \code{mean_in} (mean steps from other states), and whose \code{object}
+#'   is the \code{net_mpt} it summarises. Its print method shows the table.
 #' @rdname passage_time
 #' @export
 summary.net_mpt <- function(object, ...) {
@@ -241,6 +245,8 @@ print.summary.net_mpt <- function(x, ...) {
 #'   Default dark green \code{"#004d00"}.
 #' @param high Character. Hex colour for the high end (long passage time).
 #'   Default pale green \code{"#ccffcc"}.
+#' @return \code{plot.net_mpt} returns a ggplot object: a from-by-to heatmap
+#'   of the mean first passage time matrix.
 #' @rdname passage_time
 #' @export
 plot.net_mpt <- function(x,
@@ -315,6 +321,9 @@ plot.net_mpt <- function(x,
 #'     \code{avg_time_from_others} (mean MFPT arriving at state \eqn{i}).}
 #'   \item{mpt}{The underlying \code{net_mpt} object.}
 #' }
+#'   For a \code{netobject_group} the result is a
+#'   \code{"net_markov_stability_group"}: a named list holding one such
+#'   object per group.
 #'
 #' @details
 #' \strong{Sojourn time} is the expected consecutive time steps spent in a
@@ -336,6 +345,11 @@ plot.net_mpt <- function(x,
 #' }
 #'
 #' @seealso \code{\link{passage_time}}
+#'
+#' @references
+#' Kemeny, J.G. and Snell, J.L. (1976). \emph{Finite Markov Chains}.
+#' Springer-Verlag.
+#'
 #' @export
 markov_stability <- function(x, normalize = TRUE) {
   if (inherits(x, "netobject_group")) {
@@ -424,6 +438,10 @@ summary.net_markov_stability <- function(object, ...) {
 #'   shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE},
 #'   returns a named list of single-panel ggplots, one per metric, so each
 #'   can be printed, saved, or re-laid-out independently.
+#' @return \code{plot.net_markov_stability} returns a faceted ggplot object
+#'   when \code{combined = TRUE}, and (invisibly) a named list of
+#'   single-metric ggplots, one per entry of \code{metrics}, when
+#'   \code{combined = FALSE}.
 #' @rdname markov_stability
 #' @export
 plot.net_markov_stability <- function(x,

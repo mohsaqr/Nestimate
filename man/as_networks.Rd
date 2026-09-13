@@ -53,7 +53,7 @@ clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, clusters, aggregation = "composite", method = "cor")
 nets <- as_networks(fit)
 nets
-nets$macro$weights
+summary(nets)
 }
 \seealso{
 \code{\link{build_mcml_pc}} to create the input,

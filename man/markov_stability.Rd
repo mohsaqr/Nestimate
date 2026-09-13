@@ -46,6 +46,14 @@ An object of class \code{"net_markov_stability"} with:
 \code{avg_time_from_others} (mean MFPT arriving at state \eqn{i}).}
 \item{mpt}{The underlying \code{net_mpt} object.}
 }
+For a \code{netobject_group} the result is a
+\code{"net_markov_stability_group"}: a named list holding one such
+object per group.
+
+\code{plot.net_markov_stability} returns a faceted ggplot object
+when \code{combined = TRUE}, and (invisibly) a named list of
+single-metric ggplots, one per entry of \code{metrics}, when
+\code{combined = FALSE}.
 }
 \description{
 Computes per-state stability metrics from a transition network:
@@ -71,6 +79,10 @@ print(ms)
 plot(ms)
 }
 
+}
+\references{
+Kemeny, J.G. and Snell, J.L. (1976). \emph{Finite Markov Chains}.
+Springer-Verlag.
 }
 \seealso{
 \code{\link{passage_time}}

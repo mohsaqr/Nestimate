@@ -16,6 +16,8 @@ sequence_plot(
   na = TRUE,
   normalize = FALSE,
   trim = NULL,
+  panel = c("both", "summary", "channels"),
+  expand = NULL,
   trim_clusterwise = FALSE,
   row_gap = 0,
   dendrogram_width = 1.2,
@@ -58,8 +60,8 @@ for dendrogram.}
 \code{\link{build_network}} on a clustering. Extracts data and
 assignments from \code{attr(, "clustering")}.
 }
-\item{net_mmm}{From \code{\link{build_mmm}}. Uses \code{$models[[1]]$data}
-and \code{$assignments}.}
+\item{net_mmm}{From \code{\link{build_mmm}}. Uses \code{$data} (falling
+back to \code{$models[[1]]$data}) and \code{$assignments}.}
 \item{tna}{From the tna package. Decodes integer-encoded sequences.}
 \item{mcml}{From \code{\link{build_mcml}} (built from sequences).
 Produces a \strong{multichannel} plot: one panel per cluster plus a
@@ -103,6 +105,21 @@ the columns covering the shortest 95\\% of sequences); a value
 \code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
 time points).}
 
+\item{panel}{\code{mcml} + \code{type = "distribution"} only. Which panel
+to draw, as a single \code{ggplot}. \code{"both"} (default) puts the
+macro \code{Summary} channel and the per-cluster channels on one figure
+sharing a fill scale; \code{"summary"} draws the macro channel alone,
+keyed and coloured by cluster; \code{"channels"} draws the per-cluster
+channels alone, keyed and coloured by state. The macro channel is keyed
+by cluster and the rest by state, so on a shared scale a cluster and a
+state can land on the same colour -- drawing one panel avoids that and
+gives it its own legend and default title.}
+
+\item{expand}{For an \code{mcml}, names of clusters whose member states
+are shown individually in the Summary band; \code{"all"} or \code{TRUE}
+expands every cluster. The per-cluster channels are unaffected. Default
+\code{NULL} keys the Summary band by cluster.}
+
 \item{trim_clusterwise}{Grouped \code{type = "index"} /
 \code{"distribution"} only, and only when \code{trim} is a fraction.
 \code{FALSE} (default) computes one cutoff on the pooled data and
@@ -133,10 +150,10 @@ dendrogram (e.g. \code{sort = "start"}) or for other types.}
 
 \item{na_color}{Colour for \code{NA} cells.}
 
-\item{cell_border}{Cell border colour. \code{NA} = off.}
+\item{cell_border}{Cell border colour. \code{NA} (default) = off.}
 
-\item{frame}{If \code{TRUE} (default), draw a box around each panel.
-If \code{FALSE}, no box - axis ticks and labels still appear.}
+\item{frame}{\code{FALSE} (default) draws no box - axis ticks and labels
+still appear. \code{TRUE} draws a box around each panel.}
 
 \item{width, height}{Optional device dimensions in inches. When supplied,
 opens a new graphics device via \code{grDevices::dev.new()}. In knitr
@@ -164,7 +181,8 @@ legend). Single-group calls (\code{G == 1}) ignore this argument.
 Heatmap is always single-figure.}
 
 \item{legend}{Legend position: \code{"bottom"}, \code{"right"}, or
-\code{"none"}. Default varies by type.}
+\code{"none"}. \code{NULL} (default) resolves to \code{"right"} for
+every type.}
 
 \item{legend_size}{Legend text size. \code{NULL} (default) auto-scales
 from the device width so the legend looks proportional at 5 in vs
@@ -179,9 +197,23 @@ from the device width so the legend looks proportional at 5 in vs
 \item{legend_bty}{\code{"n"} or \code{"o"}.}
 }
 \value{
-For base-graphics types, invisibly a list describing the plot
-(shape depends on \code{type}). For an \code{mcml} input, a \code{ggplot}
-object.
+An \code{mcml} input returns a \code{ggplot} object (the
+multichannel figure). Every other input draws with base graphics and
+returns, invisibly, a list whose shape depends on \code{type}:
+\describe{
+\item{\code{"heatmap"}}{\code{ord} (integer row order actually
+plotted), \code{codes} (the integer-encoded, trimmed sequence
+matrix), \code{palette}, \code{levels} (state labels, parallel to
+\code{palette}), and \code{sort_used} (the ordering strategy
+applied, \code{"net_clustering"} when a clustering dendrogram was
+used).}
+\item{\code{"index"}}{\code{codes}, \code{palette}, \code{levels},
+\code{orders} (list of integer row orders, one per panel, indexing
+the original rows) and \code{groups} (panel labels).}
+\item{\code{"distribution"}}{Whatever
+\code{\link{distribution_plot}} returns: \code{counts},
+\code{proportions}, \code{levels}, \code{palette}, \code{groups}.}
+}
 }
 \description{
 Single entry point for three categorical-sequence visualisations.

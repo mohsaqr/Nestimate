@@ -23,23 +23,23 @@
 \item{reorder}{Logical. Reorder states within each centrality panel by
 centrality value. Default: \code{TRUE}.}
 
-\item{ncol}{Integer. Number of facet columns.}
+\item{ncol}{Integer. Number of facet columns. Default: \code{3}.}
 
 \item{type}{Plot type. \code{"bar"} shows one faceted horizontal bar chart
 per measure; \code{"line"} shows state profiles as lines across measures
 (the value \code{"profile"} is still accepted as an alias);
 \code{"heatmap"} shows a states-by-measures tile grid, each measure
 scaled to 0--1 for cross-measure comparability with the raw value
-printed in the tile.}
+printed in the tile. Default: \code{"bar"}.}
 
-\item{scales}{Facet scale mode. \code{"free_x"} uses free centrality axes;
-\code{"fixed"} keeps a common centrality axis.}
+\item{scales}{Facet scale mode. \code{"free_x"} (default) uses free
+centrality axes; \code{"fixed"} keeps a common centrality axis.}
 
 \item{profile_scale}{Scaling used by \code{type = "line"}.
-\code{"measure"} rescales each centrality measure to 0--1 before drawing
-cross-measure profiles; \code{"none"} uses raw values.}
+\code{"measure"} (default) rescales each centrality measure to 0--1
+before drawing cross-measure profiles; \code{"none"} uses raw values.}
 
-\item{labels}{Logical. Add compact value labels.}
+\item{labels}{Logical. Add compact value labels. Default: \code{TRUE}.}
 
 \item{drop_zero}{Logical. Drop measures whose values are all (near) zero
 so empty panels do not waste space. Default: \code{FALSE} (every

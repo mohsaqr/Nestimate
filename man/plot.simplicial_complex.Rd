@@ -22,8 +22,8 @@ A grid grob (invisibly) when \code{combined = TRUE}; a named list of
 four ggplots when \code{combined = FALSE}.
 }
 \description{
-Produces a multi-panel summary: f-vector, simplicial degree ranking,
-and degree-by-dimension heatmap.
+Produces a four-panel summary: f-vector, Betti numbers, simplicial
+degree ranking, and degree-by-dimension heatmap.
 }
 \examples{
 \donttest{

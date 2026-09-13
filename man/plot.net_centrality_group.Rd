@@ -24,7 +24,7 @@
 \item{reorder}{Logical. Reorder states by their mean value within each
 centrality panel. Default: \code{TRUE}.}
 
-\item{ncol}{Integer. Number of facet columns.}
+\item{ncol}{Integer. Number of facet columns. Default: \code{3}.}
 
 \item{type}{Plot type. \code{"bar"} shows grouped bars within each measure;
 \code{"line"} facets by state and draws one line per group across
@@ -32,18 +32,19 @@ centrality measures (\code{"profile"} is accepted as an alias);
 \code{"delta"} draws a diverging bar of group
 differences. With two groups it is the per-state difference (second group
 minus first); with three or more groups it is each group's deviation from
-the per-state group mean, so the largest gaps stand out either way.}
+the per-state group mean, so the largest gaps stand out either way.
+Default: \code{"bar"}.}
 
-\item{scales}{Facet scale mode. \code{"free_x"} uses free centrality axes;
-\code{"fixed"} keeps a common centrality axis.}
+\item{scales}{Facet scale mode. \code{"free_x"} (default) uses free
+centrality axes; \code{"fixed"} keeps a common centrality axis.}
 
-\item{palette}{Brewer palette for groups.}
+\item{palette}{Brewer palette for groups. Default: \code{"Set2"}.}
 
 \item{profile_scale}{Scaling used by \code{type = "line"}.
-\code{"measure"} rescales each centrality measure to 0--1 before drawing
-cross-measure profiles; \code{"none"} uses raw values.}
+\code{"measure"} (default) rescales each centrality measure to 0--1
+before drawing cross-measure profiles; \code{"none"} uses raw values.}
 
-\item{labels}{Logical. Add compact value labels.}
+\item{labels}{Logical. Add compact value labels. Default: \code{FALSE}.}
 
 \item{drop_zero}{Logical. Drop measures whose values are all (near) zero
 so empty panels do not waste space. Default: \code{FALSE}.}

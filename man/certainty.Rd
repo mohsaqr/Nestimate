@@ -38,13 +38,19 @@ for stability inference (default \code{c(0.75, 1.25)}).}
 non-zero edge weights.}
 }
 \value{
-An object of class \code{c("net_certainty", "net_bootstrap")} with the
-same fields as \code{\link{bootstrap_network}}: \code{original}, \code{mean},
+For a \code{netobject}: an object of class
+\code{c("net_certainty", "net_bootstrap")} with the same fields as
+\code{\link{bootstrap_network}}: \code{original}, \code{mean},
 \code{sd}, \code{p_values}, \code{significant}, \code{ci_lower},
 \code{ci_upper}, \code{cr_lower}, \code{cr_upper}, \code{summary},
 \code{model}, \code{method}, \code{params}, \code{ci_level},
 \code{inference}, \code{consistency_range}, \code{edge_threshold}, plus
-\code{prior} and \code{iter = NA} (no iterations).
+\code{prior}, \code{ci_method = "analytic"} and \code{iter = NA} (no
+iterations).
+
+For a \code{netobject_group}: a named list of those objects, one per
+constituent network, of class
+\code{c("net_certainty_group", "net_bootstrap_group", "list")}.
 }
 \description{
 Closed-form alternative to \code{\link{bootstrap_network}} for transition
