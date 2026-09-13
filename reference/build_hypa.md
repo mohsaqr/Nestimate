@@ -41,9 +41,12 @@ build_hypa(
 
 - alpha:
 
-  Numeric. Significance threshold for anomaly classification (default
-  0.05). Paths with HYPA score \< alpha are under-represented; paths
-  with score \> 1-alpha are over-represented.
+  Numeric in `(0, 0.5)`. Significance threshold for anomaly
+  classification (default 0.05). A path is labelled `"under"` when its
+  adjusted lower-tail p-value `p_adjusted_under` is below `alpha`,
+  `"over"` when its adjusted upper-tail p-value `p_adjusted_over` is
+  below `alpha`, and `"normal"` otherwise (the under-representation test
+  is applied first).
 
 - min_count:
 

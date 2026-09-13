@@ -65,6 +65,13 @@ An object of class `"net_markov_stability"` with:
 
   The underlying `net_mpt` object.
 
+For a `netobject_group` the result is a `"net_markov_stability_group"`:
+a named list holding one such object per group.
+
+`plot.net_markov_stability` returns a faceted ggplot object when
+`combined = TRUE`, and (invisibly) a named list of single-metric
+ggplots, one per entry of `metrics`, when `combined = FALSE`.
+
 ## Details
 
 **Sojourn time** is the expected consecutive time steps spent in a state
@@ -76,6 +83,11 @@ reflects how "sticky" or "isolated" the state is.
 
 **avg_time_from_others**: mean passage time from all other states to
 this one; reflects accessibility (attractor strength).
+
+## References
+
+Kemeny, J.G. and Snell, J.L. (1976). *Finite Markov Chains*.
+Springer-Verlag.
 
 ## See also
 

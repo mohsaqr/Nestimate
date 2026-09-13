@@ -37,7 +37,12 @@ clique_expansion(hg, weighted = TRUE)
 
 A `netobject` (also `cograph_network`) with
 `method = "clique_expansion"`, undirected, with weighted symmetric
-adjacency `W = incidence %*% t(incidence)` and zero diagonal.
+adjacency `W = incidence %*% t(incidence)` and zero diagonal. The
+standard `netobject` fields are present (`$weights`, `$nodes`,
+`$edges` - one row per non-zero upper-triangle cell with integer
+`from`/`to` node indices and `weight` - `$n_nodes`, `$n_edges`,
+`$meta`); `$params` records `source`, `weighted`, `n_hyperedges` and
+`hypergraph_size_distribution`.
 
 ## Details
 
@@ -65,8 +70,9 @@ the implementation is a direct one-line restatement of the definition.
 
 ## References
 
-Tian, Y., & Zafarani, R. (2024). Higher-order network analysis methods.
-*SIGKDD Explorations* 26(1), Section 5.1.5.
+Tian, H., & Zafarani, R. (2024). Higher-order networks representation
+and learning: A survey. *ACM SIGKDD Explorations Newsletter* 26(1),
+1-18.
 
 ## See also
 
@@ -83,11 +89,18 @@ df <- data.frame(
 )
 hg  <- bipartite_groups(df, player = "player", group = "session")
 net <- clique_expansion(hg)
-net$weights
-#>   A B C D E
-#> A 0 2 1 0 0
-#> B 2 0 1 0 0
-#> C 1 1 0 1 1
-#> D 0 0 1 0 1
-#> E 0 0 1 1 0
+extract_edges(net, threshold = 1)
+#>    from to weight
+#> 1     B  A      2
+#> 2     A  B      2
+#> 3     C  A      1
+#> 4     C  B      1
+#> 5     A  C      1
+#> 6     B  C      1
+#> 7     D  C      1
+#> 8     E  C      1
+#> 9     C  D      1
+#> 10    E  D      1
+#> 11    C  E      1
+#> 12    D  E      1
 ```

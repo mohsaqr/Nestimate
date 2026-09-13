@@ -19,14 +19,17 @@ build_mogen(
 
 - data:
 
-  A data.frame (rows = trajectories, columns = time points) or a list of
-  character/numeric vectors (one per trajectory).
+  A data.frame (rows = trajectories, columns = time points), a list of
+  character/numeric vectors (one per trajectory), a `tna` object, or a
+  `netobject` with sequence data. For `tna`/`netobject`, numeric state
+  IDs are automatically converted to label names.
 
 - max_order:
 
   Integer. Maximum Markov order to test (default 5). Must be a whole
   number; a non-integer value (e.g. `2.7`) is an error rather than being
-  silently truncated.
+  silently truncated. A `max_order` at or above the longest trajectory
+  is capped at (longest path - 1) with a message.
 
 - criterion:
 
@@ -39,7 +42,7 @@ build_mogen(
 
 ## Value
 
-An object of class `net_mogen` with components:
+An object of class `c("net_mogen", "cograph_network")` with components:
 
 - optimal_order:
 
@@ -51,7 +54,7 @@ An object of class `net_mogen` with components:
 
 - orders:
 
-  Integer vector of tested orders (0 to max_order).
+  Integer vector of tested orders (0 to max_order, after any capping).
 
 - aic:
 
@@ -75,7 +78,13 @@ An object of class `net_mogen` with components:
 
 - transition_matrices:
 
-  List of transition matrices (index 1 = order 0).
+  List of row-stochastic transition matrices (index 1 = order 0, held as
+  the marginal named numeric vector).
+
+- count_matrices:
+
+  List of the matching raw count matrices, same indexing; read by
+  [`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md).
 
 - states:
 
@@ -89,6 +98,40 @@ An object of class `net_mogen` with components:
 
   Total number of state observations.
 
+- weights:
+
+  `cograph_network` weight matrix: the transition matrix of the selected
+  optimal order (a 1 x n matrix named `"marginal"` when the optimal
+  order is 0). Its dimnames are the internal k-gram keys (states joined
+  by a non-printing separator), not arrow notation.
+
+- nodes:
+
+  data.frame (`id`, `label`, `name`) of the optimal-order De Bruijn
+  nodes.
+
+- edges:
+
+  `cograph_network` edge data.frame with integer `from`/`to` node
+  indices and a numeric `weight`. The readable arrow-notation table is
+  [`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md).
+
+- directed:
+
+  Logical. Always `TRUE`.
+
+- n_nodes, n_edges:
+
+  Counts for the optimal-order graph.
+
+- meta:
+
+  `cograph_network` metadata list.
+
+- node_groups:
+
+  Always `NULL`.
+
 ## Details
 
 At order k, nodes are k-tuples of states and edges represent transitions
@@ -100,9 +143,9 @@ Markov orders and selects the one that best balances fit and parsimony.
 Scholtes, I. (2017). When is a Network a Network? Multi-Order Graphical
 Model Selection in Pathways and Temporal Networks. *KDD 2017*.
 
-Gote, C. & Scholtes, I. (2023). Predicting variable-length paths in
-networked systems using multi-order generative models. *Applied Network
-Science*, 8, 62.
+Gote, C., Casiraghi, G., Schweitzer, F., & Scholtes, I. (2023).
+Predicting variable-length paths in networked systems using multi-order
+generative models. *Applied Network Science*, 8, 68.
 
 ## Examples
 

@@ -21,7 +21,7 @@ windows, not between simultaneous states inside the same row."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -129,10 +129,12 @@ taking the first non-NA indicator per column. Default: FALSE.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame in wide format with columns named
-<code>W{window}_T{time}</code> where each cell contains a state name or NA.
-Attributes <code>windowed</code>, <code>window_size</code>, <code>window_span</code>
-are set on the result.</p>
+    <p>A data frame in wide format, one row per actor/session sequence,
+with columns named <code>W&lt;window&gt;_T&lt;slot&gt;</code> where each cell contains a
+state name or <code>NA</code>. Attributes <code>windowed</code> (always
+<code>TRUE</code>), <code>window_size</code>, <code>window_span</code> (the number of
+<code>cols</code>) and <code>codes</code> (the <code>cols</code> themselves) are set on
+the result.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

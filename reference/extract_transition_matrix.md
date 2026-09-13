@@ -12,7 +12,8 @@ extract_transition_matrix(model, type = c("raw", "scaled"))
 
 - model:
 
-  A TNA model object or a list containing a 'weights' element.
+  A `netobject`, TNA model object, `mcml` object, a list containing a
+  `weights` element, or a bare weight matrix.
 
 - type:
 
@@ -30,7 +31,15 @@ extract_transition_matrix(model, type = c("raw", "scaled"))
 
 ## Value
 
-A square numeric matrix with row and column names as state names.
+For a single network: a square numeric matrix with row and column names
+as state names, of class
+`c("nest_transition_matrix", "matrix", "array")`. It behaves as an
+ordinary matrix; the class stamp only adds a
+[`summary()`](https://rdrr.io/r/base/summary.html) method returning a
+tidy `from`/`to`/`weight` data frame.
+
+For an `mcml` object: a named list of such matrices, with `macro` first
+and then one element per cluster.
 
 ## Details
 

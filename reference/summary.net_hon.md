@@ -21,9 +21,12 @@ summary(object, ...)
 
 ## Value
 
-The edge data.frame `object$edges` (columns `path`, `from`, `to`,
-`count`, `probability`, `from_order`, `to_order`), returned visibly; the
-summary text is printed as a side effect.
+The `cograph_network` edge data.frame `object$edges`: one row per
+non-zero cell of the adjacency matrix, with integer `from`/`to` node
+indices and a numeric `weight`. Returned visibly; the summary text
+(counts, first-order states, order distribution) is printed as a side
+effect. The arrow-notation table with `path`/`count`/`probability` is
+`object$ho_edges`.
 
 ## Examples
 

@@ -11,7 +11,7 @@ powers of the HON transition matrix followed by truncated SVD."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,9 @@ square weighted adjacency matrix.</p></dd>
 
 
 <dt id="arg-dim">dim<a class="anchor" aria-label="anchor" href="#arg-dim"></a></dt>
-<dd><p>Integer. Embedding dimension (default 32).</p></dd>
+<dd><p>Integer. Embedding dimension (default 32). Silently capped at
+<code>n_nodes - 1</code>; the dimension actually used is reported in the
+returned <code>dim</code> component.</p></dd>
 
 
 <dt id="arg-max-power">max_power<a class="anchor" aria-label="anchor" href="#arg-max-power"></a></dt>
@@ -79,7 +81,9 @@ square weighted adjacency matrix.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>net_honem</code> with components:</p><dl><dt>embeddings</dt>
-<dd><p>Numeric matrix (n_nodes x dim) of node embeddings.</p></dd>
+<dd><p>Numeric matrix (n_nodes x dim) of node embeddings,
+row names = node names, column names <code>dim_1</code>, <code>dim_2</code>,
+...</p></dd>
 
 <dt>nodes</dt>
 <dd><p>Character vector of node names.</p></dd>
@@ -108,7 +112,7 @@ hyperparameter tuning required.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Saebi, M., Ciampaglia, G. L., Kazemzadeh, S., &amp; Meyur, R. (2020).
+    <p>Saebi, M., Ciampaglia, G. L., Kaplan, L. M., &amp; Chawla, N. V. (2020).
 HONEM: Learning Embedding for Higher Order Networks. <em>Big Data</em>,
 8(4), 255-269.</p>
     </div>

@@ -41,7 +41,7 @@ object so persistent_homology() can read them directly.'><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -127,7 +127,8 @@ or <code>"vr"</code> (alias <code>"rips"</code>).</p></dd>
 <dd><p>For <code>type = "clique"</code>: minimum non-zero absolute
 edge weight to include an edge (default 0). Edges below this are
 ignored; zero-weight non-edges are never included. Ignored for
-<code>type = "vr"</code> - use <code>max_scale</code> instead.</p></dd>
+<code>type = "vr"</code> (use <code>max_scale</code> instead) and for
+<code>type = "pathway"</code>.</p></dd>
 
 
 <dt id="arg-max-dim">max_dim<a class="anchor" aria-label="anchor" href="#arg-max-dim"></a></dt>
@@ -160,9 +161,42 @@ in the filtration. <code>NULL</code> (default) uses <code>max(d)</code>.</p></dd
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>simplicial_complex</code> object. For <code>type = "vr"</code> an
-additional <code>$filtration</code> numeric vector is attached (parallel to
-<code>$simplices</code>).</p>
+    <p>A <code>simplicial_complex</code> object - a list with:</p><dl><dt>simplices</dt>
+<dd><p>List of integer vectors, one per simplex, each holding
+the (sorted) node indices it spans. Every face of every simplex is
+present, including all 0-simplices (isolated vertices included).</p></dd>
+
+<dt>nodes</dt>
+<dd><p>Character vector of node labels; <code>simplices</code> index
+into it.</p></dd>
+
+<dt>n_nodes, n_simplices</dt>
+<dd><p>Integer counts.</p></dd>
+
+<dt>dimension</dt>
+<dd><p>Integer. Highest simplex dimension present
+(a k-simplex has k+1 nodes).</p></dd>
+
+<dt>f_vector</dt>
+<dd><p>Named integer vector <code>dim_0</code>, <code>dim_1</code>, ... -
+the number of simplices of each dimension.</p></dd>
+
+<dt>density</dt>
+<dd><p>Numeric. <code>n_simplices</code> divided by the number of
+simplices a complete complex on <code>n_nodes</code> would have up to
+<code>dimension</code>.</p></dd>
+
+<dt>mean_dim</dt>
+<dd><p>Numeric. Mean simplex dimension.</p></dd>
+
+<dt>type</dt>
+<dd><p><code>"clique"</code>, <code>"pathway"</code>, or <code>"vr"</code>.</p></dd>
+
+
+</dl><p>For <code>type = "vr"</code> two further elements are attached:
+<code>$filtration</code> (numeric, parallel to <code>$simplices</code>: the value at
+which each simplex enters) and <code>$max_scale</code> (the cap actually
+used). <code><a href="persistent_homology.html">persistent_homology()</a></code> consumes them directly.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -17,7 +17,7 @@ $data slot directly."><meta property="og:image" content="https://saqr.me/Nestima
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,9 +103,11 @@ the other classes.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>data.frame</code> with columns <code>group</code> (character),
-<code>state</code> (character), <code>count</code> (integer), and
-<code>proportion</code> (numeric, within-group share).</p>
+    <p>A <code>data.frame</code> with one row per (group, state) cell and
+columns <code>group</code> (character), <code>state</code> (character),
+<code>count</code> (integer), and <code>proportion</code> (numeric, within-group
+share). A single ungrouped network yields a single group labelled
+<code>"all"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -116,13 +118,41 @@ returned <code>state_freq</code> object.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">ai_long</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">ai_long</span>, method <span class="op">=</span> <span class="st">"frequency"</span>,</span></span>
-<span class="r-in"><span>                       id_col <span class="op">=</span> <span class="st">"session_id"</span>,</span></span>
-<span class="r-in"><span>                       time_col <span class="op">=</span> <span class="st">"order_in_session"</span>, action <span class="op">=</span> <span class="st">"code"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu">state_distribution</span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, package <span class="op">=</span> <span class="st">"Nestimate"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"frequency"</span>,</span></span>
+<span class="r-in"><span>                     format <span class="op">=</span> <span class="st">"long"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span></span>
+<span class="r-in"><span>                     order <span class="op">=</span> <span class="st">"Time"</span>, group <span class="op">=</span> <span class="st">"Course"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">state_distribution</span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    group      state count proportion</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      A  consensus  3298 0.26618241</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      A       plan  2805 0.22639225</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      A    discuss  1960 0.15819209</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      A    emotion  1517 0.12243745</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      A   cohesion   923 0.07449556</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      A coregulate   855 0.06900726</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7      A    monitor   602 0.04858757</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8      A  synthesis   290 0.02340597</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9      A      adapt   140 0.01129944</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10     B       plan  2445 0.25399958</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11     B  consensus  2226 0.23124870</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12     B    discuss  1453 0.15094536</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13     B    emotion   995 0.10336588</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14     B coregulate   817 0.08487430</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15     B   cohesion   590 0.06129233</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16     B    monitor   565 0.05869520</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17     B  synthesis   274 0.02846458</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18     B      adapt   261 0.02711407</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19     C       plan  1373 0.24886714</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20     C  consensus  1273 0.23074134</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21     C    discuss   854 0.15479427</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22     C    emotion   563 0.10204821</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23     C coregulate   461 0.08355991</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24     C    monitor   349 0.06325902</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25     C   cohesion   326 0.05909009</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26     C  synthesis   165 0.02990756</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27     C      adapt   153 0.02773246</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

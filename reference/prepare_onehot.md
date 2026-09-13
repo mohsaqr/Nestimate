@@ -72,9 +72,11 @@ prepare_onehot(
 
 ## Value
 
-A data frame in wide format with columns named `W{window}_T{time}` where
-each cell contains a state name or NA. Attributes `windowed`,
-`window_size`, `window_span` are set on the result.
+A data frame in wide format, one row per actor/session sequence, with
+columns named `W<window>_T<slot>` where each cell contains a state name
+or `NA`. Attributes `windowed` (always `TRUE`), `window_size`,
+`window_span` (the number of `cols`) and `codes` (the `cols` themselves)
+are set on the result.
 
 ## See also
 

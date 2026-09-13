@@ -17,7 +17,7 @@ network) should not be over-interpreted.'><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,15 +111,18 @@ in which the item's sign differed from the observed one),
 <span class="r-in"><span>                     method <span class="op">=</span> <span class="st">"cor"</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, a3, b1, b2. See $loadings (misfit, cross_cluster).</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Reverse-keyed item(s) flipped in composites: a2, b3. See $loadings (sign).</span>
-<span class="r-in"><span><span class="va">ls</span> <span class="op">&lt;-</span> <span class="fu">loading_stability</span><span class="op">(</span><span class="va">fit</span>, iter <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">ls</span><span class="op">$</span><span class="va">summary</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   node cluster     weight  boot_mean   boot_sd   ci_lower  ci_upper sign_flips</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   a1       A  0.1405873  0.2119349 0.2931353 -0.4594061 0.4760502       0.18</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   a2       A -0.3666270  0.1041219 0.3064605 -0.4215860 0.4384606       0.68</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   a3       A  0.4927857  0.1710647 0.3171502 -0.4661878 0.4662406       0.24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   b1       B  0.2856282  0.2469936 0.2441808 -0.4553946 0.4688604       0.10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   b2       B  0.2708179  0.2257656 0.2509415 -0.4394226 0.4624575       0.12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   b3       B -0.4435540 -0.1735737 0.3268693 -0.4691528 0.4829590       0.26</span>
+<span class="r-in"><span><span class="va">stability</span> <span class="op">&lt;-</span> <span class="fu">loading_stability</span><span class="op">(</span><span class="va">fit</span>, iter <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stability</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Composite-Weight Stability (case bootstrap, experimental)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   50 replicates | 95% percentile CIs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  node cluster weight boot_mean boot_sd ci_lower ci_upper sign_flips</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    a1       A  0.141     0.212   0.293   -0.459    0.476       0.18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    a2       A -0.367     0.104   0.306   -0.422    0.438       0.68</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    a3       A  0.493     0.171   0.317   -0.466    0.466       0.24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    b1       B  0.286     0.247   0.244   -0.455    0.469       0.10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    b2       B  0.271     0.226   0.251   -0.439    0.462       0.12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    b3       B -0.444    -0.174   0.327   -0.469    0.483       0.26</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

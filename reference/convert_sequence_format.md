@@ -100,10 +100,10 @@ building transition frequency matrices.
 # Wide format input
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 convert_sequence_format(seqs, format = "frequency")
-#>   rid .rid A B C
-#> 1   1    1 2 1 0
-#> 2   2    2 1 1 1
-#> 3   3    3 1 1 1
+#>   .rid rid A B C
+#> 1    1   1 2 1 0
+#> 2    2   2 1 1 1
+#> 3    3   3 1 1 1
 convert_sequence_format(seqs, format = "edgelist")
 #>   .rid from to
 #> 1    1    A  B

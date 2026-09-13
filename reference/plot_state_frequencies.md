@@ -147,9 +147,11 @@ plot_state_frequencies(x, ...)
   vocabularies differ per panel, so each gets its own legend);
   `"bottom"` for single-network and `netobject_group` treemaps (shared
   state vocabulary, one shared legend). Override with any of `"bottom"`,
-  `"top"`, `"right"`, `"left"`, `"none"`, or `"per_facet"`. The
-  `"per_facet"` option requires the gridExtra package and returns a
-  `gtable`.
+  `"top"`, `"right"`, `"left"`, `"none"`, or `"per_facet"`.
+  `"per_facet"` is silently demoted to `"bottom"` when every group
+  shares the same state vocabulary (repeating one legend per panel would
+  be redundant); when it does take effect it returns a `gtable`
+  (requiring the gridExtra package) or a list of ggplots, per `combine`.
 
 - legend_dir:
 
@@ -184,8 +186,9 @@ plot_state_frequencies(x, ...)
   [`base::abbreviate()`](https://rdrr.io/r/base/abbreviate.html) (which
   extends the truncation as needed to keep names unique after
   collision); a positive integer sets the target minimum length
-  explicitly (e.g. `abbreviate = 4`). Affects tile labels, legend, and
-  the returned `$table`.
+  explicitly (e.g. `abbreviate = 4`). Affects tile labels, the legend,
+  and the tidy table returned by
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html).
 
 - include_macro:
 
@@ -216,15 +219,18 @@ plot_state_frequencies(x, ...)
 
 ## Value
 
-A `state_freq` object: a list with the rendered `$plot` (a `ggplot` or
-`gtable`), the tidy `$table` (a `data.frame` with columns `group`,
-`state`, `count`, `proportion`), and the call's `$style`, `$metric`,
-`$source_class`. The class supports
-[`print()`](https://rdrr.io/r/base/print.html) (shows the tidy table in
-the console), [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-(renders the chart), and
+A `state_freq` object: a list with the rendered `$plot` (a `ggplot`; a
+`gtable` or a list of ggplots under `legend = "per_facet"`, per
+`combine`), the tidy `$table` (a `data.frame` with columns `group`,
+`state`, `count`, `proportion`, one row per (group, state) cell), and
+the call's `$style`, `$metric`, `$source_class`. The class supports
+[`print()`](https://rdrr.io/r/base/print.html) (prints the tidy table
+and draws the chart),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) (draws the
+chart alone), and
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) (returns
-the table).
+the tidy table) – see
+[`state_freq`](https://saqr.me/Nestimate/reference/state_freq.md).
 
 ## Details
 

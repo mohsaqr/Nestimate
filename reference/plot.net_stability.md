@@ -27,17 +27,16 @@ A `ggplot` object (invisibly).
 ## Examples
 
 ``` r
-net <- build_network(data.frame(V1 = c("A","B","C","A"),
-  V2 = c("B","C","A","B")), method = "relative")
-cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
-#> Warning: All centrality measures have zero variance. No stability can be assessed.
+seqs <- data.frame(
+  T1 = c("plan", "code", "debug", "plan", "test", "code"),
+  T2 = c("code", "debug", "code", "plan", "code", "test"),
+  T3 = c("debug", "code", "plan", "code", "debug", "plan"),
+  T4 = c("test", "plan", "test", "debug", "plan", "code")
+)
+net <- build_network(seqs, method = "relative")
+cs <- centrality_stability(net, iter = 10,
+  drop_prop = c(0.1, 0.3, 0.5), seed = 1)
 plot(cs)
-#> Warning: Removed 3 rows containing missing values or values outside the scale range
-#> (`geom_line()`).
-#> Warning: Removed 3 rows containing missing values or values outside the scale range
-#> (`geom_point()`).
-#> Warning: Removed 3 rows containing missing values or values outside the scale range
-#> (`geom_ribbon()`).
 
 # \donttest{
 set.seed(1)

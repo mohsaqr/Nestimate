@@ -27,4 +27,5 @@ plot(x, ...)
 
 ## Value
 
-A ggplot object, invisibly printable.
+A ggplot object (the score heatmap), returned visibly so that `plot(x)`
+draws it.

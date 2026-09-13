@@ -134,13 +134,44 @@ An object of class `net_casedrop_reliability` with:
   edge-vector correlation remains \>= `threshold` in at least
   `certainty` of iterations. Zero if no proportion qualifies.
 
+- `summary`:
+
+  Tidy data frame, one row per metric by drop proportion, with columns
+  `metric` (`"mean_abs_dev"`, `"median_abs_dev"`, `"correlation"`,
+  `"max_abs_dev"`), `drop_prop`, `mean`, `sd`, `median`, `mad`, `q025`,
+  `q975`.
+
+- `metrics`:
+
+  Named list of four `iter` x `length(drop_prop)` matrices, one per
+  metric, holding the raw per-iteration values.
+
 - `correlations`:
 
-  `iter` x `length(drop_prop)` matrix of per- iteration correlations.
+  `iter` x `length(drop_prop)` matrix of per- iteration correlations
+  (the `correlation` entry of `metrics`).
 
-- `drop_prop`, `threshold`, `certainty`, `iter`, `method`:
+- `drop_prop`, `threshold`, `certainty`, `iter`, `method`,
+  `include_diag`:
 
   Inputs.
+
+- `n_cases`:
+
+  Number of cases resampled from (sequences for transition methods, rows
+  of `$data` otherwise).
+
+- `n_edges`:
+
+  Length of the edge vector assessed.
+
+A `netobject_group` or `mcml` input instead returns a
+`net_casedrop_reliability_group`: a named list of one result per
+constituent network.
+
+When the original edge vector has zero variance a warning is issued and
+the object is returned with `cs = 0`, an empty `summary`, and all-`NA`
+metric matrices.
 
 The input `x` invisibly.
 
@@ -194,6 +225,7 @@ Research Methods* 50(1), 195-212.
 ## Examples
 
 ``` r
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE),
   V2 = sample(LETTERS[1:4], 30, TRUE),
@@ -212,8 +244,8 @@ print(es)
 #> 
 #> Model-level reliability across iterations (mean +/- sd per drop):
 #>   drop_prop      p=0.1        p=0.3        p=0.5      
-#>   mean|diff|      0.027+- 0.006   0.060+- 0.013   0.094+- 0.022
-#>   MAD             0.021+- 0.008   0.051+- 0.016   0.078+- 0.018
-#>   cor             0.921+- 0.035   0.787+- 0.109   0.674+- 0.190
-#>   max|diff|       0.076+- 0.023   0.159+- 0.046   0.250+- 0.070
+#>   mean|diff|      0.028+- 0.007   0.062+- 0.014   0.095+- 0.018
+#>   MAD             0.021+- 0.008   0.052+- 0.014   0.085+- 0.023
+#>   cor             0.927+- 0.045   0.820+- 0.078   0.688+- 0.161
+#>   max|diff|       0.081+- 0.023   0.160+- 0.051   0.241+- 0.056
 ```

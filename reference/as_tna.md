@@ -1,83 +1,77 @@
-# Convert cluster_summary to tna Objects
+# Promote the Layers of an mcml to Networks
 
-Converts a `cluster_summary` object to proper tna objects that can be
-used with all functions from the tna package. Creates both a
-between-cluster tna model (cluster-level transitions) and within-cluster
-tna models (internal transitions within each cluster).
+Converts an `mcml` object into a `netobject_group`: one netobject for
+the cluster-level (macro) layer, and one per cluster for the
+within-cluster layers. The stored weights are carried over as they are –
+nothing is re-normalised here, so the aggregation chosen when the `mcml`
+was built is what the networks hold.
 
 ## Usage
 
 ``` r
-as_tna(x)
+as_tna(x, ...)
 
 # S3 method for class 'mcml'
-as_tna(x)
+as_tna(x, expand = NULL, ...)
 
 # Default S3 method
-as_tna(x)
+as_tna(x, ...)
 ```
 
 ## Arguments
 
 - x:
 
-  A `cluster_summary` object created by
-  [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
-  The aggregated weights are passed to
-  [`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md), which
-  row-normalises them as needed.
+  An `mcml` object created by
+  [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
+  or [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md).
+
+- ...:
+
+  Passed to methods.
+
+- expand:
+
+  For the `mcml` method, names of clusters whose member states replace
+  the collapsed cluster node in the `macro` layer (see
+  [`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)).
+  `NULL` (default) keeps the macro fully collapsed. The per-cluster
+  layers are unaffected.
 
 ## Value
 
-A `cluster_tna` object (S3 class) containing:
+A `netobject_group`: a named list whose first element is `macro` (the k
+x k cluster-level network) followed by one element per cluster, each a
+`netobject`/`cograph_network` carrying `$weights`, `$inits`, `$nodes`,
+`$edges` and the recorded `$method` (`"relative"` for an mcml whose
+weights are already row-normalised, `"frequency"` otherwise).
 
-- between:
+The `mcml` method returns that `netobject_group`, each layer keeping the
+data the corresponding `mcml` layer carried. With `expand`, its `macro`
+element is the mixed-resolution network of
+[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)
+rather than the fully collapsed one.
 
-  A tna object representing cluster-level transitions. Contains
-  `$weights` (k x k transition matrix), `$inits` (initial distribution),
-  and `$labels` (cluster names). Use this for analyzing how
-  learners/entities move between high-level groups or phases.
-
-- within:
-
-  Named list of tna objects, one per cluster. Each tna object represents
-  internal transitions within that cluster. Contains `$weights` (n_i x
-  n_i matrix), `$inits` (initial distribution), and `$labels` (node
-  labels). Clusters with single nodes or zero-row nodes are excluded
-  (tna requires positive row sums).
-
-A `netobject_group` with data preserved from each sub-network.
-
-A `tna` object constructed from the input.
+The default method returns the input unchanged when it already inherits
+from `tna`, and otherwise raises an error.
 
 ## Details
 
-This is the final step in the MCML workflow, enabling full integration
-with the tna package for centrality analysis, bootstrap validation,
-permutation tests, and visualization.
-
-### Requirements
-
-The tna package must be installed. If not available, the function throws
-an error with installation instructions.
+This is the step that lets an MCML result flow into the verbs that take
+a group of networks (printing, network-metric summaries, rendering with
+cograph).
 
 ### Workflow
 
 
     # Full MCML workflow
     net <- build_network(data, method = "relative")
-    net$nodes$clusters <- group_assignments
-    cs <- cluster_summary(net)
-    tna_models <- as_tna(cs)
+    cs   <- cluster_summary(net, clusters = group_assignments)
+    nets <- as_tna(cs)
 
-    # Now use tna package functions
-    plot(tna_models$macro)
-    tna::centralities(tna_models$macro)
-    tna::bootstrap(tna_models$macro, iter = 1000)
-
-    # Analyze within-cluster patterns
-    plot(tna_models$clusters$ClusterA)
-    tna::centralities(tna_models$clusters$ClusterA)
+    # Every layer is an ordinary netobject
+    print(nets)      # one line per layer
+    summary(nets)    # network metrics per layer
 
 ### Zero-out-degree (sink) nodes
 
@@ -91,31 +85,44 @@ never re-normalised, so a sink row needs no special handling. Inspect
 ## See also
 
 [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
-to create the input object,
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
-visualization without conversion,
-[`tna::tna`](http://sonsoles.me/tna/reference/build_model.md) for the
-underlying tna constructor
+and [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md) to
+create the input object,
+[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)
+for a macro layer with one cluster expanded,
+[`as_networks`](https://saqr.me/Nestimate/reference/as_networks.md) for
+the psychometric-network counterpart
 
 ## Examples
 
 ``` r
+set.seed(1)
 mat <- matrix(runif(36), 6, 6)
 rownames(mat) <- colnames(mat) <- LETTERS[1:6]
 clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"), G3 = c("E", "F"))
 cs <- cluster_summary(mat, clusters)
-tna_models <- as_tna(cs)
-tna_models
+nets <- as_tna(cs)
+nets
 #> Group Networks (4 groups)
 #> 
 #>   Group  Nodes  Edges  Weights
-#>   macro  3      9      [0.907, 3.076]
-#>   G1     2      4      [0.018, 0.777]
-#>   G2     2      4      [0.056, 0.736]
-#>   G3     2      4      [0.272, 0.905]
-tna_models$macro$weights
-#>           G1       G2       G3
-#> G1 0.9065801 2.585793 2.645868
-#> G2 2.5352275 1.534746 2.120124
-#> G3 2.2492125 3.076226 2.460135
+#>   macro  3      9      [1.076, 2.706]
+#>   G1     2      4      [0.266, 0.945]
+#>   G2     2      4      [0.212, 0.935]
+#>   G3     2      4      [0.340, 0.870]
+summary(nets)
+#> Network metrics by group:
+#>                       metric  macro     G1      G2     G3
+#>                   Node Count      3      2       2      2
+#>                   Edge Count      9      4       4      4
+#>              Network Density      1      1       1      1
+#>                Mean Distance  1.863 0.6584  0.7162 0.5839
+#>            Mean Out-Strength  6.181  1.122   1.207  1.353
+#>              SD Out-Strength 0.8432 0.6844 0.08534 0.2021
+#>             Mean In-Strength  6.181  1.122   1.207  1.353
+#>               SD In-Strength 0.5072 0.1253  0.7034 0.4867
+#>              Mean Out-Degree      3      2       2      2
+#>                SD Out-Degree      0      0       0      0
+#>  Centralization (Out-Degree)      0      0       0      0
+#>   Centralization (In-Degree)      0      0       0      0
+#>                  Reciprocity      1      1       1      1
 ```

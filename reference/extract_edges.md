@@ -13,7 +13,8 @@ extract_edges(model, threshold = 0, include_self = FALSE, sort_by = "weight")
 
 - model:
 
-  A TNA model object or a matrix of weights.
+  A `netobject`, TNA model object, `mcml` object, or a matrix of
+  weights.
 
 - threshold:
 
@@ -30,7 +31,8 @@ extract_edges(model, threshold = 0, include_self = FALSE, sort_by = "weight")
 
 ## Value
 
-A data frame with columns:
+For a single network: a data frame with one row per retained edge and
+columns:
 
 - from:
 
@@ -43,6 +45,9 @@ A data frame with columns:
 - weight:
 
   Edge weight (transition probability).
+
+For an `mcml` object: a named list of such data frames, with `macro`
+first and then one element per cluster.
 
 ## Details
 

@@ -71,6 +71,8 @@ A list of class `net_nct` with elements:
 - M:
 
   List with `observed`, `perm`, `p_value` for the global strength test.
+  P-values are permutation p-values,
+  `(sum(perm >= observed) + 1) / (iter + 1)`.
 
 - S:
 
@@ -78,7 +80,10 @@ A list of class `net_nct` with elements:
 
 - E:
 
-  Same structure for per-edge tests.
+  Same structure for the per-edge tests (`observed` and `p_value` are
+  one value per upper-triangle edge, `perm` an `iter` by edges matrix),
+  plus `edge_names`, a two-column data frame of the node pairs (`NULL`
+  when `data1` has no column names).
 
 - n_iter:
 
@@ -88,14 +93,20 @@ A list of class `net_nct` with elements:
 
   Whether a paired test was used.
 
+- params:
+
+  List of the settings used: `gamma`, `abs`, `weighted`, `p_adjust`.
+
 ## Details
 
-Implementation matches `NetworkComparisonTest::NCT()` with defaults
-`abs = TRUE`, `weighted = TRUE`, `paired = FALSE` at machine precision
-when the same seed is used. The network estimator is EBIC-selected
-glasso applied to a Pearson correlation matrix, with
+Follows `NetworkComparisonTest::NCT()` with defaults `abs = TRUE`,
+`weighted = TRUE`, `paired = FALSE`. The network estimator is
+EBIC-selected glasso applied to a Pearson correlation matrix, with
 [`Matrix::nearPD`](https://rdrr.io/pkg/Matrix/man/nearPD.html)
-symmetrization (matching NCT's `NCT_estimator_GGM` default).
+symmetrization (matching NCT's `NCT_estimator_GGM` default). The glasso
+solver is not the Fortran one NCT wraps, so results agree to
+independent-solver precision (of the order of `1e-4` on the test
+statistics) rather than bit-for-bit, even under the same seed.
 
 ## Examples
 
@@ -106,7 +117,7 @@ x1 <- matrix(rnorm(200 * 5), 200, 5)
 x2 <- matrix(rnorm(200 * 5), 200, 5)
 colnames(x1) <- colnames(x2) <- paste0("V", 1:5)
 res <- nct(x1, x2, iter = 100)
-res$M$p_value
-res$S$p_value
+res
+summary(res)
 } # }
 ```

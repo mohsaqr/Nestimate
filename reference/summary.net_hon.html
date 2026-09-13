@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,10 +67,12 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The edge data.frame <code>object$edges</code> (columns <code>path</code>,
-<code>from</code>, <code>to</code>, <code>count</code>, <code>probability</code>,
-<code>from_order</code>, <code>to_order</code>), returned visibly; the summary text
-is printed as a side effect.</p>
+    <p>The <code>cograph_network</code> edge data.frame <code>object$edges</code>:
+one row per non-zero cell of the adjacency matrix, with integer
+<code>from</code>/<code>to</code> node indices and a numeric <code>weight</code>. Returned
+visibly; the summary text (counts, first-order states, order
+distribution) is printed as a side effect. The arrow-notation table with
+<code>path</code>/<code>count</code>/<code>probability</code> is <code>object$ho_edges</code>.</p>
     </div>
 
     <div class="section level2">

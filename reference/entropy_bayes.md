@@ -107,6 +107,9 @@ An object of class `"net_entropy_bayes"` with:
 
   Call metadata.
 
+For a `netobject_group` the result is a `"net_entropy_bayes_group"`: a
+named list holding one such object per group.
+
 ## Details
 
 With `prior > 0` the posterior puts mass on every transition, so

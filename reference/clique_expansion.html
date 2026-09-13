@@ -19,7 +19,7 @@ products (weighted incidence).'><meta property="og:image" content="https://saqr.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,12 @@ shared hyperedges.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>netobject</code> (also <code>cograph_network</code>) with <code>method = "clique_expansion"</code>, undirected, with weighted symmetric adjacency
-<code>W = incidence %*% t(incidence)</code> and zero diagonal.</p>
+<code>W = incidence %*% t(incidence)</code> and zero diagonal. The standard
+<code>netobject</code> fields are present (<code>$weights</code>, <code>$nodes</code>, <code>$edges</code> - one row
+per non-zero upper-triangle cell with integer <code>from</code>/<code>to</code> node indices
+and <code>weight</code> - <code>$n_nodes</code>, <code>$n_edges</code>, <code>$meta</code>); <code>$params</code> records
+<code>source</code>, <code>weighted</code>, <code>n_hyperedges</code> and
+<code>hypergraph_size_distribution</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -114,8 +119,8 @@ the implementation is a direct one-line restatement of the definition.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Tian, Y., &amp; Zafarani, R. (2024). Higher-order network analysis methods.
-<em>SIGKDD Explorations</em> 26(1), Section 5.1.5.</p>
+    <p>Tian, H., &amp; Zafarani, R. (2024). Higher-order networks representation and
+learning: A survey. <em>ACM SIGKDD Explorations Newsletter</em> 26(1), 1-18.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -130,13 +135,20 @@ the implementation is a direct one-line restatement of the definition.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">hg</span>  <span class="op">&lt;-</span> <span class="fu"><a href="bipartite_groups.html">bipartite_groups</a></span><span class="op">(</span><span class="va">df</span>, player <span class="op">=</span> <span class="st">"player"</span>, group <span class="op">=</span> <span class="st">"session"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu">clique_expansion</span><span class="op">(</span><span class="va">hg</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">net</span><span class="op">$</span><span class="va">weights</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A B C D E</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> A 0 2 1 0 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> B 2 0 1 0 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> C 1 1 0 1 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> D 0 0 1 0 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> E 0 0 1 1 0</span>
+<span class="r-in"><span><span class="fu"><a href="extract_edges.html">extract_edges</a></span><span class="op">(</span><span class="va">net</span>, threshold <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to weight</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     B  A      2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     A  B      2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     C  A      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     C  B      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     A  C      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     B  C      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     D  C      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     E  C      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     C  D      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    E  D      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    C  E      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    D  E      1</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

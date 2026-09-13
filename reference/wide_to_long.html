@@ -9,7 +9,7 @@ time points) to long format (one row per action)."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,22 +96,28 @@ Default: "Time".</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame in long format with columns:</p><dl><dt>id</dt>
-<dd><p>Sequence identifier (integer).</p></dd>
+    <p>A data frame in long format, one row per (sequence, time point),
+sorted by identifier then time, with columns:</p><dl><dt>id</dt>
+<dd><p>Sequence identifier. Named by <code>id_col</code>; when that is
+<code>NULL</code> the column is called <code>id</code> and holds the row number
+of the wide input (integer).</p></dd>
 
 <dt>Time</dt>
-<dd><p>Time point within the sequence (integer).</p></dd>
+<dd><p>Time point within the sequence (integer), taken from the
+numeric suffix of the wide column name. Named by <code>time_col</code>.</p></dd>
 
 <dt>Action</dt>
-<dd><p>The action/state at that time point (character).</p></dd>
+<dd><p>The action/state at that time point. Named by
+<code>action_col</code>.</p></dd>
 
 
-</dl><p>Any additional columns from the original data are preserved.</p>
+</dl><p>Any additional non-time columns from the original data are preserved and
+repeated on every row of their sequence.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function converts data from the format produced by <code>simulate_sequences()</code>
-to the long format used by many TNA functions and analyses.</p>
+    <p>Converts wide sequence data (one row per sequence, one column per time
+point) to the long format used by many TNA functions and analyses.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

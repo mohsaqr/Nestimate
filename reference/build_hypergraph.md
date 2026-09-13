@@ -112,9 +112,14 @@ A `net_hypergraph` object: a list with components
   Recorded call parameters: `method`, `p`, `include_pairwise`,
   `max_size`, `threshold`, `seed`.
 
-The input `x` invisibly.
+For [`print()`](https://rdrr.io/r/base/print.html), the input `x`
+invisibly.
 
-The input `object` invisibly.
+For [`summary()`](https://rdrr.io/r/base/summary.html), a data.frame
+with one row per node and columns `node` (node name) and `degree`
+(number of hyperedges containing the node), returned visibly; the
+summary block (node / hyperedge counts, mean and maximum hyperedge size)
+is printed as a side effect.
 
 ## Details
 

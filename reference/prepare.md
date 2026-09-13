@@ -113,8 +113,10 @@ A list with class `"nestimate_data"` containing:
 
 - statistics:
 
-  List with total_sessions, total_actions, max_sequence_length,
-  unique_actors, etc.
+  List with `total_sessions`, `total_actions` and `max_sequence_length`,
+  plus `unique_actors` only when `actor` was supplied (with no `actor`
+  every row belongs to one synthetic actor, so the count would be
+  meaningless).
 
 ## Details
 
@@ -132,6 +134,7 @@ events first.
 ## Examples
 
 ``` r
+set.seed(1)
 df <- data.frame(
   student = rep(1:3, each = 5),
   code = sample(c("read", "write", "test"), 15, replace = TRUE),

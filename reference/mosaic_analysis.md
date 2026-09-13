@@ -112,6 +112,20 @@ An object of class `"mosaic_analysis"`: a list with
 
   Row counts before/after filtering.
 
+- vars:
+
+  Named character vector `c(var1 = , var2 = )`.
+
+- plot_parts, plot_args:
+
+  The residual matrix, table, and styling arguments retained so
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) can re-render
+  without re-testing.
+
+Use [`print()`](https://rdrr.io/r/base/print.html) for the test summary
+and [`summary()`](https://rdrr.io/r/base/summary.html) for the tidy
+per-cell table.
+
 ## See also
 
 [`mosaic_plot`](https://saqr.me/Nestimate/reference/mosaic_plot.md) for
@@ -120,22 +134,22 @@ the network/table mosaic (which also accepts `style = "flat"`).
 ## Examples
 
 ``` r
-df <- data.frame(
-  gender = sample(c("F", "M"), 200, replace = TRUE),
-  level  = sample(c("Low", "Mid", "High"), 200, replace = TRUE)
-)
-res <- mosaic_analysis(df, "gender", "level", min_count = 5)
-res$stats
-#>         test statistic df p_value cramers_v effect_size   n
-#> 1 Chi-square     0.848  2  0.6545     0.065  negligible 200
-res$counts
-#>   gender level observed expected residual  pct
-#> 1      F  High       33   30.030    0.897 16.5
-#> 2      M  High       33   35.970   -0.897 16.5
-#> 3      F   Low       31   33.215   -0.653 15.5
-#> 4      M   Low       42   39.785    0.653 21.0
-#> 5      F   Mid       27   27.755   -0.233 13.5
-#> 6      M   Mid       34   33.245    0.233 17.0
+data(group_regulation_long, package = "Nestimate")
+res <- mosaic_analysis(group_regulation_long, "Course", "Action",
+                       min_count = 20)
+res
+#> Mosaic analysis: Course x Action
+#>   N = 27533 (filtered from 27533); table 3 x 9
+#>   Chi-square: X2 = 233.560, df = 16, p = 1.199e-40
+#>   Cramer's V = 0.065 (negligible)
+head(summary(res))
+#>   Course   Action observed expected residual  pct
+#> 1      A    adapt      140  249.303   -9.430 0.51
+#> 2      B    adapt      261  193.688    6.059 0.95
+#> 3      C    adapt      153  111.009    4.502 0.56
+#> 4      A cohesion      923  827.560    4.631 3.35
+#> 5      B cohesion      590  642.945   -2.680 2.14
+#> 6      C cohesion      326  368.495   -2.563 1.18
 # \donttest{
 plot(res, tile_label = "percent")
 

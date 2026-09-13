@@ -80,8 +80,20 @@ nets
 #>   macro  2      1      [0.028, 0.028]
 #>   A      3      3      [-0.026, 0.068]
 #>   B      3      3      [-0.070, 0.038]
-nets$macro$weights
-#>            A          B
-#> A 0.00000000 0.02847388
-#> B 0.02847388 0.00000000
+summary(nets)
+#> Network metrics by group:
+#>                       metric   macro       A       B
+#>                   Node Count       2       3       3
+#>                   Edge Count       2       2       2
+#>              Network Density       1  0.6667  0.6667
+#>                Mean Distance 0.02847 0.06817 0.03813
+#>            Mean Out-Strength 0.02847 0.07709 0.07688
+#>              SD Out-Strength       0 0.02578 0.03159
+#>             Mean In-Strength 0.02847 0.07709 0.07688
+#>               SD In-Strength       0 0.02578 0.03159
+#>              Mean Out-Degree       1       2       2
+#>                SD Out-Degree       0       0       0
+#>  Centralization (Out-Degree)       0       0       0
+#>   Centralization (In-Degree)       0       0       0
+#>                  Reciprocity       1       1       1
 ```

@@ -15,7 +15,7 @@ to bootnet with richer output."><meta property="og:image" content="https://saqr.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,8 +92,11 @@ a <code>netobject</code> with <code>method = "glasso"</code>.</p></dd>
 
 
 <dt id="arg-cs-iter">cs_iter<a class="anchor" aria-label="anchor" href="#arg-cs-iter"></a></dt>
-<dd><p>Integer. Number of case-dropping iterations per drop
-proportion (default: 500).</p></dd>
+<dd><p>Integer. Total number of case-dropping iterations
+(default: 500). Following <span class="pkg">bootnet</span>, each iteration draws one
+drop proportion at random from <code>cs_drop</code>, so the iterations are
+spread across the proportions rather than repeated <code>cs_iter</code>
+times at each one.</p></dd>
 
 
 <dt id="arg-cs-drop">cs_drop<a class="anchor" aria-label="anchor" href="#arg-cs-drop"></a></dt>
@@ -186,11 +189,15 @@ ci_upper) per centrality measure.</p></dd>
 centrality measure.</p></dd>
 
 <dt>cs_data</dt>
-<dd><p>Data frame of case-dropping correlations (drop_prop,
-measure, correlation).</p></dd>
+<dd><p>Data frame of case-dropping results, one row per
+drop proportion by measure, with columns <code>drop_prop</code>,
+<code>measure</code>, <code>mean_cor</code>, <code>prop_above</code> (fraction of
+that proportion's iterations correlating above 0.7) and
+<code>n_samples</code> (iterations that landed on that proportion).</p></dd>
 
 <dt>edge_diff_p</dt>
-<dd><p>Symmetric matrix of pairwise edge difference p-values.</p></dd>
+<dd><p>Symmetric matrix of pairwise edge difference
+p-values; <code>NULL</code> when the network has more than 500 edges.</p></dd>
 
 <dt>centrality_diff_p</dt>
 <dd><p>Named list of symmetric p-value matrices per
@@ -254,6 +261,16 @@ matrices.</p></dd>
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating
+psychological networks and their accuracy: A tutorial paper.
+<em>Behavior Research Methods</em> 50(1), 195-212.
+<a href="https://doi.org/10.3758/s13428-017-0862-1" class="external-link">doi:10.3758/s13428-017-0862-1</a>
+
+(source of the CS-coefficient and of the case-dropping,
+edge-difference and centrality-difference procedures reproduced here.)</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code>, <code><a href="bootstrap_network.html">bootstrap_network</a></code></p></div>

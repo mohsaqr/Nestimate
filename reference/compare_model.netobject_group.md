@@ -62,4 +62,6 @@ A `net_comparison` object.
 ## See also
 
 [`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md),
-the N-way successor with tidy tables and a dashboard plot.
+the N-way successor with tidy tables and a
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) that draws one
+view per call.

@@ -5,13 +5,25 @@ $$\Lambda_{(b,d)}(t) = \max(0, \min(t - b, d - t)).$$
 The \(k\)-th landscape function \(\lambda^{(k)}(t)\) is the
 \(k\)-th largest of \(\{\Lambda_{(b_i,d_i)}(t)\}_i\) at each
 \(t\). Landscapes are stable under bottleneck distance and form a
-Banach-space embedding of persistence diagrams."><meta property="og:description" content="Computes the persistence landscape (Bubenik 2015) from a persistence
+Banach-space embedding of persistence diagrams.
+Essential classes are excluded: a tent function is undefined for an
+infinitely-lived class on a finite grid, so pairs with
+death = Inf (VR mode) and pairs with death = 0 but
+birth &amp;gt; 0 (the clique-mode encoding of an essential class) are
+dropped before the landscape is built. When no finite pair remains in
+the requested dimension, every landscape function is zero on the grid."><meta property="og:description" content="Computes the persistence landscape (Bubenik 2015) from a persistence
 diagram. Each (birth, death) pair contributes a tent function
 $$\Lambda_{(b,d)}(t) = \max(0, \min(t - b, d - t)).$$
 The \(k\)-th landscape function \(\lambda^{(k)}(t)\) is the
 \(k\)-th largest of \(\{\Lambda_{(b_i,d_i)}(t)\}_i\) at each
 \(t\). Landscapes are stable under bottleneck distance and form a
-Banach-space embedding of persistence diagrams."><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"></head><body>
+Banach-space embedding of persistence diagrams.
+Essential classes are excluded: a tent function is undefined for an
+infinitely-lived class on a finite grid, so pairs with
+death = Inf (VR mode) and pairs with death = 0 but
+birth &amp;gt; 0 (the clique-mode encoding of an essential class) are
+dropped before the landscape is built. When no finite pair remains in
+the requested dimension, every landscape function is zero on the grid."><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -19,7 +31,7 @@ Banach-space embedding of persistence diagrams."><meta property="og:image" conte
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,6 +75,12 @@ The \(k\)-th landscape function \(\lambda^{(k)}(t)\) is the
 \(k\)-th largest of \(\{\Lambda_{(b_i,d_i)}(t)\}_i\) at each
 \(t\). Landscapes are stable under bottleneck distance and form a
 Banach-space embedding of persistence diagrams.</p>
+<p>Essential classes are excluded: a tent function is undefined for an
+infinitely-lived class on a finite grid, so pairs with
+<code>death = Inf</code> (VR mode) and pairs with <code>death = 0</code> but
+<code>birth &gt; 0</code> (the clique-mode encoding of an essential class) are
+dropped before the landscape is built. When no finite pair remains in
+the requested dimension, every landscape function is zero on the grid.</p>
     </div>
 
     <div class="section level2">

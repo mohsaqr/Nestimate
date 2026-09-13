@@ -20,7 +20,9 @@ build_honem(hon, dim = 32L, max_power = 10L)
 
 - dim:
 
-  Integer. Embedding dimension (default 32).
+  Integer. Embedding dimension (default 32). Silently capped at
+  `n_nodes - 1`; the dimension actually used is reported in the returned
+  `dim` component.
 
 - max_power:
 
@@ -33,7 +35,8 @@ An object of class `net_honem` with components:
 
 - embeddings:
 
-  Numeric matrix (n_nodes x dim) of node embeddings.
+  Numeric matrix (n_nodes x dim) of node embeddings, row names = node
+  names, column names `dim_1`, `dim_2`, ...
 
 - nodes:
 
@@ -66,8 +69,9 @@ hyperparameter tuning required.
 
 ## References
 
-Saebi, M., Ciampaglia, G. L., Kazemzadeh, S., & Meyur, R. (2020). HONEM:
-Learning Embedding for Higher Order Networks. *Big Data*, 8(4), 255-269.
+Saebi, M., Ciampaglia, G. L., Kaplan, L. M., & Chawla, N. V. (2020).
+HONEM: Learning Embedding for Higher Order Networks. *Big Data*, 8(4),
+255-269.
 
 ## Examples
 

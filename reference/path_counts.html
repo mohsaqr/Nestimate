@@ -11,7 +11,7 @@ formal models."><meta property="og:image" content="https://saqr.me/Nestimate/log
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,9 +68,9 @@ formal models.</p>
 
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
-<dd><p>Integer. Length of the path / n-gram (default 2). A k of 2 counts
-individual transitions; k of 3 counts two-step paths, etc. Must be a
-whole number; a non-integer value is an error rather than being
+<dd><p>Integer &gt;= 2. Length of the path / n-gram (default 2). A k of 2
+counts individual transitions; k of 3 counts two-step paths, etc. Must be
+a whole number; a non-integer value is an error rather than being
 silently truncated.</p></dd>
 
 
@@ -81,8 +81,10 @@ paths (default NULL = all).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with columns: <code>path</code>, <code>count</code>,
-<code>proportion</code>.</p>
+    <p>A data frame with one row per distinct k-gram, sorted by
+<code>count</code> (descending), with columns <code>path</code> (the k states in
+arrow notation, e.g. "A -&gt; B"), <code>count</code> and <code>proportion</code>
+(share of all k-grams, rounded to 4 decimal places).</p>
     </div>
 
     <div class="section level2">

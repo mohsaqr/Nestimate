@@ -19,7 +19,8 @@ chain_structure(x, normalize = TRUE, tol = 1e-10)
   A `netobject`, `cograph_network`, `tna` model, transition matrix, or
   sequence data.frame (passed through
   [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
-  with `method = "relative"`).
+  with `method = "relative"`). A `netobject_group` is also accepted and
+  analysed constituent by constituent.
 
 - normalize:
 
@@ -42,7 +43,12 @@ chain_structure(x, normalize = TRUE, tol = 1e-10)
 
 ## Value
 
-A `chain_structure` object: a list with elements
+For a `netobject_group`, a `c("chain_structure_group", "list")`: a named
+list holding one `chain_structure` per constituent network, with its own
+[`print()`](https://rdrr.io/r/base/print.html) and
+[`summary()`](https://rdrr.io/r/base/summary.html) methods.
+
+Otherwise a `chain_structure` object: a list with elements
 
 - `states`:
 

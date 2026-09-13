@@ -11,7 +11,7 @@ or both network types."><meta property="og:image" content="https://saqr.me/Nesti
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -115,9 +115,17 @@ computation. If NULL, treats all rows as one group. Default: NULL.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>For <code>method = "transition"</code> or <code>"cooccurrence"</code>: a
-<code>netobject</code> (see <code><a href="build_network.html">build_network</a></code>).</p>
-<p>For <code>method = "both"</code>: a <code>wtna_mixed</code> object with elements
-<code>$transition</code> and <code>$cooccurrence</code>, each a <code>netobject</code>.</p>
+<code>c("netobject", "cograph_network")</code> object (see
+<code><a href="build_network.html">build_network</a></code>) with <code>method</code> set to
+<code>"wtna_transition"</code> or <code>"wtna_cooccurrence"</code>,
+<code>directed = TRUE</code> only for transitions, and the windowing
+settings (<code>type</code>, <code>window_size</code>, <code>mode</code>, <code>codes</code>,
+<code>actor</code>) recorded in <code>$params</code>. Transition networks also
+carry <code>$initial</code>, the per-actor-averaged initial state
+distribution.</p>
+<p>For <code>method = "both"</code>: a <code>wtna_mixed</code> object - a list with
+elements <code>$transition</code> and <code>$cooccurrence</code> (each a
+<code>netobject</code> as above) and <code>$method = "wtna_both"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

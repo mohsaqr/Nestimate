@@ -9,7 +9,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,13 +97,18 @@ Default: TRUE.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame in wide format where each row is a sequence and
-columns V1, V2, ... contain the actions at each time point.</p>
+    <p>A data frame in wide format, one row per sequence: the
+<code>id_col</code> column followed by the time point columns
+<code>V1</code>, <code>V2</code>, ... (named with <code>time_prefix</code>) holding the
+action at each time point. With <code>fill_na = TRUE</code> short sequences
+are padded with <code>NA</code> so every row shares the same columns; with
+<code>fill_na = FALSE</code> only the time points present in every sequence
+are kept.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function converts long format data (like that from <code>simulate_long_data()</code>)
-to the wide format expected by <code><a href="http://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::tna()</a></code> and related functions.</p>
+    <p>Converts long format data (one row per action) to the wide format expected
+by <code><a href="build_network.html">build_network</a></code>, <code><a href="http://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::tna()</a></code> and related functions.</p>
 <p>If <code>time_col</code> contains non-integer values (e.g., timestamps), the function
 will use the ordering within each sequence to create time indices.</p>
     </div>

@@ -13,7 +13,7 @@ group differences."><meta property="og:image" content="https://saqr.me/Nestimate
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,8 @@ Not needed for <code>netobject_group</code>.</p></dd>
 
 <dt id="arg-min-freq">min_freq<a class="anchor" aria-label="anchor" href="#arg-min-freq"></a></dt>
 <dd><p>Integer. Minimum frequency in each group for a pattern
-to be included. Default: 5.</p></dd>
+to be included: a pattern is kept only when its count reaches this
+threshold in <em>every</em> group. Default: 5.</p></dd>
 
 
 <dt id="arg-test">test<a class="anchor" aria-label="anchor" href="#arg-test"></a></dt>
@@ -111,17 +112,21 @@ to be included. Default: 5.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"net_sequence_comparison"</code> containing:</p><dl><dt>patterns</dt>
-<dd><p>Tidy data.frame. Always present:
-<code>pattern</code>, <code>length</code>, <code>freq_&lt;group&gt;</code>,
-<code>prop_&lt;group&gt;</code>, <code>resid_&lt;group&gt;</code>. If
-<code>test = "permutation"</code>: <code>effect_size</code>, <code>p_value</code>.
-If <code>test = "chisq"</code>: <code>statistic</code>, <code>p_value</code>.</p></dd>
+<dd><p>Tidy data.frame, one row per retained k-gram pattern.
+Always present: <code>pattern</code>, <code>length</code>, and one
+<code>freq_&lt;group&gt;</code>, <code>prop_&lt;group&gt;</code> and <code>resid_&lt;group&gt;</code>
+column per group. If <code>test = "permutation"</code>: <code>effect_size</code>,
+<code>p_value</code>. If <code>test = "chisq"</code>: <code>statistic</code>,
+<code>p_value</code>. Rows are ordered by ascending adjusted <code>p_value</code>
+when a test was run, and by descending maximum absolute residual
+otherwise.</p></dd>
 
 <dt>groups</dt>
-<dd><p>Character vector of group names.</p></dd>
+<dd><p>Character vector of group names, sorted.</p></dd>
 
 <dt>n_patterns</dt>
-<dd><p>Integer. Number of patterns passing min_freq.</p></dd>
+<dd><p>Integer. Number of rows in <code>patterns</code>, i.e. the
+patterns meeting <code>min_freq</code> in every group.</p></dd>
 
 <dt>params</dt>
 <dd><p>List of sub, min_freq, test, iter, adjust.</p></dd>
@@ -159,10 +164,19 @@ proportions are returned.</p></dd>
 any method supported by <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">p.adjust</a></code>. The default is
 <code>"fdr"</code> (Benjamini-Hochberg).</p>
     </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Haberman, S. J. (1973). The analysis of residuals in cross-classified
+tables. <em>Biometrics</em>, 29(1), 205–220. (standardized residuals)</p>
+<p>Benjamini, Y. &amp; Hochberg, Y. (1995). Controlling the false discovery rate.
+<em>Journal of the Royal Statistical Society B</em>, 57(1), 289–300.
+(the default <code>adjust = "fdr"</code>)</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">60</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">60</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">60</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>

@@ -26,6 +26,7 @@ The input object, invisibly.
 ## Examples
 
 ``` r
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 60, TRUE),
   V2 = sample(LETTERS[1:4], 60, TRUE),

@@ -22,7 +22,10 @@ mark_terminal_state(data, state = "End", cols = NULL)
 
 - state:
 
-  Character. Label to insert in terminal-NA cells. Default `"End"`.
+  Character. Label to insert in terminal-NA cells. Default `"End"`. If
+  the label already occurs somewhere in `data`, the function warns and
+  appends `_1`, `_2`, ... until it is unique, so the absorbing marker is
+  never confused with an observed state.
 
 - cols:
 
@@ -30,8 +33,10 @@ mark_terminal_state(data, state = "End", cols = NULL)
 
 ## Value
 
-A `data.frame` of the same shape as `data` with terminal NAs filled by
-`state`.
+A character `data.frame` of the same shape as `data` (or of `data[cols]`
+when `cols` is given) with terminal NAs filled by `state`. The label
+actually used is attached as the `"terminal_state"` attribute, which
+matters when it had to be made unique.
 
 ## Details
 

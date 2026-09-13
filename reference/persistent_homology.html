@@ -51,7 +51,7 @@ to high. Use max_scale to cap the filtration diameter.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -127,7 +127,11 @@ to high. Use <code>max_scale</code> to cap the filtration diameter.</p></dd>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A square matrix, <code>tna</code>, or <code>netobject</code>. For
-<code>type = "vr"</code>, must be a non-negative distance matrix.</p></dd>
+<code>type = "vr"</code>, must be a non-negative distance matrix.
+A <code>simplicial_complex</code> carrying a <code>$filtration</code> vector (as
+returned by <code>build_simplicial(type = "vr")</code>) is also accepted and
+is used directly: its stored filtration values are reduced as they are,
+so <code>type</code> is taken from the complex rather than this argument.</p></dd>
 
 
 <dt id="arg-n-steps">n_steps<a class="anchor" aria-label="anchor" href="#arg-n-steps"></a></dt>
@@ -158,9 +162,13 @@ uses <code>max(d)</code>.</p></dd>
 <code>betti</code>.</p></dd>
 
 <dt>persistence</dt>
-<dd><p>Data frame of birth-death pairs:
-<code>dimension</code>, <code>birth</code>, <code>death</code>, <code>persistence</code>.
-Sorted by descending persistence.</p></dd>
+<dd><p>Data frame of birth-death pairs, one row per
+homology class: <code>dimension</code>, <code>birth</code>, <code>death</code>,
+<code>persistence</code>. Sorted by descending persistence. Essential
+classes are included, with <code>death = 0</code> and
+<code>persistence = birth</code> in clique mode, and <code>death = Inf</code>,
+<code>persistence = Inf</code> in VR mode (the plot method caps those for
+display only).</p></dd>
 
 <dt>thresholds</dt>
 <dd><p>Numeric vector of grid thresholds.</p></dd>
@@ -173,8 +181,9 @@ Sorted by descending persistence.</p></dd>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Edelsbrunner, H., Letscher, D., &amp; Zomorodian, A. (2000). Topological
-persistence and simplification. <em>Discrete &amp; Computational Geometry</em>
-<strong>28</strong>, 511-533.</p>
+persistence and simplification. In <em>Proceedings of the 41st Annual
+Symposium on Foundations of Computer Science</em>, 454-463. Journal version:
+<em>Discrete &amp; Computational Geometry</em> (2002) <strong>28</strong>, 511-533.</p>
     </div>
 
     <div class="section level2">

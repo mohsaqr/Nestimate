@@ -13,7 +13,7 @@ avoid an export clash when both packages are attached."><meta property="og:image
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -171,15 +171,18 @@ plain numeric <code>matrix</code> for ad-hoc plotting.</p></dd>
 
 
 <dt id="arg-xlab-ylab">xlab, ylab<a class="anchor" aria-label="anchor" href="#arg-xlab-ylab"></a></dt>
-<dd><p>Axis labels. <code>NULL</code> (default) draws no axis title.
-Pass any string to add one.</p></dd>
+<dd><p>Axis labels. <code>NULL</code> (default) draws no axis title
+on the four data-bearing methods; the <code>table</code> / <code>matrix</code>
+methods default to <code>"Row"</code> and <code>"Column"</code>. Pass any string to
+set one.</p></dd>
 
 
 <dt id="arg-range">range<a class="anchor" aria-label="anchor" href="#arg-range"></a></dt>
 <dd><p>Numeric of length 2 giving the lower and upper colour-scale
 limits for the standardized residual. <code>NULL</code> (default) auto-fits
 the limits to the symmetric range <code>c(-M, M)</code> where
-<code>M = max(|stdres|)</code>, so no signal is squished. Pass an explicit
+<code>M = max(|stdres|)</code> floored at 1, so no signal is squished and the
+legend stays readable on a near-independent table. Pass an explicit
 range (e.g. <code>c(-4, 4)</code> for tna-style display, <code>c(-6, 6)</code> for
 moderate clipping) to clamp the colour scale.</p></dd>
 
@@ -242,23 +245,31 @@ aggregate); <code>"clusters"</code> draws one mosaic per cluster from
 
 
 <dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
-<dd><p>For <code>netobject_group</code>: number of columns in the small-
-multiples layout. Default 2.</p></dd>
+<dd><p>Number of columns in the multi-panel layout. Default 2.
+Effective only for <code>mcml</code> with <code>level = "clusters"</code>, the one
+multi-panel case; <code>netobject_group</code> is drawn as a single
+(group x state) mosaic, so <code>ncol</code> is accepted but has no effect
+there.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>ggplot</code> object (or a <code>gtable</code> from
-<code><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html" class="external-link">gridExtra::arrangeGrob</a></code> for <code>netobject_group</code> when
-<span class="pkg">gridExtra</span> is available).</p>
+    <p>A <code>ggplot</code> object: one <code>geom_rect</code> layer with one
+rectangle per contingency-table cell, filled by the standardized
+residual. <code>mcml</code> with <code>level = "clusters"</code> returns a single
+<code>facet_wrap</code>-ed <code>ggplot</code> (one panel per cluster, shared fill
+scale); every other input returns a single-panel <code>ggplot</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Column widths are proportional to row marginals of the weight matrix
 (incoming totals when the matrix is transposed, as for transitions). Within
 each column, segment heights are proportional to that row's conditional
-distribution. Cell fill is the standardized residual from
-<code><a href="https://rdrr.io/r/stats/chisq.test.html" class="external-link">stats::chisq.test()</a></code>, with a diverging palette clipped to \(\pm 4\).
+distribution. Cell fill is the standardized residual under the independence
+null – a permutation z-score by default, or the closed-form
+<code><a href="https://rdrr.io/r/stats/chisq.test.html" class="external-link">stats::chisq.test()</a></code> residual with <code>residuals = "asymptotic"</code>
+(see <code>residuals</code>) – on a diverging palette whose limits auto-fit the
+observed residuals unless <code>range</code> is supplied.
 Mosaics need integer counts: when <code>$weights</code> is already integer
 (<code>method = "frequency"</code> / <code>"co_occurrence"</code>) it is used directly;
 for a single <code>netobject</code> / <code>htna</code> otherwise (relative, glasso,
@@ -273,10 +284,14 @@ sequences. The function errors only when neither integer weights nor
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span>  <span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation</span>, method <span class="op">=</span> <span class="st">"frequency"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu">mosaic_plot</span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, package <span class="op">=</span> <span class="st">"Nestimate"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"frequency"</span>,</span></span>
+<span class="r-in"><span>                     format <span class="op">=</span> <span class="st">"long"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span></span>
+<span class="r-in"><span>                     order <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">mosaic_plot</span><span class="op">(</span><span class="va">net</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="mosaic_plot-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

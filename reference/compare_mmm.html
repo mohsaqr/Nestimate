@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,8 +80,10 @@ table is allocated.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>mmm_compare</code> data frame with BIC, AIC, ICL, AvePP,
-entropy per k. When <code>return_fits = TRUE</code>, the fitted models are
+    <p>A <code>mmm_compare</code> data frame, one row per requested <code>k</code>,
+with columns <code>k</code>, <code>log_likelihood</code>, <code>AIC</code>, <code>BIC</code>,
+<code>ICL</code>, <code>AvePP</code>, <code>Entropy</code> and <code>converged</code>. When
+<code>return_fits = TRUE</code>, the fitted <code>net_mmm</code> models are
 attached as <code>attr(result, "fits")</code>.</p>
     </div>
 
@@ -93,9 +95,9 @@ attached as <code>attr(result, "fits")</code>.</p>
 <span class="r-in"><span><span class="va">comp</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> MMM Model Comparison</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  k log_likelihood AIC      BIC      ICL      AvePP    Entropy   converged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2 -63.27791      160.5558 184.3762 186.5265 0.964899 0.2153937 FALSE    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3 -63.27792      178.5558 214.9870 218.8336 0.938229 0.2455097  TRUE    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  k log_likelihood AIC      BIC      ICL      AvePP     Entropy   converged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2 -62.32972      158.6594 182.4798 184.6518 0.9647836 0.2121121  TRUE    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3 -62.32987      176.6597 213.0909 217.2174 0.9343265 0.2487206 FALSE    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  best   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  &lt;-- BIC</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         </span>
@@ -115,10 +117,16 @@ attached as <code>attr(result, "fits")</code>.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  &lt;-- BIC</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Retain fits to avoid a re-fit after picking the BIC-min model.</span></span></span>
+<span class="r-in"><span><span class="co"># Retain the fits so the chosen model needs no re-run; summary() marks</span></span></span>
+<span class="r-in"><span><span class="co"># the minimum-BIC and minimum-ICL rows in its `best` column.</span></span></span>
 <span class="r-in"><span><span class="va">comp_with_fits</span> <span class="op">&lt;-</span> <span class="fu">compare_mmm</span><span class="op">(</span><span class="va">seqs</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">3</span>, seed <span class="op">=</span> <span class="fl">42</span>, return_fits <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">best_k</span> <span class="op">&lt;-</span> <span class="va">comp_with_fits</span><span class="op">$</span><span class="va">k</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.min</a></span><span class="op">(</span><span class="va">comp_with_fits</span><span class="op">$</span><span class="va">BIC</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">best_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">comp_with_fits</span>, <span class="st">"fits"</span><span class="op">)</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">best_k</span><span class="op">)</span><span class="op">]</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">comp_with_fits</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   k log_likelihood      AIC      BIC      ICL     AvePP   Entropy converged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2      -122.4385 278.8771 302.6974 310.2070 0.8974786 0.3160632      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 3      -118.1764 288.3527 324.7838 332.3711 0.9006835 0.1882551      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   best</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  BIC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

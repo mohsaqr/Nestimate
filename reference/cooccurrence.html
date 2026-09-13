@@ -13,7 +13,7 @@ measure. Argument names follow the citenets convention."><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -170,10 +170,17 @@ If <code>FALSE</code>, the diagonal is zeroed.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>netobject</code> (undirected) with <code>method = "co_occurrence_fn"</code>.
-The <code>$weights</code> matrix contains similarity (or raw) co-occurrence values.
-The <code>$params</code> list stores the similarity method, threshold, and
-the number of transactions.</p>
+    <p>A <code>netobject</code> (undirected, class
+<code>c("netobject", "cograph_network")</code>) with
+<code>method = "co_occurrence_fn"</code> and <code>$data = NULL</code> - this
+function does <em>not</em> go through <code><a href="build_network.html">build_network</a></code>, so the
+result carries no source data and the data-resampling verbs
+(<code><a href="bootstrap_network.html">bootstrap_network</a></code>, <code><a href="permutation.html">permutation</a></code>) cannot be
+run on it. The <code>$weights</code> matrix holds the similarity (or raw)
+co-occurrence values, one row/column per retained item. The
+<code>$params</code> list records <code>similarity</code>, <code>threshold</code>,
+<code>min_occur</code>, <code>diagonal</code>, <code>top_n</code>,
+<code>n_transactions</code> and <code>n_items</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

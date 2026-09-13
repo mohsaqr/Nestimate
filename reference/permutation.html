@@ -45,7 +45,7 @@ use the same invert setting.'><meta property="og:image" content="https://saqr.me
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,7 +131,11 @@ use the same <code>invert</code> setting.</p>
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
 <dd><p>A <code>netobject</code> (from <code><a href="build_network.html">build_network</a></code>) or a
 <code><a href="net_edge_betweenness.html">net_edge_betweenness</a></code> object.
-Must use the same method and have the same nodes as <code>x</code>.</p></dd>
+Must use the same method and have the same nodes as <code>x</code>.
+Default <code>NULL</code>: when <code>x</code> is a <code>netobject_group</code> (or an
+<code>mcml</code>) and <code>y</code> is left <code>NULL</code>, every pair of groups is
+tested and the result is a <code>net_permutation_group</code> named
+<code>"&lt;group i&gt; vs &lt;group j&gt;"</code>.</p></dd>
 
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
@@ -196,7 +200,18 @@ Default: 50.</p></dd>
 <dd><p>Effect size matrix (observed diff / SD of permutation diffs).</p></dd>
 
 <dt>summary</dt>
-<dd><p>Long-format data frame of edge-level results.</p></dd>
+<dd><p>Long-format data frame, one row per edge present in
+either network (undirected networks keep one row per unordered
+pair), with columns <code>from</code>, <code>to</code>, <code>weight_x</code>,
+<code>weight_y</code>, <code>diff</code>, <code>effect_size</code>, <code>p_value</code>,
+<code>sig</code>.</p></dd>
+
+<dt>global</dt>
+<dd><p>Data frame of the two NCT-style global statistics, one
+row each: <code>statistic</code> (<code>"M"</code>, the sum of absolute edge
+differences, and <code>"S"</code>, the largest absolute edge difference),
+<code>observed</code>, and <code>p_value</code> from the same permutation null
+as the edge test. Absent on the edge-betweenness path.</p></dd>
 
 <dt>method</dt>
 <dd><p>The network estimation method.</p></dd>
@@ -224,7 +239,13 @@ with <code>stats</code> (one row per state-by-measure: <code>state</code>,
 (observed differences where <code>p &lt; alpha</code>, else 0).</p></dd>
 
 
-</dl></div>
+</dl><p>Grouped input returns a <code>"net_permutation_group"</code> (a named list of
+<code>net_permutation</code> results): one element per matching group name
+when both <code>x</code> and <code>y</code> are <code>netobject_group</code>s, or one per
+group pair when <code>y</code> is <code>NULL</code>. Two <code>wtna_mixed</code> inputs
+return a <code>"wtna_perm_mixed"</code> with <code>$transition</code> and
+<code>$cooccurrence</code> results.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="bayes_compare.html">bayes_compare</a></code> for the Bayesian complement: instead of

@@ -25,7 +25,7 @@ distribution_plot.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,6 +85,8 @@ thin gaps (no dendrogram). Supports grouping via <code>group</code> or a
 <span>  na <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  normalize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  panel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"both"</span>, <span class="st">"summary"</span>, <span class="st">"channels"</span><span class="op">)</span>,</span>
+<span>  expand <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  trim_clusterwise <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  row_gap <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  dendrogram_width <span class="op">=</span> <span class="fl">1.2</span>,</span>
@@ -138,8 +140,8 @@ for dendrogram.</p></dd>
 assignments from <code>attr(, "clustering")</code>.</p></dd>
 
 <dt>net_mmm</dt>
-<dd><p>From <code><a href="build_mmm.html">build_mmm</a></code>. Uses <code>$models[[1]]$data</code>
-and <code>$assignments</code>.</p></dd>
+<dd><p>From <code><a href="build_mmm.html">build_mmm</a></code>. Uses <code>$data</code> (falling
+back to <code>$models[[1]]$data</code>) and <code>$assignments</code>.</p></dd>
 
 <dt>tna</dt>
 <dd><p>From the tna package. Decodes integer-encoded sequences.</p></dd>
@@ -204,6 +206,25 @@ the columns covering the shortest 95\<!-- % of sequences); a value -->
 time points).</p></dd>
 
 
+<dt id="arg-panel">panel<a class="anchor" aria-label="anchor" href="#arg-panel"></a></dt>
+<dd><p><code>mcml</code> + <code>type = "distribution"</code> only. Which panel
+to draw, as a single <code>ggplot</code>. <code>"both"</code> (default) puts the
+macro <code>Summary</code> channel and the per-cluster channels on one figure
+sharing a fill scale; <code>"summary"</code> draws the macro channel alone,
+keyed and coloured by cluster; <code>"channels"</code> draws the per-cluster
+channels alone, keyed and coloured by state. The macro channel is keyed
+by cluster and the rest by state, so on a shared scale a cluster and a
+state can land on the same colour – drawing one panel avoids that and
+gives it its own legend and default title.</p></dd>
+
+
+<dt id="arg-expand">expand<a class="anchor" aria-label="anchor" href="#arg-expand"></a></dt>
+<dd><p>For an <code>mcml</code>, names of clusters whose member states
+are shown individually in the Summary band; <code>"all"</code> or <code>TRUE</code>
+expands every cluster. The per-cluster channels are unaffected. Default
+<code>NULL</code> keys the Summary band by cluster.</p></dd>
+
+
 <dt id="arg-trim-clusterwise">trim_clusterwise<a class="anchor" aria-label="anchor" href="#arg-trim-clusterwise"></a></dt>
 <dd><p>Grouped <code>type = "index"</code> /
 <code>"distribution"</code> only, and only when <code>trim</code> is a fraction.
@@ -251,12 +272,12 @@ dendrogram (e.g. <code>sort = "start"</code>) or for other types.</p></dd>
 
 
 <dt id="arg-cell-border">cell_border<a class="anchor" aria-label="anchor" href="#arg-cell-border"></a></dt>
-<dd><p>Cell border colour. <code>NA</code> = off.</p></dd>
+<dd><p>Cell border colour. <code>NA</code> (default) = off.</p></dd>
 
 
 <dt id="arg-frame">frame<a class="anchor" aria-label="anchor" href="#arg-frame"></a></dt>
-<dd><p>If <code>TRUE</code> (default), draw a box around each panel.
-If <code>FALSE</code>, no box - axis ticks and labels still appear.</p></dd>
+<dd><p><code>FALSE</code> (default) draws no box - axis ticks and labels
+still appear. <code>TRUE</code> draws a box around each panel.</p></dd>
 
 
 <dt id="arg-width-height">width, height<a class="anchor" aria-label="anchor" href="#arg-width-height"></a></dt>
@@ -302,7 +323,8 @@ Heatmap is always single-figure.</p></dd>
 
 <dt id="arg-legend">legend<a class="anchor" aria-label="anchor" href="#arg-legend"></a></dt>
 <dd><p>Legend position: <code>"bottom"</code>, <code>"right"</code>, or
-<code>"none"</code>. Default varies by type.</p></dd>
+<code>"none"</code>. <code>NULL</code> (default) resolves to <code>"right"</code> for
+every type.</p></dd>
 
 
 <dt id="arg-legend-size">legend_size<a class="anchor" aria-label="anchor" href="#arg-legend-size"></a></dt>
@@ -329,10 +351,28 @@ from the device width so the legend looks proportional at 5 in vs
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>For base-graphics types, invisibly a list describing the plot
-(shape depends on <code>type</code>). For an <code>mcml</code> input, a <code>ggplot</code>
-object.</p>
-    </div>
+    <p>An <code>mcml</code> input returns a <code>ggplot</code> object (the
+multichannel figure). Every other input draws with base graphics and
+returns, invisibly, a list whose shape depends on <code>type</code>:</p><dl><dt><code>"heatmap"</code></dt>
+<dd><p><code>ord</code> (integer row order actually
+plotted), <code>codes</code> (the integer-encoded, trimmed sequence
+matrix), <code>palette</code>, <code>levels</code> (state labels, parallel to
+<code>palette</code>), and <code>sort_used</code> (the ordering strategy
+applied, <code>"net_clustering"</code> when a clustering dendrogram was
+used).</p></dd>
+
+<dt><code>"index"</code></dt>
+<dd><p><code>codes</code>, <code>palette</code>, <code>levels</code>,
+<code>orders</code> (list of integer row orders, one per panel, indexing
+the original rows) and <code>groups</code> (panel labels).</p></dd>
+
+<dt><code>"distribution"</code></dt>
+<dd><p>Whatever
+<code><a href="distribution_plot.html">distribution_plot</a></code> returns: <code>counts</code>,
+<code>proportions</code>, <code>levels</code>, <code>palette</code>, <code>groups</code>.</p></dd>
+
+
+</dl></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="distribution_plot.html">distribution_plot</a></code>, <code><a href="build_clusters.html">build_clusters</a></code>,

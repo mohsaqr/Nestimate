@@ -21,7 +21,10 @@ summary(object, ...)
 
 ## Value
 
-A data frame with edge-level bootstrap statistics.
+The `$summary` data frame: one row per non-zero original edge, with
+columns `from`, `to`, `weight`, `mean`, `sd`, `p_value`, `sig`,
+`ci_lower`, `ci_upper`, plus `cr_lower` and `cr_upper` when the
+bootstrap used `inference = "stability"`.
 
 ## Examples
 

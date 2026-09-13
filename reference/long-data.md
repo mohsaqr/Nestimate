@@ -37,12 +37,13 @@ Data frames in long format with 9 columns:
 
 - code:
 
-  Character. Interaction code (17 action labels).
+  Character. Interaction code. The two data frames use disjoint code
+  sets – 9 labels in `human_long`, 8 in `ai_long`, 17 in total.
 
 - cluster:
 
-  Character. High-level cluster: Action, Communication, Directive,
-  Evaluative, Metacognitive, or Repair.
+  Character. High-level cluster. `human_long` uses Directive, Evaluative
+  and Metacognitive; `ai_long` uses Action, Communication and Repair.
 
 - code_order:
 

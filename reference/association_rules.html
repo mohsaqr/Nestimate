@@ -15,7 +15,7 @@ and logical matrix indexing for k-itemsets."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -113,14 +113,23 @@ columns = items).</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"net_association_rules"</code> containing:</p><dl><dt>rules</dt>
-<dd><p>Data frame with columns: antecedent (list), consequent (list),
-support, confidence, lift, conviction, count, n_transactions.</p></dd>
+<dd><p>Tidy data frame, one row per rule, ordered by descending
+lift then confidence, with columns <code>antecedent</code> and
+<code>consequent</code> (the itemsets as comma-separated character strings),
+<code>support</code>, <code>confidence</code>, <code>lift</code>, <code>conviction</code>,
+<code>count</code> and <code>n_transactions</code>.</p></dd>
+
+<dt>frequent</dt>
+<dd><p>Tidy data frame, one row per frequent itemset, with
+columns <code>itemset</code>, <code>size</code>, <code>support</code> and <code>count</code>.</p></dd>
 
 <dt>frequent_itemsets</dt>
-<dd><p>List of frequent itemsets per level k.</p></dd>
+<dd><p>List of frequent itemsets per level k, each
+entry a list of <code>items</code> / <code>count</code> / <code>support</code>.</p></dd>
 
 <dt>items</dt>
-<dd><p>Character vector of all items.</p></dd>
+<dd><p>Character vector of the frequent 1-itemsets the mining ran
+on (all items when no item clears <code>min_support</code>).</p></dd>
 
 <dt>n_transactions</dt>
 <dd><p>Integer.</p></dd>
@@ -174,6 +183,9 @@ from independence. Higher = stronger implication.</p></dd>
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Agrawal, R. &amp; Srikant, R. (1994). Fast algorithms for mining association
 rules. In <em>Proc. 20th VLDB Conference</em>, 487–499.</p>
+<p>Brin, S., Motwani, R., Ullman, J. D. &amp; Tsur, S. (1997). Dynamic itemset
+counting and implication rules for market basket data. In <em>Proc. ACM
+SIGMOD</em>, 255–264. (lift and conviction)</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

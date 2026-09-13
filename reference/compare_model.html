@@ -23,7 +23,7 @@ correlations."><meta property="og:image" content="https://saqr.me/Nestimate/logo
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -173,9 +173,12 @@ Nestimate's base-R Floyd-Warshall, which handles negative weights.</p></dd>
 
 <dt id="arg-measures">measures<a class="anchor" aria-label="anchor" href="#arg-measures"></a></dt>
 <dd><p>Character vector of centrality measures to compare. Empty
-by default (no centrality block). Valid names are <code>"InStrength"</code>,
-<code>"OutStrength"</code>, and <code>"Betweenness"</code>. Unknown names are
-ignored with a warning.</p></dd>
+by default (no centrality block). Any built-in measure is valid:
+<code>"OutStrength"</code>, <code>"InStrength"</code>, <code>"ClosenessIn"</code>,
+<code>"ClosenessOut"</code>, <code>"Closeness"</code>, <code>"Betweenness"</code>,
+<code>"BetweennessRSP"</code>, <code>"Diffusion"</code>, <code>"Clustering"</code>,
+<code>"InCloseness"</code>, <code>"OutCloseness"</code>. Unknown names are ignored
+with a warning.</p></dd>
 
 
 <dt id="arg-network">network<a class="anchor" aria-label="anchor" href="#arg-network"></a></dt>

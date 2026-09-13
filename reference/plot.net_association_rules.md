@@ -22,7 +22,8 @@ plot(x, ...)
 
 ## Value
 
-A `ggplot` object, invisibly.
+The drawn `ggplot` object, invisibly (the plot is also printed). `NULL`,
+invisibly, when no rule was found.
 
 ## Examples
 

@@ -34,9 +34,10 @@ compare_mmm(data, k = 2:5, return_fits = FALSE, ...)
 
 ## Value
 
-A `mmm_compare` data frame with BIC, AIC, ICL, AvePP, entropy per k.
-When `return_fits = TRUE`, the fitted models are attached as
-`attr(result, "fits")`.
+A `mmm_compare` data frame, one row per requested `k`, with columns `k`,
+`log_likelihood`, `AIC`, `BIC`, `ICL`, `AvePP`, `Entropy` and
+`converged`. When `return_fits = TRUE`, the fitted `net_mmm` models are
+attached as `attr(result, "fits")`.
 
 ## Examples
 
@@ -47,9 +48,9 @@ comp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
 comp
 #> MMM Model Comparison
 #> 
-#>  k log_likelihood AIC      BIC      ICL      AvePP    Entropy   converged
-#>  2 -63.27791      160.5558 184.3762 186.5265 0.964899 0.2153937 FALSE    
-#>  3 -63.27792      178.5558 214.9870 218.8336 0.938229 0.2455097  TRUE    
+#>  k log_likelihood AIC      BIC      ICL      AvePP     Entropy   converged
+#>  2 -62.32972      158.6594 182.4798 184.6518 0.9647836 0.2121121  TRUE    
+#>  3 -62.32987      176.6597 213.0909 217.2174 0.9343265 0.2487206 FALSE    
 #>  best   
 #>  <-- BIC
 #>         
@@ -69,9 +70,15 @@ print(comp)
 #>  <-- BIC
 #>         
 
-# Retain fits to avoid a re-fit after picking the BIC-min model.
+# Retain the fits so the chosen model needs no re-run; summary() marks
+# the minimum-BIC and minimum-ICL rows in its `best` column.
 comp_with_fits <- compare_mmm(seqs, k = 2:3, seed = 42, return_fits = TRUE)
-best_k <- comp_with_fits$k[which.min(comp_with_fits$BIC)]
-best_fit <- attr(comp_with_fits, "fits")[[as.character(best_k)]]
+summary(comp_with_fits)
+#>   k log_likelihood      AIC      BIC      ICL     AvePP   Entropy converged
+#> 1 2      -122.4385 278.8771 302.6974 310.2070 0.8974786 0.3160632      TRUE
+#> 2 3      -118.1764 288.3527 324.7838 332.3711 0.9006835 0.1882551      TRUE
+#>   best
+#> 1  BIC
+#> 2     
 # }
 ```

@@ -21,7 +21,10 @@ summary(object, ...)
 
 ## Value
 
-A data frame with group, edge, p_value, and sig columns.
+The per-group summaries stacked into one data frame: the columns of
+[`summary.net_permutation`](https://saqr.me/Nestimate/reference/summary.net_permutation.md)
+prefixed by a `group` column naming the group (or group pair) each row
+came from.
 
 ## Examples
 

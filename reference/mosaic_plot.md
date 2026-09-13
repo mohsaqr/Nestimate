@@ -120,16 +120,19 @@ mosaic_plot(x, ...)
 
 - xlab, ylab:
 
-  Axis labels. `NULL` (default) draws no axis title. Pass any string to
-  add one.
+  Axis labels. `NULL` (default) draws no axis title on the four
+  data-bearing methods; the `table` / `matrix` methods default to
+  `"Row"` and `"Column"`. Pass any string to set one.
 
 - range:
 
   Numeric of length 2 giving the lower and upper colour-scale limits for
   the standardized residual. `NULL` (default) auto-fits the limits to
-  the symmetric range `c(-M, M)` where `M = max(|stdres|)`, so no signal
-  is squished. Pass an explicit range (e.g. `c(-4, 4)` for tna-style
-  display, `c(-6, 6)` for moderate clipping) to clamp the colour scale.
+  the symmetric range `c(-M, M)` where `M = max(|stdres|)` floored at 1,
+  so no signal is squished and the legend stays readable on a
+  near-independent table. Pass an explicit range (e.g. `c(-4, 4)` for
+  tna-style display, `c(-6, 6)` for moderate clipping) to clamp the
+  colour scale.
 
 - top_angle, left_angle:
 
@@ -186,28 +189,36 @@ mosaic_plot(x, ...)
 
 - ncol:
 
-  For `netobject_group`: number of columns in the small- multiples
-  layout. Default 2.
+  Number of columns in the multi-panel layout. Default 2. Effective only
+  for `mcml` with `level = "clusters"`, the one multi-panel case;
+  `netobject_group` is drawn as a single (group x state) mosaic, so
+  `ncol` is accepted but has no effect there.
 
 ## Value
 
-A `ggplot` object (or a `gtable` from
-[`gridExtra::arrangeGrob`](https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html)
-for `netobject_group` when gridExtra is available).
+A `ggplot` object: one `geom_rect` layer with one rectangle per
+contingency-table cell, filled by the standardized residual. `mcml` with
+`level = "clusters"` returns a single `facet_wrap`-ed `ggplot` (one
+panel per cluster, shared fill scale); every other input returns a
+single-panel `ggplot`.
 
 ## Details
 
 Column widths are proportional to row marginals of the weight matrix
 (incoming totals when the matrix is transposed, as for transitions).
 Within each column, segment heights are proportional to that row's
-conditional distribution. Cell fill is the standardized residual from
-[`stats::chisq.test()`](https://rdrr.io/r/stats/chisq.test.html), with a
-diverging palette clipped to \\\pm 4\\. Mosaics need integer counts:
-when `$weights` is already integer (`method = "frequency"` /
-`"co_occurrence"`) it is used directly; for a single `netobject` /
-`htna` otherwise (relative, glasso, cor, ...) order-1 transition counts
-are recounted from the raw `$data` sequences. The function errors only
-when neither integer weights nor `$data` are available.
+conditional distribution. Cell fill is the standardized residual under
+the independence null – a permutation z-score by default, or the
+closed-form
+[`stats::chisq.test()`](https://rdrr.io/r/stats/chisq.test.html)
+residual with `residuals = "asymptotic"` (see `residuals`) – on a
+diverging palette whose limits auto-fit the observed residuals unless
+`range` is supplied. Mosaics need integer counts: when `$weights` is
+already integer (`method = "frequency"` / `"co_occurrence"`) it is used
+directly; for a single `netobject` / `htna` otherwise (relative, glasso,
+cor, ...) order-1 transition counts are recounted from the raw `$data`
+sequences. The function errors only when neither integer weights nor
+`$data` are available.
 
 ## See also
 
@@ -217,8 +228,12 @@ the lower-level data.frame primitive.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-  net <- build_network(group_regulation, method = "frequency")
-  mosaic_plot(net)
-} # }
+# \donttest{
+data(group_regulation_long, package = "Nestimate")
+net <- build_network(group_regulation_long, method = "frequency",
+                     format = "long", actor = "Actor", action = "Action",
+                     order = "Time")
+mosaic_plot(net, seed = 1)
+
+# }
 ```

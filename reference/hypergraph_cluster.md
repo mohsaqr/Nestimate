@@ -55,8 +55,10 @@ An object of class `net_hypergraph_cluster`: a list with `$clusters`
 row-normalized spectral embedding used by k-means, dims `dim1..dimk`),
 `$k`, `$type`, `$eigenvalues` (full Laplacian spectrum, increasing),
 `$eigengap` (gap after the k-th eigenvalue), `$sizes` (data.frame
-`cluster`/`size`), `$pi` (stationary distribution) and `$params`. Has
-`print`, `summary`, `plot` and `as.data.frame` methods;
+`cluster`/`size`), `$pi` (named stationary distribution), `$n_nodes`,
+`$n_hyperedges` and `$params` (the `edge_weights` used, `nstart`,
+`seed`, `tot_withinss`). Has `print`, `summary`, `plot` and
+`as.data.frame` methods;
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
 one row per node with `node`, `cluster`, the stationary probability
 `pi`, and the embedding coordinates.

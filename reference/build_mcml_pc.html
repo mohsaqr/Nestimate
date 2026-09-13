@@ -8,9 +8,10 @@ exact aggregation formulas may change between releases.
 Unlike transition counts, partial correlations do not aggregate by
 arithmetic: the submatrix of a pcor matrix is not the pcor
 network of the subsystem (the conditioning set changes), and averaging
-pcor entries across blocks is descriptive only. The five
+pcor entries across blocks is descriptive only. The
 aggregation methods therefore have explicitly different
-statuses:
+statuses (the full list of accepted values is under
+aggregation below):
 
 &quot;average&quot; (descriptive)
 Macro edge A–B = mean of the
@@ -38,7 +39,7 @@ weighting - related in spirit to network loadings
 (Christensen &amp;amp; Golino 2021) but not a reimplementation of any
 EGA-family estimator. Requires raw data.
 
-&quot;rv&quot; (descriptive, multivariate)
+&quot;escoufier&quot; (descriptive, multivariate)
 Macro edge A–B =
 Escoufier's RV coefficient between the member blocks - a matrix
 correlation in [0, 1] computed from the block covariance
@@ -46,7 +47,7 @@ structure. No composites are formed and no estimator is re-fit,
 so nothing is lost to averaging; signs are not represented.
 Requires raw data.
 
-&quot;canonical&quot; (descriptive, multivariate)
+&quot;cancor&quot; (descriptive, multivariate)
 Macro edge
 A–B = the first canonical correlation between the member blocks:
 the strongest linear relationship any weighting of A's items can
@@ -64,9 +65,10 @@ exact aggregation formulas may change between releases.
 Unlike transition counts, partial correlations do not aggregate by
 arithmetic: the submatrix of a pcor matrix is not the pcor
 network of the subsystem (the conditioning set changes), and averaging
-pcor entries across blocks is descriptive only. The five
+pcor entries across blocks is descriptive only. The
 aggregation methods therefore have explicitly different
-statuses:
+statuses (the full list of accepted values is under
+aggregation below):
 
 &quot;average&quot; (descriptive)
 Macro edge A–B = mean of the
@@ -94,7 +96,7 @@ weighting - related in spirit to network loadings
 (Christensen &amp;amp; Golino 2021) but not a reimplementation of any
 EGA-family estimator. Requires raw data.
 
-&quot;rv&quot; (descriptive, multivariate)
+&quot;escoufier&quot; (descriptive, multivariate)
 Macro edge A–B =
 Escoufier's RV coefficient between the member blocks - a matrix
 correlation in [0, 1] computed from the block covariance
@@ -102,7 +104,7 @@ structure. No composites are formed and no estimator is re-fit,
 so nothing is lost to averaging; signs are not represented.
 Requires raw data.
 
-&quot;canonical&quot; (descriptive, multivariate)
+&quot;cancor&quot; (descriptive, multivariate)
 Macro edge
 A–B = the first canonical correlation between the member blocks:
 the strongest linear relationship any weighting of A's items can
@@ -119,7 +121,7 @@ composite methods can recover. Requires raw data.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -165,9 +167,10 @@ exact aggregation formulas may change between releases.</p>
 <p>Unlike transition counts, partial correlations do not aggregate by
 arithmetic: the submatrix of a pcor matrix is <em>not</em> the pcor
 network of the subsystem (the conditioning set changes), and averaging
-pcor entries across blocks is descriptive only. The five
+pcor entries across blocks is descriptive only. The
 <code>aggregation</code> methods therefore have explicitly different
-statuses:</p>
+statuses (the full list of accepted values is under
+<code>aggregation</code> below):</p>
 <dl><dt><code>"average"</code> (descriptive)</dt>
 <dd><p>Macro edge A–B = mean of the
 signed node-level weights between members of A and members of B;
@@ -194,7 +197,7 @@ weighting - related in spirit to network loadings
 (Christensen &amp; Golino 2021) but not a reimplementation of any
 EGA-family estimator. Requires raw data.</p></dd>
 
-<dt><code>"rv"</code> (descriptive, multivariate)</dt>
+<dt><code>"escoufier"</code> (descriptive, multivariate)</dt>
 <dd><p>Macro edge A–B =
 Escoufier's RV coefficient between the member blocks - a matrix
 correlation in <code>[0, 1]</code> computed from the block covariance
@@ -202,7 +205,7 @@ structure. No composites are formed and no estimator is re-fit,
 so nothing is lost to averaging; signs are not represented.
 Requires raw data.</p></dd>
 
-<dt><code>"canonical"</code> (descriptive, multivariate)</dt>
+<dt><code>"cancor"</code> (descriptive, multivariate)</dt>
 <dd><p>Macro edge
 A–B = the first canonical correlation between the member blocks:
 the strongest linear relationship any weighting of A's items can
@@ -467,11 +470,16 @@ based on (kept for diagnostics and <code>loading_stability</code>).</p></dd>
 <code>NULL</code>.</p></dd>
 
 <dt>meta</dt>
-<dd><p>List: <code>aggregation</code>, <code>method</code>,
-<code>within</code>, <code>scale</code>, <code>cor_method</code>, <code>signed</code>,
-<code>n_nodes</code>, <code>n_clusters</code>, <code>cluster_sizes</code>,
-<code>n_misfit</code>, <code>n_flipped</code>, <code>directed = FALSE</code>,
-<code>source = "pc"</code>, <code>experimental = TRUE</code>.</p></dd>
+<dd><p>List: <code>aggregation</code> (the name as the caller spelled
+it), <code>method</code>, <code>within</code>, <code>weighting</code>,
+<code>fa_method</code>, <code>fa_args</code>, <code>scale</code>, <code>cor_method</code>,
+<code>signed</code>, <code>n_nodes</code>, <code>n_clusters</code>,
+<code>cluster_sizes</code>, <code>n_misfit</code>, <code>n_flipped</code>,
+<code>directed = FALSE</code>, <code>source = "pc"</code>,
+<code>experimental = TRUE</code>. <code>method</code> and <code>weighting</code> are
+<code>NA</code> on the descriptive paths that re-estimate nothing, and
+<code>fa_method</code>/<code>fa_args</code> are set only for
+<code>weighting = "factor"</code>.</p></dd>
 
 
 </dl></div>
@@ -559,18 +567,20 @@ for uncertainty on the macro network.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">build_mcml_pc</span><span class="op">(</span><span class="va">df</span>, <span class="va">clusters</span>, aggregation <span class="op">=</span> <span class="st">"composite"</span>,</span></span>
 <span class="r-in"><span>                     method <span class="op">=</span> <span class="st">"cor"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span><span class="op">$</span><span class="va">macro</span><span class="op">$</span><span class="va">weights</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          A        B</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> A 0.000000 0.235001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> B 0.235001 0.000000</span>
-<span class="r-in"><span><span class="va">fit</span><span class="op">$</span><span class="va">loadings</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   node cluster   loading    weight sign max_cross cross_cluster misfit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   a1       A 0.4738902 0.3333333    1 0.1671718             B  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   a2       A 0.4537919 0.3333333    1 0.1602877             B  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   a3       A 0.4736153 0.3333333    1 0.1400550             B  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   b1       B 0.5368416 0.3333333    1 0.1618540             A  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   b2       B 0.5156674 0.3333333    1 0.1811768             A  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   b3       B 0.5168036 0.3333333    1 0.1244837             A  FALSE</span>
+<span class="r-in"><span><span class="va">fit</span>            <span class="co"># macro (cluster-level) weights</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MCML for Psychometric Networks (experimental)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Aggregation: composite | Estimator: cor | Within: reestimate | cor: pearson | Weights: equal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   6 nodes in 2 clusters (A: 3, B: 3)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Macro weights:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       A     B</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> A 0.000 0.235</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> B 0.235 0.000</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>   <span class="co"># one row per macro edge</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   from to   weight</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    A  B 0.235001</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>      <span class="co"># heatmap of the same weights</span></span></span>
+<span class="r-plt img"><img src="build_mcml_pc-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

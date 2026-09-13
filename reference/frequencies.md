@@ -1,7 +1,4 @@
-# Sequence Data Conversion Functions
-
-Functions for converting sequence data (long or wide format) into
-transition frequency matrices and other useful representations.
+# Build a Transition Frequency Matrix
 
 Convert long or wide format sequence data into a transition frequency
 matrix. Counts how many times each transition from state_i to state_j
@@ -54,10 +51,15 @@ frequencies(
 
 ## Value
 
-A square integer matrix of transition frequencies where `mat[i, j]` is
+A square integer matrix of transition frequencies, of class
+`c("nest_transition_counts", "matrix", "array")`, where `mat[i, j]` is
 the number of times state i was followed by state j. Row and column
-names are the sorted unique states. Can be passed directly to
-[`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md).
+names are the sorted unique states. It behaves as an ordinary matrix and
+can be passed directly to
+[`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md); the
+class stamp only adds a
+[`summary()`](https://rdrr.io/r/base/summary.html) method, which returns
+the same counts as a tidy `from`/`to`/`count` data frame.
 
 ## Details
 

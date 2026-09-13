@@ -3,7 +3,9 @@
 Two panels: Betti curve (threshold vs Betti number) and persistence
 diagram (birth vs death). Persistence pairs come from full boundary-
 matrix reduction; essential classes are shown at the filtration boundary
-(`death = 0` in clique mode, `death = max_scale` in VR mode).
+(`death = 0` in clique mode; in VR mode their stored `death = Inf` is
+capped for display at the largest finite value in the diagram or on the
+threshold grid, so they still render).
 
 ## Usage
 

@@ -15,7 +15,7 @@ which the marked state is absorbing by construction
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,9 @@ observations.</p></dd>
 
 <dt id="arg-state">state<a class="anchor" aria-label="anchor" href="#arg-state"></a></dt>
 <dd><p>Character. Label to insert in terminal-NA cells.
-Default <code>"End"</code>.</p></dd>
+Default <code>"End"</code>. If the label already occurs somewhere in <code>data</code>, the
+function warns and appends <code>_1</code>, <code>_2</code>, ... until it is unique, so the
+absorbing marker is never confused with an observed state.</p></dd>
 
 
 <dt id="arg-cols">cols<a class="anchor" aria-label="anchor" href="#arg-cols"></a></dt>
@@ -85,8 +87,11 @@ Default <code>"End"</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>data.frame</code> of the same shape as <code>data</code> with terminal
-NAs filled by <code>state</code>.</p>
+    <p>A character <code>data.frame</code> of the same shape as <code>data</code> (or of
+<code>data[cols]</code> when <code>cols</code> is given) with terminal NAs filled by
+<code>state</code>. The label actually used is attached as the
+<code>"terminal_state"</code> attribute, which matters when it had to be made
+unique.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

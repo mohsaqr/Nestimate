@@ -9,7 +9,7 @@ Computes L1-regularized logistic regression network for binary data.'><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,10 @@ Computes L1-regularized logistic regression network for binary data.</p>
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance).</p></dd>
+square symmetric matrix (correlation or covariance). A fitted
+<code>net_clustering</code> or <code>net_mmm</code> object is also accepted: the
+per-cluster networks are (re)built and a <code>netobject_group</code> is
+returned.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

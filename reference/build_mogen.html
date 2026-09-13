@@ -9,7 +9,7 @@ selects the optimal Markov order using AIC, BIC, or likelihood ratio tests."><me
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,14 +65,19 @@ selects the optimal Markov order using AIC, BIC, or likelihood ratio tests.</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>A data.frame (rows = trajectories, columns = time points) or
-a list of character/numeric vectors (one per trajectory).</p></dd>
+<dd><p>A data.frame (rows = trajectories, columns = time points), a
+list of character/numeric vectors (one per trajectory), a <code>tna</code>
+object, or a <code>netobject</code> with sequence data. For
+<code>tna</code>/<code>netobject</code>, numeric state IDs are automatically
+converted to label names.</p></dd>
 
 
 <dt id="arg-max-order">max_order<a class="anchor" aria-label="anchor" href="#arg-max-order"></a></dt>
 <dd><p>Integer. Maximum Markov order to test (default 5).
 Must be a whole number; a non-integer value (e.g. <code>2.7</code>) is an
-error rather than being silently truncated.</p></dd>
+error rather than being silently truncated. A <code>max_order</code> at or
+above the longest trajectory is capped at (longest path - 1) with a
+message.</p></dd>
 
 
 <dt id="arg-criterion">criterion<a class="anchor" aria-label="anchor" href="#arg-criterion"></a></dt>
@@ -86,14 +91,16 @@ error rather than being silently truncated.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>net_mogen</code> with components:</p><dl><dt>optimal_order</dt>
+    <p>An object of class <code>c("net_mogen", "cograph_network")</code> with
+components:</p><dl><dt>optimal_order</dt>
 <dd><p>Selected optimal Markov order.</p></dd>
 
 <dt>criterion</dt>
 <dd><p>Which criterion was used for selection.</p></dd>
 
 <dt>orders</dt>
-<dd><p>Integer vector of tested orders (0 to max_order).</p></dd>
+<dd><p>Integer vector of tested orders (0 to max_order, after
+any capping).</p></dd>
 
 <dt>aic</dt>
 <dd><p>Named numeric vector of AIC values per order.</p></dd>
@@ -111,7 +118,12 @@ error rather than being silently truncated.</p></dd>
 <dd><p>Named integer vector of per-layer DOF.</p></dd>
 
 <dt>transition_matrices</dt>
-<dd><p>List of transition matrices (index 1 = order 0).</p></dd>
+<dd><p>List of row-stochastic transition matrices
+(index 1 = order 0, held as the marginal named numeric vector).</p></dd>
+
+<dt>count_matrices</dt>
+<dd><p>List of the matching raw count matrices, same
+indexing; read by <code><a href="mogen_transitions.html">mogen_transitions()</a></code>.</p></dd>
 
 <dt>states</dt>
 <dd><p>Unique first-order states.</p></dd>
@@ -121,6 +133,35 @@ error rather than being silently truncated.</p></dd>
 
 <dt>n_observations</dt>
 <dd><p>Total number of state observations.</p></dd>
+
+<dt>weights</dt>
+<dd><p><code>cograph_network</code> weight matrix: the transition
+matrix of the selected optimal order (a 1 x n matrix named
+<code>"marginal"</code> when the optimal order is 0). Its dimnames are the
+internal k-gram keys (states joined by a non-printing separator),
+not arrow notation.</p></dd>
+
+<dt>nodes</dt>
+<dd><p>data.frame (<code>id</code>, <code>label</code>, <code>name</code>) of the
+optimal-order De Bruijn nodes.</p></dd>
+
+<dt>edges</dt>
+<dd><p><code>cograph_network</code> edge data.frame with integer
+<code>from</code>/<code>to</code> node indices and a numeric <code>weight</code>. The
+readable arrow-notation table is
+<code><a href="mogen_transitions.html">mogen_transitions()</a></code>.</p></dd>
+
+<dt>directed</dt>
+<dd><p>Logical. Always <code>TRUE</code>.</p></dd>
+
+<dt>n_nodes, n_edges</dt>
+<dd><p>Counts for the optimal-order graph.</p></dd>
+
+<dt>meta</dt>
+<dd><p><code>cograph_network</code> metadata list.</p></dd>
+
+<dt>node_groups</dt>
+<dd><p>Always <code>NULL</code>.</p></dd>
 
 
 </dl></div>
@@ -134,9 +175,9 @@ orders and selects the one that best balances fit and parsimony.</p>
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Scholtes, I. (2017). When is a Network a Network? Multi-Order Graphical
 Model Selection in Pathways and Temporal Networks. <em>KDD 2017</em>.</p>
-<p>Gote, C. &amp; Scholtes, I. (2023). Predicting variable-length paths in
-networked systems using multi-order generative models. <em>Applied
-Network Science</em>, 8, 62.</p>
+<p>Gote, C., Casiraghi, G., Schweitzer, F., &amp; Scholtes, I. (2023). Predicting
+variable-length paths in networked systems using multi-order generative
+models. <em>Applied Network Science</em>, 8, 68.</p>
     </div>
 
     <div class="section level2">

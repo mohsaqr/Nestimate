@@ -19,7 +19,7 @@ correlations derived from the person-mean fixed effects.'><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -122,12 +122,10 @@ named list of three full netobjects, one per network, plus
 model-level metadata stored as attributes. Each element is a
 standard <code>c("netobject", "cograph_network")</code> weight-matrix wrapper
 (no raw <code>$data</code>), so <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="coefs.html">coefs()</a></code>, and
-<code>cograph::splot(fit$temporal)</code> work directly. The three constituents
-are matrix-wrapped and carry no underlying panel data, so
-data-resampling verbs such as <code><a href="bootstrap_network.html">bootstrap_network()</a></code> (and
-reliability/stability) cannot iterate over them - extract a single
-constituent and rebuild via <code><a href="build_network.html">build_network()</a></code> if you need those.
-Structure:</p><dl><dt><code>fit$temporal</code></dt>
+<code>cograph::splot(fit$temporal)</code> work directly. See
+<strong>Dispatch limitation</strong> for the verbs that do <em>not</em> work on this
+object (<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, <code><a href="bootstrap_network.html">bootstrap_network()</a></code>, <code>centrality()</code>,
+reliability/stability). Structure:</p><dl><dt><code>fit$temporal</code></dt>
 <dd><p>Directed netobject for the <code>d x d</code> matrix of
 fixed-effect lagged coefficients. <code>$weights[i, j]</code> is the effect
 of variable j at t-lag on variable i at t. <code>method = "mlvar_temporal"</code>, <code>directed = TRUE</code>.</p></dd>
@@ -191,6 +189,23 @@ and lmer residual SDs.</p></li>
 configurations, and to exact equality (max_diff == 0) against the
 pre-delegation Nestimate implementation on all layers, coefficients,
 and observation counts across lag/standardize/day/beep configurations.</p>
+<p>When the data carry no between-person variance (a random-intercept SD of
+zero), the between-subjects network is not estimable. Since 0.9.0 this
+raises a warning from <span class="pkg">idiographic</span> and still returns the zero matrix
+by convention; before 0.9.0 the zero matrix was returned silently.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="dispatch-limitation">Dispatch limitation<a class="anchor" aria-label="anchor" href="#dispatch-limitation"></a></h2>
+
+
+<p>There is no <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method for <code>net_mlvar</code> - plot a single constituent
+(<code>cograph::splot(fit$temporal)</code>) instead. The three constituents are
+matrix-wrapped and carry no <code>$data</code>, so the data-resampling and
+data-reading verbs do <strong>not</strong> work on the fitted object or its parts:
+<code><a href="bootstrap_network.html">bootstrap_network()</a></code>, <code><a href="certainty.html">certainty()</a></code>, <code><a href="network_reliability.html">network_reliability()</a></code>,
+<code><a href="centrality_stability.html">centrality_stability()</a></code> and <code>centrality()</code> all need the source panel.
+Extract a constituent and rebuild it through <code><a href="build_network.html">build_network()</a></code> if you
+need those. Use <code><a href="coefs.html">coefs()</a></code> for the tidy model output.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -199,13 +214,36 @@ and observation counts across lag/standardize/day/beep configurations.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu">simulate_data</span><span class="op">(</span><span class="st">"mlvar"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">build_mlvar</span><span class="op">(</span><span class="va">d</span>, vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">d</span>, <span class="st">"vars"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                   id <span class="op">=</span> <span class="st">"id"</span>, day <span class="op">=</span> <span class="st">"day"</span>, beep <span class="op">=</span> <span class="st">"beep"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by</span></span></span>
+<span class="r-in"><span><span class="co"># `happy` one beep earlier, so the temporal network should recover it.</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">n_beep</span> <span class="op">&lt;-</span> <span class="fl">20</span></span></span>
+<span class="r-in"><span>  <span class="va">ar1</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span>, <span class="va">phi</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="va">phi</span>,</span></span>
+<span class="r-in"><span>                                                   method <span class="op">=</span> <span class="st">"recursive"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">panel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">happy</span> <span class="op">&lt;-</span> <span class="fu">ar1</span><span class="op">(</span><span class="va">n_beep</span>, <span class="fl">0.4</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      id    <span class="op">=</span> <span class="va">i</span>,</span></span>
+<span class="r-in"><span>      beep  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_beep</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>      happy <span class="op">=</span> <span class="va">happy</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>      calm  <span class="op">=</span> <span class="fu">ar1</span><span class="op">(</span><span class="va">n_beep</span>, <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>      tired <span class="op">=</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">happy</span><span class="op">[</span><span class="op">-</span><span class="va">n_beep</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_beep</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>              <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">build_mlvar</span><span class="op">(</span><span class="va">panel</span>, vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"happy"</span>, <span class="st">"calm"</span>, <span class="st">"tired"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                     id <span class="op">=</span> <span class="st">"id"</span>, beep <span class="op">=</span> <span class="st">"beep"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">fit</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="coefs.html">coefs</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           network n_nodes n_edges density mean_abs_weight n_positive n_negative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        temporal       3       6       1      0.11569402          2          4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 contemporaneous       3       3       1      0.05304465          1          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         between       3       3       1      0.15389239          2          1</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

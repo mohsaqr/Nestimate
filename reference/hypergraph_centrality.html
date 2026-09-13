@@ -17,7 +17,7 @@ higher-order groups directly."><meta property="og:image" content="https://saqr.m
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,13 +100,16 @@ iterates. Default <code>1e-8</code>.</p></dd>
 <dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
 <dd><p>Logical. If <code>TRUE</code> (default), each returned
 centrality vector is L2-normalized to unit norm (compatible with
-<code><a href="https://r.igraph.org/reference/eigen_centrality.html" class="external-link">igraph::eigen_centrality()</a></code>'s scale for type <code>"clique"</code>).</p></dd>
+<code><a href="https://r.igraph.org/reference/eigen_centrality.html" class="external-link">igraph::eigen_centrality()</a></code>'s scale for type <code>"clique"</code>). If
+<code>FALSE</code>, the vector is rescaled so its largest absolute entry is 1.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list; one component per requested <code>type</code>. Each
-component is a named numeric vector of length <code>hg$n_nodes</code>.</p>
+    <p>A named list, one component per requested <code>type</code>, in the order
+given by <code>type</code>. Each component is a numeric vector of length
+<code>hg$n_nodes</code> named by <code>hg$nodes</code>. A hypergraph with no hyperedges
+yields all-zero vectors.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

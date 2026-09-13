@@ -36,7 +36,9 @@ centrality_stability(
 - x:
 
   A `netobject` from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+  a `cograph_network`, or a `netobject_group` / `mcml` (each constituent
+  network is assessed and a `net_stability_group` is returned).
 
 - measures:
 
@@ -78,12 +80,13 @@ centrality_stability(
   Optional function. A custom centrality function that takes a weight
   matrix and returns a named list of centrality vectors. When `NULL`
   (default), all built-in measures are computed internally:
-  `"InStrength"`/`"OutStrength"` via `colSums`/`rowSums`, and
-  `"Betweenness"`/ `"InCloseness"`/`"OutCloseness"`/`"Closeness"` via an
-  internal Floyd-Warshall shortest-path routine. When provided, the
-  function is called as `centrality_fn(mat)` and is used only for
-  requested measures that are not one of the six built-ins; it should
-  return a named list (e.g., `list(my_metric = ...)`).
+  `"InStrength"`/`"OutStrength"` via `colSums`/`rowSums`,
+  `"Betweenness"`/ `"ClosenessIn"`/`"ClosenessOut"`/`"Closeness"` via an
+  internal Floyd-Warshall shortest-path routine, and `"BetweennessRSP"`,
+  `"Diffusion"` and `"Clustering"` from the weight matrix directly. When
+  provided, the function is called as `centrality_fn(mat)` and is used
+  only for requested measures that are not one of the built-ins; it
+  should return a named list (e.g., `list(my_metric = ...)`).
 
 - loops:
 
@@ -112,20 +115,21 @@ centrality_stability(
 
 ## Value
 
-An object of class `"net_stability"` containing:
+An object of class `"net_stability"`: a list with
 
 - cs:
 
-  Named numeric vector of CS-coefficients per measure.
+  Named numeric vector of CS-coefficients, one per retained measure.
 
 - correlations:
 
-  Named list of matrices (iter x n_prop) of correlation values per
-  measure.
+  Named list of `iter` x `length(drop_prop)` matrices of correlation
+  values, one per retained measure.
 
 - measures:
 
-  Character vector of measures assessed.
+  Character vector of the measures actually assessed (see the
+  zero-variance rule below).
 
 - drop_prop:
 
@@ -147,6 +151,26 @@ An object of class `"net_stability"` containing:
 
   Correlation method.
 
+A `netobject_group` or `mcml` input instead returns a
+`"net_stability_group"`: a named list of one `net_stability` per
+constituent network.
+
+Zero-variance measures are handled by two different rules, both
+long-standing behaviour. When *some* requested measures have zero
+variance on the original network (for example `"OutStrength"` on a
+row-normalised transition network), those measures are **dropped**:
+`$cs`, `$correlations` and `$measures` cover only the retained ones.
+When *every* requested measure has zero variance a warning is issued and
+**all** requested names are returned with `cs = 0` and all-`NA`
+correlation matrices.
+
+## References
+
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
+psychological networks and their accuracy: A tutorial paper. *Behavior
+Research Methods* 50(1), 195-212.
+[doi:10.3758/s13428-017-0862-1](https://doi.org/10.3758/s13428-017-0862-1)
+
 ## See also
 
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
@@ -155,11 +179,16 @@ An object of class `"net_stability"` containing:
 ## Examples
 
 ``` r
-net <- build_network(data.frame(V1 = c("A","B","C","A"),
-  V2 = c("B","C","A","B")), method = "relative")
-cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
-#> Warning: All centrality measures have zero variance. No stability can be assessed.
+seqs <- data.frame(
+  T1 = c("plan", "code", "debug", "plan", "test", "code"),
+  T2 = c("code", "debug", "code", "plan", "code", "test"),
+  T3 = c("debug", "code", "plan", "code", "debug", "plan"),
+  T4 = c("test", "plan", "test", "debug", "plan", "code")
+)
+net <- build_network(seqs, method = "relative")
+cs <- centrality_stability(net, iter = 10, drop_prop = 0.3, seed = 1)
 # \donttest{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
@@ -172,7 +201,7 @@ print(cs)
 #>   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 #> 
 #>   CS-coefficients:
-#>     InStrength       0.30
-#>     OutStrength      0.00
+#>     InStrength       0.00
+#>     OutStrength      0.30
 # }
 ```

@@ -65,12 +65,23 @@ An object of class `"net_link_prediction"` containing:
 
 - predictions:
 
-  Data frame with columns: from, to, method, score, rank. Sorted by
-  score (descending) within each method.
+  Data frame, one row per (node pair, method), with columns `from`,
+  `to`, `method`, `score`, `existing` (was the pair already an edge?)
+  and `rank`. Sorted by score (descending) within each method.
+
+- consensus:
+
+  Data frame, one row per node pair, with columns `from`, `to`,
+  `avg_rank`, `n_methods` and `consensus_rank`, ordered by `avg_rank`.
+  `NULL` when only one method was requested.
 
 - scores:
 
   Named list of score matrices (one per method).
+
+- adjacency:
+
+  Integer 0/1 adjacency matrix of the input network.
 
 - methods:
 
@@ -146,6 +157,13 @@ Adamic, L. A. & Adar, E. (2003). Friends and neighbors on the Web.
 
 Katz, L. (1953). A new status index derived from sociometric analysis.
 *Psychometrika*, 18(1), 39–43.
+
+Jaccard, P. (1901). Etude comparative de la distribution florale dans
+une portion des Alpes et des Jura. *Bulletin de la Societe Vaudoise des
+Sciences Naturelles*, 37, 547–579.
+
+Barabasi, A.-L. & Albert, R. (1999). Emergence of scaling in random
+networks. *Science*, 286(5439), 509–512.
 
 ## See also
 

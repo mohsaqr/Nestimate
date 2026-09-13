@@ -54,7 +54,9 @@ distribution_plot(
 - group:
 
   Optional grouping vector (length `nrow(x)`) producing one panel per
-  group. Ignored if `x` is a `net_clustering`.
+  group. `NULL` (default) falls back to the cluster assignments carried
+  by a `net_clustering` / `net_mmm` / `netobject_group` input; supplying
+  `group` overrides them.
 
 - scale:
 
@@ -93,11 +95,12 @@ distribution_plot(
 
 - na_color:
 
-  Colour for the `NA` band.
+  Colour for the `NA` band. Default `"grey90"`.
 
 - frame:
 
-  If `TRUE` (default), draw a box around each panel.
+  `FALSE` (default) draws no panel box; `TRUE` draws a box around each
+  panel.
 
 - width, height:
 
@@ -174,8 +177,31 @@ distribution_plot(
 
 ## Value
 
-Invisibly, a list with `counts`, `proportions`, `levels`, `palette`, and
-`groups`.
+Invisibly, a list describing the drawn figure:
+
+- counts:
+
+  Named list, one entry per group, each a (state x time point) numeric
+  matrix of cell counts. Rows are named by `levels`; columns are the
+  retained time points.
+
+- proportions:
+
+  Same shape as `counts`, each column divided by its total.
+
+- levels:
+
+  Character vector of state labels in plotting order, with `"NA"`
+  appended when `na = TRUE`.
+
+- palette:
+
+  Character vector of fill colours, parallel to `levels`.
+
+- groups:
+
+  Character vector of group labels (`"all"` when ungrouped), parallel to
+  `counts` / `proportions`.
 
 ## See also
 

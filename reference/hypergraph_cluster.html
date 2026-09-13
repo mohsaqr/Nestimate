@@ -23,7 +23,7 @@ edge-independent weights the walk collapses to a graph random walk
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -116,7 +116,9 @@ edge-independent weights the walk collapses to a graph random walk
 k-means, dims <code>dim1..dimk</code>), <code>$k</code>, <code>$type</code>, <code>$eigenvalues</code> (full
 Laplacian spectrum, increasing), <code>$eigengap</code> (gap after the k-th
 eigenvalue), <code>$sizes</code> (data.frame <code>cluster</code>/<code>size</code>), <code>$pi</code>
-(stationary distribution) and <code>$params</code>. Has <code>print</code>, <code>summary</code>,
+(named stationary distribution), <code>$n_nodes</code>, <code>$n_hyperedges</code> and
+<code>$params</code> (the <code>edge_weights</code> used, <code>nstart</code>, <code>seed</code>,
+<code>tot_withinss</code>). Has <code>print</code>, <code>summary</code>,
 <code>plot</code> and <code>as.data.frame</code> methods; <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> returns one row
 per node with <code>node</code>, <code>cluster</code>, the stationary probability <code>pi</code>, and
 the embedding coordinates.</p>

@@ -95,8 +95,9 @@ data, from which a relative network is built), the result is that
 network with entropy weights swapped in - `$inits`, `$meta`,
 `$node_groups`, and node coordinates are inherited, so it plots with the
 same TNA styling and layout as its source. `$method` is `"entropy"`.
-`$params` carries `base`, `weight`, `entropy_rate`, and the stationary
-distribution `stationary`.
+`$params` carries `base`, `weight`, `scaling`, `entropy_rate`, and the
+stationary distribution `stationary` (plus `production_rate` and
+`n_oneway_pairs` when `weight = "production"`).
 
 The object also declares the entropy house style through the
 `$meta$splot` producer contract (honoured by cograph \>= 2.4.4): no

@@ -21,8 +21,10 @@ verify_simplicial(mat, threshold = 0)
 
 ## Value
 
-A list with `$cliques_match` (logical), `$n_simplices_ours`,
-`$n_simplices_igraph`, `$betti`, and `$euler`.
+Invisibly, a list with `cliques_match` (logical: do the simplices match
+[`igraph::cliques()`](https://r.igraph.org/reference/cliques.html)
+exactly), `n_simplices_ours`, `n_simplices_igraph`, `betti`, `euler`,
+and `f_vector`. The comparison is also printed to the console.
 
 ## Examples
 

@@ -62,19 +62,29 @@ build_hon(
 
 ## Value
 
-An S3 object of class `"net_hon"` containing:
+An S3 object of class `c("net_hon", "cograph_network")` containing:
 
-- matrix:
+- weights, matrix:
 
-  Weighted adjacency matrix (rows = from, cols = to). Rows and columns
-  use readable arrow notation (e.g., `"A -> B"`).
+  The same weighted adjacency matrix (rows = from, cols = to) under both
+  names; `weights` is the `cograph_network` slot, `matrix` the
+  higher-order name kept for back-compatibility. Rows and columns use
+  readable arrow notation (e.g., `"A -> B"`).
+
+- ho_edges:
+
+  The higher-order edge table: one row per HON edge, with columns `path`
+  (full state sequence, e.g., "A -\> B -\> C"), `from`
+  (context/conditioning states), `to` (predicted next state), `count`
+  (raw frequency), `probability` (transition probability), `from_order`,
+  `to_order`.
 
 - edges:
 
-  Data frame with columns: `path` (full state sequence, e.g., "A -\> B
-  -\> C"), `from` (context/conditioning states), `to` (predicted next
-  state), `count` (raw frequency), `probability` (transition
-  probability), `from_order`, `to_order`.
+  The `cograph_network` edge table: one row per non-zero cell of
+  `weights`, with *integer* `from`/`to` node indices into `nodes` and a
+  numeric `weight`. This is **not** the arrow-notation table - use
+  `ho_edges` for that.
 
 - nodes:
 
@@ -88,7 +98,7 @@ An S3 object of class `"net_hon"` containing:
 
 - n_edges:
 
-  Number of edges.
+  Number of rows in `ho_edges`.
 
 - first_order_states:
 
@@ -113,6 +123,15 @@ An S3 object of class `"net_hon"` containing:
 - directed:
 
   Logical. Always `TRUE`.
+
+- meta:
+
+  `cograph_network` metadata list (`source`, `layout`,
+  `tna$method = "hon"`).
+
+- node_groups:
+
+  Always `NULL`.
 
 ## Details
 

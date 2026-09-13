@@ -219,6 +219,17 @@ An object of class `"net_clustering"` containing:
 
   Lambda value used (0 if not weighted).
 
+- covariates:
+
+  The post-hoc covariate analysis (a list; see the `estimator`
+  argument), or NULL when `covariates = NULL`.
+
+- network_method, build_args:
+
+  For `netobject` input, the source network's method and stored build
+  arguments, so per-cluster networks can be rebuilt the same way. NULL
+  otherwise.
+
 - htna_partition:
 
   For HTNA input, the preserved node-to-actor partition used to restore
@@ -249,23 +260,23 @@ print(cl)
 #> Sequence Clustering [pam]
 #>   Sequences: 20  |  Clusters: 2
 #>   Dissimilarity: hamming
-#>   Quality: silhouette = 0.266
+#>   Quality: silhouette = 0.315
 #> 
 #>   Cluster  N           Mean within-dist  Medoid
-#>   1        9 (45.0%)   2.389             13
-#>   2        11 (55.0%)  2.036             20
+#>   1        9 (45.0%)   2.333             5
+#>   2        11 (55.0%)  2.000             15
 summary(cl)
 #> Sequence Clustering Summary
 #>   Method:        pam 
 #>   Dissimilarity: hamming 
-#>   Silhouette:    0.2659 
+#>   Silhouette:    0.315 
 #> 
 #> Per-cluster statistics:
 #>  cluster size mean_within_dist
-#>        1    9         2.388889
-#>        2   11         2.036364
+#>        1    9         2.333333
+#>        2   11         2.000000
 #>   cluster size mean_within_dist
-#> 1       1    9         2.388889
-#> 2       2   11         2.036364
+#> 1       1    9         2.333333
+#> 2       2   11         2.000000
 # }
 ```

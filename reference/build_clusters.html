@@ -15,7 +15,7 @@ distance computation for 100-1000x speedup on edit distances."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -255,6 +255,15 @@ for hierarchical methods).</p></dd>
 <dt>lambda</dt>
 <dd><p>Lambda value used (0 if not weighted).</p></dd>
 
+<dt>covariates</dt>
+<dd><p>The post-hoc covariate analysis (a list; see the
+<code>estimator</code> argument), or NULL when <code>covariates = NULL</code>.</p></dd>
+
+<dt>network_method, build_args</dt>
+<dd><p>For <code>netobject</code> input, the
+source network's method and stored build arguments, so per-cluster
+networks can be rebuilt the same way. NULL otherwise.</p></dd>
+
 <dt>htna_partition</dt>
 <dd><p>For HTNA input, the preserved node-to-actor
 partition used to restore HTNA children when networks are built.</p></dd>
@@ -286,24 +295,24 @@ partition used to restore HTNA children when networks are built.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sequence Clustering [pam]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sequences: 20  |  Clusters: 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Dissimilarity: hamming</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Quality: silhouette = 0.266</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Quality: silhouette = 0.315</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Cluster  N           Mean within-dist  Medoid</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1        9 (45.0%)   2.389             13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2        11 (55.0%)  2.036             20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1        9 (45.0%)   2.333             5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2        11 (55.0%)  2.000             15</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sequence Clustering Summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method:        pam </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Dissimilarity: hamming </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Silhouette:    0.2659 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Silhouette:    0.315 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-cluster statistics:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  cluster size mean_within_dist</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1    9         2.388889</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        2   11         2.036364</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        1    9         2.333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        2   11         2.000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size mean_within_dist</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1    9         2.388889</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2   11         2.036364</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1    9         2.333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2   11         2.000000</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

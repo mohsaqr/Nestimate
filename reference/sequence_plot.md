@@ -27,6 +27,8 @@ sequence_plot(
   na = TRUE,
   normalize = FALSE,
   trim = NULL,
+  panel = c("both", "summary", "channels"),
+  expand = NULL,
   trim_clusterwise = FALSE,
   row_gap = 0,
   dendrogram_width = 1.2,
@@ -92,7 +94,8 @@ sequence_plot(
 
   :   From
       [`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md).
-      Uses `$models[[1]]$data` and `$assignments`.
+      Uses `$data` (falling back to `$models[[1]]$data`) and
+      `$assignments`.
 
   tna
 
@@ -155,6 +158,25 @@ sequence_plot(
   `>= 1` is an absolute cut (`trim = 50` keeps the first 50 time
   points).
 
+- panel:
+
+  `mcml` + `type = "distribution"` only. Which panel to draw, as a
+  single `ggplot`. `"both"` (default) puts the macro `Summary` channel
+  and the per-cluster channels on one figure sharing a fill scale;
+  `"summary"` draws the macro channel alone, keyed and coloured by
+  cluster; `"channels"` draws the per-cluster channels alone, keyed and
+  coloured by state. The macro channel is keyed by cluster and the rest
+  by state, so on a shared scale a cluster and a state can land on the
+  same colour – drawing one panel avoids that and gives it its own
+  legend and default title.
+
+- expand:
+
+  For an `mcml`, names of clusters whose member states are shown
+  individually in the Summary band; `"all"` or `TRUE` expands every
+  cluster. The per-cluster channels are unaffected. Default `NULL` keys
+  the Summary band by cluster.
+
 - trim_clusterwise:
 
   Grouped `type = "index"` / `"distribution"` only, and only when `trim`
@@ -200,12 +222,12 @@ sequence_plot(
 
 - cell_border:
 
-  Cell border colour. `NA` = off.
+  Cell border colour. `NA` (default) = off.
 
 - frame:
 
-  If `TRUE` (default), draw a box around each panel. If `FALSE`, no
-  box - axis ticks and labels still appear.
+  `FALSE` (default) draws no box - axis ticks and labels still appear.
+  `TRUE` draws a box around each panel.
 
 - width, height:
 
@@ -250,8 +272,8 @@ sequence_plot(
 
 - legend:
 
-  Legend position: `"bottom"`, `"right"`, or `"none"`. Default varies by
-  type.
+  Legend position: `"bottom"`, `"right"`, or `"none"`. `NULL` (default)
+  resolves to `"right"` for every type.
 
 - legend_size:
 
@@ -277,8 +299,28 @@ sequence_plot(
 
 ## Value
 
-For base-graphics types, invisibly a list describing the plot (shape
-depends on `type`). For an `mcml` input, a `ggplot` object.
+An `mcml` input returns a `ggplot` object (the multichannel figure).
+Every other input draws with base graphics and returns, invisibly, a
+list whose shape depends on `type`:
+
+- `"heatmap"`:
+
+  `ord` (integer row order actually plotted), `codes` (the
+  integer-encoded, trimmed sequence matrix), `palette`, `levels` (state
+  labels, parallel to `palette`), and `sort_used` (the ordering strategy
+  applied, `"net_clustering"` when a clustering dendrogram was used).
+
+- `"index"`:
+
+  `codes`, `palette`, `levels`, `orders` (list of integer row orders,
+  one per panel, indexing the original rows) and `groups` (panel
+  labels).
+
+- `"distribution"`:
+
+  Whatever
+  [`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+  returns: `counts`, `proportions`, `levels`, `palette`, `groups`.
 
 ## See also
 

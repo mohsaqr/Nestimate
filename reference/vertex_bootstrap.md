@@ -160,7 +160,7 @@ seqs <- data.frame(
 )
 net <- build_network(seqs, method = "relative")
 vb <- vertex_bootstrap(net, iter = 100, seed = 1)
-vb$summary
+summary(vb)
 #>        statistic  observed boot_mean    boot_sd        bias   ci_lower
 #> 1        density 0.8333333 0.8433333 0.13415153  0.01000000 0.58333333
 #> 2    mean_weight 0.3800000 0.3734656 0.05149123 -0.00653441 0.27899554

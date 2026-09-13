@@ -13,7 +13,7 @@ the mean recurrence time \(1/\pi_i\)."><meta property="og:image" content="https:
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -144,10 +144,16 @@ Diagonal = mean recurrence time \(1/\pi_i\).</p></dd>
 <dd><p>Character vector of state names.</p></dd>
 
 
-</dl><p><code>summary.net_mpt</code> returns a data frame with one row per state
-and columns <code>state</code>, <code>return_time</code>, <code>stationary</code>,
-<code>mean_out</code> (mean steps to other states), <code>mean_in</code> (mean steps
-from other states).</p>
+</dl><p>For a <code>netobject_group</code> the result is a <code>"net_mpt_group"</code>: a
+named list holding one <code>net_mpt</code> per group.</p>
+<p><code>summary.net_mpt</code> returns an object of class
+<code>"summary.net_mpt"</code>: a list whose <code>table</code> is a data frame with
+one row per state and columns <code>state</code>, <code>return_time</code>,
+<code>stationary</code>, <code>mean_out</code> (mean steps to other states) and
+<code>mean_in</code> (mean steps from other states), and whose <code>object</code>
+is the <code>net_mpt</code> it summarises. Its print method shows the table.</p>
+<p><code>plot.net_mpt</code> returns a ggplot object: a from-by-to heatmap
+of the mean first passage time matrix.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

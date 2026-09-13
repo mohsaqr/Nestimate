@@ -80,7 +80,10 @@ build_gimme(
 
 - subcutoff:
 
-  Numeric. Not used (reserved for future subgrouping).
+  Numeric. Not used (reserved for future subgrouping); accepted for API
+  compatibility and *not* forwarded to
+  [`idiographic::fit_gimme()`](https://pak.dynasite.org/idiographic/reference/fit_gimme.html),
+  which does not implement subgrouping either. Default `0.50`.
 
 - paths:
 
@@ -124,7 +127,12 @@ build_gimme(
 
 ## Value
 
-An S3 object of class `"net_gimme"` containing:
+The object returned by
+[`idiographic::fit_gimme()`](https://pak.dynasite.org/idiographic/reference/fit_gimme.html):
+an S3 object of class `c("net_gimme", "cograph_network", "list")`. It is
+a *superset* of the pre-0.9.0 in-package field contract – every element
+below is present, alongside idiographic's own additions (`contemp_cov`,
+`contemp_cov_avg`, `contemp_is_cov`). Elements:
 
 - `temporal`:
 
@@ -192,8 +200,24 @@ An S3 object of class `"net_gimme"` containing:
   List of configuration parameters.
 
 The object additionally carries idiographic's netobject fields
-(`weights`, `nodes`, `edges`, ...) so it renders directly with cograph,
-and dispatches to idiographic's `print`, `summary`, and `plot` methods.
+(`weights`, `nodes`, `edges`, `directed`, `data`, `meta`, `node_groups`)
+so it renders directly with cograph.
+[`print()`](https://rdrr.io/r/base/print.html),
+[`summary()`](https://rdrr.io/r/base/summary.html) and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) dispatch to
+idiographic's methods, not to Nestimate's: in particular
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a tidy
+`data.frame` rather than printing.
+
+## Results changed in 0.9.0
+
+Before 0.9.0 the search ran in an in-package implementation that was
+*not* upstream-gimme-exact. Delegating to
+[`idiographic::fit_gimme()`](https://pak.dynasite.org/idiographic/reference/fit_gimme.html)
+changed which paths the search selects on the same data –
+individual-level paths in particular – so numeric results are not
+comparable with Nestimate \<= 0.8.5. The returned object also gained
+fields (see **Value**); nothing was removed.
 
 ## See also
 

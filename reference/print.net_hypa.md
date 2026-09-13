@@ -27,8 +27,7 @@ The input object, invisibly.
 
 ``` r
 seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
-hyp <- build_hypa(seqs, k = 2)
-#> Warning: 'k' is deprecated; use 'order' instead.
+hyp <- build_hypa(seqs, order = 2)
 print(hyp)
 #> HYPA: Path Anomaly Detection
 #>   Order(s):     2
@@ -44,8 +43,7 @@ seqs <- data.frame(
   V3 = c("C","A","B","C","A","B","C","A","B","C"),
   V4 = c("A","B","C","A","B","C","A","B","C","A")
 )
-hypa <- build_hypa(seqs, k = 2L)
-#> Warning: 'k' is deprecated; use 'order' instead.
+hypa <- build_hypa(seqs, order = 2L)
 print(hypa)
 #> HYPA: Path Anomaly Detection
 #>   Order(s):     2

@@ -31,7 +31,9 @@ plot(x, type = c("posterior", "covariates"), combined = TRUE, ...)
 
 ## Value
 
-A `ggplot` object, invisibly.
+A `ggplot` object, invisibly; for `type = "covariates"` with
+`combined = FALSE`, a list of `ggplot` objects named by cluster
+(invisibly).
 
 ## Examples
 

@@ -24,6 +24,10 @@ build_mcml(
   order = NULL,
   session = NULL,
   time_threshold = 900,
+  exclude = NULL,
+  trim = NULL,
+  end = FALSE,
+  end_by = NULL,
   labels = NULL
 )
 ```
@@ -57,9 +61,9 @@ build_mcml(
       Otherwise falls back to
       [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
 
-  cluster_summary
+  mcml
 
-  :   Returns as-is.
+  :   An `mcml` object is returned unchanged.
 
   square numeric matrix
 
@@ -106,9 +110,10 @@ build_mcml(
 
   NULL
 
-  :   Auto-detect from `netobject$nodes` or `$node_groups` (same logic
-      as
-      [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)).
+  :   Auto-detect from a `netobject`'s node table (a
+      `clusters`/`cluster`/`groups`/`group` column) or from its
+      `node_groups`. Only `netobject` input can auto-detect; data frames
+      and matrices require an explicit assignment.
 
 - method:
 
@@ -166,6 +171,39 @@ build_mcml(
   path. Behaves identically to
   `prepare(...) |> build_network() |> build_mcml()`.
 
+- exclude:
+
+  Optional character vector of state labels to drop before the network
+  is built (e.g. a technical-void marker). On long-format input the
+  matching events are removed before sequences are formed, so a dropped
+  state never occupies a sequence position; on wide sequence input the
+  matching cells are set to `NA`.
+
+- trim:
+
+  Optional truncation of each sequence. `NULL` (default) keeps every
+  time point. A fraction in `(0, 1)` keeps the columns covering that
+  quantile of sequence lengths (`trim = 0.95` keeps the shortest 95\\
+  (`trim = 10` keeps the first 10 time points). Same semantics as
+  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md)'s
+  `trim`.
+
+- end:
+
+  Terminal state appended after each sequence's last observed state.
+  `FALSE` (default) adds none, `TRUE` adds one labelled `"End"`, and a
+  string supplies the label. Applied *after* `trim`, so trimming can
+  never remove the marker.
+
+- end_by:
+
+  Optional column name(s) grouping the terminal marker at a coarser unit
+  than the sequence. `NULL` (default) marks every sequence. When
+  supplied, only the *last* sequence of each group is marked – e.g.
+  `session = "AttemptID", end = "Conclude", end_by = "SkillID"` closes
+  each skill once, not each attempt. Requires long-format input, since
+  the grouping column lives there.
+
 - labels:
 
   Optional name -\> label remap applied to within-cluster nodes (the
@@ -176,18 +214,30 @@ build_mcml(
 
 ## Value
 
-A `cluster_summary` object with `meta$source = "transitions"`, fully
-compatible with
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-[`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md), and
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html).
+An `mcml` object with the same layout as the return value of
+[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
+(`macro`, `clusters`, `cluster_members`, `edges`, `meta`). On the
+sequence and edge-list paths `meta$source` is `"transitions"`,
+`meta$type` records the `type` post-processing, and `edges` is a tidy
+data frame with one row per observed node-level transition and columns
+`from`, `to`, `weight`, `cluster_from`, `cluster_to`, `type`
+(`"within"`/`"between"`). Matrix input falls through to
+[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md),
+so `meta$source` is `"matrix"` and `edges` is `NULL`. Works with
+[`print()`](https://rdrr.io/r/base/print.html),
+[`summary()`](https://rdrr.io/r/base/summary.html),
+[`as_tna`](https://saqr.me/Nestimate/reference/as_tna.md),
+[`as_htna`](https://saqr.me/Nestimate/reference/as_htna.md) and
+[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md).
 
 ## See also
 
 [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
-for matrix-based aggregation, `net_as_tna()` to convert to tna objects,
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
-visualization
+for matrix-based aggregation,
+[`as_tna`](https://saqr.me/Nestimate/reference/as_tna.md) to promote the
+layers to netobjects,
+[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)
+for the cluster-level network with one cluster expanded
 
 ## Examples
 
@@ -199,11 +249,22 @@ edges <- data.frame(
   weight = c(1, 2, 1, 3, 1, 2)
 )
 clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
-cs <- build_mcml(edges, clusters)
-cs$macro$weights
-#>           G1        G2
-#> G1 0.5000000 0.5000000
-#> G2 0.3333333 0.6666667
+build_mcml(edges, clusters)
+#> MCML Network
+#> ============
+#> Type: tna  | Method: sum 
+#> Nodes: 4  | Clusters: 2 
+#> Transitions: 6 
+#>   Macro: 2  | Per-cluster: 4 
+#> 
+#> Clusters:
+#>   G1 (2): A, B
+#>   G2 (2): C, D
+#> 
+#> Macro (cluster-level) weights:
+#>        G1     G2
+#> G1 0.5000 0.5000
+#> G2 0.3333 0.6667
 
 # Sequence data with clusters
 seqs <- data.frame(
@@ -213,8 +274,24 @@ seqs <- data.frame(
   T4 = c("D", "A", "C")
 )
 cs <- build_mcml(seqs, clusters, type = "raw")
-cs$macro$weights
+cs
+#> MCML Network
+#> ============
+#> Type: raw  | Method: sum 
+#> Nodes: 4  | Clusters: 2 
+#> Transitions: 9 
+#>   Macro: 3  | Per-cluster: 6 
+#> 
+#> Clusters:
+#>   G1 (2): A, B
+#>   G2 (2): C, D
+#> 
+#> Macro (cluster-level) weights:
 #>    G1 G2
 #> G1  2  2
 #> G2  1  4
+summary(cs)
+#>   cluster size within_total between_out between_in
+#> 1      G1    2            2           2          1
+#> 2      G2    2            4           1          2
 ```

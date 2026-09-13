@@ -6,7 +6,13 @@ Coerce a net_hypergraph_transduction to a data.frame
 
 ``` r
 # S3 method for class 'net_hypergraph_transduction'
-as.data.frame(x, what = c("predictions", "scores"), ...)
+as.data.frame(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  what = c("predictions", "scores"),
+  ...
+)
 ```
 
 ## Arguments
@@ -14,6 +20,17 @@ as.data.frame(x, what = c("predictions", "scores"), ...)
 - x:
 
   A `net_hypergraph_transduction` object.
+
+- row.names:
+
+  `NULL` (default) or a character vector of row names for the returned
+  data frame.
+
+- optional:
+
+  Ignored; present so the method matches the signature of the
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
+  generic.
 
 - what:
 
@@ -27,4 +44,7 @@ as.data.frame(x, what = c("predictions", "scores"), ...)
 
 ## Value
 
-A data.frame as selected by `what`.
+A data.frame selected by `what`: for `"predictions"`, one row per node
+with columns `node`, `label` (the given label, `NA` if unlabeled),
+`predicted`, `score` and `margin`; for `"scores"`, one row per node x
+class with columns `node`, `class` and `score`.

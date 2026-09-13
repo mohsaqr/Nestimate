@@ -37,7 +37,7 @@ testing.'><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,7 +114,10 @@ testing.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>netobject</code> from <code><a href="build_network.html">build_network</a></code>.
 The data, method, params, scaling, threshold, and level are all
-extracted from this object.</p></dd>
+extracted from this object. A <code>cograph_network</code> is coerced
+first; a <code>netobject_group</code> or <code>mcml</code> bootstraps every
+constituent network, and a <code>wtna_mixed</code> bootstraps both of its
+components (see <strong>Value</strong>).</p></dd>
 
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
@@ -196,19 +199,29 @@ transition probabilities close to 0).</p></dd>
 <dd><p>Consistency range upper bound (stability only).</p></dd>
 
 <dt>summary</dt>
-<dd><p>Long-format data frame of edge-level statistics.</p></dd>
+<dd><p>Long-format data frame, one row per non-zero original
+edge (undirected networks keep one row per unordered pair), with
+columns <code>from</code>, <code>to</code>, <code>weight</code>, <code>mean</code>,
+<code>sd</code>, <code>p_value</code>, <code>sig</code>, <code>ci_lower</code>,
+<code>ci_upper</code>, plus <code>cr_lower</code> and <code>cr_upper</code> when
+<code>inference = "stability"</code>.</p></dd>
 
 <dt>model</dt>
 <dd><p>Pruned <code>netobject</code> (non-significant edges zeroed).</p></dd>
 
-<dt>method, params, iter, ci_level, inference</dt>
-<dd><p>Bootstrap config.</p></dd>
+<dt>method, params, iter, ci_level, inference, ci_method</dt>
+<dd><p>Bootstrap
+config.</p></dd>
 
 <dt>consistency_range, edge_threshold</dt>
 <dd><p>Inference parameters.</p></dd>
 
 
-</dl></div>
+</dl><p>A <code>netobject_group</code> or <code>mcml</code> input returns a
+<code>"net_bootstrap_group"</code> (named list of <code>net_bootstrap</code>
+results); a <code>wtna_mixed</code> input returns a <code>"wtna_boot_mixed"</code>
+with <code>$transition</code> and <code>$cooccurrence</code> results.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="certainty.html">certainty</a></code> for the closed-form Bayesian counterpart
@@ -223,6 +236,7 @@ transition probabilities close to 0).</p></dd>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu">bootstrap_network</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>, V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>, V4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -235,40 +249,40 @@ transition probabilities close to 0).</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edges      : 0 significant / 16 total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    from to    weight       mean         sd   p_value   sig   ci_lower  ci_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     A  A 0.2380952 0.22549744 0.10350003 0.5742574 FALSE 0.00000000 0.4091452</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     A  B 0.2380952 0.24114731 0.09590287 0.5049505 FALSE 0.10000000 0.4523864</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     A  C 0.1904762 0.19542089 0.08640450 0.5940594 FALSE 0.04449405 0.3481731</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     A  D 0.3333333 0.33793436 0.11154625 0.5247525 FALSE 0.15230179 0.5402206</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     B  A 0.1304348 0.13866145 0.07187177 0.6336634 FALSE 0.04252717 0.3107143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     B  B 0.1739130 0.16900511 0.06392779 0.5544554 FALSE 0.02065217 0.2663462</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7     B  C 0.3043478 0.30361963 0.09915202 0.4752475 FALSE 0.11764368 0.5000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8     B  D 0.3913043 0.38871381 0.11498719 0.4158416 FALSE 0.17010870 0.5724256</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9     C  A 0.2105263 0.22757228 0.11419320 0.7227723 FALSE 0.02159091 0.4735294</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10    C  B 0.1052632 0.09744051 0.05974522 0.6633663 FALSE 0.00000000 0.2000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11    C  C 0.2631579 0.25532349 0.09327931 0.4455446 FALSE 0.06153846 0.4362092</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12    C  D 0.4210526 0.41966372 0.10250544 0.3366337 FALSE 0.23424908 0.6133547</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13    D  A 0.2962963 0.30959223 0.08589135 0.4059406 FALSE 0.15967433 0.4642308</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14    D  B 0.2592593 0.25870020 0.07826515 0.3960396 FALSE 0.12691532 0.4136798</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15    D  C 0.2592593 0.26226022 0.08068165 0.3663366 FALSE 0.12895833 0.4268519</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16    D  D 0.1851852 0.16944736 0.07886852 0.5544554 FALSE 0.03771368 0.3337131</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to    weight      mean         sd   p_value   sig   ci_lower  ci_upper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     A  A 0.1304348 0.1274665 0.08074773 0.6831683 FALSE 0.00000000 0.3022826</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     A  B 0.3043478 0.2997861 0.08278592 0.3663366 FALSE 0.14284091 0.4582168</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     A  C 0.1304348 0.1418228 0.07482973 0.6732673 FALSE 0.00000000 0.3000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     A  D 0.4347826 0.4309246 0.11390253 0.3267327 FALSE 0.24720280 0.6570000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     B  A 0.1724138 0.1737516 0.06474250 0.5346535 FALSE 0.07821429 0.3180000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     B  B 0.4137931 0.4205944 0.09336440 0.2970297 FALSE 0.23541667 0.5884848</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     B  C 0.2068966 0.2050824 0.07346017 0.4752475 FALSE 0.06981818 0.3420833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     B  D 0.2068966 0.2005716 0.08216875 0.5049505 FALSE 0.05967023 0.3751667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     C  A 0.4000000 0.3857941 0.10757329 0.3861386 FALSE 0.17766798 0.6044118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    C  B 0.2000000 0.1884783 0.09391798 0.6534653 FALSE 0.04761905 0.3828755</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    C  C 0.1500000 0.1571277 0.07338105 0.6039604 FALSE 0.00000000 0.2994885</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    C  D 0.2500000 0.2686000 0.09868840 0.5544554 FALSE 0.10360963 0.4642308</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    D  A 0.1666667 0.1651025 0.08394913 0.6336634 FALSE 0.02261905 0.3436275</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    D  B 0.2222222 0.2362980 0.11192342 0.6930693 FALSE 0.00000000 0.4332589</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    D  C 0.4444444 0.4507200 0.14203236 0.3861386 FALSE 0.18312325 0.7498039</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16    D  D 0.1666667 0.1478795 0.11004755 0.8118812 FALSE 0.00000000 0.3750000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      cr_lower  cr_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.17857143 0.2976190</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.17857143 0.2976190</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.14285714 0.2380952</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.25000000 0.4166667</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.09782609 0.1630435</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.13043478 0.2173913</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  0.22826087 0.3804348</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  0.29347826 0.4891304</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  0.15789474 0.2631579</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 0.07894737 0.1315789</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 0.19736842 0.3289474</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12 0.31578947 0.5263158</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 0.22222222 0.3703704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14 0.19444444 0.3240741</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15 0.19444444 0.3240741</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16 0.13888889 0.2314815</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.09782609 0.1630435</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.22826087 0.3804348</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.09782609 0.1630435</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.32608696 0.5434783</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.12931034 0.2155172</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.31034483 0.5172414</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  0.15517241 0.2586207</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  0.15517241 0.2586207</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  0.30000000 0.5000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 0.15000000 0.2500000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 0.11250000 0.1875000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12 0.18750000 0.3125000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13 0.12500000 0.2083333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14 0.16666667 0.2777778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15 0.33333333 0.5555556</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16 0.12500000 0.2083333</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

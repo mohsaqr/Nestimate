@@ -118,7 +118,7 @@ s2 <- data.frame(
 net1 <- build_network(s1, method = "relative")
 net2 <- build_network(s2, method = "relative")
 cmp <- vertex_compare(net1, net2, iter = 100, seed = 1)
-cmp$summary
+summary(cmp)
 #>        statistic observed_x observed_y        diff    se_diff          z
 #> 1        density  0.5000000  0.5833333 -0.08333333 0.25478584 -0.3270721
 #> 2    mean_weight  0.5000000  0.5714286 -0.07142857 0.09622256 -0.7423267

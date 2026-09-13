@@ -17,7 +17,7 @@ summary(), plot(), net_centrality)."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,10 +126,22 @@ into a group rather than re-wrapping matrices.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   macro  2      1      [0.028, 0.028]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   A      3      3      [-0.026, 0.068]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   B      3      3      [-0.070, 0.038]</span>
-<span class="r-in"><span><span class="va">nets</span><span class="op">$</span><span class="va">macro</span><span class="op">$</span><span class="va">weights</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            A          B</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> A 0.00000000 0.02847388</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> B 0.02847388 0.00000000</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">nets</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Network metrics by group:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       metric   macro       A       B</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Node Count       2       3       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Edge Count       2       2       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Network Density       1  0.6667  0.6667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Mean Distance 0.02847 0.06817 0.03813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Out-Strength 0.02847 0.07709 0.07688</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              SD Out-Strength       0 0.02578 0.03159</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Mean In-Strength 0.02847 0.07709 0.07688</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               SD In-Strength       0 0.02578 0.03159</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Mean Out-Degree       1       2       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                SD Out-Degree       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Centralization (Out-Degree)       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Centralization (In-Degree)       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  Reciprocity       1       1       1</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

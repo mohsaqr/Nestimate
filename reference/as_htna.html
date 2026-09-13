@@ -19,7 +19,7 @@ mcml only retains in aggregate."><meta property="og:image" content="https://saqr
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,8 +86,9 @@ mcml only retains in aggregate.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>Data accepted by <code><a href="build_network.html">build_network</a></code> (sequence data frame,
 edgelist, transition matrix, <code>netobject</code>, or <code>tna</code>); or an
-<code>mcml</code> object, in which case the original <code>data</code> must also be
-supplied and the mcml provides the node-cluster membership; or a fitted
+<code>mcml</code> object, which provides the node-cluster membership and, when
+it was built from wide sequence data, the retained source as well (see
+<code>data</code>); or a fitted
 <code>net_mmm</code> object, which is materialized into one HTNA per sequence
 cluster using its preserved actor partition.</p></dd>
 
@@ -110,11 +111,12 @@ and <code>x</code> carries node groups (or is an <code>mcml</code>), those are u
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>For the <code>mcml</code> method, the original data the mcml was built
-from (sequence/edgelist/etc.). Optional when the mcml was built from
-sequence/edgelist data: <code><a href="build_mcml.html">build_mcml()</a></code> stashes that source (and the
-<code>actor</code>/<code>action</code>/<code>time</code> roles), so <code>as_htna(mcml)</code>
-works on its own. Required for an mcml built from a matrix/aggregate,
-which retains no node-level data.</p></dd>
+from (sequence/edgelist/etc.). Optional when the mcml was built from wide
+sequence data (long-format input counts, since <code><a href="build_mcml.html">build_mcml()</a></code> widens
+it first): that source is stashed on the object, so
+<code>as_htna(mcml)</code> works on its own. Required for an mcml built from a
+matrix, an aggregate, or an edge list, none of which retain a usable
+node-level source.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -158,8 +160,26 @@ and plots directly as a grouped network with cograph:
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>C1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>, C2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span>, C3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"E"</span>, <span class="st">"F"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu">as_htna</span><span class="op">(</span><span class="va">seqs</span>, <span class="va">clusters</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">net</span><span class="op">$</span><span class="va">nodes</span><span class="op">$</span><span class="va">cluster</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "C1" "C1" "C2" "C2" "C3" "C3"</span>
+<span class="r-in"><span><span class="va">net</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transition Network (relative probabilities) [directed]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Weights: [0.500, 1.000]  |  mean: 0.750</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Weight matrix:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       A   B   C   D E F</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A 0.0 0.5 0.0 0.5 0 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B 0.5 0.0 0.5 0.0 0 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   C 0.0 0.0 0.0 1.0 0 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   D 1.0 0.0 0.0 0.0 0 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   E 0.0 0.0 0.0 0.0 0 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   F 0.0 0.0 0.0 0.0 1 0 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Initial probabilities:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A             0.250  ████████████████████████████████████████</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B             0.250  ████████████████████████████████████████</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   C             0.250  ████████████████████████████████████████</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   E             0.250  ████████████████████████████████████████</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   D             0.000  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   F             0.000  </span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">cograph</span><span class="fu">::</span><span class="fu"><a href="https://sonsoles.me/cograph/reference/plot_htna.html" class="external-link">plot_htna</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>

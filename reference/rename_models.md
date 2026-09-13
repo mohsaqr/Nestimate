@@ -33,16 +33,18 @@ rename_models(x, new_names)
 
 ## Value
 
-A `netobject_group` of the same class with renamed members.
+A `netobject_group` of the same class and length as `x`, with
+[`names()`](https://rdrr.io/r/base/names.html) replaced by `new_names`.
+The constituent networks are returned unchanged.
 
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-  d   <- tna::group_regulation
-  grp <- build_network(d, method = "tna",
-                       group = sample(c("a", "b"), nrow(d), TRUE))
-  grp <- rename_models(grp, c("High", "Low"))
-  names(grp)
-} # }
+grp <- build_network(group_regulation_long, method = "tna",
+                     actor = "Actor", action = "Action", time = "Time",
+                     group = "Achiever")
+names(grp)
+#> [1] "High" "Low" 
+names(rename_models(grp, c("High achievers", "Low achievers")))
+#> [1] "High achievers" "Low achievers" 
 ```

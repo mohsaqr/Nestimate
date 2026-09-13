@@ -17,7 +17,7 @@ provides significantly different transition distributions."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -115,16 +115,26 @@ building).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An S3 object of class <code>"net_hon"</code> containing:</p><dl><dt>matrix</dt>
-<dd><p>Weighted adjacency matrix (rows = from, cols = to).
-Rows and columns use readable arrow notation (e.g., <code>"A -&gt; B"</code>).</p></dd>
+    <p>An S3 object of class
+<code>c("net_hon", "cograph_network")</code> containing:</p><dl><dt>weights, matrix</dt>
+<dd><p>The same weighted adjacency matrix (rows = from,
+cols = to) under both names; <code>weights</code> is the
+<code>cograph_network</code> slot, <code>matrix</code> the higher-order name kept
+for back-compatibility. Rows and columns use readable arrow notation
+(e.g., <code>"A -&gt; B"</code>).</p></dd>
+
+<dt>ho_edges</dt>
+<dd><p>The higher-order edge table: one row per HON edge, with
+columns <code>path</code> (full state sequence, e.g., "A -&gt; B -&gt; C"),
+<code>from</code> (context/conditioning states), <code>to</code> (predicted next
+state), <code>count</code> (raw frequency), <code>probability</code> (transition
+probability), <code>from_order</code>, <code>to_order</code>.</p></dd>
 
 <dt>edges</dt>
-<dd><p>Data frame with columns: <code>path</code> (full state sequence,
-e.g., "A -&gt; B -&gt; C"), <code>from</code> (context/conditioning states),
-<code>to</code> (predicted next state), <code>count</code> (raw frequency),
-<code>probability</code> (transition probability), <code>from_order</code>,
-<code>to_order</code>.</p></dd>
+<dd><p>The <code>cograph_network</code> edge table: one row per non-zero
+cell of <code>weights</code>, with <em>integer</em> <code>from</code>/<code>to</code> node
+indices into <code>nodes</code> and a numeric <code>weight</code>. This is
+<strong>not</strong> the arrow-notation table - use <code>ho_edges</code> for that.</p></dd>
 
 <dt>nodes</dt>
 <dd><p>data.frame with columns <code>id</code>, <code>label</code>,
@@ -136,7 +146,7 @@ arrow-notation node names). Stored as a data.frame for
 <dd><p>Number of HON nodes.</p></dd>
 
 <dt>n_edges</dt>
-<dd><p>Number of edges.</p></dd>
+<dd><p>Number of rows in <code>ho_edges</code>.</p></dd>
 
 <dt>first_order_states</dt>
 <dd><p>Character vector of unique original states.</p></dd>
@@ -155,6 +165,13 @@ arrow-notation node names). Stored as a data.frame for
 
 <dt>directed</dt>
 <dd><p>Logical. Always <code>TRUE</code>.</p></dd>
+
+<dt>meta</dt>
+<dd><p><code>cograph_network</code> metadata list
+(<code>source</code>, <code>layout</code>, <code>tna$method = "hon"</code>).</p></dd>
+
+<dt>node_groups</dt>
+<dd><p>Always <code>NULL</code>.</p></dd>
 
 
 </dl></div>

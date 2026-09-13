@@ -38,8 +38,10 @@ boot_glasso(
 
 - cs_iter:
 
-  Integer. Number of case-dropping iterations per drop proportion
-  (default: 500).
+  Integer. Total number of case-dropping iterations (default: 500).
+  Following bootnet, each iteration draws one drop proportion at random
+  from `cs_drop`, so the iterations are spread across the proportions
+  rather than repeated `cs_iter` times at each one.
 
 - cs_drop:
 
@@ -139,12 +141,15 @@ An object of class `"boot_glasso"` containing:
 
 - cs_data:
 
-  Data frame of case-dropping correlations (drop_prop, measure,
-  correlation).
+  Data frame of case-dropping results, one row per drop proportion by
+  measure, with columns `drop_prop`, `measure`, `mean_cor`, `prop_above`
+  (fraction of that proportion's iterations correlating above 0.7) and
+  `n_samples` (iterations that landed on that proportion).
 
 - edge_diff_p:
 
-  Symmetric matrix of pairwise edge difference p-values.
+  Symmetric matrix of pairwise edge difference p-values; `NULL` when the
+  network has more than 500 edges.
 
 - centrality_diff_p:
 
@@ -221,6 +226,15 @@ An object of class `"boot_glasso"` containing:
 - timing:
 
   Named numeric vector with timing in seconds.
+
+## References
+
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
+psychological networks and their accuracy: A tutorial paper. *Behavior
+Research Methods* 50(1), 195-212.
+[doi:10.3758/s13428-017-0862-1](https://doi.org/10.3758/s13428-017-0862-1)
+(source of the CS-coefficient and of the case-dropping, edge-difference
+and centrality-difference procedures reproduced here.)
 
 ## See also
 

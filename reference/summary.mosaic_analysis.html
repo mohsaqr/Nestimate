@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,8 +67,11 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The tidy per-cell <code>counts</code> data.frame, with the <code>stats</code>
-row attached as an attribute.</p>
+    <p>The tidy per-cell <code>data.frame</code>: one row per (var1, var2)
+cell, with the two variable columns (named after <code>var1</code> /
+<code>var2</code>) plus <code>observed</code>, <code>expected</code>, <code>residual</code> and
+<code>pct</code>. The one-row test summary is attached as the <code>"stats"</code>
+attribute.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

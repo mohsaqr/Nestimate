@@ -66,16 +66,25 @@ An object of class `"net_association_rules"` containing:
 
 - rules:
 
-  Data frame with columns: antecedent (list), consequent (list),
-  support, confidence, lift, conviction, count, n_transactions.
+  Tidy data frame, one row per rule, ordered by descending lift then
+  confidence, with columns `antecedent` and `consequent` (the itemsets
+  as comma-separated character strings), `support`, `confidence`,
+  `lift`, `conviction`, `count` and `n_transactions`.
+
+- frequent:
+
+  Tidy data frame, one row per frequent itemset, with columns `itemset`,
+  `size`, `support` and `count`.
 
 - frequent_itemsets:
 
-  List of frequent itemsets per level k.
+  List of frequent itemsets per level k, each entry a list of `items` /
+  `count` / `support`.
 
 - items:
 
-  Character vector of all items.
+  Character vector of the frequent 1-itemsets the mining ran on (all
+  items when no item clears `min_support`).
 
 - n_transactions:
 
@@ -124,6 +133,10 @@ efficiency at k \>= 4.
 
 Agrawal, R. & Srikant, R. (1994). Fast algorithms for mining association
 rules. In *Proc. 20th VLDB Conference*, 487–499.
+
+Brin, S., Motwani, R., Ullman, J. D. & Tsur, S. (1997). Dynamic itemset
+counting and implication rules for market basket data. In *Proc. ACM
+SIGMOD*, 255–264. (lift and conviction)
 
 ## See also
 

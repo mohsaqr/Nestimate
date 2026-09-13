@@ -33,7 +33,7 @@ iterations. Dashed horizontal line marks the stability threshold
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -203,15 +203,39 @@ list of four single-panel ggplots, one per metric.</p></dd>
 which the edge-vector correlation remains &gt;= <code>threshold</code> in at
 least <code>certainty</code> of iterations. Zero if no proportion qualifies.</p></dd>
 
+<dt><code>summary</code></dt>
+<dd><p>Tidy data frame, one row per metric by drop
+proportion, with columns <code>metric</code> (<code>"mean_abs_dev"</code>,
+<code>"median_abs_dev"</code>, <code>"correlation"</code>, <code>"max_abs_dev"</code>),
+<code>drop_prop</code>, <code>mean</code>, <code>sd</code>, <code>median</code>, <code>mad</code>, <code>q025</code>, <code>q975</code>.</p></dd>
+
+<dt><code>metrics</code></dt>
+<dd><p>Named list of four <code>iter</code> x <code>length(drop_prop)</code>
+matrices, one per metric, holding the raw per-iteration values.</p></dd>
+
 <dt><code>correlations</code></dt>
 <dd><p><code>iter</code> x <code>length(drop_prop)</code> matrix of per-
-iteration correlations.</p></dd>
+iteration correlations (the <code>correlation</code> entry of <code>metrics</code>).</p></dd>
 
-<dt><code>drop_prop</code>, <code>threshold</code>, <code>certainty</code>, <code>iter</code>, <code>method</code></dt>
+<dt><code>drop_prop</code>, <code>threshold</code>, <code>certainty</code>, <code>iter</code>, <code>method</code>,
+<code>include_diag</code></dt>
 <dd><p>Inputs.</p></dd>
 
+<dt><code>n_cases</code></dt>
+<dd><p>Number of cases resampled from (sequences for
+transition methods, rows of <code>$data</code> otherwise).</p></dd>
 
-</dl><p>The input <code>x</code> invisibly.</p>
+<dt><code>n_edges</code></dt>
+<dd><p>Length of the edge vector assessed.</p></dd>
+
+
+</dl><p>A <code>netobject_group</code> or <code>mcml</code> input instead returns a
+<code>net_casedrop_reliability_group</code>: a named list of one result per
+constituent network.</p>
+<p>When the original edge vector has zero variance a warning is issued and
+the object is returned with <code>cs = 0</code>, an empty <code>summary</code>, and all-<code>NA</code>
+metric matrices.</p>
+<p>The input <code>x</code> invisibly.</p>
 <p>A tidy data frame with columns <code>metric</code>, <code>drop_prop</code>,
 <code>mean</code>, <code>sd</code> summarising edge-weight stability across
 case-dropping iterations.</p>
@@ -256,7 +280,8 @@ psychological networks and their accuracy: A tutorial paper.
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -274,10 +299,10 @@ psychological networks and their accuracy: A tutorial paper.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model-level reliability across iterations (mean +/- sd per drop):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   drop_prop      p=0.1        p=0.3        p=0.5      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   mean|diff|      0.027+- 0.006   0.060+- 0.013   0.094+- 0.022</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   MAD             0.021+- 0.008   0.051+- 0.016   0.078+- 0.018</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   cor             0.921+- 0.035   0.787+- 0.109   0.674+- 0.190</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   max|diff|       0.076+- 0.023   0.159+- 0.046   0.250+- 0.070</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mean|diff|      0.028+- 0.007   0.062+- 0.014   0.095+- 0.018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MAD             0.021+- 0.008   0.052+- 0.014   0.085+- 0.023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   cor             0.927+- 0.045   0.820+- 0.078   0.688+- 0.161</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   max|diff|       0.081+- 0.023   0.160+- 0.051   0.241+- 0.056</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

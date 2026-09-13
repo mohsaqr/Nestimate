@@ -11,7 +11,7 @@ matrix. Sequences are probabilistically assigned to components."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,8 +74,10 @@ matrix. Sequences are probabilistically assigned to components.</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>A data.frame (wide format), <code>netobject</code>, or
-<code>tna</code> model. For tna objects, extracts the stored data.</p></dd>
+<dd><p>A data.frame (wide format), <code>netobject</code>,
+<code>cograph_network</code>, or <code>tna</code> model. For tna and
+cograph_network objects the stored (integer-encoded) data is
+extracted and decoded to state labels.</p></dd>
 
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
@@ -168,13 +170,36 @@ component transition matrix.</p></dd>
 <dt>quality</dt>
 <dd><p>List: <code>avepp</code> (per-class), <code>avepp_overall</code>,
 <code>entropy</code>, <code>relative_entropy</code>,
-<code>classification_error</code>.</p></dd>
+<code>classification_error</code>, <code>class_entropy</code>.</p></dd>
 
 <dt>log_likelihood, BIC, AIC, ICL</dt>
 <dd><p>Model fit statistics.</p></dd>
 
+<dt>n_params</dt>
+<dd><p>Number of free parameters behind BIC/AIC/ICL. With
+<code>covariate_effect = "em"</code> it grows by <code>(k - 1) * p</code> for
+<code>p</code> covariate columns.</p></dd>
+
+<dt>iterations, converged</dt>
+<dd><p>EM iterations used by the retained fit
+and whether it met <code>tol</code>.</p></dd>
+
 <dt>states</dt>
 <dd><p>Character vector of state names.</p></dd>
+
+<dt>n_sequences</dt>
+<dd><p>Number of sequences actually fitted (rows with
+missing covariates are dropped under
+<code>covariate_effect = "em"</code>).</p></dd>
+
+<dt>covariates</dt>
+<dd><p>The post-hoc covariate analysis (list), or NULL
+when <code>covariates = NULL</code>.</p></dd>
+
+<dt>network_method, build_args, htna_partition</dt>
+<dd><p>Provenance kept
+from <code>netobject</code> / HTNA input so per-cluster networks can be
+rebuilt the same way; NULL otherwise.</p></dd>
 
 
 </dl></div>
@@ -211,13 +236,12 @@ state.</p>
 <span class="r-in"><span><span class="va">mmm</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Mixed Markov Model</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sequences: 30  |  Clusters: 2  |  States: 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ICs: LL = -62.784  |  BIC = 183.388  |  AIC = 159.567  |  ICL = 185.413</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Quality: AvePP = 0.967  |  Entropy = 0.191  |  Class.Err = 0.0%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Status: did not converge in 10 iterations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ICs: LL = -62.330  |  BIC = 182.480  |  AIC = 158.659  |  ICL = 184.652</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Quality: AvePP = 0.965  |  Entropy = 0.212  |  Class.Err = 0.0%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Cluster  N           Mix%   AvePP</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1        28 (93.3%)  91.6%  0.973</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2        2 ( 6.7%)    8.4%  0.888</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1        24 (80.0%)  78.1%  0.966</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2        6 (20.0%)   21.9%  0.961</span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>, V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>

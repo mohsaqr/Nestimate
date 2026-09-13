@@ -44,7 +44,9 @@ bootstrap_network(
   A `netobject` from
   [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
   The data, method, params, scaling, threshold, and level are all
-  extracted from this object.
+  extracted from this object. A `cograph_network` is coerced first; a
+  `netobject_group` or `mcml` bootstraps every constituent network, and
+  a `wtna_mixed` bootstraps both of its components (see **Value**).
 
 - iter:
 
@@ -136,19 +138,26 @@ An object of class `"net_bootstrap"` containing:
 
 - summary:
 
-  Long-format data frame of edge-level statistics.
+  Long-format data frame, one row per non-zero original edge (undirected
+  networks keep one row per unordered pair), with columns `from`, `to`,
+  `weight`, `mean`, `sd`, `p_value`, `sig`, `ci_lower`, `ci_upper`, plus
+  `cr_lower` and `cr_upper` when `inference = "stability"`.
 
 - model:
 
   Pruned `netobject` (non-significant edges zeroed).
 
-- method, params, iter, ci_level, inference:
+- method, params, iter, ci_level, inference, ci_method:
 
   Bootstrap config.
 
 - consistency_range, edge_threshold:
 
   Inference parameters.
+
+A `netobject_group` or `mcml` input returns a `"net_bootstrap_group"`
+(named list of `net_bootstrap` results); a `wtna_mixed` input returns a
+`"wtna_boot_mixed"` with `$transition` and `$cooccurrence` results.
 
 ## See also
 
@@ -165,6 +174,7 @@ net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
   method = "relative")
 boot <- bootstrap_network(net, iter = 10)
 # \donttest{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
@@ -177,39 +187,39 @@ print(boot)
 #>   Edges      : 0 significant / 16 total
 #>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 summary(boot)
-#>    from to    weight       mean         sd   p_value   sig   ci_lower  ci_upper
-#> 1     A  A 0.2380952 0.22549744 0.10350003 0.5742574 FALSE 0.00000000 0.4091452
-#> 2     A  B 0.2380952 0.24114731 0.09590287 0.5049505 FALSE 0.10000000 0.4523864
-#> 3     A  C 0.1904762 0.19542089 0.08640450 0.5940594 FALSE 0.04449405 0.3481731
-#> 4     A  D 0.3333333 0.33793436 0.11154625 0.5247525 FALSE 0.15230179 0.5402206
-#> 5     B  A 0.1304348 0.13866145 0.07187177 0.6336634 FALSE 0.04252717 0.3107143
-#> 6     B  B 0.1739130 0.16900511 0.06392779 0.5544554 FALSE 0.02065217 0.2663462
-#> 7     B  C 0.3043478 0.30361963 0.09915202 0.4752475 FALSE 0.11764368 0.5000000
-#> 8     B  D 0.3913043 0.38871381 0.11498719 0.4158416 FALSE 0.17010870 0.5724256
-#> 9     C  A 0.2105263 0.22757228 0.11419320 0.7227723 FALSE 0.02159091 0.4735294
-#> 10    C  B 0.1052632 0.09744051 0.05974522 0.6633663 FALSE 0.00000000 0.2000000
-#> 11    C  C 0.2631579 0.25532349 0.09327931 0.4455446 FALSE 0.06153846 0.4362092
-#> 12    C  D 0.4210526 0.41966372 0.10250544 0.3366337 FALSE 0.23424908 0.6133547
-#> 13    D  A 0.2962963 0.30959223 0.08589135 0.4059406 FALSE 0.15967433 0.4642308
-#> 14    D  B 0.2592593 0.25870020 0.07826515 0.3960396 FALSE 0.12691532 0.4136798
-#> 15    D  C 0.2592593 0.26226022 0.08068165 0.3663366 FALSE 0.12895833 0.4268519
-#> 16    D  D 0.1851852 0.16944736 0.07886852 0.5544554 FALSE 0.03771368 0.3337131
+#>    from to    weight      mean         sd   p_value   sig   ci_lower  ci_upper
+#> 1     A  A 0.1304348 0.1274665 0.08074773 0.6831683 FALSE 0.00000000 0.3022826
+#> 2     A  B 0.3043478 0.2997861 0.08278592 0.3663366 FALSE 0.14284091 0.4582168
+#> 3     A  C 0.1304348 0.1418228 0.07482973 0.6732673 FALSE 0.00000000 0.3000000
+#> 4     A  D 0.4347826 0.4309246 0.11390253 0.3267327 FALSE 0.24720280 0.6570000
+#> 5     B  A 0.1724138 0.1737516 0.06474250 0.5346535 FALSE 0.07821429 0.3180000
+#> 6     B  B 0.4137931 0.4205944 0.09336440 0.2970297 FALSE 0.23541667 0.5884848
+#> 7     B  C 0.2068966 0.2050824 0.07346017 0.4752475 FALSE 0.06981818 0.3420833
+#> 8     B  D 0.2068966 0.2005716 0.08216875 0.5049505 FALSE 0.05967023 0.3751667
+#> 9     C  A 0.4000000 0.3857941 0.10757329 0.3861386 FALSE 0.17766798 0.6044118
+#> 10    C  B 0.2000000 0.1884783 0.09391798 0.6534653 FALSE 0.04761905 0.3828755
+#> 11    C  C 0.1500000 0.1571277 0.07338105 0.6039604 FALSE 0.00000000 0.2994885
+#> 12    C  D 0.2500000 0.2686000 0.09868840 0.5544554 FALSE 0.10360963 0.4642308
+#> 13    D  A 0.1666667 0.1651025 0.08394913 0.6336634 FALSE 0.02261905 0.3436275
+#> 14    D  B 0.2222222 0.2362980 0.11192342 0.6930693 FALSE 0.00000000 0.4332589
+#> 15    D  C 0.4444444 0.4507200 0.14203236 0.3861386 FALSE 0.18312325 0.7498039
+#> 16    D  D 0.1666667 0.1478795 0.11004755 0.8118812 FALSE 0.00000000 0.3750000
 #>      cr_lower  cr_upper
-#> 1  0.17857143 0.2976190
-#> 2  0.17857143 0.2976190
-#> 3  0.14285714 0.2380952
-#> 4  0.25000000 0.4166667
-#> 5  0.09782609 0.1630435
-#> 6  0.13043478 0.2173913
-#> 7  0.22826087 0.3804348
-#> 8  0.29347826 0.4891304
-#> 9  0.15789474 0.2631579
-#> 10 0.07894737 0.1315789
-#> 11 0.19736842 0.3289474
-#> 12 0.31578947 0.5263158
-#> 13 0.22222222 0.3703704
-#> 14 0.19444444 0.3240741
-#> 15 0.19444444 0.3240741
-#> 16 0.13888889 0.2314815
+#> 1  0.09782609 0.1630435
+#> 2  0.22826087 0.3804348
+#> 3  0.09782609 0.1630435
+#> 4  0.32608696 0.5434783
+#> 5  0.12931034 0.2155172
+#> 6  0.31034483 0.5172414
+#> 7  0.15517241 0.2586207
+#> 8  0.15517241 0.2586207
+#> 9  0.30000000 0.5000000
+#> 10 0.15000000 0.2500000
+#> 11 0.11250000 0.1875000
+#> 12 0.18750000 0.3125000
+#> 13 0.12500000 0.2083333
+#> 14 0.16666667 0.2777778
+#> 15 0.33333333 0.5555556
+#> 16 0.12500000 0.2083333
 # }
 ```

@@ -9,7 +9,7 @@ across 34 projects, in long format."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,11 +75,14 @@ across 34 projects, in long format.</p>
 <dd><p>Character. Date of the session (YYYY-MM-DD).</p></dd>
 
 <dt>code</dt>
-<dd><p>Character. Interaction code (17 action labels).</p></dd>
+<dd><p>Character. Interaction code. The two data frames use
+disjoint code sets – 9 labels in <code>human_long</code>, 8 in
+<code>ai_long</code>, 17 in total.</p></dd>
 
 <dt>cluster</dt>
-<dd><p>Character. High-level cluster: Action, Communication,
-Directive, Evaluative, Metacognitive, or Repair.</p></dd>
+<dd><p>Character. High-level cluster. <code>human_long</code> uses
+Directive, Evaluative and Metacognitive; <code>ai_long</code> uses Action,
+Communication and Repair.</p></dd>
 
 <dt>code_order</dt>
 <dd><p>Integer. Order of the code within the session.</p></dd>

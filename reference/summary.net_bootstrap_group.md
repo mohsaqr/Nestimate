@@ -21,7 +21,9 @@ summary(object, ...)
 
 ## Value
 
-A data frame with group, edge, and bootstrap statistics columns.
+The per-group summaries stacked into one data frame: the columns of
+[`summary.net_bootstrap`](https://saqr.me/Nestimate/reference/summary.net_bootstrap.md)
+prefixed by a `group` column naming the network each row came from.
 
 ## Examples
 

@@ -3,9 +3,10 @@
 [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
 returns a `state_freq` object holding both the rendered chart and the
 tidy frequency table. [`print()`](https://rdrr.io/r/base/print.html)
-shows the table in the console,
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) renders the
-chart, and
+shows the table in the console *and* draws the chart on the active
+graphics device,
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the chart
+alone, and
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
 the tidy table for downstream piping.
 
@@ -30,12 +31,13 @@ as.data.frame(x, ...)
 
 - digits:
 
-  Number of decimal places for proportion / share columns.
+  Number of decimal places for proportion / share columns. Default 1.
 
 - max_states:
 
-  Cap on rows shown per group in the per-state table. The full table
-  remains available via `x$table`.
+  Cap on rows shown per group in the per-state table (default 20); the
+  surplus is folded into a single `"(+k more)"` row. The full, uncapped
+  table is returned by `as.data.frame(x)`.
 
 - ...:
 
@@ -43,8 +45,10 @@ as.data.frame(x, ...)
 
 ## Value
 
-[`print()`](https://rdrr.io/r/base/print.html) returns `invisible(x)`;
+[`print()`](https://rdrr.io/r/base/print.html) returns `x` invisibly
+(after printing the table and drawing the chart);
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns
 `invisible(NULL)` after drawing;
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
-`x$table`.
+the tidy `data.frame`, one row per (group, state) cell with columns
+`group`, `state`, `count`, `proportion`.

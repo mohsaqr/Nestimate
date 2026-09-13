@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@ centrality panel. Default: <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
-<dd><p>Integer. Number of facet columns.</p></dd>
+<dd><p>Integer. Number of facet columns. Default: <code>3</code>.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
@@ -89,26 +89,27 @@ centrality measures (<code>"profile"</code> is accepted as an alias);
 <code>"delta"</code> draws a diverging bar of group
 differences. With two groups it is the per-state difference (second group
 minus first); with three or more groups it is each group's deviation from
-the per-state group mean, so the largest gaps stand out either way.</p></dd>
+the per-state group mean, so the largest gaps stand out either way.
+Default: <code>"bar"</code>.</p></dd>
 
 
 <dt id="arg-scales">scales<a class="anchor" aria-label="anchor" href="#arg-scales"></a></dt>
-<dd><p>Facet scale mode. <code>"free_x"</code> uses free centrality axes;
-<code>"fixed"</code> keeps a common centrality axis.</p></dd>
+<dd><p>Facet scale mode. <code>"free_x"</code> (default) uses free
+centrality axes; <code>"fixed"</code> keeps a common centrality axis.</p></dd>
 
 
 <dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a></dt>
-<dd><p>Brewer palette for groups.</p></dd>
+<dd><p>Brewer palette for groups. Default: <code>"Set2"</code>.</p></dd>
 
 
 <dt id="arg-profile-scale">profile_scale<a class="anchor" aria-label="anchor" href="#arg-profile-scale"></a></dt>
 <dd><p>Scaling used by <code>type = "line"</code>.
-<code>"measure"</code> rescales each centrality measure to 0–1 before drawing
-cross-measure profiles; <code>"none"</code> uses raw values.</p></dd>
+<code>"measure"</code> (default) rescales each centrality measure to 0–1
+before drawing cross-measure profiles; <code>"none"</code> uses raw values.</p></dd>
 
 
 <dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
-<dd><p>Logical. Add compact value labels.</p></dd>
+<dd><p>Logical. Add compact value labels. Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-drop-zero">drop_zero<a class="anchor" aria-label="anchor" href="#arg-drop-zero"></a></dt>

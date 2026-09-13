@@ -84,7 +84,9 @@ print(x, digits = attr(x, "digits") %||% 2L, ...)
 Every table is a data frame of class `net_table` whose
 [`print()`](https://rdrr.io/r/base/print.html) shows whole numbers
 without decimals, exact zeros as `0`, other values with `digits`
-decimals, and p-values with three decimals.
+decimals, and p-values with three decimals;
+[`print()`](https://rdrr.io/r/base/print.html) itself returns the table
+invisibly.
 
 ## Examples
 

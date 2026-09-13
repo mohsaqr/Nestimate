@@ -28,8 +28,9 @@ cluster_mmm(
 
 - data:
 
-  A data.frame (wide format), `netobject`, or `tna` model. For tna
-  objects, extracts the stored data.
+  A data.frame (wide format), `netobject`, `cograph_network`, or `tna`
+  model. For tna and cograph_network objects the stored
+  (integer-encoded) data is extracted and decoded to state labels.
 
 - k:
 
@@ -140,40 +141,25 @@ for fitting and immediately materializing per-cluster networks
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))
 fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-fit$assignments
-#>  [1] 1 2 1 2 1 1 1 1 1 1 1 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1
-fit$posterior
-#>             [,1]       [,2]
-#>  [1,] 0.93308744 0.06691256
-#>  [2,] 0.05671918 0.94328082
-#>  [3,] 0.98448637 0.01551363
-#>  [4,] 0.05671918 0.94328082
-#>  [5,] 0.98208168 0.01791832
-#>  [6,] 0.98208168 0.01791832
-#>  [7,] 0.98448637 0.01551363
-#>  [8,] 0.98448637 0.01551363
-#>  [9,] 0.96505461 0.03494539
-#> [10,] 0.98208168 0.01791832
-#> [11,] 0.84431831 0.15568169
-#> [12,] 0.05671918 0.94328082
-#> [13,] 0.97033747 0.02966253
-#> [14,] 0.98448637 0.01551363
-#> [15,] 0.98448637 0.01551363
-#> [16,] 0.92870181 0.07129819
-#> [17,] 0.98448637 0.01551363
-#> [18,] 0.98208168 0.01791832
-#> [19,] 0.05671918 0.94328082
-#> [20,] 0.96505461 0.03494539
-#> [21,] 0.97033747 0.02966253
-#> [22,] 0.97033747 0.02966253
-#> [23,] 0.97033747 0.02966253
-#> [24,] 0.97033747 0.02966253
-#> [25,] 0.98448637 0.01551363
-#> [26,] 0.97033747 0.02966253
-#> [27,] 0.97033747 0.02966253
-#> [28,] 0.98448637 0.01551363
-#> [29,] 0.98448637 0.01551363
-#> [30,] 0.98448637 0.01551363
+fit
+#> Mixed Markov Model
+#>   Sequences: 30  |  Clusters: 2  |  States: 3
+#>   ICs: LL = -59.844  |  BIC = 177.508  |  AIC = 153.688  |  ICL = 179.621
+#>   Quality: AvePP = 0.966  |  Entropy = 0.202  |  Class.Err = 0.0%
+#>   Status: did not converge in 10 iterations
+#> 
+#>   Cluster  N           Mix%   AvePP
+#>   1        26 (86.7%)  84.8%  0.969
+#>   2        4 (13.3%)   15.2%  0.943
+cluster_diagnostics(fit)
+#> Cluster Diagnostics (mmm) [k = 2]
+#>   Sequences: 30  |  Clusters: 2  |  States: 3
+#>   Quality: AvePP = 0.966  |  Entropy = 0.202  |  Class.Err = 0.0%
+#>   ICs: LL = -59.844  |  BIC = 177.508  |  AIC = 153.688  |  ICL = 179.621
+#> 
+#>   Cluster  N           Mix%   AvePP  Class.Err%
+#>   1        26 (86.7%)  84.8%  0.969   0.0%
+#>   2        4 (13.3%)   15.2%  0.943   0.0%
 # \donttest{
 # Visualise with sequence_plot
 seqs <- data.frame(

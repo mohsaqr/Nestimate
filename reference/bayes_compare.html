@@ -59,7 +59,7 @@ invert setting."><meta property="og:image" content="https://saqr.me/Nestimate/lo
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -209,7 +209,9 @@ the analogue of the permutation observed difference.</p></dd>
 <dd><p>Difference where <code>sig</code>, else 0.</p></dd>
 
 <dt>p_values</dt>
-<dd><p>P-value matrix (the two-sided Bayesian p-equivalent).</p></dd>
+<dd><p>The two-sided Bayesian p-equivalent, in the field a
+<code>net_permutation</code> consumer reads as p-values (see
+<code>p_bayes</code>).</p></dd>
 
 <dt>effect_size</dt>
 <dd><p>Posterior mean difference over its posterior SD.</p></dd>
@@ -223,8 +225,10 @@ posterior mass on the dominant side of zero, in \([0.5, 1]\)
 (\(P(\mathrm{High} &gt; \mathrm{Low})\) for a positive difference).</p></dd>
 
 <dt>p_bayes</dt>
-<dd><p>Alias of <code>p_values</code> (two-sided Bayesian p,
-\(2(1-\mathrm{p\_difference})\)).</p></dd>
+<dd><p>Alias of <code>p_values</code>: the two-sided Bayesian
+p-<em>equivalent</em> \(2(1-\mathrm{p\_difference})\). It summarises
+posterior mass, not a frequentist tail probability, so it is not a
+p-value and should not be reported as one.</p></dd>
 
 <dt>prob_x, prob_y</dt>
 <dd><p>Posterior mean transition-probability matrices.</p></dd>

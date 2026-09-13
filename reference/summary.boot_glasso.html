@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,14 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame or list of data frames depending on <code>type</code>.</p>
+    <p>For <code>type = "edges"</code>, the <code>edge_ci</code> data frame
+(<code>edge</code>, <code>weight</code>, <code>ci_lower</code>, <code>ci_upper</code>,
+<code>inclusion</code>) ordered by decreasing absolute weight; for
+<code>"cs"</code> the <code>cs_data</code> data frame; for
+<code>"predictability"</code> the <code>predictability_ci</code> data frame; for
+<code>"centrality"</code> a named list of one data frame per measure
+(<code>node</code>, <code>value</code>, <code>ci_lower</code>, <code>ci_upper</code>); for
+<code>"all"</code> a named list holding all four.</p>
     </div>
 
     <div class="section level2">

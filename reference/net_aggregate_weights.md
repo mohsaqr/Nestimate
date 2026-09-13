@@ -39,7 +39,8 @@ net_aggregate_weights(w, method = "sum", n_possible = NULL)
 
 ## Value
 
-Single aggregated value
+A single numeric value: the chosen aggregation of the non-zero, non-`NA`
+weights, or `0` when none remain.
 
 ## Examples
 

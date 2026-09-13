@@ -72,8 +72,8 @@ An object of class `"net_entropy_trajectory"` with:
   (window midpoint; transition index when no `time` column),
   `time_start`, `time_end`, `n_transitions`, `n_states` (distinct states
   in the window), `entropy` (bits per transition) and `entropy_norm`
-  (divided by \\\log_b\\ of the window's active-state count; in \\\[0,
-  1\]\\).
+  (divided by \\\log_b\\ of the window's active-state count, floored at
+  2 states so the ceiling is never zero; in \\\[0, 1\]\\).
 
 - window, step, base, states:
 

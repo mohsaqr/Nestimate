@@ -14,7 +14,9 @@ build_cor(data, ...)
 - data:
 
   Data frame (sequences or per-observation frequencies) or a square
-  symmetric matrix (correlation or covariance).
+  symmetric matrix (correlation or covariance). A fitted
+  `net_clustering` or `net_mmm` object is also accepted: the per-cluster
+  networks are (re)built and a `netobject_group` is returned.
 
 - ...:
 

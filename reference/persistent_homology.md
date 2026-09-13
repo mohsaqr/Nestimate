@@ -41,7 +41,11 @@ persistent_homology(
 - x:
 
   A square matrix, `tna`, or `netobject`. For `type = "vr"`, must be a
-  non-negative distance matrix.
+  non-negative distance matrix. A `simplicial_complex` carrying a
+  `$filtration` vector (as returned by `build_simplicial(type = "vr")`)
+  is also accepted and is used directly: its stored filtration values
+  are reduced as they are, so `type` is taken from the complex rather
+  than this argument.
 
 - n_steps:
 
@@ -72,8 +76,12 @@ A `persistent_homology` object with:
 
 - persistence:
 
-  Data frame of birth-death pairs: `dimension`, `birth`, `death`,
-  `persistence`. Sorted by descending persistence.
+  Data frame of birth-death pairs, one row per homology class:
+  `dimension`, `birth`, `death`, `persistence`. Sorted by descending
+  persistence. Essential classes are included, with `death = 0` and
+  `persistence = birth` in clique mode, and `death = Inf`,
+  `persistence = Inf` in VR mode (the plot method caps those for display
+  only).
 
 - thresholds:
 
@@ -86,8 +94,9 @@ A `persistent_homology` object with:
 ## References
 
 Edelsbrunner, H., Letscher, D., & Zomorodian, A. (2000). Topological
-persistence and simplification. *Discrete & Computational Geometry*
-**28**, 511-533.
+persistence and simplification. In *Proceedings of the 41st Annual
+Symposium on Foundations of Computer Science*, 454-463. Journal version:
+*Discrete & Computational Geometry* (2002) **28**, 511-533.
 
 ## Examples
 

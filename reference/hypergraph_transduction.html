@@ -23,7 +23,7 @@ a handful of labeled ones."><meta property="og:image" content="https://saqr.me/N
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -113,8 +113,9 @@ initial labels.</p></dd>
 <code>$predictions</code> (data.frame, one row per node: <code>node</code>, <code>label</code> (given,
 <code>NA</code> if unlabeled), <code>predicted</code>, <code>score</code> (winning class score),
 <code>margin</code> (winning minus runner-up score)), <code>$classes</code>, <code>$scores</code>
-(node x class score matrix), <code>$xi</code>, <code>$type</code>, <code>$n_labeled</code> and
-<code>$params</code>. Has <code>print</code>, <code>summary</code>, <code>plot</code> and <code>as.data.frame</code> methods;
+(node x class score matrix), <code>$xi</code>, <code>$type</code>, <code>$n_labeled</code>, <code>$n_nodes</code>
+and <code>$params</code> (the <code>edge_weights</code> used).
+Has <code>print</code>, <code>summary</code>, <code>plot</code> and <code>as.data.frame</code> methods;
 <code>as.data.frame(x, what = "scores")</code> returns the tidy long score table.</p>
     </div>
     <div class="section level2">

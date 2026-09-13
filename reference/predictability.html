@@ -21,7 +21,7 @@ regressing each node on its network neighbors (nodes with non-zero edges).'><met
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,7 +87,8 @@ regressing each node on its network neighbors (nodes with non-zero edges).</p>
 
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
-<dd><p>A <code>netobject</code> or <code>netobject_ml</code> object.</p></dd>
+<dd><p>A <code>netobject</code>, <code>netobject_ml</code>, or
+<code>netobject_group</code> object.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -96,20 +97,26 @@ regressing each node on its network neighbors (nodes with non-zero edges).</p>
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Optional data frame of the original variables used to estimate
-the network. Required for <code>method = "cor"</code> (multiple-R\(^2\) regression
-of each node on its neighbours); ignored for the precision-matrix path used
-by <code>glasso</code>/<code>pcor</code>, which has no need of the raw data.</p></dd>
+the network. R\(^2\) never needs it (it comes from the precision or
+correlation matrix stored on the object). It is used only for the
+<code>RMSE</code> column and defaults to <code>object$data</code>; when neither is
+available <code>RMSE</code> is <code>NA</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>For <code>netobject</code>: a named numeric vector of R\(^2\) values
-(one per node, between 0 and 1).</p>
+    <p>For <code>netobject</code>: a data frame with one row per node and columns
+<code>node</code> (character), <code>R2</code> (numeric, between 0 and 1) and
+<code>RMSE</code> (numeric, <code>NA</code> when no data is available).</p>
 <p>For <code>netobject_ml</code>: a list with elements <code>$between</code> and
-<code>$within</code>, each a named numeric vector.</p>
-<p>A named numeric vector of predictability values per node.</p>
-<p>A list with <code>within</code> and <code>between</code> predictability vectors.</p>
-<p>A named list of per-group predictability vectors.</p>
+<code>$within</code>, each such a data frame.</p>
+<p>For <code>netobject_group</code>: a named list of such data frames, one per
+group.</p>
+<p>A data frame with one row per node and columns <code>node</code>,
+<code>R2</code> and <code>RMSE</code>.</p>
+<p>A list with <code>between</code> and <code>within</code> predictability data
+frames.</p>
+<p>A named list of per-group predictability data frames.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

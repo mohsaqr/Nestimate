@@ -50,9 +50,10 @@ cluster_choice(
 
   Other arguments forwarded to
   [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
-  (`weighted`, `lambda`, `q`, `p`, `seed`, `na_syms`, `covariates`).
-  Note: `weighted = TRUE` only works with `dissimilarity = "hamming"`
-  and is rejected up-front when sweeping mixed dissimilarities.
+  (`weighted`, `lambda`, `q`, `p`, `seed`, `na_syms`, `covariates`,
+  `estimator`). Note: `weighted = TRUE` only works with
+  `dissimilarity = "hamming"` and is rejected up-front when sweeping
+  mixed dissimilarities.
 
 ## Value
 

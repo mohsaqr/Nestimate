@@ -21,7 +21,12 @@ summary(object, ...)
 
 ## Value
 
-The input object, invisibly.
+A data frame of per-cluster statistics, one row per cluster, with
+columns `cluster`, `size` and `mean_within_dist`, returned *visibly*.
+When the clustering was fitted with `covariates`, a
+`tidy_covariates`/`data.frame` (the tidied covariate table, with cluster
+sizes, fit statistics and profiles attached as attributes) is returned
+*invisibly* instead. In both cases the printed summary is a side effect.
 
 ## Examples
 

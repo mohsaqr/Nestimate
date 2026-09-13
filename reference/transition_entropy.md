@@ -97,6 +97,10 @@ An object of class `"net_transition_entropy"` with:
 
   Character vector of state names.
 
+For a `netobject_group` the result is a
+`"net_transition_entropy_group"`: a named list holding one such object
+per group.
+
 ## Details
 
 Convention \\0 \log 0 := 0\\ is applied, so absorbing or deterministic

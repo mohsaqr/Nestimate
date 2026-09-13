@@ -21,7 +21,9 @@ summary(object, ...)
 
 ## Value
 
-A data frame with edge-level permutation test results.
+The `$summary` data frame: one row per edge present in either network,
+with columns `from`, `to`, `weight_x`, `weight_y`, `diff`,
+`effect_size`, `p_value`, `sig`.
 
 ## Examples
 

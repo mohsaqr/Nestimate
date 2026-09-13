@@ -15,8 +15,9 @@ srl_strategies
 
 ## Format
 
-A data frame with 250 rows and 9 columns. Each column is an integer
-count of how often the student used that strategy.
+A data frame with 250 rows and 9 columns, one row per student. Every
+column is numeric (double) and holds a whole-number count of how often
+that student used the strategy; observed values range from 0 to 37.
 
 ## Examples
 

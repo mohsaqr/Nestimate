@@ -27,7 +27,7 @@ plots (cograph::splot()) like any other Nestimate network."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -159,8 +159,9 @@ built), the result is that network with entropy weights swapped in -
 <code>$inits</code>, <code>$meta</code>, <code>$node_groups</code>, and node coordinates
 are inherited, so it plots with the same TNA styling and layout as its
 source. <code>$method</code> is <code>"entropy"</code>. <code>$params</code> carries
-<code>base</code>, <code>weight</code>, <code>entropy_rate</code>, and the stationary
-distribution <code>stationary</code>.</p>
+<code>base</code>, <code>weight</code>, <code>scaling</code>, <code>entropy_rate</code>, and the
+stationary distribution <code>stationary</code> (plus <code>production_rate</code>
+and <code>n_oneway_pairs</code> when <code>weight = "production"</code>).</p>
 <p>The object also declares the entropy house style through the
 <code>$meta$splot</code> producer contract (honoured by cograph &gt;= 2.4.4):
 no minimum-weight pruning (bit values are smaller than probabilities),

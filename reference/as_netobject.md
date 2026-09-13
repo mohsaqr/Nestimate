@@ -1,7 +1,7 @@
 # Coerce a network object to a Nestimate netobject
 
-Promotes a psychnet result (class `c("psychnet", "cograph_network")`) or
-any bare `cograph_network` to the dual-class
+Promotes a psychnets result (class `c("psychnet", "cograph_network")`)
+or any bare `cograph_network` to the dual-class
 `c("netobject", "cograph_network")` used throughout Nestimate, so it
 dispatches to the package's verbs (`centrality()`,
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html), bootstrap,

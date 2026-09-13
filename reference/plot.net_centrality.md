@@ -33,7 +33,7 @@ plot(
 
 - ncol:
 
-  Integer. Number of facet columns.
+  Integer. Number of facet columns. Default: `3`.
 
 - type:
 
@@ -42,21 +42,22 @@ plot(
   `"profile"` is still accepted as an alias); `"heatmap"` shows a
   states-by-measures tile grid, each measure scaled to 0–1 for
   cross-measure comparability with the raw value printed in the tile.
+  Default: `"bar"`.
 
 - scales:
 
-  Facet scale mode. `"free_x"` uses free centrality axes; `"fixed"`
-  keeps a common centrality axis.
+  Facet scale mode. `"free_x"` (default) uses free centrality axes;
+  `"fixed"` keeps a common centrality axis.
 
 - profile_scale:
 
-  Scaling used by `type = "line"`. `"measure"` rescales each centrality
-  measure to 0–1 before drawing cross-measure profiles; `"none"` uses
-  raw values.
+  Scaling used by `type = "line"`. `"measure"` (default) rescales each
+  centrality measure to 0–1 before drawing cross-measure profiles;
+  `"none"` uses raw values.
 
 - labels:
 
-  Logical. Add compact value labels.
+  Logical. Add compact value labels. Default: `TRUE`.
 
 - drop_zero:
 

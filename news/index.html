@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,6 +43,42 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.5" id="nestimate-095">Nestimate 0.9.5<a class="anchor" aria-label="anchor" href="#nestimate-095"></a></h2>
+<div class="section level3">
+<h3 id="new-verbs-0-9-5">New verbs<a class="anchor" aria-label="anchor" href="#new-verbs-0-9-5"></a></h3>
+<ul><li>
+<code><a href="../reference/macro_network.html">macro_network()</a></code> returns the macro (cluster-level) network of an <code>mcml</code> with one or more named clusters expanded back into their member states and every other cluster left collapsed — a network at mixed resolution. It re-counts from the recoded sequence data rather than splitting the k x k aggregate, which cannot be disaggregated; a matrix-derived <code>mcml</code> raises <code>nestimate_no_expand_source</code>. <code>$node_groups</code> maps each expanded state back to its parent cluster, so the result plots grouped.</li>
+<li>
+<code><a href="../reference/extract_pathways.html">extract_pathways()</a></code> cuts a long event log into pathways and returns one row per pathway. Three cuts via <code>type =</code>: <code>"unit"</code> (one pathway per group), <code>"segments"</code> (one per contiguous run), <code>"anchored"</code> (spans around an anchor event). <code>resolve =</code> appends a resolution label as the closing state.</li>
+<li>
+<code><a href="../reference/outcome_model.html">outcome_model()</a></code> regresses a unit-level outcome on sequence or network predictors — pattern indicators, <code><a href="../reference/simplicial_features.html">simplicial_features()</a></code> output, or any numeric covariate — with family auto-detection, an optional <code>lme4</code> random intercept, <code>select = "split"</code> hold-out selection, BH-corrected p-values, confidence intervals and odds ratios. <code><a href="../reference/effects_table.html">effects_table()</a></code> is the tidy accessor; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns the same table.</li>
+<li>
+<code><a href="../reference/simplicial_features.html">simplicial_features()</a></code> returns topological summaries of one or many networks as a tidy data.frame, one row per network per threshold, ready to use as regression predictors. Accepts a <code>netobject</code>, <code>netobject_group</code>, <code>mcml</code>, a square weight matrix, or a named list of any of these.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="extended-0-9-5">Extended<a class="anchor" aria-label="anchor" href="#extended-0-9-5"></a></h3>
+<ul><li>
+<code><a href="../reference/build_mcml.html">build_mcml()</a></code> gains the <code>exclude</code>, <code>trim</code>, <code>end</code> and <code>end_by</code> sequence arguments, applied in that fixed order.</li>
+<li>
+<code><a href="../reference/as_tna.html">as_tna()</a></code> is now a generic. <code>as_tna.mcml(expand =)</code> delegates to <code><a href="../reference/macro_network.html">macro_network()</a></code> for the macro layer only; per-cluster layers are untouched. An <code><a href="../reference/as_tna.html">as_tna.default()</a></code> covers everything else.</li>
+<li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> and its <code>mcml</code> method gain <code>panel = c("both", "summary", "channels")</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixes-0-9-5">Fixes<a class="anchor" aria-label="anchor" href="#fixes-0-9-5"></a></h3>
+<ul><li>
+<code>frequencies(format = "frequency")</code> returned zero rows for any long-format data whose id column was not integer-valued. The sequence key was coerced with <code><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer()</a></code> before the merge, turning every character id into <code>NA</code>; the merge then matched nothing and failed silently. Sequence keys are now aligned in their character form.</li>
+<li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code> errored whenever a singleton cluster was named after its own state: the shared fill scale built its levels with <code>factor(levels = c(states, clusters))</code>, and duplicate levels are an error. Levels and values are now de-duplicated.</li>
+<li>
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> methods for <code>net_hypergraph_transduction</code> and <code>net_hypergraph_cluster</code> placed <code>what</code> in the generic’s <code>row.names</code> slot, so <code>as.data.frame(x, "scores")</code> bound <code>"scores"</code> to <code>row.names</code>. The generic’s arguments now come first and <code>row.names</code> is honoured (<code>R CMD check</code> “S3 generic/method consistency”).</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.4" id="nestimate-094">Nestimate 0.9.4<a class="anchor" aria-label="anchor" href="#nestimate-094"></a></h2>
+<ul><li>pkgdown reference index repaired: the five topics added in 0.9.3 were unindexed and <code>build_reference_index()</code> failed. The S3 Methods section now wildcards <code>as.data.frame.</code> alongside <code>print.</code>, <code>summary.</code> and <code>plot.</code>, so a future result class with the house-standard accessor cannot repeat it.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.3" id="nestimate-093">Nestimate 0.9.3<a class="anchor" aria-label="anchor" href="#nestimate-093"></a></h2>
 <div class="section level3">
 <h3 id="new-verb-compare_networks-0-9-3">New verb: <code>compare_networks()</code>
@@ -58,6 +94,15 @@
 <code><a href="../reference/permutation.html">permutation()</a></code> gains a <code>$global</code> data frame with NCT-style <code>M</code> (sum of absolute differences) and <code>S</code> (largest absolute difference) statistics and their permutation p-values, computed from the same null.</li>
 <li>
 <code><a href="../reference/compare_model.html">compare_model()</a></code> is unchanged and will be soft-deprecated once <code><a href="../reference/compare_networks.html">compare_networks()</a></code> has been through one release.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="hypergraph-suite-0-9-3">Hypergraph suite<a class="anchor" aria-label="anchor" href="#hypergraph-suite-0-9-3"></a></h3>
+<ul><li>
+<code><a href="../reference/build_hypergraph.html">build_hypergraph()</a></code> promotes a network’s k-cliques (k &gt;= 3) to hyperedges, following Burgio, Matamalas, Gomez and Arenas (2020); underlying pairwise edges are retained. <code><a href="../reference/clique_expansion.html">clique_expansion()</a></code> projects a hypergraph back to a pairwise network in one <code><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">tcrossprod()</a></code> call, closing the event data -&gt; <code><a href="../reference/bipartite_groups.html">bipartite_groups()</a></code> -&gt; hypergraph -&gt; network cycle.</li>
+<li>
+<code><a href="../reference/hypergraph_measures.html">hypergraph_measures()</a></code> returns the structural-statistics suite (Lee, Choe and Shin 2024); an empty hypergraph returns trivial zeros rather than erroring. <code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code> computes Benson’s (2019) three eigenvector centralities.</li>
+<li>
+<code><a href="../reference/hypergraph_laplacian.html">hypergraph_laplacian()</a></code> computes the normalized Laplacian, either the Zhou, Huang and Scholkopf (2006) form on the binary incidence pattern or the Hayashi, Aksoy, Park and Park (2020) weighted form. Built on it: <code><a href="../reference/hypergraph_cluster.html">hypergraph_cluster()</a></code> (spectral clustering) and <code><a href="../reference/hypergraph_transduction.html">hypergraph_transduction()</a></code> (semi-supervised label propagation), each with print, summary, plot and <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> methods.</li>
 </ul></div>
 </div>
     <div class="section level2">

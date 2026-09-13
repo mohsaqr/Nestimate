@@ -11,7 +11,7 @@ a netobject_group, an mcml model, or an htna network."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -190,9 +190,11 @@ vocabularies differ per panel, so each gets its own legend);
 <code>"bottom"</code> for single-network and <code>netobject_group</code>
 treemaps (shared state vocabulary, one shared legend).
 Override with any of <code>"bottom"</code>, <code>"top"</code>, <code>"right"</code>,
-<code>"left"</code>, <code>"none"</code>, or <code>"per_facet"</code>. The
-<code>"per_facet"</code> option requires the <span class="pkg">gridExtra</span> package and
-returns a <code>gtable</code>.</p></dd>
+<code>"left"</code>, <code>"none"</code>, or <code>"per_facet"</code>. <code>"per_facet"</code>
+is silently demoted to <code>"bottom"</code> when every group shares the same
+state vocabulary (repeating one legend per panel would be redundant);
+when it does take effect it returns a <code>gtable</code> (requiring the
+<span class="pkg">gridExtra</span> package) or a list of ggplots, per <code>combine</code>.</p></dd>
 
 
 <dt id="arg-legend-dir">legend_dir<a class="anchor" aria-label="anchor" href="#arg-legend-dir"></a></dt>
@@ -229,7 +231,8 @@ full names; <code>TRUE</code> truncates to the first 3 characters via
 <code><a href="https://rdrr.io/r/base/abbreviate.html" class="external-link">base::abbreviate()</a></code> (which extends the truncation as needed to
 keep names unique after collision); a positive integer sets the
 target minimum length explicitly (e.g. <code>abbreviate = 4</code>).
-Affects tile labels, legend, and the returned <code>$table</code>.</p></dd>
+Affects tile labels, the legend, and the tidy table returned by
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>.</p></dd>
 
 
 <dt id="arg-include-macro">include_macro<a class="anchor" aria-label="anchor" href="#arg-include-macro"></a></dt>
@@ -264,12 +267,14 @@ collapse onto a smaller categorical legend.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>state_freq</code> object: a list with the rendered <code>$plot</code>
-(a <code>ggplot</code> or <code>gtable</code>), the tidy <code>$table</code> (a
+(a <code>ggplot</code>; a <code>gtable</code> or a list of ggplots under
+<code>legend = "per_facet"</code>, per <code>combine</code>), the tidy <code>$table</code> (a
 <code>data.frame</code> with columns <code>group</code>, <code>state</code>, <code>count</code>,
-<code>proportion</code>), and the call's <code>$style</code>, <code>$metric</code>,
-<code>$source_class</code>. The class supports <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> (shows the
-tidy table in the console), <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> (renders the chart), and
-<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> (returns the table).</p>
+<code>proportion</code>, one row per (group, state) cell), and the call's
+<code>$style</code>, <code>$metric</code>, <code>$source_class</code>. The class supports
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> (prints the tidy table and draws the chart),
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> (draws the chart alone), and <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>
+(returns the tidy table) – see <code><a href="state_freq.html">state_freq</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

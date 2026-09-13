@@ -19,7 +19,7 @@ evidence to the same tables. plot() draws one view per call."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,8 +107,14 @@ evidence to the same tables. <code><a href="https://rdrr.io/r/graphics/plot.defa
 
 
 <dl><dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code> for the network views (e.g.
-<code>layout</code>, <code>node_size</code>, <code>minimum</code>); ignored by the other views.</p></dd>
+<dd><p>For <code>compare_networks()</code>: two or more networks, in any mix of:
+<code>netobject</code>, <code>netobject_group</code> (members are flattened and keep their
+names), <code>cograph_network</code> / <code>psychnet</code>, <code>mcml</code>, <code>tna</code>, <code>group_tna</code>,
+square numeric matrices, or one unnamed <code>list</code> of these. Name the
+arguments to name the networks (<code>compare_networks(early = a, late = b)</code>).
+For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: passed to <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code> for the network views (e.g.
+<code>layout</code>, <code>node_size</code>, <code>minimum</code>); ignored by the other views and by
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>.</p></dd>
 
 
 <dt id="arg-reference">reference<a class="anchor" aria-label="anchor" href="#arg-reference"></a></dt>
@@ -128,13 +134,17 @@ the networks as estimated.</p></dd>
 <dt id="arg-measures">measures<a class="anchor" aria-label="anchor" href="#arg-measures"></a></dt>
 <dd><p>Centrality measures for the node table. Any of
 <code>OutStrength</code>, <code>InStrength</code>, <code>ClosenessIn</code>, <code>ClosenessOut</code>, <code>Closeness</code>,
-<code>Betweenness</code>, <code>BetweennessRSP</code>, <code>Diffusion</code>, <code>Clustering</code>. <code>NULL</code> or
-<code>character(0)</code> skips the node table.</p></dd>
+<code>Betweenness</code>, <code>BetweennessRSP</code>, <code>Diffusion</code>, <code>Clustering</code>; <code>"all"</code>
+selects those nine. <code>NULL</code> or <code>character(0)</code> skips the node table.
+Unknown names are dropped with a warning.</p></dd>
 
 
 <dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
-<dd><p>Logical; print the signed difference on the edge and node
-views. Default <code>TRUE</code>. The heatmap always shows its values.</p></dd>
+<dd><p>For <code>compare_networks()</code>: optional character vector naming
+the networks (one per network after flattening groups); overrides
+argument names. For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: logical; print the signed difference on
+the edge and node views, default <code>TRUE</code> (the heatmap always shows its
+values).</p></dd>
 
 
 <dt id="arg-test">test<a class="anchor" aria-label="anchor" href="#arg-test"></a></dt>
@@ -281,8 +291,9 @@ approximation from the posterior mean and SD) and <code>bayes_decision</code>.
 <code>"bootstrap"</code> (via <code><a href="vertex_compare.html">vertex_compare()</a></code>) appends structural rows
 (density, mean weight, centralization, reciprocity) to <code>global</code> with
 <code>boot_se</code>, <code>boot_ci_lower</code>, <code>boot_ci_upper</code>, <code>boot_z</code>, <code>boot_p</code>,
-<code>boot_sig</code>. Unified <code>sig</code> and <code>evidence</code> columns on <code>edges</code>/<code>nodes</code> take
-the permutation result when run, else the Bayesian one.
+<code>boot_sig</code>. Unified <code>sig</code> and <code>evidence</code> columns take the permutation
+result when run (on both <code>edges</code> and <code>nodes</code>), else the Bayesian one (on
+<code>edges</code> only – the Bayesian backend is edge-level).
 Permutation and Bayesian tests need networks that carry their data
 (<code><a href="build_network.html">build_network()</a></code> output, or <code>tna</code> objects, which are rebuilt); plain
 matrices support <code>"bootstrap"</code> only.</p>
@@ -294,8 +305,24 @@ matrices support <code>"bootstrap"</code> only.</p>
 <p>Classed conditions (<code>nestimate_compare_*</code>): <code>too_few</code>, <code>bad_input</code>,
 <code>dim_mismatch</code>, <code>node_mismatch</code>, <code>na_weights</code>, <code>reference_unknown</code>,
 <code>labels_length</code>, <code>scaling_domain</code>, <code>scaling_inference</code>,
-<code>test_unsupported</code>, <code>unknown_pair</code>, <code>no_nodes</code>; warning
-<code>unknown_measure</code>.</p>
+<code>test_unsupported</code>, <code>unknown_pair</code>, <code>no_nodes</code>, <code>no_test</code>
+(<code>plot(type = "inference")</code> under <code>test = "none"</code>), <code>unknown_measure</code>
+(selecting a measure the object does not carry); warning
+<code>unknown_measure</code> (an unknown name in <code>measures</code>).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="reading-the-figures">Reading the figures<a class="anchor" aria-label="anchor" href="#reading-the-figures"></a></h2>
+
+
+<p>One colour contract in every view and every backend: <code>"#4A6FE3"</code> marks
+<code>network_a</code> (the reference, when one is set) as the higher of the two,
+<code>"#D33F6A"</code> marks <code>network_b</code>, and grey marks no difference; the plotted
+quantity is always <code>diff = a - b</code>. Colour never carries the sign alone –
+a solid line and a circular marker repeat "<code>a</code> higher", a dashed line and
+a square marker repeat "<code>b</code> higher", and the printed value carries its
+sign. When <code>test</code> was run, evidence is shown by opacity and a starred
+(edge and node views) or annotated (inference view) label: a
+non-significant difference is faded, never deleted.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

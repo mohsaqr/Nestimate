@@ -41,13 +41,12 @@ mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
 print(mmm)
 #> Mixed Markov Model
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
-#>   ICs: LL = -65.033  |  BIC = 187.886  |  AIC = 164.066  |  ICL = 190.065
-#>   Quality: AvePP = 0.964  |  Entropy = 0.217  |  Class.Err = 0.0%
-#>   Status: did not converge in 10 iterations
+#>   ICs: LL = -62.330  |  BIC = 182.480  |  AIC = 158.659  |  ICL = 184.652
+#>   Quality: AvePP = 0.965  |  Entropy = 0.212  |  Class.Err = 0.0%
 #> 
 #>   Cluster  N           Mix%   AvePP
-#>   1        25 (83.3%)  81.4%  0.966
-#>   2        5 (16.7%)   18.6%  0.954
+#>   1        24 (80.0%)  78.1%  0.966
+#>   2        6 (20.0%)   21.9%  0.961
 # \donttest{
 set.seed(1)
 seqs <- data.frame(

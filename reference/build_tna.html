@@ -9,7 +9,7 @@ Computes row-normalized transition probabilities from sequence data.'><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,10 @@ Computes row-normalized transition probabilities from sequence data.</p>
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance).</p></dd>
+square symmetric matrix (correlation or covariance). A fitted
+<code>net_clustering</code> or <code>net_mmm</code> object is also accepted: the
+per-cluster networks are (re)built and a <code>netobject_group</code> is
+returned.</p></dd>
 
 
 <dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
@@ -71,7 +74,8 @@ transition is <code>start -&gt; first_observed</code>). <code>FALSE</code> (defa
 adds nothing; <code>TRUE</code> uses the label <code>"Start"</code>; a single string
 uses that string as the label. Only valid for the transition methods
 (<code>relative</code>, <code>frequency</code>, <code>co_occurrence</code>,
-<code>attention</code>); errors otherwise.</p></dd>
+<code>attention</code>, <code>ngram</code>, <code>gap</code>, <code>reverse</code>); errors
+otherwise (<code>wtna</code> included).</p></dd>
 
 
 <dt id="arg-end">end<a class="anchor" aria-label="anchor" href="#arg-end"></a></dt>

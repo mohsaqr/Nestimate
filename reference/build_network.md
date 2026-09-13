@@ -42,15 +42,18 @@ build_network(
 - data:
 
   Data frame (sequences or per-observation frequencies) or a square
-  symmetric matrix (correlation or covariance).
+  symmetric matrix (correlation or covariance). A fitted
+  `net_clustering` or `net_mmm` object is also accepted: the per-cluster
+  networks are (re)built and a `netobject_group` is returned.
 
 - method:
 
-  Character. Required. Name of a registered estimator. Built-in methods:
-  `"relative"`, `"frequency"`, `"co_occurrence"`, `"cor"`, `"pcor"`,
-  `"glasso"`, `"ising"`, `"mgm"`, `"attention"`, `"wtna"`,
-  `"wtna_cooccurrence"`, `"ngram"`, `"gap"`, `"reverse"`. The last three
-  mirror
+  Character. Required, except when `data` is a `net_clustering` or
+  `net_mmm` object, where the fitted object's own network method is
+  used. Name of a registered estimator. Built-in methods: `"relative"`,
+  `"frequency"`, `"co_occurrence"`, `"cor"`, `"pcor"`, `"glasso"`,
+  `"ising"`, `"mgm"`, `"attention"`, `"wtna"`, `"wtna_cooccurrence"`,
+  `"ngram"`, `"gap"`, `"reverse"`. The last three mirror
   [`tna::build_model()`](http://sonsoles.me/tna/reference/build_model.md)
   types `"n-gram"` (adjacent pairs counted once per n-gram window
   containing them; `params = list(n_gram = 2)`), `"gap"` (pairs up to
@@ -127,9 +130,11 @@ build_network(
 
 - level:
 
-  Character or NULL. Multilevel decomposition for association methods.
-  One of `NULL`, `"between"`, `"within"`, `"both"`. Requires `id_col`.
-  Default: `NULL`.
+  Character or NULL. Multilevel decomposition for the undirected
+  association methods (`cor`, `pcor`, `glasso`); a directed estimator
+  errors. One of `NULL`, `"between"`, `"within"`, `"both"`. Requires an
+  id column, supplied either as `actor` or as `params$id` /
+  `params$id_col`. Default: `NULL`.
 
 - time_threshold:
 
@@ -177,7 +182,8 @@ build_network(
   is `start -> first_observed`). `FALSE` (default) adds nothing; `TRUE`
   uses the label `"Start"`; a single string uses that string as the
   label. Only valid for the transition methods (`relative`, `frequency`,
-  `co_occurrence`, `attention`); errors otherwise.
+  `co_occurrence`, `attention`, `ngram`, `gap`, `reverse`); errors
+  otherwise (`wtna` included).
 
 - end:
 
@@ -200,10 +206,10 @@ build_network(
   options such as `weighted` and `concat` (and the low-level
   `begin_state` / `end_state`, of which `start` / `end` are the public
   form – see those arguments). Column-like entries in `params`
-  (`action`, `id`, `id_col`, `time`, `session`, `order`, `codes`, and
-  `group`) are resolved before format detection and must name existing
-  columns. If the same column role is supplied both directly and through
-  `params`, the names must agree.
+  (`action`, `id`, `id_col`, `actor`, `time`, `session`, `order`,
+  `cols`, `codes`, and `group`) are resolved before format detection and
+  must name existing columns. If the same column role is supplied both
+  directly and through `params`, the names must agree.
 
 - labels:
 
@@ -222,7 +228,12 @@ An object of class `c("netobject", "cograph_network")` containing:
 
 - data:
 
-  The input data used for estimation, as a data frame.
+  The state columns of the cleaned input data, as a data frame.
+
+- metadata:
+
+  Data frame of the non-state columns of the cleaned input (and, for
+  long input, the per-sequence metadata), or NULL.
 
 - weights:
 
@@ -270,6 +281,12 @@ An object of class `c("netobject", "cograph_network")` containing:
 
   Decomposition level used (or NULL).
 
+- build_args:
+
+  The resolved column/format arguments (`actor`, `action`, `time`,
+  `session`, `order`, `codes`, `format`, `window_size`, `mode`) used for
+  this build.
+
 - meta:
 
   List with `source`, `layout`, and `tna` metadata (cograph-compatible).
@@ -285,11 +302,18 @@ An object of class `c("netobject", "cograph_network")` containing:
   directed methods.
 
 Method-specific extras (e.g. `precision_matrix`, `cor_matrix`,
-`frequency_matrix`, `lambda_selected`, etc.) are preserved from the
-estimator output.
+`frequency_matrix`, `initial`, `lambda_selected`, etc.) are preserved
+from the estimator output.
 
 When `level = "both"`, returns an object of class `"netobject_ml"` with
 `$between` and `$within` sub-networks and a `$method` field.
+`level = "between"` or `"within"` returns a single `netobject` estimated
+on the decomposed data.
+
+When `group` is supplied (or `data` is a `net_clustering` / `net_mmm`
+object), returns an object of class `"netobject_group"`: a named list of
+`netobject`s, one per group, carrying the grouping column in
+`attr(x, "group_col")`.
 
 ## Details
 

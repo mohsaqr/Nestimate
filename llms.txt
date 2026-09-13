@@ -691,6 +691,8 @@ Cluster-based and multilevel network analysis
   Build MCML from Raw Transition Data
 - [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
   : Multi-Cluster Multi-Level Aggregation for Psychometric Networks
+- [`macro_network()`](https://saqr.me/Nestimate/reference/macro_network.md)
+  : Cluster-Level Network, With One Cluster Expanded
 - [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) :
   Fit a Mixed Markov Model
 - [`compare_mmm()`](https://saqr.me/Nestimate/reference/compare_mmm.md)
@@ -702,6 +704,8 @@ Topological analysis of networks
 
 - [`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md)
   : Build a Simplicial Complex
+- [`simplicial_features()`](https://saqr.me/Nestimate/reference/simplicial_features.md)
+  : Tidy Topological Features for One or Many Networks
 - [`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md)
   : Persistent Homology
 - [`bottleneck_distance()`](https://saqr.me/Nestimate/reference/bottleneck_distance.md)
@@ -751,7 +755,7 @@ Helper functions and extractors
 - [`predictability()`](https://saqr.me/Nestimate/reference/predictability.md)
   : Compute Node Predictability
 - [`frequencies()`](https://saqr.me/Nestimate/reference/frequencies.md)
-  : Sequence Data Conversion Functions
+  : Build a Transition Frequency Matrix
 - [`state_frequencies()`](https://saqr.me/Nestimate/reference/state_frequencies.md)
   : Compute State Frequencies from Trajectory Data
 - [`net_aggregate_weights()`](https://saqr.me/Nestimate/reference/net_aggregate_weights.md)
@@ -762,8 +766,8 @@ Helper functions and extractors
   : Edge Betweenness Network
 - [`coefs()`](https://saqr.me/Nestimate/reference/coefs.md) : Tidy
   coefficients from a fitted mlvar model
-- [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) : Convert
-  cluster_summary to tna Objects
+- [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) : Promote
+  the Layers of an mcml to Networks
 - [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md) : Build
   a grouped node-level network (htna) from data and a clustering
 - [`as_networks()`](https://saqr.me/Nestimate/reference/as_networks.md)
@@ -799,6 +803,8 @@ Sequence visualization, pattern comparison, and association mining
   : Two-variable mosaic analysis (chi-square test + flat mosaic)
 - [`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.md)
   : Compare Subsequence Patterns Between Groups
+- [`extract_pathways()`](https://saqr.me/Nestimate/reference/extract_pathways.md)
+  : Cut an Event Log into Pathways
 - [`association_rules()`](https://saqr.me/Nestimate/reference/association_rules.md)
   : Discover Association Rules from Sequential or Transaction Data
 
@@ -810,6 +816,18 @@ Predict and evaluate missing connections
   : Predict Missing or Future Links in a Network
 - [`evaluate_links()`](https://saqr.me/Nestimate/reference/evaluate_links.md)
   : Evaluate Link Predictions Against Known Edges
+
+## Outcome Modelling
+
+Relate network and sequence features to an outcome
+
+- [`outcome_model()`](https://saqr.me/Nestimate/reference/outcome_model.md)
+  [`print(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
+  [`summary(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
+  [`plot(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
+  : Model Unit-Level Outcomes from Sequence or Network Predictors
+- [`effects_table()`](https://saqr.me/Nestimate/reference/effects_table.md)
+  : Effect Table of a Fitted Outcome Model
 
 ## Data
 
@@ -869,6 +887,12 @@ Print, summary, plot, and as.data.frame methods for package classes
   [`print(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
   [`plot(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
   : Magnitude difference between the frequency and probability views
+
+- [`outcome_model()`](https://saqr.me/Nestimate/reference/outcome_model.md)
+  [`print(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
+  [`summary(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
+  [`plot(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
+  : Model Unit-Level Outcomes from Sequence or Network Predictors
 
 - [`print(`*`<boot_glasso>`*`)`](https://saqr.me/Nestimate/reference/print.boot_glasso.md)
   : Print Method for boot_glasso

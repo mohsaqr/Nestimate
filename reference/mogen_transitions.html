@@ -11,7 +11,7 @@ sequence of states, along with the observed count and transition probability."><
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,9 +67,12 @@ sequence of states, along with the observed count and transition probability.</p
 
 
 <dt id="arg-order">order<a class="anchor" aria-label="anchor" href="#arg-order"></a></dt>
-<dd><p>Integer. Which order's transitions to extract. Must be a
-whole number; a non-integer value is an error rather than being
-silently truncated. Defaults to the optimal order selected by the model.</p></dd>
+<dd><p>Integer &gt;= 1 and at most the highest order tested. Which
+order's transitions to extract. Must be a whole number; a non-integer
+value is an error rather than being silently truncated. Defaults to the
+optimal order selected by the model - pass an explicit <code>order</code> when
+that optimal order is 0, which has no transition table and therefore
+errors.</p></dd>
 
 
 <dt id="arg-min-count">min_count<a class="anchor" aria-label="anchor" href="#arg-min-count"></a></dt>
@@ -79,14 +82,16 @@ Use this to filter out rare transitions that have unreliable probabilities.</p><
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with columns:</p><dl><dt>path</dt>
+    <p>A data frame with one row per retained transition, sorted by
+<code>count</code> (descending), with columns:</p><dl><dt>path</dt>
 <dd><p>The full state sequence (e.g., "AI -&gt; FAIL -&gt; SOLVE").</p></dd>
 
 <dt>count</dt>
 <dd><p>Number of times this transition was observed.</p></dd>
 
 <dt>probability</dt>
-<dd><p>Transition probability P(to | from).</p></dd>
+<dd><p>Transition probability P(to | from), rounded to 4
+decimal places.</p></dd>
 
 <dt>from</dt>
 <dd><p>The context / conditioning states (k-gram source node).</p></dd>
@@ -95,7 +100,9 @@ Use this to filter out rare transitions that have unreliable probabilities.</p><
 <dd><p>The predicted next state.</p></dd>
 
 
-</dl></div>
+</dl><p>A zero-row data frame with the same columns when no transition reaches
+<code>min_count</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>At order k, each edge in the De Bruijn graph represents a (k+1)-step path.

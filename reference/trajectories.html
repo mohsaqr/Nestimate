@@ -13,7 +13,7 @@ hold the engagement state for that week. States: "Active",
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,9 +63,12 @@ hold the engagement state for that week. States: <code>"Active"</code>,
 
     <div class="section level2">
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
-    <p>A character matrix with 138 rows and 15 columns. Entries are
-one of <code>"Active"</code>, <code>"Average"</code>, <code>"Disengaged"</code>, or
-<code>NA</code>.</p>
+    <p>A character matrix with 138 rows and 15 columns, one row per
+student. Columns are named <code>"1"</code>..<code>"15"</code> (the week). Entries
+are one of <code>"Active"</code>, <code>"Average"</code>, <code>"Disengaged"</code>, or
+<code>NA</code>; <code>NA</code> runs at the end of a row mark drop-out, which the
+right-censored sequence verbs (<code><a href="actor_endpoints.html">actor_endpoints</a></code>,
+<code><a href="mark_terminal_state.html">mark_terminal_state</a></code>) are built to read.</p>
     </div>
 
     <div class="section level2">

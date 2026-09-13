@@ -23,7 +23,9 @@ estimate_network(
 - data:
 
   Data frame (sequences or per-observation frequencies) or a square
-  symmetric matrix (correlation or covariance).
+  symmetric matrix (correlation or covariance). A fitted
+  `net_clustering` or `net_mmm` object is also accepted: the per-cluster
+  networks are (re)built and a `netobject_group` is returned.
 
 - method:
 
@@ -40,10 +42,10 @@ estimate_network(
   options such as `weighted` and `concat` (and the low-level
   `begin_state` / `end_state`, of which `start` / `end` are the public
   form – see those arguments). Column-like entries in `params`
-  (`action`, `id`, `id_col`, `time`, `session`, `order`, `codes`, and
-  `group`) are resolved before format detection and must name existing
-  columns. If the same column role is supplied both directly and through
-  `params`, the names must agree.
+  (`action`, `id`, `id_col`, `actor`, `time`, `session`, `order`,
+  `cols`, `codes`, and `group`) are resolved before format detection and
+  must name existing columns. If the same column role is supplied both
+  directly and through `params`, the names must agree.
 
 - scaling:
 
@@ -58,9 +60,11 @@ estimate_network(
 
 - level:
 
-  Character or NULL. Multilevel decomposition for association methods.
-  One of `NULL`, `"between"`, `"within"`, `"both"`. Requires `id_col`.
-  Default: `NULL`.
+  Character or NULL. Multilevel decomposition for the undirected
+  association methods (`cor`, `pcor`, `glasso`); a directed estimator
+  errors. One of `NULL`, `"between"`, `"within"`, `"both"`. Requires an
+  id column, supplied either as `actor` or as `params$id` /
+  `params$id_col`. Default: `NULL`.
 
 - ...:
 

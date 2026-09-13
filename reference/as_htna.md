@@ -31,10 +31,11 @@ as_htna(x, clusters = NULL, method = "relative", ...)
   Data accepted by
   [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
   (sequence data frame, edgelist, transition matrix, `netobject`, or
-  `tna`); or an `mcml` object, in which case the original `data` must
-  also be supplied and the mcml provides the node-cluster membership; or
-  a fitted `net_mmm` object, which is materialized into one HTNA per
-  sequence cluster using its preserved actor partition.
+  `tna`); or an `mcml` object, which provides the node-cluster
+  membership and, when it was built from wide sequence data, the
+  retained source as well (see `data`); or a fitted `net_mmm` object,
+  which is materialized into one HTNA per sequence cluster using its
+  preserved actor partition.
 
 - clusters:
 
@@ -57,12 +58,13 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 - data:
 
   For the `mcml` method, the original data the mcml was built from
-  (sequence/edgelist/etc.). Optional when the mcml was built from
-  sequence/edgelist data:
+  (sequence/edgelist/etc.). Optional when the mcml was built from wide
+  sequence data (long-format input counts, since
   [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
-  stashes that source (and the `actor`/`action`/`time` roles), so
+  widens it first): that source is stashed on the object, so
   `as_htna(mcml)` works on its own. Required for an mcml built from a
-  matrix/aggregate, which retains no node-level data.
+  matrix, an aggregate, or an edge list, none of which retain a usable
+  node-level source.
 
 ## Value
 
@@ -111,8 +113,26 @@ seqs <- data.frame(
 )
 clusters <- list(C1 = c("A", "B"), C2 = c("C", "D"), C3 = c("E", "F"))
 net <- as_htna(seqs, clusters)
-net$nodes$cluster
-#> [1] "C1" "C1" "C2" "C2" "C3" "C3"
+net
+#> Transition Network (relative probabilities) [directed]
+#>   Weights: [0.500, 1.000]  |  mean: 0.750
+#> 
+#>   Weight matrix:
+#>       A   B   C   D E F
+#>   A 0.0 0.5 0.0 0.5 0 0
+#>   B 0.5 0.0 0.5 0.0 0 0
+#>   C 0.0 0.0 0.0 1.0 0 0
+#>   D 1.0 0.0 0.0 0.0 0 0
+#>   E 0.0 0.0 0.0 0.0 0 1
+#>   F 0.0 0.0 0.0 0.0 1 0 
+#> 
+#>   Initial probabilities:
+#>   A             0.250  ████████████████████████████████████████
+#>   B             0.250  ████████████████████████████████████████
+#>   C             0.250  ████████████████████████████████████████
+#>   E             0.250  ████████████████████████████████████████
+#>   D             0.000  
+#>   F             0.000  
 if (FALSE) { # \dontrun{
 cograph::plot_htna(net)
 } # }

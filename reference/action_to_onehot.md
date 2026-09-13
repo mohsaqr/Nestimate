@@ -45,7 +45,9 @@ action_to_onehot(
 
 ## Value
 
-Data frame with one-hot encoded columns (0/1 integers).
+The input data frame with one 0/1 integer column appended per state
+(named `paste0(prefix, state)`). All other columns are kept; the
+original action column is removed unless `drop_action = FALSE`.
 
 ## Examples
 

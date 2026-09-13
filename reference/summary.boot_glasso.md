@@ -26,7 +26,12 @@ summary(object, type = "edges", ...)
 
 ## Value
 
-A data frame or list of data frames depending on `type`.
+For `type = "edges"`, the `edge_ci` data frame (`edge`, `weight`,
+`ci_lower`, `ci_upper`, `inclusion`) ordered by decreasing absolute
+weight; for `"cs"` the `cs_data` data frame; for `"predictability"` the
+`predictability_ci` data frame; for `"centrality"` a named list of one
+data frame per measure (`node`, `value`, `ci_lower`, `ci_upper`); for
+`"all"` a named list holding all four.
 
 ## Examples
 

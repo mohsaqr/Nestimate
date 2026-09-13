@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,7 @@ centrality value. Default: <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
-<dd><p>Integer. Number of facet columns.</p></dd>
+<dd><p>Integer. Number of facet columns. Default: <code>3</code>.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
@@ -87,22 +87,22 @@ per measure; <code>"line"</code> shows state profiles as lines across measures
 (the value <code>"profile"</code> is still accepted as an alias);
 <code>"heatmap"</code> shows a states-by-measures tile grid, each measure
 scaled to 0–1 for cross-measure comparability with the raw value
-printed in the tile.</p></dd>
+printed in the tile. Default: <code>"bar"</code>.</p></dd>
 
 
 <dt id="arg-scales">scales<a class="anchor" aria-label="anchor" href="#arg-scales"></a></dt>
-<dd><p>Facet scale mode. <code>"free_x"</code> uses free centrality axes;
-<code>"fixed"</code> keeps a common centrality axis.</p></dd>
+<dd><p>Facet scale mode. <code>"free_x"</code> (default) uses free
+centrality axes; <code>"fixed"</code> keeps a common centrality axis.</p></dd>
 
 
 <dt id="arg-profile-scale">profile_scale<a class="anchor" aria-label="anchor" href="#arg-profile-scale"></a></dt>
 <dd><p>Scaling used by <code>type = "line"</code>.
-<code>"measure"</code> rescales each centrality measure to 0–1 before drawing
-cross-measure profiles; <code>"none"</code> uses raw values.</p></dd>
+<code>"measure"</code> (default) rescales each centrality measure to 0–1
+before drawing cross-measure profiles; <code>"none"</code> uses raw values.</p></dd>
 
 
 <dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
-<dd><p>Logical. Add compact value labels.</p></dd>
+<dd><p>Logical. Add compact value labels. Default: <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-drop-zero">drop_zero<a class="anchor" aria-label="anchor" href="#arg-drop-zero"></a></dt>

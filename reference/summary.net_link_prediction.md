@@ -21,7 +21,8 @@ summary(object, ...)
 
 ## Value
 
-A data frame with per-method summary statistics, invisibly.
+A data frame, one row per method, with columns `method`,
+`n_predictions`, `score_mean`, `score_sd`, `score_max` and `score_min`.
 
 ## Examples
 

@@ -130,16 +130,8 @@ print(fit)
 #>   magnitude-difference summary (abs_diff):
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #> 0.00000 0.01143 0.03002 0.06035 0.06894 0.42910 
-# Edges most promoted by row-normalization (rare-source transitions):
-head(fit$edges[order(-fit$edges$signed), c("from", "to", "ftna", "tna")])
-#>         from        to       ftna       tna
-#> 19     adapt consensus 0.04830269 0.4774067
-#> 27 synthesis consensus 0.06042805 0.4662577
-#> 20  cohesion consensus 0.16776736 0.4979351
-#> 43   monitor   discuss 0.10694175 0.3754361
-#> 10     adapt  cohesion 0.02762993 0.2730845
-#> 9  synthesis     adapt 0.03041280 0.2346626
 # \donttest{
+# The polar portrait shows which edges row-normalization promotes.
 plot(fit)                       # stacked polar portrait
 
 plot(fit, type = "circular")    # chord-style diagram

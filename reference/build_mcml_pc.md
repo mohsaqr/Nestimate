@@ -11,8 +11,9 @@ formulas may change between releases.
 Unlike transition counts, partial correlations do not aggregate by
 arithmetic: the submatrix of a pcor matrix is *not* the pcor network of
 the subsystem (the conditioning set changes), and averaging pcor entries
-across blocks is descriptive only. The five `aggregation` methods
-therefore have explicitly different statuses:
+across blocks is descriptive only. The `aggregation` methods therefore
+have explicitly different statuses (the full list of accepted values is
+under `aggregation` below):
 
 - `"average"` (descriptive):
 
@@ -39,7 +40,7 @@ therefore have explicitly different statuses:
   related in spirit to network loadings (Christensen & Golino 2021) but
   not a reimplementation of any EGA-family estimator. Requires raw data.
 
-- `"rv"` (descriptive, multivariate):
+- `"escoufier"` (descriptive, multivariate):
 
   Macro edge A–B = Escoufier's RV coefficient between the member
   blocks - a matrix correlation in `[0, 1]` computed from the block
@@ -47,7 +48,7 @@ therefore have explicitly different statuses:
   re-fit, so nothing is lost to averaging; signs are not represented.
   Requires raw data.
 
-- `"canonical"` (descriptive, multivariate):
+- `"cancor"` (descriptive, multivariate):
 
   Macro edge A–B = the first canonical correlation between the member
   blocks: the strongest linear relationship any weighting of A's items
@@ -319,10 +320,13 @@ An object of class `"mcml_pc"` containing:
 
 - meta:
 
-  List: `aggregation`, `method`, `within`, `scale`, `cor_method`,
+  List: `aggregation` (the name as the caller spelled it), `method`,
+  `within`, `weighting`, `fa_method`, `fa_args`, `scale`, `cor_method`,
   `signed`, `n_nodes`, `n_clusters`, `cluster_sizes`, `n_misfit`,
   `n_flipped`, `directed = FALSE`, `source = "pc"`,
-  `experimental = TRUE`.
+  `experimental = TRUE`. `method` and `weighting` are `NA` on the
+  descriptive paths that re-estimate nothing, and `fa_method`/`fa_args`
+  are set only for `weighting = "factor"`.
 
 ## Details
 
@@ -424,16 +428,18 @@ clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 
 fit <- build_mcml_pc(df, clusters, aggregation = "composite",
                      method = "cor")
-fit$macro$weights
-#>          A        B
-#> A 0.000000 0.235001
-#> B 0.235001 0.000000
-fit$loadings
-#>   node cluster   loading    weight sign max_cross cross_cluster misfit
-#> 1   a1       A 0.4738902 0.3333333    1 0.1671718             B  FALSE
-#> 2   a2       A 0.4537919 0.3333333    1 0.1602877             B  FALSE
-#> 3   a3       A 0.4736153 0.3333333    1 0.1400550             B  FALSE
-#> 4   b1       B 0.5368416 0.3333333    1 0.1618540             A  FALSE
-#> 5   b2       B 0.5156674 0.3333333    1 0.1811768             A  FALSE
-#> 6   b3       B 0.5168036 0.3333333    1 0.1244837             A  FALSE
+fit            # macro (cluster-level) weights
+#> MCML for Psychometric Networks (experimental)
+#>   Aggregation: composite | Estimator: cor | Within: reestimate | cor: pearson | Weights: equal
+#>   6 nodes in 2 clusters (A: 3, B: 3)
+#> 
+#> Macro weights:
+#>       A     B
+#> A 0.000 0.235
+#> B 0.235 0.000
+summary(fit)   # one row per macro edge
+#>   from to   weight
+#> 1    A  B 0.235001
+plot(fit)      # heatmap of the same weights
+
 ```

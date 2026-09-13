@@ -33,9 +33,10 @@ summary(
 
 - order_by:
 
-  Character. Ranking used within each anomaly direction: `"sig"` ranks
-  by the active tail probability, `"freq"` by observed count, `"ratio"`
-  by observed/expected ratio, and `"path"` alphabetically.
+  Character. Ranking used within each anomaly direction: `"sig"`
+  (default) ranks by the active tail probability, `"freq"` (or its alias
+  `"frequency"`) by observed count, `"ratio"` by observed/expected
+  ratio, and `"path"` alphabetically.
 
 - ...:
 
@@ -43,15 +44,20 @@ summary(
 
 ## Value
 
-A data frame with path, observed, expected, ratio, p_tail, and direction
-columns.
+A data frame of the reported anomalies, at most `n` rows per direction,
+with columns `order` (the De Bruijn order the path was found at),
+`path`, `observed`, `expected`, `ratio`, `p_tail` (the raw tail
+probability in the reported direction: `p_over` for over-represented
+paths, `p_under` for under-represented ones) and `direction`
+(`"over"`/`"under"`). Returned visibly; the summary text and the top-`n`
+tables are printed as a side effect. When no anomalies were detected, a
+zero-row data frame with the same columns except `order` is returned.
 
 ## Examples
 
 ``` r
 seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
-hyp <- build_hypa(seqs, k = 2)
-#> Warning: 'k' is deprecated; use 'order' instead.
+hyp <- build_hypa(seqs, order = 2)
 summary(hyp)
 #> HYPA Summary
 #> 
@@ -70,8 +76,7 @@ seqs <- data.frame(
   V3 = c("C","A","B","C","A","B","C","A","B","C"),
   V4 = c("A","B","C","A","B","C","A","B","C","A")
 )
-hypa <- build_hypa(seqs, k = 2L)
-#> Warning: 'k' is deprecated; use 'order' instead.
+hypa <- build_hypa(seqs, order = 2L)
 summary(hypa)
 #> HYPA Summary
 #> 

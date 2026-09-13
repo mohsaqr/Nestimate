@@ -37,7 +37,7 @@ directories)."><meta property="og:image" content="https://saqr.me/Nestimate/logo
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -151,7 +151,10 @@ Default <code>0.75</code>.</p></dd>
 
 
 <dt id="arg-subcutoff">subcutoff<a class="anchor" aria-label="anchor" href="#arg-subcutoff"></a></dt>
-<dd><p>Numeric. Not used (reserved for future subgrouping).</p></dd>
+<dd><p>Numeric. Not used (reserved for future subgrouping);
+accepted for API compatibility and <em>not</em> forwarded to
+<code><a href="https://pak.dynasite.org/idiographic/reference/fit_gimme.html" class="external-link">idiographic::fit_gimme()</a></code>, which does not implement subgrouping
+either. Default <code>0.50</code>.</p></dd>
 
 
 <dt id="arg-paths">paths<a class="anchor" aria-label="anchor" href="#arg-paths"></a></dt>
@@ -196,7 +199,12 @@ stop individual search. Default <code>2</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An S3 object of class <code>"net_gimme"</code> containing:</p><dl><dt><code>temporal</code></dt>
+    <p>The object returned by <code><a href="https://pak.dynasite.org/idiographic/reference/fit_gimme.html" class="external-link">idiographic::fit_gimme()</a></code>: an S3 object of
+class <code>c("net_gimme", "cograph_network", "list")</code>. It is a
+<em>superset</em> of the pre-0.9.0 in-package field contract – every
+element below is present, alongside idiographic's own additions
+(<code>contemp_cov</code>, <code>contemp_cov_avg</code>, <code>contemp_is_cov</code>).
+Elements:</p><dl><dt><code>temporal</code></dt>
 <dd><p>p x p matrix of group-level temporal (lagged)
 path counts – entry <code>[i,j]</code> = number of individuals with path j(t-1)-&gt;i(t).</p></dd>
 
@@ -249,9 +257,22 @@ individual-level paths (beyond group).</p></dd>
 
 
 </dl><p>The object additionally carries idiographic's netobject fields
-(<code>weights</code>, <code>nodes</code>, <code>edges</code>, ...) so it renders directly
-with cograph, and dispatches to idiographic's <code>print</code>, <code>summary</code>,
-and <code>plot</code> methods.</p>
+(<code>weights</code>, <code>nodes</code>, <code>edges</code>, <code>directed</code>,
+<code>data</code>, <code>meta</code>, <code>node_groups</code>) so it renders directly with
+cograph. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> dispatch to
+<span class="pkg">idiographic</span>'s methods, not to Nestimate's: in particular
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns a tidy <code>data.frame</code> rather than printing.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="results-changed-in-">Results changed in 0.9.0<a class="anchor" aria-label="anchor" href="#results-changed-in-"></a></h2>
+
+
+<p>Before 0.9.0 the search ran in an in-package implementation that was
+<em>not</em> upstream-gimme-exact. Delegating to
+<code><a href="https://pak.dynasite.org/idiographic/reference/fit_gimme.html" class="external-link">idiographic::fit_gimme()</a></code> changed which paths the search selects on the
+same data – individual-level paths in particular – so numeric results
+are not comparable with Nestimate &lt;= 0.8.5. The returned object also
+gained fields (see <strong>Value</strong>); nothing was removed.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

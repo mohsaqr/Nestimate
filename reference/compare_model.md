@@ -123,8 +123,10 @@ compare_model(
 - measures:
 
   Character vector of centrality measures to compare. Empty by default
-  (no centrality block). Valid names are `"InStrength"`,
-  `"OutStrength"`, and `"Betweenness"`. Unknown names are ignored with a
+  (no centrality block). Any built-in measure is valid: `"OutStrength"`,
+  `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`, `"Closeness"`,
+  `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"`, `"Clustering"`,
+  `"InCloseness"`, `"OutCloseness"`. Unknown names are ignored with a
   warning.
 
 - network:

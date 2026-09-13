@@ -19,7 +19,7 @@ igraph::edge_betweenness()."><meta property="og:image" content="https://saqr.me/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,9 +99,10 @@ and frequency networks).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>For a <code>netobject</code>: a new <code>netobject</code> (class
-<code>c("netobject", "cograph_network")</code>) whose <code>$weights</code> are the
-edge-betweenness scores, with <code>method = "edge_betweenness"</code>. Call
+    <p>For a <code>netobject</code>: a new network of class
+<code>c("net_edge_betweenness", "netobject", "cograph_network")</code> whose
+<code>$weights</code> are the edge-betweenness scores, with
+<code>method = "edge_betweenness"</code>. Call
 <code><a href="extract_edges.html">extract_edges()</a></code> on it for a tidy per-edge table, or <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
 to render it. The object preserves source-network metadata so
 <code><a href="permutation.html">permutation</a></code> can test edge-betweenness differences by

@@ -15,7 +15,7 @@ original transition data to produce the TRUE Markov chain over cluster states.">
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,6 +74,10 @@ original transition data to produce the TRUE Markov chain over cluster states.</
 <span>  order <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  session <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time_threshold <span class="op">=</span> <span class="fl">900</span>,</span>
+<span>  exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  end <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  end_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  labels <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -101,8 +105,8 @@ the raw data. Otherwise falls back to <code><a href="cluster_summary.html">clust
 <dd><p>If <code>x$data</code> is non-NULL, detects edge list
 vs sequence data. Otherwise falls back to <code><a href="cluster_summary.html">cluster_summary</a></code>.</p></dd>
 
-<dt>cluster_summary</dt>
-<dd><p>Returns as-is.</p></dd>
+<dt>mcml</dt>
+<dd><p>An <code>mcml</code> object is returned unchanged.</p></dd>
 
 <dt>square numeric matrix</dt>
 <dd><p>Falls back to <code><a href="cluster_summary.html">cluster_summary</a></code>.</p></dd>
@@ -143,8 +147,11 @@ pass an explicit named list (<code>list(G1 = c("N1","N2"), ...)</code>)
 or a two-column data frame <code>data.frame(node, group)</code> instead.</p></dd>
 
 <dt>NULL</dt>
-<dd><p>Auto-detect from <code>netobject$nodes</code> or
-<code>$node_groups</code> (same logic as <code><a href="cluster_summary.html">cluster_summary</a></code>).</p></dd>
+<dd><p>Auto-detect from a <code>netobject</code>'s node table (a
+<code>clusters</code>/<code>cluster</code>/<code>groups</code>/<code>group</code> column) or
+from its <code>node_groups</code>. Only <code>netobject</code> input can
+auto-detect; data frames and matrices require an explicit
+assignment.</p></dd>
 
 
 </dl></dd>
@@ -202,6 +209,39 @@ then routed to the existing sequence path. Behaves identically to
 <code>prepare(...) |&gt; build_network() |&gt; build_mcml()</code>.</p></dd>
 
 
+<dt id="arg-exclude">exclude<a class="anchor" aria-label="anchor" href="#arg-exclude"></a></dt>
+<dd><p>Optional character vector of state labels to drop before
+the network is built (e.g. a technical-void marker). On long-format
+input the matching events are removed before sequences are formed, so a
+dropped state never occupies a sequence position; on wide sequence input
+the matching cells are set to <code>NA</code>.</p></dd>
+
+
+<dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
+<dd><p>Optional truncation of each sequence. <code>NULL</code> (default)
+keeps every time point. A fraction in <code>(0, 1)</code> keeps the columns
+covering that quantile of sequence lengths (<code>trim = 0.95</code> keeps the
+shortest 95\<!-- %); a value \code{&gt;= 1} is an absolute cut -->
+(<code>trim = 10</code> keeps the first 10 time points). Same semantics as
+<code><a href="sequence_plot.html">sequence_plot</a></code>'s <code>trim</code>.</p></dd>
+
+
+<dt id="arg-end">end<a class="anchor" aria-label="anchor" href="#arg-end"></a></dt>
+<dd><p>Terminal state appended after each sequence's last observed
+state. <code>FALSE</code> (default) adds none, <code>TRUE</code> adds one labelled
+<code>"End"</code>, and a string supplies the label. Applied <em>after</em>
+<code>trim</code>, so trimming can never remove the marker.</p></dd>
+
+
+<dt id="arg-end-by">end_by<a class="anchor" aria-label="anchor" href="#arg-end-by"></a></dt>
+<dd><p>Optional column name(s) grouping the terminal marker at a
+coarser unit than the sequence. <code>NULL</code> (default) marks every
+sequence. When supplied, only the <em>last</em> sequence of each group is
+marked – e.g. <code>session = "AttemptID", end = "Conclude",
+  end_by = "SkillID"</code> closes each skill once, not each attempt. Requires
+long-format input, since the grouping column lives there.</p></dd>
+
+
 <dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
 <dd><p>Optional name -&gt; label remap applied to within-cluster nodes
 (the macro layer is left untouched because its labels are cluster
@@ -212,15 +252,26 @@ names pass through unchanged.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>cluster_summary</code> object with <code>meta$source = "transitions"</code>,
-fully compatible with <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, <code><a href="as_tna.html">as_tna()</a></code>, and
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>.</p>
+    <p>An <code>mcml</code> object with the same layout as the return value of
+<code><a href="cluster_summary.html">cluster_summary</a></code> (<code>macro</code>, <code>clusters</code>,
+<code>cluster_members</code>, <code>edges</code>, <code>meta</code>). On the sequence and
+edge-list paths <code>meta$source</code> is <code>"transitions"</code>,
+<code>meta$type</code> records the <code>type</code> post-processing, and
+<code>edges</code> is a tidy data frame with one row per observed node-level
+transition and columns <code>from</code>, <code>to</code>, <code>weight</code>,
+<code>cluster_from</code>, <code>cluster_to</code>, <code>type</code>
+(<code>"within"</code>/<code>"between"</code>). Matrix input falls through to
+<code><a href="cluster_summary.html">cluster_summary</a></code>, so <code>meta$source</code> is <code>"matrix"</code>
+and <code>edges</code> is <code>NULL</code>. Works with <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>,
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="as_tna.html">as_tna</a></code>, <code><a href="as_htna.html">as_htna</a></code> and
+<code><a href="macro_network.html">macro_network</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="cluster_summary.html">cluster_summary</a></code> for matrix-based aggregation,
-<code>net_as_tna()</code> to convert to tna objects,
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for visualization</p></div>
+<code><a href="as_tna.html">as_tna</a></code> to promote the layers to netobjects,
+<code><a href="macro_network.html">macro_network</a></code> for the cluster-level network with one
+cluster expanded</p></div>
     </div>
 
     <div class="section level2">
@@ -232,11 +283,22 @@ fully compatible with <code><a href="https://rdrr.io/r/graphics/plot.default.htm
 <span class="r-in"><span>  weight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>G1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>, G2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu">build_mcml</span><span class="op">(</span><span class="va">edges</span>, <span class="va">clusters</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cs</span><span class="op">$</span><span class="va">macro</span><span class="op">$</span><span class="va">weights</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           G1        G2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> G1 0.5000000 0.5000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> G2 0.3333333 0.6666667</span>
+<span class="r-in"><span><span class="fu">build_mcml</span><span class="op">(</span><span class="va">edges</span>, <span class="va">clusters</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MCML Network</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ============</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: tna  | Method: sum </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Nodes: 4  | Clusters: 2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transitions: 6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Macro: 2  | Per-cluster: 4 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Clusters:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G1 (2): A, B</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G2 (2): C, D</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Macro (cluster-level) weights:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        G1     G2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G1 0.5000 0.5000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G2 0.3333 0.6667</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Sequence data with clusters</span></span></span>
 <span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
@@ -246,10 +308,26 @@ fully compatible with <code><a href="https://rdrr.io/r/graphics/plot.default.htm
 <span class="r-in"><span>  T4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"D"</span>, <span class="st">"A"</span>, <span class="st">"C"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu">build_mcml</span><span class="op">(</span><span class="va">seqs</span>, <span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cs</span><span class="op">$</span><span class="va">macro</span><span class="op">$</span><span class="va">weights</span></span></span>
+<span class="r-in"><span><span class="va">cs</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MCML Network</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ============</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: raw  | Method: sum </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Nodes: 4  | Clusters: 2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transitions: 9 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Macro: 3  | Per-cluster: 6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Clusters:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G1 (2): A, B</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G2 (2): C, D</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Macro (cluster-level) weights:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    G1 G2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> G1  2  2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> G2  1  4</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cs</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size within_total between_out between_in</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      G1    2            2           2          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      G2    2            4           1          2</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

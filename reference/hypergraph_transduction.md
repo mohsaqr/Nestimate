@@ -52,9 +52,10 @@ An object of class `net_hypergraph_transduction`: a list with
 `$predictions` (data.frame, one row per node: `node`, `label` (given,
 `NA` if unlabeled), `predicted`, `score` (winning class score), `margin`
 (winning minus runner-up score)), `$classes`, `$scores` (node x class
-score matrix), `$xi`, `$type`, `$n_labeled` and `$params`. Has `print`,
-`summary`, `plot` and `as.data.frame` methods;
-`as.data.frame(x, what = "scores")` returns the tidy long score table.
+score matrix), `$xi`, `$type`, `$n_labeled`, `$n_nodes` and `$params`
+(the `edge_weights` used). Has `print`, `summary`, `plot` and
+`as.data.frame` methods; `as.data.frame(x, what = "scores")` returns the
+tidy long score table.
 
 ## References
 

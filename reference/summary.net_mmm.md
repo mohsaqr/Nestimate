@@ -48,29 +48,28 @@ mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
 summary(mmm)
 #> Mixed Markov Model
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
-#>   ICs: LL = -65.033  |  BIC = 187.886  |  AIC = 164.066  |  ICL = 190.065
-#>   Quality: AvePP = 0.964  |  Entropy = 0.217  |  Class.Err = 0.0%
-#>   Status: did not converge in 10 iterations
+#>   ICs: LL = -62.330  |  BIC = 182.480  |  AIC = 158.659  |  ICL = 184.652
+#>   Quality: AvePP = 0.965  |  Entropy = 0.212  |  Class.Err = 0.0%
 #> 
 #>   Cluster  N           Mix%   AvePP
-#>   1        25 (83.3%)  81.4%  0.966
-#>   2        5 (16.7%)   18.6%  0.954
+#>   1        24 (80.0%)  78.1%  0.966
+#>   2        6 (20.0%)   21.9%  0.961
 #> 
-#> --- Cluster 1 (81.4%, n=25) ---
+#> --- Cluster 1 (78.1%, n=24) ---
 #>       A     B     C
-#> A 0.333 0.333 0.333
-#> B 0.556 0.411 0.033
-#> C 0.447 0.220 0.333
+#> A 0.248 0.376 0.376
+#> B 0.447 0.333 0.220
+#> C 0.842 0.034 0.124
 #> 
-#> --- Cluster 2 (18.6%, n=5) ---
+#> --- Cluster 2 (21.9%, n=6) ---
 #>       A     B     C
-#> A 0.333 0.333 0.333
-#> B 0.038 0.037 0.925
-#> C 0.337 0.329 0.334
+#> A 0.330 0.335 0.335
+#> B 0.337 0.334 0.329
+#> C 0.035 0.939 0.027
 #> 
 #>   component     prior n_assigned mean_posterior     avepp
-#> 1         1 0.8137522         25      0.9664648 0.9664648
-#> 2         2 0.1862478          5      0.9543665 0.9543665
+#> 1         1 0.7809305         24      0.9656098 0.9656098
+#> 2         2 0.2190695          6      0.9614788 0.9614788
 # \donttest{
 set.seed(1)
 seqs <- data.frame(

@@ -29,8 +29,11 @@ network_reliability(
 
   One or more `netobject`s (from
   [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
-  If unnamed, each model is auto-named from its `$method`. A
-  `netobject_group` is flattened into its constituent models.
+  If unnamed, each model is auto-named from its `$method`; duplicate
+  names are made unique with
+  [`make.unique()`](https://rdrr.io/r/base/make.unique.html). A
+  `netobject_group` is flattened into its constituent models (named by
+  group), and an `mcml` or `cograph_network` is converted first.
 
 - iter:
 
@@ -93,6 +96,7 @@ net <- build_network(data.frame(V1 = c("A","B","C","A"),
   V2 = c("B","C","A","B")), method = "relative")
 rel <- network_reliability(net, iter = 10)
 # \donttest{
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
@@ -101,9 +105,9 @@ net <- build_network(seqs, method = "relative")
 rel <- network_reliability(net, iter = 100, seed = 42)
 print(rel)
 #> Split-Half Reliability (100 iterations, split = 50%)
-#>   Mean Abs. Diff.     mean = 0.1493  sd = 0.0330
-#>   Median Abs. Diff.   mean = 0.1275  sd = 0.0390
-#>   Pearson             mean = -0.1906  sd = 0.2242
-#>   Max Abs. Diff.      mean = 0.3789  sd = 0.1037
+#>   Mean Abs. Diff.     mean = 0.1537  sd = 0.0300
+#>   Median Abs. Diff.   mean = 0.1329  sd = 0.0322
+#>   Pearson             mean = 0.2006  sd = 0.1882
+#>   Max Abs. Diff.      mean = 0.3760  sd = 0.0972
 # }
 ```

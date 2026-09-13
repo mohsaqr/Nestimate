@@ -31,7 +31,7 @@ predictability(object, ...)
 
 - object:
 
-  A `netobject` or `netobject_ml` object.
+  A `netobject`, `netobject_ml`, or `netobject_group` object.
 
 - ...:
 
@@ -40,23 +40,27 @@ predictability(object, ...)
 - data:
 
   Optional data frame of the original variables used to estimate the
-  network. Required for `method = "cor"` (multiple-R\\^2\\ regression of
-  each node on its neighbours); ignored for the precision-matrix path
-  used by `glasso`/`pcor`, which has no need of the raw data.
+  network. R\\^2\\ never needs it (it comes from the precision or
+  correlation matrix stored on the object). It is used only for the
+  `RMSE` column and defaults to `object$data`; when neither is available
+  `RMSE` is `NA`.
 
 ## Value
 
-For `netobject`: a named numeric vector of R\\^2\\ values (one per node,
-between 0 and 1).
+For `netobject`: a data frame with one row per node and columns `node`
+(character), `R2` (numeric, between 0 and 1) and `RMSE` (numeric, `NA`
+when no data is available).
 
 For `netobject_ml`: a list with elements `$between` and `$within`, each
-a named numeric vector.
+such a data frame.
 
-A named numeric vector of predictability values per node.
+For `netobject_group`: a named list of such data frames, one per group.
 
-A list with `within` and `between` predictability vectors.
+A data frame with one row per node and columns `node`, `R2` and `RMSE`.
 
-A named list of per-group predictability vectors.
+A list with `between` and `within` predictability data frames.
+
+A named list of per-group predictability data frames.
 
 ## References
 

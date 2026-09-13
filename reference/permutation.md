@@ -60,6 +60,9 @@ permutation(
   or a
   [`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
   object. Must use the same method and have the same nodes as `x`.
+  Default `NULL`: when `x` is a `netobject_group` (or an `mcml`) and `y`
+  is left `NULL`, every pair of groups is tested and the result is a
+  `net_permutation_group` named `"<group i> vs <group j>"`.
 
 - iter:
 
@@ -131,7 +134,18 @@ An object of class `"net_permutation"` containing:
 
 - summary:
 
-  Long-format data frame of edge-level results.
+  Long-format data frame, one row per edge present in either network
+  (undirected networks keep one row per unordered pair), with columns
+  `from`, `to`, `weight_x`, `weight_y`, `diff`, `effect_size`,
+  `p_value`, `sig`.
+
+- global:
+
+  Data frame of the two NCT-style global statistics, one row each:
+  `statistic` (`"M"`, the sum of absolute edge differences, and `"S"`,
+  the largest absolute edge difference), `observed`, and `p_value` from
+  the same permutation null as the edge test. Absent on the
+  edge-betweenness path.
 
 - method:
 
@@ -163,6 +177,12 @@ An object of class `"net_permutation"` containing:
   per state-by-measure: `state`, `centrality`, `diff_true`,
   `effect_size`, `p_value`), `diffs_true` (wide observed differences),
   and `diffs_sig` (observed differences where `p < alpha`, else 0).
+
+Grouped input returns a `"net_permutation_group"` (a named list of
+`net_permutation` results): one element per matching group name when
+both `x` and `y` are `netobject_group`s, or one per group pair when `y`
+is `NULL`. Two `wtna_mixed` inputs return a `"wtna_perm_mixed"` with
+`$transition` and `$cooccurrence` results.
 
 ## See also
 

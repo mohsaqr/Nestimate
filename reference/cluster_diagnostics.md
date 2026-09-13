@@ -34,7 +34,13 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 
 ## Value
 
-A `net_cluster_diagnostics` object.
+`cluster_diagnostics()` returns a `net_cluster_diagnostics` object: a
+list carrying `family`, `k`, `n`, `sizes`, the `per_cluster` data frame
+(one row per cluster), `overall`, `ics`, `metadata` and `source`, as
+detailed above.
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) on that
+object returns the `per_cluster` data frame itself – one row per
+cluster, with family-specific columns.
 
 ## Details
 

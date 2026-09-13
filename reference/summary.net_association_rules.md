@@ -21,7 +21,9 @@ summary(object, ...)
 
 ## Value
 
-A data frame summarizing the rules, invisibly.
+The tidy rules data frame: one row per rule, with columns `antecedent`,
+`consequent`, `support`, `confidence`, `lift`, `conviction`, `count` and
+`n_transactions`.
 
 ## Examples
 

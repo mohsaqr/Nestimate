@@ -52,8 +52,8 @@ build_simplicial(
 
   For `type = "clique"`: minimum non-zero absolute edge weight to
   include an edge (default 0). Edges below this are ignored; zero-weight
-  non-edges are never included. Ignored for `type = "vr"` - use
-  `max_scale` instead.
+  non-edges are never included. Ignored for `type = "vr"` (use
+  `max_scale` instead) and for `type = "pathway"`.
 
 - max_dim:
 
@@ -85,8 +85,50 @@ build_simplicial(
 
 ## Value
 
-A `simplicial_complex` object. For `type = "vr"` an additional
-`$filtration` numeric vector is attached (parallel to `$simplices`).
+A `simplicial_complex` object - a list with:
+
+- simplices:
+
+  List of integer vectors, one per simplex, each holding the (sorted)
+  node indices it spans. Every face of every simplex is present,
+  including all 0-simplices (isolated vertices included).
+
+- nodes:
+
+  Character vector of node labels; `simplices` index into it.
+
+- n_nodes, n_simplices:
+
+  Integer counts.
+
+- dimension:
+
+  Integer. Highest simplex dimension present (a k-simplex has k+1
+  nodes).
+
+- f_vector:
+
+  Named integer vector `dim_0`, `dim_1`, ... - the number of simplices
+  of each dimension.
+
+- density:
+
+  Numeric. `n_simplices` divided by the number of simplices a complete
+  complex on `n_nodes` would have up to `dimension`.
+
+- mean_dim:
+
+  Numeric. Mean simplex dimension.
+
+- type:
+
+  `"clique"`, `"pathway"`, or `"vr"`.
+
+For `type = "vr"` two further elements are attached: `$filtration`
+(numeric, parallel to `$simplices`: the value at which each simplex
+enters) and `$max_scale` (the cap actually used).
+[`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md)
+consumes them directly.
 
 ## See also
 

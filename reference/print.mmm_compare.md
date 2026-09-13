@@ -21,7 +21,8 @@ print(x, ...)
 
 ## Value
 
-The input object, invisibly.
+The comparison table, invisibly, with the printed `best` marker column
+(`"<-- BIC"` / `"<-- ICL"`) added.
 
 ## Examples
 

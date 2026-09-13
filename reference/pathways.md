@@ -42,29 +42,39 @@ pathways(x, order = NULL, min_count = 1L, min_prob = 0, top = NULL, ...)
 
 - x:
 
-  A higher-order network object (`net_hon`, `net_hypa`, or `net_mogen`).
+  A higher-order network object (`net_hon`, `net_hypa`, `net_mogen`), a
+  `netobject`, a `net_association_rules` or a `net_link_prediction`.
 
 - ...:
 
-  Additional arguments.
+  Additional arguments passed on to the method.
 
 - min_count:
 
-  Integer. Minimum transition count to include (default: 1).
+  Integer. Minimum transition count to include (default: 1). Filters
+  noise from rare observations. Used by the `net_hon` and `net_mogen`
+  methods.
 
 - min_prob:
 
   Numeric. Minimum transition probability to include (default: 0).
+  Useful for filtering weak transitions. Used by the `net_hon` and
+  `net_mogen` methods.
 
 - top:
 
-  Integer or NULL. Return only the top N pathways ranked by count
-  (default: NULL = all).
+  Integer or NULL. Keep only the top N pathways: ranked by count for
+  `net_hon` and `net_mogen`, by lift then confidence for
+  `net_association_rules`, and by score for `net_link_prediction`.
+  Default `NULL` (all) everywhere except `net_link_prediction`, whose
+  default is `10`.
 
 - order:
 
-  Integer or NULL. Markov order to extract. Default: optimal order from
-  model selection.
+  Integer or NULL. For `net_hon`, keep only pathways whose source is of
+  this order; default `NULL` = every order above 1. For `net_mogen`, the
+  Markov order to extract; default `NULL` = the optimal order from model
+  selection.
 
 - type:
 
@@ -103,18 +113,8 @@ pathways(x, order = NULL, min_count = 1L, min_prob = 0, top = NULL, ...)
 A character vector of pathway strings in arrow notation (e.g.
 `"A B -> C"`), suitable for
 [`cograph::plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html).
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
-
-A character vector of pathway strings.
+Every method returns this shape, and `character(0)` when nothing
+survives its filters.
 
 ## Methods (by class)
 
@@ -135,7 +135,9 @@ A character vector of pathway strings.
   `"A B -> C"` suitable for
   [`cograph::plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html).
   Antecedent items become source nodes; consequent items become the
-  target.
+  target. Rules whose antecedent and consequent share the same item set
+  describe the same simplex, so only the highest-lift rule per item set
+  is returned; `top` is applied after that de-duplication.
 
 - `pathways(net_link_prediction)`: Extract pathways from link
   predictions
@@ -171,5 +173,5 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net, methods = "common_neighbors")
 pathways(pred)
-#> character(0)
+#> [1] "C A B D -> E"
 ```

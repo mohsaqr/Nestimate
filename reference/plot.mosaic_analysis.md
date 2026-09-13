@@ -24,17 +24,16 @@ plot(x, ...)
 
 ## Value
 
-The `ggplot` object, invisibly (drawn as a side effect).
+The re-rendered flat mosaic `ggplot` object, invisibly; the plot is
+drawn on the active device as a side effect.
 
 ## Examples
 
 ``` r
-df <- data.frame(
-  a = sample(c("X", "Y", "Z"), 200, replace = TRUE),
-  b = sample(c("P", "Q"), 200, replace = TRUE)
-)
-res <- mosaic_analysis(df, "a", "b", min_count = 5)
 # \donttest{
+data(group_regulation_long, package = "Nestimate")
+res <- mosaic_analysis(group_regulation_long, "Course", "Action",
+                       min_count = 20)
 plot(res, tile_label = "percent", legend_position = "bottom")
 
 # }

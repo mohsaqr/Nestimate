@@ -14,7 +14,9 @@ build_tna(data, start = FALSE, end = FALSE, ...)
 - data:
 
   Data frame (sequences or per-observation frequencies) or a square
-  symmetric matrix (correlation or covariance).
+  symmetric matrix (correlation or covariance). A fitted
+  `net_clustering` or `net_mmm` object is also accepted: the per-cluster
+  networks are (re)built and a `netobject_group` is returned.
 
 - start:
 
@@ -23,7 +25,8 @@ build_tna(data, start = FALSE, end = FALSE, ...)
   is `start -> first_observed`). `FALSE` (default) adds nothing; `TRUE`
   uses the label `"Start"`; a single string uses that string as the
   label. Only valid for the transition methods (`relative`, `frequency`,
-  `co_occurrence`, `attention`); errors otherwise.
+  `co_occurrence`, `attention`, `ngram`, `gap`, `reverse`); errors
+  otherwise (`wtna` included).
 
 - end:
 

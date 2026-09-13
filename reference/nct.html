@@ -15,7 +15,7 @@ permutation of group labels."><meta property="og:image" content="https://saqr.me
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -122,13 +122,18 @@ Default <code>TRUE</code>.</p></dd>
 
 <dt>M</dt>
 <dd><p>List with <code>observed</code>, <code>perm</code>, <code>p_value</code> for
-the global strength test.</p></dd>
+the global strength test. P-values are permutation p-values,
+<code>(sum(perm &gt;= observed) + 1) / (iter + 1)</code>.</p></dd>
 
 <dt>S</dt>
 <dd><p>Same structure for the maximum absolute edge difference.</p></dd>
 
 <dt>E</dt>
-<dd><p>Same structure for per-edge tests.</p></dd>
+<dd><p>Same structure for the per-edge tests (<code>observed</code> and
+<code>p_value</code> are one value per upper-triangle edge, <code>perm</code> an
+<code>iter</code> by edges matrix), plus <code>edge_names</code>, a two-column
+data frame of the node pairs (<code>NULL</code> when <code>data1</code> has no
+column names).</p></dd>
 
 <dt>n_iter</dt>
 <dd><p>Number of permutations.</p></dd>
@@ -136,16 +141,22 @@ the global strength test.</p></dd>
 <dt>paired</dt>
 <dd><p>Whether a paired test was used.</p></dd>
 
+<dt>params</dt>
+<dd><p>List of the settings used: <code>gamma</code>, <code>abs</code>,
+<code>weighted</code>, <code>p_adjust</code>.</p></dd>
+
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Implementation matches <code>NetworkComparisonTest::NCT()</code> with defaults
-<code>abs = TRUE</code>, <code>weighted = TRUE</code>, <code>paired = FALSE</code> at
-machine precision when the same seed is used. The network estimator is
-EBIC-selected glasso applied to a Pearson correlation matrix, with
-<code><a href="https://rdrr.io/pkg/Matrix/man/nearPD.html" class="external-link">Matrix::nearPD</a></code> symmetrization (matching NCT's
-<code>NCT_estimator_GGM</code> default).</p>
+    <p>Follows <code>NetworkComparisonTest::NCT()</code> with defaults
+<code>abs = TRUE</code>, <code>weighted = TRUE</code>, <code>paired = FALSE</code>. The
+network estimator is EBIC-selected glasso applied to a Pearson
+correlation matrix, with <code><a href="https://rdrr.io/pkg/Matrix/man/nearPD.html" class="external-link">Matrix::nearPD</a></code> symmetrization (matching
+NCT's <code>NCT_estimator_GGM</code> default). The glasso solver is not the
+Fortran one NCT wraps, so results agree to independent-solver precision
+(of the order of <code>1e-4</code> on the test statistics) rather than
+bit-for-bit, even under the same seed.</p>
     </div>
 
     <div class="section level2">
@@ -156,8 +167,8 @@ EBIC-selected glasso applied to a Pearson correlation matrix, with
 <span class="r-in"><span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span> <span class="op">*</span> <span class="fl">5</span><span class="op">)</span>, <span class="fl">200</span>, <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x2</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">nct</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">M</span><span class="op">$</span><span class="va">p_value</span></span></span>
-<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">S</span><span class="op">$</span><span class="va">p_value</span></span></span>
+<span class="r-in"><span><span class="va">res</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

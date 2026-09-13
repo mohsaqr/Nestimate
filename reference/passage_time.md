@@ -97,9 +97,17 @@ An object of class `"net_mpt"` with:
 
   Character vector of state names.
 
-`summary.net_mpt` returns a data frame with one row per state and
-columns `state`, `return_time`, `stationary`, `mean_out` (mean steps to
-other states), `mean_in` (mean steps from other states).
+For a `netobject_group` the result is a `"net_mpt_group"`: a named list
+holding one `net_mpt` per group.
+
+`summary.net_mpt` returns an object of class `"summary.net_mpt"`: a list
+whose `table` is a data frame with one row per state and columns
+`state`, `return_time`, `stationary`, `mean_out` (mean steps to other
+states) and `mean_in` (mean steps from other states), and whose `object`
+is the `net_mpt` it summarises. Its print method shows the table.
+
+`plot.net_mpt` returns a ggplot object: a from-by-to heatmap of the mean
+first passage time matrix.
 
 ## Details
 

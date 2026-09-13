@@ -17,7 +17,7 @@ netobject_group."><meta property="og:image" content="https://saqr.me/Nestimate/l
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,7 +91,14 @@ or <code>build_network(net_mmm)</code>), or <code>net_mmm_clustering</code>.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>net_cluster_diagnostics</code> object.</p>
+    <p><code>cluster_diagnostics()</code> returns a
+<code>net_cluster_diagnostics</code> object: a list carrying
+<code>family</code>, <code>k</code>, <code>n</code>, <code>sizes</code>, the
+<code>per_cluster</code> data frame (one row per cluster), <code>overall</code>,
+<code>ics</code>, <code>metadata</code> and <code>source</code>, as detailed above.
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on that object returns the
+<code>per_cluster</code> data frame itself – one row per cluster, with
+family-specific columns.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

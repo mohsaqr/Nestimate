@@ -23,8 +23,10 @@ plot(
 - type:
 
   Character. Plot type: `"silhouette"` (per-observation silhouette
-  bars), `"mds"` (2D MDS projection), or `"heatmap"` (distance matrix
-  heatmap ordered by cluster). Default: `"silhouette"`.
+  bars), `"mds"` (2D MDS projection), `"heatmap"` (distance matrix
+  heatmap ordered by cluster), or `"predictors"` (odds-ratio forest plot
+  of the post-hoc covariate analysis; requires `covariates` and an
+  estimator that produces coefficients). Default: `"silhouette"`.
 
 - combined:
 
@@ -38,7 +40,9 @@ plot(
 
 ## Value
 
-A `ggplot` object (invisibly).
+A `ggplot` object (invisibly); for `type = "predictors"` with
+`combined = FALSE`, a list of `ggplot` objects named by cluster
+(invisibly).
 
 ## Examples
 

@@ -33,7 +33,8 @@ plot(x, type = "edges", measure = NULL, ...)
 
 ## Value
 
-A `ggplot` object, invisibly.
+A `ggplot` object (returned, and so printed when the call is made at the
+top level).
 
 ## Examples
 

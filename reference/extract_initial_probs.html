@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,19 +57,27 @@
 
 
 <dl><dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
-<dd><p>A TNA model object or a list containing an 'initial' element.</p></dd>
+<dd><p>A <code>netobject</code>, TNA model object, <code>mcml</code> object, or
+a list containing an <code>initial</code> element.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named numeric vector of initial state probabilities.</p>
+    <p>For a single network: a named numeric vector of initial state
+probabilities summing to 1, of class
+<code>c("nest_initial_probs", "numeric")</code>. The class stamp only adds a
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method returning a tidy <code>state</code>/<code>prob</code> data
+frame.</p>
+<p>For an <code>mcml</code> object: a named list of such vectors, with
+<code>macro</code> first and then one element per cluster (taken from each
+layer's <code>$inits</code>, unstamped).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Initial probabilities represent the probability of starting a sequence in
 each state. If the model doesn't have explicit initial probabilities,
-this function attempts to estimate them from the data or use uniform
-probabilities.</p>
+this function falls back to a uniform distribution over the states of the
+transition matrix and warns.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

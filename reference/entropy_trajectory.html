@@ -19,7 +19,7 @@ transition entropy through task phases this way)."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,7 +131,8 @@ index when no <code>time</code> column), <code>time_start</code>,
 <code>time_end</code>, <code>n_transitions</code>, <code>n_states</code> (distinct
 states in the window), <code>entropy</code> (bits per transition) and
 <code>entropy_norm</code> (divided by \(\log_b\) of the window's
-active-state count; in \([0, 1]\)).</p></dd>
+active-state count, floored at 2 states so the ceiling is never
+zero; in \([0, 1]\)).</p></dd>
 
 <dt>window, step, base, states</dt>
 <dd><p>Call metadata; <code>states</code> is the

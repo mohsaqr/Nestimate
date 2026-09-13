@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,9 +68,11 @@
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>Character. Plot type: <code>"silhouette"</code> (per-observation
-silhouette bars), <code>"mds"</code> (2D MDS projection), or
-<code>"heatmap"</code> (distance matrix heatmap ordered by cluster).
-Default: <code>"silhouette"</code>.</p></dd>
+silhouette bars), <code>"mds"</code> (2D MDS projection),
+<code>"heatmap"</code> (distance matrix heatmap ordered by cluster), or
+<code>"predictors"</code> (odds-ratio forest plot of the post-hoc
+covariate analysis; requires <code>covariates</code> and an estimator that
+produces coefficients). Default: <code>"silhouette"</code>.</p></dd>
 
 
 <dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
@@ -86,7 +88,9 @@ returned.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>ggplot</code> object (invisibly).</p>
+    <p>A <code>ggplot</code> object (invisibly); for
+<code>type = "predictors"</code> with <code>combined = FALSE</code>, a list of
+<code>ggplot</code> objects named by cluster (invisibly).</p>
     </div>
 
     <div class="section level2">

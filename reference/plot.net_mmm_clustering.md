@@ -53,7 +53,9 @@ plot(
 
 ## Value
 
-A `ggplot` object, invisibly.
+A `ggplot` object, invisibly; for `type = "covariates"` / `"predictors"`
+with `combined = FALSE`, a list of `ggplot` objects named by cluster
+(invisibly).
 
 ## Examples
 

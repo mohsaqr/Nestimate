@@ -66,14 +66,11 @@ stored as attributes. Each element is a standard
 `$data`), so [`print()`](https://rdrr.io/r/base/print.html),
 [`summary()`](https://rdrr.io/r/base/summary.html),
 [`coefs()`](https://saqr.me/Nestimate/reference/coefs.md), and
-`cograph::splot(fit$temporal)` work directly. The three constituents are
-matrix-wrapped and carry no underlying panel data, so data-resampling
-verbs such as
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
-(and reliability/stability) cannot iterate over them - extract a single
-constituent and rebuild via
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
-if you need those. Structure:
+`cograph::splot(fit$temporal)` work directly. See **Dispatch
+limitation** for the verbs that do *not* work on this object
+([`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+`centrality()`, reliability/stability). Structure:
 
 - `fit$temporal`:
 
@@ -153,6 +150,29 @@ configurations, and to exact equality (max_diff == 0) against the
 pre-delegation Nestimate implementation on all layers, coefficients, and
 observation counts across lag/standardize/day/beep configurations.
 
+When the data carry no between-person variance (a random-intercept SD of
+zero), the between-subjects network is not estimable. Since 0.9.0 this
+raises a warning from idiographic and still returns the zero matrix by
+convention; before 0.9.0 the zero matrix was returned silently.
+
+## Dispatch limitation
+
+There is no [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+method for `net_mlvar` - plot a single constituent
+(`cograph::splot(fit$temporal)`) instead. The three constituents are
+matrix-wrapped and carry no `$data`, so the data-resampling and
+data-reading verbs do **not** work on the fitted object or its parts:
+[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+[`certainty()`](https://saqr.me/Nestimate/reference/certainty.md),
+[`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md),
+[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+and `centrality()` all need the source panel. Extract a constituent and
+rebuild it through
+[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+if you need those. Use
+[`coefs()`](https://saqr.me/Nestimate/reference/coefs.md) for the tidy
+model output.
+
 ## See also
 
 [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
@@ -160,11 +180,34 @@ observation counts across lag/standardize/day/beep configurations.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-d <- simulate_data("mlvar", seed = 1)
-fit <- build_mlvar(d, vars = attr(d, "vars"),
-                   id = "id", day = "day", beep = "beep")
-print(fit)
-summary(fit)
-} # }
+# \donttest{
+# A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by
+# `happy` one beep earlier, so the temporal network should recover it.
+if (requireNamespace("lme4", quietly = TRUE)) {
+  set.seed(1)
+  n_beep <- 20
+  ar1 <- function(n, phi) as.numeric(stats::filter(stats::rnorm(n), phi,
+                                                   method = "recursive"))
+  panel <- do.call(rbind, lapply(seq_len(20), function(i) {
+    happy <- ar1(n_beep, 0.4)
+    data.frame(
+      id    = i,
+      beep  = seq_len(n_beep),
+      happy = happy + stats::rnorm(1),
+      calm  = ar1(n_beep, 0.3) + stats::rnorm(1),
+      tired = 0.5 * c(0, happy[-n_beep]) + stats::rnorm(n_beep) +
+              stats::rnorm(1)
+    )
+  }))
+  fit <- build_mlvar(panel, vars = c("happy", "calm", "tired"),
+                     id = "id", beep = "beep")
+  fit
+  coefs(fit)
+  summary(fit)
+}
+#>           network n_nodes n_edges density mean_abs_weight n_positive n_negative
+#> 1        temporal       3       6       1      0.11569402          2          4
+#> 2 contemporaneous       3       3       1      0.05304465          1          2
+#> 3         between       3       3       1      0.15389239          2          1
+# }
 ```

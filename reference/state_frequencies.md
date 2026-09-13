@@ -17,7 +17,9 @@ state_frequencies(data)
 
 ## Value
 
-A data frame with columns: `state`, `count`, `proportion`.
+A data frame with one row per distinct state, sorted by `count`
+(descending), with columns `state`, `count` and `proportion` (share of
+all observations, rounded to 4 decimal places).
 
 ## Examples
 

@@ -63,11 +63,18 @@ wtna(
 
 ## Value
 
-For `method = "transition"` or `"cooccurrence"`: a `netobject` (see
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
+For `method = "transition"` or `"cooccurrence"`: a
+`c("netobject", "cograph_network")` object (see
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md))
+with `method` set to `"wtna_transition"` or `"wtna_cooccurrence"`,
+`directed = TRUE` only for transitions, and the windowing settings
+(`type`, `window_size`, `mode`, `codes`, `actor`) recorded in `$params`.
+Transition networks also carry `$initial`, the per-actor-averaged
+initial state distribution.
 
-For `method = "both"`: a `wtna_mixed` object with elements `$transition`
-and `$cooccurrence`, each a `netobject`.
+For `method = "both"`: a `wtna_mixed` object - a list with elements
+`$transition` and `$cooccurrence` (each a `netobject` as above) and
+`$method = "wtna_both"`.
 
 ## Details
 

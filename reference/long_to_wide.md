@@ -46,13 +46,18 @@ long_to_wide(
 
 ## Value
 
-A data frame in wide format where each row is a sequence and columns V1,
-V2, ... contain the actions at each time point.
+A data frame in wide format, one row per sequence: the `id_col` column
+followed by the time point columns `V1`, `V2`, ... (named with
+`time_prefix`) holding the action at each time point. With
+`fill_na = TRUE` short sequences are padded with `NA` so every row
+shares the same columns; with `fill_na = FALSE` only the time points
+present in every sequence are kept.
 
 ## Details
 
-This function converts long format data (like that from
-`simulate_long_data()`) to the wide format expected by
+Converts long format data (one row per action) to the wide format
+expected by
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
 [`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md) and
 related functions.
 

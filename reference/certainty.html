@@ -27,7 +27,7 @@ net_bootstrap object work unchanged.'><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,13 +130,18 @@ non-zero edge weights.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>c("net_certainty", "net_bootstrap")</code> with the
-same fields as <code><a href="bootstrap_network.html">bootstrap_network</a></code>: <code>original</code>, <code>mean</code>,
+    <p>For a <code>netobject</code>: an object of class
+<code>c("net_certainty", "net_bootstrap")</code> with the same fields as
+<code><a href="bootstrap_network.html">bootstrap_network</a></code>: <code>original</code>, <code>mean</code>,
 <code>sd</code>, <code>p_values</code>, <code>significant</code>, <code>ci_lower</code>,
 <code>ci_upper</code>, <code>cr_lower</code>, <code>cr_upper</code>, <code>summary</code>,
 <code>model</code>, <code>method</code>, <code>params</code>, <code>ci_level</code>,
 <code>inference</code>, <code>consistency_range</code>, <code>edge_threshold</code>, plus
-<code>prior</code> and <code>iter = NA</code> (no iterations).</p>
+<code>prior</code>, <code>ci_method = "analytic"</code> and <code>iter = NA</code> (no
+iterations).</p>
+<p>For a <code>netobject_group</code>: a named list of those objects, one per
+constituent network, of class
+<code>c("net_certainty_group", "net_bootstrap_group", "list")</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

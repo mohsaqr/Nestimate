@@ -21,5 +21,7 @@ summary(object, ...)
 
 ## Value
 
-The tidy per-cell `counts` data.frame, with the `stats` row attached as
-an attribute.
+The tidy per-cell `data.frame`: one row per (var1, var2) cell, with the
+two variable columns (named after `var1` / `var2`) plus `observed`,
+`expected`, `residual` and `pct`. The one-row test summary is attached
+as the `"stats"` attribute.

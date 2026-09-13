@@ -13,7 +13,7 @@ Accepts the same inputs as sequence_plot."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -104,7 +104,9 @@ one panel is drawn per cluster.</p></dd>
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
 <dd><p>Optional grouping vector (length <code>nrow(x)</code>) producing
-one panel per group. Ignored if <code>x</code> is a <code>net_clustering</code>.</p></dd>
+one panel per group. <code>NULL</code> (default) falls back to the cluster
+assignments carried by a <code>net_clustering</code> / <code>net_mmm</code> /
+<code>netobject_group</code> input; supplying <code>group</code> overrides them.</p></dd>
 
 
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
@@ -145,11 +147,12 @@ Okabe-Ito.</p></dd>
 
 
 <dt id="arg-na-color">na_color<a class="anchor" aria-label="anchor" href="#arg-na-color"></a></dt>
-<dd><p>Colour for the <code>NA</code> band.</p></dd>
+<dd><p>Colour for the <code>NA</code> band. Default <code>"grey90"</code>.</p></dd>
 
 
 <dt id="arg-frame">frame<a class="anchor" aria-label="anchor" href="#arg-frame"></a></dt>
-<dd><p>If <code>TRUE</code> (default), draw a box around each panel.</p></dd>
+<dd><p><code>FALSE</code> (default) draws no panel box; <code>TRUE</code> draws
+a box around each panel.</p></dd>
 
 
 <dt id="arg-width-height">width, height<a class="anchor" aria-label="anchor" href="#arg-width-height"></a></dt>
@@ -230,9 +233,29 @@ from device width (clamped to <code>[0.65, 1.2]</code>).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisibly, a list with <code>counts</code>, <code>proportions</code>,
-<code>levels</code>, <code>palette</code>, and <code>groups</code>.</p>
-    </div>
+    <p>Invisibly, a list describing the drawn figure:</p><dl><dt>counts</dt>
+<dd><p>Named list, one entry per group, each a
+(state x time point) numeric matrix of cell counts. Rows are named
+by <code>levels</code>; columns are the retained time points.</p></dd>
+
+<dt>proportions</dt>
+<dd><p>Same shape as <code>counts</code>, each column divided
+by its total.</p></dd>
+
+<dt>levels</dt>
+<dd><p>Character vector of state labels in plotting order,
+with <code>"NA"</code> appended when <code>na = TRUE</code>.</p></dd>
+
+<dt>palette</dt>
+<dd><p>Character vector of fill colours, parallel to
+<code>levels</code>.</p></dd>
+
+<dt>groups</dt>
+<dd><p>Character vector of group labels (<code>"all"</code> when
+ungrouped), parallel to <code>counts</code> / <code>proportions</code>.</p></dd>
+
+
+</dl></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="sequence_plot.html">sequence_plot</a></code>, <code><a href="build_clusters.html">build_clusters</a></code></p></div>

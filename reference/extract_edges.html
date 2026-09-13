@@ -9,7 +9,7 @@ data frame of from-to-weight tuples."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,8 @@ data frame of from-to-weight tuples.</p>
 
 
 <dl><dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
-<dd><p>A TNA model object or a matrix of weights.</p></dd>
+<dd><p>A <code>netobject</code>, TNA model object, <code>mcml</code> object, or
+a matrix of weights.</p></dd>
 
 
 <dt id="arg-threshold">threshold<a class="anchor" aria-label="anchor" href="#arg-threshold"></a></dt>
@@ -78,7 +79,8 @@ data frame of from-to-weight tuples.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with columns:</p><dl><dt>from</dt>
+    <p>For a single network: a data frame with one row per retained edge
+and columns:</p><dl><dt>from</dt>
 <dd><p>Source state name.</p></dd>
 
 <dt>to</dt>
@@ -88,7 +90,9 @@ data frame of from-to-weight tuples.</p>
 <dd><p>Edge weight (transition probability).</p></dd>
 
 
-</dl></div>
+</dl><p>For an <code>mcml</code> object: a named list of such data frames, with
+<code>macro</code> first and then one element per cluster.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function converts the transition matrix into an edge list format,

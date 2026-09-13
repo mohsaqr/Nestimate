@@ -35,4 +35,7 @@ plot(x, type = NULL, ...)
 
 ## Value
 
-A `ggplot` object, invisibly.
+Whatever the underlying plot method returns: a `ggplot` object,
+invisibly; or, for the covariate forest views called with
+`combined = FALSE`, a list of `ggplot` objects named by cluster
+(invisibly).

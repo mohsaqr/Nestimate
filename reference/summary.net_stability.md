@@ -27,15 +27,19 @@ A data frame with columns `measure`, `drop_prop`, `mean_cor`, `sd_cor`,
 ## Examples
 
 ``` r
-net <- build_network(data.frame(V1 = c("A","B","C","A"),
-  V2 = c("B","C","A","B")), method = "relative")
-cs <- centrality_stability(net, iter = 10, drop_prop = 0.3)
-#> Warning: All centrality measures have zero variance. No stability can be assessed.
+seqs <- data.frame(
+  T1 = c("plan", "code", "debug", "plan", "test", "code"),
+  T2 = c("code", "debug", "code", "plan", "code", "test"),
+  T3 = c("debug", "code", "plan", "code", "debug", "plan"),
+  T4 = c("test", "plan", "test", "debug", "plan", "code")
+)
+net <- build_network(seqs, method = "relative")
+cs <- centrality_stability(net, iter = 10, drop_prop = 0.3, seed = 1)
 summary(cs)
-#>       measure drop_prop mean_cor sd_cor prop_above
-#> 1  InStrength       0.3      NaN     NA        NaN
-#> 2 OutStrength       0.3      NaN     NA        NaN
-#> 3 Betweenness       0.3      NaN     NA        NaN
+#>       measure drop_prop  mean_cor     sd_cor prop_above
+#> 1  InStrength       0.3 0.9119179 0.06965928        1.0
+#> 2 OutStrength       0.3 1.0000000 0.00000000        1.0
+#> 3 Betweenness       0.3 0.6940525 0.30018702        0.5
 # \donttest{
 set.seed(1)
 seqs <- data.frame(

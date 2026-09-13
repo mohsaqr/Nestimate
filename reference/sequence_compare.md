@@ -37,8 +37,9 @@ sequence_compare(
 
 - min_freq:
 
-  Integer. Minimum frequency in each group for a pattern to be included.
-  Default: 5.
+  Integer. Minimum frequency in each group for a pattern to be included:
+  a pattern is kept only when its count reaches this threshold in
+  *every* group. Default: 5.
 
 - test:
 
@@ -62,17 +63,21 @@ An object of class `"net_sequence_comparison"` containing:
 
 - patterns:
 
-  Tidy data.frame. Always present: `pattern`, `length`, `freq_<group>`,
-  `prop_<group>`, `resid_<group>`. If `test = "permutation"`:
+  Tidy data.frame, one row per retained k-gram pattern. Always present:
+  `pattern`, `length`, and one `freq_<group>`, `prop_<group>` and
+  `resid_<group>` column per group. If `test = "permutation"`:
   `effect_size`, `p_value`. If `test = "chisq"`: `statistic`, `p_value`.
+  Rows are ordered by ascending adjusted `p_value` when a test was run,
+  and by descending maximum absolute residual otherwise.
 
 - groups:
 
-  Character vector of group names.
+  Character vector of group names, sorted.
 
 - n_patterns:
 
-  Integer. Number of patterns passing min_freq.
+  Integer. Number of rows in `patterns`, i.e. the patterns meeting
+  `min_freq` in every group.
 
 - params:
 
@@ -114,9 +119,19 @@ any method supported by
 [`p.adjust`](https://rdrr.io/r/stats/p.adjust.html). The default is
 `"fdr"` (Benjamini-Hochberg).
 
+## References
+
+Haberman, S. J. (1973). The analysis of residuals in cross-classified
+tables. *Biometrics*, 29(1), 205–220. (standardized residuals)
+
+Benjamini, Y. & Hochberg, Y. (1995). Controlling the false discovery
+rate. *Journal of the Royal Statistical Society B*, 57(1), 289–300. (the
+default `adjust = "fdr"`)
+
 ## Examples
 
 ``` r
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 60, TRUE),
   V2 = sample(LETTERS[1:4], 60, TRUE),

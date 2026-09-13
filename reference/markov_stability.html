@@ -11,7 +11,7 @@ recurrence time, sojourn time, and mean accessibility to/from other states."><me
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,7 +114,14 @@ can be printed, saved, or re-laid-out independently.</p></dd>
 <dd><p>The underlying <code>net_mpt</code> object.</p></dd>
 
 
-</dl></div>
+</dl><p>For a <code>netobject_group</code> the result is a
+<code>"net_markov_stability_group"</code>: a named list holding one such
+object per group.</p>
+<p><code>plot.net_markov_stability</code> returns a faceted ggplot object
+when <code>combined = TRUE</code>, and (invisibly) a named list of
+single-metric ggplots, one per entry of <code>metrics</code>, when
+<code>combined = FALSE</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Sojourn time</strong> is the expected consecutive time steps spent in a
@@ -124,6 +131,11 @@ state before leaving: \(1/(1-P_{ii})\). States with
 others; reflects how "sticky" or "isolated" the state is.</p>
 <p><strong>avg_time_from_others</strong>: mean passage time from all other states
 to this one; reflects accessibility (attractor strength).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Kemeny, J.G. and Snell, J.L. (1976). <em>Finite Markov Chains</em>.
+Springer-Verlag.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

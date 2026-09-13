@@ -25,7 +25,7 @@ For net_mogen: extracts all transitions at the optimal order
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,31 +102,39 @@ under-represented relative to the hypergeometric null model).</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A higher-order network object (<code>net_hon</code>,
-<code>net_hypa</code>, or <code>net_mogen</code>).</p></dd>
+<dd><p>A higher-order network object (<code>net_hon</code>, <code>net_hypa</code>,
+<code>net_mogen</code>), a <code>netobject</code>, a <code>net_association_rules</code>
+or a <code>net_link_prediction</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments.</p></dd>
+<dd><p>Additional arguments passed on to the method.</p></dd>
 
 
 <dt id="arg-min-count">min_count<a class="anchor" aria-label="anchor" href="#arg-min-count"></a></dt>
 <dd><p>Integer. Minimum transition count to include
-(default: 1).</p></dd>
+(default: 1). Filters noise from rare observations. Used by the
+<code>net_hon</code> and <code>net_mogen</code> methods.</p></dd>
 
 
 <dt id="arg-min-prob">min_prob<a class="anchor" aria-label="anchor" href="#arg-min-prob"></a></dt>
 <dd><p>Numeric. Minimum transition probability to include
-(default: 0).</p></dd>
+(default: 0). Useful for filtering weak transitions. Used by the
+<code>net_hon</code> and <code>net_mogen</code> methods.</p></dd>
 
 
 <dt id="arg-top">top<a class="anchor" aria-label="anchor" href="#arg-top"></a></dt>
-<dd><p>Integer or NULL. Return only the top N pathways ranked
-by count (default: NULL = all).</p></dd>
+<dd><p>Integer or NULL. Keep only the top N pathways: ranked by count
+for <code>net_hon</code> and <code>net_mogen</code>, by lift then confidence for
+<code>net_association_rules</code>, and by score for
+<code>net_link_prediction</code>. Default <code>NULL</code> (all) everywhere except
+<code>net_link_prediction</code>, whose default is <code>10</code>.</p></dd>
 
 
 <dt id="arg-order">order<a class="anchor" aria-label="anchor" href="#arg-order"></a></dt>
-<dd><p>Integer or NULL. Markov order to extract. Default:
+<dd><p>Integer or NULL. For <code>net_hon</code>, keep only pathways whose
+source is of this order; default <code>NULL</code> = every order above 1. For
+<code>net_mogen</code>, the Markov order to extract; default <code>NULL</code> = the
 optimal order from model selection.</p></dd>
 
 
@@ -169,13 +177,8 @@ pathway (default: 3).</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A character vector of pathway strings in arrow notation
 (e.g. <code>"A B -&gt; C"</code>), suitable for
-<code><a href="https://sonsoles.me/cograph/reference/plot_simplicial.html" class="external-link">cograph::plot_simplicial()</a></code>.</p>
-<p>A character vector of pathway strings.</p>
-<p>A character vector of pathway strings.</p>
-<p>A character vector of pathway strings.</p>
-<p>A character vector of pathway strings.</p>
-<p>A character vector of pathway strings.</p>
-<p>A character vector of pathway strings.</p>
+<code><a href="https://sonsoles.me/cograph/reference/plot_simplicial.html" class="external-link">cograph::plot_simplicial()</a></code>. Every method returns this shape, and
+<code>character(0)</code> when nothing survives its filters.</p>
     </div>
     <div class="section level2">
     <h2 id="methods-by-class-">Methods (by class)<a class="anchor" aria-label="anchor" href="#methods-by-class-"></a></h2>
@@ -189,7 +192,10 @@ built from sequence data (has <code>$data</code>).</p></li>
 <li><p><code>pathways(net_association_rules)</code>: Extract pathways from association rules</p>
 <p>Converts association rules <code>{A, B} =&gt; {C}</code> into pathway strings
 <code>"A B -&gt; C"</code> suitable for <code><a href="https://sonsoles.me/cograph/reference/plot_simplicial.html" class="external-link">cograph::plot_simplicial()</a></code>.
-Antecedent items become source nodes; consequent items become the target.</p></li>
+Antecedent items become source nodes; consequent items become the target.
+Rules whose antecedent and consequent share the same item set describe the
+same simplex, so only the highest-lift rule per item set is returned;
+<code>top</code> is applied after that de-duplication.</p></li>
 <li><p><code>pathways(net_link_prediction)</code>: Extract pathways from link predictions</p>
 <p>Converts predicted links into pathway strings for
 <code><a href="https://sonsoles.me/cograph/reference/plot_simplicial.html" class="external-link">cograph::plot_simplicial()</a></code>. When <code>evidence = TRUE</code>
@@ -221,7 +227,7 @@ neighbors that structurally support the prediction, producing
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">seqs</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="predict_links.html">predict_links</a></span><span class="op">(</span><span class="va">net</span>, methods <span class="op">=</span> <span class="st">"common_neighbors"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">pathways</span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> character(0)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "C A B D -&gt; E"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

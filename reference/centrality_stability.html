@@ -25,7 +25,7 @@ are computed directly from the matrix without igraph."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,7 +98,10 @@ are computed directly from the matrix without igraph.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>netobject</code> from <code><a href="build_network.html">build_network</a></code>.</p></dd>
+<dd><p>A <code>netobject</code> from <code><a href="build_network.html">build_network</a></code>, a
+<code>cograph_network</code>, or a <code>netobject_group</code> / <code>mcml</code>
+(each constituent network is assessed and a
+<code>net_stability_group</code> is returned).</p></dd>
 
 
 <dt id="arg-measures">measures<a class="anchor" aria-label="anchor" href="#arg-measures"></a></dt>
@@ -143,12 +146,14 @@ threshold (default: 0.95).</p></dd>
 that takes a weight matrix and returns a named list of centrality
 vectors. When <code>NULL</code> (default), all built-in measures are
 computed internally: <code>"InStrength"</code>/<code>"OutStrength"</code> via
-<code>colSums</code>/<code>rowSums</code>, and <code>"Betweenness"</code>/
-<code>"InCloseness"</code>/<code>"OutCloseness"</code>/<code>"Closeness"</code> via an
-internal Floyd-Warshall shortest-path routine. When provided, the
-function is called as <code>centrality_fn(mat)</code> and is used only for
-requested measures that are not one of the six built-ins; it should
-return a named list (e.g., <code>list(my_metric = ...)</code>).</p></dd>
+<code>colSums</code>/<code>rowSums</code>, <code>"Betweenness"</code>/
+<code>"ClosenessIn"</code>/<code>"ClosenessOut"</code>/<code>"Closeness"</code> via an
+internal Floyd-Warshall shortest-path routine, and
+<code>"BetweennessRSP"</code>, <code>"Diffusion"</code> and <code>"Clustering"</code>
+from the weight matrix directly. When provided, the function is
+called as <code>centrality_fn(mat)</code> and is used only for requested
+measures that are not one of the built-ins; it should return a named
+list (e.g., <code>list(my_metric = ...)</code>).</p></dd>
 
 
 <dt id="arg-loops">loops<a class="anchor" aria-label="anchor" href="#arg-loops"></a></dt>
@@ -179,15 +184,18 @@ when <code>normalize = FALSE</code>. Default: <code>TRUE</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>"net_stability"</code> containing:</p><dl><dt>cs</dt>
-<dd><p>Named numeric vector of CS-coefficients per measure.</p></dd>
+    <p>An object of class <code>"net_stability"</code>: a list with</p><dl><dt>cs</dt>
+<dd><p>Named numeric vector of CS-coefficients, one per retained
+measure.</p></dd>
 
 <dt>correlations</dt>
-<dd><p>Named list of matrices (iter x n_prop) of
-correlation values per measure.</p></dd>
+<dd><p>Named list of <code>iter</code> x
+<code>length(drop_prop)</code> matrices of correlation values, one per
+retained measure.</p></dd>
 
 <dt>measures</dt>
-<dd><p>Character vector of measures assessed.</p></dd>
+<dd><p>Character vector of the measures actually assessed
+(see the zero-variance rule below).</p></dd>
 
 <dt>drop_prop</dt>
 <dd><p>Drop proportions used.</p></dd>
@@ -205,7 +213,25 @@ correlation values per measure.</p></dd>
 <dd><p>Correlation method.</p></dd>
 
 
-</dl></div>
+</dl><p>A <code>netobject_group</code> or <code>mcml</code> input instead returns a
+<code>"net_stability_group"</code>: a named list of one <code>net_stability</code>
+per constituent network.</p>
+<p>Zero-variance measures are handled by two different rules, both
+long-standing behaviour. When <em>some</em> requested measures have zero
+variance on the original network (for example <code>"OutStrength"</code> on a
+row-normalised transition network), those measures are <strong>dropped</strong>:
+<code>$cs</code>, <code>$correlations</code> and <code>$measures</code> cover only the
+retained ones. When <em>every</em> requested measure has zero variance a
+warning is issued and <strong>all</strong> requested names are returned with
+<code>cs = 0</code> and all-<code>NA</code> correlation matrices.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating
+psychological networks and their accuracy: A tutorial paper.
+<em>Behavior Research Methods</em> 50(1), 195-212.
+<a href="https://doi.org/10.3758/s13428-017-0862-1" class="external-link">doi:10.3758/s13428-017-0862-1</a></p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code>, <code><a href="network_reliability.html">network_reliability</a></code></p></div>
@@ -213,11 +239,16 @@ correlation values per measure.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span>,<span class="st">"A"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B"</span>,<span class="st">"C"</span>,<span class="st">"A"</span>,<span class="st">"B"</span><span class="op">)</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu">centrality_stability</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">10</span>, drop_prop <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>All centrality measures have zero variance. No stability can be assessed.</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  T1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"plan"</span>, <span class="st">"code"</span>, <span class="st">"debug"</span>, <span class="st">"plan"</span>, <span class="st">"test"</span>, <span class="st">"code"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  T2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"code"</span>, <span class="st">"debug"</span>, <span class="st">"code"</span>, <span class="st">"plan"</span>, <span class="st">"code"</span>, <span class="st">"test"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  T3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"debug"</span>, <span class="st">"code"</span>, <span class="st">"plan"</span>, <span class="st">"code"</span>, <span class="st">"debug"</span>, <span class="st">"plan"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  T4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"test"</span>, <span class="st">"plan"</span>, <span class="st">"test"</span>, <span class="st">"debug"</span>, <span class="st">"plan"</span>, <span class="st">"code"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">seqs</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu">centrality_stability</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">10</span>, drop_prop <span class="op">=</span> <span class="fl">0.3</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>, V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>, V4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -230,8 +261,8 @@ correlation values per measure.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   CS-coefficients:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     InStrength       0.30</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     OutStrength      0.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     InStrength       0.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     OutStrength      0.30</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -34,7 +34,7 @@ plot(
 
 - ncol:
 
-  Integer. Number of facet columns.
+  Integer. Number of facet columns. Default: `3`.
 
 - type:
 
@@ -44,26 +44,26 @@ plot(
   diverging bar of group differences. With two groups it is the
   per-state difference (second group minus first); with three or more
   groups it is each group's deviation from the per-state group mean, so
-  the largest gaps stand out either way.
+  the largest gaps stand out either way. Default: `"bar"`.
 
 - scales:
 
-  Facet scale mode. `"free_x"` uses free centrality axes; `"fixed"`
-  keeps a common centrality axis.
+  Facet scale mode. `"free_x"` (default) uses free centrality axes;
+  `"fixed"` keeps a common centrality axis.
 
 - palette:
 
-  Brewer palette for groups.
+  Brewer palette for groups. Default: `"Set2"`.
 
 - profile_scale:
 
-  Scaling used by `type = "line"`. `"measure"` rescales each centrality
-  measure to 0–1 before drawing cross-measure profiles; `"none"` uses
-  raw values.
+  Scaling used by `type = "line"`. `"measure"` (default) rescales each
+  centrality measure to 0–1 before drawing cross-measure profiles;
+  `"none"` uses raw values.
 
 - labels:
 
-  Logical. Add compact value labels.
+  Logical. Add compact value labels. Default: `FALSE`.
 
 - drop_zero:
 

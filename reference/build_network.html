@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,11 +93,16 @@ estimator registry, so custom estimators can also be used.</p>
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance).</p></dd>
+square symmetric matrix (correlation or covariance). A fitted
+<code>net_clustering</code> or <code>net_mmm</code> object is also accepted: the
+per-cluster networks are (re)built and a <code>netobject_group</code> is
+returned.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
-<dd><p>Character. Required. Name of a registered estimator.
+<dd><p>Character. Required, except when <code>data</code> is a
+<code>net_clustering</code> or <code>net_mmm</code> object, where the fitted
+object's own network method is used. Name of a registered estimator.
 Built-in methods: <code>"relative"</code>, <code>"frequency"</code>,
 <code>"co_occurrence"</code>, <code>"cor"</code>, <code>"pcor"</code>, <code>"glasso"</code>,
 <code>"ising"</code>, <code>"mgm"</code>, <code>"attention"</code>, <code>"wtna"</code>,
@@ -188,9 +193,11 @@ result matrix. Default: 0 (no thresholding).</p></dd>
 
 
 <dt id="arg-level">level<a class="anchor" aria-label="anchor" href="#arg-level"></a></dt>
-<dd><p>Character or NULL. Multilevel decomposition for association
-methods. One of <code>NULL</code>, <code>"between"</code>, <code>"within"</code>,
-<code>"both"</code>. Requires <code>id_col</code>. Default: <code>NULL</code>.</p></dd>
+<dd><p>Character or NULL. Multilevel decomposition for the undirected
+association methods (<code>cor</code>, <code>pcor</code>, <code>glasso</code>); a directed
+estimator errors. One of <code>NULL</code>, <code>"between"</code>, <code>"within"</code>,
+<code>"both"</code>. Requires an id column, supplied either as <code>actor</code> or
+as <code>params$id</code> / <code>params$id_col</code>. Default: <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-time-threshold">time_threshold<a class="anchor" aria-label="anchor" href="#arg-time-threshold"></a></dt>
@@ -239,7 +246,8 @@ transition is <code>start -&gt; first_observed</code>). <code>FALSE</code> (defa
 adds nothing; <code>TRUE</code> uses the label <code>"Start"</code>; a single string
 uses that string as the label. Only valid for the transition methods
 (<code>relative</code>, <code>frequency</code>, <code>co_occurrence</code>,
-<code>attention</code>); errors otherwise.</p></dd>
+<code>attention</code>, <code>ngram</code>, <code>gap</code>, <code>reverse</code>); errors
+otherwise (<code>wtna</code> included).</p></dd>
 
 
 <dt id="arg-end">end<a class="anchor" aria-label="anchor" href="#arg-end"></a></dt>
@@ -263,9 +271,9 @@ Transition estimators accept tna-style sequence options such as
 / <code>end_state</code>, of which <code>start</code> / <code>end</code> are the public
 form – see those arguments).
 Column-like entries in <code>params</code> (<code>action</code>, <code>id</code>,
-<code>id_col</code>, <code>time</code>, <code>session</code>, <code>order</code>, <code>codes</code>,
-and <code>group</code>) are resolved before format detection and must name
-existing columns. If the same column role is supplied both directly and
+<code>id_col</code>, <code>actor</code>, <code>time</code>, <code>session</code>, <code>order</code>,
+<code>cols</code>, <code>codes</code>, and <code>group</code>) are resolved before format
+detection and must name existing columns. If the same column role is supplied both directly and
 through <code>params</code>, the names must agree.</p></dd>
 
 
@@ -284,7 +292,11 @@ through unchanged.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>c("netobject", "cograph_network")</code> containing:</p><dl><dt>data</dt>
-<dd><p>The input data used for estimation, as a data frame.</p></dd>
+<dd><p>The state columns of the cleaned input data, as a data frame.</p></dd>
+
+<dt>metadata</dt>
+<dd><p>Data frame of the non-state columns of the cleaned input
+(and, for long input, the per-sequence metadata), or NULL.</p></dd>
 
 <dt>weights</dt>
 <dd><p>The estimated network weight matrix.</p></dd>
@@ -321,6 +333,11 @@ through unchanged.</p></dd>
 <dt>level</dt>
 <dd><p>Decomposition level used (or NULL).</p></dd>
 
+<dt>build_args</dt>
+<dd><p>The resolved column/format arguments (<code>actor</code>,
+<code>action</code>, <code>time</code>, <code>session</code>, <code>order</code>, <code>codes</code>,
+<code>format</code>, <code>window_size</code>, <code>mode</code>) used for this build.</p></dd>
+
 <dt>meta</dt>
 <dd><p>List with <code>source</code>, <code>layout</code>, and <code>tna</code> metadata
 (cograph-compatible).</p></dd>
@@ -335,11 +352,17 @@ values per node (for undirected association methods when
 
 
 </dl><p>Method-specific extras (e.g. <code>precision_matrix</code>, <code>cor_matrix</code>,
-<code>frequency_matrix</code>, <code>lambda_selected</code>, etc.) are preserved
-from the estimator output.</p>
+<code>frequency_matrix</code>, <code>initial</code>, <code>lambda_selected</code>, etc.) are
+preserved from the estimator output.</p>
 <p>When <code>level = "both"</code>, returns an object of class
 <code>"netobject_ml"</code> with <code>$between</code> and <code>$within</code>
-sub-networks and a <code>$method</code> field.</p>
+sub-networks and a <code>$method</code> field. <code>level = "between"</code> or
+<code>"within"</code> returns a single <code>netobject</code> estimated on the
+decomposed data.</p>
+<p>When <code>group</code> is supplied (or <code>data</code> is a <code>net_clustering</code> /
+<code>net_mmm</code> object), returns an object of class
+<code>"netobject_group"</code>: a named list of <code>netobject</code>s, one per group,
+carrying the grouping column in <code>attr(x, "group_col")</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

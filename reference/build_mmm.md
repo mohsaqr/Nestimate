@@ -25,8 +25,9 @@ build_mmm(
 
 - data:
 
-  A data.frame (wide format), `netobject`, or `tna` model. For tna
-  objects, extracts the stored data.
+  A data.frame (wide format), `netobject`, `cograph_network`, or `tna`
+  model. For tna and cograph_network objects the stored
+  (integer-encoded) data is extracted and decoded to state labels.
 
 - k:
 
@@ -126,15 +127,40 @@ An object of class `net_mmm` with components:
 - quality:
 
   List: `avepp` (per-class), `avepp_overall`, `entropy`,
-  `relative_entropy`, `classification_error`.
+  `relative_entropy`, `classification_error`, `class_entropy`.
 
 - log_likelihood, BIC, AIC, ICL:
 
   Model fit statistics.
 
+- n_params:
+
+  Number of free parameters behind BIC/AIC/ICL. With
+  `covariate_effect = "em"` it grows by `(k - 1) * p` for `p` covariate
+  columns.
+
+- iterations, converged:
+
+  EM iterations used by the retained fit and whether it met `tol`.
+
 - states:
 
   Character vector of state names.
+
+- n_sequences:
+
+  Number of sequences actually fitted (rows with missing covariates are
+  dropped under `covariate_effect = "em"`).
+
+- covariates:
+
+  The post-hoc covariate analysis (list), or NULL when
+  `covariates = NULL`.
+
+- network_method, build_args, htna_partition:
+
+  Provenance kept from `netobject` / HTNA input so per-cluster networks
+  can be rebuilt the same way; NULL otherwise.
 
 ## Initial states
 
@@ -169,13 +195,12 @@ mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
 mmm
 #> Mixed Markov Model
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
-#>   ICs: LL = -62.784  |  BIC = 183.388  |  AIC = 159.567  |  ICL = 185.413
-#>   Quality: AvePP = 0.967  |  Entropy = 0.191  |  Class.Err = 0.0%
-#>   Status: did not converge in 10 iterations
+#>   ICs: LL = -62.330  |  BIC = 182.480  |  AIC = 158.659  |  ICL = 184.652
+#>   Quality: AvePP = 0.965  |  Entropy = 0.212  |  Class.Err = 0.0%
 #> 
 #>   Cluster  N           Mix%   AvePP
-#>   1        28 (93.3%)  91.6%  0.973
-#>   2        2 ( 6.7%)    8.4%  0.888
+#>   1        24 (80.0%)  78.1%  0.966
+#>   2        6 (20.0%)   21.9%  0.961
 # \donttest{
 seqs <- data.frame(
   V1 = sample(LETTERS[1:3], 30, TRUE), V2 = sample(LETTERS[1:3], 30, TRUE),

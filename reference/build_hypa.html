@@ -13,7 +13,7 @@ flagged as over- or under-represented."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,9 +95,12 @@ aggregates every built order.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>Numeric. Significance threshold for anomaly classification
-(default 0.05). Paths with HYPA score &lt; alpha are under-represented;
-paths with score &gt; 1-alpha are over-represented.</p></dd>
+<dd><p>Numeric in <code>(0, 0.5)</code>. Significance threshold for anomaly
+classification (default 0.05). A path is labelled <code>"under"</code> when its
+adjusted lower-tail p-value <code>p_adjusted_under</code> is below
+<code>alpha</code>, <code>"over"</code> when its adjusted upper-tail p-value
+<code>p_adjusted_over</code> is below <code>alpha</code>, and <code>"normal"</code>
+otherwise (the under-representation test is applied first).</p></dd>
 
 
 <dt id="arg-min-count">min_count<a class="anchor" aria-label="anchor" href="#arg-min-count"></a></dt>

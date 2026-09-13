@@ -3,8 +3,11 @@
 Computes centrality measures from a `netobject`, `netobject_group`,
 `mcml`, or `cograph_network`. The built-in measures match
 [`tna::centralities()`](http://sonsoles.me/tna/reference/centralities.md)
-without importing `tna` or `igraph`. The only intentional default
-difference is that `Diffusion` is range-normalized by default.
+without importing `tna` or `igraph`: strength is taken from the weight
+matrix directly, and the path-based measures (betweenness, closeness)
+come from all-pairs shortest paths computed in-package by
+Floyd-Warshall. The only intentional default difference from `tna` is
+that `Diffusion` is range-normalized by default.
 
 ## Usage
 
@@ -25,7 +28,7 @@ net_centrality(
 
 - x:
 
-  A `netobject`, `netobject_group`, or `cograph_network`.
+  A `netobject`, `netobject_group`, `mcml`, or `cograph_network`.
 
 - measures:
 
@@ -68,9 +71,33 @@ net_centrality(
 
 ## Value
 
-For a `netobject`: a `net_centrality` data frame with node names as
-rows, a `state` column, and one column per centrality measure. For a
-`netobject_group`: a `net_centrality_group` list of such data frames.
+For a `netobject` or `cograph_network`: a `net_centrality` data frame,
+one row per node, with a `state` column and one further column per
+requested measure (node names are also the row names). For a
+`netobject_group` or an `mcml`: a `net_centrality_group` list of such
+data frames, one per group.
+
+## References
+
+Freeman, L. C. (1978). Centrality in social networks: conceptual
+clarification. *Social Networks*, 1(3), 215–239. (betweenness,
+closeness)
+
+Opsahl, T., Agneessens, F. & Skvoretz, J. (2010). Node centrality in
+weighted networks: generalizing degree and shortest paths. *Social
+Networks*, 32(3), 245–251. (weighted strength and geodesics)
+
+Kivimaki, I., Lebichot, B., Saramaki, J. & Saerens, M. (2016). Two
+betweenness centrality measures based on randomized shortest paths.
+*Scientific Reports*, 6, 19668. (`BetweennessRSP`)
+
+Banerjee, A., Chandrasekhar, A. G., Duflo, E. & Jackson, M. O. (2013).
+The diffusion of microfinance. *Science*, 341(6144), 1236498.
+(`Diffusion`)
+
+Onnela, J.-P., Saramaki, J., Kertesz, J. & Kaski, K. (2005). Intensity
+and coherence of motifs in weighted complex networks. *Physical Review
+E*, 71, 065103. (`Clustering`)
 
 ## Examples
 

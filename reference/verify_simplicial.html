@@ -9,7 +9,7 @@ and known topological invariants. Useful for testing."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,9 +69,11 @@ and known topological invariants. Useful for testing.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with <code>$cliques_match</code> (logical),
-<code>$n_simplices_ours</code>, <code>$n_simplices_igraph</code>,
-<code>$betti</code>, and <code>$euler</code>.</p>
+    <p>Invisibly, a list with <code>cliques_match</code> (logical: do the
+simplices match <code><a href="https://r.igraph.org/reference/cliques.html" class="external-link">igraph::cliques()</a></code> exactly),
+<code>n_simplices_ours</code>, <code>n_simplices_igraph</code>, <code>betti</code>,
+<code>euler</code>, and <code>f_vector</code>. The comparison is also printed to
+the console.</p>
     </div>
 
     <div class="section level2">

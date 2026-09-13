@@ -1,12 +1,14 @@
 # Plot Method for net_sequence_comparison
 
 Visualizes pattern-level standardized residuals across groups. Two
-styles are available:
+styles are available, and `style = "auto"` (the default) picks between
+them by the number of groups:
 
 - `"pyramid"`:
 
   Back-to-back bars of pattern proportions, shaded by each side's
-  standardized residual. Requires exactly 2 groups.
+  standardized residual. Requires exactly 2 groups; an explicit
+  `style = "pyramid"` on any other number is an error.
 
 - `"heatmap"`:
 
@@ -72,11 +74,13 @@ plot(
 
 ## Value
 
-A `ggplot` object, invisibly.
+The drawn `ggplot` object, invisibly (the plot is also printed). `NULL`,
+invisibly, when the object holds no patterns.
 
 ## Examples
 
 ``` r
+set.seed(1)
 seqs <- data.frame(
   V1 = sample(LETTERS[1:4], 60, TRUE),
   V2 = sample(LETTERS[1:4], 60, TRUE),

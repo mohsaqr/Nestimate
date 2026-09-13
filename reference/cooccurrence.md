@@ -125,10 +125,17 @@ cooccurrence(
 
 ## Value
 
-A `netobject` (undirected) with `method = "co_occurrence_fn"`. The
-`$weights` matrix contains similarity (or raw) co-occurrence values. The
-`$params` list stores the similarity method, threshold, and the number
-of transactions.
+A `netobject` (undirected, class `c("netobject", "cograph_network")`)
+with `method = "co_occurrence_fn"` and `$data = NULL` - this function
+does *not* go through
+[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+so the result carries no source data and the data-resampling verbs
+([`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+[`permutation`](https://saqr.me/Nestimate/reference/permutation.md))
+cannot be run on it. The `$weights` matrix holds the similarity (or raw)
+co-occurrence values, one row/column per retained item. The `$params`
+list records `similarity`, `threshold`, `min_occur`, `diagonal`,
+`top_n`, `n_transactions` and `n_items`.
 
 ## Details
 

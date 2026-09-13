@@ -124,7 +124,8 @@ plotting, plus Bayesian extras:
 
 - p_values:
 
-  P-value matrix (the two-sided Bayesian p-equivalent).
+  The two-sided Bayesian p-equivalent, in the field a `net_permutation`
+  consumer reads as p-values (see `p_bayes`).
 
 - effect_size:
 
@@ -142,8 +143,10 @@ plotting, plus Bayesian extras:
 
 - p_bayes:
 
-  Alias of `p_values` (two-sided Bayesian p,
-  \\2(1-\mathrm{p\\difference})\\).
+  Alias of `p_values`: the two-sided Bayesian p-*equivalent*
+  \\2(1-\mathrm{p\\difference})\\. It summarises posterior mass, not a
+  frequentist tail probability, so it is not a p-value and should not be
+  reported as one.
 
 - prob_x, prob_y:
 

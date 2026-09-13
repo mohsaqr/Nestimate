@@ -42,22 +42,20 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net, exclude_existing = FALSE)
 
-# Evaluate: predict the network's own edges
-true <- data.frame(from = pred$predictions$from[1:5],
-                   to = pred$predictions$to[1:5])
-evaluate_links(pred, true)
+# Evaluate against the network's own edges as the known truth
+evaluate_links(pred, extract_edges(net, threshold = 0.001))
 #>                    method       auc average_precision precision_at_5
-#> 1        common_neighbors 0.9933333         1.0000000            1.0
-#> 2     resource_allocation 0.9933333         1.0000000            1.0
-#> 3             adamic_adar 0.9933333         1.0000000            1.0
-#> 4                 jaccard 0.9400000         0.8100000            0.8
-#> 5 preferential_attachment 0.6066667         0.5110731            0.4
-#> 6                    katz 0.6400000         0.3671032            0.4
+#> 1        common_neighbors 0.3421053         0.9536904              1
+#> 2     resource_allocation 0.3421053         0.9536904              1
+#> 3             adamic_adar 0.3421053         0.9536904              1
+#> 4                 jaccard 0.6578947         0.9817801              1
+#> 5 preferential_attachment 1.0000000         1.0000000              1
+#> 6                    katz 1.0000000         1.0000000              1
 #>   precision_at_10 precision_at_20
-#> 1             0.5            0.25
-#> 2             0.5            0.25
-#> 3             0.5            0.25
-#> 4             0.5            0.25
-#> 5             0.3            0.25
-#> 6             0.4            0.25
+#> 1             0.9            0.95
+#> 2             0.9            0.95
+#> 3             0.9            0.95
+#> 4             1.0            0.95
+#> 5             1.0            0.95
+#> 6             1.0            0.95
 ```

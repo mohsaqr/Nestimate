@@ -20,9 +20,12 @@ mogen_transitions(x, order = NULL, min_count = 1L)
 
 - order:
 
-  Integer. Which order's transitions to extract. Must be a whole number;
-  a non-integer value is an error rather than being silently truncated.
-  Defaults to the optimal order selected by the model.
+  Integer \>= 1 and at most the highest order tested. Which order's
+  transitions to extract. Must be a whole number; a non-integer value is
+  an error rather than being silently truncated. Defaults to the optimal
+  order selected by the model - pass an explicit `order` when that
+  optimal order is 0, which has no transition table and therefore
+  errors.
 
 - min_count:
 
@@ -31,7 +34,8 @@ mogen_transitions(x, order = NULL, min_count = 1L)
 
 ## Value
 
-A data frame with columns:
+A data frame with one row per retained transition, sorted by `count`
+(descending), with columns:
 
 - path:
 
@@ -43,7 +47,7 @@ A data frame with columns:
 
 - probability:
 
-  Transition probability P(to \| from).
+  Transition probability P(to \| from), rounded to 4 decimal places.
 
 - from:
 
@@ -52,6 +56,9 @@ A data frame with columns:
 - to:
 
   The predicted next state.
+
+A zero-row data frame with the same columns when no transition reaches
+`min_count`.
 
 ## Details
 

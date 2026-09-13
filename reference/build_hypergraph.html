@@ -13,7 +13,7 @@ with probability p. Optionally retains the underlying pairwise edges as
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -159,8 +159,11 @@ of each size, named <code>size_2</code>, <code>size_3</code>, ...</p></dd>
 <code>include_pairwise</code>, <code>max_size</code>, <code>threshold</code>, <code>seed</code>.</p></dd>
 
 
-</dl><p>The input <code>x</code> invisibly.</p>
-<p>The input <code>object</code> invisibly.</p>
+</dl><p>For <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, the input <code>x</code> invisibly.</p>
+<p>For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, a data.frame with one row per node and columns
+<code>node</code> (node name) and <code>degree</code> (number of hyperedges containing the
+node), returned visibly; the summary block (node / hyperedge counts,
+mean and maximum hyperedge size) is printed as a side effect.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

@@ -35,7 +35,7 @@ network you observed."><meta property="og:image" content="https://saqr.me/Nestim
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -223,7 +223,7 @@ centrality stability.</p></div>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">seqs</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">vb</span> <span class="op">&lt;-</span> <span class="fu">vertex_bootstrap</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">vb</span><span class="op">$</span><span class="va">summary</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">vb</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        statistic  observed boot_mean    boot_sd        bias   ci_lower</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1        density 0.8333333 0.8433333 0.13415153  0.01000000 0.58333333</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2    mean_weight 0.3800000 0.3734656 0.05149123 -0.00653441 0.27899554</span>

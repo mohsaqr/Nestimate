@@ -8,6 +8,13 @@ landscape function \\\lambda^{(k)}(t)\\ is the \\k\\-th largest of
 under bottleneck distance and form a Banach-space embedding of
 persistence diagrams.
 
+Essential classes are excluded: a tent function is undefined for an
+infinitely-lived class on a finite grid, so pairs with `death = Inf` (VR
+mode) and pairs with `death = 0` but `birth > 0` (the clique-mode
+encoding of an essential class) are dropped before the landscape is
+built. When no finite pair remains in the requested dimension, every
+landscape function is zero on the grid.
+
 ## Usage
 
 ``` r

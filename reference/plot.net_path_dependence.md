@@ -24,7 +24,8 @@ plot(x, top = 15L, title = NULL, ...)
 
 - title:
 
-  Character. Plot title.
+  Character or `NULL`. Plot title. Default `NULL`, which builds "Path
+  dependence: order k vs order 1" from the fitted order.
 
 - ...:
 

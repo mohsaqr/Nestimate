@@ -44,9 +44,10 @@ net_edge_betweenness(x, invert = TRUE, ...)
 
 ## Value
 
-For a `netobject`: a new `netobject` (class
-`c("netobject", "cograph_network")`) whose `$weights` are the
-edge-betweenness scores, with `method = "edge_betweenness"`. Call
+For a `netobject`: a new network of class
+`c("net_edge_betweenness", "netobject", "cograph_network")` whose
+`$weights` are the edge-betweenness scores, with
+`method = "edge_betweenness"`. Call
 [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.md)
 on it for a tidy per-edge table, or
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) to render it.

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,9 +79,10 @@
 
 <dt id="arg-order-by">order_by<a class="anchor" aria-label="anchor" href="#arg-order-by"></a></dt>
 <dd><p>Character. Ranking used within each anomaly direction:
-<code>"sig"</code> ranks by the active tail probability, <code>"freq"</code> by
-observed count, <code>"ratio"</code> by observed/expected ratio, and
-<code>"path"</code> alphabetically.</p></dd>
+<code>"sig"</code> (default) ranks by the active tail probability,
+<code>"freq"</code> (or its alias <code>"frequency"</code>) by observed count,
+<code>"ratio"</code> by observed/expected ratio, and <code>"path"</code>
+alphabetically.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -90,15 +91,22 @@ observed count, <code>"ratio"</code> by observed/expected ratio, and
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with path, observed, expected, ratio, p_tail, and
-direction columns.</p>
+    <p>A data frame of the reported anomalies, at most <code>n</code> rows per
+direction, with columns <code>order</code> (the De Bruijn order the path was
+found at), <code>path</code>, <code>observed</code>, <code>expected</code>, <code>ratio</code>,
+<code>p_tail</code> (the raw tail probability in the reported direction:
+<code>p_over</code> for over-represented paths, <code>p_under</code> for
+under-represented ones) and <code>direction</code>
+(<code>"over"</code>/<code>"under"</code>). Returned visibly; the summary text and
+the top-<code>n</code> tables are printed as a side effect. When no anomalies
+were detected, a zero-row data frame with the same columns except
+<code>order</code> is returned.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B"</span>,<span class="st">"C"</span>,<span class="st">"A"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>,<span class="st">"C"</span>,<span class="st">"B"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">hyp</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_hypa.html">build_hypa</a></span><span class="op">(</span><span class="va">seqs</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'k' is deprecated; use 'order' instead.</span>
+<span class="r-in"><span><span class="va">hyp</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_hypa.html">build_hypa</a></span><span class="op">(</span><span class="va">seqs</span>, order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">hyp</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> HYPA Summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -117,8 +125,7 @@ direction columns.</p>
 <span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C"</span>,<span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span>,<span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span>,<span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  V4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span>,<span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span>,<span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span>,<span class="st">"A"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">hypa</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_hypa.html">build_hypa</a></span><span class="op">(</span><span class="va">seqs</span>, k <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'k' is deprecated; use 'order' instead.</span>
+<span class="r-in"><span><span class="va">hypa</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_hypa.html">build_hypa</a></span><span class="op">(</span><span class="va">seqs</span>, order <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">hypa</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> HYPA Summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

@@ -67,13 +67,18 @@ certainty(
 
 ## Value
 
-An object of class `c("net_certainty", "net_bootstrap")` with the same
-fields as
+For a `netobject`: an object of class
+`c("net_certainty", "net_bootstrap")` with the same fields as
 [`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md):
 `original`, `mean`, `sd`, `p_values`, `significant`, `ci_lower`,
 `ci_upper`, `cr_lower`, `cr_upper`, `summary`, `model`, `method`,
 `params`, `ci_level`, `inference`, `consistency_range`,
-`edge_threshold`, plus `prior` and `iter = NA` (no iterations).
+`edge_threshold`, plus `prior`, `ci_method = "analytic"` and `iter = NA`
+(no iterations).
+
+For a `netobject_group`: a named list of those objects, one per
+constituent network, of class
+`c("net_certainty_group", "net_bootstrap_group", "list")`.
 
 ## Details
 

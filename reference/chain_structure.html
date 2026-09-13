@@ -15,7 +15,7 @@ absorbing states exist."><meta property="og:image" content="https://saqr.me/Nest
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,8 @@ absorbing states exist.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>netobject</code>, <code>cograph_network</code>, <code>tna</code> model, transition
 matrix, or sequence data.frame (passed through <code><a href="build_network.html">build_network()</a></code> with
-<code>method = "relative"</code>).</p></dd>
+<code>method = "relative"</code>). A <code>netobject_group</code> is also accepted and
+analysed constituent by constituent.</p></dd>
 
 
 <dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
@@ -94,7 +95,10 @@ absorbing). Default <code>1e-10</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>chain_structure</code> object: a list with elements</p><dl><dt><code>states</code></dt>
+    <p>For a <code>netobject_group</code>, a <code>c("chain_structure_group", "list")</code>:
+a named list holding one <code>chain_structure</code> per constituent network,
+with its own <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods.</p>
+<p>Otherwise a <code>chain_structure</code> object: a list with elements</p><dl><dt><code>states</code></dt>
 <dd><p>Character vector of state names.</p></dd>
 
 <dt><code>classification</code></dt>

@@ -47,12 +47,14 @@ hypergraph_centrality(
   Logical. If `TRUE` (default), each returned centrality vector is
   L2-normalized to unit norm (compatible with
   [`igraph::eigen_centrality()`](https://r.igraph.org/reference/eigen_centrality.html)'s
-  scale for type `"clique"`).
+  scale for type `"clique"`). If `FALSE`, the vector is rescaled so its
+  largest absolute entry is 1.
 
 ## Value
 
-A named list; one component per requested `type`. Each component is a
-named numeric vector of length `hg$n_nodes`.
+A named list, one component per requested `type`, in the order given by
+`type`. Each component is a numeric vector of length `hg$n_nodes` named
+by `hg$nodes`. A hypergraph with no hyperedges yields all-zero vectors.
 
 ## Details
 

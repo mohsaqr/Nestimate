@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,10 @@
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance).</p></dd>
+square symmetric matrix (correlation or covariance). A fitted
+<code>net_clustering</code> or <code>net_mmm</code> object is also accepted: the
+per-cluster networks are (re)built and a <code>netobject_group</code> is
+returned.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -85,9 +88,9 @@ Transition estimators accept tna-style sequence options such as
 / <code>end_state</code>, of which <code>start</code> / <code>end</code> are the public
 form – see those arguments).
 Column-like entries in <code>params</code> (<code>action</code>, <code>id</code>,
-<code>id_col</code>, <code>time</code>, <code>session</code>, <code>order</code>, <code>codes</code>,
-and <code>group</code>) are resolved before format detection and must name
-existing columns. If the same column role is supplied both directly and
+<code>id_col</code>, <code>actor</code>, <code>time</code>, <code>session</code>, <code>order</code>,
+<code>cols</code>, <code>codes</code>, and <code>group</code>) are resolved before format
+detection and must name existing columns. If the same column role is supplied both directly and
 through <code>params</code>, the names must agree.</p></dd>
 
 
@@ -104,9 +107,11 @@ result matrix. Default: 0 (no thresholding).</p></dd>
 
 
 <dt id="arg-level">level<a class="anchor" aria-label="anchor" href="#arg-level"></a></dt>
-<dd><p>Character or NULL. Multilevel decomposition for association
-methods. One of <code>NULL</code>, <code>"between"</code>, <code>"within"</code>,
-<code>"both"</code>. Requires <code>id_col</code>. Default: <code>NULL</code>.</p></dd>
+<dd><p>Character or NULL. Multilevel decomposition for the undirected
+association methods (<code>cor</code>, <code>pcor</code>, <code>glasso</code>); a directed
+estimator errors. One of <code>NULL</code>, <code>"between"</code>, <code>"within"</code>,
+<code>"both"</code>. Requires an id column, supplied either as <code>actor</code> or
+as <code>params$id</code> / <code>params$id_col</code>. Default: <code>NULL</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

@@ -51,10 +51,17 @@ plot(
 
 - ...:
 
-  Passed to
+  For `compare_networks()`: two or more networks, in any mix of:
+  `netobject`, `netobject_group` (members are flattened and keep their
+  names), `cograph_network` / `psychnet`, `mcml`, `tna`, `group_tna`,
+  square numeric matrices, or one unnamed `list` of these. Name the
+  arguments to name the networks
+  (`compare_networks(early = a, late = b)`). For
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html): passed to
   [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
   for the network views (e.g. `layout`, `node_size`, `minimum`); ignored
-  by the other views.
+  by the other views and by
+  [`print()`](https://rdrr.io/r/base/print.html).
 
 - reference:
 
@@ -74,13 +81,17 @@ plot(
 
   Centrality measures for the node table. Any of `OutStrength`,
   `InStrength`, `ClosenessIn`, `ClosenessOut`, `Closeness`,
-  `Betweenness`, `BetweennessRSP`, `Diffusion`, `Clustering`. `NULL` or
-  `character(0)` skips the node table.
+  `Betweenness`, `BetweennessRSP`, `Diffusion`, `Clustering`; `"all"`
+  selects those nine. `NULL` or `character(0)` skips the node table.
+  Unknown names are dropped with a warning.
 
 - labels:
 
-  Logical; print the signed difference on the edge and node views.
-  Default `TRUE`. The heatmap always shows its values.
+  For `compare_networks()`: optional character vector naming the
+  networks (one per network after flattening groups); overrides argument
+  names. For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
+  logical; print the signed difference on the edge and node views,
+  default `TRUE` (the heatmap always shows its values).
 
 - test:
 
@@ -256,8 +267,9 @@ approximation from the posterior mean and SD) and `bayes_decision`.
 appends structural rows (density, mean weight, centralization,
 reciprocity) to `global` with `boot_se`, `boot_ci_lower`,
 `boot_ci_upper`, `boot_z`, `boot_p`, `boot_sig`. Unified `sig` and
-`evidence` columns on `edges`/`nodes` take the permutation result when
-run, else the Bayesian one. Permutation and Bayesian tests need networks
+`evidence` columns take the permutation result when run (on both `edges`
+and `nodes`), else the Bayesian one (on `edges` only – the Bayesian
+backend is edge-level). Permutation and Bayesian tests need networks
 that carry their data
 ([`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
 output, or `tna` objects, which are rebuilt); plain matrices support
@@ -268,8 +280,22 @@ output, or `tna` objects, which are rebuilt); plain matrices support
 Classed conditions (`nestimate_compare_*`): `too_few`, `bad_input`,
 `dim_mismatch`, `node_mismatch`, `na_weights`, `reference_unknown`,
 `labels_length`, `scaling_domain`, `scaling_inference`,
-`test_unsupported`, `unknown_pair`, `no_nodes`; warning
-`unknown_measure`.
+`test_unsupported`, `unknown_pair`, `no_nodes`, `no_test`
+(`plot(type = "inference")` under `test = "none"`), `unknown_measure`
+(selecting a measure the object does not carry); warning
+`unknown_measure` (an unknown name in `measures`).
+
+## Reading the figures
+
+One colour contract in every view and every backend: `"#4A6FE3"` marks
+`network_a` (the reference, when one is set) as the higher of the two,
+`"#D33F6A"` marks `network_b`, and grey marks no difference; the plotted
+quantity is always `diff = a - b`. Colour never carries the sign alone –
+a solid line and a circular marker repeat "`a` higher", a dashed line
+and a square marker repeat "`b` higher", and the printed value carries
+its sign. When `test` was run, evidence is shown by opacity and a
+starred (edge and node views) or annotated (inference view) label: a
+non-significant difference is faded, never deleted.
 
 ## See also
 

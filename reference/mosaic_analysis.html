@@ -19,7 +19,7 @@ output is a tidy one-row-per-cell data.frame."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -163,8 +163,17 @@ labels auto-rotate to vertical when there are more than 6 columns; pass
 <dt>n_original, n_filtered</dt>
 <dd><p>Row counts before/after filtering.</p></dd>
 
+<dt>vars</dt>
+<dd><p>Named character vector <code>c(var1 = , var2 = )</code>.</p></dd>
 
-</dl></div>
+<dt>plot_parts, plot_args</dt>
+<dd><p>The residual matrix, table, and styling
+arguments retained so <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> can re-render without re-testing.</p></dd>
+
+
+</dl><p>Use <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> for the test summary and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> for the tidy
+per-cell table.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="mosaic_plot.html">mosaic_plot</a></code> for the network/table mosaic (which also
@@ -173,22 +182,22 @@ accepts <code>style = "flat"</code>).</p></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  gender <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"F"</span>, <span class="st">"M"</span><span class="op">)</span>, <span class="fl">200</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  level  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Low"</span>, <span class="st">"Mid"</span>, <span class="st">"High"</span><span class="op">)</span>, <span class="fl">200</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">mosaic_analysis</span><span class="op">(</span><span class="va">df</span>, <span class="st">"gender"</span>, <span class="st">"level"</span>, min_count <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">stats</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         test statistic df p_value cramers_v effect_size   n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Chi-square     0.848  2  0.6545     0.065  negligible 200</span>
-<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">counts</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   gender level observed expected residual  pct</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      F  High       33   30.030    0.897 16.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      M  High       33   35.970   -0.897 16.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      F   Low       31   33.215   -0.653 15.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      M   Low       42   39.785    0.653 21.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      F   Mid       27   27.755   -0.233 13.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      M   Mid       34   33.245    0.233 17.0</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, package <span class="op">=</span> <span class="st">"Nestimate"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">mosaic_analysis</span><span class="op">(</span><span class="va">group_regulation_long</span>, <span class="st">"Course"</span>, <span class="st">"Action"</span>,</span></span>
+<span class="r-in"><span>                       min_count <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">res</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Mosaic analysis: Course x Action</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N = 27533 (filtered from 27533); table 3 x 9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Chi-square: X2 = 233.560, df = 16, p = 1.199e-40</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Cramer's V = 0.065 (negligible)</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Course   Action observed expected residual  pct</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      A    adapt      140  249.303   -9.430 0.51</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      B    adapt      261  193.688    6.059 0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      C    adapt      153  111.009    4.502 0.56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      A cohesion      923  827.560    4.631 3.35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      B cohesion      590  642.945   -2.680 2.14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      C cohesion      326  368.495   -2.563 1.18</span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, tile_label <span class="op">=</span> <span class="st">"percent"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="mosaic_analysis-1.png" alt="" width="700" height="433"></span>

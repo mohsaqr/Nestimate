@@ -46,27 +46,30 @@ wide_to_long(
 
 ## Value
 
-A data frame in long format with columns:
+A data frame in long format, one row per (sequence, time point), sorted
+by identifier then time, with columns:
 
 - id:
 
-  Sequence identifier (integer).
+  Sequence identifier. Named by `id_col`; when that is `NULL` the column
+  is called `id` and holds the row number of the wide input (integer).
 
 - Time:
 
-  Time point within the sequence (integer).
+  Time point within the sequence (integer), taken from the numeric
+  suffix of the wide column name. Named by `time_col`.
 
 - Action:
 
-  The action/state at that time point (character).
+  The action/state at that time point. Named by `action_col`.
 
-Any additional columns from the original data are preserved.
+Any additional non-time columns from the original data are preserved and
+repeated on every row of their sequence.
 
 ## Details
 
-This function converts data from the format produced by
-`simulate_sequences()` to the long format used by many TNA functions and
-analyses.
+Converts wide sequence data (one row per sequence, one column per time
+point) to the long format used by many TNA functions and analyses.
 
 ## See also
 
