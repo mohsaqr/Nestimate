@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -306,6 +306,27 @@
 
         </dt>
         <dd>Structural measures for a hypergraph</dd>
+
+        <dt>
+
+          <code><a href="hypergraph_cluster.html">hypergraph_cluster()</a></code>
+
+        </dt>
+        <dd>Spectral clustering of hypergraph vertices</dd>
+
+        <dt>
+
+          <code><a href="hypergraph_transduction.html">hypergraph_transduction()</a></code>
+
+        </dt>
+        <dd>Transductive label spreading on a hypergraph</dd>
+
+        <dt>
+
+          <code><a href="hypergraph_laplacian.html">hypergraph_laplacian()</a></code>
+
+        </dt>
+        <dd>Normalized hypergraph Laplacian</dd>
       </dl></div><div class="section level2">
       <h2 id="markov-analysis">Markov Analysis<a class="anchor" aria-label="anchor" href="#markov-analysis"></a></h2>
 
@@ -1031,7 +1052,7 @@
       </dl></div><div class="section level2">
       <h2 id="s-methods">S3 Methods<a class="anchor" aria-label="anchor" href="#s-methods"></a></h2>
 
-      <div class="section-desc"><p>Print, summary, and plot methods for package classes</p></div>
+      <div class="section-desc"><p>Print, summary, plot, and as.data.frame methods for package classes</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -1051,6 +1072,20 @@
 
         </dt>
         <dd>Edge-weight Case-dropping Stability</dd>
+
+        <dt>
+
+          <code><a href="compare_networks.html">compare_networks()</a></code> <code><a href="compare_networks.html">print(<i>&lt;net_network_comparison&gt;</i>)</a></code> <code><a href="compare_networks.html">plot(<i>&lt;net_network_comparison&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Compare two or more networks</dd>
+
+        <dt>
+
+          <code><a href="comparison_tables.html">summary(<i>&lt;net_network_comparison&gt;</i>)</a></code> <code><a href="comparison_tables.html">edge_differences()</a></code> <code><a href="comparison_tables.html">node_differences()</a></code> <code><a href="comparison_tables.html">global_differences()</a></code> <code><a href="comparison_tables.html">network_metrics()</a></code> <code><a href="comparison_tables.html">print(<i>&lt;net_table&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Tables of a network comparison</dd>
 
         <dt>
 
@@ -1233,6 +1268,20 @@
 
         </dt>
         <dd>Print Method for net_hypa</dd>
+
+        <dt>
+
+          <code><a href="print.net_hypergraph_cluster.html">print(<i>&lt;net_hypergraph_cluster&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for net_hypergraph_cluster</dd>
+
+        <dt>
+
+          <code><a href="print.net_hypergraph_transduction.html">print(<i>&lt;net_hypergraph_transduction&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for net_hypergraph_transduction</dd>
 
         <dt>
 
@@ -1670,6 +1719,20 @@
 
         <dt>
 
+          <code><a href="summary.net_hypergraph_cluster.html">summary(<i>&lt;net_hypergraph_cluster&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summary method for net_hypergraph_cluster</dd>
+
+        <dt>
+
+          <code><a href="summary.net_hypergraph_transduction.html">summary(<i>&lt;net_hypergraph_transduction&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summary method for net_hypergraph_transduction</dd>
+
+        <dt>
+
           <code><a href="summary.net_link_prediction.html">summary(<i>&lt;net_link_prediction&gt;</i>)</a></code>
 
         </dt>
@@ -1936,6 +1999,20 @@
 
         <dt>
 
+          <code><a href="plot.net_hypergraph_cluster.html">plot(<i>&lt;net_hypergraph_cluster&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot method for net_hypergraph_cluster</dd>
+
+        <dt>
+
+          <code><a href="plot.net_hypergraph_transduction.html">plot(<i>&lt;net_hypergraph_transduction&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot method for net_hypergraph_transduction</dd>
+
+        <dt>
+
           <code><a href="plot.net_markov_order.html">plot(<i>&lt;net_markov_order&gt;</i>)</a></code>
 
         </dt>
@@ -2059,6 +2136,27 @@
 
         </dt>
         <dd>Plot State Frequency Distributions</dd>
+
+        <dt>
+
+          <code><a href="as.data.frame.net_hypergraph_cluster.html">as.data.frame(<i>&lt;net_hypergraph_cluster&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Coerce a net_hypergraph_cluster to a data.frame</dd>
+
+        <dt>
+
+          <code><a href="as.data.frame.net_hypergraph_transduction.html">as.data.frame(<i>&lt;net_hypergraph_transduction&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Coerce a net_hypergraph_transduction to a data.frame</dd>
+
+        <dt>
+
+          <code><a href="cluster_diagnostics.html">cluster_diagnostics()</a></code> <code><a href="cluster_diagnostics.html">as.data.frame(<i>&lt;net_cluster_diagnostics&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Cluster Diagnostics</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

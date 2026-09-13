@@ -17,6 +17,8 @@
 <url><loc>https://saqr.me/Nestimate/reference/Nestimate-package.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/action_to_onehot.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/actor_endpoints.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/as.data.frame.net_hypergraph_cluster.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/as.data.frame.net_hypergraph_transduction.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/as_htna.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/as_netdifference.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/as_netobject.html</loc></url>
@@ -66,6 +68,8 @@
 <url><loc>https://saqr.me/Nestimate/reference/compare_mmm.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/compare_model.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/compare_model.netobject_group.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/compare_networks.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/comparison_tables.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/convert_sequence_format.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/cooccurrence.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/distribution_plot.html</loc></url>
@@ -82,7 +86,10 @@
 <url><loc>https://saqr.me/Nestimate/reference/get_estimator.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/group_regulation_long.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/hypergraph_centrality.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/hypergraph_cluster.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/hypergraph_laplacian.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/hypergraph_measures.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/hypergraph_transduction.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/index.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/learning_activities.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/list_estimators.html</loc></url>
@@ -130,6 +137,8 @@
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_entropy_bayes.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_entropy_trajectory.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_honem.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/plot.net_hypergraph_cluster.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/plot.net_hypergraph_transduction.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_markov_order.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_mmm.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.net_mmm_clustering.html</loc></url>
@@ -177,6 +186,8 @@
 <url><loc>https://saqr.me/Nestimate/reference/print.net_hon.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_honem.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_hypa.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.net_hypergraph_cluster.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.net_hypergraph_transduction.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_link_prediction.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_markov_order.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.net_markov_order_group.html</loc></url>
@@ -248,6 +259,8 @@
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_hon.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_honem.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_hypa.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/summary.net_hypergraph_cluster.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/summary.net_hypergraph_transduction.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_link_prediction.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_markov_order.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/summary.net_mlvar.html</loc></url>

@@ -19,7 +19,8 @@ prepare(
   time_threshold = 900,
   custom_format = NULL,
   is_unix_time = FALSE,
-  unix_time_unit = c("seconds", "milliseconds", "microseconds")
+  unix_time_unit = c("seconds", "milliseconds", "microseconds"),
+  timezone = "UTC"
 )
 ```
 
@@ -79,6 +80,16 @@ prepare(
 
   Character. Unit for Unix timestamps: `"seconds"`, `"milliseconds"`, or
   `"microseconds"`. Default: `"seconds"`.
+
+- timezone:
+
+  Character. An Olson time zone (see
+  [`OlsonNames`](https://rdrr.io/r/base/timezones.html)) used to
+  interpret timestamps that carry no zone information, and in which Unix
+  timestamps are expressed. Timestamps that end in `Z`, `UTC`, `GMT` or
+  a numeric offset such as `+02:00` are converted from that offset.
+  Parsing is therefore independent of the machine's local time zone.
+  Default: `"UTC"`.
 
 ## Value
 

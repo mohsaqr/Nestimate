@@ -25,6 +25,7 @@ build_network(
   threshold = 0,
   level = NULL,
   time_threshold = 900,
+  timezone = "UTC",
   predictability = TRUE,
   state_cols = NULL,
   metadata_cols = NULL,
@@ -48,13 +49,23 @@ build_network(
   Character. Required. Name of a registered estimator. Built-in methods:
   `"relative"`, `"frequency"`, `"co_occurrence"`, `"cor"`, `"pcor"`,
   `"glasso"`, `"ising"`, `"mgm"`, `"attention"`, `"wtna"`,
-  `"wtna_cooccurrence"`. Aliases: `"tna"` and `"transition"` map to
+  `"wtna_cooccurrence"`, `"ngram"`, `"gap"`, `"reverse"`. The last three
+  mirror
+  [`tna::build_model()`](http://sonsoles.me/tna/reference/build_model.md)
+  types `"n-gram"` (adjacent pairs counted once per n-gram window
+  containing them; `params = list(n_gram = 2)`), `"gap"` (pairs up to
+  `max_gap + 1` positions apart, weighted by `1 / distance`;
+  `params = list(max_gap = 1)`) and `"reverse"` (reply network: the
+  transpose of `"frequency"`; `params = list(weighted = FALSE)`). All
+  three return raw weights; add `scaling = "normalize"` for row
+  probabilities. Aliases: `"tna"` and `"transition"` map to
   `"relative"`; `"ftna"` and `"counts"` map to `"frequency"`; `"cna"`
   and `"wcna"` map to `"co_occurrence"`; `"corr"` and `"correlation"`
   map to `"cor"`; `"partial"` maps to `"pcor"`; `"ebicglasso"` and
   `"regularized"` map to `"glasso"`; `"isingfit"` maps to `"ising"`;
   `"atna"` maps to `"attention"`; `"mixed"` and `"mixed_graphical"` map
-  to `"mgm"`; `"wtna_transition"` maps to `"wtna"`.
+  to `"mgm"`; `"wtna_transition"` maps to `"wtna"`; `"co-occurrence"`
+  maps to `"co_occurrence"`; `"n-gram"` and `"n_gram"` map to `"ngram"`.
 
 - actor:
 
@@ -125,6 +136,14 @@ build_network(
   Numeric or FALSE. Maximum time gap (seconds) for long format session
   splitting. Set to `FALSE` to switch session-interval splitting off, so
   each actor (or actor-session) forms a single sequence. Default: `900`.
+
+- timezone:
+
+  Character. Olson time zone used to interpret naive timestamps in
+  long-format data (offset-bearing timestamps such as `...Z` or `+02:00`
+  are converted from their offset). Passed to
+  [`prepare`](https://saqr.me/Nestimate/reference/prepare.md). Default:
+  `"UTC"`.
 
 - predictability:
 

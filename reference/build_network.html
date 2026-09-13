@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,6 +75,7 @@ estimator registry, so custom estimators can also be used.</p>
 <span>  threshold <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  level <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time_threshold <span class="op">=</span> <span class="fl">900</span>,</span>
+<span>  timezone <span class="op">=</span> <span class="st">"UTC"</span>,</span>
 <span>  predictability <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  state_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  metadata_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -100,7 +101,15 @@ square symmetric matrix (correlation or covariance).</p></dd>
 Built-in methods: <code>"relative"</code>, <code>"frequency"</code>,
 <code>"co_occurrence"</code>, <code>"cor"</code>, <code>"pcor"</code>, <code>"glasso"</code>,
 <code>"ising"</code>, <code>"mgm"</code>, <code>"attention"</code>, <code>"wtna"</code>,
-<code>"wtna_cooccurrence"</code>.
+<code>"wtna_cooccurrence"</code>, <code>"ngram"</code>, <code>"gap"</code>,
+<code>"reverse"</code>. The last three mirror <code><a href="http://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::build_model()</a></code>
+types <code>"n-gram"</code> (adjacent pairs counted once per n-gram window
+containing them; <code>params = list(n_gram = 2)</code>), <code>"gap"</code>
+(pairs up to <code>max_gap + 1</code> positions apart, weighted by
+<code>1 / distance</code>; <code>params = list(max_gap = 1)</code>) and
+<code>"reverse"</code> (reply network: the transpose of <code>"frequency"</code>;
+<code>params = list(weighted = FALSE)</code>). All three return raw weights;
+add <code>scaling = "normalize"</code> for row probabilities.
 Aliases: <code>"tna"</code> and <code>"transition"</code> map to <code>"relative"</code>;
 <code>"ftna"</code> and <code>"counts"</code> map to <code>"frequency"</code>;
 <code>"cna"</code> and <code>"wcna"</code> map to <code>"co_occurrence"</code>;
@@ -110,7 +119,9 @@ Aliases: <code>"tna"</code> and <code>"transition"</code> map to <code>"relative
 <code>"isingfit"</code> maps to <code>"ising"</code>;
 <code>"atna"</code> maps to <code>"attention"</code>;
 <code>"mixed"</code> and <code>"mixed_graphical"</code> map to <code>"mgm"</code>;
-<code>"wtna_transition"</code> maps to <code>"wtna"</code>.</p></dd>
+<code>"wtna_transition"</code> maps to <code>"wtna"</code>;
+<code>"co-occurrence"</code> maps to <code>"co_occurrence"</code>;
+<code>"n-gram"</code> and <code>"n_gram"</code> map to <code>"ngram"</code>.</p></dd>
 
 
 <dt id="arg-actor">actor<a class="anchor" aria-label="anchor" href="#arg-actor"></a></dt>
@@ -187,6 +198,13 @@ methods. One of <code>NULL</code>, <code>"between"</code>, <code>"within"</code>
 format session splitting. Set to <code>FALSE</code> to switch session-interval
 splitting off, so each actor (or actor-session) forms a single sequence.
 Default: <code>900</code>.</p></dd>
+
+
+<dt id="arg-timezone">timezone<a class="anchor" aria-label="anchor" href="#arg-timezone"></a></dt>
+<dd><p>Character. Olson time zone used to interpret naive
+timestamps in long-format data (offset-bearing timestamps such as
+<code>...Z</code> or <code>+02:00</code> are converted from their offset). Passed to
+<code><a href="prepare.html">prepare</a></code>. Default: <code>"UTC"</code>.</p></dd>
 
 
 <dt id="arg-predictability">predictability<a class="anchor" aria-label="anchor" href="#arg-predictability"></a></dt>

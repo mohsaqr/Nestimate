@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,25 +70,31 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2      co_occurrence                             Co-occurrence within sequences</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                cor                               Pairwise correlation network</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4          frequency                            Raw transition frequency counts</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5             glasso                EBICglasso regularized partial correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6              ising             Ising model (L1-penalized logistic regression)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8               pcor                         Unregularized partial correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9           relative                    Row-normalized transition probabilities</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10              wtna                     Window-based TNA transitions (one-hot)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                gap             Gap-allowed transitions weighted by 1/distance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6             glasso                EBICglasso regularized partial correlations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7              ising             Ising model (L1-penalized logistic regression)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9              ngram      n-gram transitions (adjacent pairs per n-gram window)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10              pcor                         Unregularized partial correlations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11          relative                    Row-normalized transition probabilities</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12           reverse        Reverse (reply) transitions: transpose of frequency</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13              wtna                     Window-based TNA transitions (one-hot)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    directed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1      TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2     FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3     FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6     FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7     FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8     FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    FALSE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

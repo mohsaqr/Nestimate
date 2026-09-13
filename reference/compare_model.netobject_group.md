@@ -58,3 +58,8 @@ compare_model(
 ## Value
 
 A `net_comparison` object.
+
+## See also
+
+[`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md),
+the N-way successor with tidy tables and a dashboard plot.
