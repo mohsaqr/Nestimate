@@ -56,6 +56,9 @@ reference:
       - hypergraph_centrality
       - build_hypergraph
       - hypergraph_measures
+      - hypergraph_cluster
+      - hypergraph_transduction
+      - hypergraph_laplacian
 
   - title: Markov Analysis
     desc: Order, structure, entropy, and stability of Markov chains
@@ -192,11 +195,12 @@ reference:
       - trajectories
 
   - title: S3 Methods
-    desc: Print, summary, and plot methods for package classes
+    desc: Print, summary, plot, and as.data.frame methods for package classes
     contents:
       - starts_with("print.")
       - starts_with("summary.")
       - starts_with("plot.")
+      - starts_with("as.data.frame.")
 
 authors:
   Mohammed Saqr:
