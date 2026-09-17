@@ -71,7 +71,10 @@ A list with class \code{"nestimate_data"} containing:
 \item{sequence_data}{Data frame in wide format (one row per session,
 columns T1, T2, ...).}
 \item{long_data}{The processed long-format data with session IDs.}
-\item{meta_data}{Session-level metadata (session ID, actor).}
+\item{meta_data}{Session-level metadata, one row per session in the row
+order of \code{sequence_data}: \code{.session_id}, \code{.session_label},
+the \code{actor} column, the \code{session} column(s) under their own
+names, and every other column aggregated per session.}
 \item{time_data}{Parsed time values in wide format (if time provided).}
 \item{statistics}{List with \code{total_sessions},
 \code{total_actions} and \code{max_sequence_length}, plus

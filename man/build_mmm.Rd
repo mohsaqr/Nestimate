@@ -99,6 +99,10 @@ when \code{covariates = NULL}.}
 \item{network_method, build_args, htna_partition}{Provenance kept
 from \code{netobject} / HTNA input so per-cluster networks can be
 rebuilt the same way; NULL otherwise.}
+\item{metadata}{The \code{netobject}'s per-sequence metadata, one row
+per fitted sequence in the row order of \code{posterior}, so
+\code{\link{session_ids}} can name each sequence; NULL for other
+input.}
 }
 }
 \description{

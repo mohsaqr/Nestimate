@@ -1,3 +1,28 @@
+# Nestimate (development version)
+
+## New verbs
+
+* `session_ids()` names the session behind every sequence of a network built
+  from long data, and of a `build_mmm()` or `build_clusters()` fit on such a
+  network. It returns one row per sequence in model order: `sequence`, the
+  `actor` and `session` columns under their own names, `session_label`, and,
+  for a fit, `cluster` (plus `posterior` for a mixture). The fit's assignments
+  can then be joined to the input by those columns instead of parsing the
+  `"actor | session"` label, which breaks when an id contains `" | "`. Raises
+  `nestimate_no_session_ids` for wide-data input or for fits made before this
+  version, and `nestimate_session_ids_misaligned` when the metadata and the
+  sequences differ in number.
+
+## Changes
+
+* `prepare()` (and so `build_network()` on long data) keeps the `session`
+  column(s) in the per-sequence metadata under their own names, and returns
+  the metadata explicitly in sequence row order (it was assembled with
+  `merge(sort = FALSE)`, whose order is unspecified).
+* `build_mmm()` and `build_clusters()` keep the input network's `$metadata`
+  (restricted to the fitted rows when `build_mmm()` drops sequences with
+  missing covariates).
+
 # Nestimate 0.9.5
 
 ## New verbs

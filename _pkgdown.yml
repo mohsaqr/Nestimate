@@ -118,6 +118,7 @@ reference:
       - macro_network
       - build_mmm
       - compare_mmm
+      - session_ids
 
   - title: Simplicial Complex Analysis
     desc: Topological analysis of networks

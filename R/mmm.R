@@ -452,6 +452,10 @@
 #'     \item{network_method, build_args, htna_partition}{Provenance kept
 #'       from \code{netobject} / HTNA input so per-cluster networks can be
 #'       rebuilt the same way; NULL otherwise.}
+#'     \item{metadata}{The \code{netobject}'s per-sequence metadata, one row
+#'       per fitted sequence in the row order of \code{posterior}, so
+#'       \code{\link{session_ids}} can name each sequence; NULL for other
+#'       input.}
 #'   }
 #'
 #' @examples
@@ -540,6 +544,7 @@ build_mmm <- function(data,
   htna_partition <- .capture_htna_partition(data)
   network_method <- NULL
   build_args     <- NULL
+  metadata       <- NULL
   if (inherits(data, "tna") || inherits(data, "ftna")) {
     raw_data <- data$data
     states <- data$labels
@@ -556,6 +561,7 @@ build_mmm <- function(data,
   } else if (inherits(data, "netobject")) {
     network_method <- data$method
     build_args     <- data$build_args
+    metadata       <- data$metadata
     raw_data <- data$data
     states <- data$nodes$label
   } else {
@@ -623,6 +629,7 @@ build_mmm <- function(data,
       init_state <- init_state[complete]
       cov_df <- cov_df[complete, , drop = FALSE]
       raw_data <- raw_data[complete, , drop = FALSE]
+      if (!is.null(metadata)) metadata <- metadata[complete, , drop = FALSE]
       N <- nrow(counts)
     }
   }
@@ -806,6 +813,7 @@ build_mmm <- function(data,
     covariates = cov_result,
     network_method = network_method,
     build_args     = build_args,
+    metadata       = metadata,
     htna_partition = htna_partition
   ), class = "net_mmm")
 }

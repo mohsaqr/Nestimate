@@ -51,7 +51,10 @@
 #'   \item{sequence_data}{Data frame in wide format (one row per session,
 #'     columns T1, T2, ...).}
 #'   \item{long_data}{The processed long-format data with session IDs.}
-#'   \item{meta_data}{Session-level metadata (session ID, actor).}
+#'   \item{meta_data}{Session-level metadata, one row per session in the row
+#'     order of \code{sequence_data}: \code{.session_id}, \code{.session_label},
+#'     the \code{actor} column, the \code{session} column(s) under their own
+#'     names, and every other column aggregated per session.}
 #'   \item{time_data}{Parsed time values in wide format (if time provided).}
 #'   \item{statistics}{List with \code{total_sessions},
 #'     \code{total_actions} and \code{max_sequence_length}, plus
@@ -235,6 +238,14 @@ prepare <- function(data,
                     c(".session_id", actor_col), drop = FALSE]
     meta_data <- merge(meta_data, actor_map, by = ".session_id", sort = FALSE)
   }
+  # The session column(s) keep their own names, so a sequence can be traced
+  # back to its session without parsing .session_label. Every row of a
+  # session carries the same value, so the first row is the session's value.
+  if (!is.null(session)) {
+    session_map <- df[!duplicated(df$.session_id),
+                      c(".session_id", session), drop = FALSE]
+    meta_data <- merge(meta_data, session_map, by = ".session_id", sort = FALSE)
+  }
 
   # Aggregate extra columns per session
   special_cols <- c(action, actor_col, time, order_col, session,
@@ -245,6 +256,9 @@ prepare <- function(data,
                                extra_cols = extra_cols)
     meta_data <- merge(meta_data, agg, by = ".session_id", sort = FALSE)
   }
+  # merge() leaves the row order unspecified; row i must describe sequence i.
+  meta_data <- meta_data[match(sessions, meta_data$.session_id), , drop = FALSE]
+  rownames(meta_data) <- NULL
 
   # Statistics
   stats <- list(

@@ -136,6 +136,9 @@ for hierarchical methods).}
 \item{network_method, build_args}{For \code{netobject} input, the
 source network's method and stored build arguments, so per-cluster
 networks can be rebuilt the same way. NULL otherwise.}
+\item{metadata}{For \code{netobject} input, its per-sequence metadata,
+one row per clustered sequence, so \code{\link{session_ids}} can name
+each sequence. NULL otherwise.}
 \item{htna_partition}{For HTNA input, the preserved node-to-actor
 partition used to restore HTNA children when networks are built.}
 }

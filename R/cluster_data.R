@@ -635,6 +635,9 @@
 #'   \item{network_method, build_args}{For \code{netobject} input, the
 #'     source network's method and stored build arguments, so per-cluster
 #'     networks can be rebuilt the same way. NULL otherwise.}
+#'   \item{metadata}{For \code{netobject} input, its per-sequence metadata,
+#'     one row per clustered sequence, so \code{\link{session_ids}} can name
+#'     each sequence. NULL otherwise.}
 #'   \item{htna_partition}{For HTNA input, the preserved node-to-actor
 #'     partition used to restore HTNA children when networks are built.}
 #' }
@@ -798,6 +801,7 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
       covariates = cov_result,
       network_method = if (inherits(raw_data, "netobject")) raw_data$method else NULL,
       build_args     = if (inherits(raw_data, "netobject")) raw_data$build_args else NULL,
+      metadata       = if (inherits(raw_data, "netobject")) raw_data$metadata else NULL,
       htna_partition = .capture_htna_partition(raw_data)
     ),
     class = "net_clustering"
