@@ -106,14 +106,14 @@ the columns covering the shortest 95\\% of sequences); a value
 time points).}
 
 \item{panel}{\code{mcml} + \code{type = "distribution"} only. Which panel
-to draw, as a single \code{ggplot}. \code{"both"} (default) puts the
-macro \code{Summary} channel and the per-cluster channels on one figure
-sharing a fill scale; \code{"summary"} draws the macro channel alone,
+to draw. \code{"both"} (default) stacks the macro \code{Summary}
+channel and the per-cluster channels on one figure, each with its own
+legend; \code{"summary"} draws the macro channel alone,
 keyed and coloured by cluster; \code{"channels"} draws the per-cluster
 channels alone, keyed and coloured by state. The macro channel is keyed
-by cluster and the rest by state, so on a shared scale a cluster and a
-state can land on the same colour -- drawing one panel avoids that and
-gives it its own legend and default title.}
+by cluster and the rest by state, so a cluster and a state can land on
+the same colour -- drawing one panel avoids that and gives it a default
+title.}
 
 \item{expand}{For an \code{mcml}, names of clusters whose member states
 are shown individually in the Summary band; \code{"all"} or \code{TRUE}
@@ -197,8 +197,13 @@ from the device width so the legend looks proportional at 5 in vs
 \item{legend_bty}{\code{"n"} or \code{"o"}.}
 }
 \value{
-An \code{mcml} input returns a \code{ggplot} object (the
-multichannel figure). Every other input draws with base graphics and
+An \code{mcml} input returns the multichannel figure: one panel
+per channel (the macro \code{Summary} and one per cluster), stacked,
+each with its own legend of its own clusters or states. When more than
+one channel is drawn this is an \code{mcml_sequence_plot} (a
+\code{gtable} whose print method draws it); when \code{panel =
+  "summary"} leaves a single channel it is a plain \code{ggplot}. Every
+other input draws with base graphics and
 returns, invisibly, a list whose shape depends on \code{type}:
 \describe{
 \item{\code{"heatmap"}}{\code{ord} (integer row order actually

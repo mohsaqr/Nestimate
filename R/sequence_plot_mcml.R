@@ -111,17 +111,6 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   list(state = state_pal, cluster = cluster_pal, faded = faded)
 }
 
-# ---- internal: legend keys grouped by cluster -------------------------------
-# Order the fill legend so each cluster name is followed by its own states:
-#   Cognitive, discuss, synthesis, ... , Regulation, plan, ... .
-# The cluster-name key carries the cluster colour (the same colour used in the
-# Summary channel), so it reads as a group header above its member states.
-# Used as `breaks` for the fill scale; rendered as a single vertical column.
-.mcml_grouped_breaks <- function(ch) {
-  unique(unlist(lapply(ch$macro_keys, function(k) c(k, ch$clusters[[k]])),
-                use.names = FALSE))
-}
-
 # A cluster may legitimately be named after a state it contains (a singleton
 # cluster is the natural case). Cluster keys and state keys then collide in
 # the single `key` fill scale: the level vector gains a duplicate, which
@@ -179,26 +168,97 @@ utils::globalVariables(c("time", "y", "key", "prop"))
                           levels = .mcml_uniq_levels(ch$all_states, cn,
                                                      paste0(ch$cluster_names, " (elsewhere)")))
 
-  ggplot2::ggplot(tiles, ggplot2::aes(x = time, y = y, fill = key)) +
-    ggplot2::geom_tile() +
-    ggplot2::facet_wrap(~ channel, ncol = 1L, strip.position = "left") +
-    ggplot2::scale_fill_manual(
-      values = .mcml_uniq_values(pals$state, pals$cluster, pals$faded),
-      breaks = .mcml_grouped_breaks(ch), na.value = "white",
-      name = "Cluster / State") +
-    ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1L, byrow = TRUE)) +
-    ggplot2::scale_x_continuous(expand = c(0, 0)) +
-    ggplot2::scale_y_reverse(expand = c(0, 0)) +
-    ggplot2::labs(x = time_label, y = NULL, title = main) +
-    ggplot2::theme_minimal(base_size = 12) +
-    ggplot2::theme(
-      panel.grid        = ggplot2::element_blank(),
-      panel.background  = ggplot2::element_rect(fill = "white", colour = "grey80"),
-      axis.text.y       = ggplot2::element_blank(),
-      axis.ticks.y      = ggplot2::element_blank(),
-      strip.text.y.left = ggplot2::element_text(angle = 0, face = "bold"),
-      panel.spacing     = ggplot2::unit(8, "pt"),
-      legend.position   = "right")
+  .mcml_stack_channels(
+    tiles, ch,
+    values = .mcml_uniq_values(pals$state, pals$cluster, pals$faded),
+    layer  = function(d) ggplot2::ggplot(d, ggplot2::aes(x = time, y = y, fill = key)) +
+      ggplot2::geom_tile() +
+      ggplot2::scale_y_reverse(expand = c(0, 0)),
+    y_lab = NULL, main = main, time_label = time_label,
+    theme_extra = ggplot2::theme(
+      panel.grid       = ggplot2::element_blank(),
+      panel.background = ggplot2::element_rect(fill = "white", colour = "grey80"),
+      axis.text.y      = ggplot2::element_blank(),
+      axis.ticks.y     = ggplot2::element_blank()))
+}
+
+# ---- internal: one ggplot per channel, each with its own legend -------------
+# A faceted ggplot has a single fill scale, so every cluster's states pile into
+# one long legend. Each channel is drawn as its own ggplot instead: the Summary
+# legend lists the clusters, a cluster channel lists its own states followed by
+# the faded "elsewhere" bands. Legend order: macro keys, then each cluster's
+# states, then the "(elsewhere)" keys, then NA.
+.mcml_channel_plots <- function(d, ch, values, layer, y_lab, main, time_label,
+                                theme_extra = NULL) {
+  d$channel <- droplevels(d$channel)
+  chans     <- levels(d$channel)
+  n         <- length(chans)
+  key_order <- c(ch$macro_keys, ch$all_states,
+                 paste0(ch$cluster_names, " (elsewhere)"), "NA")
+  plots <- lapply(seq_len(n), function(i) {
+    di      <- d[d$channel == chans[i], , drop = FALSE]
+    di$key  <- droplevels(di$key)
+    own     <- if (identical(chans[i], "Summary")) character(0) else ch$clusters[[chans[i]]]
+    present <- levels(di$key)
+    brks    <- unique(c(intersect(own, present), intersect(key_order, present),
+                        setdiff(present, key_order)))
+    first <- i == 1L
+    last  <- i == n
+    layer(di) +
+      ggplot2::facet_wrap(~ channel, ncol = 1L, strip.position = "left") +
+      ggplot2::scale_fill_manual(values = values[names(values) %in% brks],
+                                 breaks = brks, na.value = "white",
+                                 name = if (identical(chans[i], "Summary")) "Cluster" else "State") +
+      ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1L, byrow = TRUE)) +
+      ggplot2::scale_x_continuous(expand = c(0, 0)) +
+      ggplot2::labs(x = if (last) time_label else NULL, y = y_lab,
+                    title = if (first) main else NULL) +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(
+        strip.text.y.left    = ggplot2::element_text(angle = 0, face = "bold"),
+        legend.position      = "right",
+        legend.justification = "left") +
+      theme_extra +
+      if (last) NULL else ggplot2::theme(axis.text.x  = ggplot2::element_blank(),
+                                         axis.ticks.x = ggplot2::element_blank())
+  })
+  names(plots) <- chans
+  plots
+}
+
+# Stack the per-channel ggplots into one figure. A single channel stays a plain
+# ggplot. Several are bound as gtables with `size = "max"`, which aligns every
+# panel column (strip and legend widths differ between channels) and splits the
+# flexible panel height evenly, so a title or axis never shrinks one panel.
+.mcml_stack_channels <- function(d, ch, values, layer, y_lab, main, time_label,
+                                 theme_extra = NULL) {
+  plots <- .mcml_channel_plots(d, ch, values, layer, y_lab, main, time_label,
+                               theme_extra)
+  if (length(plots) == 1L) {
+    return(plots[[1L]])
+  }
+  stacked <- do.call(rbind, c(lapply(plots, ggplot2::ggplotGrob),
+                              list(size = "max")))
+  class(stacked) <- c("mcml_sequence_plot", class(stacked))
+  attr(stacked, "panels") <- plots   # the per-channel ggplots, for inspection
+  stacked
+}
+
+#' Draw a stacked multichannel mcml sequence plot
+#'
+#' Print method for the figure \code{\link{sequence_plot}} returns for an
+#' \code{mcml} with more than one channel: one panel per channel (the macro
+#' \code{Summary} and one per cluster), each with its own legend.
+#'
+#' @param x An \code{mcml_sequence_plot} (a \code{gtable}).
+#' @param ... Ignored.
+#' @return \code{x}, invisibly. Called for the side effect of drawing it on a
+#'   new page of the current graphics device.
+#' @export
+print.mcml_sequence_plot <- function(x, ...) {
+  grid::grid.newpage()
+  grid::grid.draw(x)
+  invisible(x)
 }
 
 # ---- internal: multichannel distribution (seqdplot) -------------------------
@@ -234,7 +294,6 @@ utils::globalVariables(c("time", "y", "key", "prop"))
       })))
     bands$key <- factor(bands$key, levels = .mcml_uniq_levels(ch$all_states, cn))
     fillvals  <- .mcml_uniq_values(pals$state, pals$cluster)
-    brks      <- c(cn, ch$all_states)
     y_lab     <- "Composition (sums to 1)"
   } else {
     # prevalence: own states (solid) + other clusters (faded) + NA, to 100%.
@@ -256,7 +315,6 @@ utils::globalVariables(c("time", "y", "key", "prop"))
                                                    faded_keys, "NA"))
     fillvals  <- .mcml_uniq_values(pals$state, pals$cluster, pals$faded,
                                    "NA" = na_color)
-    brks      <- c(cn, ch$all_states, "NA")
     y_lab     <- "Share of subjects"
   }
   bands$channel <- factor(bands$channel, levels = chan_levels)
@@ -267,9 +325,6 @@ utils::globalVariables(c("time", "y", "key", "prop"))
     bands <- bands[bands$channel %in% want, , drop = FALSE]
     bands$channel <- droplevels(bands$channel)
     bands$key     <- droplevels(bands$key)
-    fillvals <- fillvals[names(fillvals) %in% levels(bands$key)]
-    brks     <- intersect(brks, levels(bands$key))
-    legend_name <- if (identical(keep, "summary")) "Cluster" else "State"
     if (is.null(main)) {
       main <- if (identical(keep, "summary")) {
         "Macro: cluster composition"
@@ -277,32 +332,17 @@ utils::globalVariables(c("time", "y", "key", "prop"))
         "Within-cluster: state composition"
       }
     }
-  } else {
-    legend_name <- "Cluster / State"
-  }
-  grouped <- if (identical(keep, "all")) {
-    c(.mcml_grouped_breaks(ch), if ("NA" %in% brks) "NA")
-  } else {
-    intersect(c(.mcml_grouped_breaks(ch), "NA"), levels(bands$key))
   }
 
-  ggplot2::ggplot(bands, ggplot2::aes(x = time, y = prop, fill = key)) +
-    ggplot2::geom_area(position = ggplot2::position_stack(reverse = TRUE)) +
-    ggplot2::facet_wrap(~ channel, ncol = 1L, strip.position = "left") +
-    ggplot2::scale_fill_manual(values = fillvals, breaks = grouped,
-                               name = legend_name) +
-    ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1L, byrow = TRUE)) +
-    ggplot2::scale_x_continuous(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0),
-                                labels = scales::percent_format(accuracy = 1)) +
-    ggplot2::coord_cartesian(ylim = c(0, 1)) +
-    ggplot2::labs(x = time_label, y = y_lab, title = main) +
-    ggplot2::theme_minimal(base_size = 12) +
-    ggplot2::theme(
-      panel.grid.minor  = ggplot2::element_blank(),
-      strip.text.y.left = ggplot2::element_text(angle = 0, face = "bold"),
-      panel.spacing     = ggplot2::unit(8, "pt"),
-      legend.position   = "right")
+  .mcml_stack_channels(
+    bands, ch, values = fillvals,
+    layer = function(d) ggplot2::ggplot(d, ggplot2::aes(x = time, y = prop, fill = key)) +
+      ggplot2::geom_area(position = ggplot2::position_stack(reverse = TRUE)) +
+      ggplot2::scale_y_continuous(expand = c(0, 0),
+                                  labels = scales::percent_format(accuracy = 1)) +
+      ggplot2::coord_cartesian(ylim = c(0, 1)),
+    y_lab = y_lab, main = main, time_label = time_label,
+    theme_extra = ggplot2::theme(panel.grid.minor = ggplot2::element_blank()))
 }
 
 # ---- internal: mcml dispatcher (called from sequence_plot) ------------------

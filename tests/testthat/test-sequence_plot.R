@@ -296,8 +296,8 @@ test_that("trim applies to the distribution and mcml paths", {
   expect_true(all(vapply(ch_abs$cmats, ncol, 1L) == length(ch_abs$times)))
   expect_equal(ncol(ch_abs$summary_mat), 15L)
 
-  expect_s3_class(sequence_plot(fit, type = "index", trim = 15), "ggplot")
-  expect_s3_class(sequence_plot(fit, type = "distribution", trim = 0.9), "ggplot")
+  expect_s3_class(sequence_plot(fit, type = "index", trim = 15), "mcml_sequence_plot")
+  expect_s3_class(sequence_plot(fit, type = "distribution", trim = 0.9), "mcml_sequence_plot")
 })
 
 test_that("trim_clusterwise: global keeps panels aligned, clusterwise crops per group", {

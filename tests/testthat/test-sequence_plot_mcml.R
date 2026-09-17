@@ -13,7 +13,23 @@ make_mcml_seq <- function() {
              actor = "Actor", action = "Action", time = "Time", type = "tna")
 }
 
-test_that("sequence_plot(mcml) returns a faceted ggplot for each type", {
+# Every per-channel ggplot of a sequence_plot(mcml) figure: the figure itself
+# when a single channel is drawn, else the panels stacked into it.
+mcml_panels <- function(p) {
+  if (inherits(p, "ggplot")) list(p) else attr(p, "panels")
+}
+# The long data of all panels, as one data.frame with shared factor levels.
+mcml_panel_data <- function(p) {
+  ds <- lapply(mcml_panels(p), function(q) q$data)
+  d  <- do.call(rbind, lapply(ds, function(x) {
+    x$channel <- as.character(x$channel); x$key <- as.character(x$key); x
+  }))
+  d$channel <- factor(d$channel, levels = unique(d$channel))
+  d$key     <- factor(d$key, levels = unique(d$key))
+  d
+}
+
+test_that("sequence_plot(mcml) stacks one ggplot per channel", {
   skip_if_not_installed("ggplot2")
   fit <- make_mcml_seq()
 
@@ -21,29 +37,49 @@ test_that("sequence_plot(mcml) returns a faceted ggplot for each type", {
   p_dist  <- sequence_plot(fit, type = "distribution")
   p_norm  <- sequence_plot(fit, type = "distribution", normalize = TRUE)
 
-  expect_s3_class(p_index, "ggplot")
-  expect_s3_class(p_dist,  "ggplot")
-  expect_s3_class(p_norm,  "ggplot")
+  lapply(list(p_index, p_dist, p_norm), function(p) {
+    expect_s3_class(p, "mcml_sequence_plot")
+    expect_s3_class(p, "gtable")
+    lapply(mcml_panels(p), function(q) expect_silent(ggplot2::ggplot_build(q)))
+  })
+  # print draws without error and returns the figure
+  pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
+  expect_identical(withVisible(print(p_index))$visible, FALSE)
+})
 
-  # All three build without error.
-  expect_silent(ggplot2::ggplot_build(p_index))
-  expect_silent(ggplot2::ggplot_build(p_dist))
-  expect_silent(ggplot2::ggplot_build(p_norm))
+test_that("each channel panel carries its own legend of its own keys", {
+  skip_if_not_installed("ggplot2")
+  fit    <- make_mcml_seq()
+  breaks <- function(q) ggplot2::get_guide_data(q, "fill")$.label
+  panels <- mcml_panels(sequence_plot(fit, type = "distribution", normalize = TRUE))
+  expect_named(panels, c("Summary", "G1", "G2"))
+  expect_equal(breaks(panels$Summary), c("G1", "G2"))
+  expect_equal(breaks(panels$G1), c("a1", "a2"))
+  expect_equal(breaks(panels$G2), c("b1", "b2"))
+  # prevalence: own states first, then the faded other clusters, then NA
+  prev <- mcml_panels(sequence_plot(fit, type = "distribution"))
+  expect_equal(breaks(prev$G1), c("a1", "a2", "G2 (elsewhere)", "NA"))
+  # carpet: no state of another cluster leaks into a channel legend
+  idx <- mcml_panels(sequence_plot(fit))
+  expect_false(any(c("b1", "b2") %in% breaks(idx$G1)))
+  # title only on the top panel, x-axis title only on the bottom one
+  expect_null(prev$G1$labels$title)
+  expect_null(prev$G1$labels$x)
+  expect_equal(prev$G2$labels$x, "Time")
 })
 
 test_that("mcml multichannel plot carries Summary + one panel per cluster", {
   skip_if_not_installed("ggplot2")
   fit <- make_mcml_seq()
-  p   <- sequence_plot(fit)
-  expect_setequal(levels(p$data$channel), c("Summary", "G1", "G2"))
+  p   <- mcml_panel_data(sequence_plot(fit))
+  expect_setequal(levels(p$channel), c("Summary", "G1", "G2"))
 })
 
 test_that("normalized distribution sums to 1 within each channel-time", {
   skip_if_not_installed("ggplot2")
   fit <- make_mcml_seq()
-  p   <- sequence_plot(fit, type = "distribution", normalize = TRUE)
-  totals <- tapply(p$data$prop,
-                   list(p$data$channel, p$data$time), sum)
+  p   <- mcml_panel_data(sequence_plot(fit, type = "distribution", normalize = TRUE))
+  totals <- tapply(p$prop, list(p$channel, p$time), sum)
   totals <- totals[!is.na(totals)]
   # Only time points with at least one active subject reach 1.
   expect_true(all(abs(totals[totals > 0] - 1) < 1e-8))
@@ -52,9 +88,9 @@ test_that("normalized distribution sums to 1 within each channel-time", {
 test_that("prevalence distribution includes an NA band that fills to 100%", {
   skip_if_not_installed("ggplot2")
   fit <- make_mcml_seq()
-  p   <- sequence_plot(fit, type = "distribution")
-  expect_true("NA" %in% as.character(p$data$key))
-  totals <- tapply(p$data$prop, list(p$data$channel, p$data$time), sum)
+  p   <- mcml_panel_data(sequence_plot(fit, type = "distribution"))
+  expect_true("NA" %in% as.character(p$key))
+  totals <- tapply(p$prop, list(p$channel, p$time), sum)
   totals <- totals[!is.na(totals)]
   expect_true(all(abs(totals - 1) < 1e-8))
 })
@@ -82,16 +118,15 @@ test_that("a cluster named after one of its own states does not break the fill s
   expect_true("End" %in% names(fit$clusters))
   expect_true("End" %in% unlist(fit$cluster_members, use.names = FALSE))
 
-  expect_silent(ggplot2::ggplot_build(sequence_plot(fit)))
-  expect_silent(ggplot2::ggplot_build(sequence_plot(fit, type = "distribution")))
-  expect_silent(ggplot2::ggplot_build(
-    sequence_plot(fit, type = "distribution", normalize = TRUE)))
-
-  # The colliding name appears exactly once in the legend breaks.
-  ch <- .mcml_seq_channels(fit, trim = NULL)
-  brks <- .mcml_grouped_breaks(ch)
-  expect_equal(sum(brks == "End"), 1L)
-  expect_false(anyDuplicated(brks) > 0L)
+  figs <- list(sequence_plot(fit), sequence_plot(fit, type = "distribution"),
+               sequence_plot(fit, type = "distribution", normalize = TRUE))
+  lapply(figs, function(p) lapply(mcml_panels(p), function(q) {
+    expect_silent(ggplot2::ggplot_build(q))
+    # The colliding name appears at most once in any panel legend.
+    brks <- ggplot2::get_guide_data(q, "fill")$.label
+    expect_lte(sum(brks == "End"), 1L)
+    expect_false(anyDuplicated(brks) > 0L)
+  }))
 })
 
 test_that("panel draws the macro and the channels apart, each with one palette", {
@@ -102,15 +137,16 @@ test_that("panel draws the macro and the channels apart, each with one palette",
   summary  <- sequence_plot(fit, type = "distribution", panel = "summary")
   channels <- sequence_plot(fit, type = "distribution", panel = "channels")
 
-  expect_s3_class(summary, "ggplot")
-  expect_s3_class(channels, "ggplot")
+  expect_s3_class(summary, "ggplot")              # one channel: a plain ggplot
+  expect_s3_class(channels, "mcml_sequence_plot")  # two clusters: stacked
   expect_silent(ggplot2::ggplot_build(summary))
-  expect_silent(ggplot2::ggplot_build(channels))
+  both     <- mcml_panel_data(both)
+  channels <- mcml_panel_data(channels)
 
   # The macro panel is keyed by cluster, the rest by state. Split apart, each
   # scale holds one kind of key, so a cluster and a state cannot collide.
   expect_equal(levels(summary$data$channel), "Summary")
-  expect_false("Summary" %in% levels(channels$data$channel))
+  expect_false("Summary" %in% levels(channels$channel))
   # Prevalence adds an NA band to both panels; the clusters are the solid keys.
   expect_true(all(names(fit$cluster_members) %in% levels(summary$data$key)))
   expect_setequal(
@@ -120,13 +156,13 @@ test_that("panel draws the macro and the channels apart, each with one palette",
   # Prevalence also carries the faded "elsewhere" bands and NA; the states are
   # the solid keys. Composition drops both, leaving states alone.
   states <- unlist(fit$cluster_members, use.names = FALSE)
-  expect_true(all(states %in% levels(channels$data$key)))
-  norm <- sequence_plot(fit, type = "distribution", normalize = TRUE,
-                        panel = "channels")
-  expect_setequal(levels(norm$data$key), states)
+  expect_true(all(states %in% levels(channels$key)))
+  norm <- mcml_panel_data(sequence_plot(fit, type = "distribution",
+                                       normalize = TRUE, panel = "channels"))
+  expect_setequal(levels(norm$key), states)
   # the shared scale carries more keys than either panel alone
-  expect_gt(nlevels(both$data$key),
-            max(nlevels(summary$data$key), nlevels(norm$data$key)))
+  expect_gt(nlevels(both$key),
+            max(nlevels(summary$data$key), nlevels(norm$key)))
 })
 
 test_that("each panel carries a default title that main overrides", {
@@ -134,12 +170,12 @@ test_that("each panel carries a default title that main overrides", {
   fit <- make_mcml_seq()
   expect_match(sequence_plot(fit, type = "distribution",
                              panel = "summary")$labels$title, "Macro")
-  expect_match(sequence_plot(fit, type = "distribution",
-                             panel = "channels")$labels$title, "Within-cluster")
+  expect_match(attr(sequence_plot(fit, type = "distribution", panel = "channels"),
+                    "panels")[[1L]]$labels$title, "Within-cluster")
   expect_equal(sequence_plot(fit, type = "distribution", panel = "summary",
                              main = "Mine")$labels$title, "Mine")
-  expect_null(sequence_plot(fit, type = "distribution",
-                            panel = "both")$labels$title)
+  expect_null(attr(sequence_plot(fit, type = "distribution", panel = "both"),
+                   "panels")[[1L]]$labels$title)
 })
 
 test_that("panel is rejected for the carpet types", {
@@ -164,10 +200,10 @@ test_that("sequence_plot(expand =) opens the Summary band only", {
 
   # the channels are the partition either way
   expect_equal(
-    levels(sequence_plot(fit, type = "distribution", normalize = TRUE,
-                         panel = "channels")$data$key),
-    levels(sequence_plot(fit, type = "distribution", normalize = TRUE,
-                         panel = "channels", expand = "G1")$data$key))
+    levels(mcml_panel_data(sequence_plot(fit, type = "distribution", normalize = TRUE,
+                                         panel = "channels"))$key),
+    levels(mcml_panel_data(sequence_plot(fit, type = "distribution", normalize = TRUE,
+                                         panel = "channels", expand = "G1"))$key))
 
   # and the object itself is untouched -- an expanded macro stored on the
   # mcml would be mis-drawn by cograph::plot_mcml(), which indexes the macro
