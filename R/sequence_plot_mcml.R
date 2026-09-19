@@ -156,20 +156,39 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   expand
 }
 
+# Every fill key the multichannel figure can draw, in one place: the states,
+# the Summary keys (cluster names, a `combine` group's label, or the member
+# states of an expanded cluster), the channel names, and the pooled-rest key.
+# `state_colors` may name any of them, and .check_color_keys() rejects the
+# rest, so this is also the list a typo is reported against.
+.mcml_color_keys <- function(ch) {
+  unique(c(ch$all_states, ch$macro_keys, ch$cluster_names, ch$rest_label))
+}
+
 # ---- internal: state / cluster / faded palettes -----------------------------
+# `state_colors` is one named lookup over the whole key space: a state name
+# colours its tiles, a cluster name (or a `combine` group's label) colours its
+# Summary band, its channel strip and - after the fade below - its band in the
+# other panels. Unnamed keys keep the defaults, so naming one combined group
+# leaves the rest of the figure untouched.
 .mcml_seq_palettes <- function(ch, state_colors) {
   states <- ch$all_states
   cn     <- ch$macro_keys
-  state_pal <- stats::setNames(.state_palette(state_colors, length(states)), states)
+  state_pal <- stats::setNames(
+    .state_palette(state_colors, length(states), states), states)
   base_cl   <- c("#264653", "#2A9D8F", "#E76F51", "#E9C46A", "#8AB17D",
                  "#5B5F97", "#B5838D", "#6D6875")
-  cluster_pal <- stats::setNames(rep_len(base_cl, length(cn)), cn)
+  cluster_pal <- .apply_named_colors(
+    stats::setNames(rep_len(base_cl, length(cn)), cn), state_colors)
   # A cluster opened by `expand` has no Summary colour; give each such
   # cluster its own unused base colour so its faded band stays distinct.
   chan_pal <- stats::setNames(cluster_pal[ch$cluster_names], ch$cluster_names)
   open_cl  <- is.na(chan_pal)
   spare    <- setdiff(base_cl, chan_pal)
   chan_pal[open_cl] <- rep_len(if (length(spare)) spare else base_cl, sum(open_cl))
+  # An expanded cluster is absent from `cluster_pal`, so its own name has not
+  # been looked up yet; do it here so `state_colors` reaches its faded band too.
+  chan_pal <- .apply_named_colors(chan_pal, state_colors)
   faded <- stats::setNames(
     vapply(chan_pal, function(col) {
       m <- 0.22 * (grDevices::col2rgb(col) / 255) + 0.78   # 22% colour, 78% white
@@ -177,7 +196,8 @@ utils::globalVariables(c("time", "y", "key", "prop"))
     }, character(1L)),
     .mcml_other_key(ch, ch$cluster_names))
   list(state = state_pal, cluster = cluster_pal, faded = faded,
-       rest = stats::setNames("grey78", ch$rest_label))
+       rest = .apply_named_colors(
+         stats::setNames("grey78", ch$rest_label), state_colors))
 }
 
 # A cluster may legitimately be named after a state it contains (a singleton
@@ -463,6 +483,7 @@ print.mcml_sequence_plot <- function(x, ...) {
          "name, or the reserved \"NA\" key.", call. = FALSE)
   }
   ch$rest_label <- rest_label
+  .check_color_keys(state_colors, .mcml_color_keys(ch))
   pals <- .mcml_seq_palettes(ch, state_colors)
   if (type %in% c("heatmap", "index")) {
     if (!identical(panel, "both")) {

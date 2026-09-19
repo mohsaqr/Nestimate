@@ -337,3 +337,35 @@ test_that("trim_clusterwise: global keeps panels aligned, clusterwise crops per 
                       trim_clusterwise = TRUE, legend = "none")
   expect_setequal(unlist(ix$orders), seq_len(nrow(df)))
 })
+
+test_that("named state_colors maps by name in every non-mcml type", {
+  m <- matrix(c("a", "b", "c", "a",
+                "b", "c", "c", "a",
+                "b", "b", "c", "a"), nrow = 3, byrow = TRUE)
+  pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
+
+  idx  <- sequence_plot(m, type = "index", state_colors = c(b = "#000000"))
+  heat <- sequence_plot(m, type = "heatmap", state_colors = c(c = "#123456"))
+  dist <- sequence_plot(m, type = "distribution", state_colors = c(b = "#000000"))
+
+  # named key overridden, the rest keep Okabe-Ito in level order
+  expect_equal(idx$palette, c(.okabe_ito[1L], "#000000", .okabe_ito[3L]))
+  expect_equal(heat$palette, c(.okabe_ito[1L], .okabe_ito[2L], "#123456"))
+  expect_equal(dist$palette[seq_len(3L)], c(.okabe_ito[1L], "#000000",
+                                            .okabe_ito[3L]))
+
+  # unnamed stays positional (regression: names must not change the old path)
+  pos <- sequence_plot(m, type = "index",
+                       state_colors = c("#111111", "#222222", "#333333"))
+  expect_equal(pos$palette, c("#111111", "#222222", "#333333"))
+
+  expect_error(sequence_plot(m, state_colors = c(zz = "red")),
+               "Unknown name\\(s\\) in `state_colors`: zz")
+})
+
+test_that("a half-named state_colors is rejected, not half-honoured", {
+  m <- matrix(c("a", "b", "c", "a", "b", "c"), nrow = 2, byrow = TRUE)
+  pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
+  expect_error(sequence_plot(m, state_colors = c("#111111", b = "#222222")),
+               "mixes named and unnamed colours")
+})

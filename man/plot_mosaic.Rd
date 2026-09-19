@@ -31,9 +31,10 @@ in \code{x}, \code{y}, and \code{weight}.}
 or the name of another column to map to fill (e.g. a residual column
 for diverging color).}
 
-\item{colors}{Optional character vector of fill colors. When
-\code{fill = "y"}, length must be at least the number of distinct y
-levels. Defaults to recycled Okabe-Ito.}
+\item{colors}{Optional fill colors. Either an unnamed vector applied in
+level order (when \code{fill = "y"}, length must be at least the number
+of distinct y levels), or a named lookup (\code{c(plan = "#0072B2")})
+overriding only the levels you name. Defaults to recycled Okabe-Ito.}
 
 \item{show_labels}{If \code{TRUE}, draw within-segment percentage labels.}
 

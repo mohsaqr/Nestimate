@@ -69,8 +69,11 @@ so the time axes stay aligned; \code{TRUE} crops each group to its
 own length quantile (panels can differ in width). See
 \code{\link{sequence_plot}}.}
 
-\item{state_colors}{Vector of colours, one per state. Defaults to
-Okabe-Ito.}
+\item{state_colors}{Colours for the state fills. Either an unnamed
+vector, one colour per state in level order, or a named lookup
+(\code{c(plan = "#0072B2")}) where only the states you name are
+overridden and the rest keep the default Okabe-Ito palette. A name
+that matches no state is an error.}
 
 \item{na_color}{Colour for the \code{NA} band. Default \code{"grey90"}.}
 

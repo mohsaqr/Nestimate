@@ -156,10 +156,78 @@
 
 # Build the state palette from an optional user-supplied vector, falling
 # back to recycled Okabe-Ito. Returns a character vector length = n_states.
-.state_palette <- function(user_colors, n_states) {
+#
+# Two ways to supply colours, and the names decide which:
+#   unnamed - positional, one colour per state in level order (the historical
+#             behaviour; still needs length >= n_states).
+#   named   - a lookup. Only the keys the caller names are overridden; every
+#             other state keeps its Okabe-Ito default, so a partial vector is
+#             legitimate and the vector may be shorter than n_states. Names
+#             that match nothing here are NOT an error at this level: the mcml
+#             path passes the same vector to several palettes (states,
+#             clusters, combined groups), so only the caller knows the full key
+#             space. Callers validate it once with .check_color_keys().
+.state_palette <- function(user_colors, n_states, states = NULL) {
   if (is.null(user_colors)) return(rep_len(.okabe_ito, n_states))
-  stopifnot(is.character(user_colors), length(user_colors) >= n_states)
-  user_colors[seq_len(n_states)]
+  stopifnot("`state_colors` must be a character vector of colours" =
+              is.character(user_colors))
+  # Half-named is ambiguous - the unnamed entries would be dropped without a
+  # word - so it is rejected rather than half-honoured.
+  nm <- names(user_colors)
+  if (!is.null(nm) && any(nzchar(nm)) && !all(nzchar(nm))) {
+    stop("`state_colors` mixes named and unnamed colours. Name every colour ",
+         "(a lookup) or none of them (positional).", call. = FALSE)
+  }
+  if (!.is_named_colors(user_colors)) {
+    stopifnot("`state_colors` must supply at least one colour per state" =
+                length(user_colors) >= n_states)
+    return(unname(user_colors[seq_len(n_states)]))
+  }
+  if (is.null(states)) {
+    stop("Named `state_colors` needs the state names; this plot supplies ",
+         "only a count. Pass an unnamed vector of colours instead.",
+         call. = FALSE)
+  }
+  unname(.apply_named_colors(
+    stats::setNames(rep_len(.okabe_ito, n_states), states), user_colors))
+}
+
+
+# TRUE when the user supplied a lookup (at least one non-empty name) rather
+# than a positional vector.
+.is_named_colors <- function(user_colors) {
+  nm <- names(user_colors)
+  !is.null(nm) && any(nzchar(nm))
+}
+
+
+# Override the entries of a default palette with the same-named entries of the
+# user's vector. Keys the user did not name keep their default colour, so a
+# named vector is always a partial override, never a replacement.
+.apply_named_colors <- function(pal, user_colors) {
+  if (!.is_named_colors(user_colors)) return(pal)
+  hit <- intersect(names(pal), names(user_colors)[nzchar(names(user_colors))])
+  pal[hit] <- unname(user_colors[hit])
+  pal
+}
+
+
+# Surface a mistyped key instead of silently drawing the default colour: a
+# named `state_colors` whose names are not in the plot's key space is a typo,
+# and a palette that quietly ignores it is a silent failure.
+.check_color_keys <- function(user_colors, keys, arg = "state_colors") {
+  if (is.null(user_colors) || !.is_named_colors(user_colors)) {
+    return(invisible(NULL))
+  }
+  nm      <- names(user_colors)
+  unknown <- setdiff(nm[nzchar(nm)], keys)
+  if (length(unknown) > 0L) {
+    stop("Unknown name(s) in `", arg, "`: ",
+         paste(utils::head(unknown, 5L), collapse = ", "),
+         ". Available: ", paste(utils::head(keys, 20L), collapse = ", "),
+         if (length(keys) > 20L) ", ..." else "", ".", call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 

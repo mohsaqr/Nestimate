@@ -177,9 +177,10 @@
 #' @param fill Either \code{"y"} (color by Y category, e.g. state -- default)
 #'   or the name of another column to map to fill (e.g. a residual column
 #'   for diverging color).
-#' @param colors Optional character vector of fill colors. When
-#'   \code{fill = "y"}, length must be at least the number of distinct y
-#'   levels. Defaults to recycled Okabe-Ito.
+#' @param colors Optional fill colors. Either an unnamed vector applied in
+#'   level order (when \code{fill = "y"}, length must be at least the number
+#'   of distinct y levels), or a named lookup (\code{c(plan = "#0072B2")})
+#'   overriding only the levels you name. Defaults to recycled Okabe-Ito.
 #' @param show_labels If \code{TRUE}, draw within-segment percentage labels.
 #' @param label_size Numeric size for segment labels.
 #' @param x_label,y_label Optional axis labels.
@@ -273,7 +274,7 @@ plot_mosaic <- function(data,
 
   # Build palette
   pal <- if (identical(fill, "y")) {
-    .state_palette(colors, length(y_levels))
+    .state_palette(colors, length(y_levels), y_levels)
   } else {
     NULL
   }
@@ -1424,7 +1425,7 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
   group_levels <- unique(freq_df$group)
   freq_df$group <- factor(freq_df$group, levels = group_levels)
 
-  pal <- .state_palette(colors, length(state_levels))
+  pal <- .state_palette(colors, length(state_levels), state_levels)
   names(pal) <- state_levels
 
   # Build cumulative-width / cumulative-height rectangle coordinates.
@@ -1662,7 +1663,7 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
     sub <- sub[!is.na(sub$state) & sub$count > 0, , drop = FALSE]
     if (nrow(sub) == 0L) return(NULL)
 
-    local_pal <- .state_palette(colors, length(local_levels))
+    local_pal <- .state_palette(colors, length(local_levels), local_levels)
     names(local_pal) <- local_levels
 
     .single_treemap_plot(sub, local_pal, label, label_size,
@@ -1735,7 +1736,7 @@ knit_print.nestimate_facet_list <- function(x, ...) {
                                   legend_dir = "auto",
                                   legend_frame = "none") {
   state_levels <- .order_states(freq_df$state, freq_df$count, sort_states)
-  pal <- .state_palette(colors, length(state_levels))
+  pal <- .state_palette(colors, length(state_levels), state_levels)
   names(pal) <- state_levels
 
   groups <- unique(as.character(freq_df$group))
@@ -1809,7 +1810,7 @@ knit_print.nestimate_facet_list <- function(x, ...) {
   state_levels <- .order_states(freq_df$state, freq_df$count, sort_states)
   # Reverse so the largest count appears at the top of the y-axis
   freq_df$state <- factor(freq_df$state, levels = rev(state_levels))
-  pal <- .state_palette(colors, length(state_levels))
+  pal <- .state_palette(colors, length(state_levels), state_levels)
   names(pal) <- state_levels
 
   x_var <- if (metric == "freq") "count" else "proportion"
@@ -1918,9 +1919,10 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #'   ("legend enclosed in a square").
 #' @param sort_states One of \code{"frequency"} (default -- most frequent
 #'   first), \code{"alpha"}, or \code{"none"}.
-#' @param colors Optional character vector overriding the default
-#'   Okabe-Ito state palette. Length must be at least the number of unique
-#'   states.
+#' @param colors Optional colors overriding the default Okabe-Ito state
+#'   palette. Either an unnamed vector applied in state order (length at
+#'   least the number of unique states), or a named lookup
+#'   (\code{c(plan = "#0072B2")}) overriding only the states you name.
 #' @param label_size Numeric size of inline labels (max size when
 #'   \pkg{ggfittext} is installed -- text auto-shrinks per tile).
 #' @param abbreviate Abbreviate state names. \code{FALSE} (default) shows

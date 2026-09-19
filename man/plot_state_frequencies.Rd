@@ -146,9 +146,10 @@ horizontal for top/bottom, vertical for left/right), or force
 \item{sort_states}{One of \code{"frequency"} (default -- most frequent
 first), \code{"alpha"}, or \code{"none"}.}
 
-\item{colors}{Optional character vector overriding the default
-Okabe-Ito state palette. Length must be at least the number of unique
-states.}
+\item{colors}{Optional colors overriding the default Okabe-Ito state
+palette. Either an unnamed vector applied in state order (length at
+least the number of unique states), or a named lookup
+(\code{c(plan = "#0072B2")}) overriding only the states you name.}
 
 \item{label_size}{Numeric size of inline labels (max size when
 \pkg{ggfittext} is installed -- text auto-shrinks per tile).}

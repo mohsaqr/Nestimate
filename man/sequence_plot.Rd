@@ -183,7 +183,21 @@ dendrogram (e.g. \code{sort = "start"}) or for other types.}
 \item{k_line_width}{Line width for the cluster separators. Default
 \code{2.5}.}
 
-\item{state_colors}{Vector of colours, one per state.}
+\item{state_colors}{Colours for the fill keys. Two forms:
+\emph{unnamed} - one colour per state, in level order (states are
+ordered as \code{sort(unique(...))}); \emph{named} - a lookup, where
+only the keys you name are overridden and every other key keeps its
+default. A name that matches no key is an error, not a silently
+ignored entry.
+
+For an \code{mcml} the named form reaches the whole figure, not just
+the states: a cluster name colours its \code{Summary} band, its
+channel strip and its faded band in the other panels, and a group
+merged by \code{combine} is named by its label (the list name you
+gave it, or \code{"A + B"}). \code{rest_label} is a key too. So
+\code{state_colors = c(plan = "#0072B2", "Planning + Monitoring" =
+  "#D55E00")} recolours one state and one combined cluster and leaves
+the rest of the palette alone.}
 
 \item{na_color}{Colour for \code{NA} cells.}
 
@@ -335,6 +349,13 @@ sequence_plot(fit, type = "distribution", panel = "channels",
 sequence_plot(fit, type = "distribution", panel = "channels",
               rest = "none")                                # own states only
 sequence_plot(fit, rest = "pooled")                         # carpet, pooled wash
+
+# Colour by name: one state, one cluster, one combined group. Everything
+# not named keeps its default colour.
+sequence_plot(fit, type = "distribution",
+              combine = list(Task = c("Cognitive", "Regulation")),
+              state_colors = c(Task = "#0072B2", Affective = "#D55E00",
+                               emotion = "#CC79A7"))
 }
 }
 \seealso{

@@ -425,3 +425,74 @@ test_that("mcml-only arguments error on other input; NA label message is clear",
   fit <- make_mcml_seq3()
   expect_error(sequence_plot(fit, rest_label = "NA"), "reserved")
 })
+
+# ---- named state_colors -----------------------------------------------------
+# Every fill key of a panel with its resolved colour, as a named character
+# vector: legend label -> fill. Reads the built guide, so it is the colour the
+# figure actually draws, not the palette we handed in.
+mcml_fills <- function(p, panel) {
+  g <- ggplot2::get_guide_data(mcml_panels(p)[[panel]], "fill")
+  stats::setNames(g$fill, g$.label)
+}
+
+test_that("named state_colors colours a combined group everywhere it appears", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+
+  p <- sequence_plot(fit, type = "distribution",
+                     combine = list(Merged = c("G1", "G2")),
+                     state_colors = c(Merged = "#CC79A7", b1 = "#000000"))
+
+  # the group's Summary band, and one of its member states
+  expect_equal(unname(mcml_fills(p, "Summary")[["Merged"]]), "#CC79A7")
+  expect_equal(unname(mcml_fills(p, "Merged")[["b1"]]), "#000000")
+  # the faded band in the other panel is the 22% fade of the same colour
+  m <- 0.22 * (grDevices::col2rgb("#CC79A7") / 255) + 0.78
+  expect_equal(unname(mcml_fills(p, "G3")[["Merged (Other states)"]]),
+               toupper(grDevices::rgb(m[1L], m[2L], m[3L])))
+  # keys the user did not name keep their defaults
+  expect_equal(unname(mcml_fills(p, "Merged")[["a1"]]), .okabe_ito[1L])
+  expect_equal(unname(mcml_fills(p, "Summary")[["G3"]]), "#2A9D8F")
+})
+
+test_that("named state_colors reaches an expanded cluster and rest_label", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+
+  # `expand` takes G1's Summary key away, but its channel and faded band remain
+  p <- sequence_plot(fit, type = "distribution", expand = "G1",
+                     state_colors = c(G1 = "#CC79A7"))
+  m <- 0.22 * (grDevices::col2rgb("#CC79A7") / 255) + 0.78
+  expect_equal(unname(mcml_fills(p, "G2")[["G1 (Other states)"]]),
+               toupper(grDevices::rgb(m[1L], m[2L], m[3L])))
+
+  pooled <- sequence_plot(fit, type = "distribution", rest = "pooled",
+                          state_colors = c("Other states" = "#F0E442"))
+  expect_equal(unname(mcml_fills(pooled, "G1")[["Other states"]]), "#F0E442")
+})
+
+test_that("an unnamed state_colors stays positional for an mcml", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+  cols <- c("#111111", "#222222", "#333333", "#444444", "#555555", "#666666")
+
+  p <- sequence_plot(fit, type = "distribution", state_colors = cols)
+  # states are keyed in sorted order: a1 a2 b1 b2 c1 c2
+  expect_equal(unname(mcml_fills(p, "G1")[c("a1", "a2")]), cols[1:2])
+  expect_equal(unname(mcml_fills(p, "G3")[c("c1", "c2")]), cols[5:6])
+  # clusters keep their own palette, untouched by a positional vector
+  expect_equal(unname(mcml_fills(p, "Summary")[["G1"]]), "#264653")
+})
+
+test_that("a state_colors name matching no key is an error", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+
+  expect_error(sequence_plot(fit, state_colors = c(nope = "red")),
+               "Unknown name\\(s\\) in `state_colors`: nope")
+  # the label of a group that was never combined is not a key either
+  expect_error(sequence_plot(fit, state_colors = c("G1 + G2" = "red")),
+               "Unknown name")
+  expect_silent(sequence_plot(fit, combine = c("G1", "G2"),
+                              state_colors = c("G1 + G2" = "red")))
+})

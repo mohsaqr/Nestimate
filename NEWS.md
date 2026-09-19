@@ -1,3 +1,25 @@
+# Nestimate 0.9.10
+
+## Improvements
+
+* `state_colors` accepts a **named** vector everywhere `sequence_plot()`,
+  `distribution_plot()` and `plot_state_frequencies()` draw, and the names are
+  a lookup rather than a positional list: only the keys you name are
+  overridden, every other key keeps its default, and the vector may be shorter
+  than the number of states. An unnamed vector is still positional, unchanged.
+
+* For an `mcml`, that lookup covers the whole multichannel figure, not only
+  the states. A cluster name colours its `Summary` band, its channel strip and
+  its faded band in the other panels; a group merged by `combine =` is named
+  by its label (the list name, or `"A + B"`); `rest_label` is a key too. So
+  `sequence_plot(fit, combine = list(Task = c("Cognitive", "Regulation")),
+  state_colors = c(Task = "#0072B2"))` recolours the combined cluster and
+  leaves the rest of the palette alone. Previously the cluster and combined
+  keys were drawn from a fixed internal palette with no way to set them.
+
+* A `state_colors` name that matches no key in the figure is now an error
+  naming the available keys, instead of being silently ignored.
+
 # Nestimate 0.9.9
 
 ## New verbs
