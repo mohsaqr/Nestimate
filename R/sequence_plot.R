@@ -220,8 +220,9 @@
 #'   \emph{unnamed} - one colour per state, in level order (states are
 #'   ordered as \code{sort(unique(...))}); \emph{named} - a lookup, where
 #'   only the keys you name are overridden and every other key keeps its
-#'   default. A name that matches no key is an error, not a silently
-#'   ignored entry.
+#'   default. Names this figure does not draw are dropped with a message
+#'   naming them, so one project-wide palette can be handed to every plot
+#'   and each takes the keys that apply to it.
 #'
 #'   For an \code{mcml} the named form reaches the whole figure, not just
 #'   the states: a cluster name colours its \code{Summary} band, its
@@ -522,7 +523,7 @@ sequence_plot <- function(x,
                  length(ord), n_rows), call. = FALSE)
   }
 
-  .check_color_keys(state_colors, levels_all)
+  .report_unused_colors(state_colors, levels_all)
   palette <- .state_palette(state_colors, length(levels_all), levels_all)
   z       <- t(codes[ord, , drop = FALSE])
 
@@ -630,7 +631,7 @@ sequence_plot <- function(x,
   full_codes <- enc$codes
   levels_all <- enc$levels
   col_names  <- colnames(full_codes)
-  .check_color_keys(state_colors, levels_all)
+  .report_unused_colors(state_colors, levels_all)
   palette    <- .state_palette(state_colors, length(levels_all), levels_all)
   # One global cut keeps every panel the same width (aligned axes). With
   # trim_clusterwise = TRUE each group is cropped to its own length

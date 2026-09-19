@@ -187,8 +187,9 @@ dendrogram (e.g. \code{sort = "start"}) or for other types.}
 \emph{unnamed} - one colour per state, in level order (states are
 ordered as \code{sort(unique(...))}); \emph{named} - a lookup, where
 only the keys you name are overridden and every other key keeps its
-default. A name that matches no key is an error, not a silently
-ignored entry.
+default. Names this figure does not draw are dropped with a message
+naming them, so one project-wide palette can be handed to every plot
+and each takes the keys that apply to it.
 
 For an \code{mcml} the named form reaches the whole figure, not just
 the states: a cluster name colours its \code{Summary} band, its

@@ -1,3 +1,14 @@
+# Nestimate 0.9.11
+
+## Fixes
+
+* A named `state_colors` no longer has to match the figure exactly. Names the
+  plot does not draw are dropped with a `message()` naming them, so one
+  project-wide palette -- states from a wider coding scheme, clusters a given
+  call merged away -- can be handed to every plot and each takes the keys that
+  apply to it. 0.9.10 raised an error instead, which made a shared palette
+  unusable.
+
 # Nestimate 0.9.10
 
 ## Improvements

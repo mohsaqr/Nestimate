@@ -166,7 +166,8 @@
 #             that match nothing here are NOT an error at this level: the mcml
 #             path passes the same vector to several palettes (states,
 #             clusters, combined groups), so only the caller knows the full key
-#             space. Callers validate it once with .check_color_keys().
+#             space. Callers report the leftovers once with
+#             .report_unused_colors().
 .state_palette <- function(user_colors, n_states, states = NULL) {
   if (is.null(user_colors)) return(rep_len(.okabe_ito, n_states))
   stopifnot("`state_colors` must be a character vector of colours" =
@@ -212,20 +213,30 @@
 }
 
 
-# Surface a mistyped key instead of silently drawing the default colour: a
-# named `state_colors` whose names are not in the plot's key space is a typo,
-# and a palette that quietly ignores it is a silent failure.
-.check_color_keys <- function(user_colors, keys, arg = "state_colors") {
+# Names the figure does not draw are dropped, not rejected: one project-wide
+# palette legitimately carries states from a wider coding scheme, and clusters
+# a given call merged away. Erroring would make a shared palette unusable. They
+# are announced with message() rather than dropped in silence, so a typo or a
+# renamed state still surfaces; message() is suppressible and does not stop the
+# plot. A palette where nothing matches says so explicitly - the figure is
+# entirely default-coloured, which is worth reading as a sentence.
+.report_unused_colors <- function(user_colors, keys, arg = "state_colors") {
   if (is.null(user_colors) || !.is_named_colors(user_colors)) {
     return(invisible(NULL))
   }
-  nm      <- names(user_colors)
-  unknown <- setdiff(nm[nzchar(nm)], keys)
-  if (length(unknown) > 0L) {
-    stop("Unknown name(s) in `", arg, "`: ",
-         paste(utils::head(unknown, 5L), collapse = ", "),
-         ". Available: ", paste(utils::head(keys, 20L), collapse = ", "),
-         if (length(keys) > 20L) ", ..." else "", ".", call. = FALSE)
+  nm     <- names(user_colors)[nzchar(names(user_colors))]
+  unused <- setdiff(nm, keys)
+  if (length(unused) == 0L) {
+    return(invisible(NULL))
+  }
+  shown <- paste0(paste(utils::head(unused, 6L), collapse = ", "),
+                  if (length(unused) > 6L) ", ..." else "")
+  if (length(unused) == length(nm)) {
+    message("`", arg, "`: no name matches a key this plot draws, so every key ",
+            "keeps its default colour. Dropped: ", shown, ".")
+  } else {
+    message("`", arg, "`: ", length(unused), " of ", length(nm),
+            " names are not drawn by this plot and were dropped: ", shown, ".")
   }
   invisible(NULL)
 }

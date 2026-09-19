@@ -359,8 +359,13 @@ test_that("named state_colors maps by name in every non-mcml type", {
                        state_colors = c("#111111", "#222222", "#333333"))
   expect_equal(pos$palette, c("#111111", "#222222", "#333333"))
 
-  expect_error(sequence_plot(m, state_colors = c(zz = "red")),
-               "Unknown name\\(s\\) in `state_colors`: zz")
+  # extra names are dropped with a message (one palette, many figures)
+  expect_message(super <- sequence_plot(m, type = "index",
+                                        state_colors = c(zz = "red", b = "#000000")),
+                 "1 of 2 names are not drawn")
+  expect_equal(super$palette, c(.okabe_ito[1L], "#000000", .okabe_ito[3L]))
+  expect_message(sequence_plot(m, state_colors = c(zz = "red")),
+                 "no name matches a key this plot draws")
 })
 
 test_that("a half-named state_colors is rejected, not half-honoured", {

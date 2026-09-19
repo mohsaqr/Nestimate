@@ -159,8 +159,8 @@ utils::globalVariables(c("time", "y", "key", "prop"))
 # Every fill key the multichannel figure can draw, in one place: the states,
 # the Summary keys (cluster names, a `combine` group's label, or the member
 # states of an expanded cluster), the channel names, and the pooled-rest key.
-# `state_colors` may name any of them, and .check_color_keys() rejects the
-# rest, so this is also the list a typo is reported against.
+# `state_colors` may name any of them; .report_unused_colors() drops the rest
+# with a message, so this is also the list a typo is reported against.
 .mcml_color_keys <- function(ch) {
   unique(c(ch$all_states, ch$macro_keys, ch$cluster_names, ch$rest_label))
 }
@@ -483,7 +483,7 @@ print.mcml_sequence_plot <- function(x, ...) {
          "name, or the reserved \"NA\" key.", call. = FALSE)
   }
   ch$rest_label <- rest_label
-  .check_color_keys(state_colors, .mcml_color_keys(ch))
+  .report_unused_colors(state_colors, .mcml_color_keys(ch))
   pals <- .mcml_seq_palettes(ch, state_colors)
   if (type %in% c("heatmap", "index")) {
     if (!identical(panel, "both")) {

@@ -484,15 +484,39 @@ test_that("an unnamed state_colors stays positional for an mcml", {
   expect_equal(unname(mcml_fills(p, "Summary")[["G1"]]), "#264653")
 })
 
-test_that("a state_colors name matching no key is an error", {
+test_that("names this figure does not draw are dropped with a message", {
   skip_if_not_installed("ggplot2")
   fit <- make_mcml_seq3()
 
-  expect_error(sequence_plot(fit, state_colors = c(nope = "red")),
-               "Unknown name\\(s\\) in `state_colors`: nope")
+  expect_message(sequence_plot(fit, state_colors = c(nope = "red")),
+                 "no name matches a key this plot draws")
   # the label of a group that was never combined is not a key either
-  expect_error(sequence_plot(fit, state_colors = c("G1 + G2" = "red")),
-               "Unknown name")
+  expect_message(sequence_plot(fit, state_colors = c("G1 + G2" = "red")),
+                 "no name matches a key this plot draws")
+  # a partial overlap says how many were dropped, and still draws the rest
+  expect_message(sequence_plot(fit, state_colors = c(nope = "red", a1 = "#000000")),
+                 "1 of 2 names are not drawn")
+  # a palette that matches exactly says nothing
   expect_silent(sequence_plot(fit, combine = c("G1", "G2"),
                               state_colors = c("G1 + G2" = "red")))
+})
+
+test_that("a palette carrying keys this figure does not draw is accepted", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+  # One project-wide palette: states of another coding scheme, clusters this
+  # figure merged away, and the states it does draw.
+  master <- c(Approve = "#2CA02C", Encourage = "#B5D334", a1 = "#000000",
+              G3 = "#CC79A7", "G1 + G2" = "#0072B2")
+
+  expect_message(
+    p <- sequence_plot(fit, type = "distribution", combine = c("G1", "G2"),
+                       state_colors = master),
+    "2 of 5 names are not drawn")
+
+  expect_equal(unname(mcml_fills(p, "Summary")[["G1 + G2"]]), "#0072B2")
+  expect_equal(unname(mcml_fills(p, "Summary")[["G3"]]), "#CC79A7")
+  expect_equal(unname(mcml_fills(p, "G1 + G2")[["a1"]]), "#000000")
+  # the keys it does not name keep their defaults
+  expect_equal(unname(mcml_fills(p, "G1 + G2")[["a2"]]), .okabe_ito[2L])
 })

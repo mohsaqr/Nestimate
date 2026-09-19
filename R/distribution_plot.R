@@ -39,8 +39,9 @@
 #' @param state_colors Colours for the state fills. Either an unnamed
 #'   vector, one colour per state in level order, or a named lookup
 #'   (\code{c(plan = "#0072B2")}) where only the states you name are
-#'   overridden and the rest keep the default Okabe-Ito palette. A name
-#'   that matches no state is an error.
+#'   overridden and the rest keep the default Okabe-Ito palette. Names this
+#'   plot does not draw are dropped with a message, so one palette can be
+#'   reused across figures.
 #' @param na_color Colour for the \code{NA} band. Default \code{"grey90"}.
 #' @param frame \code{FALSE} (default) draws no panel box; \code{TRUE} draws
 #'   a box around each panel.
@@ -166,7 +167,7 @@ distribution_plot <- function(x,
   # trim_clusterwise crops each group to its own length quantile.
   global_cut <- .trim_cut(full_codes, trim)
 
-  .check_color_keys(state_colors, levels_all)
+  .report_unused_colors(state_colors, levels_all)
   palette       <- .state_palette(state_colors, K_core, levels_all)
   full_palette  <- if (na) c(palette, na_color) else palette
   legend_labels <- if (na) c(levels_all, "NA") else levels_all
