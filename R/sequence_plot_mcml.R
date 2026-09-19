@@ -67,7 +67,7 @@ utils::globalVariables(c("time", "y", "key", "prop"))
 
   list(cluster_names = cluster_names, clusters = clusters, cmats = cmats,
        times = seq_along(tcols), all_states = all_states,
-       macro_keys = macro_keys,
+       macro_keys = macro_keys, expanded = expanded,
        summary_mat = summary_mat, summary_cluster_mat = summary_cluster_mat)
 }
 
@@ -299,15 +299,22 @@ print.mcml_sequence_plot <- function(x, ...) {
     # prevalence: own states (solid) + other clusters (faded) + NA, to 100%.
     inactive   <- pmax(0, 1 - colSums(cl_share))
     faded_keys <- paste0(cn, " (elsewhere)")
+    # An expanded cluster has no row of its own in `cl_share` (its states are
+    # the macro keys), so its faded share in other panels sums its members.
+    cluster_share <- function(j) {
+      rows <- if (j %in% ch$expanded) ch$clusters[[j]] else j
+      colSums(cl_share[rows, , drop = FALSE])
+    }
     bands <- rbind(
-      do.call(rbind, lapply(cn, function(cl) band("Summary", cl, cl_share[cl, ]))),
+      do.call(rbind, lapply(ch$macro_keys,
+                            function(cl) band("Summary", cl, cl_share[cl, ]))),
       band("Summary", "NA", inactive),
       do.call(rbind, lapply(cn, function(k) {
         own <- share_at(ch$cmats[[k]], ch$clusters[[k]])
         own_b <- do.call(rbind, lapply(seq_along(ch$clusters[[k]]),
                                        function(i) band(k, ch$clusters[[k]][i], own[i, ])))
         oth_b <- do.call(rbind, lapply(setdiff(cn, k),
-                                       function(j) band(k, paste0(j, " (elsewhere)"), cl_share[j, ])))
+                                       function(j) band(k, paste0(j, " (elsewhere)"), cluster_share(j))))
         rbind(own_b, oth_b, band(k, "NA", inactive))
       })))
     bands$key <- factor(bands$key,

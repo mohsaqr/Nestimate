@@ -7,7 +7,8 @@
 macro_network(x, expand = NULL, method = "relative", ...)
 }
 \arguments{
-\item{x}{An \code{mcml} built from sequence data. A matrix-derived
+\item{x}{An \code{mcml} built from sequence data, or an
+\code{mcml_pc} from \code{\link{build_mcml_pc}}. A matrix-derived
 \code{mcml} carries no node-level data and cannot be expanded.}
 
 \item{expand}{Names of clusters to expand into their member states.

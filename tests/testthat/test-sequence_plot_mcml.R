@@ -222,3 +222,29 @@ test_that("sequence_plot(expand = all) opens every cluster in the Summary band",
   }
   expect_error(sequence_plot(fit, expand = "nope"), "Unknown")
 })
+
+test_that("sequence_plot(expand =) works in the default prevalence view", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq()
+
+  # regression: the prevalence branch indexed the cluster-share table by
+  # cluster name, which has no row for an expanded cluster
+  p <- sequence_plot(fit, type = "distribution", expand = "G1")
+  d <- mcml_panel_data(p)
+
+  # the Summary band opens G1; the G2 panel keeps G1 as one faded band
+  expect_setequal(unique(as.character(d$key[d$channel == "Summary"])),
+                  c("a1", "a2", "G2", "NA"))
+  expect_true("G1 (elsewhere)" %in% as.character(d$key[d$channel == "G2"]))
+
+  # every channel still stacks to 100% at every time point
+  tot <- stats::aggregate(prop ~ channel + time, d, sum)
+  expect_equal(tot$prop, rep(1, nrow(tot)))
+
+  # the faded G1 share equals the summed a1 + a2 shares of the Summary band
+  faded <- d[d$channel == "G2" & d$key == "G1 (elsewhere)", ]
+  own   <- stats::aggregate(prop ~ time,
+                            d[d$channel == "Summary" & d$key %in% c("a1", "a2"), ],
+                            sum)
+  expect_equal(faded$prop[order(faded$time)], own$prop[order(own$time)])
+})

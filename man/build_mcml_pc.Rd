@@ -248,7 +248,7 @@ composite methods can recover. Requires raw data.}
 \details{
 \strong{Item diagnostics.} Whenever raw data or a node-level network
 is available, every item's connection strength to \emph{every} cluster
-is computed. The \code{$loadings} table reports, per item: its signed
+is computed. The \code{\link{item_loadings}()} table reports, per item: its signed
 own-cluster loading, its composite weight, its strongest cross-cluster
 loading, and a \code{misfit} flag set when the cross-cluster loading
 exceeds the own-cluster loading - evidence the item is assigned to the

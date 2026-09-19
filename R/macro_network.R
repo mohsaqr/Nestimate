@@ -19,7 +19,8 @@
 #' at mixed resolution: the cluster of interest in detail, its context in
 #' summary.
 #'
-#' @param x An \code{mcml} built from sequence data. A matrix-derived
+#' @param x An \code{mcml} built from sequence data, or an
+#'   \code{mcml_pc} from \code{\link{build_mcml_pc}}. A matrix-derived
 #'   \code{mcml} carries no node-level data and cannot be expanded.
 #' @param expand Names of clusters to expand into their member states.
 #'   \code{NULL} (default) collapses every cluster, reproducing the macro
@@ -50,10 +51,25 @@
 #' @export
 macro_network <- function(x, expand = NULL, method = "relative", ...) {
   stopifnot(
-    "`x` must be an mcml" = inherits(x, "mcml"),
+    "`x` must be an mcml or an mcml_pc" =
+      inherits(x, "mcml") || inherits(x, "mcml_pc"),
     "`expand` must be a character vector, TRUE, \"all\" or NULL" =
       is.null(expand) || is.character(expand) || isTRUE(expand)
   )
+  # A psychometric fit already holds its cluster-level network as a full
+  # netobject -- there is nothing to re-count, so the verb hands it back.
+  # Mixed-resolution expansion is a transition-network operation: it re-counts
+  # sequences, which an association network has none of.
+  if (inherits(x, "mcml_pc")) {
+    if (!is.null(expand)) {
+      stop(errorCondition(
+        paste0("`expand` is not available for a psychometric (mcml_pc) fit: ",
+               "there are no sequences to re-count. Use as_networks() to get ",
+               "the macro network together with every within-cluster network."),
+        class = "nestimate_no_expand", call = NULL))
+    }
+    return(x$macro)
+  }
   members <- x$cluster_members
   # "all" / TRUE expands every cluster, so the macro carries each state as its
   # own node. Spelling it out as names(x$cluster_members) would make the

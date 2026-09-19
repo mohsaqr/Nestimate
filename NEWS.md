@@ -12,8 +12,20 @@
   `nestimate_no_session_ids` for wide-data input or for fits made before this
   version, and `nestimate_session_ids_misaligned` when the metadata and the
   sequences differ in number.
+* `item_loadings()` returns the tidy item-diagnostic table of a
+  `build_mcml_pc()` fit (node, cluster, loading, weight, sign, max_cross,
+  cross_cluster, misfit); `misfit = TRUE`/`FALSE` filters it.
+* `composites()` returns the per-respondent cluster scores of a
+  `build_mcml_pc()` fit, one row per observation and one column per cluster.
+  Raises `nestimate_no_composites` for the descriptive aggregations
+  (`"average"`, `"escoufier"`, `"cancor"`), which form no score.
 
 ## Changes
+
+* `macro_network()` accepts an `mcml_pc` fit and returns its cluster-level
+  network; `expand =` on an `mcml_pc` raises `nestimate_no_expand`.
+* `print.mcml_pc()` and its build-time warnings name `item_loadings()`
+  instead of pointing at `$loadings`.
 
 * `prepare()` (and so `build_network()` on long data) keeps the `session`
   column(s) in the per-sequence metadata under their own names, and returns
@@ -22,6 +34,14 @@
 * `build_mmm()` and `build_clusters()` keep the input network's `$metadata`
   (restricted to the fitted rows when `build_mmm()` drops sequences with
   missing covariates).
+
+## Fixes
+
+* `sequence_plot()` on an `mcml` with `type = "distribution"` and `expand =`
+  no longer fails with "subscript out of bounds" in the default
+  (`normalize = FALSE`) view. The Summary band now opens the expanded
+  cluster into its states, and the other panels draw it as one faded
+  "(elsewhere)" band.
 
 # Nestimate 0.9.5
 
