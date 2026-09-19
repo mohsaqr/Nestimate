@@ -754,7 +754,10 @@ cluster_summary <- function(x,
 #'       the raw data. Otherwise falls back to \code{\link{cluster_summary}}.}
 #'     \item{netobject}{If \code{x$data} is non-NULL, detects edge list
 #'       vs sequence data. Otherwise falls back to \code{\link{cluster_summary}}.}
-#'     \item{mcml}{An \code{mcml} object is returned unchanged.}
+#'     \item{mcml}{An \code{mcml} object is returned unchanged, unless
+#'       \code{clusters}, \code{combine} or \code{expand} changes its
+#'       partition: it is then re-estimated from the sequences it carries
+#'       (see \code{combine}).}
 #'     \item{square numeric matrix}{Falls back to \code{\link{cluster_summary}}.}
 #'     \item{non-square or character matrix}{Treated as sequence data.}
 #'   }
@@ -844,6 +847,31 @@ cluster_summary <- function(x,
 #'   names). Accepts a 2-column data.frame \code{(name, label)}, a named
 #'   character vector \code{c(name = "label")}, or a named list. Unmapped
 #'   names pass through unchanged.
+#' @param combine,expand Change the partition. On new input they apply to
+#'   \code{clusters} (in any of its accepted forms, including
+#'   auto-detection) before estimation, so
+#'   \code{build_mcml(data, clusters = cl, combine = c("A", "B"))} equals a
+#'   build with \code{A} and \code{B} merged in \code{cl}; this works for
+#'   every input type, matrices included. On an existing \code{mcml} they
+#'   re-partition it (see below).
+#'   \code{combine} merges clusters into one: a character vector merges one
+#'   group, a list merges several and its names label them (default label
+#'   \code{"A + B"}). \code{expand} then splits the named clusters (or
+#'   \code{"all"}/\code{TRUE}) into one cluster per member state, named by
+#'   the state. For an existing \code{mcml} the model is re-estimated --
+#'   macro network, within-cluster
+#'   networks and stored sequences -- from the sequences the \code{mcml}
+#'   carries, with its original \code{type}, \code{method} and
+#'   \code{directed} unless passed explicitly. Any session split,
+#'   \code{exclude}, \code{trim} or \code{end} applied when it was built is
+#'   already in those sequences and is not re-applied. Passing a new
+#'   \code{clusters} list instead re-estimates under that partition. Errors
+#'   with class \code{nestimate_mcml_no_sequences} when the \code{mcml} was
+#'   built from a matrix or with \code{compute_within = FALSE}.
+#'   \code{\link{sequence_plot}} accepts the same two arguments as display
+#'   options: its \code{combine} draws exactly what it draws for
+#'   \code{build_mcml(x, combine = )}, while its \code{expand} opens clusters
+#'   in the Summary panel only and keeps one panel per cluster.
 #'
 #' @return An \code{mcml} object with the same layout as the return value of
 #'   \code{\link{cluster_summary}} (\code{macro}, \code{clusters},
@@ -885,6 +913,16 @@ cluster_summary <- function(x,
 #' cs <- build_mcml(seqs, clusters, type = "raw")
 #' cs
 #' summary(cs)
+#'
+#' # Change the partition while building ...
+#' three <- build_mcml(seqs, list(G1 = "A", G2 = "B", G3 = c("C", "D")))
+#' build_mcml(seqs, list(G1 = "A", G2 = "B", G3 = c("C", "D")),
+#'            combine = c("G1", "G2"))
+#'
+#' # ... or re-partition an existing mcml: the model is re-estimated
+#' build_mcml(three, combine = c("G1", "G2"))           # G1 + G2 as one cluster
+#' build_mcml(three, combine = list(AB = c("G1", "G2"))) # named merge
+#' build_mcml(three, expand = "G3")                      # C and D as clusters
 build_mcml <- function(x,
                        clusters = NULL,
                        method = c("sum", "mean", "median", "max",
@@ -903,7 +941,9 @@ build_mcml <- function(x,
                        trim = NULL,
                        end = FALSE,
                        end_by = NULL,
-                       labels = NULL) {
+                       labels = NULL,
+                       combine = NULL,
+                       expand = NULL) {
   if (!is.logical(directed) || length(directed) != 1L || is.na(directed)) {
     stop("'directed' must be TRUE or FALSE.", call. = FALSE)
   }
@@ -912,9 +952,38 @@ build_mcml <- function(x,
     stop("'compute_within' must be TRUE or FALSE.", call. = FALSE)
   }
 
-  # If already an mcml object, return as-is
+  # An existing mcml: unchanged unless the partition is changed, in which
+  # case it is re-estimated from the sequences it carries.
   if (inherits(x, "mcml")) {
-    return(x)
+    if (is.null(clusters) && is.null(combine) && is.null(expand)) {
+      return(x)
+    }
+    return(.mcml_rebuild(
+      x, clusters = clusters, combine = combine, expand = expand,
+      method = if (missing(method)) x$meta$method else match.arg(method),
+      type = if (missing(type)) x$meta$type else match.arg(type),
+      directed = if (missing(directed)) x$meta$directed %||% directed else directed,
+      compute_within = compute_within))
+  }
+  # combine/expand on fresh input: resolve the partition exactly as the plain
+  # build does (every `clusters` form, including auto-detection, ends up as
+  # the fit's named `cluster_members`), re-partition that list, and build
+  # once more from the same input. Identical to building with the merged
+  # list by construction, and works for matrix input too.
+  if (!is.null(combine) || !is.null(expand)) {
+    args <- list(x = x, clusters = clusters, directed = directed,
+                 compute_within = compute_within, actor = actor,
+                 action = action, time = time, order = order,
+                 session = session, time_threshold = time_threshold,
+                 exclude = exclude, trim = trim, end = end, end_by = end_by,
+                 labels = labels)
+    # pass method/type only when given, so the matrix path's
+    # "type is ignored" warning fires exactly as in a plain call
+    if (!missing(method)) args$method <- method
+    if (!missing(type))   args$type   <- type
+    base <- do.call(build_mcml, args)
+    args$clusters <- .mcml_partition(base$cluster_members, combine, expand)
+    return(do.call(build_mcml, args))
   }
 
   # Remember whether the caller passed `type` explicitly -- used below to
@@ -1075,6 +1144,68 @@ build_mcml <- function(x,
 
 #' Detect input type for build_mcml
 #' @noRd
+# Re-partition a named cluster list: `combine` merges clusters (a merged
+# group takes the place of its first member and is labelled by its list name
+# or "A + B"), then `expand` splits clusters into one singleton cluster per
+# member state, named by the state. Shared by build_mcml() on fresh input and
+# on an existing mcml.
+.mcml_partition <- function(clusters, combine = NULL, expand = NULL) {
+  groups <- .mcml_resolve_combine(combine, names(clusters))
+  if (length(groups) > 0L) {
+    owner <- stats::setNames(names(clusters), names(clusters))
+    owner[unlist(groups, use.names = FALSE)] <- rep(names(groups), lengths(groups))
+    new_names <- unique(unname(owner))
+    clusters <- stats::setNames(lapply(new_names, function(g) {
+      unlist(clusters[names(owner)[owner == g]], use.names = FALSE)
+    }), new_names)
+  }
+  opened <- .mcml_resolve_expand(expand, names(clusters))
+  if (length(opened) > 0L) {
+    kept   <- setdiff(names(clusters), opened)
+    states <- unlist(clusters[opened], use.names = FALSE)
+    clash  <- intersect(states, kept)
+    if (length(clash) > 0L) {
+      stop("Expanding would give a state the name of an existing cluster: ",
+           paste(clash, collapse = ", "), call. = FALSE)
+    }
+    clusters <- do.call(c, lapply(names(clusters), function(k) {
+      if (k %in% opened) stats::setNames(as.list(clusters[[k]]), clusters[[k]]) else clusters[k]
+    }))
+  }
+  clusters
+}
+
+# Re-estimate an mcml under a changed partition. The stored per-cluster
+# matrices are the full sequences with other clusters' states blanked, and the
+# clusters partition the states, so coalescing them recovers the sequences the
+# mcml was built from (after any session split, exclude, trim or end, which are
+# therefore not re-applied). `combine` merges clusters, then `expand` splits
+# clusters into singleton clusters, one per member state -- the same order as
+# sequence_plot(combine =, expand =).
+.mcml_rebuild <- function(x, clusters, combine, expand, method, type,
+                          directed, compute_within) {
+  datas <- lapply(x$clusters, function(z) z$data)
+  if (!length(datas) || any(vapply(datas, is.null, logical(1L)))) {
+    stop(errorCondition(
+      paste0("This mcml carries no sequences (built from a matrix, or with ",
+             "compute_within = FALSE), so it cannot be re-partitioned. ",
+             "Rebuild it from the original data with the new `clusters`."),
+      class = "nestimate_mcml_no_sequences", call = NULL))
+  }
+  if (!is.null(clusters) && (!is.null(combine) || !is.null(expand))) {
+    stop("Pass either `clusters` or `combine`/`expand`, not both.",
+         call. = FALSE)
+  }
+  seqs <- Reduce(function(a, b) { a[is.na(a)] <- b[is.na(a)]; a },
+                 lapply(datas, as.data.frame, stringsAsFactors = FALSE))
+
+  if (is.null(clusters)) {
+    clusters <- .mcml_partition(x$cluster_members, combine, expand)
+  }
+  build_mcml(seqs, clusters = clusters, method = method, type = type,
+             directed = directed, compute_within = compute_within)
+}
+
 .detect_mcml_input <- function(x) {
   if (inherits(x, "tna")) {
     if (!is.null(x$data)) return("tna_data")

@@ -21,7 +21,9 @@ build_mcml(
   trim = NULL,
   end = FALSE,
   end_by = NULL,
-  labels = NULL
+  labels = NULL,
+  combine = NULL,
+  expand = NULL
 )
 }
 \arguments{
@@ -37,7 +39,10 @@ transitions.}
 the raw data. Otherwise falls back to \code{\link{cluster_summary}}.}
 \item{netobject}{If \code{x$data} is non-NULL, detects edge list
 vs sequence data. Otherwise falls back to \code{\link{cluster_summary}}.}
-\item{mcml}{An \code{mcml} object is returned unchanged.}
+\item{mcml}{An \code{mcml} object is returned unchanged, unless
+\code{clusters}, \code{combine} or \code{expand} changes its
+partition: it is then re-estimated from the sequences it carries
+(see \code{combine}).}
 \item{square numeric matrix}{Falls back to \code{\link{cluster_summary}}.}
 \item{non-square or character matrix}{Treated as sequence data.}
 }}
@@ -136,6 +141,32 @@ long-format input, since the grouping column lives there.}
 names). Accepts a 2-column data.frame \code{(name, label)}, a named
 character vector \code{c(name = "label")}, or a named list. Unmapped
 names pass through unchanged.}
+
+\item{combine, expand}{Change the partition. On new input they apply to
+\code{clusters} (in any of its accepted forms, including
+auto-detection) before estimation, so
+\code{build_mcml(data, clusters = cl, combine = c("A", "B"))} equals a
+build with \code{A} and \code{B} merged in \code{cl}; this works for
+every input type, matrices included. On an existing \code{mcml} they
+re-partition it (see below).
+\code{combine} merges clusters into one: a character vector merges one
+group, a list merges several and its names label them (default label
+\code{"A + B"}). \code{expand} then splits the named clusters (or
+\code{"all"}/\code{TRUE}) into one cluster per member state, named by
+the state. For an existing \code{mcml} the model is re-estimated --
+macro network, within-cluster
+networks and stored sequences -- from the sequences the \code{mcml}
+carries, with its original \code{type}, \code{method} and
+\code{directed} unless passed explicitly. Any session split,
+\code{exclude}, \code{trim} or \code{end} applied when it was built is
+already in those sequences and is not re-applied. Passing a new
+\code{clusters} list instead re-estimates under that partition. Errors
+with class \code{nestimate_mcml_no_sequences} when the \code{mcml} was
+built from a matrix or with \code{compute_within = FALSE}.
+\code{\link{sequence_plot}} accepts the same two arguments as display
+options: its \code{combine} draws exactly what it draws for
+\code{build_mcml(x, combine = )}, while its \code{expand} opens clusters
+in the Summary panel only and keeps one panel per cluster.}
 }
 \value{
 An \code{mcml} object with the same layout as the return value of
@@ -179,6 +210,16 @@ seqs <- data.frame(
 cs <- build_mcml(seqs, clusters, type = "raw")
 cs
 summary(cs)
+
+# Change the partition while building ...
+three <- build_mcml(seqs, list(G1 = "A", G2 = "B", G3 = c("C", "D")))
+build_mcml(seqs, list(G1 = "A", G2 = "B", G3 = c("C", "D")),
+           combine = c("G1", "G2"))
+
+# ... or re-partition an existing mcml: the model is re-estimated
+build_mcml(three, combine = c("G1", "G2"))           # G1 + G2 as one cluster
+build_mcml(three, combine = list(AB = c("G1", "G2"))) # named merge
+build_mcml(three, expand = "G3")                      # C and D as clusters
 }
 \seealso{
 \code{\link{cluster_summary}} for matrix-based aggregation,

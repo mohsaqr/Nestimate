@@ -2,6 +2,18 @@
 
 ## New verbs
 
+* `build_mcml()` gains `combine =` and `expand =`. On new input they change
+  the partition before estimation, in any `clusters` form and for every input
+  type: `build_mcml(data, clusters = cl, combine = c("A", "B"))` equals a build
+  with `A` and `B` merged in `cl`. On an existing `mcml` they re-partition it:
+  `build_mcml(mc, combine =)` merges clusters, `build_mcml(mc, expand =)`
+  splits clusters into one cluster per state, and `build_mcml(mc, clusters =)`
+  applies a new partition. The
+  model (macro network, within-cluster networks, sequences) is re-estimated
+  from the sequences the `mcml` carries, with its original `type`, `method`
+  and `directed`. With the partition unchanged the result is identical to the
+  input; `expand = "all"` reproduces the relative transition network. Raises
+  `nestimate_mcml_no_sequences` for an `mcml` built from a matrix.
 * `session_ids()` names the session behind every sequence of a network built
   from long data, and of a `build_mmm()` or `build_clusters()` fit on such a
   network. It returns one row per sequence in model order: `sequence`, the
