@@ -413,6 +413,9 @@ sequence_plot <- function(x,
 
   type <- match.arg(type)
   sort <- match.arg(sort)
+  # A palette attached with set_state_colors() is the object's own default;
+  # an explicit `state_colors` still wins for this one figure.
+  state_colors <- state_colors %||% .stored_state_colors(x)
   stopifnot(is.logical(combined), length(combined) == 1L,
             is.logical(trim_clusterwise), length(trim_clusterwise) == 1L)
   if (is.null(legend)) legend <- "right"

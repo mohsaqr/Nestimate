@@ -348,11 +348,14 @@ test_that("named state_colors maps by name in every non-mcml type", {
   heat <- sequence_plot(m, type = "heatmap", state_colors = c(c = "#123456"))
   dist <- sequence_plot(m, type = "distribution", state_colors = c(b = "#000000"))
 
-  # named key overridden, the rest keep Okabe-Ito in level order
-  expect_equal(idx$palette, c(.okabe_ito[1L], "#000000", .okabe_ito[3L]))
+  # The named key is overridden; the states left unnamed are dealt the
+  # Okabe-Ito colours the palette did NOT use, one each - so "b" taking
+  # #000000 (Okabe-Ito 9) leaves "a" and "c" on 1 and 2, never a repeat.
+  expect_equal(idx$palette, c(.okabe_ito[1L], "#000000", .okabe_ito[2L]))
   expect_equal(heat$palette, c(.okabe_ito[1L], .okabe_ito[2L], "#123456"))
   expect_equal(dist$palette[seq_len(3L)], c(.okabe_ito[1L], "#000000",
-                                            .okabe_ito[3L]))
+                                            .okabe_ito[2L]))
+  expect_false(anyDuplicated(idx$palette) > 0L)
 
   # unnamed stays positional (regression: names must not change the old path)
   pos <- sequence_plot(m, type = "index",
@@ -363,7 +366,7 @@ test_that("named state_colors maps by name in every non-mcml type", {
   expect_message(super <- sequence_plot(m, type = "index",
                                         state_colors = c(zz = "red", b = "#000000")),
                  "1 of 2 names are not drawn")
-  expect_equal(super$palette, c(.okabe_ito[1L], "#000000", .okabe_ito[3L]))
+  expect_equal(super$palette, c(.okabe_ito[1L], "#000000", .okabe_ito[2L]))
   expect_message(sequence_plot(m, state_colors = c(zz = "red")),
                  "no name matches a key this plot draws")
 })

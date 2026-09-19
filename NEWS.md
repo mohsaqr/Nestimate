@@ -1,3 +1,41 @@
+# Nestimate 0.9.12
+
+## New verbs
+
+* `set_state_colors(x, colors)` attaches a palette to a `netobject`,
+  `netobject_group`, `mcml` or `htna`, and every figure drawn from that object
+  then uses it -- `sequence_plot()`, `distribution_plot()`,
+  `plot_state_frequencies()` **and** `cograph::splot()`. The cograph half goes
+  through the documented `meta$splot` producer contract (`defaults$node_fill`,
+  stamped in node order), so `splot(net)` needs no arguments and renders
+  byte-identically to `splot(net, node_fill = ...)`. A `state_colors(x) <- `
+  replacement form is also available.
+
+* `state_colors(x)` reads the resolved palette back as a tidy data.frame: one
+  row per key, with `state`, `color` and `source` (`"set"` or `"default"`). It
+  is what the figures actually draw, not just what was passed in.
+
+## Improvements
+
+* States a named palette does not mention are now dealt the Okabe-Ito colours
+  the palette has **not** used, one each, instead of taking their positional
+  slot. Pinning `plan = "#0072B2"` no longer leaves another state defaulting to
+  that same blue. Affects the named form only; an unnamed `state_colors` and
+  the all-default palette are unchanged.
+
+* An attached palette resolves **once**, in the object's own key order, so
+  every figure drawn from it colours a state identically. Previously only the
+  colours you set were carried and each figure dealt the remaining defaults in
+  its own sort order -- `plot_state_frequencies()` sorts states by frequency
+  and `sequence_plot()` alphabetically, so one state could come out amber in
+  one figure and black in the other.
+
+* In-tile labels in `plot_state_frequencies()` take whichever ink (dark or
+  white) has the higher WCAG contrast ratio against the tile, instead of one
+  fixed grey. A percentage on a dark tile -- black, navy, dark wine -- is now
+  readable, whether the colour came from the default palette or from a palette
+  you set.
+
 # Nestimate 0.9.11
 
 ## Fixes

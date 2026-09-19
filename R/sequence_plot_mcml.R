@@ -300,6 +300,11 @@ utils::globalVariables(c("time", "y", "key", "prop"))
                         setdiff(present, key_order)))
     first <- i == 1L
     last  <- i == n
+    # One y-axis title for the whole stack, on the middle panel. Every panel
+    # measures the same quantity, so repeating the title once per channel is
+    # redundant - and at a normal figure height the repeats collide with each
+    # other and with the tick labels.
+    mid   <- i == ceiling(n / 2)
     layer(di) +
       ggplot2::facet_wrap(~ channel, ncol = 1L, strip.position = "left") +
       ggplot2::scale_fill_manual(values = values[names(values) %in% brks],
@@ -307,7 +312,8 @@ utils::globalVariables(c("time", "y", "key", "prop"))
                                  name = if (identical(chans[i], "Summary")) "Cluster" else "State") +
       ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1L, byrow = TRUE)) +
       ggplot2::scale_x_continuous(expand = c(0, 0)) +
-      ggplot2::labs(x = if (last) time_label else NULL, y = y_lab,
+      ggplot2::labs(x = if (last) time_label else NULL,
+                    y = if (mid) y_lab else NULL,
                     title = if (first) main else NULL) +
       ggplot2::theme_minimal(base_size = 12) +
       ggplot2::theme(

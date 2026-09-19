@@ -310,7 +310,10 @@ plot_mosaic <- function(data,
     rects$y_mid <- (rects$ymin + rects$ymax) / 2
     rects$lab   <- sprintf("%.1f%%", 100 * rects$pct)
     rects$lab[rects$pct < 0.04] <- ""
-    p <- p + .geom_fit_label(rects, label_size)
+    fill_cols <- if (is.null(pal)) NULL else {
+      pal[match(as.character(rects[[fill_var]]), y_levels)]
+    }
+    p <- p + .geom_fit_label(rects, label_size, fill_colors = fill_cols)
   }
   p
 }
@@ -1492,7 +1495,8 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
     rects$tile_w <- rects$xmax - rects$xmin
     rects$tile_h <- rects$ymax - rects$ymin
     rects$angle <- ifelse(rects$tile_h > rects$tile_w, 90, 0)
-    p <- p + .geom_fit_label(rects, label_size)
+    p <- p + .geom_fit_label(rects, label_size,
+                             fill_colors = pal[as.character(rects$state)])
   }
   p
 }
@@ -1610,7 +1614,8 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
     rects$lab <- .format_value_label(rects$state, rects$count,
                                      rects$proportion, label)
     rects$angle <- ifelse(rects$tile_h > rects$tile_w, 90, 0)
-    p <- p + .geom_fit_label(rects, label_size)
+    p <- p + .geom_fit_label(rects, label_size,
+                             fill_colors = pal_named[as.character(rects$state)])
   }
   p
 }
@@ -1791,7 +1796,8 @@ knit_print.nestimate_facet_list <- function(x, ...) {
     rects$tile_w <- rects$xmax - rects$xmin
     rects$tile_h <- rects$ymax - rects$ymin
     rects$angle <- ifelse(rects$tile_h > rects$tile_w, 90, 0)
-    p <- p + .geom_fit_label(rects, label_size)
+    p <- p + .geom_fit_label(rects, label_size,
+                             fill_colors = pal[as.character(rects$state)])
   }
   p
 }
@@ -2080,7 +2086,7 @@ plot_state_frequencies.netobject_group <- function(x,
                                                     combine = "auto",
                                                     ncol = NULL,
                                                     node_groups = NULL,
-                                                    ...) {
+                                                          ...) {
   .plot_state_frequencies_impl(
     x, source_class = "netobject_group", hierarchical = FALSE,
     style = style, metric = metric, label = label, legend = legend,
@@ -2136,6 +2142,9 @@ plot_state_frequencies.default <- function(x, ...) {
   legend_dir   <- match.arg(legend_dir)
   legend_frame <- match.arg(legend_frame)
   sort_states  <- match.arg(sort_states)
+  # A palette attached with set_state_colors() is the object's own default;
+  # an explicit `colors` still wins for this one figure.
+  colors       <- colors %||% .stored_state_colors(x)
 
   if (identical(legend, "auto")) {
     legend <- if (style == "bars") {

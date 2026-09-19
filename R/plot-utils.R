@@ -189,8 +189,24 @@
          "only a count. Pass an unnamed vector of colours instead.",
          call. = FALSE)
   }
-  unname(.apply_named_colors(
-    stats::setNames(rep_len(.okabe_ito, n_states), states), user_colors))
+  .fill_state_colors(states, user_colors)
+}
+
+
+# Resolve a set of keys against a named palette: a key the palette names takes
+# that colour, and the rest are dealt the Okabe-Ito colours the palette has NOT
+# already used, one each. Dealing only to the keys that need one - rather than
+# recycling across all of them and overwriting - is what keeps the defaults
+# distinct: nine states with three pinned leaves six unnamed and six spare
+# colours, so nothing repeats. Returns an unnamed vector parallel to `keys`.
+.fill_state_colors <- function(keys, user_colors) {
+  named <- keys %in% names(user_colors)
+  out   <- character(length(keys))
+  out[named]  <- unname(user_colors[keys[named]])
+  spare       <- setdiff(.okabe_ito, unname(user_colors))
+  if (!length(spare)) spare <- .okabe_ito
+  out[!named] <- rep_len(spare, sum(!named))
+  out
 }
 
 
@@ -283,7 +299,43 @@
 # ggfittext is not installed, falls back to ggplot2::geom_text() at midpoint.
 # Caller is expected to have already nulled out labels for tiles too small for
 # legible rendering.
-.geom_fit_label <- function(rects, label_size, color = "grey15") {
+# WCAG relative luminance of a colour: linearise sRGB, weight by
+# (0.2126, 0.7152, 0.0722). Vectorised over `col`.
+.rel_luminance <- function(col) {
+  rgb <- grDevices::col2rgb(col) / 255
+  lin <- ifelse(rgb <= 0.03928, rgb / 12.92, ((rgb + 0.055) / 1.055)^2.4)
+  0.2126 * lin[1L, ] + 0.7152 * lin[2L, ] + 0.0722 * lin[3L, ]
+}
+
+
+# Label colour that stays readable on the tile it sits on. A palette is the
+# user's to choose - theirs may be navy, dark wine or black - so the label
+# follows the fill instead of assuming a light one. Whichever of the two ink
+# colours has the higher WCAG contrast ratio against the fill wins; a fixed
+# luminance threshold gets mid-greys wrong (on #999999 the dark ink has 5.4:1
+# and white only 2.9:1, yet a 0.4 cutoff picks white). Returns one colour per
+# input fill.
+.contrast_label_color <- function(fill, inks = c("grey15", "white")) {
+  lum_fill <- .rel_luminance(fill)
+  lum_ink  <- .rel_luminance(inks)
+  ratio <- vapply(lum_ink, function(li) {
+    hi <- pmax(li, lum_fill); lo <- pmin(li, lum_fill)
+    (hi + 0.05) / (lo + 0.05)
+  }, numeric(length(lum_fill)))
+  ratio <- matrix(ratio, nrow = length(lum_fill))
+  inks[max.col(ratio, ties.method = "first")]
+}
+
+
+.geom_fit_label <- function(rects, label_size, color = "grey15",
+                            fill_colors = NULL) {
+  # When the caller can say what each tile is filled with, the label takes the
+  # contrasting colour per tile rather than one fixed grey for the whole plot.
+  if (!is.null(fill_colors)) {
+    fill_colors <- as.character(fill_colors)
+    fill_colors[is.na(fill_colors)] <- "#FFFFFF"
+    color <- .contrast_label_color(fill_colors)
+  }
   if (is.null(rects$angle)) {
     rects$angle <- ifelse((rects$ymax - rects$ymin) >
                             (rects$xmax - rects$xmin), 90, 0)

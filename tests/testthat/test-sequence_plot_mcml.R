@@ -517,6 +517,7 @@ test_that("a palette carrying keys this figure does not draw is accepted", {
   expect_equal(unname(mcml_fills(p, "Summary")[["G1 + G2"]]), "#0072B2")
   expect_equal(unname(mcml_fills(p, "Summary")[["G3"]]), "#CC79A7")
   expect_equal(unname(mcml_fills(p, "G1 + G2")[["a1"]]), "#000000")
-  # the keys it does not name keep their defaults
-  expect_equal(unname(mcml_fills(p, "G1 + G2")[["a2"]]), .okabe_ito[2L])
+  # the keys it does not name are dealt the Okabe-Ito colours the palette did
+  # not use: a1 is pinned, so a2 takes the first spare one
+  expect_equal(unname(mcml_fills(p, "G1 + G2")[["a2"]]), .okabe_ito[1L])
 })

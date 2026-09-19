@@ -147,6 +147,10 @@ distribution_plot <- function(x,
   stopifnot(is.numeric(legend_size), length(legend_size) == 1L,
             legend_size > 0)
 
+  # A palette attached with set_state_colors() is the object's own default;
+  # an explicit `state_colors` still wins for this one figure.
+  state_colors <- state_colors %||% .stored_state_colors(x)
+
   # Extract data and group from various input types
   extracted <- .extract_seqplot_input(x, group)
   x <- extracted$data
