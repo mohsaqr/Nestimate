@@ -124,3 +124,67 @@ test_that("fresh-input combine works for matrices and membership vectors", {
   expect_equal(build_mcml(seqs, clusters = memb, combine = list(AB = c("A", "B")))$macro$weights,
                build_mcml(seqs, clusters = list(AB = c("a", "b"), C = c("c", "d")))$macro$weights)
 })
+
+# ---- regressions from the 0.9.9 review ---------------------------------------
+
+test_that("fresh-input combine honours labels = (applied once, after the merge)", {
+  cl <- list(P = c("plan", "consensus"),
+             R = c("coregulate", "discuss", "synthesis"),
+             S = c("cohesion", "emotion", "monitor", "adapt"))
+  got <- build_mcml(group_regulation_long, clusters = cl, combine = c("R", "S"),
+                    labels = c(plan = "Planning"),
+                    actor = "Actor", action = "Action", time = "Time")
+  ref <- build_mcml(group_regulation_long,
+                    clusters = list(P = cl$P, `R + S` = c(cl$R, cl$S)),
+                    labels = c(plan = "Planning"),
+                    actor = "Actor", action = "Action", time = "Time")
+  expect_equal(got$macro$weights, ref$macro$weights)
+  expect_true("Planning" %in% got$cluster_members$P)
+})
+
+test_that("an edge-list mcml refuses a re-partition with the classed error", {
+  set.seed(1)
+  el <- data.frame(from = sample(LETTERS[1:6], 200, TRUE),
+                   to = sample(LETTERS[1:6], 200, TRUE), weight = runif(200))
+  me <- build_mcml(el, clusters = list(G1 = c("A", "B"), G2 = c("C", "D"),
+                                       G3 = c("E", "F")))
+  expect_error(build_mcml(me, combine = c("G1", "G2")),
+               class = "nestimate_mcml_no_sequences")
+  # the fresh route still works on the edge list itself
+  expect_setequal(names(build_mcml(el, clusters = list(G1 = c("A", "B"), G2 = c("C", "D"),
+                                                       G3 = c("E", "F")),
+                                   combine = c("G1", "G2"))$cluster_members),
+                  c("G1 + G2", "G3"))
+})
+
+test_that("sequence-shaping arguments are rejected on a re-partition", {
+  mc <- make_repart_mcml()
+  expect_error(build_mcml(mc, combine = c("P", "R"), trim = 3), "trim")
+  expect_error(build_mcml(mc, expand = "S", labels = c(plan = "PLAN")), "labels")
+  # without a re-partition the mcml is still returned untouched
+  expect_identical(build_mcml(mc), mc)
+})
+
+test_that("identity holds with attributes for labelled and netobject-built mcml", {
+  cl <- list(P = c("plan", "consensus"),
+             R = c("coregulate", "discuss", "synthesis"),
+             S = c("cohesion", "emotion", "monitor", "adapt"))
+  ml <- build_mcml(group_regulation_long, clusters = cl, labels = c(plan = "Planning"),
+                   actor = "Actor", action = "Action", time = "Time")
+  expect_equal(build_mcml(ml, clusters = ml$cluster_members), ml)
+  net <- build_network(group_regulation_long, method = "relative",
+                       actor = "Actor", action = "Action", time = "Time")
+  mn <- build_mcml(net, clusters = cl)
+  expect_equal(build_mcml(mn, clusters = mn$cluster_members), mn)
+})
+
+test_that("fresh matrix input warns about `type` once, as a plain call does", {
+  m <- matrix(c(0, 2, 1, 0, 1, 0, 0, 3, 2, 1, 0, 1, 0, 1, 2, 0), 4, byrow = TRUE,
+              dimnames = list(letters[1:4], letters[1:4]))
+  n_warn <- 0L
+  withCallingHandlers(
+    build_mcml(m, clusters = list(A = "a", B = "b", C = c("c", "d")), type = "tna",
+               combine = c("A", "B")),
+    warning = function(w) { n_warn <<- n_warn + 1L; invokeRestart("muffleWarning") })
+  expect_identical(n_warn, 1L)
+})

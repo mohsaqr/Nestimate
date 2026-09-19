@@ -400,3 +400,28 @@ test_that("sequence_plot(rest_label =) relabels the other-cluster keys", {
   expect_error(sequence_plot(fit, rest_label = ""), "non-empty")
   expect_error(sequence_plot(fit, rest_label = c("A", "B")), "single")
 })
+
+test_that("a single-channel mcml draws in every view", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+  all3 <- c("G1", "G2", "G3")
+  lapply(c("index", "heatmap", "distribution"), function(tp) {
+    p <- sequence_plot(fit, type = tp, combine = all3)
+    expect_true(inherits(p, "mcml_sequence_plot") || inherits(p, "ggplot"))
+    expect_silent(print(p))
+  })
+})
+
+test_that("expanded clusters keep distinct faded colours", {
+  fit <- make_mcml_seq3()
+  pal <- .mcml_seq_palettes(.mcml_seq_channels(fit, expand = "all"), NULL)
+  expect_identical(anyDuplicated(unname(pal$faded)), 0L)
+})
+
+test_that("mcml-only arguments error on other input; NA label message is clear", {
+  seqs <- data.frame(T1 = c("a", "b"), T2 = c("b", "a"))
+  expect_error(sequence_plot(seqs, combine = c("x", "y")), "apply to an mcml")
+  expect_error(sequence_plot(seqs, rest = "pooled"), "apply to an mcml")
+  fit <- make_mcml_seq3()
+  expect_error(sequence_plot(fit, rest_label = "NA"), "reserved")
+})

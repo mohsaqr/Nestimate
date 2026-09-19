@@ -146,8 +146,9 @@ names pass through unchanged.}
 \code{clusters} (in any of its accepted forms, including
 auto-detection) before estimation, so
 \code{build_mcml(data, clusters = cl, combine = c("A", "B"))} equals a
-build with \code{A} and \code{B} merged in \code{cl}; this works for
-every input type, matrices included. On an existing \code{mcml} they
+build with \code{A} and \code{B} merged in \code{cl} (the merged
+cluster lists its states in cluster-name order); this works for every
+input type, matrices included. On an existing \code{mcml} they
 re-partition it (see below).
 \code{combine} merges clusters into one: a character vector merges one
 group, a list merges several and its names label them (default label
@@ -159,10 +160,14 @@ networks and stored sequences -- from the sequences the \code{mcml}
 carries, with its original \code{type}, \code{method} and
 \code{directed} unless passed explicitly. Any session split,
 \code{exclude}, \code{trim} or \code{end} applied when it was built is
-already in those sequences and is not re-applied. Passing a new
-\code{clusters} list instead re-estimates under that partition. Errors
-with class \code{nestimate_mcml_no_sequences} when the \code{mcml} was
-built from a matrix or with \code{compute_within = FALSE}.
+already in those sequences, so passing any of these (or \code{actor},
+\code{action}, \code{time}, \code{session}, \code{labels}) together
+with a re-partition is an error. Passing a new \code{clusters} list
+instead re-estimates under that partition; with the partition unchanged
+the result equals the input. Errors with class
+\code{nestimate_mcml_no_sequences} when the \code{mcml} was built from a
+matrix, from an edge list (only within-cluster edges are kept), or with
+\code{compute_within = FALSE}.
 \code{\link{sequence_plot}} accepts the same two arguments as display
 options: its \code{combine} draws exactly what it draws for
 \code{build_mcml(x, combine = )}, while its \code{expand} opens clusters

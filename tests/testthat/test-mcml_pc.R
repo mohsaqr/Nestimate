@@ -927,3 +927,36 @@ test_that("macro_network() refuses expand= on a psychometric fit", {
                        aggregation = "loadings", method = "cor")
   expect_error(macro_network(fit, expand = "A"), class = "nestimate_no_expand")
 })
+
+test_that("composites() keeps one row per input row, with NA and row names", {
+  set.seed(1)
+  f <- stats::rnorm(120); g <- stats::rnorm(120)
+  df <- data.frame(a1 = f + stats::rnorm(120), a2 = f + stats::rnorm(120),
+                   a3 = f + stats::rnorm(120), b1 = g + stats::rnorm(120),
+                   b2 = g + stats::rnorm(120), b3 = g + stats::rnorm(120))
+  rownames(df) <- sprintf("r%03d", seq_len(nrow(df)))
+  df[3, c("a1", "a2", "a3")] <- NA        # all of cluster A missing
+  df[5, "b1"] <- NA                       # part of cluster B missing
+  fit <- build_mcml_pc(df, list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3")),
+                       aggregation = "composite", method = "cor")
+  sc <- composites(fit)
+  expect_identical(dim(sc), c(120L, 2L))
+  expect_identical(rownames(sc), rownames(df))
+  expect_true(is.na(sc["r003", "A"]))
+  expect_false(is.na(sc["r005", "B"]))    # averaged over the observed items
+  # the macro network is the estimator on the complete rows
+  expect_equal(build_network(sc, method = "cor")$weights,
+               macro_network(fit)$weights)
+})
+
+test_that("macro_network(mcml_pc) rejects method and ... instead of ignoring them", {
+  set.seed(2)
+  f <- stats::rnorm(100); g <- stats::rnorm(100)
+  df <- data.frame(a1 = f + stats::rnorm(100), a2 = f + stats::rnorm(100),
+                   b1 = g + stats::rnorm(100), b2 = g + stats::rnorm(100))
+  fit <- build_mcml_pc(df, list(A = c("a1", "a2"), B = c("b1", "b2")),
+                       aggregation = "composite", method = "cor")
+  expect_error(macro_network(fit, method = "glasso"), "do not apply")
+  expect_error(macro_network(fit, gamma = 0.5), "do not apply")
+  expect_s3_class(macro_network(fit), "netobject")
+})

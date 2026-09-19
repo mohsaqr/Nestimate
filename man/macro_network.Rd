@@ -17,12 +17,20 @@ layer; \code{"all"} or \code{TRUE} expands every cluster, so each state
 is its own node.}
 
 \item{method}{Estimator passed to \code{\link{build_network}}. Default
-\code{"relative"} (row-normalised transitions).}
+\code{"relative"} (row-normalised transitions). Not used for an
+\code{mcml_pc}.}
 
-\item{...}{Further arguments passed to \code{\link{build_network}}.}
+\item{...}{Further arguments passed to \code{\link{build_network}}. Not
+used for an \code{mcml_pc}.}
 }
 \value{
-A \code{netobject} (also a \code{cograph_network}) whose nodes are
+For an \code{mcml_pc}: its cluster-level network, the netobject
+estimated by \code{\link{build_mcml_pc}}, unchanged. Its estimator is
+set when the fit is built, so \code{method} or \code{...} raise an
+error, and \code{expand} errors with class \code{nestimate_no_expand}
+(there are no sequences to re-count).
+
+For an \code{mcml}: a \code{netobject} (also a \code{cograph_network}) whose nodes are
 the collapsed clusters plus the member states of any expanded cluster,
 with weights re-counted from the sequence data by
 \code{\link{build_network}}. \code{$node_groups} is a two-column data

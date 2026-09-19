@@ -15,9 +15,13 @@ composites(x, ...)
 \item{...}{Ignored.}
 }
 \value{
-A data frame with one row per observation of the input data
-and one numeric column per cluster, named by the cluster. Rows whose
-cluster members were entirely missing are \code{NA}.
+A data frame with one row per row of the input data, in input
+order and with the input's row names, and one numeric column per
+cluster, named by the cluster. A row whose members of a cluster are all
+missing is \code{NA} in that column (items missing only in part are
+averaged over the observed ones). The macro network is estimated on the
+complete rows, so \code{build_network(composites(fit), method = ...)}
+reproduces it.
 
 The \code{mcml_pc} method errors with class
 \code{"nestimate_no_composites"} for the descriptive aggregations
@@ -33,8 +37,11 @@ downstream model that needs one number per cluster per respondent.
 }
 \examples{
 set.seed(1)
-df <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, 6))
-names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+f <- stats::rnorm(200)
+g <- stats::rnorm(200)
+df <- data.frame(a1 = f + stats::rnorm(200), a2 = f + stats::rnorm(200),
+                 a3 = f + stats::rnorm(200), b1 = g + stats::rnorm(200),
+                 b2 = g + stats::rnorm(200), b3 = g + stats::rnorm(200))
 clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, clusters, aggregation = "loadings",
                      method = "cor")
@@ -43,5 +50,5 @@ head(composites(fit))
 }
 \seealso{
 \code{\link{build_mcml_pc}} to create the fit,
-\code{\link{loadings}} for the item weights behind these scores.
+\code{\link{item_loadings}} for the item weights behind these scores.
 }

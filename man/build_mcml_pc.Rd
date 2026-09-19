@@ -286,9 +286,9 @@ out-of-cluster nodes). Modes without raw data force
 
 \strong{Uncertainty.} The composite/loadings macro network is a full
 netobject carrying its composite data, so
-\code{\link{bootstrap_network}(fit$macro)} (edge-weight CIs) and
-\code{\link{vertex_bootstrap}(fit$macro)} (network-level CIs) work
-directly; \code{\link{vertex_compare}(fit1$macro, fit2$macro)}
+\code{\link{bootstrap_network}(macro_network(fit))} (edge-weight CIs) and
+\code{\link{vertex_bootstrap}(macro_network(fit))} (network-level CIs) work
+directly; \code{\link{vertex_compare}(macro_network(fit1), macro_network(fit2))}
 compares two groups. \code{\link{loading_stability}} quantifies how
 stable the composite weights themselves are under case resampling.
 

@@ -143,7 +143,9 @@
 #'   \code{type = "distribution"}.
 #'   For an \code{mcml} (\code{type = "distribution"}), \code{na = FALSE}
 #'   drops the \code{NA} (ended) band and shows every time point as shares
-#'   of the sequences still running there, so each panel stacks to 100 percent.
+#'   of the sequences still running there, so each panel stacks to 100
+#'   percent (cluster panels only with \code{rest = "clusters"} or
+#'   \code{"pooled"}; a time point where no sequence is running stays empty).
 #' @param normalize \code{mcml} + \code{type = "distribution"} only. When
 #'   \code{TRUE}, each time point is normalised to sum to 1 within its channel
 #'   (TraMineR-style \code{seqdplot} composition); when \code{FALSE} (default)
@@ -274,7 +276,7 @@
 #'   \item \code{na} (distribution only) keeps the \code{NA} band of
 #'     sequences that have ended (\code{TRUE}, shares of all subjects) or
 #'     drops it (\code{FALSE}, shares of the subjects still running, so every
-#'     panel stacks to 100 percent). \code{normalize = TRUE} instead rescales each
+#'     panel stacks to 100 percent unless \code{rest = "none"}). \code{normalize = TRUE} instead rescales each
 #'     cluster panel to its own states, which ignores \code{rest} and
 #'     \code{na}.
 #' }
@@ -397,6 +399,12 @@ sequence_plot <- function(x,
 
   # mcml: multichannel sequence / distribution plot (ggplot, faceted by
   # cluster-channel). Self-contained path; returns a ggplot object.
+  if (!inherits(x, "mcml") &&
+      (!is.null(combine) || !is.null(expand) || !missing(rest) ||
+       !missing(rest_label))) {
+    stop("`combine`, `expand`, `rest` and `rest_label` apply to an mcml ",
+         "(from build_mcml()); got '", class(x)[1L], "'.", call. = FALSE)
+  }
   if (inherits(x, "mcml")) {
     return(.sequence_plot_mcml(
       x, type = type, normalize = isTRUE(normalize),

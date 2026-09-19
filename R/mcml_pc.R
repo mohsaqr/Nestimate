@@ -93,9 +93,9 @@
 #'
 #' \strong{Uncertainty.} The composite/loadings macro network is a full
 #' netobject carrying its composite data, so
-#' \code{\link{bootstrap_network}(fit$macro)} (edge-weight CIs) and
-#' \code{\link{vertex_bootstrap}(fit$macro)} (network-level CIs) work
-#' directly; \code{\link{vertex_compare}(fit1$macro, fit2$macro)}
+#' \code{\link{bootstrap_network}(macro_network(fit))} (edge-weight CIs) and
+#' \code{\link{vertex_bootstrap}(macro_network(fit))} (network-level CIs) work
+#' directly; \code{\link{vertex_compare}(macro_network(fit1), macro_network(fit2))}
 #' compares two groups. \code{\link{loading_stability}} quantifies how
 #' stable the composite weights themselves are under case resampling.
 #'
@@ -489,12 +489,16 @@ build_mcml_pc <- function(x,
   }
 
   # ---- Macro network ----
+  composites <- NULL
   macro <- switch(aggregation,
     average = .wrap_netobject(.pc_average_macro(W, members), data = NULL,
                               method = "pc_average", directed = FALSE),
     composite = {
       composites <- .pc_composites(data, members, loadings_df, scale,
                                    signed = signed, score_fn = score_fn)
+      # keep the input's row identities: the estimator drops incomplete rows
+      # and renumbers, so composites() must not read the estimator's data
+      rownames(composites) <- rownames(data)
       .pc_estimate(composites, method, "pearson")
     },
     rv = .wrap_netobject(.pc_block_macro(data, members, "rv"),
@@ -524,6 +528,7 @@ build_mcml_pc <- function(x,
     loadings = loadings_df,
     node_network = node_network,
     data = if (has_data) data else NULL,
+    composites = composites,
     meta = list(
       aggregation = aggregation_label,
       method = if (aggregation == "composite") method
@@ -1087,8 +1092,11 @@ plot.mcml_pc <- function(x, digits = 2, ...) {
 #'
 #' @examples
 #' set.seed(1)
-#' df <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, 6))
-#' names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+#' f <- stats::rnorm(200)
+#' g <- stats::rnorm(200)
+#' df <- data.frame(a1 = f + stats::rnorm(200), a2 = f + stats::rnorm(200),
+#'                  a3 = f + stats::rnorm(200), b1 = g + stats::rnorm(200),
+#'                  b2 = g + stats::rnorm(200), b3 = g + stats::rnorm(200))
 #' clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 #' fit <- build_mcml_pc(df, clusters, aggregation = "loadings",
 #'                      method = "cor")
@@ -1136,17 +1144,24 @@ item_loadings.mcml_pc <- function(x, misfit = NULL, ...) {
 #' @param x An object carrying cluster scores.
 #' @param ... Ignored.
 #'
-#' @return A data frame with one row per observation of the input data
-#'   and one numeric column per cluster, named by the cluster. Rows whose
-#'   cluster members were entirely missing are \code{NA}.
+#' @return A data frame with one row per row of the input data, in input
+#'   order and with the input's row names, and one numeric column per
+#'   cluster, named by the cluster. A row whose members of a cluster are all
+#'   missing is \code{NA} in that column (items missing only in part are
+#'   averaged over the observed ones). The macro network is estimated on the
+#'   complete rows, so \code{build_network(composites(fit), method = ...)}
+#'   reproduces it.
 #'
 #' @seealso \code{\link{build_mcml_pc}} to create the fit,
-#'   \code{\link{loadings}} for the item weights behind these scores.
+#'   \code{\link{item_loadings}} for the item weights behind these scores.
 #'
 #' @examples
 #' set.seed(1)
-#' df <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, 6))
-#' names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+#' f <- stats::rnorm(200)
+#' g <- stats::rnorm(200)
+#' df <- data.frame(a1 = f + stats::rnorm(200), a2 = f + stats::rnorm(200),
+#'                  a3 = f + stats::rnorm(200), b1 = g + stats::rnorm(200),
+#'                  b2 = g + stats::rnorm(200), b3 = g + stats::rnorm(200))
 #' clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 #' fit <- build_mcml_pc(df, clusters, aggregation = "loadings",
 #'                      method = "cor")
@@ -1164,7 +1179,7 @@ composites <- function(x, ...) {
 #'   clusters without ever forming a score.
 #' @export
 composites.mcml_pc <- function(x, ...) {
-  scores <- x$macro$data
+  scores <- x$composites
   if (is.null(scores)) {
     stop(errorCondition(
       sprintf(paste0("aggregation = \"%s\" relates the item blocks directly ",

@@ -96,7 +96,9 @@ one facet per group. Index/distribution only. Ignored for heatmap.}
 \code{type = "distribution"}.
 For an \code{mcml} (\code{type = "distribution"}), \code{na = FALSE}
 drops the \code{NA} (ended) band and shows every time point as shares
-of the sequences still running there, so each panel stacks to 100 percent.}
+of the sequences still running there, so each panel stacks to 100
+percent (cluster panels only with \code{rest = "clusters"} or
+\code{"pooled"}; a time point where no sequence is running stays empty).}
 
 \item{normalize}{\code{mcml} + \code{type = "distribution"} only. When
 \code{TRUE}, each time point is normalised to sum to 1 within its channel
@@ -295,7 +297,7 @@ band labelled \code{rest_label} (\code{"pooled"}), or nothing
 \item \code{na} (distribution only) keeps the \code{NA} band of
 sequences that have ended (\code{TRUE}, shares of all subjects) or
 drops it (\code{FALSE}, shares of the subjects still running, so every
-panel stacks to 100 percent). \code{normalize = TRUE} instead rescales each
+panel stacks to 100 percent unless \code{rest = "none"}). \code{normalize = TRUE} instead rescales each
 cluster panel to its own states, which ignores \code{rest} and
 \code{na}.
 }

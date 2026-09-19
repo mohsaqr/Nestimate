@@ -92,7 +92,9 @@ utils::globalVariables(c("time", "y", "key", "prop"))
 # Legend keys for time spent in other clusters: one per cluster
 # ("Social (Other states)") or a single pooled key ("Other states"). The text
 # is the user's `rest_label`, carried on the channel list.
-.mcml_other_key <- function(ch, cluster) paste0(cluster, " (", ch$rest_label, ")")
+.mcml_other_key <- function(ch, cluster) {
+  paste0(cluster, " (", ch$rest_label, ")", recycle0 = TRUE)
+}
 
 # Resolve `combine` against the cluster names: NULL stays NULL; a character
 # vector is one group, a list is several. Every group names >= 2 existing
@@ -162,8 +164,12 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   base_cl   <- c("#264653", "#2A9D8F", "#E76F51", "#E9C46A", "#8AB17D",
                  "#5B5F97", "#B5838D", "#6D6875")
   cluster_pal <- stats::setNames(rep_len(base_cl, length(cn)), cn)
-  chan_pal <- cluster_pal[ch$cluster_names]
-  chan_pal[is.na(names(chan_pal))] <- base_cl[1L]
+  # A cluster opened by `expand` has no Summary colour; give each such
+  # cluster its own unused base colour so its faded band stays distinct.
+  chan_pal <- stats::setNames(cluster_pal[ch$cluster_names], ch$cluster_names)
+  open_cl  <- is.na(chan_pal)
+  spare    <- setdiff(base_cl, chan_pal)
+  chan_pal[open_cl] <- rep_len(if (length(spare)) spare else base_cl, sum(open_cl))
   faded <- stats::setNames(
     vapply(chan_pal, function(col) {
       m <- 0.22 * (grDevices::col2rgb(col) / 255) + 0.78   # 22% colour, 78% white
@@ -453,8 +459,8 @@ print.mcml_sequence_plot <- function(x, ...) {
               !is.na(rest_label) && nzchar(rest_label))
   ch   <- .mcml_seq_channels(x, trim, expand, combine)
   if (rest_label %in% c(ch$all_states, ch$cluster_names, ch$macro_keys, "NA")) {
-    stop("`rest_label` \"", rest_label, "\" is already a state or cluster name.",
-         call. = FALSE)
+    stop("`rest_label` \"", rest_label, "\" is already a state or cluster ",
+         "name, or the reserved \"NA\" key.", call. = FALSE)
   }
   ch$rest_label <- rest_label
   pals <- .mcml_seq_palettes(ch, state_colors)

@@ -851,8 +851,9 @@ cluster_summary <- function(x,
 #'   \code{clusters} (in any of its accepted forms, including
 #'   auto-detection) before estimation, so
 #'   \code{build_mcml(data, clusters = cl, combine = c("A", "B"))} equals a
-#'   build with \code{A} and \code{B} merged in \code{cl}; this works for
-#'   every input type, matrices included. On an existing \code{mcml} they
+#'   build with \code{A} and \code{B} merged in \code{cl} (the merged
+#'   cluster lists its states in cluster-name order); this works for every
+#'   input type, matrices included. On an existing \code{mcml} they
 #'   re-partition it (see below).
 #'   \code{combine} merges clusters into one: a character vector merges one
 #'   group, a list merges several and its names label them (default label
@@ -864,10 +865,14 @@ cluster_summary <- function(x,
 #'   carries, with its original \code{type}, \code{method} and
 #'   \code{directed} unless passed explicitly. Any session split,
 #'   \code{exclude}, \code{trim} or \code{end} applied when it was built is
-#'   already in those sequences and is not re-applied. Passing a new
-#'   \code{clusters} list instead re-estimates under that partition. Errors
-#'   with class \code{nestimate_mcml_no_sequences} when the \code{mcml} was
-#'   built from a matrix or with \code{compute_within = FALSE}.
+#'   already in those sequences, so passing any of these (or \code{actor},
+#'   \code{action}, \code{time}, \code{session}, \code{labels}) together
+#'   with a re-partition is an error. Passing a new \code{clusters} list
+#'   instead re-estimates under that partition; with the partition unchanged
+#'   the result equals the input. Errors with class
+#'   \code{nestimate_mcml_no_sequences} when the \code{mcml} was built from a
+#'   matrix, from an edge list (only within-cluster edges are kept), or with
+#'   \code{compute_within = FALSE}.
 #'   \code{\link{sequence_plot}} accepts the same two arguments as display
 #'   options: its \code{combine} draws exactly what it draws for
 #'   \code{build_mcml(x, combine = )}, while its \code{expand} opens clusters
@@ -958,6 +963,22 @@ build_mcml <- function(x,
     if (is.null(clusters) && is.null(combine) && is.null(expand)) {
       return(x)
     }
+    # Everything that shaped the sequences was applied when x was built and
+    # is baked into the sequences it carries; accepting these again would
+    # silently do nothing.
+    shaping <- c(actor = !missing(actor), action = !missing(action),
+                 time = !missing(time), order = !missing(order),
+                 session = !missing(session),
+                 time_threshold = !missing(time_threshold),
+                 exclude = !missing(exclude), trim = !missing(trim),
+                 end = !missing(end), end_by = !missing(end_by),
+                 labels = !missing(labels))
+    if (any(shaping)) {
+      stop("`", paste(names(shaping)[shaping], collapse = "`, `"),
+           "` cannot be applied when re-partitioning an mcml: the sequences ",
+           "it carries already reflect how it was built. Build from the ",
+           "original data to change them.", call. = FALSE)
+    }
     return(.mcml_rebuild(
       x, clusters = clusters, combine = combine, expand = expand,
       method = if (missing(method)) x$meta$method else match.arg(method),
@@ -975,14 +996,16 @@ build_mcml <- function(x,
                  compute_within = compute_within, actor = actor,
                  action = action, time = time, order = order,
                  session = session, time_threshold = time_threshold,
-                 exclude = exclude, trim = trim, end = end, end_by = end_by,
-                 labels = labels)
-    # pass method/type only when given, so the matrix path's
-    # "type is ignored" warning fires exactly as in a plain call
-    if (!missing(method)) args$method <- method
-    if (!missing(type))   args$type   <- type
+                 exclude = exclude, trim = trim, end = end, end_by = end_by)
+    # The first build only reads the partition: without `labels` (its
+    # cluster_members must hold the raw state names the second build maps)
+    # and without method/type (which do not change the partition, and whose
+    # matrix-path warning must fire once, in the real build).
     base <- do.call(build_mcml, args)
     args$clusters <- .mcml_partition(base$cluster_members, combine, expand)
+    args$labels   <- labels
+    if (!missing(method)) args$method <- method
+    if (!missing(type))   args$type   <- type
     return(do.call(build_mcml, args))
   }
 
@@ -1142,13 +1165,12 @@ build_mcml <- function(x,
   result
 }
 
-#' Detect input type for build_mcml
-#' @noRd
 # Re-partition a named cluster list: `combine` merges clusters (a merged
-# group takes the place of its first member and is labelled by its list name
-# or "A + B"), then `expand` splits clusters into one singleton cluster per
-# member state, named by the state. Shared by build_mcml() on fresh input and
-# on an existing mcml.
+# group is labelled by its list name or "A + B"; its states keep the order of
+# the clusters it merges), then `expand` splits clusters into one singleton
+# cluster per member state, named by the state. build_mcml() orders clusters
+# by name, so list position is not kept. Shared by build_mcml() on fresh input
+# and on an existing mcml.
 .mcml_partition <- function(clusters, combine = NULL, expand = NULL) {
   groups <- .mcml_resolve_combine(combine, names(clusters))
   if (length(groups) > 0L) {
@@ -1192,6 +1214,15 @@ build_mcml <- function(x,
              "Rebuild it from the original data with the new `clusters`."),
       class = "nestimate_mcml_no_sequences", call = NULL))
   }
+  if (any(vapply(datas, function(d) identical(attr(d, "source"), "edgelist"),
+                 logical(1L)))) {
+    stop(errorCondition(
+      paste0("This mcml was built from an edge list: it stores only the ",
+             "within-cluster edges, so the between-cluster edges needed to ",
+             "re-partition it are gone. Rebuild from the original edge list, ",
+             "e.g. build_mcml(edges, clusters = ..., combine = ...)."),
+      class = "nestimate_mcml_no_sequences", call = NULL))
+  }
   if (!is.null(clusters) && (!is.null(combine) || !is.null(expand))) {
     stop("Pass either `clusters` or `combine`/`expand`, not both.",
          call. = FALSE)
@@ -1202,10 +1233,16 @@ build_mcml <- function(x,
   if (is.null(clusters)) {
     clusters <- .mcml_partition(x$cluster_members, combine, expand)
   }
-  build_mcml(seqs, clusters = clusters, method = method, type = type,
-             directed = directed, compute_within = compute_within)
+  out <- build_mcml(seqs, clusters = clusters, method = method, type = type,
+                    directed = directed, compute_within = compute_within)
+  # The node-level source (used by as_htna) does not depend on the partition;
+  # keep the original's, not the coalesced (possibly relabelled) sequences.
+  attr(out, "htna_source") <- attr(x, "htna_source")
+  out
 }
 
+#' Detect input type for build_mcml
+#' @noRd
 .detect_mcml_input <- function(x) {
   if (inherits(x, "tna")) {
     if (!is.null(x$data)) return("tna_data")

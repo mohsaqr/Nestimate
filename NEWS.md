@@ -1,19 +1,24 @@
-# Nestimate (development version)
+# Nestimate 0.9.9
 
 ## New verbs
 
 * `build_mcml()` gains `combine =` and `expand =`. On new input they change
   the partition before estimation, in any `clusters` form and for every input
   type: `build_mcml(data, clusters = cl, combine = c("A", "B"))` equals a build
-  with `A` and `B` merged in `cl`. On an existing `mcml` they re-partition it:
+  with `A` and `B` merged in `cl` (the merged cluster lists its states in
+  cluster-name order). On an existing `mcml` they re-partition it:
   `build_mcml(mc, combine =)` merges clusters, `build_mcml(mc, expand =)`
   splits clusters into one cluster per state, and `build_mcml(mc, clusters =)`
   applies a new partition. The
   model (macro network, within-cluster networks, sequences) is re-estimated
   from the sequences the `mcml` carries, with its original `type`, `method`
-  and `directed`. With the partition unchanged the result is identical to the
-  input; `expand = "all"` reproduces the relative transition network. Raises
-  `nestimate_mcml_no_sequences` for an `mcml` built from a matrix.
+  and `directed`. With the partition unchanged the result equals the input;
+  `expand = "all"` reproduces the node-level transition network of the same
+  `type`. Raises `nestimate_mcml_no_sequences` for an `mcml` built from a
+  matrix or an edge list (which keeps only within-cluster edges), and errors
+  when sequence-shaping arguments (`trim`, `exclude`, `end`, `labels`,
+  `actor`, ...) are passed with a re-partition, since the carried sequences
+  already reflect them.
 * `session_ids()` names the session behind every sequence of a network built
   from long data, and of a `build_mmm()` or `build_clusters()` fit on such a
   network. It returns one row per sequence in model order: `sequence`, the
@@ -28,8 +33,9 @@
   `build_mcml_pc()` fit (node, cluster, loading, weight, sign, max_cross,
   cross_cluster, misfit); `misfit = TRUE`/`FALSE` filters it.
 * `composites()` returns the per-respondent cluster scores of a
-  `build_mcml_pc()` fit, one row per observation and one column per cluster.
-  Raises `nestimate_no_composites` for the descriptive aggregations
+  `build_mcml_pc()` fit: one row per input row (input order and row names,
+  `NA` where all of a cluster's items are missing) and one column per
+  cluster. Raises `nestimate_no_composites` for the descriptive aggregations
   (`"average"`, `"escoufier"`, `"cancor"`), which form no score.
 
 ## Changes
@@ -50,7 +56,10 @@
   `na = FALSE` drops the `NA` (ended) band and shows each time point as shares
   of the sequences still running, as `distribution_plot()` already did.
 * `macro_network()` accepts an `mcml_pc` fit and returns its cluster-level
-  network; `expand =` on an `mcml_pc` raises `nestimate_no_expand`.
+  network; `expand =` on an `mcml_pc` raises `nestimate_no_expand`, and
+  `method =` or `...` error (the estimator is set in `build_mcml_pc()`).
+* `sequence_plot()` errors when `combine`, `expand`, `rest` or `rest_label`
+  is passed for input that is not an `mcml`, instead of ignoring them.
 * `print.mcml_pc()` and its build-time warnings name `item_loadings()`
   instead of pointing at `$loadings`.
 
@@ -72,7 +81,13 @@
   no longer fails with "subscript out of bounds" in the default
   (`normalize = FALSE`) view. The Summary band now opens the expanded
   cluster into its states, and the other panels draw it as one faded
-  "(elsewhere)" band.
+  `"<cluster> (<rest_label>)"` band.
+* `sequence_plot()` on an `mcml` with a single channel (one cluster, or every
+  cluster merged by `combine`) no longer fails in the carpet view with
+  "replacement has 1 row, data has 0".
+* `sequence_plot()` on an `mcml`: with `expand =`, each cluster's faded band
+  in the other panels now has its own colour (expanded clusters all shared
+  one).
 
 # Nestimate 0.9.5
 
