@@ -18,6 +18,9 @@ sequence_plot(
   trim = NULL,
   panel = c("both", "summary", "channels"),
   expand = NULL,
+  combine = NULL,
+  rest = c("clusters", "pooled", "none"),
+  rest_label = "Other states",
   trim_clusterwise = FALSE,
   row_gap = 0,
   dendrogram_width = 1.2,
@@ -69,8 +72,9 @@ macro \code{Summary} panel. \code{type = "heatmap"}/\code{"index"}
 draw the carpet (each channel's own states solid, other clusters a
 faded wash); \code{type = "distribution"} draws the stacked
 distribution (add \code{normalize = TRUE} for a TraMineR-style
-\code{seqdplot} where each time point sums to 1). Returns a
-\code{ggplot} object.}
+\code{seqdplot} where each time point sums to 1). See the section
+\emph{Multichannel view of an mcml} for the options that shape it,
+and \emph{Value} for what it returns.}
 }}
 
 \item{type}{One of \code{"heatmap"} (default), \code{"index"}, or
@@ -89,7 +93,10 @@ object to supply row ordering (heatmap only; overrides \code{sort}).}
 one facet per group. Index/distribution only. Ignored for heatmap.}
 
 \item{scale, geom, na}{Passed to \code{\link{distribution_plot}} when
-\code{type = "distribution"}.}
+\code{type = "distribution"}.
+For an \code{mcml} (\code{type = "distribution"}), \code{na = FALSE}
+drops the \code{NA} (ended) band and shows every time point as shares
+of the sequences still running there, so each panel stacks to 100 percent.}
 
 \item{normalize}{\code{mcml} + \code{type = "distribution"} only. When
 \code{TRUE}, each time point is normalised to sum to 1 within its channel
@@ -119,6 +126,34 @@ title.}
 are shown individually in the Summary band; \code{"all"} or \code{TRUE}
 expands every cluster. The per-cluster channels are unaffected. Default
 \code{NULL} keys the Summary band by cluster.}
+
+\item{combine}{For an \code{mcml}, clusters to merge into one channel. A
+character vector merges one group (e.g.
+\code{combine = c("Cognitive", "Affective")}); a list merges several,
+and its names label the merged channels (default label
+\code{"Cognitive + Affective"}). A merged group acts as one cluster
+throughout the figure: one per-cluster panel holding all its states, one
+key in the Summary band, and one faded band in the other panels.
+\code{expand} is resolved after merging, so it can name the merged
+label. Errors on unknown clusters, a group of fewer than two, or a
+cluster in two groups. Default \code{NULL} draws the partition as built.}
+
+\item{rest}{For an \code{mcml}, how a cluster's panel shows the time its
+subjects spend in \emph{other} clusters. \code{"clusters"} (default): one
+faded band (or wash, in the carpet) per other cluster.
+\code{"pooled"}: all other clusters as one grey band labelled
+\code{rest_label}.
+\code{"none"}: left blank, so the panel shows only its own states; in the
+distribution view the \code{NA} (ended) band is dropped too, and the
+panel's height at each time point is the share of subjects in that
+cluster. Ignored with \code{normalize = TRUE}, which rescales each panel
+to its own states. The Summary panel is unaffected.}
+
+\item{rest_label}{For an \code{mcml}, the legend text for time spent in
+other clusters. Default \code{"Other states"}; e.g. \code{"Others"} or
+\code{"Rest of states"}. The pooled band (\code{rest = "pooled"}) takes
+it as is; the per-cluster bands read \code{"Social (Other states)"}.
+Must not equal a state or cluster name.}
 
 \item{trim_clusterwise}{Grouped \code{type = "index"} /
 \code{"distribution"} only, and only when \code{trim} is a fraction.
@@ -232,6 +267,42 @@ thin gaps (no dendrogram). Supports grouping via \code{group} or a
 \code{\link{distribution_plot}}.
 }
 }
+\section{Multichannel view of an mcml}{
+
+An \code{mcml} built from sequences stores, for every cluster, the full
+sequence matrix with the other clusters' states blanked out. Each cluster
+is therefore a \emph{channel}, and \code{sequence_plot()} stacks them:
+\describe{
+\item{\code{Summary}}{The macro sequence: at every time point, the
+cluster each subject is in.}
+\item{One panel per cluster}{That cluster's own states, plus the time
+its subjects spend in the other clusters.}
+}
+The options apply in this order, so each one sees the result of the one
+before:
+\enumerate{
+\item \code{combine} merges clusters into one channel. The merged group
+is then one cluster throughout the figure: one panel with all its
+states, one Summary key, one band in the other panels. The object
+itself is not changed.
+\item \code{expand} opens clusters (including a merged group, by its
+label) into their member states in the Summary panel only.
+\item \code{rest} and \code{rest_label} set how a cluster's panel shows
+the other clusters: one faded band per cluster labelled
+\code{"<cluster> (<rest_label>)"} (\code{rest = "clusters"}), one grey
+band labelled \code{rest_label} (\code{"pooled"}), or nothing
+(\code{"none"}).
+\item \code{na} (distribution only) keeps the \code{NA} band of
+sequences that have ended (\code{TRUE}, shares of all subjects) or
+drops it (\code{FALSE}, shares of the subjects still running, so every
+panel stacks to 100 percent). \code{normalize = TRUE} instead rescales each
+cluster panel to its own states, which ignores \code{rest} and
+\code{na}.
+}
+\code{panel} draws the Summary or the cluster panels alone, and
+\code{trim} cuts the time axis for every panel at once.
+}
+
 \examples{
 \donttest{
 sequence_plot(trajectories)
@@ -248,6 +319,20 @@ fit <- build_mcml(
 sequence_plot(fit)                                          # multichannel carpet
 sequence_plot(fit, type = "distribution")                  # prevalence + NA band
 sequence_plot(fit, type = "distribution", normalize = TRUE) # seqdplot (sums to 1)
+
+# Shape the multichannel view (see the section above).
+sequence_plot(fit, type = "distribution",
+              combine = c("Cognitive", "Affective"))        # two channels as one
+sequence_plot(fit, type = "distribution",
+              combine = list(Task = c("Cognitive", "Regulation")),
+              expand = "Task")                              # merge, then open
+sequence_plot(fit, type = "distribution", panel = "channels",
+              rest = "pooled", na = FALSE)                  # one grey band, no NA
+sequence_plot(fit, type = "distribution", panel = "channels",
+              rest = "pooled", rest_label = "Rest of states")
+sequence_plot(fit, type = "distribution", panel = "channels",
+              rest = "none")                                # own states only
+sequence_plot(fit, rest = "pooled")                         # carpet, pooled wash
 }
 }
 \seealso{

@@ -22,6 +22,21 @@
 
 ## Changes
 
+* `sequence_plot()` on an `mcml` gains `combine =`: named clusters are merged
+  into one channel (a character vector for one group, a list for several;
+  list names label the merged channels, default `"A + B"`). The merged group
+  acts as one cluster across the figure (one panel, one Summary key, one
+  faded band) and can itself be opened with `expand =`.
+* `sequence_plot()` on an `mcml` gains `rest = c("clusters", "pooled",
+  "none")`: how a cluster's panel shows the time spent in other clusters (one
+  faded band per cluster, one pooled grey band, or blank, leaving
+  only the panel's own states). Applies to the carpet and distribution views.
+  `rest_label =` (default `"Other states"`) sets the legend text: the pooled
+  band takes it as is, per-cluster bands read `"Social (Other states)"`. This
+  replaces the former `"(elsewhere)"` wording.
+* `sequence_plot()` on an `mcml` now honours `na =` in the distribution view:
+  `na = FALSE` drops the `NA` (ended) band and shows each time point as shares
+  of the sequences still running, as `distribution_plot()` already did.
 * `macro_network()` accepts an `mcml_pc` fit and returns its cluster-level
   network; `expand =` on an `mcml_pc` raises `nestimate_no_expand`.
 * `print.mcml_pc()` and its build-time warnings name `item_loadings()`
@@ -37,6 +52,10 @@
 
 ## Fixes
 
+* `sequence_plot()` on an `mcml` with `type = "heatmap"`/`"index"` and
+  `expand =` drew the other-cluster wash as blank cells: the wash was keyed by
+  the Summary keys, which are states once a cluster is expanded. It is now
+  keyed by cluster.
 * `sequence_plot()` on an `mcml` with `type = "distribution"` and `expand =`
   no longer fails with "subscript out of bounds" in the default
   (`normalize = FALSE`) view. The Summary band now opens the expanded

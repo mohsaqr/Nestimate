@@ -11,7 +11,7 @@
 utils::globalVariables(c("time", "y", "key", "prop"))
 
 # ---- internal: pull per-channel matrices out of an mcml ---------------------
-.mcml_seq_channels <- function(x, trim = NULL, expand = NULL) {
+.mcml_seq_channels <- function(x, trim = NULL, expand = NULL, combine = NULL) {
   layers <- x$clusters
   if (is.null(layers) || !length(layers)) {
     stop("mcml has no clusters to plot.", call. = FALSE)
@@ -27,6 +27,24 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   tcols    <- colnames(datas[[1L]])
   cmats    <- lapply(datas, function(d) as.matrix(d[, tcols, drop = FALSE]))
   names(cmats) <- cluster_names
+
+  # `combine` merges clusters into one channel before anything else, so a
+  # merged group behaves as a single cluster everywhere below (its own panel,
+  # one Summary key, one faded other-states band) and `expand` can name it.
+  groups <- .mcml_resolve_combine(combine, cluster_names)
+  if (length(groups) > 0L) {
+    owner <- stats::setNames(cluster_names, cluster_names)
+    owner[unlist(groups, use.names = FALSE)] <- rep(names(groups), lengths(groups))
+    new_names <- unique(unname(owner))
+    clusters <- stats::setNames(lapply(new_names, function(g) {
+      unlist(clusters[names(owner)[owner == g]], use.names = FALSE)
+    }), new_names)
+    cmats <- stats::setNames(lapply(new_names, function(g) {
+      Reduce(function(a, b) { a[is.na(a)] <- b[is.na(a)]; a },
+             cmats[names(owner)[owner == g]])
+    }), new_names)
+    cluster_names <- new_names
+  }
 
   all_states    <- sort(unique(unlist(clusters, use.names = FALSE)))
   state2cluster <- stats::setNames(rep(cluster_names, lengths(clusters)),
@@ -71,6 +89,50 @@ utils::globalVariables(c("time", "y", "key", "prop"))
        summary_mat = summary_mat, summary_cluster_mat = summary_cluster_mat)
 }
 
+# Legend keys for time spent in other clusters: one per cluster
+# ("Social (Other states)") or a single pooled key ("Other states"). The text
+# is the user's `rest_label`, carried on the channel list.
+.mcml_other_key <- function(ch, cluster) paste0(cluster, " (", ch$rest_label, ")")
+
+# Resolve `combine` against the cluster names: NULL stays NULL; a character
+# vector is one group, a list is several. Every group names >= 2 existing
+# clusters, no cluster sits in two groups, and a group is labelled by its list
+# name or, failing that, "A + B".
+.mcml_resolve_combine <- function(combine, cluster_names) {
+  if (is.null(combine)) {
+    return(NULL)
+  }
+  groups <- if (is.list(combine)) combine else list(combine)
+  stopifnot(
+    "`combine` must be a character vector or a list of character vectors" =
+      all(vapply(groups, is.character, logical(1L))),
+    "each `combine` group must name at least two clusters" =
+      all(lengths(groups) >= 2L))
+  members <- unlist(groups, use.names = FALSE)
+  unknown <- setdiff(members, cluster_names)
+  if (length(unknown) > 0L) {
+    stop("Unknown cluster(s) in `combine`: ",
+         paste(utils::head(unknown, 5L), collapse = ", "),
+         ". Available: ", paste(cluster_names, collapse = ", "),
+         call. = FALSE)
+  }
+  if (anyDuplicated(members) > 0L) {
+    stop("A cluster appears in more than one `combine` group: ",
+         paste(unique(members[duplicated(members)]), collapse = ", "),
+         call. = FALSE)
+  }
+  labels <- names(groups) %||% character(length(groups))
+  missing <- !nzchar(labels)
+  labels[missing] <- vapply(groups[missing], paste, character(1L),
+                            collapse = " + ")
+  clash <- intersect(labels, setdiff(cluster_names, members))
+  if (length(clash) > 0L) {
+    stop("`combine` label clashes with an existing cluster: ",
+         paste(clash, collapse = ", "), call. = FALSE)
+  }
+  stats::setNames(groups, labels)
+}
+
 # Resolve `expand` against the cluster names: NULL stays NULL, "all"/TRUE
 # means every cluster, anything else must name clusters that exist.
 .mcml_resolve_expand <- function(expand, cluster_names) {
@@ -107,8 +169,9 @@ utils::globalVariables(c("time", "y", "key", "prop"))
       m <- 0.22 * (grDevices::col2rgb(col) / 255) + 0.78   # 22% colour, 78% white
       grDevices::rgb(m[1L], m[2L], m[3L])
     }, character(1L)),
-    paste0(ch$cluster_names, " (elsewhere)"))
-  list(state = state_pal, cluster = cluster_pal, faded = faded)
+    .mcml_other_key(ch, ch$cluster_names))
+  list(state = state_pal, cluster = cluster_pal, faded = faded,
+       rest = stats::setNames("grey78", ch$rest_label))
 }
 
 # A cluster may legitimately be named after a state it contains (a singleton
@@ -138,7 +201,7 @@ utils::globalVariables(c("time", "y", "key", "prop"))
 }
 
 # ---- internal: multichannel index (carpet) ----------------------------------
-.mcml_index_plot <- function(ch, pals, main, time_label) {
+.mcml_index_plot <- function(ch, pals, main, time_label, rest = "clusters") {
   cn          <- ch$cluster_names
   chan_levels <- c("Summary", cn)
   times       <- ch$times
@@ -152,11 +215,17 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   cm  <- lapply(ch$cmats, function(m) m[ord, , drop = FALSE])
 
   summary_tiles <- .mcml_mat_long(scm, "Summary", times, "key")
-  ghost_tiles <- do.call(rbind, lapply(cn, function(k) {
-    gm <- scm
-    gm[!(is.na(cm[[k]]) & !is.na(sm))] <- NA           # keep "active elsewhere"
+  # Cells where the subject is active in another cluster. Keyed by the
+  # partition (not the Summary keys, which are states once `expand` is set):
+  # per cluster, pooled into one `rest_label` key, or left blank.
+  state2cl <- stats::setNames(rep(cn, lengths(ch$clusters[cn])),
+                              unlist(ch$clusters[cn], use.names = FALSE))
+  ghost_tiles <- if (identical(rest, "none")) NULL else do.call(rbind, lapply(cn, function(k) {
+    gm <- sm
+    gm[] <- state2cl[sm]
+    gm[!(is.na(cm[[k]]) & !is.na(sm))] <- NA           # keep "active in another cluster"
     d <- .mcml_mat_long(gm, k, times, "key")
-    d$key <- paste0(d$key, " (elsewhere)")
+    d$key <- if (identical(rest, "pooled")) rep(ch$rest_label, nrow(d)) else .mcml_other_key(ch, d$key)
     d
   }))
   state_tiles <- do.call(rbind, lapply(cn, function(k)
@@ -165,12 +234,13 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   tiles <- rbind(summary_tiles, ghost_tiles, state_tiles)
   tiles$channel <- factor(tiles$channel, levels = chan_levels)
   tiles$key     <- factor(tiles$key,
-                          levels = .mcml_uniq_levels(ch$all_states, cn,
-                                                     paste0(ch$cluster_names, " (elsewhere)")))
+                          levels = .mcml_uniq_levels(ch$all_states, ch$macro_keys, cn,
+                                                     .mcml_other_key(ch, ch$cluster_names),
+                                                     ch$rest_label))
 
   .mcml_stack_channels(
     tiles, ch,
-    values = .mcml_uniq_values(pals$state, pals$cluster, pals$faded),
+    values = .mcml_uniq_values(pals$state, pals$cluster, pals$faded, pals$rest),
     layer  = function(d) ggplot2::ggplot(d, ggplot2::aes(x = time, y = y, fill = key)) +
       ggplot2::geom_tile() +
       ggplot2::scale_y_reverse(expand = c(0, 0)),
@@ -186,15 +256,15 @@ utils::globalVariables(c("time", "y", "key", "prop"))
 # A faceted ggplot has a single fill scale, so every cluster's states pile into
 # one long legend. Each channel is drawn as its own ggplot instead: the Summary
 # legend lists the clusters, a cluster channel lists its own states followed by
-# the faded "elsewhere" bands. Legend order: macro keys, then each cluster's
-# states, then the "(elsewhere)" keys, then NA.
+# the faded other-cluster bands. Legend order: macro keys, then each cluster's
+# states, then the other-cluster keys, then NA.
 .mcml_channel_plots <- function(d, ch, values, layer, y_lab, main, time_label,
                                 theme_extra = NULL) {
   d$channel <- droplevels(d$channel)
   chans     <- levels(d$channel)
   n         <- length(chans)
   key_order <- c(ch$macro_keys, ch$all_states,
-                 paste0(ch$cluster_names, " (elsewhere)"), "NA")
+                 .mcml_other_key(ch, ch$cluster_names), ch$rest_label, "NA")
   plots <- lapply(seq_len(n), function(i) {
     di      <- d[d$channel == chans[i], , drop = FALSE]
     di$key  <- droplevels(di$key)
@@ -263,16 +333,24 @@ print.mcml_sequence_plot <- function(x, ...) {
 
 # ---- internal: multichannel distribution (seqdplot) -------------------------
 .mcml_dist_plot <- function(ch, pals, na_color, normalize, main, time_label,
-                            keep = "all") {
+                            keep = "all", rest = "clusters", na = TRUE) {
   cn          <- ch$cluster_names
   chan_levels <- c("Summary", cn)
   times       <- ch$times
-  N           <- nrow(ch$summary_mat)
+  # Denominator per time point: every subject (na = TRUE, ended subjects form
+  # the NA band), or only the subjects still running (na = FALSE, no NA band;
+  # each time point stacks to 100% of the running sequences).
+  N <- if (isTRUE(na)) {
+    rep(nrow(ch$summary_mat), ncol(ch$summary_mat))
+  } else {
+    pmax(colSums(!is.na(ch$summary_mat)), 1)
+  }
 
   share_at <- function(m, cats) {
     r <- vapply(seq_len(ncol(m)),
                 function(j) tabulate(factor(m[, j], levels = cats), nbins = length(cats)),
-                integer(length(cats))) / N
+                integer(length(cats)))
+    r <- sweep(matrix(r, nrow = length(cats)), 2L, N, "/")
     matrix(r, nrow = length(cats), dimnames = list(cats, NULL))   # keep 2-D for k=1
   }
   cl_share <- share_at(ch$summary_cluster_mat, ch$macro_keys)
@@ -298,7 +376,8 @@ print.mcml_sequence_plot <- function(x, ...) {
   } else {
     # prevalence: own states (solid) + other clusters (faded) + NA, to 100%.
     inactive   <- pmax(0, 1 - colSums(cl_share))
-    faded_keys <- paste0(cn, " (elsewhere)")
+    na_band    <- function(channel) if (isTRUE(na)) band(channel, "NA", inactive)
+    faded_keys <- .mcml_other_key(ch, cn)
     # An expanded cluster has no row of its own in `cl_share` (its states are
     # the macro keys), so its faded share in other panels sums its members.
     cluster_share <- function(j) {
@@ -308,21 +387,31 @@ print.mcml_sequence_plot <- function(x, ...) {
     bands <- rbind(
       do.call(rbind, lapply(ch$macro_keys,
                             function(cl) band("Summary", cl, cl_share[cl, ]))),
-      band("Summary", "NA", inactive),
+      na_band("Summary"),
       do.call(rbind, lapply(cn, function(k) {
         own <- share_at(ch$cmats[[k]], ch$clusters[[k]])
         own_b <- do.call(rbind, lapply(seq_along(ch$clusters[[k]]),
                                        function(i) band(k, ch$clusters[[k]][i], own[i, ])))
-        oth_b <- do.call(rbind, lapply(setdiff(cn, k),
-                                       function(j) band(k, paste0(j, " (elsewhere)"), cluster_share(j))))
-        rbind(own_b, oth_b, band(k, "NA", inactive))
+        # The rest of the panel: one faded band per other cluster, one pooled
+        # `rest_label` band, or nothing (own states only, no NA cap either).
+        others <- setdiff(cn, k)
+        switch(rest,
+          clusters = rbind(own_b,
+                           do.call(rbind, lapply(others, function(j)
+                             band(k, .mcml_other_key(ch, j), cluster_share(j)))),
+                           na_band(k)),
+          pooled   = rbind(own_b,
+                           band(k, ch$rest_label,
+                                Reduce(`+`, lapply(others, cluster_share), 0)),
+                           na_band(k)),
+          none     = own_b)
       })))
     bands$key <- factor(bands$key,
-                        levels = .mcml_uniq_levels(ch$all_states, cn,
-                                                   faded_keys, "NA"))
+                        levels = .mcml_uniq_levels(ch$all_states, ch$macro_keys, cn,
+                                                   faded_keys, ch$rest_label, "NA"))
     fillvals  <- .mcml_uniq_values(pals$state, pals$cluster, pals$faded,
-                                   "NA" = na_color)
-    y_lab     <- "Share of subjects"
+                                   pals$rest, "NA" = na_color)
+    y_lab     <- if (isTRUE(na)) "Share of subjects" else "Share of active subjects"
   }
   bands$channel <- factor(bands$channel, levels = chan_levels)
 
@@ -355,19 +444,30 @@ print.mcml_sequence_plot <- function(x, ...) {
 # ---- internal: mcml dispatcher (called from sequence_plot) ------------------
 .sequence_plot_mcml <- function(x, type, normalize, state_colors, na_color,
                                 main, time_label, trim = NULL,
-                                panel = "both", expand = NULL) {
+                                panel = "both", expand = NULL,
+                                combine = NULL, rest = "clusters", na = TRUE,
+                                rest_label = "Other states") {
   panel <- match.arg(panel, c("both", "summary", "channels"))
-  ch   <- .mcml_seq_channels(x, trim, expand)
+  stopifnot("`rest_label` must be a single non-empty string" =
+              is.character(rest_label) && length(rest_label) == 1L &&
+              !is.na(rest_label) && nzchar(rest_label))
+  ch   <- .mcml_seq_channels(x, trim, expand, combine)
+  if (rest_label %in% c(ch$all_states, ch$cluster_names, ch$macro_keys, "NA")) {
+    stop("`rest_label` \"", rest_label, "\" is already a state or cluster name.",
+         call. = FALSE)
+  }
+  ch$rest_label <- rest_label
   pals <- .mcml_seq_palettes(ch, state_colors)
   if (type %in% c("heatmap", "index")) {
     if (!identical(panel, "both")) {
       stop("`panel` applies to type = \"distribution\".", call. = FALSE)
     }
-    return(.mcml_index_plot(ch, pals, main, time_label))
+    return(.mcml_index_plot(ch, pals, main, time_label, rest = rest))
   }
   # The macro channel is keyed by cluster and the rest by state, so a shared
   # fill scale can put a cluster and a state on one colour. Drawing a single
   # panel gives that panel its own palette, legend and default title.
   .mcml_dist_plot(ch, pals, na_color, normalize, main, time_label,
-                  keep = switch(panel, both = "all", panel))
+                  keep = switch(panel, both = "all", panel), rest = rest,
+                  na = na)
 }

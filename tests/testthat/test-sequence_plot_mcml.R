@@ -58,7 +58,7 @@ test_that("each channel panel carries its own legend of its own keys", {
   expect_equal(breaks(panels$G2), c("b1", "b2"))
   # prevalence: own states first, then the faded other clusters, then NA
   prev <- mcml_panels(sequence_plot(fit, type = "distribution"))
-  expect_equal(breaks(prev$G1), c("a1", "a2", "G2 (elsewhere)", "NA"))
+  expect_equal(breaks(prev$G1), c("a1", "a2", "G2 (Other states)", "NA"))
   # carpet: no state of another cluster leaks into a channel legend
   idx <- mcml_panels(sequence_plot(fit))
   expect_false(any(c("b1", "b2") %in% breaks(idx$G1)))
@@ -153,7 +153,7 @@ test_that("panel draws the macro and the channels apart, each with one palette",
     levels(sequence_plot(fit, type = "distribution", normalize = TRUE,
                          panel = "summary")$data$key),
     names(fit$cluster_members))
-  # Prevalence also carries the faded "elsewhere" bands and NA; the states are
+  # Prevalence also carries the faded other-cluster bands and NA; the states are
   # the solid keys. Composition drops both, leaving states alone.
   states <- unlist(fit$cluster_members, use.names = FALSE)
   expect_true(all(states %in% levels(channels$key)))
@@ -235,16 +235,168 @@ test_that("sequence_plot(expand =) works in the default prevalence view", {
   # the Summary band opens G1; the G2 panel keeps G1 as one faded band
   expect_setequal(unique(as.character(d$key[d$channel == "Summary"])),
                   c("a1", "a2", "G2", "NA"))
-  expect_true("G1 (elsewhere)" %in% as.character(d$key[d$channel == "G2"]))
+  expect_true("G1 (Other states)" %in% as.character(d$key[d$channel == "G2"]))
 
   # every channel still stacks to 100% at every time point
   tot <- stats::aggregate(prop ~ channel + time, d, sum)
   expect_equal(tot$prop, rep(1, nrow(tot)))
 
   # the faded G1 share equals the summed a1 + a2 shares of the Summary band
-  faded <- d[d$channel == "G2" & d$key == "G1 (elsewhere)", ]
+  faded <- d[d$channel == "G2" & d$key == "G1 (Other states)", ]
   own   <- stats::aggregate(prop ~ time,
                             d[d$channel == "Summary" & d$key %in% c("a1", "a2"), ],
                             sum)
   expect_equal(faded$prop[order(faded$time)], own$prop[order(own$time)])
+})
+
+make_mcml_seq3 <- function() {
+  # 10 actors, 6 states in 3 clusters.
+  actors <- rep(1:10, each = 6)
+  states <- c("a1", "a2", "b1", "b2", "c1", "c2")
+  acts   <- states[((seq_along(actors) * 7L) %% 6L) + 1L]
+  times  <- as.POSIXct("2025-01-01", tz = "UTC") + seq_along(actors) * 60
+  df <- data.frame(Actor = actors, Action = acts, Time = times,
+                   stringsAsFactors = FALSE)
+  build_mcml(df,
+             clusters = list(G1 = c("a1", "a2"), G2 = c("b1", "b2"),
+                             G3 = c("c1", "c2")),
+             actor = "Actor", action = "Action", time = "Time", type = "tna")
+}
+
+test_that("sequence_plot(combine =) merges clusters into one channel", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+
+  p <- sequence_plot(fit, type = "distribution", combine = c("G1", "G2"))
+  d <- mcml_panel_data(p)
+
+  # channels: Summary, the merged group (at G1's position), then G3
+  expect_equal(levels(d$channel), c("Summary", "G1 + G2", "G3"))
+  # the merged panel holds both clusters' states and one faded band for G3
+  expect_setequal(unique(as.character(d$key[d$channel == "G1 + G2"])),
+                  c("a1", "a2", "b1", "b2", "G3 (Other states)", "NA"))
+  # the Summary band keys the group once
+  expect_setequal(unique(as.character(d$key[d$channel == "Summary"])),
+                  c("G1 + G2", "G3", "NA"))
+  # the G3 panel fades the merged group as one band
+  expect_true("G1 + G2 (Other states)" %in% as.character(d$key[d$channel == "G3"]))
+
+  # every channel still stacks to 100% at every time point
+  tot <- stats::aggregate(prop ~ channel + time, d, sum)
+  expect_equal(tot$prop, rep(1, nrow(tot)))
+
+  # invariant: the merged Summary share is the sum of the unmerged G1 and G2
+  plain <- mcml_panel_data(sequence_plot(fit, type = "distribution",
+                                         panel = "summary"))
+  sep <- stats::aggregate(prop ~ time, plain[plain$key %in% c("G1", "G2"), ], sum)
+  mer <- d[d$channel == "Summary" & d$key == "G1 + G2", ]
+  expect_equal(mer$prop[order(mer$time)], sep$prop[order(sep$time)])
+})
+
+test_that("sequence_plot(combine =) takes a named list and works for every type", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+
+  p <- sequence_plot(fit, type = "distribution", normalize = TRUE,
+                     combine = list(Early = c("G1", "G2")))
+  expect_equal(levels(mcml_panel_data(p)$channel), c("Summary", "Early", "G3"))
+
+  idx <- sequence_plot(fit, type = "index", combine = c("G2", "G3"))
+  expect_true(inherits(idx, "mcml_sequence_plot") || inherits(idx, "ggplot"))
+
+  # expand is resolved after merging, so it can open the merged group
+  open <- sequence_plot(fit, type = "distribution", panel = "summary",
+                        combine = c("G1", "G2"), expand = "G1 + G2")
+  expect_setequal(levels(open$data$key), c("a1", "a2", "b1", "b2", "G3", "NA"))
+})
+
+test_that("sequence_plot(combine =) rejects malformed groups", {
+  fit <- make_mcml_seq3()
+  expect_error(sequence_plot(fit, combine = c("G1", "nope")), "Unknown")
+  expect_error(sequence_plot(fit, combine = "G1"), "at least two")
+  expect_error(sequence_plot(fit, combine = list(c("G1", "G2"), c("G2", "G3"))),
+               "more than one")
+  expect_error(sequence_plot(fit, combine = list(G3 = c("G1", "G2"))),
+               "clashes")
+  expect_error(sequence_plot(fit, combine = 1:2), "character")
+})
+
+test_that("sequence_plot(rest =) sets how a panel shows the other clusters", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+
+  dp <- mcml_panel_data(sequence_plot(fit, type = "distribution", rest = "pooled"))
+  expect_setequal(unique(as.character(dp$key[dp$channel == "G1"])),
+                  c("a1", "a2", "Other states", "NA"))
+  tot <- stats::aggregate(prop ~ channel + time, dp, sum)
+  expect_equal(tot$prop, rep(1, nrow(tot)))
+
+  # the pooled band equals the sum of the per-cluster faded bands
+  dc <- mcml_panel_data(sequence_plot(fit, type = "distribution"))
+  per <- stats::aggregate(prop ~ time,
+                          dc[dc$channel == "G1" & grepl(" (Other states)", dc$key, fixed = TRUE), ], sum)
+  pool <- dp[dp$channel == "G1" & dp$key == "Other states", ]
+  expect_equal(pool$prop[order(pool$time)], per$prop[order(per$time)])
+
+  # none: own states only, and their height is the cluster's Summary share
+  dn <- mcml_panel_data(sequence_plot(fit, type = "distribution", rest = "none"))
+  expect_setequal(unique(as.character(dn$key[dn$channel == "G1"])), c("a1", "a2"))
+  own <- stats::aggregate(prop ~ time, dn[dn$channel == "G1", ], sum)
+  sm  <- dn[dn$channel == "Summary" & dn$key == "G1", ]
+  expect_equal(own$prop[order(own$time)], sm$prop[order(sm$time)])
+
+  # carpet
+  ci <- mcml_panel_data(sequence_plot(fit, type = "index", rest = "pooled"))
+  expect_true("Other states" %in% as.character(ci$key[ci$channel == "G2"]))
+  cn <- mcml_panel_data(sequence_plot(fit, type = "index", rest = "none"))
+  expect_false(any(grepl("Other states", cn$key, fixed = TRUE)))
+
+  expect_error(sequence_plot(fit, rest = "bogus"))
+})
+
+test_that("carpet wash keys by cluster when the Summary is expanded", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+  # regression: the wash took Summary keys (states once expanded), producing
+  # keys like "a1 (Other states)" with no level, drawn as blank NA fill
+  d <- mcml_panel_data(sequence_plot(fit, type = "index", expand = "G1"))
+  expect_false(anyNA(d$key))
+  expect_true("G1 (Other states)" %in% as.character(d$key[d$channel == "G2"]))
+})
+
+test_that("sequence_plot(mcml, na = FALSE) drops the NA band and rescales to running", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+  d <- mcml_panel_data(sequence_plot(fit, type = "distribution",
+                                     rest = "pooled", na = FALSE))
+  expect_false("NA" %in% as.character(d$key))
+  # every channel stacks to 100% of the running sequences at every time point
+  tot <- stats::aggregate(prop ~ channel + time, d, sum)
+  expect_equal(tot$prop, rep(1, nrow(tot)))
+  # own-state shares are the na = TRUE shares divided by the running share
+  a <- mcml_panel_data(sequence_plot(fit, type = "distribution", rest = "pooled"))
+  running <- stats::aggregate(prop ~ time, a[a$channel == "Summary" & a$key != "NA", ], sum)
+  g1_na  <- a[a$channel == "G1" & a$key == "a1", ]
+  g1_run <- d[d$channel == "G1" & d$key == "a1", ]
+  expect_equal(g1_run$prop[order(g1_run$time)],
+               g1_na$prop[order(g1_na$time)] / running$prop[order(running$time)])
+})
+
+test_that("sequence_plot(rest_label =) relabels the other-cluster keys", {
+  skip_if_not_installed("ggplot2")
+  fit <- make_mcml_seq3()
+  dp <- mcml_panel_data(sequence_plot(fit, type = "distribution",
+                                      rest = "pooled", rest_label = "Rest of states"))
+  expect_true("Rest of states" %in% as.character(dp$key[dp$channel == "G1"]))
+  dc <- mcml_panel_data(sequence_plot(fit, type = "distribution", rest_label = "Others"))
+  expect_true(all(c("G2 (Others)", "G3 (Others)") %in%
+                    as.character(dc$key[dc$channel == "G1"])))
+  ci <- mcml_panel_data(sequence_plot(fit, type = "index", rest = "pooled",
+                                      rest_label = "Others"))
+  expect_true("Others" %in% as.character(ci$key))
+  expect_false(anyNA(ci$key))
+
+  expect_error(sequence_plot(fit, rest_label = "a1"), "already a state")
+  expect_error(sequence_plot(fit, rest_label = ""), "non-empty")
+  expect_error(sequence_plot(fit, rest_label = c("A", "B")), "single")
 })
