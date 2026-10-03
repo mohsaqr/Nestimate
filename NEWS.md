@@ -1,3 +1,16 @@
+# Nestimate 0.9.15
+
+## New features
+
+* `bootstrap_network()` gains `block =`, the column identifying the unit
+  that sequences are nested in. Whole units are resampled with replacement,
+  keeping their sequences together (cluster bootstrap, top level only;
+  Davison & Hinkley, 1997; Field & Welsh, 2007). The result reports the ICC
+  (Shrout & Fleiss, 1979) and the design effect (Kish, 1965) for the edges,
+  printed under the bootstrap summary and returned as `clustering` and
+  `clustering_edges`. With one sequence per unit it reproduces the ordinary
+  bootstrap exactly. Transition networks only.
+
 # Nestimate 0.9.14
 
 ## Documentation

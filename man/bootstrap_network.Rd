@@ -13,7 +13,8 @@ bootstrap_network(
   edge_threshold = NULL,
   seed = NULL,
   boundary = c("inclusive", "strict"),
-  ci_method = c("percentile", "basic")
+  ci_method = c("percentile", "basic"),
+  block = NULL
 )
 }
 \arguments{
@@ -56,6 +57,13 @@ observed weight, \eqn{(2\hat{\theta} - q_{1-\alpha/2},
 which corrects first-order bootstrap bias but can produce bounds
 outside the natural weight range near boundaries (e.g., below 0 for
 transition probabilities close to 0).}
+
+\item{block}{Character or NULL. Name of the column identifying the unit
+each sequence belongs to (e.g. \code{"Actor"} for sessions nested in
+students, \code{"Group"} for students nested in teams), looked up in
+the network's \code{$metadata} or wide sequence data. When supplied,
+whole units are resampled; see the section \emph{Nested data and
+block}. Default \code{NULL}: sequences are resampled individually.}
 }
 \value{
 An object of class \code{"net_bootstrap"} containing:
@@ -79,6 +87,14 @@ columns \code{from}, \code{to}, \code{weight}, \code{mean},
 \item{method, params, iter, ci_level, inference, ci_method}{Bootstrap
 config.}
 \item{consistency_range, edge_threshold}{Inference parameters.}
+\item{block, n_blocks}{The \code{block} column and its number of units;
+\code{NULL} without \code{block}.}
+\item{clustering}{Only with \code{block}. One-row data frame:
+\code{n_sequences}, \code{n_blocks}, \code{icc}, \code{icc_ci_lower},
+\code{icc_ci_upper}, \code{deff_edges}.}
+\item{clustering_edges}{Only with \code{block}. One row per edge of
+\code{summary}: \code{from}, \code{to}, \code{icc},
+\code{sd_blocked}, \code{sd_unblocked}, \code{deff}.}
 }
 A \code{netobject_group} or \code{mcml} input returns a
 \code{"net_bootstrap_group"} (named list of \code{net_bootstrap}
@@ -106,6 +122,28 @@ If a transition network contains only one sequence, the function warns that
 such a network is not recommended for bootstrap or other confirmatory
 testing.
 }
+\section{Nested data and \code{block}}{
+
+The bootstrap resamples sequences as independent units. When sequences
+are nested in units (sessions in students, students in teams),
+\code{block} names the column identifying the unit, and whole units are
+resampled with replacement, keeping all their sequences together: the
+cluster bootstrap that resamples at the top level only (Davison &
+Hinkley, 1997, section 3.8; Field & Welsh, 2007). The number of
+sequences per replicate then varies with the units drawn.
+
+With \code{block}, the result also reports the nesting effect. The ICC
+is the proportion of the total variance that lies between units (Shrout
+& Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
+effect. It is computed as in \code{\link{permutation}}. The design effect
+is the ratio of the variance under the nested design to the variance had
+the sequences been sampled independently (Kish, 1965): here, the variance
+of the edge weights over unit-level replicates divided by their variance
+over sequence-level replicates drawn in the same run, reported as the
+median over edges. \code{block} is available for transition networks
+(\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}).
+}
+
 \examples{
 net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
   method = "relative")
@@ -120,8 +158,28 @@ net <- build_network(seqs, method = "relative")
 boot <- bootstrap_network(net, iter = 100)
 print(boot)
 summary(boot)
+
+# Students nested in teams: resample whole teams
+teams <- build_network(group_regulation_long, method = "relative",
+                       actor = "Actor", action = "Action", time = "Time",
+                       group = "Achiever")
+bootstrap_network(teams, iter = 100, block = "Group", seed = 1)
 }
 
+}
+\references{
+Davison, A. C., & Hinkley, D. V. (1997). \emph{Bootstrap Methods and
+Their Application}. Cambridge University Press.
+
+Field, C. A., & Welsh, A. H. (2007). Bootstrapping clustered data.
+\emph{Journal of the Royal Statistical Society: Series B}, 69(3),
+369-390.
+
+Kish, L. (1965). \emph{Survey Sampling}. Wiley.
+
+Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
+assessing rater reliability. \emph{Psychological Bulletin}, 86(2),
+420-428.
 }
 \seealso{
 \code{\link{certainty}} for the closed-form Bayesian counterpart

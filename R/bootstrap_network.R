@@ -23,6 +23,26 @@
 #' such a network is not recommended for bootstrap or other confirmatory
 #' testing.
 #'
+#' @section Nested data and \code{block}:
+#' The bootstrap resamples sequences as independent units. When sequences
+#' are nested in units (sessions in students, students in teams),
+#' \code{block} names the column identifying the unit, and whole units are
+#' resampled with replacement, keeping all their sequences together: the
+#' cluster bootstrap that resamples at the top level only (Davison &
+#' Hinkley, 1997, section 3.8; Field & Welsh, 2007). The number of
+#' sequences per replicate then varies with the units drawn.
+#'
+#' With \code{block}, the result also reports the nesting effect. The ICC
+#' is the proportion of the total variance that lies between units (Shrout
+#' & Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
+#' effect. It is computed as in \code{\link{permutation}}. The design effect
+#' is the ratio of the variance under the nested design to the variance had
+#' the sequences been sampled independently (Kish, 1965): here, the variance
+#' of the edge weights over unit-level replicates divided by their variance
+#' over sequence-level replicates drawn in the same run, reported as the
+#' median over edges. \code{block} is available for transition networks
+#' (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}).
+#'
 #' @param x A \code{netobject} from \code{\link{build_network}}.
 #'   The data, method, params, scaling, threshold, and level are all
 #'   extracted from this object. A \code{cograph_network} is coerced
@@ -54,6 +74,12 @@
 #'   which corrects first-order bootstrap bias but can produce bounds
 #'   outside the natural weight range near boundaries (e.g., below 0 for
 #'   transition probabilities close to 0).
+#' @param block Character or NULL. Name of the column identifying the unit
+#'   each sequence belongs to (e.g. \code{"Actor"} for sessions nested in
+#'   students, \code{"Group"} for students nested in teams), looked up in
+#'   the network's \code{$metadata} or wide sequence data. When supplied,
+#'   whole units are resampled; see the section \emph{Nested data and
+#'   block}. Default \code{NULL}: sequences are resampled individually.
 #'
 #' @return An object of class \code{"net_bootstrap"} containing:
 #' \describe{
@@ -76,6 +102,14 @@
 #'   \item{method, params, iter, ci_level, inference, ci_method}{Bootstrap
 #'     config.}
 #'   \item{consistency_range, edge_threshold}{Inference parameters.}
+#'   \item{block, n_blocks}{The \code{block} column and its number of units;
+#'     \code{NULL} without \code{block}.}
+#'   \item{clustering}{Only with \code{block}. One-row data frame:
+#'     \code{n_sequences}, \code{n_blocks}, \code{icc}, \code{icc_ci_lower},
+#'     \code{icc_ci_upper}, \code{deff_edges}.}
+#'   \item{clustering_edges}{Only with \code{block}. One row per edge of
+#'     \code{summary}: \code{from}, \code{to}, \code{icc},
+#'     \code{sd_blocked}, \code{sd_unblocked}, \code{deff}.}
 #' }
 #' A \code{netobject_group} or \code{mcml} input returns a
 #' \code{"net_bootstrap_group"} (named list of \code{net_bootstrap}
@@ -96,7 +130,27 @@
 #' boot <- bootstrap_network(net, iter = 100)
 #' print(boot)
 #' summary(boot)
+#'
+#' # Students nested in teams: resample whole teams
+#' teams <- build_network(group_regulation_long, method = "relative",
+#'                        actor = "Actor", action = "Action", time = "Time",
+#'                        group = "Achiever")
+#' bootstrap_network(teams, iter = 100, block = "Group", seed = 1)
 #' }
+#'
+#' @references
+#' Davison, A. C., & Hinkley, D. V. (1997). \emph{Bootstrap Methods and
+#' Their Application}. Cambridge University Press.
+#'
+#' Field, C. A., & Welsh, A. H. (2007). Bootstrapping clustered data.
+#' \emph{Journal of the Royal Statistical Society: Series B}, 69(3),
+#' 369-390.
+#'
+#' Kish, L. (1965). \emph{Survey Sampling}. Wiley.
+#'
+#' Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
+#' assessing rater reliability. \emph{Psychological Bulletin}, 86(2),
+#' 420-428.
 #'
 #' @seealso \code{\link{certainty}} for the closed-form Bayesian counterpart
 #'   (same result layout, no resampling);
@@ -113,7 +167,8 @@ bootstrap_network <- function(x,
                               edge_threshold = NULL,
                               seed = NULL,
                               boundary = c("inclusive", "strict"),
-                              ci_method = c("percentile", "basic")) {
+                              ci_method = c("percentile", "basic"),
+                              block = NULL) {
   boundary <- match.arg(boundary)
   ci_method <- match.arg(ci_method)
 
@@ -126,13 +181,13 @@ bootstrap_network <- function(x,
                                        consistency_range = consistency_range,
                                        edge_threshold = edge_threshold,
                                        boundary = boundary,
-                                       ci_method = ci_method),
+                                       ci_method = ci_method, block = block),
       cooccurrence = bootstrap_network(x$cooccurrence, iter = iter,
                                        ci_level = ci_level, inference = inference,
                                        consistency_range = consistency_range,
                                        edge_threshold = edge_threshold,
                                        boundary = boundary,
-                                       ci_method = ci_method)
+                                       ci_method = ci_method, block = block)
     )
     class(result) <- "wtna_boot_mixed"
     return(result)
@@ -150,7 +205,8 @@ bootstrap_network <- function(x,
                         inference = inference,
                         consistency_range = consistency_range,
                         edge_threshold = edge_threshold, seed = seed,
-                        boundary = boundary, ci_method = ci_method)
+                        boundary = boundary, ci_method = ci_method,
+                        block = block)
     })
     class(results) <- c("net_bootstrap_group", "list")
     return(results)
@@ -206,6 +262,7 @@ bootstrap_network <- function(x,
   )
   iter <- as.integer(iter)
   inference <- match.arg(inference, c("stability", "threshold"))
+  .check_permutation_block(block, paired = FALSE)
 
   if (!is.null(seed)) {
     stopifnot(is.numeric(seed), length(seed) == 1)
@@ -233,11 +290,30 @@ bootstrap_network <- function(x,
     }
     transition_data <- .resampling_transition_data(data, x$metadata, params)
     .warn_single_sequence_confirmatory_network(transition_data, params)
-    boot_matrices <- .bootstrap_transition(
-      data = transition_data, method = method, params = params, states = states,
-      scaling = scaling, threshold = threshold, iter = iter
+    trans_2d <- .precompute_per_sequence(transition_data, method, params,
+                                         states)
+    block_ids <- if (is.null(block)) NULL else
+      .permutation_block_ids(x, block, nrow(trans_2d), "x")
+    # Cluster bootstrap: resample whole units (summed counts), top level only
+    units <- if (is.null(block_ids)) trans_2d else
+      rowsum(trans_2d, block_ids, reorder = FALSE)
+    if (!is.null(block_ids) && nrow(units) < 2L) {
+      stop(errorCondition(
+        sprintf("`block = \"%s\"` has %d unit; resampling needs at least 2.",
+                block, nrow(units)),
+        class = "nestimate_bad_block", call = NULL))
+    }
+    boot_matrices <- .bootstrap_counts(
+      units, method = method, states = states, scaling = scaling,
+      threshold = threshold, iter = iter
+    )
+    # sequence-level reference drawn in the same run, for the design effect
+    reference <- if (is.null(block_ids)) NULL else .bootstrap_counts(
+      trans_2d, method = method, states = states, scaling = scaling,
+      threshold = threshold, iter = iter
     )
   } else {
+    .stop_block_unsupported(block, method)
     boot_matrices <- .bootstrap_association(
       data = data, estimator = estimator, params = params, states = states,
       scaling = scaling, threshold = threshold, iter = iter,
@@ -323,10 +399,50 @@ bootstrap_network <- function(x,
     inference         = inference,
     consistency_range = consistency_range,
     edge_threshold    = edge_threshold,
-    ci_method         = ci_method
+    ci_method         = ci_method,
+    block             = block,
+    n_blocks          = if (is.null(block)) NULL else nrow(units)
   )
+  if (!is.null(block)) {
+    clus <- .build_bootstrap_clustering(stats$sd, reference, trans_2d,
+                                        block_ids, summary_df, states)
+    result$clustering <- clus$overall
+    result$clustering_edges <- clus$edges
+  }
   class(result) <- "net_bootstrap"
   result
+}
+
+
+#' Tidy nesting diagnostics of a blocked bootstrap
+#'
+#' Design effect = variance over unit-level replicates / variance over
+#' sequence-level replicates (Kish, 1965); ICC as in permutation().
+#' @noRd
+.build_bootstrap_clustering <- function(sd_blocked, reference, trans_2d,
+                                        block_ids, summary_df, states) {
+  n_states <- length(states)
+  sd_unblocked <- matrix(apply(reference, 2, stats::sd, na.rm = TRUE),
+                         n_states, n_states, dimnames = list(states, states))
+  icc <- .block_icc(trans_2d, block_ids, rep("x", length(block_ids)))
+  icc_edges <- matrix(icc$per_edge, n_states, n_states, byrow = TRUE,
+                      dimnames = list(states, states))
+  at <- cbind(summary_df$from, summary_df$to)
+  edges <- data.frame(
+    from = summary_df$from, to = summary_df$to,
+    icc = icc_edges[at],
+    sd_blocked = sd_blocked[at], sd_unblocked = sd_unblocked[at],
+    deff = (sd_blocked[at] / sd_unblocked[at])^2,
+    stringsAsFactors = FALSE
+  )
+  overall <- data.frame(
+    n_sequences = nrow(trans_2d),
+    n_blocks = length(unique(block_ids)),
+    icc = icc$estimate,
+    icc_ci_lower = icc$ci[1L], icc_ci_upper = icc$ci[2L],
+    deff_edges = stats::median(edges$deff[is.finite(edges$deff)])
+  )
+  list(overall = overall, edges = edges)
 }
 
 
@@ -405,12 +521,22 @@ bootstrap_network <- function(x,
 #' @noRd
 .bootstrap_transition <- function(data, method, params, states,
                                   scaling, threshold, iter) {
+  .bootstrap_counts(.precompute_per_sequence(data, method, params, states),
+                    method = method, states = states, scaling = scaling,
+                    threshold = threshold, iter = iter)
+}
+
+
+#' Bootstrap from a precomputed unit x (n_states^2) count matrix
+#'
+#' Rows are the resampling units: sequences, or whole blocks (summed
+#' counts) for the cluster bootstrap.
+#' @noRd
+.bootstrap_counts <- function(trans_2d, method, states, scaling, threshold,
+                              iter) {
   n_states <- length(states)
   nbins <- n_states * n_states
   is_relative <- method == "relative"
-
-  # Pre-compute per-sequence count matrix ONCE
-  trans_2d <- .precompute_per_sequence(data, method, params, states)
   n_seq <- nrow(trans_2d)
 
   # vapply: each iteration resamples sequences + sums + post-processes
@@ -817,6 +943,13 @@ print.net_bootstrap <- function(x, ...) {
     cat(sprintf("  |  Threshold: %g", x$edge_threshold))
   }
   cat("\n")
+  if (!is.null(x$clustering)) {
+    cl <- x$clustering
+    cat(sprintf("  Blocked by : %s (%d units)\n", x$block, cl$n_blocks))
+    cat(sprintf(paste0("  Nesting    : ICC = %.3f [95%% CI %.3f, %.3f]  |  ",
+                       "Design effect (edges) = %.2f\n"),
+                cl$icc, cl$icc_ci_lower, cl$icc_ci_upper, cl$deff_edges))
+  }
 
   invisible(x)
 }
@@ -939,8 +1072,14 @@ print.net_bootstrap_group <- function(x, ...) {
   cat(sprintf("Grouped Bootstrap  [%d groups | %d iterations | %s CI]\n",
               length(grp_names), iter, ci_pct))
   for (nm in grp_names) {
-    cat(sprintf("  %-20s  %d sig / %d total\n",
+    cat(sprintf("  %-20s  %d sig / %d total",
                 nm, grp_stats["sig", nm], grp_stats["total", nm]))
+    cl <- x[[nm]]$clustering
+    if (!is.null(cl)) {
+      cat(sprintf("  |  %s: %d units, ICC %.3f, design effect %.2f",
+                  x[[nm]]$block, cl$n_blocks, cl$icc, cl$deff_edges))
+    }
+    cat("\n")
   }
   if (has_shared_space) {
     cat(sprintf("  Shared (all groups)   %d edges\n", length(shared)))
