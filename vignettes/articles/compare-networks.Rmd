@@ -85,3 +85,19 @@ plot(cmp, type = "inference")
 
 Edge differences with their permutation p-values; filled markers are
 significant at 0.05.
+
+## Accounting for nesting
+```{r}
+nested <- compare_networks(achievers, test = "permutation", iter = 1000,
+                           seed = 1, actor = "Group")
+nested
+tail(global_differences(nested, digits = 3), 5)
+```
+
+Students are nested in teams, and the achievement level is given per
+team. With `actor = "Group"`, the permutation test reassigns whole teams
+instead of single students, and `global_differences()` gains three
+`Nesting` rows. The ICC is −0.002, which indicates little evidence of a
+nesting effect; the design effect is 1.01 for the transitions and 1.17
+for M. The networks still differ overall (M = 2.61, p = 0.001), and 42
+transitions remain significant.

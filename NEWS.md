@@ -1,3 +1,14 @@
+# Nestimate 0.9.17
+
+## New features
+
+* `compare_networks()` gains `actor =`, passed to the permutation backend:
+  whole actors are reassigned between the networks, the printed header names
+  the actor column, and `global_differences()` gains the rows `ICC`,
+  `Design effect (edges)` and `Design effect (M)` (category `"Nesting"`).
+  Requires `test = "permutation"` (error class
+  `nestimate_compare_actor_needs_permutation`).
+
 # Nestimate 0.9.16
 
 ## Breaking changes (development versions only)

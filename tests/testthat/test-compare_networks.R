@@ -35,7 +35,8 @@ test_that("class stack, slots and exact table columns", {
   expect_named(cmp, c("networks", "matrices", "pairs", "edges", "nodes",
                       "global", "network_metrics", "differences", "scaling",
                       "reference", "measures", "test", "iter", "alpha",
-                      "adjust", "paired", "rope", "directed", "n_networks",
+                      "adjust", "paired", "rope", "actor", "directed",
+                      "n_networks",
                       "n_pairs"))
   expect_named(cmp$pairs, c("pair", "network_a", "network_b"))
   expect_named(cmp$edges, .cn_edge_cols)

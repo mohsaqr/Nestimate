@@ -54,6 +54,13 @@
 #'   `bayes_decision` of `"different"`, `"equivalent"` or `"undecided"`.
 #' @param seed Optional integer seed. Each pair uses `seed + pair index`, so
 #'   results are reproducible and independent of pair order.
+#' @param actor Optional column name identifying the actor each sequence
+#'   belongs to (e.g. `"student_id"` when sessions are nested in students,
+#'   `"Group"` for students nested in teams). Passed to [permutation()], which
+#'   then reassigns whole actors; see its sections *Nested data and actor*
+#'   and *ICC and design effect*. Requires `test = "permutation"`. The ICC
+#'   and design effects are added to `global` under the category
+#'   `"Nesting"`. Default `NULL`.
 #'
 #' @details
 #' **Guarding.** Ratios are never `Inf`/`NaN`: `ratio` is `NA` when
@@ -68,7 +75,9 @@
 #' **Inference.** `"permutation"` (via [permutation()]) adds
 #' `perm_effect`, `perm_p`, `perm_sig` to `edges` and `nodes`, and two rows
 #' `M` (sum of absolute edge differences) and `S` (largest absolute edge
-#' difference) to `global` with permutation p-values. `"bayes"` (via
+#' difference) to `global` with permutation p-values; with `actor`, the
+#' reassignment moves whole actors and `global` also gains the rows `ICC`,
+#' `Design effect (edges)` and `Design effect (M)`. `"bayes"` (via
 #' [bayes_compare()]) adds `bayes_diff` (posterior mean difference),
 #' `bayes_ci_lower`, `bayes_ci_upper`, `bayes_pd` (probability of direction),
 #' `bayes_p`, `bayes_sig` to `edges`; with `rope`, `bayes_p_rope` (normal
@@ -164,7 +173,8 @@ compare_networks <- function(...,
                              adjust = "none",
                              paired = FALSE,
                              rope = NULL,
-                             seed = NULL) {
+                             seed = NULL,
+                             actor = NULL) {
   scaling <- match.arg(scaling)
   stopifnot(
     "`test` must be a character vector" = is.character(test) && length(test) >= 1L,
@@ -178,11 +188,18 @@ compare_networks <- function(...,
     "`rope` must be NULL or a single positive number" =
       is.null(rope) || (is.numeric(rope) && length(rope) == 1L && rope > 0),
     "`seed` must be NULL or a single number" =
-      is.null(seed) || (is.numeric(seed) && length(seed) == 1L)
+      is.null(seed) || (is.numeric(seed) && length(seed) == 1L),
+    "`actor` must be NULL or a single column name" =
+      is.null(actor) || (is.character(actor) && length(actor) == 1L &&
+                           !is.na(actor) && nzchar(actor))
   )
   test <- match.arg(test, c("none", "permutation", "bayes", "bootstrap"),
                     several.ok = TRUE)
   test <- setdiff(test, "none")
+  if (!is.null(actor) && !"permutation" %in% test) {
+    .cn_stop(paste0("`actor` applies to the permutation backend; use ",
+                    "`test = \"permutation\"`."), "actor_needs_permutation")
+  }
   iter <- as.integer(iter)
   measures <- .cn_resolve_measures(measures)
 
@@ -276,6 +293,7 @@ compare_networks <- function(...,
     adjust = adjust,
     paired = paired,
     rope = rope,
+    actor = actor,
     directed = directed,
     n_networks = n_networks,
     n_pairs = nrow(pairs)
@@ -283,7 +301,8 @@ compare_networks <- function(...,
 
   if (length(test) > 0L) {
     result <- .cn_add_inference(result, nets, pair_rows, seeds, test,
-                                iter, alpha, adjust, paired, rope, measures)
+                                iter, alpha, adjust, paired, rope, measures,
+                                actor)
   }
 
   structure(result, class = "net_network_comparison")
@@ -655,7 +674,8 @@ compare_networks <- function(...,
 .cn_cells <- function(M, nodes, keep) as.vector(t(M[nodes, nodes]))[keep]
 
 .cn_add_inference <- function(result, nets, pair_rows, seeds, test, iter,
-                              alpha, adjust, paired, rope, measures) {
+                              alpha, adjust, paired, rope, measures,
+                              actor = NULL) {
   edges <- result$edges
   nodes_tab <- result$nodes
   global <- result$global
@@ -673,7 +693,7 @@ compare_networks <- function(...,
       permutation(nets[[pr$network_a]], nets[[pr$network_b]], iter = iter,
                   alpha = alpha, paired = paired, adjust = adjust,
                   measures = if (length(measures) > 0L) measures else NULL,
-                  seed = sd)
+                  seed = sd, actor = actor)
     }, pair_rows, seeds)
     edge_add <- do.call(rbind, Map(function(pr, r) {
       keep <- edge_keep(pr)
@@ -708,6 +728,20 @@ compare_networks <- function(...,
     }, pair_rows, runs))
     global$perm_p <- NA_real_
     global <- .cn_rbind_fill(global, global_add)
+    if (!is.null(actor)) {
+      # nesting diagnostics of each pair's actor-level permutation
+      nesting <- do.call(rbind, Map(function(pr, r) {
+        cl <- r$clustering
+        data.frame(pair = pr$pair, network_a = pr$network_a,
+                   network_b = pr$network_b, category = "Nesting",
+                   metric = c("ICC", "Design effect (edges)",
+                              "Design effect (M)"),
+                   key = c("icc", "deff_edges", "deff_global"),
+                   value = c(cl$icc, cl$deff_edges, cl$deff_global),
+                   stringsAsFactors = FALSE)
+      }, pair_rows, runs))
+      global <- .cn_rbind_fill(global, nesting)
+    }
     global$perm_sig <- ifelse(is.na(global$perm_p), NA, global$perm_p < alpha)
   }
 
@@ -789,8 +823,9 @@ compare_networks <- function(...,
 
 .cn_header <- function(x) {
   test_txt <- if (identical(x$test, "none")) "descriptive" else
-    sprintf("%s, iter = %d, alpha = %s, adjust = %s",
-            paste(x$test, collapse = " + "), x$iter, format(x$alpha), x$adjust)
+    sprintf("%s, iter = %d, alpha = %s, adjust = %s%s",
+            paste(x$test, collapse = " + "), x$iter, format(x$alpha), x$adjust,
+            if (is.null(x$actor)) "" else sprintf(", actor = %s", x$actor))
   net_lines <- vapply(names(x$networks), function(nm) {
     sprintf("%s (%d nodes, %s)", nm, nrow(x$matrices[[nm]]),
             if (x$directed[[nm]]) "directed" else "undirected")

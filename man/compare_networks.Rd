@@ -19,7 +19,8 @@ compare_networks(
   adjust = "none",
   paired = FALSE,
   rope = NULL,
-  seed = NULL
+  seed = NULL,
+  actor = NULL
 )
 
 \method{print}{net_network_comparison}(x, digits = 2L, ...)
@@ -91,6 +92,14 @@ difference scale (Bayesian backend only). Adds \code{bayes_p_rope} and a
 
 \item{seed}{Optional integer seed. Each pair uses \verb{seed + pair index}, so
 results are reproducible and independent of pair order.}
+
+\item{actor}{Optional column name identifying the actor each sequence
+belongs to (e.g. \code{"student_id"} when sessions are nested in students,
+\code{"Group"} for students nested in teams). Passed to \code{\link[=permutation]{permutation()}}, which
+then reassigns whole actors; see its sections \emph{Nested data and actor}
+and \emph{ICC and design effect}. Requires \code{test = "permutation"}. The ICC
+and design effects are added to \code{global} under the category
+\code{"Nesting"}. Default \code{NULL}.}
 
 \item{x}{A \code{net_network_comparison} object.}
 
@@ -191,7 +200,9 @@ are undirected only \code{from <= to} cells are kept.
 \strong{Inference.} \code{"permutation"} (via \code{\link[=permutation]{permutation()}}) adds
 \code{perm_effect}, \code{perm_p}, \code{perm_sig} to \code{edges} and \code{nodes}, and two rows
 \code{M} (sum of absolute edge differences) and \code{S} (largest absolute edge
-difference) to \code{global} with permutation p-values. \code{"bayes"} (via
+difference) to \code{global} with permutation p-values; with \code{actor}, the
+reassignment moves whole actors and \code{global} also gains the rows \code{ICC},
+\verb{Design effect (edges)} and \verb{Design effect (M)}. \code{"bayes"} (via
 \code{\link[=bayes_compare]{bayes_compare()}}) adds \code{bayes_diff} (posterior mean difference),
 \code{bayes_ci_lower}, \code{bayes_ci_upper}, \code{bayes_pd} (probability of direction),
 \code{bayes_p}, \code{bayes_sig} to \code{edges}; with \code{rope}, \code{bayes_p_rope} (normal
