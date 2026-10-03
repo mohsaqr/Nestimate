@@ -47,7 +47,7 @@
 #' @param prior Numeric. Dirichlet prior concentration added to every cell
 #'   (default \code{0.5}, the Jeffreys prior).
 #' @param ci_level Numeric in (0,1). Tail level for credible intervals and the
-#'   stability decision (default \code{0.05}, i.e. a 95\% interval). Named to
+#'   stability decision (default \code{0.05}, i.e. a 95% interval). Named to
 #'   match \code{bootstrap_network()}.
 #' @param inference Character. \code{"stability"} (default) tests whether the
 #'   posterior keeps the edge within a multiplicative \code{consistency_range}

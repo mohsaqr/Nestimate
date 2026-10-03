@@ -22,7 +22,7 @@ transition-probability method (\code{"relative"} / \code{"tna"}), or a
 (default \code{0.5}, the Jeffreys prior).}
 
 \item{ci_level}{Numeric in (0,1). Tail level for credible intervals and the
-stability decision (default \code{0.05}, i.e. a 95\\% interval). Named to
+stability decision (default \code{0.05}, i.e. a 95\% interval). Named to
 match \code{bootstrap_network()}.}
 
 \item{inference}{Character. \code{"stability"} (default) tests whether the

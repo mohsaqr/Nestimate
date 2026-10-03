@@ -102,11 +102,11 @@ test_that("permutation works with method='relative'", {
 test_that("permutation warns for one-sequence transition networks", {
   long <- data.frame(action = c("A", "B", "C", "A"),
                      stringsAsFactors = FALSE)
-  net <- suppressWarnings(build_tna(long, action = "action"))
+  net <- suppressMessages(build_tna(long, action = "action"))
 
   expect_warning(
     perm <- permutation(net, net, iter = 2L, seed = 1),
-    "one long sequence is not recommended"
+    class = "nestimate_single_sequence"
   )
   expect_s3_class(perm, "net_permutation")
 })

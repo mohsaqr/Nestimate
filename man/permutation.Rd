@@ -13,7 +13,8 @@ permutation(
   adjust = "none",
   measures = NULL,
   nlambda = 50L,
-  seed = NULL
+  seed = NULL,
+  block = NULL
 )
 }
 \arguments{
@@ -54,6 +55,18 @@ Higher values give finer lambda resolution at the cost of speed.
 Default: 50.}
 
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
+
+\item{block}{Character or NULL. Name of the column that identifies the
+person, team, or other cluster each sequence belongs to, looked up in
+the network's \code{$metadata} (e.g. \code{"Actor"} when sessions are
+nested in persons) or in its wide sequence data. When supplied, whole
+blocks are permuted and the ICC and design effect are reported; see the
+sections \emph{Nested data and block} and \emph{ICC and design
+effect}. Supported for transition
+methods (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"});
+cannot be combined with \code{paired = TRUE}, which is the special case
+of one block per pair. Default \code{NULL}: sequences are permuted
+individually.}
 }
 \value{
 An object of class \code{"net_permutation"} containing:
@@ -80,6 +93,24 @@ as the edge test. Absent on the edge-betweenness path.}
 \item{alpha}{Significance level used.}
 \item{paired}{Whether paired permutation was used.}
 \item{adjust}{p-value adjustment method used.}
+\item{block}{The \code{block} column name, or \code{NULL}.}
+\item{n_blocks}{Number of distinct blocks, or \code{NULL}.}
+\item{null_sd}{Matrix of the SD of each edge difference over the
+permutation null (the effect-size denominator).}
+\item{null_sd_m}{SD of the global \code{M} statistic over the
+permutation null. Absent on the edge-betweenness path.}
+\item{clustering}{Present only with \code{block}. One-row data frame:
+\code{n_sequences}, \code{n_blocks}, \code{design}
+(\code{"between"}, \code{"within"}, \code{"mixed"}), \code{icc} with
+\code{icc_ci_lower}/\code{icc_ci_upper} (how alike sequences of one
+block are; see \code{\link{permutation_diagnostics}}),
+\code{deff_edges} (median over edges) and \code{deff_global} (for
+\code{M}): the blocked over the unblocked null variance, drawn in the
+same run (the design effect; Kish, 1965). \code{min_p} is the
+smallest attainable p-value.}
+\item{clustering_edges}{Present only with \code{block}. One row per
+edge of \code{summary}: \code{from}, \code{to}, \code{icc},
+\code{null_sd_blocked}, \code{null_sd_unblocked}, \code{deff}.}
 \item{centralities}{Present only when \code{measures} is supplied. A list
 with \code{stats} (one row per state-by-measure: \code{state},
 \code{centrality}, \code{diff_true}, \code{effect_size}, \code{p_value}),
@@ -94,31 +125,110 @@ return a \code{"wtna_perm_mixed"} with \code{$transition} and
 \code{$cooccurrence} results.
 }
 \description{
-Compares two networks estimated by \code{\link{build_network}} using a
-permutation test. Works with all built-in methods (transition and
-association) as well as custom registered estimators. The test shuffles
-which observations belong to which group, re-estimates networks, and tests
-whether observed edge-wise differences exceed chance.
+Tests whether two networks estimated by \code{\link{build_network}}
+differ more than chance would produce. The sequences (or rows) of both
+networks are pooled, the group labels are shuffled \code{iter} times, both
+networks are re-estimated on every shuffle, and the observed differences
+are compared with the shuffled ones. Works with every built-in method and
+with registered custom estimators.
+}
+\section{What is tested}{
 
-For transition methods (\code{"relative"}, \code{"frequency"},
-\code{"co_occurrence"}), uses a fast pre-computation strategy: per-sequence
-count matrices are computed once, and each permutation iteration only
-shuffles group labels and computes group-wise \code{colSums}.
+Two kinds of question are answered from the same shuffles.
+\describe{
+\item{Edge tests}{One test per edge: is the difference in this edge's
+weight, \code{x - y}, larger than the shuffles produce? Reported in
+\code{summary()} with an effect size (observed difference divided by
+the SD of the shuffled differences) and a p-value
+\code{(number of shuffles at least as extreme + 1) / (iter + 1)}. With
+many edges, some fall below \code{alpha} by chance; use \code{adjust}
+to correct for that.}
+\item{Global test}{One test for the whole network: do the two networks
+differ at all? Two statistics, as in the Network Comparison Test
+(van Borkulo et al., 2023): \strong{M}, the sum of the absolute edge
+differences (the total amount of difference), and \strong{S}, the
+largest absolute edge difference. Being a single test, it needs no
+multiplicity correction. It is shown by \code{print()}.}
+}
+The smallest attainable p-value is \code{1 / (iter + 1)}; with the
+default \code{iter = 1000} it is 0.000999, meaning no shuffle came close.
+}
 
-For association methods (\code{"cor"}, \code{"pcor"}, \code{"glasso"},
-and custom estimators), the full estimator is called on each permuted
-group split.
+\section{Nested data and \code{block}}{
 
-If either transition network contains only one sequence, the function warns
-that such a network is not recommended for permutation or other
-confirmatory testing.
+Shuffling treats every sequence as an exchangeable unit. When several
+sequences come from the same person (repeated sessions) or the same
+team, \code{block} names the column identifying that person or team. The
+shuffle then respects it (Good, 2005; Anderson & ter Braak, 2003): a
+person whose sequences are all in one group moves to the other group
+as a whole; a person with sequences in both groups has their labels
+shuffled among their own sequences only. Mixed designs combine the two.
+The observed differences do not change; only the p-values and effect
+sizes do. With few persons there are few distinct ways to shuffle them,
+and a warning (class \code{nestimate_few_blocks}) is raised when no
+p-value could fall below \code{alpha}.
+
+\code{block} is available for transition networks (\code{"relative"},
+\code{"frequency"}, \code{"co_occurrence"}). Association networks
+(\code{"cor"}, \code{"pcor"}, \code{"glasso"}, ...) do not keep row
+identifiers after estimation and raise \code{nestimate_block_unsupported}.
+}
+
+\section{ICC and design effect}{
+
+With \code{block}, \code{print()} also reports:
+\describe{
+\item{ICC}{The intraclass correlation, the proportion of the total
+variance that lies between blocks (Shrout & Fleiss, 1979). An ICC
+close to 0 indicates little evidence of a nesting effect. Computed as
+the one-way ANOVA ICC of each sequence's transition shares within each
+group, averaged over edges weighted by edge frequency, jackknife
+bias-corrected, with a 95\% interval from the leave-one-block-out
+jackknife (Efron & Tibshirani, 1993).}
+\item{Design effect}{The ratio of the variance of an estimate under the
+clustered design to its variance had the units been sampled
+independently (Kish, 1965). Here: the variance of the shuffled
+differences when whole blocks are moved, divided by the variance when
+single sequences are moved, both drawn in the same run. Reported as
+the median over edges and for the global statistic M. For equal block
+sizes m, Kish gives the approximation \code{1 + (m - 1) * ICC}.}
+}
+}
+
+\section{Reading the printed output}{
+
+\preformatted{
+Permutation Test: Transition Network (relative probabilities) [directed]
+  Iterations: 1000  |  Alpha: 0.05  |  Blocked by: Group (200 blocks)
+  Nodes: 9  |  Edges tested: 78  |  Significant: 42
+  Global test (networks differ overall?): M = 2.612 (p = 0.000999)  |  ...
+  Clustering by Group: ICC = -0.002 [95\% CI -0.006, 0.002]  |  between design
+  Design effect (1 = nesting does not matter): edges 1.03  |  global 1.20
+}
+Line 2: settings, and the blocking column with its number of blocks.
+Line 3: edges present in either network and how many differ at
+\code{alpha}. Line 4: the global test. Lines 5-6, only with
+\code{block}: the ICC with its interval, whether persons sit in one group
+(\code{between}), in both (\code{within}) or either (\code{mixed}), and
+the design effects.
+}
+
+\section{Other inputs}{
+
+For transition methods, per-sequence count matrices are computed once
+and each shuffle only re-sums them, which keeps large \code{iter} fast.
+For association methods the estimator is re-run on every shuffle. If a
+transition network rests on a single sequence, a warning (class
+\code{nestimate_single_sequence}) says it cannot be validated by
+resampling.
 
 \code{permutation()} also accepts two \code{\link{net_edge_betweenness}}
-objects. In that case it permutes the source networks, recomputes edge
-betweenness for each shuffled split, and tests edge-betweenness differences.
-The two edge-betweenness objects must come from the same source method and
-use the same \code{invert} setting.
+objects. It then permutes the source networks, recomputes edge
+betweenness for each shuffle, and tests the edge-betweenness
+differences. Both objects must come from the same source method and use
+the same \code{invert} setting.
 }
+
 \examples{
 s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
@@ -138,11 +248,41 @@ net2 <- build_network(d2, method = "relative")
 perm <- permutation(net1, net2, iter = 100, seed = 42)
 print(perm)
 summary(perm)
+
+# Students are nested in teams, and Achiever is a team-level label:
+# permute whole teams, not single students
+net <- build_network(group_regulation_long, method = "relative",
+                     actor = "Actor", action = "Action", time = "Time",
+                     group = "Achiever")
+permutation(net, iter = 100, block = "Group", seed = 1)
 }
 
 }
+\references{
+Anderson, M. J., & ter Braak, C. J. F. (2003). Permutation tests for
+multi-factorial analysis of variance. \emph{Journal of Statistical
+Computation and Simulation}, 73(2), 85-113.
+
+Efron, B., & Tibshirani, R. J. (1993). \emph{An Introduction to the
+Bootstrap}. Chapman & Hall.
+
+Good, P. (2005). \emph{Permutation, Parametric, and Bootstrap Tests of
+Hypotheses} (3rd ed.). Springer.
+
+Kish, L. (1965). \emph{Survey Sampling}. Wiley.
+
+Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
+assessing rater reliability. \emph{Psychological Bulletin}, 86(2),
+420-428.
+
+van Borkulo, C. D., van Bork, R., Boschloo, L., Kossakowski, J. J.,
+Tio, P., Schoevers, R. A., Borsboom, D., & Waldorp, L. J. (2023).
+Comparing network structures on three aspects: A permutation test.
+\emph{Psychological Methods}, 28(6), 1273-1285.
+}
 \seealso{
-\code{\link{bayes_compare}} for the Bayesian complement: instead of
+\code{\link{permutation_diagnostics}} to compare the blocked
+and ordinary tests side by side; \code{\link{bayes_compare}} for the Bayesian complement: instead of
 "is this difference more extreme than chance?" it answers "how probable is
 a difference, and how large?";
 \code{\link{build_network}}, \code{\link{bootstrap_network}},

@@ -8,7 +8,7 @@
 #' a data-driven search that identifies:
 #' \enumerate{
 #'   \item \strong{Group-level paths}: Directed edges present for a majority
-#'     (default 75\%) of individuals.
+#'     (default 75%) of individuals.
 #'   \item \strong{Individual-level paths}: Additional edges specific to each
 #'     person, found after group paths are established.
 #' }

@@ -89,6 +89,7 @@ reference:
       - vertex_compare
       - boot_glasso
       - permutation
+      - permutation_diagnostics
       - nct
       - compare_model
       - compare_model.netobject_group
@@ -233,4 +234,5 @@ articles:
   - starts_with("articles/cograph-tutorial-nestimate")
   - starts_with("articles/cograph-tutorial-simplicial")
   - starts_with("articles/tutorial_model_assessment")
+  - starts_with("articles/permutation-nested-data")
 

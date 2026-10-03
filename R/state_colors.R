@@ -30,6 +30,8 @@
 #'   are dropped with a message, so one project-wide palette can be attached to
 #'   every object. States you do not name keep the default Okabe-Ito colour.
 #'   \code{NULL} removes a palette set earlier.
+#' @param value The palette, as for \code{colors}, in the replacement form
+#'   \code{state_colors(x) <- value}.
 #' @return \code{x}, with the palette stored in \code{x$state_colors} and, for
 #'   an object carrying \code{$nodes}, mirrored into
 #'   \code{x$meta$splot$defaults$node_fill} in node order so

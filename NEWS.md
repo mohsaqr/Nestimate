@@ -1,3 +1,49 @@
+# Nestimate 0.9.13
+
+## New features
+
+* `permutation()` gains `block =`, the column identifying the unit that
+  sequences are nested in (sessions in students, students in teams). Whole
+  units are reassigned between the groups; units with sequences in both
+  groups, as in repeated-measures designs, have their sequences reassigned
+  within the unit; mixed designs combine the two (Good, 2005; Anderson &
+  ter Braak, 2003). Supported for transition networks (`relative`,
+  `frequency`, `co_occurrence`); association networks raise
+  `nestimate_block_unsupported`. A warning of class `nestimate_few_blocks`
+  is raised when no p-value could fall below `alpha`.
+
+* With `block`, `permutation()` reports the nesting effect: the intraclass
+  correlation (Shrout & Fleiss, 1979) with a jackknife 95% interval, and the
+  design effect (Kish, 1965), the blocked over the unblocked null variance,
+  for the edges and the global statistic M.
+
+* `permutation_diagnostics(x, block =)` runs the ordinary and the blocked
+  test on the same data and returns them side by side as a tidy data frame,
+  one row per pair or, with `level = "edges"`, per edge.
+
+## Improvements
+
+* `print()` of a `net_permutation` shows the global test (M and S, with
+  p-values) and, with `block`, the ICC and design effects. A grouped result
+  prints every pair in full.
+
+* The `permutation()` help page is reorganised into sections: what is
+  tested, nested data and `block`, ICC and design effect, reading the
+  printed output.
+
+* Building a transition network from a single long sequence now raises a
+  message instead of a warning; running `bootstrap_network()` or
+  `permutation()` on such a network still warns. Both carry the class
+  `nestimate_single_sequence`.
+
+## Bug fixes
+
+* `\%` in markdown roxygen silently cut the rest of a line from the help
+  pages of `certainty()`, `build_gimme()`, `build_mcml()` and
+  `sequence_plot()`; the text is restored.
+
+* Missing space in the `permutation()` print header.
+
 # Nestimate 0.9.12
 
 ## New verbs

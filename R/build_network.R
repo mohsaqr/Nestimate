@@ -554,13 +554,7 @@ build_network <- function(data,
   # ---- Long format: prepare event log data ----
   if (format == "long" && !is.null(action) && is.data.frame(data) &&
       action %in% names(data)) {
-    if (is.null(actor)) {
-      warning(
-        "A network with one long sequence is not recommended and can't be ",
-        "validated using bootstrap and other confirmatory testings.",
-        call. = FALSE
-      )
-    }
+    if (is.null(actor)) .single_sequence_notice(type = "message")
     prep_args <- list(data = data, action = action)
     if (!is.null(actor)) prep_args$actor <- actor
     if (!is.null(time)) prep_args$time <- time

@@ -913,25 +913,27 @@ test_that("build_network auto-detects long format via action column", {
     Action = c("A", "B", "A", "B", "A", "B"),
     stringsAsFactors = FALSE
   )
-  expect_warning(
+  expect_message(
     net <- build_network(long_data, method = "relative",
                          action = "Action"),
-    "one long sequence is not recommended"
+    class = "nestimate_single_sequence"
   )
   expect_s3_class(net, "netobject")
   expect_true(net$directed)
 })
 
-test_that("build_network warns when long data has action but no actor", {
+test_that("build_network notes when long data has action but no actor", {
   long_data <- data.frame(
     action = c("A", "B", "C", "A", "C", "B"),
     stringsAsFactors = FALSE
   )
 
-  expect_warning(
+  expect_message(
     net <- build_tna(long_data, action = "action"),
-    "one long sequence is not recommended"
+    class = "nestimate_single_sequence"
   )
+  # a note, not a warning: building from one sequence is legitimate
+  expect_no_warning(suppressMessages(build_tna(long_data, action = "action")))
   expect_s3_class(net, "netobject")
   expect_null(net$build_args$actor)
 })

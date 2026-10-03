@@ -348,15 +348,36 @@ bootstrap_network <- function(x,
                                                        label = NULL) {
   n_seq <- .transition_resampling_n_sequences(data, params)
   if (!is.na(n_seq) && n_seq <= 1L) {
-    prefix <- if (is.null(label)) "" else paste0(label, ": ")
-    warning(
-      prefix,
-      "A network with one long sequence is not recommended and can't be ",
-      "validated using bootstrap and other confirmatory testings.",
-      call. = FALSE
-    )
+    .single_sequence_notice(label = label)
   }
   invisible(n_seq)
+}
+
+#' Signal that a transition network rests on one sequence
+#'
+#' A network estimated from a single sequence has no between-sequence
+#' variation, so bootstrap and permutation tests, which resample sequences,
+#' cannot validate it. Building such a network is legitimate and raises a
+#' message; running a confirmatory test on it raises a warning. Both carry
+#' the class `nestimate_single_sequence`.
+#' @noRd
+.single_sequence_notice <- function(type = c("warning", "message"),
+                                    label = NULL) {
+  type <- match.arg(type)
+  text <- paste0(
+    if (is.null(label)) "" else paste0(label, ": "),
+    "A network with one long sequence is not recommended and can't be ",
+    "validated using bootstrap and other confirmatory testings."
+  )
+  if (identical(type, "message")) {
+    # base R has no messageCondition(); add the class to a simpleMessage
+    cond <- simpleMessage(paste0(text, "\n"))
+    class(cond) <- c("nestimate_single_sequence", class(cond))
+    message(cond)
+  } else {
+    warning(warningCondition(text, class = "nestimate_single_sequence",
+                             call = NULL))
+  }
 }
 
 

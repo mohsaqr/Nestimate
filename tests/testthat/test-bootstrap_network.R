@@ -55,11 +55,11 @@ test_that("bootstrap_network works with method='frequency'", {
 test_that("bootstrap_network warns for one-sequence transition networks", {
   long <- data.frame(action = c("A", "B", "C", "A"),
                      stringsAsFactors = FALSE)
-  net <- suppressWarnings(build_tna(long, action = "action"))
+  net <- suppressMessages(build_tna(long, action = "action"))
 
   expect_warning(
     boot <- bootstrap_network(net, iter = 2L, seed = 1),
-    "one long sequence is not recommended"
+    class = "nestimate_single_sequence"
   )
   expect_s3_class(boot, "net_bootstrap")
 })

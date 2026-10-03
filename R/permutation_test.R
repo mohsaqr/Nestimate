@@ -3,30 +3,99 @@
 #' Permutation Test for Network Comparison
 #'
 #' @description
-#' Compares two networks estimated by \code{\link{build_network}} using a
-#' permutation test. Works with all built-in methods (transition and
-#' association) as well as custom registered estimators. The test shuffles
-#' which observations belong to which group, re-estimates networks, and tests
-#' whether observed edge-wise differences exceed chance.
+#' Tests whether two networks estimated by \code{\link{build_network}}
+#' differ more than chance would produce. The sequences (or rows) of both
+#' networks are pooled, the group labels are shuffled \code{iter} times, both
+#' networks are re-estimated on every shuffle, and the observed differences
+#' are compared with the shuffled ones. Works with every built-in method and
+#' with registered custom estimators.
 #'
-#' For transition methods (\code{"relative"}, \code{"frequency"},
-#' \code{"co_occurrence"}), uses a fast pre-computation strategy: per-sequence
-#' count matrices are computed once, and each permutation iteration only
-#' shuffles group labels and computes group-wise \code{colSums}.
+#' @section What is tested:
+#' Two kinds of question are answered from the same shuffles.
+#' \describe{
+#'   \item{Edge tests}{One test per edge: is the difference in this edge's
+#'     weight, \code{x - y}, larger than the shuffles produce? Reported in
+#'     \code{summary()} with an effect size (observed difference divided by
+#'     the SD of the shuffled differences) and a p-value
+#'     \code{(number of shuffles at least as extreme + 1) / (iter + 1)}. With
+#'     many edges, some fall below \code{alpha} by chance; use \code{adjust}
+#'     to correct for that.}
+#'   \item{Global test}{One test for the whole network: do the two networks
+#'     differ at all? Two statistics, as in the Network Comparison Test
+#'     (van Borkulo et al., 2023): \strong{M}, the sum of the absolute edge
+#'     differences (the total amount of difference), and \strong{S}, the
+#'     largest absolute edge difference. Being a single test, it needs no
+#'     multiplicity correction. It is shown by \code{print()}.}
+#' }
+#' The smallest attainable p-value is \code{1 / (iter + 1)}; with the
+#' default \code{iter = 1000} it is 0.000999, meaning no shuffle came close.
 #'
-#' For association methods (\code{"cor"}, \code{"pcor"}, \code{"glasso"},
-#' and custom estimators), the full estimator is called on each permuted
-#' group split.
+#' @section Nested data and \code{block}:
+#' Shuffling treats every sequence as an exchangeable unit. When several
+#' sequences come from the same person (repeated sessions) or the same
+#' team, \code{block} names the column identifying that person or team. The
+#' shuffle then respects it (Good, 2005; Anderson & ter Braak, 2003): a
+#' person whose sequences are all in one group moves to the other group
+#' as a whole; a person with sequences in both groups has their labels
+#' shuffled among their own sequences only. Mixed designs combine the two.
+#' The observed differences do not change; only the p-values and effect
+#' sizes do. With few persons there are few distinct ways to shuffle them,
+#' and a warning (class \code{nestimate_few_blocks}) is raised when no
+#' p-value could fall below \code{alpha}.
 #'
-#' If either transition network contains only one sequence, the function warns
-#' that such a network is not recommended for permutation or other
-#' confirmatory testing.
+#' \code{block} is available for transition networks (\code{"relative"},
+#' \code{"frequency"}, \code{"co_occurrence"}). Association networks
+#' (\code{"cor"}, \code{"pcor"}, \code{"glasso"}, ...) do not keep row
+#' identifiers after estimation and raise \code{nestimate_block_unsupported}.
+#'
+#' @section ICC and design effect:
+#' With \code{block}, \code{print()} also reports:
+#' \describe{
+#'   \item{ICC}{The intraclass correlation, the proportion of the total
+#'     variance that lies between blocks (Shrout & Fleiss, 1979). An ICC
+#'     close to 0 indicates little evidence of a nesting effect. Computed as
+#'     the one-way ANOVA ICC of each sequence's transition shares within each
+#'     group, averaged over edges weighted by edge frequency, jackknife
+#'     bias-corrected, with a 95% interval from the leave-one-block-out
+#'     jackknife (Efron & Tibshirani, 1993).}
+#'   \item{Design effect}{The ratio of the variance of an estimate under the
+#'     clustered design to its variance had the units been sampled
+#'     independently (Kish, 1965). Here: the variance of the shuffled
+#'     differences when whole blocks are moved, divided by the variance when
+#'     single sequences are moved, both drawn in the same run. Reported as
+#'     the median over edges and for the global statistic M. For equal block
+#'     sizes m, Kish gives the approximation \code{1 + (m - 1) * ICC}.}
+#' }
+#'
+#' @section Reading the printed output:
+#' \preformatted{
+#' Permutation Test: Transition Network (relative probabilities) [directed]
+#'   Iterations: 1000  |  Alpha: 0.05  |  Blocked by: Group (200 blocks)
+#'   Nodes: 9  |  Edges tested: 78  |  Significant: 42
+#'   Global test (networks differ overall?): M = 2.612 (p = 0.000999)  |  ...
+#'   Clustering by Group: ICC = -0.002 [95\% CI -0.006, 0.002]  |  between design
+#'   Design effect (1 = nesting does not matter): edges 1.03  |  global 1.20
+#' }
+#' Line 2: settings, and the blocking column with its number of blocks.
+#' Line 3: edges present in either network and how many differ at
+#' \code{alpha}. Line 4: the global test. Lines 5-6, only with
+#' \code{block}: the ICC with its interval, whether persons sit in one group
+#' (\code{between}), in both (\code{within}) or either (\code{mixed}), and
+#' the design effects.
+#'
+#' @section Other inputs:
+#' For transition methods, per-sequence count matrices are computed once
+#' and each shuffle only re-sums them, which keeps large \code{iter} fast.
+#' For association methods the estimator is re-run on every shuffle. If a
+#' transition network rests on a single sequence, a warning (class
+#' \code{nestimate_single_sequence}) says it cannot be validated by
+#' resampling.
 #'
 #' \code{permutation()} also accepts two \code{\link{net_edge_betweenness}}
-#' objects. In that case it permutes the source networks, recomputes edge
-#' betweenness for each shuffled split, and tests edge-betweenness differences.
-#' The two edge-betweenness objects must come from the same source method and
-#' use the same \code{invert} setting.
+#' objects. It then permutes the source networks, recomputes edge
+#' betweenness for each shuffle, and tests the edge-betweenness
+#' differences. Both objects must come from the same source method and use
+#' the same \code{invert} setting.
 #'
 #' @param x A \code{netobject} (from \code{\link{build_network}}) or a
 #'   \code{\link{net_edge_betweenness}} object.
@@ -57,6 +126,17 @@
 #'   Higher values give finer lambda resolution at the cost of speed.
 #'   Default: 50.
 #' @param seed Integer or NULL. RNG seed for reproducibility.
+#' @param block Character or NULL. Name of the column that identifies the
+#'   person, team, or other cluster each sequence belongs to, looked up in
+#'   the network's \code{$metadata} (e.g. \code{"Actor"} when sessions are
+#'   nested in persons) or in its wide sequence data. When supplied, whole
+#'   blocks are permuted and the ICC and design effect are reported; see the
+#'   sections \emph{Nested data and block} and \emph{ICC and design
+#'   effect}. Supported for transition
+#'   methods (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"});
+#'   cannot be combined with \code{paired = TRUE}, which is the special case
+#'   of one block per pair. Default \code{NULL}: sequences are permuted
+#'   individually.
 #'
 #' @return An object of class \code{"net_permutation"} containing:
 #' \describe{
@@ -82,6 +162,24 @@
 #'   \item{alpha}{Significance level used.}
 #'   \item{paired}{Whether paired permutation was used.}
 #'   \item{adjust}{p-value adjustment method used.}
+#'   \item{block}{The \code{block} column name, or \code{NULL}.}
+#'   \item{n_blocks}{Number of distinct blocks, or \code{NULL}.}
+#'   \item{null_sd}{Matrix of the SD of each edge difference over the
+#'     permutation null (the effect-size denominator).}
+#'   \item{null_sd_m}{SD of the global \code{M} statistic over the
+#'     permutation null. Absent on the edge-betweenness path.}
+#'   \item{clustering}{Present only with \code{block}. One-row data frame:
+#'     \code{n_sequences}, \code{n_blocks}, \code{design}
+#'     (\code{"between"}, \code{"within"}, \code{"mixed"}), \code{icc} with
+#'     \code{icc_ci_lower}/\code{icc_ci_upper} (how alike sequences of one
+#'     block are; see \code{\link{permutation_diagnostics}}),
+#'     \code{deff_edges} (median over edges) and \code{deff_global} (for
+#'     \code{M}): the blocked over the unblocked null variance, drawn in the
+#'     same run (the design effect; Kish, 1965). \code{min_p} is the
+#'     smallest attainable p-value.}
+#'   \item{clustering_edges}{Present only with \code{block}. One row per
+#'     edge of \code{summary}: \code{from}, \code{to}, \code{icc},
+#'     \code{null_sd_blocked}, \code{null_sd_unblocked}, \code{deff}.}
 #'   \item{centralities}{Present only when \code{measures} is supplied. A list
 #'     with \code{stats} (one row per state-by-measure: \code{state},
 #'     \code{centrality}, \code{diff_true}, \code{effect_size}, \code{p_value}),
@@ -114,9 +212,39 @@
 #' perm <- permutation(net1, net2, iter = 100, seed = 42)
 #' print(perm)
 #' summary(perm)
+#'
+#' # Students are nested in teams, and Achiever is a team-level label:
+#' # permute whole teams, not single students
+#' net <- build_network(group_regulation_long, method = "relative",
+#'                      actor = "Actor", action = "Action", time = "Time",
+#'                      group = "Achiever")
+#' permutation(net, iter = 100, block = "Group", seed = 1)
 #' }
 #'
-#' @seealso \code{\link{bayes_compare}} for the Bayesian complement: instead of
+#' @references
+#' Anderson, M. J., & ter Braak, C. J. F. (2003). Permutation tests for
+#' multi-factorial analysis of variance. \emph{Journal of Statistical
+#' Computation and Simulation}, 73(2), 85-113.
+#'
+#' Efron, B., & Tibshirani, R. J. (1993). \emph{An Introduction to the
+#' Bootstrap}. Chapman & Hall.
+#'
+#' Good, P. (2005). \emph{Permutation, Parametric, and Bootstrap Tests of
+#' Hypotheses} (3rd ed.). Springer.
+#'
+#' Kish, L. (1965). \emph{Survey Sampling}. Wiley.
+#'
+#' Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
+#' assessing rater reliability. \emph{Psychological Bulletin}, 86(2),
+#' 420-428.
+#'
+#' van Borkulo, C. D., van Bork, R., Boschloo, L., Kossakowski, J. J.,
+#' Tio, P., Schoevers, R. A., Borsboom, D., & Waldorp, L. J. (2023).
+#' Comparing network structures on three aspects: A permutation test.
+#' \emph{Psychological Methods}, 28(6), 1273-1285.
+#'
+#' @seealso \code{\link{permutation_diagnostics}} to compare the blocked
+#'   and ordinary tests side by side; \code{\link{bayes_compare}} for the Bayesian complement: instead of
 #'   "is this difference more extreme than chance?" it answers "how probable is
 #'   a difference, and how large?";
 #'   \code{\link{build_network}}, \code{\link{bootstrap_network}},
@@ -132,7 +260,8 @@ permutation <- function(x, y = NULL,
                              adjust = "none",
                              measures = NULL,
                              nlambda = 50L,
-                             seed = NULL) {
+                             seed = NULL,
+                             block = NULL) {
 
   # ---- wtna_mixed dispatch: permute both components ----
   if (inherits(x, "wtna_mixed") || inherits(y, "wtna_mixed")) {
@@ -142,12 +271,13 @@ permutation <- function(x, y = NULL,
     result <- list(
       transition = permutation(
         x$transition, y$transition, iter = iter, alpha = alpha,
-        paired = paired, adjust = adjust, measures = measures, nlambda = nlambda, seed = seed
+        paired = paired, adjust = adjust, measures = measures, nlambda = nlambda,
+        seed = seed, block = block
       ),
       cooccurrence = permutation(
         x$cooccurrence, y$cooccurrence, iter = iter, alpha = alpha,
         paired = paired, adjust = adjust, measures = measures,
-        nlambda = nlambda, seed = seed
+        nlambda = nlambda, seed = seed, block = block
       )
     )
     class(result) <- "wtna_perm_mixed"
@@ -172,7 +302,7 @@ permutation <- function(x, y = NULL,
       j <- pairs[2L, k]
       permutation(x[[i]], x[[j]], iter = iter, alpha = alpha,
                   paired = paired, adjust = adjust, measures = measures,
-                  nlambda = nlambda, seed = seed)
+                  nlambda = nlambda, seed = seed, block = block)
     })
     pair_labels <- vapply(seq_len(ncol(pairs)), function(k) {
       paste(grp_names[pairs[1L, k]], "vs", grp_names[pairs[2L, k]])
@@ -191,7 +321,7 @@ permutation <- function(x, y = NULL,
     results <- lapply(common, function(nm) {
       permutation(x[[nm]], y[[nm]], iter = iter, alpha = alpha,
                   paired = paired, adjust = adjust, measures = measures,
-                  nlambda = nlambda, seed = seed)
+                  nlambda = nlambda, seed = seed, block = block)
     })
     names(results) <- common
     class(results) <- c("net_permutation_group", "list")
@@ -207,7 +337,8 @@ permutation <- function(x, y = NULL,
       inherits(y, "net_edge_betweenness")) {
     return(.permutation_edge_betweenness(
       x = x, y = y, iter = iter, alpha = alpha, paired = paired,
-      adjust = adjust, measures = measures, nlambda = nlambda, seed = seed
+      adjust = adjust, measures = measures, nlambda = nlambda, seed = seed,
+      block = block
     ))
   }
 
@@ -221,6 +352,7 @@ permutation <- function(x, y = NULL,
     is.character(adjust), length(adjust) == 1
   )
   iter <- as.integer(iter)
+  .check_permutation_block(block, paired)
 
   if (is.null(x$data)) {
     stop("'x' does not contain $data. Rebuild with build_network().",
@@ -297,18 +429,16 @@ permutation <- function(x, y = NULL,
     n_seq_y <- .transition_resampling_n_sequences(y$data, y$params)
     if ((!is.na(n_seq_x) && n_seq_x <= 1L) ||
         (!is.na(n_seq_y) && n_seq_y <= 1L)) {
-      warning(
-        "A network with one long sequence is not recommended and can't be ",
-        "validated using bootstrap and other confirmatory testings.",
-        call. = FALSE
-      )
+      .single_sequence_notice()
     }
     perm_result <- .permutation_transition(
       x = x, y = y, nodes = nodes, method = method,
       iter = iter, paired = paired,
-      measures = measures, directed = directed, obs_cent_diff = obs_cent_diff
+      measures = measures, directed = directed, obs_cent_diff = obs_cent_diff,
+      block = block, alpha = alpha
     )
   } else {
+    .stop_block_unsupported(block, method)
     perm_result <- .permutation_association(
       x = x, y = y, nodes = nodes, method = method,
       iter = iter, paired = paired, nlambda = nlambda,
@@ -366,8 +496,18 @@ permutation <- function(x, y = NULL,
     alpha       = alpha,
     paired      = paired,
     adjust      = adjust,
-    global      = .build_permutation_global(perm_result$global, iter)
+    block       = block,
+    n_blocks    = perm_result$n_blocks,
+    global      = .build_permutation_global(perm_result$global, iter),
+    null_sd     = matrix(perm_result$perm_sd, n_nodes, n_nodes,
+                         dimnames = list(nodes, nodes)),
+    null_sd_m   = perm_result$global$m_null_sd
   )
+  if (!is.null(perm_result$clustering)) {
+    clus <- .build_permutation_clustering(perm_result, summary_df, nodes, iter)
+    result$clustering <- clus$overall
+    result$clustering_edges <- clus$edges
+  }
 
   # ---- Centrality permutation block (tna-parity) ----
   if (!is.null(measures)) {
@@ -488,7 +628,8 @@ permutation <- function(x, y = NULL,
 #' Permutation test for edge-betweenness differences
 #' @noRd
 .permutation_edge_betweenness <- function(x, y, iter, alpha, paired,
-                                          adjust, measures, nlambda, seed) {
+                                          adjust, measures, nlambda, seed,
+                                          block = NULL) {
   if (!inherits(x, "net_edge_betweenness") ||
       !inherits(y, "net_edge_betweenness")) {
     stop("Both x and y must be net_edge_betweenness objects.",
@@ -506,6 +647,7 @@ permutation <- function(x, y = NULL,
     is.character(adjust), length(adjust) == 1
   )
   iter <- as.integer(iter)
+  .check_permutation_block(block, paired)
 
   if (is.null(x$data)) {
     stop("'x' does not contain $data. Rebuild with build_network().",
@@ -576,19 +718,17 @@ permutation <- function(x, y = NULL,
     n_seq_y <- .transition_resampling_n_sequences(y_src$data, y_src$params)
     if ((!is.na(n_seq_x) && n_seq_x <= 1L) ||
         (!is.na(n_seq_y) && n_seq_y <= 1L)) {
-      warning(
-        "A network with one long sequence is not recommended and can't be ",
-        "validated using bootstrap and other confirmatory testings.",
-        call. = FALSE
-      )
+      .single_sequence_notice()
     }
     perm_result <- .permutation_transition(
       x = x_src, y = y_src, nodes = nodes, method = method,
       iter = iter, paired = paired,
       measures = NULL, directed = directed, obs_cent_diff = NULL,
-      transform = transform_eb, obs_diff = obs_diff
+      transform = transform_eb, obs_diff = obs_diff,
+      block = block, alpha = alpha
     )
   } else {
+    .stop_block_unsupported(block, method)
     perm_result <- .permutation_association(
       x = x_src, y = y_src, nodes = nodes, method = method,
       iter = iter, paired = paired, nlambda = nlambda,
@@ -636,8 +776,17 @@ permutation <- function(x, y = NULL,
     alpha = alpha,
     paired = paired,
     adjust = adjust,
+    block = block,
+    n_blocks = perm_result$n_blocks,
+    null_sd = matrix(perm_result$perm_sd, n_nodes, n_nodes,
+                     dimnames = list(nodes, nodes)),
     edge_betweenness = list(invert = invert, source_method = method)
   )
+  if (!is.null(perm_result$clustering)) {
+    clus <- .build_permutation_clustering(perm_result, summary_df, nodes, iter)
+    result$clustering <- clus$overall
+    result$clustering_edges <- clus$edges
+  }
   class(result) <- "net_permutation"
   result
 }
@@ -651,7 +800,8 @@ permutation <- function(x, y = NULL,
                                     measures = NULL, directed = TRUE,
                                     obs_cent_diff = NULL,
                                     transform = NULL,
-                                    obs_diff = NULL) {
+                                    obs_diff = NULL,
+                                    block = NULL, alpha = 0.05) {
   n_nodes <- length(nodes)
   nbins <- n_nodes * n_nodes
   is_relative <- method == "relative"
@@ -675,6 +825,29 @@ permutation <- function(x, y = NULL,
   pooled <- rbind(trans_x, trans_y)
   n_total <- n_x + n_y
 
+  # Blocked design: whole persons/teams move together (see ?permutation)
+  block_ids <- if (is.null(block)) NULL else
+    c(.permutation_block_ids(x, block, n_x, "x"),
+      .permutation_block_ids(y, block, n_y, "y"))
+  design <- if (is.null(block)) NULL else .block_design(
+    block_ids = block_ids, is_x = rep(c(TRUE, FALSE), c(n_x, n_y)),
+    block = block, alpha = alpha
+  )
+  if (!is.null(design)) {
+    # unblocked reference null, drawn alongside, gives the design effect
+    ref_sum <- numeric(nbins)
+    ref_sumsq <- numeric(nbins)
+    ref_m_sum <- 0
+    ref_m_sumsq <- 0
+    split_diff <- function(in_x) {
+      mat_x <- .postprocess_counts(colSums(pooled[in_x, , drop = FALSE]),
+                                   n_nodes, is_relative, x$scaling, x$threshold)
+      mat_y <- .postprocess_counts(colSums(pooled[-in_x, , drop = FALSE]),
+                                   n_nodes, is_relative, y$scaling, y$threshold)
+      as.vector(transform(mat_x)) - as.vector(transform(mat_y))
+    }
+  }
+
   # Observed diff (recomputed from counts for consistency)
   obs_flat <- as.vector(obs_diff %||% (x$weights - y$weights))
 
@@ -687,6 +860,8 @@ permutation <- function(x, y = NULL,
   s_obs <- max(abs(obs_flat))
   m_exceed <- 0L
   s_exceed <- 0L
+  m_sum <- 0
+  m_sumsq <- 0
 
   for (i in seq_len(iter)) {
     if (paired) {
@@ -696,6 +871,11 @@ permutation <- function(x, y = NULL,
       idx_y <- ifelse(swaps, seq_len(n_x), seq(n_x + 1L, n_total))
       counts_x <- colSums(pooled[idx_x, , drop = FALSE])
       counts_y <- colSums(pooled[idx_y, , drop = FALSE])
+    } else if (!is.null(design)) {
+      # Blocked: reassign whole blocks / shuffle within crossed blocks
+      perm_is_x <- .block_permute(design)
+      counts_x <- colSums(pooled[perm_is_x, , drop = FALSE])
+      counts_y <- colSums(pooled[!perm_is_x, , drop = FALSE])
     } else {
       # Unpaired: shuffle group labels
       idx_x <- sample.int(n_total, n_x)
@@ -719,6 +899,16 @@ permutation <- function(x, y = NULL,
     sum_diffs_sq <- sum_diffs_sq + perm_diff^2
     m_exceed <- m_exceed + (sum(abs(perm_diff)) >= m_obs)
     s_exceed <- s_exceed + (max(abs(perm_diff)) >= s_obs)
+    m_sum <- m_sum + sum(abs(perm_diff))
+    m_sumsq <- m_sumsq + sum(abs(perm_diff))^2
+
+    if (!is.null(design)) {
+      ref_diff <- split_diff(sample.int(n_total, n_x))
+      ref_sum <- ref_sum + ref_diff
+      ref_sumsq <- ref_sumsq + ref_diff^2
+      ref_m_sum <- ref_m_sum + sum(abs(ref_diff))
+      ref_m_sumsq <- ref_m_sumsq + sum(abs(ref_diff))^2
+    }
 
     if (do_cent) {
       cd <- .perm_cent_diff_mat(mat_x, mat_y, nodes, directed, measures)
@@ -736,14 +926,196 @@ permutation <- function(x, y = NULL,
     exceed_counts = exceed_counts,
     perm_sd = perm_sd,
     global = list(m_obs = m_obs, s_obs = s_obs,
-                  m_exceed = m_exceed, s_exceed = s_exceed)
+                  m_exceed = m_exceed, s_exceed = s_exceed,
+                  m_null_sd = sqrt(max(m_sumsq / iter - (m_sum / iter)^2, 0))),
+    n_blocks = design$n_blocks
   )
+  if (!is.null(design)) {
+    ref_mean <- ref_sum / iter
+    out$clustering <- list(
+      design = design,
+      n_sequences = n_total,
+      icc = .block_icc(pooled, block_ids, ifelse(design$is_x, "x", "y")),
+      ref_sd = sqrt(pmax(ref_sumsq / iter - ref_mean^2, 0)),
+      ref_m_sd = sqrt(max(ref_m_sumsq / iter - (ref_m_sum / iter)^2, 0))
+    )
+  }
   if (do_cent) {
     out$cent_exceed <- cent_exceed
     out$cent_sum <- cent_sum
     out$cent_sumsq <- cent_sumsq
   }
   out
+}
+
+
+# ---- Blocked (cluster-level) permutation ----
+
+#' Validate the `block` argument
+#' @noRd
+.check_permutation_block <- function(block, paired) {
+  if (is.null(block)) return(invisible(NULL))
+  if (!is.character(block) || length(block) != 1L || is.na(block) ||
+      !nzchar(block)) {
+    stop(errorCondition("`block` must be a single column name or NULL.",
+                        class = "nestimate_bad_block", call = NULL))
+  }
+  if (isTRUE(paired)) {
+    stop(errorCondition(
+      paste0("`block` and `paired = TRUE` cannot be combined: a paired ",
+             "design is the special case of one block per pair. Use one."),
+      class = "nestimate_bad_block", call = NULL))
+  }
+  invisible(NULL)
+}
+
+#' Blocked permutation needs per-row identifiers, which association
+#' networks do not keep after estimation
+#' @noRd
+.stop_block_unsupported <- function(block, method) {
+  if (is.null(block)) return(invisible(NULL))
+  stop(errorCondition(
+    sprintf(paste0("`block` is supported for transition networks ",
+                   "(relative, frequency, co_occurrence), not method '%s': ",
+                   "its netobject does not keep row identifiers."), method),
+    class = "nestimate_block_unsupported", call = NULL))
+}
+
+#' Block id of every sequence row of a netobject
+#'
+#' Looked up in `$metadata` (aligned with `$data` rows for long-format
+#' builds) or in the wide sequence data itself.
+#' @noRd
+.permutation_block_ids <- function(net, block, n_rows, label) {
+  meta <- net$metadata
+  ids <- if (is.data.frame(meta) && block %in% names(meta)) {
+    meta[[block]]
+  } else if (is.data.frame(net$data) && block %in% names(net$data)) {
+    net$data[[block]]
+  } else {
+    stop(errorCondition(
+      sprintf("`block = \"%s\"` is not a column of %s's metadata or sequence data.",
+              block, label),
+      class = "nestimate_block_missing", call = NULL))
+  }
+  if (length(ids) != n_rows) {
+    stop(errorCondition(
+      sprintf(paste0("`block = \"%s\"` has %d values but %s has %d sequences; ",
+                     "blocked permutation needs one block id per sequence."),
+              block, length(ids), label, n_rows),
+      class = "nestimate_block_misaligned", call = NULL))
+  }
+  if (anyNA(ids)) {
+    stop(errorCondition(
+      sprintf("`block = \"%s\"` has %d missing values in %s.",
+              block, sum(is.na(ids)), label),
+      class = "nestimate_block_missing", call = NULL))
+  }
+  as.character(ids)
+}
+
+#' Precompute the blocked permutation scheme
+#'
+#' Blocks entirely inside one group ("pure") are reassigned as whole units;
+#' blocks with sequences in both groups ("crossed") keep their per-block
+#' group counts and shuffle labels internally. Warns when the design admits
+#' too few distinct arrangements to reach `alpha`.
+#' @noRd
+.block_design <- function(block_ids, is_x, block, alpha, warn = TRUE) {
+  n_in_block <- tapply(is_x, block_ids, length)
+  n_x_in_block <- tapply(is_x, block_ids, sum)
+  is_pure <- n_x_in_block == 0L | n_x_in_block == n_in_block
+  pure <- names(n_in_block)[is_pure]
+  crossed <- names(n_in_block)[!is_pure]
+
+  pure_rows <- which(block_ids %in% pure)
+  crossed_rows <- which(block_ids %in% crossed)
+  crossed_block <- block_ids[crossed_rows]
+
+  # log number of distinct label arrangements the scheme can produce
+  n_pure_x <- sum(n_x_in_block[pure] > 0L)
+  log_arrangements <- lchoose(length(pure), n_pure_x) +
+    sum(lchoose(n_in_block[crossed], n_x_in_block[crossed]))
+  if (warn && log_arrangements < log(1 / alpha)) {
+    warning(warningCondition(
+      sprintf(paste0("`block = \"%s\"` allows only %d distinct permutations, ",
+                     "so no p-value can fall below %.3g (alpha = %g). ",
+                     "More blocks are needed for this test to detect anything."),
+              block, as.integer(round(exp(log_arrangements))),
+              exp(-log_arrangements), alpha),
+      class = "nestimate_few_blocks", call = NULL))
+  }
+
+  list(
+    is_x = is_x,
+    pure_rows = pure_rows,
+    pure_index = match(block_ids[pure_rows], pure),
+    pure_label = unname(n_x_in_block[pure] > 0L),
+    crossed_rows = crossed_rows,
+    crossed_block = crossed_block,
+    crossed_sorted = crossed_rows[order(crossed_block)],
+    n_blocks = length(n_in_block),
+    n_pure = length(pure),
+    n_crossed = length(crossed),
+    log_arrangements = log_arrangements
+  )
+}
+
+#' One blocked permutation of the group labels
+#' @noRd
+.block_permute <- function(design) {
+  perm_is_x <- design$is_x
+  if (length(design$pure_label) > 1L) {
+    shuffled <- design$pure_label[sample.int(length(design$pure_label))]
+    perm_is_x[design$pure_rows] <- shuffled[design$pure_index]
+  }
+  if (length(design$crossed_rows) > 0L) {
+    # rows grouped by block in random within-block order receive the
+    # block-grouped original labels: a uniform shuffle inside each block
+    target <- design$crossed_rows[order(design$crossed_block,
+                                        stats::runif(length(design$crossed_rows)))]
+    perm_is_x[target] <- design$is_x[design$crossed_sorted]
+  }
+  perm_is_x
+}
+
+
+#' Tidy clustering diagnostics of a blocked permutation
+#'
+#' Design effect = blocked null variance / unblocked null variance, per edge
+#' and for the global M statistic (Kish, 1965). One-row overall table plus a
+#' one-row-per-edge table restricted to the edges in the summary.
+#' @noRd
+.build_permutation_clustering <- function(perm_result, summary_df, nodes, iter) {
+  clus <- perm_result$clustering
+  design <- clus$design
+  n_nodes <- length(nodes)
+  as_mat <- function(v) matrix(v, n_nodes, n_nodes, dimnames = list(nodes, nodes))
+  sd_blocked <- as_mat(perm_result$perm_sd)
+  sd_unblocked <- as_mat(clus$ref_sd)
+  icc_edges <- matrix(clus$icc$per_edge, n_nodes, n_nodes, byrow = TRUE,
+                      dimnames = list(nodes, nodes))
+  at <- cbind(summary_df$from, summary_df$to)
+  edges <- data.frame(
+    from = summary_df$from, to = summary_df$to,
+    icc = icc_edges[at],
+    null_sd_blocked = sd_blocked[at], null_sd_unblocked = sd_unblocked[at],
+    deff = (sd_blocked[at] / sd_unblocked[at])^2,
+    stringsAsFactors = FALSE
+  )
+  overall <- data.frame(
+    n_sequences = clus$n_sequences,
+    n_blocks = design$n_blocks,
+    design = if (design$n_crossed == 0L) "between"
+             else if (design$n_pure == 0L) "within" else "mixed",
+    icc = clus$icc$estimate,
+    icc_ci_lower = clus$icc$ci[1L], icc_ci_upper = clus$icc$ci[2L],
+    deff_edges = stats::median(edges$deff[is.finite(edges$deff)]),
+    deff_global = (perm_result$global$m_null_sd / clus$ref_m_sd)^2,
+    min_p = max(exp(-design$log_arrangements), 1 / (iter + 1)),
+    stringsAsFactors = FALSE
+  )
+  list(overall = overall, edges = edges)
 }
 
 
@@ -807,6 +1179,8 @@ permutation <- function(x, y = NULL,
   s_obs <- max(abs(obs_flat))
   m_exceed <- 0L
   s_exceed <- 0L
+  m_sum <- 0
+  m_sumsq <- 0
 
   # Select fast path based on method
   use_fast <- method %in% c("cor", "pcor", "glasso")
@@ -910,6 +1284,8 @@ permutation <- function(x, y = NULL,
     sum_diffs_sq <- sum_diffs_sq + perm_diff^2
     m_exceed <- m_exceed + (sum(abs(perm_diff)) >= m_obs)
     s_exceed <- s_exceed + (max(abs(perm_diff)) >= s_obs)
+    m_sum <- m_sum + sum(abs(perm_diff))
+    m_sumsq <- m_sumsq + sum(abs(perm_diff))^2
 
     if (do_cent) {
       cd <- .perm_cent_diff_mat(mat_x, mat_y, nodes, directed, measures)
@@ -926,7 +1302,8 @@ permutation <- function(x, y = NULL,
     exceed_counts = exceed_counts,
     perm_sd = perm_sd,
     global = list(m_obs = m_obs, s_obs = s_obs,
-                  m_exceed = m_exceed, s_exceed = s_exceed)
+                  m_exceed = m_exceed, s_exceed = s_exceed,
+                  m_null_sd = sqrt(max(m_sumsq / iter - (m_sum / iter)^2, 0)))
   )
   if (do_cent) {
     out$cent_exceed <- cent_exceed
@@ -1016,10 +1393,13 @@ print.net_permutation <- function(x, ...) {
 
   dir_label <- if (x$x$directed) " [directed]" else " [undirected]"
 
-  cat("Permutation Test:", label, dir_label, "\n", sep = "")
+  cat("Permutation Test: ", label, dir_label, "\n", sep = "")
   cat(sprintf("  Iterations: %d  |  Alpha: %.2f",
               x$iter, x$alpha))
   if (x$paired) cat("  |  Paired")
+  if (!is.null(x$block)) {
+    cat(sprintf("  |  Blocked by: %s (%d blocks)", x$block, x$n_blocks))
+  }
   if (x$adjust != "none") cat(sprintf("  |  Adjust: %s", x$adjust))
   cat("\n")
 
@@ -1027,6 +1407,28 @@ print.net_permutation <- function(x, ...) {
   n_total <- nrow(x$summary)
   cat(sprintf("  Nodes: %d  |  Edges tested: %d  |  Significant: %d\n",
               x$x$n_nodes, n_total, n_sig))
+
+  if (!is.null(x$global)) {
+    g <- x$global
+    cat(sprintf(paste0("  Global test (networks differ overall?): ",
+                       "M = %s (p = %s)  |  S = %s (p = %s)\n"),
+                format(round(g$observed[1], 3), nsmall = 3),
+                format(g$p_value[1], digits = 3),
+                format(round(g$observed[2], 3), nsmall = 3),
+                format(g$p_value[2], digits = 3)))
+  }
+  if (!is.null(x$clustering)) {
+    cl <- x$clustering
+    cat(sprintf("  Clustering by %s: ICC = %.3f [95%% CI %.3f, %.3f]  |  %s design\n",
+                x$block, cl$icc, cl$icc_ci_lower, cl$icc_ci_upper, cl$design))
+    cat(sprintf(paste0("  Design effect (1 = nesting does not matter): ",
+                       "edges %.2f  |  global %.2f\n"),
+                cl$deff_edges, cl$deff_global))
+    if (cl$min_p > x$alpha) {
+      cat(sprintf("  Note: with %d blocks no p-value can fall below %s\n",
+                  cl$n_blocks, format(cl$min_p, digits = 3)))
+    }
+  }
 
   invisible(x)
 }
@@ -1096,7 +1498,10 @@ summary.net_permutation <- function(object, ...) {
 print.net_permutation_group <- function(x, ...) {
   cat("Grouped Permutation Test\n")
   cat("Groups:", paste(names(x), collapse = ", "), "\n")
-  cat("Use summary() on each element for edge-level results.\n")
+  lapply(names(x), function(nm) {
+    cat("\n-- ", nm, " --\n", sep = "")
+    print(x[[nm]], ...)
+  })
   invisible(x)
 }
 

@@ -110,7 +110,7 @@ sequences from stretching the plot. Applies to all three types
 (including the \code{mcml} multichannel view). \code{NULL} (default)
 plots the full width. A fraction in \code{(0, 1)} drops everything
 past that quantile of sequence lengths (e.g. \code{trim = 0.95} keeps
-the columns covering the shortest 95\\% of sequences); a value
+the columns covering the shortest 95\% of sequences); a value
 \code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
 time points).}
 
