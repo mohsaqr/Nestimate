@@ -1,0 +1,87 @@
+---
+title: "Comparing two networks with compare_networks()"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6)
+library(Nestimate)
+```
+
+High and low achievers in `group_regulation_long` are compared with a
+permutation test (1,000 permutations).
+
+```{r}
+achievers <- build_network(group_regulation_long, method = "relative",
+                           actor = "Actor", action = "Action",
+                           time = "Time", group = "Achiever")
+cmp <- compare_networks(achievers, test = "permutation", iter = 1000, seed = 1)
+cmp
+summary(cmp)
+```
+
+The networks are similar overall (Pearson 0.92, cosine 0.95, Jaccard
+0.75) but differ in 42 of 78 transitions and 16 of 27 node measures. The
+global test is significant (M = 2.61, p = 0.001).
+
+## networks
+```{r}
+plot(cmp, type = "networks")
+```
+
+The two networks side by side.
+
+## difference
+```{r}
+plot(cmp, type = "difference")
+```
+
+High minus Low for each transition: blue is higher in High, red higher in
+Low; the line style also carries the sign.
+
+## edges
+```{r}
+plot(cmp, type = "edges")
+```
+
+The largest differences: `discuss` to `consensus` (0.42 vs 0.21) and
+`synthesis` to `consensus` (0.58 vs 0.39) are higher in High; `synthesis`
+to `adapt` is higher in Low (0.14 vs 0.30). All have p = 0.001.
+
+## nodes
+```{r}
+plot(cmp, type = "nodes")
+```
+
+Centrality differences per state. `synthesis` has higher betweenness in
+High (7 vs 0, p = 0.003); `adapt` in Low (4 vs 1, p = 0.001).
+
+## global
+```{r}
+plot(cmp, type = "global")
+```
+
+The 22 similarity and distance metrics of `global_differences(cmp)`,
+grouped by category.
+
+## heatmap
+```{r}
+plot(cmp, type = "heatmap")
+```
+
+Every cell of the High minus Low difference matrix, with its value.
+
+## scatter
+```{r}
+plot(cmp, type = "scatter")
+```
+
+Each transition's weight in High against Low; points on the diagonal
+are equal in both (Pearson 0.92).
+
+## inference
+```{r}
+plot(cmp, type = "inference")
+```
+
+Edge differences with their permutation p-values; filled markers are
+significant at 0.05.

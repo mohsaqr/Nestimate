@@ -1,3 +1,11 @@
+# Nestimate 0.9.14
+
+## Documentation
+
+* New pkgdown article "Comparing two networks with compare_networks()":
+  high vs low achievers in `group_regulation_long`, every summary table and
+  all eight plot views with a short reading of each.
+
 # Nestimate 0.9.13
 
 ## New features

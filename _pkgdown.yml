@@ -235,4 +235,5 @@ articles:
   - starts_with("articles/cograph-tutorial-simplicial")
   - starts_with("articles/tutorial_model_assessment")
   - starts_with("articles/permutation-nested-data")
+  - starts_with("articles/compare-networks")
 
