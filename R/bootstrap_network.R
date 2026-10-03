@@ -23,24 +23,24 @@
 #' such a network is not recommended for bootstrap or other confirmatory
 #' testing.
 #'
-#' @section Nested data and \code{block}:
+#' @section Nested data and \code{actor}:
 #' The bootstrap resamples sequences as independent units. When sequences
-#' are nested in units (sessions in students, students in teams),
-#' \code{block} names the column identifying the unit, and whole units are
-#' resampled with replacement, keeping all their sequences together: the
-#' cluster bootstrap that resamples at the top level only (Davison &
+#' are nested in actors (sessions in students, students in teams),
+#' \code{actor} names the column identifying the actor, and whole actors
+#' are resampled with replacement, keeping all their sequences together:
+#' the cluster bootstrap that resamples at the top level only (Davison &
 #' Hinkley, 1997, section 3.8; Field & Welsh, 2007). The number of
-#' sequences per replicate then varies with the units drawn.
+#' sequences per replicate then varies with the actors drawn.
 #'
-#' With \code{block}, the result also reports the nesting effect. The ICC
-#' is the proportion of the total variance that lies between units (Shrout
+#' With \code{actor}, the result also reports the nesting effect. The ICC
+#' is the proportion of the total variance that lies between actors (Shrout
 #' & Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
 #' effect. It is computed as in \code{\link{permutation}}. The design effect
 #' is the ratio of the variance under the nested design to the variance had
 #' the sequences been sampled independently (Kish, 1965): here, the variance
-#' of the edge weights over unit-level replicates divided by their variance
+#' of the edge weights over actor-level replicates divided by their variance
 #' over sequence-level replicates drawn in the same run, reported as the
-#' median over edges. \code{block} is available for transition networks
+#' median over edges. \code{actor} is available for transition networks
 #' (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}).
 #'
 #' @param x A \code{netobject} from \code{\link{build_network}}.
@@ -74,12 +74,12 @@
 #'   which corrects first-order bootstrap bias but can produce bounds
 #'   outside the natural weight range near boundaries (e.g., below 0 for
 #'   transition probabilities close to 0).
-#' @param block Character or NULL. Name of the column identifying the unit
-#'   each sequence belongs to (e.g. \code{"Actor"} for sessions nested in
-#'   students, \code{"Group"} for students nested in teams), looked up in
+#' @param actor Character or NULL. Name of the column identifying the actor
+#'   each sequence belongs to (e.g. \code{"student_id"} for sessions nested
+#'   in students, \code{"Group"} for students nested in teams), looked up in
 #'   the network's \code{$metadata} or wide sequence data. When supplied,
-#'   whole units are resampled; see the section \emph{Nested data and
-#'   block}. Default \code{NULL}: sequences are resampled individually.
+#'   whole actors are resampled; see the section \emph{Nested data and
+#'   actor}. Default \code{NULL}: sequences are resampled individually.
 #'
 #' @return An object of class \code{"net_bootstrap"} containing:
 #' \describe{
@@ -102,14 +102,14 @@
 #'   \item{method, params, iter, ci_level, inference, ci_method}{Bootstrap
 #'     config.}
 #'   \item{consistency_range, edge_threshold}{Inference parameters.}
-#'   \item{block, n_blocks}{The \code{block} column and its number of units;
-#'     \code{NULL} without \code{block}.}
-#'   \item{clustering}{Only with \code{block}. One-row data frame:
-#'     \code{n_sequences}, \code{n_blocks}, \code{icc}, \code{icc_ci_lower},
+#'   \item{actor, n_actors}{The \code{actor} column and its number of
+#'     actors; \code{NULL} without \code{actor}.}
+#'   \item{clustering}{Only with \code{actor}. One-row data frame:
+#'     \code{n_sequences}, \code{n_actors}, \code{icc}, \code{icc_ci_lower},
 #'     \code{icc_ci_upper}, \code{deff_edges}.}
-#'   \item{clustering_edges}{Only with \code{block}. One row per edge of
+#'   \item{clustering_edges}{Only with \code{actor}. One row per edge of
 #'     \code{summary}: \code{from}, \code{to}, \code{icc},
-#'     \code{sd_blocked}, \code{sd_unblocked}, \code{deff}.}
+#'     \code{sd_actor}, \code{sd_sequence}, \code{deff}.}
 #' }
 #' A \code{netobject_group} or \code{mcml} input returns a
 #' \code{"net_bootstrap_group"} (named list of \code{net_bootstrap}
@@ -135,7 +135,7 @@
 #' teams <- build_network(group_regulation_long, method = "relative",
 #'                        actor = "Actor", action = "Action", time = "Time",
 #'                        group = "Achiever")
-#' bootstrap_network(teams, iter = 100, block = "Group", seed = 1)
+#' bootstrap_network(teams, iter = 100, actor = "Group", seed = 1)
 #' }
 #'
 #' @references
@@ -168,7 +168,7 @@ bootstrap_network <- function(x,
                               seed = NULL,
                               boundary = c("inclusive", "strict"),
                               ci_method = c("percentile", "basic"),
-                              block = NULL) {
+                              actor = NULL) {
   boundary <- match.arg(boundary)
   ci_method <- match.arg(ci_method)
 
@@ -181,13 +181,13 @@ bootstrap_network <- function(x,
                                        consistency_range = consistency_range,
                                        edge_threshold = edge_threshold,
                                        boundary = boundary,
-                                       ci_method = ci_method, block = block),
+                                       ci_method = ci_method, actor = actor),
       cooccurrence = bootstrap_network(x$cooccurrence, iter = iter,
                                        ci_level = ci_level, inference = inference,
                                        consistency_range = consistency_range,
                                        edge_threshold = edge_threshold,
                                        boundary = boundary,
-                                       ci_method = ci_method, block = block)
+                                       ci_method = ci_method, actor = actor)
     )
     class(result) <- "wtna_boot_mixed"
     return(result)
@@ -206,7 +206,7 @@ bootstrap_network <- function(x,
                         consistency_range = consistency_range,
                         edge_threshold = edge_threshold, seed = seed,
                         boundary = boundary, ci_method = ci_method,
-                        block = block)
+                        actor = actor)
     })
     class(results) <- c("net_bootstrap_group", "list")
     return(results)
@@ -262,7 +262,7 @@ bootstrap_network <- function(x,
   )
   iter <- as.integer(iter)
   inference <- match.arg(inference, c("stability", "threshold"))
-  .check_permutation_block(block, paired = FALSE)
+  .check_permutation_block(actor, paired = FALSE)
 
   if (!is.null(seed)) {
     stopifnot(is.numeric(seed), length(seed) == 1)
@@ -292,16 +292,16 @@ bootstrap_network <- function(x,
     .warn_single_sequence_confirmatory_network(transition_data, params)
     trans_2d <- .precompute_per_sequence(transition_data, method, params,
                                          states)
-    block_ids <- if (is.null(block)) NULL else
-      .permutation_block_ids(x, block, nrow(trans_2d), "x")
+    block_ids <- if (is.null(actor)) NULL else
+      .permutation_block_ids(x, actor, nrow(trans_2d), "x")
     # Cluster bootstrap: resample whole units (summed counts), top level only
     units <- if (is.null(block_ids)) trans_2d else
       rowsum(trans_2d, block_ids, reorder = FALSE)
     if (!is.null(block_ids) && nrow(units) < 2L) {
       stop(errorCondition(
-        sprintf("`block = \"%s\"` has %d unit; resampling needs at least 2.",
-                block, nrow(units)),
-        class = "nestimate_bad_block", call = NULL))
+        sprintf("`actor = \"%s\"` has %d actor; resampling needs at least 2.",
+                actor, nrow(units)),
+        class = "nestimate_bad_actor", call = NULL))
     }
     boot_matrices <- .bootstrap_counts(
       units, method = method, states = states, scaling = scaling,
@@ -313,7 +313,7 @@ bootstrap_network <- function(x,
       threshold = threshold, iter = iter
     )
   } else {
-    .stop_block_unsupported(block, method)
+    .stop_block_unsupported(actor, method)
     boot_matrices <- .bootstrap_association(
       data = data, estimator = estimator, params = params, states = states,
       scaling = scaling, threshold = threshold, iter = iter,
@@ -400,10 +400,10 @@ bootstrap_network <- function(x,
     consistency_range = consistency_range,
     edge_threshold    = edge_threshold,
     ci_method         = ci_method,
-    block             = block,
-    n_blocks          = if (is.null(block)) NULL else nrow(units)
+    actor             = actor,
+    n_actors          = if (is.null(actor)) NULL else nrow(units)
   )
-  if (!is.null(block)) {
+  if (!is.null(actor)) {
     clus <- .build_bootstrap_clustering(stats$sd, reference, trans_2d,
                                         block_ids, summary_df, states)
     result$clustering <- clus$overall
@@ -431,13 +431,13 @@ bootstrap_network <- function(x,
   edges <- data.frame(
     from = summary_df$from, to = summary_df$to,
     icc = icc_edges[at],
-    sd_blocked = sd_blocked[at], sd_unblocked = sd_unblocked[at],
+    sd_actor = sd_blocked[at], sd_sequence = sd_unblocked[at],
     deff = (sd_blocked[at] / sd_unblocked[at])^2,
     stringsAsFactors = FALSE
   )
   overall <- data.frame(
     n_sequences = nrow(trans_2d),
-    n_blocks = length(unique(block_ids)),
+    n_actors = length(unique(block_ids)),
     icc = icc$estimate,
     icc_ci_lower = icc$ci[1L], icc_ci_upper = icc$ci[2L],
     deff_edges = stats::median(edges$deff[is.finite(edges$deff)])
@@ -945,10 +945,10 @@ print.net_bootstrap <- function(x, ...) {
   cat("\n")
   if (!is.null(x$clustering)) {
     cl <- x$clustering
-    cat(sprintf("  Blocked by : %s (%d units)\n", x$block, cl$n_blocks))
-    cat(sprintf(paste0("  Nesting    : ICC = %.3f [95%% CI %.3f, %.3f]  |  ",
-                       "Design effect (edges) = %.2f\n"),
-                cl$icc, cl$icc_ci_lower, cl$icc_ci_upper, cl$deff_edges))
+    cat(sprintf("  Actor      : %s (%d actors)\n", x$actor, cl$n_actors))
+    cat(sprintf("  Nesting    : %s  |  Design effect (edges) = %.2f\n",
+                .format_icc(cl$icc, cl$icc_ci_lower, cl$icc_ci_upper),
+                cl$deff_edges))
   }
 
   invisible(x)
@@ -1076,8 +1076,8 @@ print.net_bootstrap_group <- function(x, ...) {
                 nm, grp_stats["sig", nm], grp_stats["total", nm]))
     cl <- x[[nm]]$clustering
     if (!is.null(cl)) {
-      cat(sprintf("  |  %s: %d units, ICC %.3f, design effect %.2f",
-                  x[[nm]]$block, cl$n_blocks, cl$icc, cl$deff_edges))
+      cat(sprintf("  |  %s: %d actors, ICC %.3f, design effect %.2f",
+                  x[[nm]]$actor, cl$n_actors, cl$icc, cl$deff_edges))
     }
     cat("\n")
   }

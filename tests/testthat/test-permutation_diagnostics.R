@@ -81,38 +81,38 @@ test_that("ICC is invariant to relabelling and reordering blocks", {
 
 test_that("overall level returns one tidy row per pair", {
   net <- .sim_diag_long(tau = 1, seed = 3)
-  d <- permutation_diagnostics(net, block = "person", iter = 99L, seed = 1)
+  d <- permutation_diagnostics(net, actor = "person", iter = 99L, seed = 1)
   expect_s3_class(d, "data.frame")
   expect_identical(nrow(d), 1L)
   expect_identical(names(d), c(
-    "pair", "n_sequences", "n_blocks", "design", "icc", "icc_ci_lower",
-    "icc_ci_upper", "deff_edges", "deff_global", "p_global_plain",
-    "p_global_blocked", "sig_edges_plain", "sig_edges_blocked",
-    "edges_changed", "min_p_blocked"))
+    "pair", "n_sequences", "n_actors", "design", "icc", "icc_ci_lower",
+    "icc_ci_upper", "deff_edges", "deff_global", "p_global_sequence",
+    "p_global_actor", "sig_edges_sequence", "sig_edges_actor",
+    "edges_changed", "min_p_actor"))
   expect_identical(d$pair, "g1 vs g0")
-  expect_identical(d$n_blocks, 20L)
+  expect_identical(d$n_actors, 20L)
   expect_identical(d$design, "between")
-  expect_equal(d$min_p_blocked, 1 / 100)
+  expect_equal(d$min_p_actor, 1 / 100)
 })
 
 test_that("diagnostics agree with the two permutation() runs they wrap", {
   net <- .sim_diag_long(tau = 1, seed = 4)
-  d <- permutation_diagnostics(net, block = "person", iter = 99L, seed = 7)
+  d <- permutation_diagnostics(net, actor = "person", iter = 99L, seed = 7)
   plain <- permutation(net, iter = 99L, seed = 7)[[1]]
-  blocked <- permutation(net, iter = 99L, seed = 7, block = "person")[[1]]
-  expect_equal(d$p_global_plain, plain$global$p_value[1])
-  expect_equal(d$p_global_blocked, blocked$global$p_value[1])
+  blocked <- permutation(net, iter = 99L, seed = 7, actor = "person")[[1]]
+  expect_equal(d$p_global_sequence, plain$global$p_value[1])
+  expect_equal(d$p_global_actor, blocked$global$p_value[1])
   expect_equal(d$deff_global, blocked$clustering$deff_global)
   expect_equal(d$icc, blocked$clustering$icc)
-  expect_identical(d$sig_edges_plain, sum(plain$summary$sig))
+  expect_identical(d$sig_edges_sequence, sum(plain$summary$sig))
 })
 
 test_that("clustering shows up as design effect > 1 between, < 1 within", {
   between <- permutation_diagnostics(.sim_diag_long(tau = 2, seed = 5),
-                                     block = "person", iter = 199L, seed = 1)
+                                     actor = "person", iter = 199L, seed = 1)
   within <- permutation_diagnostics(
     .sim_diag_long(tau = 2, design = "within", seed = 5),
-    block = "person", iter = 199L, seed = 1)
+    actor = "person", iter = 199L, seed = 1)
   expect_gt(between$icc, 0.1)
   expect_gt(between$deff_global, 1.5)
   expect_gt(between$deff_edges, 1.5)
@@ -122,21 +122,21 @@ test_that("clustering shows up as design effect > 1 between, < 1 within", {
 
 test_that("edges level returns one row per edge with the null SDs", {
   net <- .sim_diag_long(seed = 6)
-  e <- permutation_diagnostics(net, block = "person", iter = 99L,
+  e <- permutation_diagnostics(net, actor = "person", iter = 99L,
                                level = "edges", seed = 1)
   plain <- permutation(net, iter = 99L, seed = 1)[[1]]
   expect_identical(nrow(e), nrow(plain$summary))
   expect_identical(e$from, plain$summary$from)
   expect_identical(names(e), c("pair", "from", "to", "diff", "icc",
-                               "null_sd_plain", "null_sd_blocked", "deff",
-                               "p_plain", "p_blocked", "changed"))
-  expect_equal(e$deff, (e$null_sd_blocked / e$null_sd_plain)^2)
-  expect_identical(e$changed, (e$p_plain < 0.05) != (e$p_blocked < 0.05))
+                               "null_sd_sequence", "null_sd_actor", "deff",
+                               "p_sequence", "p_actor", "changed"))
+  expect_equal(e$deff, (e$null_sd_actor / e$null_sd_sequence)^2)
+  expect_identical(e$changed, (e$p_sequence < 0.05) != (e$p_actor < 0.05))
 })
 
 test_that("two netobjects can be diagnosed directly", {
   net <- .sim_diag_long(seed = 7)
-  d <- permutation_diagnostics(net[[1]], net[[2]], block = "person",
+  d <- permutation_diagnostics(net[[1]], net[[2]], actor = "person",
                                iter = 50L, seed = 1)
   expect_identical(d$pair, "x vs y")
 })
@@ -146,13 +146,13 @@ test_that("two netobjects can be diagnosed directly", {
 
 test_that("unsupported or missing block inputs raise classed errors", {
   net <- .sim_diag_long(seed = 8)
-  expect_error(permutation_diagnostics(net, block = "nope", iter = 10L),
-               class = "nestimate_block_missing")
+  expect_error(permutation_diagnostics(net, actor = "nope", iter = 10L),
+               class = "nestimate_actor_missing")
   set.seed(9)
   d <- data.frame(a = rnorm(40), b = rnorm(40), c = rnorm(40))
   n1 <- build_network(d, method = "cor")
-  expect_error(permutation_diagnostics(n1, n1, block = "id", iter = 10L),
-               class = "nestimate_block_unsupported")
-  expect_error(permutation_diagnostics(net, block = c("a", "b")),
+  expect_error(permutation_diagnostics(n1, n1, actor = "id", iter = 10L),
+               class = "nestimate_actor_unsupported")
+  expect_error(permutation_diagnostics(net, actor = c("a", "b")),
                "single column name")
 })

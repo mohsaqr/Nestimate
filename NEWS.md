@@ -1,3 +1,32 @@
+# Nestimate 0.9.16
+
+## Breaking changes (development versions only)
+
+* The nesting argument added in 0.9.13 (`permutation()`,
+  `permutation_diagnostics()`) and 0.9.15 (`bootstrap_network()`) is renamed
+  from `block` to `actor`, the column identifying whose sequences they are:
+  the same vocabulary as `build_network(actor = )`. Results carry `actor`
+  and `n_actors`; diagnostic columns use `_sequence` (sequences reassigned)
+  and `_actor` (actors reassigned), e.g. `p_global_sequence` /
+  `p_global_actor`; conditions are `nestimate_bad_actor`,
+  `nestimate_actor_missing`, `nestimate_actor_misaligned`,
+  `nestimate_actor_unsupported` and `nestimate_few_actors`. The printout
+  reads `Actor: Group (200 actors)` and `Nesting in Group: ICC = ...`.
+  Neither name was ever on CRAN.
+
+## Bug fixes
+
+* `build_network()`: columns named in `metadata_cols` (or left out of
+  `state_cols`) are no longer read as sequence positions in wide data. They
+  were moved to `$metadata` only after estimation, so their values became
+  states and created spurious transitions, in single and grouped networks.
+  For `cor`, `pcor`, `glasso`, `ising` and `mgm`, declared metadata columns
+  are no longer entered as variables.
+
+* An ICC that cannot be estimated (one block, or no variation) is reported
+  as not estimable instead of `NaN [NA, NA]` by `permutation()`,
+  `bootstrap_network()` and `permutation_diagnostics()`.
+
 # Nestimate 0.9.15
 
 ## New features

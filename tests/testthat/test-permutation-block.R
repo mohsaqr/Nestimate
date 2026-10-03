@@ -39,7 +39,7 @@ test_that("block scheme keeps pure blocks whole and crossed counts fixed", {
   is_x <- c(TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE)
   # 3 pure arrangements x 3 x 2 crossed = 18 < 1 / alpha
   expect_warning(design <- .block_design(ids, is_x, block = "b", alpha = 0.05),
-                 class = "nestimate_few_blocks")
+                 class = "nestimate_few_actors")
   set.seed(1)
   draws <- replicate(2000L, .block_permute(design))
 
@@ -74,54 +74,54 @@ test_that("singleton blocks reduce to an ordinary label shuffle", {
 test_that("block changes the null, not the observed differences", {
   net <- .nested_net(seed = 3)
   plain <- permutation(net, iter = 99L, seed = 1)[[1]]
-  blocked <- permutation(net, iter = 99L, seed = 1, block = "person")[[1]]
+  blocked <- permutation(net, iter = 99L, seed = 1, actor = "person")[[1]]
   expect_identical(blocked$diff, plain$diff)
-  expect_identical(blocked$block, "person")
-  expect_identical(blocked$n_blocks, 20L)
-  expect_null(plain$block)
-  expect_null(plain$n_blocks)
-  expect_output(print(blocked), "Blocked by: person \\(20 blocks\\)")
+  expect_identical(blocked$actor, "person")
+  expect_identical(blocked$n_actors, 20L)
+  expect_null(plain$actor)
+  expect_null(plain$n_actors)
+  expect_output(print(blocked), "Actor: person \\(20 actors\\)")
 })
 
 test_that("blocked result carries tidy clustering tables and prints them", {
   net <- .nested_net(tau = 2, seed = 10)
-  res <- permutation(net, iter = 99L, seed = 1, block = "person")[[1]]
+  res <- permutation(net, iter = 99L, seed = 1, actor = "person")[[1]]
   expect_s3_class(res$clustering, "data.frame")
   expect_identical(nrow(res$clustering), 1L)
   expect_identical(names(res$clustering), c(
-    "n_sequences", "n_blocks", "design", "icc", "icc_ci_lower",
+    "n_sequences", "n_actors", "design", "icc", "icc_ci_lower",
     "icc_ci_upper", "deff_edges", "deff_global", "min_p"))
   expect_identical(res$clustering$design, "between")
   expect_gt(res$clustering$icc, 0.1)
   expect_gt(res$clustering$deff_global, 1.5)
   expect_identical(res$clustering_edges$from, res$summary$from)
   expect_equal(res$clustering_edges$deff,
-               (res$clustering_edges$null_sd_blocked /
-                  res$clustering_edges$null_sd_unblocked)^2)
+               (res$clustering_edges$null_sd_actor /
+                  res$clustering_edges$null_sd_sequence)^2)
   out <- capture.output(print(res))
   expect_true(any(grepl("Global test", out)))
-  expect_true(any(grepl("Clustering by person: ICC = ", out)))
+  expect_true(any(grepl("Nesting in person: ICC = ", out)))
   expect_true(any(grepl("Design effect", out)))
   # unblocked results print the global test but no clustering lines
   plain_out <- capture.output(print(permutation(net, iter = 20L, seed = 1)[[1]]))
   expect_true(any(grepl("Global test", plain_out)))
-  expect_false(any(grepl("Clustering", plain_out)))
+  expect_false(any(grepl("Nesting", plain_out)))
   expect_null(permutation(net, iter = 20L, seed = 1)[[1]]$clustering)
 })
 
 test_that("grouped print shows every pair in full", {
   net <- .nested_net(seed = 11)
   out <- capture.output(print(permutation(net, iter = 20L, seed = 1,
-                                          block = "person")))
+                                          actor = "person")))
   expect_true(any(grepl("Grouped Permutation", out)))
   expect_true(any(grepl("^-- .* vs .* --$", out)))
-  expect_true(any(grepl("Blocked by: person", out)))
+  expect_true(any(grepl("Actor: person", out)))
 })
 
 test_that("blocking removes the false positives of clustered between-person data", {
   net <- .nested_net(tau = 2, design = "between", seed = 4)
   plain <- permutation(net, iter = 199L, seed = 1)[[1]]
-  blocked <- permutation(net, iter = 199L, seed = 1, block = "person")[[1]]
+  blocked <- permutation(net, iter = 199L, seed = 1, actor = "person")[[1]]
   # H0 is true: the plain test is fooled by the person effect, the blocked
   # test is not
   expect_lt(plain$global$p_value[1], 0.05)
@@ -131,26 +131,26 @@ test_that("blocking removes the false positives of clustered between-person data
 
 test_that("within-person designs use within-block shuffling", {
   net <- .nested_net(tau = 2, design = "within", seed = 5)
-  blocked <- permutation(net, iter = 99L, seed = 1, block = "person")[[1]]
-  expect_identical(blocked$n_blocks, 20L)
+  blocked <- permutation(net, iter = 99L, seed = 1, actor = "person")[[1]]
+  expect_identical(blocked$n_actors, 20L)
   expect_true(all(blocked$p_values > 0 & blocked$p_values <= 1))
 })
 
 test_that("block is forwarded through grouped dispatch", {
   net <- .nested_net(seed = 6)
-  res <- permutation(net, iter = 20L, seed = 1, block = "person")
+  res <- permutation(net, iter = 20L, seed = 1, actor = "person")
   expect_s3_class(res, "net_permutation_group")
-  expect_identical(res[[1]]$block, "person")
-  both <- permutation(net, net, iter = 20L, seed = 1, block = "person")
-  expect_identical(both[[1]]$block, "person")
+  expect_identical(res[[1]]$actor, "person")
+  both <- permutation(net, net, iter = 20L, seed = 1, actor = "person")
+  expect_identical(both[[1]]$actor, "person")
 })
 
 test_that("block works with a team label on bundled data", {
   net <- build_network(group_regulation_long, method = "relative",
                        actor = "Actor", action = "Action", time = "Time",
                        group = "Achiever")
-  res <- permutation(net, iter = 20L, seed = 1, block = "Group")[[1]]
-  expect_identical(res$n_blocks, 200L)
+  res <- permutation(net, iter = 20L, seed = 1, actor = "Group")[[1]]
+  expect_identical(res$n_actors, 200L)
 })
 
 
@@ -158,15 +158,15 @@ test_that("block works with a team label on bundled data", {
 
 test_that("bad block arguments raise classed errors", {
   net <- .nested_net(seed = 7)
-  expect_error(permutation(net, iter = 10L, block = "nope"),
-               class = "nestimate_block_missing")
-  expect_error(permutation(net, iter = 10L, block = c("a", "b")),
-               class = "nestimate_bad_block")
-  expect_error(permutation(net, iter = 10L, block = 1),
-               class = "nestimate_bad_block")
+  expect_error(permutation(net, iter = 10L, actor = "nope"),
+               class = "nestimate_actor_missing")
+  expect_error(permutation(net, iter = 10L, actor = c("a", "b")),
+               class = "nestimate_bad_actor")
+  expect_error(permutation(net, iter = 10L, actor = 1),
+               class = "nestimate_bad_actor")
   expect_error(permutation(net[[1]], net[[1]], iter = 10L, paired = TRUE,
-                           block = "person"),
-               class = "nestimate_bad_block")
+                           actor = "person"),
+               class = "nestimate_bad_actor")
 })
 
 test_that("block is refused for association networks", {
@@ -174,12 +174,24 @@ test_that("block is refused for association networks", {
   d <- data.frame(a = rnorm(60), b = rnorm(60), c = rnorm(60))
   n1 <- build_network(d, method = "cor")
   n2 <- build_network(d, method = "cor")
-  expect_error(permutation(n1, n2, iter = 10L, block = "id"),
-               class = "nestimate_block_unsupported")
+  expect_error(permutation(n1, n2, iter = 10L, actor = "id"),
+               class = "nestimate_actor_unsupported")
 })
 
 test_that("too few blocks to reach alpha warns", {
   net <- .nested_net(n_person = 4L, seed = 9)
-  expect_warning(permutation(net, iter = 10L, block = "person"),
-                 class = "nestimate_few_blocks")
+  expect_warning(permutation(net, iter = 10L, actor = "person"),
+                 class = "nestimate_few_actors")
+})
+
+test_that("an undefined ICC prints as not estimable, never NaN", {
+  d <- data.frame(V1 = c("A", "A", "B", "A"), V2 = c("B", "A", "A", "B"),
+                  b = "s1", Opinion = c("High", "Low", "High", "Low"))
+  nets <- build_network(d, group = "Opinion", method = "relative",
+                        metadata_cols = "b")
+  res <- suppressWarnings(permutation(nets, actor = "b", iter = 9L,
+                                      seed = 1))[[1]]
+  out <- capture.output(print(res))
+  expect_false(any(grepl("NaN", out)))
+  expect_true(any(grepl("ICC not estimable|interval needs", out)))
 })

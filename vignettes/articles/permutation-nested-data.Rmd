@@ -50,11 +50,11 @@ nesting.
 
 ## Reassigning whole teams
 
-```{r blocked}
-permutation(achievers, iter = 1000, seed = 1, block = "Group")
+```{r actor}
+permutation(achievers, iter = 1000, seed = 1, actor = "Group")
 ```
 
-`block = "Group"` tells the test that the sequences are nested in teams.
+`actor = "Group"` tells the test that the sequences are nested in teams.
 Each reassignment now moves all ten students of a team together, which is
 how the achievement levels were actually given. The observed differences
 are the same; only the reference distribution changes.
@@ -108,7 +108,7 @@ the same data and reports both with these two quantities, one row per
 compared pair:
 
 ```{r diagnostics}
-permutation_diagnostics(achievers, block = "Group", iter = 1000, seed = 1)
+permutation_diagnostics(achievers, actor = "Group", iter = 1000, seed = 1)
 ```
 
 The comparison involves 2,000 sequences in 200 teams. The design is
@@ -120,22 +120,22 @@ sampling variation around zero. The design effect is 1.03 for the
 transitions (median over edges) and 1.20 for the global statistic M. The
 global test has p = 0.000999 under both reassignments, and 42 transitions
 are significant under both. Two transitions change their conclusion. The
-smallest p-value the team-level test can produce, `min_p_blocked`, is
+smallest p-value the team-level test can produce, `min_p_actor`, is
 0.000999: with 200 teams the number of iterations sets the limit, not the
 number of teams.
 
 With `level = "edges"` the same comparison is reported per transition:
 
 ```{r edges}
-head(permutation_diagnostics(achievers, block = "Group", iter = 1000,
+head(permutation_diagnostics(achievers, actor = "Group", iter = 1000,
                              level = "edges", seed = 1), 6)
 ```
 
 `diff` is the High minus Low transition probability and is the same under
-both tests. `icc` is the ICC of that transition. `null_sd_plain` and
-`null_sd_blocked` are the spread of the reassigned differences under
+both tests. `icc` is the ICC of that transition. `null_sd_sequence` and
+`null_sd_actor` are the spread of the reassigned differences under
 student-level and team-level reassignment, and `deff` is the squared ratio
-of the two. `p_plain` and `p_blocked` are the two edge p-values, and
+of the two. `p_sequence` and `p_actor` are the two edge p-values, and
 `changed` marks a transition that is significant at 0.05 under one test
 but not the other. In the six rows shown, the ICCs lie between −0.009 and
 0.010 and the design effects between 0.82 and 1.14; the two spreads are
@@ -172,14 +172,14 @@ difference does not depend on the nesting of students in teams.
 
 - `permutation()`: one sequence per student, with no grouping above the
   student.
-- `permutation(block = )`: several sequences per student, or students in
+- `permutation(actor = )`: several sequences per student, or students in
   teams, classes or other units. It handles units in one group, units in
   both groups, and mixtures, and reports the ICC and design effect.
 - `paired = TRUE`: exactly one sequence per student in each of two
   conditions.
 - `permutation_diagnostics()`: to show next to each other what the
-  ordinary and the blocked test conclude.
-- `block` applies to transition networks (`relative`, `frequency`,
+  ordinary and the team-level test conclude.
+- `actor` applies to transition networks (`relative`, `frequency`,
   `co_occurrence`). Correlation networks do not keep the unit
   identifiers after estimation.
 

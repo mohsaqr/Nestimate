@@ -478,8 +478,12 @@ build_network <- function(data,
       if (!is.null(action) && action %in% names(data)) {
         vals <- .clean_states(as.character(data[[action]]))
       } else {
-        exclude <- c(group, actor, session)
-        state_names <- setdiff(names(data), exclude)
+        exclude <- c(group, actor, session, metadata_cols)
+        state_names <- if (!is.null(state_cols)) {
+          intersect(state_cols, names(data))
+        } else {
+          setdiff(names(data), exclude)
+        }
         vals <- .clean_states(as.character(unlist(data[, state_names, drop = FALSE])))
       }
       params$alphabet <- sort(unique(c(
@@ -603,6 +607,18 @@ build_network <- function(data,
   } else {
     # Wide sequence data: pass format through
     if (!"format" %in% names(params)) params$format <- format
+    # Explicit column roles decide what the estimator reads. Without this a
+    # declared metadata column was counted as a sequence position (its values
+    # became states) and was only moved to $metadata after estimation.
+    if (is.data.frame(data) && is.null(params$cols) &&
+        (!is.null(state_cols) || !is.null(metadata_cols))) {
+      params$cols <- if (!is.null(state_cols)) {
+        state_cols
+      } else {
+        setdiff(names(data), c(metadata_cols, actor,
+                               .param_get(params, "id")))
+      }
+    }
   }
 
   # ---- Auto-convert sequences to frequencies for association methods ----
@@ -627,6 +643,13 @@ build_network <- function(data,
       data <- freq_data[, setdiff(names(freq_data), drop), drop = FALSE]
       params$format <- "wide"
     }
+  }
+
+  # Declared metadata columns are not variables of an association network
+  # (cor, pcor, glasso, ising, mgm); without this they entered as nodes.
+  if (method %in% c("cor", "pcor", "glasso", "ising", "mgm") &&
+      is.data.frame(data) && !is.null(metadata_cols)) {
+    data <- data[, setdiff(names(data), metadata_cols), drop = FALSE]
   }
 
   # ---- Multilevel decomposition ----

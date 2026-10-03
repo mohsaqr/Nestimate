@@ -14,7 +14,7 @@ bootstrap_network(
   seed = NULL,
   boundary = c("inclusive", "strict"),
   ci_method = c("percentile", "basic"),
-  block = NULL
+  actor = NULL
 )
 }
 \arguments{
@@ -58,12 +58,12 @@ which corrects first-order bootstrap bias but can produce bounds
 outside the natural weight range near boundaries (e.g., below 0 for
 transition probabilities close to 0).}
 
-\item{block}{Character or NULL. Name of the column identifying the unit
-each sequence belongs to (e.g. \code{"Actor"} for sessions nested in
-students, \code{"Group"} for students nested in teams), looked up in
+\item{actor}{Character or NULL. Name of the column identifying the actor
+each sequence belongs to (e.g. \code{"student_id"} for sessions nested
+in students, \code{"Group"} for students nested in teams), looked up in
 the network's \code{$metadata} or wide sequence data. When supplied,
-whole units are resampled; see the section \emph{Nested data and
-block}. Default \code{NULL}: sequences are resampled individually.}
+whole actors are resampled; see the section \emph{Nested data and
+actor}. Default \code{NULL}: sequences are resampled individually.}
 }
 \value{
 An object of class \code{"net_bootstrap"} containing:
@@ -87,14 +87,14 @@ columns \code{from}, \code{to}, \code{weight}, \code{mean},
 \item{method, params, iter, ci_level, inference, ci_method}{Bootstrap
 config.}
 \item{consistency_range, edge_threshold}{Inference parameters.}
-\item{block, n_blocks}{The \code{block} column and its number of units;
-\code{NULL} without \code{block}.}
-\item{clustering}{Only with \code{block}. One-row data frame:
-\code{n_sequences}, \code{n_blocks}, \code{icc}, \code{icc_ci_lower},
+\item{actor, n_actors}{The \code{actor} column and its number of
+actors; \code{NULL} without \code{actor}.}
+\item{clustering}{Only with \code{actor}. One-row data frame:
+\code{n_sequences}, \code{n_actors}, \code{icc}, \code{icc_ci_lower},
 \code{icc_ci_upper}, \code{deff_edges}.}
-\item{clustering_edges}{Only with \code{block}. One row per edge of
+\item{clustering_edges}{Only with \code{actor}. One row per edge of
 \code{summary}: \code{from}, \code{to}, \code{icc},
-\code{sd_blocked}, \code{sd_unblocked}, \code{deff}.}
+\code{sd_actor}, \code{sd_sequence}, \code{deff}.}
 }
 A \code{netobject_group} or \code{mcml} input returns a
 \code{"net_bootstrap_group"} (named list of \code{net_bootstrap}
@@ -122,25 +122,25 @@ If a transition network contains only one sequence, the function warns that
 such a network is not recommended for bootstrap or other confirmatory
 testing.
 }
-\section{Nested data and \code{block}}{
+\section{Nested data and \code{actor}}{
 
 The bootstrap resamples sequences as independent units. When sequences
-are nested in units (sessions in students, students in teams),
-\code{block} names the column identifying the unit, and whole units are
-resampled with replacement, keeping all their sequences together: the
-cluster bootstrap that resamples at the top level only (Davison &
+are nested in actors (sessions in students, students in teams),
+\code{actor} names the column identifying the actor, and whole actors
+are resampled with replacement, keeping all their sequences together:
+the cluster bootstrap that resamples at the top level only (Davison &
 Hinkley, 1997, section 3.8; Field & Welsh, 2007). The number of
-sequences per replicate then varies with the units drawn.
+sequences per replicate then varies with the actors drawn.
 
-With \code{block}, the result also reports the nesting effect. The ICC
-is the proportion of the total variance that lies between units (Shrout
+With \code{actor}, the result also reports the nesting effect. The ICC
+is the proportion of the total variance that lies between actors (Shrout
 & Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
 effect. It is computed as in \code{\link{permutation}}. The design effect
 is the ratio of the variance under the nested design to the variance had
 the sequences been sampled independently (Kish, 1965): here, the variance
-of the edge weights over unit-level replicates divided by their variance
+of the edge weights over actor-level replicates divided by their variance
 over sequence-level replicates drawn in the same run, reported as the
-median over edges. \code{block} is available for transition networks
+median over edges. \code{actor} is available for transition networks
 (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}).
 }
 
@@ -163,7 +163,7 @@ summary(boot)
 teams <- build_network(group_regulation_long, method = "relative",
                        actor = "Actor", action = "Action", time = "Time",
                        group = "Achiever")
-bootstrap_network(teams, iter = 100, block = "Group", seed = 1)
+bootstrap_network(teams, iter = 100, actor = "Group", seed = 1)
 }
 
 }

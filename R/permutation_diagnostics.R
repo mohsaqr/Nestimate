@@ -6,31 +6,32 @@
 #' Shows what treating nested sequences as independent would cost. The
 #' comparison is run twice on the same data: once with the ordinary
 #' \code{\link{permutation}} test, which shuffles single sequences, and once
-#' with \code{block}, which shuffles whole persons or teams. The result
-#' places the two side by side, with the ICC and design effect that explain
-#' any difference between them. See the sections \emph{Nested data and
-#' block} and \emph{ICC and design effect} of \code{\link{permutation}} for
-#' what these quantities mean.
+#' with \code{actor}, which shuffles whole actors (the persons whose
+#' sessions they are, or the teams of students). The result places the two
+#' side by side, with the ICC and design effect that explain any difference
+#' between them. See the sections \emph{Nested data and actor} and
+#' \emph{ICC and design effect} of \code{\link{permutation}} for what these
+#' quantities mean.
 #'
 #' @section How to read the result:
 #' \describe{
 #'   \item{\code{deff_edges}, \code{deff_global}}{The design effect
-#'     (Kish, 1965): blocked over ordinary null variance. 1 means the two
-#'     shuffles give the same chance variation; above 1 the blocked one
-#'     varies more, below 1 less.}
+#'     (Kish, 1965): actor-level over sequence-level null variance. 1 means
+#'     the two shuffles give the same chance variation; above 1 the
+#'     actor-level one varies more, below 1 less.}
 #'   \item{\code{edges_changed}}{Edges significant under one test but not
 #'     the other. Edges with p-values close to \code{alpha} can flip from
 #'     Monte Carlo error alone; increase \code{iter} before reading much
 #'     into one or two.}
-#'   \item{\code{min_p_blocked} above \code{alpha}}{Too few persons: the
-#'     blocked test cannot reject anything.}
+#'   \item{\code{min_p_actor} above \code{alpha}}{Too few actors: the
+#'     actor-level test cannot reject anything.}
 #' }
 #' @param x A \code{netobject_group} (every pair of groups is diagnosed) or
 #'   a \code{netobject} (then \code{y} is required). Transition methods only
 #'   (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}).
 #' @param y A \code{netobject} to compare with \code{x}, or \code{NULL}.
-#' @param block Character. Column identifying the person or team each
-#'   sequence belongs to, as in \code{\link{permutation}}.
+#' @param actor Character. Column identifying the actor each sequence
+#'   belongs to, as in \code{\link{permutation}}.
 #' @param iter Integer. Permutation iterations for each of the two tests.
 #'   Default 1000.
 #' @param alpha Numeric. Significance level. Default 0.05.
@@ -43,38 +44,38 @@
 #' With \code{level = "overall"}, one row per compared pair:
 #' \describe{
 #'   \item{pair}{\code{"<x> vs <y>"}.}
-#'   \item{n_sequences, n_blocks}{Sequences and distinct blocks in the pair.}
-#'   \item{design}{\code{"between"} (every block in one group),
-#'     \code{"within"} (every block in both groups) or \code{"mixed"}.}
+#'   \item{n_sequences, n_actors}{Sequences and distinct actors in the pair.}
+#'   \item{design}{\code{"between"} (every actor in one group),
+#'     \code{"within"} (every actor in both groups) or \code{"mixed"}.}
 #'   \item{icc, icc_ci_lower, icc_ci_upper}{How alike the sequences of one
-#'     block are, with a 95% interval; as printed by
+#'     actor are, with a 95% interval; as printed by
 #'     \code{\link{permutation}}. \code{NA} interval with fewer than 3
-#'     blocks.}
+#'     actors.}
 #'   \item{deff_edges}{Median over edges of the design effect, the ratio of
-#'     the blocked to the ordinary null variance of the edge difference
-#'     (Kish, 1965).}
+#'     the actor-level to the sequence-level null variance of the edge
+#'     difference (Kish, 1965).}
 #'   \item{deff_global}{The same ratio for the global \code{M} statistic.}
-#'   \item{p_global_plain, p_global_blocked}{Permutation p-values of
-#'     \code{M} under each scheme.}
-#'   \item{sig_edges_plain, sig_edges_blocked}{Edges with \code{p < alpha}.}
-#'   \item{edges_changed}{Edges significant under one scheme but not the
+#'   \item{p_global_sequence, p_global_actor}{Permutation p-values of
+#'     \code{M} when sequences or whole actors are reassigned.}
+#'   \item{sig_edges_sequence, sig_edges_actor}{Edges with
+#'     \code{p < alpha} under each test.}
+#'   \item{edges_changed}{Edges significant under one test but not the
 #'     other.}
-#'   \item{min_p_blocked}{Smallest p-value the blocked test can produce,
-#'     \code{max(1 / arrangements, 1 / (iter + 1))}; when it exceeds
-#'     \code{alpha} the blocked test cannot reject anything.}
+#'   \item{min_p_actor}{Smallest p-value an exact actor-level test can
+#'     produce, \code{max(1 / arrangements, 1 / (iter + 1))}.}
 #' }
 #' With \code{level = "edges"}, one row per edge present in either network:
 #' \code{pair}, \code{from}, \code{to}, \code{diff}, \code{icc} (per-edge
 #' ANOVA ICC, not bias-corrected; \code{NA} where the share does not vary),
-#' \code{null_sd_plain}, \code{null_sd_blocked}, \code{deff} (\code{NaN}
+#' \code{null_sd_sequence}, \code{null_sd_actor}, \code{deff} (\code{NaN}
 #' where the edge difference never varies under either null),
-#' \code{p_plain}, \code{p_blocked}, \code{changed}.
+#' \code{p_sequence}, \code{p_actor}, \code{changed}.
 #'
-#' The ICC and design effects are those of the blocked run (see the
+#' The ICC and design effects are those of the actor-level run (see the
 #' \code{clustering} element of \code{\link{permutation}}); the p-values
 #' and significance counts compare it with a separate ordinary run.
-#' Errors with class \code{nestimate_block_unsupported} for association
-#' networks and \code{nestimate_block_missing} when \code{block} is not a
+#' Errors with class \code{nestimate_actor_unsupported} for association
+#' networks and \code{nestimate_actor_missing} when \code{actor} is not a
 #' column of the networks' metadata or sequence data.
 #'
 #' @references
@@ -95,19 +96,19 @@
 #' net <- build_network(group_regulation_long, method = "relative",
 #'                      actor = "Actor", action = "Action", time = "Time",
 #'                      group = "Achiever")
-#' permutation_diagnostics(net, block = "Group", iter = 200, seed = 1)
-#' head(permutation_diagnostics(net, block = "Group", iter = 200,
+#' permutation_diagnostics(net, actor = "Group", iter = 200, seed = 1)
+#' head(permutation_diagnostics(net, actor = "Group", iter = 200,
 #'                              level = "edges", seed = 1))
 #' }
 #' @export
-permutation_diagnostics <- function(x, y = NULL, block, iter = 1000L,
+permutation_diagnostics <- function(x, y = NULL, actor, iter = 1000L,
                                     alpha = 0.05,
                                     level = c("overall", "edges"),
                                     seed = NULL) {
   level <- match.arg(level)
   stopifnot(
-    "`block` must be a single column name" =
-      is.character(block) && length(block) == 1L && !is.na(block) && nzchar(block),
+    "`actor` must be a single column name" =
+      is.character(actor) && length(actor) == 1L && !is.na(actor) && nzchar(actor),
     "`iter` must be a single integer >= 2" =
       is.numeric(iter) && length(iter) == 1L && iter >= 2,
     "`alpha` must be in (0, 1)" =
@@ -132,7 +133,7 @@ permutation_diagnostics <- function(x, y = NULL, block, iter = 1000L,
   }
 
   rows <- lapply(pairs, function(pr) {
-    .permutation_diagnose_pair(pr$x, pr$y, pr$name, block, iter, alpha,
+    .permutation_diagnose_pair(pr$x, pr$y, pr$name, actor, iter, alpha,
                                level, seed)
   })
   out <- do.call(rbind, rows)
@@ -143,54 +144,65 @@ permutation_diagnostics <- function(x, y = NULL, block, iter = 1000L,
 
 #' Diagnose one x-vs-y comparison
 #'
-#' ICC and design effects come from the blocked run itself (its unblocked
-#' reference null is drawn in the same pass), so they match what
-#' print(permutation(..., block = )) reports.
+#' ICC and design effects come from the actor-level run itself (its
+#' sequence-level reference is drawn in the same pass), so they match what
+#' print(permutation(..., actor = )) reports.
 #' @noRd
-.permutation_diagnose_pair <- function(x, y, pair, block, iter, alpha,
+.permutation_diagnose_pair <- function(x, y, pair, actor, iter, alpha,
                                        level, seed) {
   method <- .resolve_method_alias(x$method)
   if (!method %in% c("relative", "frequency", "co_occurrence")) {
-    .stop_block_unsupported(block, method)
+    .stop_block_unsupported(actor, method)
   }
-  plain <- permutation(x, y, iter = iter, alpha = alpha, seed = seed)
-  blocked <- permutation(x, y, iter = iter, alpha = alpha, seed = seed,
-                         block = block)
-  clus <- blocked$clustering
-  edges <- blocked$clustering_edges
+  by_sequence <- permutation(x, y, iter = iter, alpha = alpha, seed = seed)
+  by_actor <- permutation(x, y, iter = iter, alpha = alpha, seed = seed,
+                          actor = actor)
+  clus <- by_actor$clustering
+  edges <- by_actor$clustering_edges
   at <- cbind(edges$from, edges$to)
-  p_plain <- plain$p_values[at]
-  p_blocked <- blocked$p_values[at]
-  sig_plain <- p_plain < alpha
-  sig_blocked <- p_blocked < alpha
+  p_sequence <- by_sequence$p_values[at]
+  p_actor <- by_actor$p_values[at]
+  sig_sequence <- p_sequence < alpha
+  sig_actor <- p_actor < alpha
 
   if (identical(level, "edges")) {
     return(data.frame(
       pair = pair, from = edges$from, to = edges$to,
-      diff = blocked$diff[at], icc = edges$icc,
-      null_sd_plain = edges$null_sd_unblocked,
-      null_sd_blocked = edges$null_sd_blocked,
-      deff = edges$deff, p_plain = p_plain, p_blocked = p_blocked,
-      changed = sig_plain != sig_blocked,
+      diff = by_actor$diff[at], icc = edges$icc,
+      null_sd_sequence = edges$null_sd_sequence,
+      null_sd_actor = edges$null_sd_actor,
+      deff = edges$deff, p_sequence = p_sequence, p_actor = p_actor,
+      changed = sig_sequence != sig_actor,
       stringsAsFactors = FALSE
     ))
   }
 
   data.frame(
     pair = pair,
-    n_sequences = clus$n_sequences, n_blocks = clus$n_blocks,
+    n_sequences = clus$n_sequences, n_actors = clus$n_actors,
     design = clus$design,
     icc = clus$icc, icc_ci_lower = clus$icc_ci_lower,
     icc_ci_upper = clus$icc_ci_upper,
     deff_edges = clus$deff_edges, deff_global = clus$deff_global,
-    p_global_plain = plain$global$p_value[1L],
-    p_global_blocked = blocked$global$p_value[1L],
-    sig_edges_plain = sum(sig_plain),
-    sig_edges_blocked = sum(sig_blocked),
-    edges_changed = sum(sig_plain != sig_blocked),
-    min_p_blocked = clus$min_p,
+    p_global_sequence = by_sequence$global$p_value[1L],
+    p_global_actor = by_actor$global$p_value[1L],
+    sig_edges_sequence = sum(sig_sequence),
+    sig_edges_actor = sum(sig_actor),
+    edges_changed = sum(sig_sequence != sig_actor),
+    min_p_actor = clus$min_p,
     stringsAsFactors = FALSE
   )
+}
+
+
+#' ICC text for print methods: value with interval, or why it is missing
+#' @noRd
+.format_icc <- function(icc, lower, upper) {
+  if (is.na(icc)) return("ICC not estimable (no variation between actors)")
+  if (is.na(lower) || is.na(upper)) {
+    return(sprintf("ICC = %.3f (interval needs at least 3 actors)", icc))
+  }
+  sprintf("ICC = %.3f [95%% CI %.3f, %.3f]", icc, lower, upper)
 }
 
 
@@ -254,6 +266,7 @@ permutation_diagnostics <- function(x, y = NULL, block, iter = 1000L,
     v <- per_edge(rows, block_ids[rows])
     weight <- colSums(counts[rows, , drop = FALSE])
     ok <- !is.na(v) & weight > 0
+    if (!any(ok)) return(NA_real_)       # no transition varies: undefined
     sum(v[ok] * weight[ok]) / sum(weight[ok])
   }
 
@@ -263,7 +276,7 @@ permutation_diagnostics <- function(x, y = NULL, block, iter = 1000L,
 
   rows_by_block <- split(all_rows, block_ids)
   k <- length(rows_by_block)
-  if (!interval || k < 3L) {
+  if (!interval || k < 3L || is.na(estimate)) {
     return(list(estimate = estimate, ci = c(NA_real_, NA_real_),
                 per_edge = icc_edges))
   }

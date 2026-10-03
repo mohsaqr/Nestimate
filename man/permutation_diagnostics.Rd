@@ -7,7 +7,7 @@
 permutation_diagnostics(
   x,
   y = NULL,
-  block,
+  actor,
   iter = 1000L,
   alpha = 0.05,
   level = c("overall", "edges"),
@@ -21,8 +21,8 @@ a \code{netobject} (then \code{y} is required). Transition methods only
 
 \item{y}{A \code{netobject} to compare with \code{x}, or \code{NULL}.}
 
-\item{block}{Character. Column identifying the person or team each
-sequence belongs to, as in \code{\link{permutation}}.}
+\item{actor}{Character. Column identifying the actor each sequence
+belongs to, as in \code{\link{permutation}}.}
 
 \item{iter}{Integer. Permutation iterations for each of the two tests.
 Default 1000.}
@@ -40,63 +40,64 @@ A \code{data.frame}.
 With \code{level = "overall"}, one row per compared pair:
 \describe{
 \item{pair}{\code{"<x> vs <y>"}.}
-\item{n_sequences, n_blocks}{Sequences and distinct blocks in the pair.}
-\item{design}{\code{"between"} (every block in one group),
-\code{"within"} (every block in both groups) or \code{"mixed"}.}
+\item{n_sequences, n_actors}{Sequences and distinct actors in the pair.}
+\item{design}{\code{"between"} (every actor in one group),
+\code{"within"} (every actor in both groups) or \code{"mixed"}.}
 \item{icc, icc_ci_lower, icc_ci_upper}{How alike the sequences of one
-block are, with a 95\% interval; as printed by
+actor are, with a 95\% interval; as printed by
 \code{\link{permutation}}. \code{NA} interval with fewer than 3
-blocks.}
+actors.}
 \item{deff_edges}{Median over edges of the design effect, the ratio of
-the blocked to the ordinary null variance of the edge difference
-(Kish, 1965).}
+the actor-level to the sequence-level null variance of the edge
+difference (Kish, 1965).}
 \item{deff_global}{The same ratio for the global \code{M} statistic.}
-\item{p_global_plain, p_global_blocked}{Permutation p-values of
-\code{M} under each scheme.}
-\item{sig_edges_plain, sig_edges_blocked}{Edges with \code{p < alpha}.}
-\item{edges_changed}{Edges significant under one scheme but not the
+\item{p_global_sequence, p_global_actor}{Permutation p-values of
+\code{M} when sequences or whole actors are reassigned.}
+\item{sig_edges_sequence, sig_edges_actor}{Edges with
+\code{p < alpha} under each test.}
+\item{edges_changed}{Edges significant under one test but not the
 other.}
-\item{min_p_blocked}{Smallest p-value the blocked test can produce,
-\code{max(1 / arrangements, 1 / (iter + 1))}; when it exceeds
-\code{alpha} the blocked test cannot reject anything.}
+\item{min_p_actor}{Smallest p-value an exact actor-level test can
+produce, \code{max(1 / arrangements, 1 / (iter + 1))}.}
 }
 With \code{level = "edges"}, one row per edge present in either network:
 \code{pair}, \code{from}, \code{to}, \code{diff}, \code{icc} (per-edge
 ANOVA ICC, not bias-corrected; \code{NA} where the share does not vary),
-\code{null_sd_plain}, \code{null_sd_blocked}, \code{deff} (\code{NaN}
+\code{null_sd_sequence}, \code{null_sd_actor}, \code{deff} (\code{NaN}
 where the edge difference never varies under either null),
-\code{p_plain}, \code{p_blocked}, \code{changed}.
+\code{p_sequence}, \code{p_actor}, \code{changed}.
 
-The ICC and design effects are those of the blocked run (see the
+The ICC and design effects are those of the actor-level run (see the
 \code{clustering} element of \code{\link{permutation}}); the p-values
 and significance counts compare it with a separate ordinary run.
-Errors with class \code{nestimate_block_unsupported} for association
-networks and \code{nestimate_block_missing} when \code{block} is not a
+Errors with class \code{nestimate_actor_unsupported} for association
+networks and \code{nestimate_actor_missing} when \code{actor} is not a
 column of the networks' metadata or sequence data.
 }
 \description{
 Shows what treating nested sequences as independent would cost. The
 comparison is run twice on the same data: once with the ordinary
 \code{\link{permutation}} test, which shuffles single sequences, and once
-with \code{block}, which shuffles whole persons or teams. The result
-places the two side by side, with the ICC and design effect that explain
-any difference between them. See the sections \emph{Nested data and
-block} and \emph{ICC and design effect} of \code{\link{permutation}} for
-what these quantities mean.
+with \code{actor}, which shuffles whole actors (the persons whose
+sessions they are, or the teams of students). The result places the two
+side by side, with the ICC and design effect that explain any difference
+between them. See the sections \emph{Nested data and actor} and
+\emph{ICC and design effect} of \code{\link{permutation}} for what these
+quantities mean.
 }
 \section{How to read the result}{
 
 \describe{
 \item{\code{deff_edges}, \code{deff_global}}{The design effect
-(Kish, 1965): blocked over ordinary null variance. 1 means the two
-shuffles give the same chance variation; above 1 the blocked one
-varies more, below 1 less.}
+(Kish, 1965): actor-level over sequence-level null variance. 1 means
+the two shuffles give the same chance variation; above 1 the
+actor-level one varies more, below 1 less.}
 \item{\code{edges_changed}}{Edges significant under one test but not
 the other. Edges with p-values close to \code{alpha} can flip from
 Monte Carlo error alone; increase \code{iter} before reading much
 into one or two.}
-\item{\code{min_p_blocked} above \code{alpha}}{Too few persons: the
-blocked test cannot reject anything.}
+\item{\code{min_p_actor} above \code{alpha}}{Too few actors: the
+actor-level test cannot reject anything.}
 }
 }
 
@@ -106,8 +107,8 @@ blocked test cannot reject anything.}
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
-permutation_diagnostics(net, block = "Group", iter = 200, seed = 1)
-head(permutation_diagnostics(net, block = "Group", iter = 200,
+permutation_diagnostics(net, actor = "Group", iter = 200, seed = 1)
+head(permutation_diagnostics(net, actor = "Group", iter = 200,
                              level = "edges", seed = 1))
 }
 }

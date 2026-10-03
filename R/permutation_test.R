@@ -30,56 +30,56 @@
 #' The smallest attainable p-value is \code{1 / (iter + 1)}; with the
 #' default \code{iter = 1000} it is 0.000999, meaning no shuffle came close.
 #'
-#' @section Nested data and \code{block}:
+#' @section Nested data and \code{actor}:
 #' Shuffling treats every sequence as an exchangeable unit. When several
-#' sequences come from the same person (repeated sessions) or the same
-#' team, \code{block} names the column identifying that person or team. The
+#' sequences come from the same actor (sessions of one person, students of
+#' one team), \code{actor} names the column identifying that actor. The
 #' shuffle then respects it (Good, 2005; Anderson & ter Braak, 2003): a
 #' person whose sequences are all in one group moves to the other group
 #' as a whole; a person with sequences in both groups has their labels
 #' shuffled among their own sequences only. Mixed designs combine the two.
 #' The observed differences do not change; only the p-values and effect
 #' sizes do. With few persons there are few distinct ways to shuffle them,
-#' and a warning (class \code{nestimate_few_blocks}) is raised when no
+#' and a warning (class \code{nestimate_few_actors}) is raised when no
 #' p-value could fall below \code{alpha}.
 #'
-#' \code{block} is available for transition networks (\code{"relative"},
+#' \code{actor} is available for transition networks (\code{"relative"},
 #' \code{"frequency"}, \code{"co_occurrence"}). Association networks
 #' (\code{"cor"}, \code{"pcor"}, \code{"glasso"}, ...) do not keep row
-#' identifiers after estimation and raise \code{nestimate_block_unsupported}.
+#' identifiers after estimation and raise \code{nestimate_actor_unsupported}.
 #'
 #' @section ICC and design effect:
-#' With \code{block}, \code{print()} also reports:
+#' With \code{actor}, \code{print()} also reports:
 #' \describe{
 #'   \item{ICC}{The intraclass correlation, the proportion of the total
-#'     variance that lies between blocks (Shrout & Fleiss, 1979). An ICC
+#'     variance that lies between actors (Shrout & Fleiss, 1979). An ICC
 #'     close to 0 indicates little evidence of a nesting effect. Computed as
 #'     the one-way ANOVA ICC of each sequence's transition shares within each
 #'     group, averaged over edges weighted by edge frequency, jackknife
-#'     bias-corrected, with a 95% interval from the leave-one-block-out
+#'     bias-corrected, with a 95% interval from the leave-one-actor-out
 #'     jackknife (Efron & Tibshirani, 1993).}
 #'   \item{Design effect}{The ratio of the variance of an estimate under the
 #'     clustered design to its variance had the units been sampled
 #'     independently (Kish, 1965). Here: the variance of the shuffled
-#'     differences when whole blocks are moved, divided by the variance when
+#'     differences when whole actors are moved, divided by the variance when
 #'     single sequences are moved, both drawn in the same run. Reported as
-#'     the median over edges and for the global statistic M. For equal block
-#'     sizes m, Kish gives the approximation \code{1 + (m - 1) * ICC}.}
+#'     the median over edges and for the global statistic M. For equal
+#'     numbers of sequences per actor m, Kish gives the approximation \code{1 + (m - 1) * ICC}.}
 #' }
 #'
 #' @section Reading the printed output:
 #' \preformatted{
 #' Permutation Test: Transition Network (relative probabilities) [directed]
-#'   Iterations: 1000  |  Alpha: 0.05  |  Blocked by: Group (200 blocks)
+#'   Iterations: 1000  |  Alpha: 0.05  |  Actor: Group (200 actors)
 #'   Nodes: 9  |  Edges tested: 78  |  Significant: 42
 #'   Global test (networks differ overall?): M = 2.612 (p = 0.000999)  |  ...
-#'   Clustering by Group: ICC = -0.002 [95\% CI -0.006, 0.002]  |  between design
+#'   Nesting in Group: ICC = -0.002 [95\% CI -0.006, 0.002]  |  between design
 #'   Design effect (1 = nesting does not matter): edges 1.03  |  global 1.20
 #' }
-#' Line 2: settings, and the blocking column with its number of blocks.
+#' Line 2: settings, and the actor column with its number of actors.
 #' Line 3: edges present in either network and how many differ at
 #' \code{alpha}. Line 4: the global test. Lines 5-6, only with
-#' \code{block}: the ICC with its interval, whether persons sit in one group
+#' \code{actor}: the ICC with its interval, whether actors sit in one group
 #' (\code{between}), in both (\code{within}) or either (\code{mixed}), and
 #' the design effects.
 #'
@@ -126,16 +126,17 @@
 #'   Higher values give finer lambda resolution at the cost of speed.
 #'   Default: 50.
 #' @param seed Integer or NULL. RNG seed for reproducibility.
-#' @param block Character or NULL. Name of the column that identifies the
-#'   person, team, or other cluster each sequence belongs to, looked up in
-#'   the network's \code{$metadata} (e.g. \code{"Actor"} when sessions are
-#'   nested in persons) or in its wide sequence data. When supplied, whole
-#'   blocks are permuted and the ICC and design effect are reported; see the
-#'   sections \emph{Nested data and block} and \emph{ICC and design
-#'   effect}. Supported for transition
+#' @param actor Character or NULL. Name of the column identifying the actor
+#'   each sequence belongs to: the person whose sessions they are, or the
+#'   team of a student. Looked up in the network's \code{$metadata} (e.g.
+#'   \code{"student_id"} when sessions are nested in students,
+#'   \code{"Group"} for students nested in teams) or in its wide sequence
+#'   data. When supplied, whole actors are permuted and the ICC and design
+#'   effect are reported; see the sections \emph{Nested data and actor} and
+#'   \emph{ICC and design effect}. Supported for transition
 #'   methods (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"});
 #'   cannot be combined with \code{paired = TRUE}, which is the special case
-#'   of one block per pair. Default \code{NULL}: sequences are permuted
+#'   of one actor per pair. Default \code{NULL}: sequences are permuted
 #'   individually.
 #'
 #' @return An object of class \code{"net_permutation"} containing:
@@ -162,24 +163,24 @@
 #'   \item{alpha}{Significance level used.}
 #'   \item{paired}{Whether paired permutation was used.}
 #'   \item{adjust}{p-value adjustment method used.}
-#'   \item{block}{The \code{block} column name, or \code{NULL}.}
-#'   \item{n_blocks}{Number of distinct blocks, or \code{NULL}.}
+#'   \item{actor}{The \code{actor} column name, or \code{NULL}.}
+#'   \item{n_actors}{Number of distinct actors, or \code{NULL}.}
 #'   \item{null_sd}{Matrix of the SD of each edge difference over the
 #'     permutation null (the effect-size denominator).}
 #'   \item{null_sd_m}{SD of the global \code{M} statistic over the
 #'     permutation null. Absent on the edge-betweenness path.}
-#'   \item{clustering}{Present only with \code{block}. One-row data frame:
-#'     \code{n_sequences}, \code{n_blocks}, \code{design}
+#'   \item{clustering}{Present only with \code{actor}. One-row data frame:
+#'     \code{n_sequences}, \code{n_actors}, \code{design}
 #'     (\code{"between"}, \code{"within"}, \code{"mixed"}), \code{icc} with
 #'     \code{icc_ci_lower}/\code{icc_ci_upper} (how alike sequences of one
-#'     block are; see \code{\link{permutation_diagnostics}}),
+#'     actor are; see \code{\link{permutation_diagnostics}}),
 #'     \code{deff_edges} (median over edges) and \code{deff_global} (for
-#'     \code{M}): the blocked over the unblocked null variance, drawn in the
+#'     \code{M}): the actor-level over the sequence-level null variance, drawn in the
 #'     same run (the design effect; Kish, 1965). \code{min_p} is the
 #'     smallest attainable p-value.}
-#'   \item{clustering_edges}{Present only with \code{block}. One row per
+#'   \item{clustering_edges}{Present only with \code{actor}. One row per
 #'     edge of \code{summary}: \code{from}, \code{to}, \code{icc},
-#'     \code{null_sd_blocked}, \code{null_sd_unblocked}, \code{deff}.}
+#'     \code{null_sd_actor}, \code{null_sd_sequence}, \code{deff}.}
 #'   \item{centralities}{Present only when \code{measures} is supplied. A list
 #'     with \code{stats} (one row per state-by-measure: \code{state},
 #'     \code{centrality}, \code{diff_true}, \code{effect_size}, \code{p_value}),
@@ -218,7 +219,7 @@
 #' net <- build_network(group_regulation_long, method = "relative",
 #'                      actor = "Actor", action = "Action", time = "Time",
 #'                      group = "Achiever")
-#' permutation(net, iter = 100, block = "Group", seed = 1)
+#' permutation(net, iter = 100, actor = "Group", seed = 1)
 #' }
 #'
 #' @references
@@ -243,8 +244,8 @@
 #' Comparing network structures on three aspects: A permutation test.
 #' \emph{Psychological Methods}, 28(6), 1273-1285.
 #'
-#' @seealso \code{\link{permutation_diagnostics}} to compare the blocked
-#'   and ordinary tests side by side; \code{\link{bayes_compare}} for the Bayesian complement: instead of
+#' @seealso \code{\link{permutation_diagnostics}} to compare the
+#'   actor-level and ordinary tests side by side; \code{\link{bayes_compare}} for the Bayesian complement: instead of
 #'   "is this difference more extreme than chance?" it answers "how probable is
 #'   a difference, and how large?";
 #'   \code{\link{build_network}}, \code{\link{bootstrap_network}},
@@ -261,7 +262,7 @@ permutation <- function(x, y = NULL,
                              measures = NULL,
                              nlambda = 50L,
                              seed = NULL,
-                             block = NULL) {
+                             actor = NULL) {
 
   # ---- wtna_mixed dispatch: permute both components ----
   if (inherits(x, "wtna_mixed") || inherits(y, "wtna_mixed")) {
@@ -272,12 +273,12 @@ permutation <- function(x, y = NULL,
       transition = permutation(
         x$transition, y$transition, iter = iter, alpha = alpha,
         paired = paired, adjust = adjust, measures = measures, nlambda = nlambda,
-        seed = seed, block = block
+        seed = seed, actor = actor
       ),
       cooccurrence = permutation(
         x$cooccurrence, y$cooccurrence, iter = iter, alpha = alpha,
         paired = paired, adjust = adjust, measures = measures,
-        nlambda = nlambda, seed = seed, block = block
+        nlambda = nlambda, seed = seed, actor = actor
       )
     )
     class(result) <- "wtna_perm_mixed"
@@ -302,7 +303,7 @@ permutation <- function(x, y = NULL,
       j <- pairs[2L, k]
       permutation(x[[i]], x[[j]], iter = iter, alpha = alpha,
                   paired = paired, adjust = adjust, measures = measures,
-                  nlambda = nlambda, seed = seed, block = block)
+                  nlambda = nlambda, seed = seed, actor = actor)
     })
     pair_labels <- vapply(seq_len(ncol(pairs)), function(k) {
       paste(grp_names[pairs[1L, k]], "vs", grp_names[pairs[2L, k]])
@@ -321,7 +322,7 @@ permutation <- function(x, y = NULL,
     results <- lapply(common, function(nm) {
       permutation(x[[nm]], y[[nm]], iter = iter, alpha = alpha,
                   paired = paired, adjust = adjust, measures = measures,
-                  nlambda = nlambda, seed = seed, block = block)
+                  nlambda = nlambda, seed = seed, actor = actor)
     })
     names(results) <- common
     class(results) <- c("net_permutation_group", "list")
@@ -338,7 +339,7 @@ permutation <- function(x, y = NULL,
     return(.permutation_edge_betweenness(
       x = x, y = y, iter = iter, alpha = alpha, paired = paired,
       adjust = adjust, measures = measures, nlambda = nlambda, seed = seed,
-      block = block
+      actor = actor
     ))
   }
 
@@ -352,7 +353,7 @@ permutation <- function(x, y = NULL,
     is.character(adjust), length(adjust) == 1
   )
   iter <- as.integer(iter)
-  .check_permutation_block(block, paired)
+  .check_permutation_block(actor, paired)
 
   if (is.null(x$data)) {
     stop("'x' does not contain $data. Rebuild with build_network().",
@@ -435,10 +436,10 @@ permutation <- function(x, y = NULL,
       x = x, y = y, nodes = nodes, method = method,
       iter = iter, paired = paired,
       measures = measures, directed = directed, obs_cent_diff = obs_cent_diff,
-      block = block, alpha = alpha
+      block = actor, alpha = alpha
     )
   } else {
-    .stop_block_unsupported(block, method)
+    .stop_block_unsupported(actor, method)
     perm_result <- .permutation_association(
       x = x, y = y, nodes = nodes, method = method,
       iter = iter, paired = paired, nlambda = nlambda,
@@ -496,8 +497,8 @@ permutation <- function(x, y = NULL,
     alpha       = alpha,
     paired      = paired,
     adjust      = adjust,
-    block       = block,
-    n_blocks    = perm_result$n_blocks,
+    actor       = actor,
+    n_actors    = perm_result$n_blocks,
     global      = .build_permutation_global(perm_result$global, iter),
     null_sd     = matrix(perm_result$perm_sd, n_nodes, n_nodes,
                          dimnames = list(nodes, nodes)),
@@ -629,7 +630,7 @@ permutation <- function(x, y = NULL,
 #' @noRd
 .permutation_edge_betweenness <- function(x, y, iter, alpha, paired,
                                           adjust, measures, nlambda, seed,
-                                          block = NULL) {
+                                          actor = NULL) {
   if (!inherits(x, "net_edge_betweenness") ||
       !inherits(y, "net_edge_betweenness")) {
     stop("Both x and y must be net_edge_betweenness objects.",
@@ -647,7 +648,7 @@ permutation <- function(x, y = NULL,
     is.character(adjust), length(adjust) == 1
   )
   iter <- as.integer(iter)
-  .check_permutation_block(block, paired)
+  .check_permutation_block(actor, paired)
 
   if (is.null(x$data)) {
     stop("'x' does not contain $data. Rebuild with build_network().",
@@ -725,10 +726,10 @@ permutation <- function(x, y = NULL,
       iter = iter, paired = paired,
       measures = NULL, directed = directed, obs_cent_diff = NULL,
       transform = transform_eb, obs_diff = obs_diff,
-      block = block, alpha = alpha
+      block = actor, alpha = alpha
     )
   } else {
-    .stop_block_unsupported(block, method)
+    .stop_block_unsupported(actor, method)
     perm_result <- .permutation_association(
       x = x_src, y = y_src, nodes = nodes, method = method,
       iter = iter, paired = paired, nlambda = nlambda,
@@ -776,8 +777,8 @@ permutation <- function(x, y = NULL,
     alpha = alpha,
     paired = paired,
     adjust = adjust,
-    block = block,
-    n_blocks = perm_result$n_blocks,
+    actor = actor,
+    n_actors = perm_result$n_blocks,
     null_sd = matrix(perm_result$perm_sd, n_nodes, n_nodes,
                      dimnames = list(nodes, nodes)),
     edge_betweenness = list(invert = invert, source_method = method)
@@ -957,14 +958,14 @@ permutation <- function(x, y = NULL,
   if (is.null(block)) return(invisible(NULL))
   if (!is.character(block) || length(block) != 1L || is.na(block) ||
       !nzchar(block)) {
-    stop(errorCondition("`block` must be a single column name or NULL.",
-                        class = "nestimate_bad_block", call = NULL))
+    stop(errorCondition("`actor` must be a single column name or NULL.",
+                        class = "nestimate_bad_actor", call = NULL))
   }
   if (isTRUE(paired)) {
     stop(errorCondition(
-      paste0("`block` and `paired = TRUE` cannot be combined: a paired ",
-             "design is the special case of one block per pair. Use one."),
-      class = "nestimate_bad_block", call = NULL))
+      paste0("`actor` and `paired = TRUE` cannot be combined: a paired ",
+             "design is the special case of one actor per pair. Use one."),
+      class = "nestimate_bad_actor", call = NULL))
   }
   invisible(NULL)
 }
@@ -975,10 +976,10 @@ permutation <- function(x, y = NULL,
 .stop_block_unsupported <- function(block, method) {
   if (is.null(block)) return(invisible(NULL))
   stop(errorCondition(
-    sprintf(paste0("`block` is supported for transition networks ",
+    sprintf(paste0("`actor` is supported for transition networks ",
                    "(relative, frequency, co_occurrence), not method '%s': ",
                    "its netobject does not keep row identifiers."), method),
-    class = "nestimate_block_unsupported", call = NULL))
+    class = "nestimate_actor_unsupported", call = NULL))
 }
 
 #' Block id of every sequence row of a netobject
@@ -994,22 +995,22 @@ permutation <- function(x, y = NULL,
     net$data[[block]]
   } else {
     stop(errorCondition(
-      sprintf("`block = \"%s\"` is not a column of %s's metadata or sequence data.",
+      sprintf("`actor = \"%s\"` is not a column of %s's metadata or sequence data.",
               block, label),
-      class = "nestimate_block_missing", call = NULL))
+      class = "nestimate_actor_missing", call = NULL))
   }
   if (length(ids) != n_rows) {
     stop(errorCondition(
-      sprintf(paste0("`block = \"%s\"` has %d values but %s has %d sequences; ",
-                     "blocked permutation needs one block id per sequence."),
+      sprintf(paste0("`actor = \"%s\"` has %d values but %s has %d sequences; ",
+                     "this needs one actor id per sequence."),
               block, length(ids), label, n_rows),
-      class = "nestimate_block_misaligned", call = NULL))
+      class = "nestimate_actor_misaligned", call = NULL))
   }
   if (anyNA(ids)) {
     stop(errorCondition(
-      sprintf("`block = \"%s\"` has %d missing values in %s.",
+      sprintf("`actor = \"%s\"` has %d missing values in %s.",
               block, sum(is.na(ids)), label),
-      class = "nestimate_block_missing", call = NULL))
+      class = "nestimate_actor_missing", call = NULL))
   }
   as.character(ids)
 }
@@ -1038,12 +1039,12 @@ permutation <- function(x, y = NULL,
     sum(lchoose(n_in_block[crossed], n_x_in_block[crossed]))
   if (warn && log_arrangements < log(1 / alpha)) {
     warning(warningCondition(
-      sprintf(paste0("`block = \"%s\"` allows only %d distinct permutations, ",
+      sprintf(paste0("`actor = \"%s\"` allows only %d distinct permutations, ",
                      "so no p-value can fall below %.3g (alpha = %g). ",
-                     "More blocks are needed for this test to detect anything."),
+                     "More actors are needed for this test to detect anything."),
               block, as.integer(round(exp(log_arrangements))),
               exp(-log_arrangements), alpha),
-      class = "nestimate_few_blocks", call = NULL))
+      class = "nestimate_few_actors", call = NULL))
   }
 
   list(
@@ -1099,13 +1100,13 @@ permutation <- function(x, y = NULL,
   edges <- data.frame(
     from = summary_df$from, to = summary_df$to,
     icc = icc_edges[at],
-    null_sd_blocked = sd_blocked[at], null_sd_unblocked = sd_unblocked[at],
+    null_sd_actor = sd_blocked[at], null_sd_sequence = sd_unblocked[at],
     deff = (sd_blocked[at] / sd_unblocked[at])^2,
     stringsAsFactors = FALSE
   )
   overall <- data.frame(
     n_sequences = clus$n_sequences,
-    n_blocks = design$n_blocks,
+    n_actors = design$n_blocks,
     design = if (design$n_crossed == 0L) "between"
              else if (design$n_pure == 0L) "within" else "mixed",
     icc = clus$icc$estimate,
@@ -1397,8 +1398,8 @@ print.net_permutation <- function(x, ...) {
   cat(sprintf("  Iterations: %d  |  Alpha: %.2f",
               x$iter, x$alpha))
   if (x$paired) cat("  |  Paired")
-  if (!is.null(x$block)) {
-    cat(sprintf("  |  Blocked by: %s (%d blocks)", x$block, x$n_blocks))
+  if (!is.null(x$actor)) {
+    cat(sprintf("  |  Actor: %s (%d actors)", x$actor, x$n_actors))
   }
   if (x$adjust != "none") cat(sprintf("  |  Adjust: %s", x$adjust))
   cat("\n")
@@ -1419,14 +1420,15 @@ print.net_permutation <- function(x, ...) {
   }
   if (!is.null(x$clustering)) {
     cl <- x$clustering
-    cat(sprintf("  Clustering by %s: ICC = %.3f [95%% CI %.3f, %.3f]  |  %s design\n",
-                x$block, cl$icc, cl$icc_ci_lower, cl$icc_ci_upper, cl$design))
+    cat(sprintf("  Nesting in %s: %s  |  %s design\n", x$actor,
+                .format_icc(cl$icc, cl$icc_ci_lower, cl$icc_ci_upper),
+                cl$design))
     cat(sprintf(paste0("  Design effect (1 = nesting does not matter): ",
                        "edges %.2f  |  global %.2f\n"),
                 cl$deff_edges, cl$deff_global))
     if (cl$min_p > x$alpha) {
-      cat(sprintf("  Note: with %d blocks no p-value can fall below %s\n",
-                  cl$n_blocks, format(cl$min_p, digits = 3)))
+      cat(sprintf("  Note: with %d actors no p-value can fall below %s\n",
+                  cl$n_actors, format(cl$min_p, digits = 3)))
     }
   }
 
