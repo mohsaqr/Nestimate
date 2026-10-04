@@ -116,6 +116,8 @@ reference:
       - cluster_network
       - build_mcml
       - build_mcml_pc
+      - composites
+      - item_loadings
       - macro_network
       - build_mmm
       - compare_mmm
@@ -167,6 +169,8 @@ reference:
       - extract_edges
       - extract_initial_probs
       - extract_transition_matrix
+      - state_colors
+      - set_state_colors
 
   - title: Sequence Analysis
     desc: Sequence visualization, pattern comparison, and association mining

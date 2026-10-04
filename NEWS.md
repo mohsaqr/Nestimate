@@ -1,3 +1,12 @@
+# Nestimate 0.9.18
+
+## Documentation
+
+* The pkgdown site builds again. Four exported topics (`state_colors()`,
+  `set_state_colors()`, `composites()`, `item_loadings()`) were missing from the
+  reference index, which had failed every site build since 0.9.10. The
+  `compare-networks` and `permutation-nested-data` articles now publish.
+
 # Nestimate 0.9.17
 
 ## New features
