@@ -12,17 +12,19 @@ Nestimate is a comprehensive R package for estimating, validating, and comparing
 
 ### Full tutorials
 
-- [Network Estimation & Visualization](https://saqr.me/Nestimate/articles/cograph-tutorial-nestimate.html)
-- [Higher-Order & Simplicial Complexes](https://saqr.me/Nestimate/articles/cograph-tutorial-simplicial.html)
-- [Model Assessment](https://saqr.me/Nestimate/articles/tutorial_model_assessment.html)
+- [Network Estimation & Visualization](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html)
+- [Higher-Order & Simplicial Complexes](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html)
+- [Model Assessment](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html)
+- [Permutation Tests for Nested Data](https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html)
+- [Comparing Networks](https://pak.dynasite.org/Nestimate/articles/compare-networks.html)
 
 ### Quick guides
 
-- [Transition Networks](https://saqr.me/Nestimate/articles/transition-networks.html)
-- [Sequence Plots & Comparison](https://saqr.me/Nestimate/articles/sequence-plots.html)
-- [Clustering & Multi-Level Analysis](https://saqr.me/Nestimate/articles/clustering.html)
-- [Markov Stability](https://saqr.me/Nestimate/articles/markov-stability.html)
-- [Sequence Pattern Comparison](https://saqr.me/Nestimate/articles/sequence-comparison.html)
+- [Transition Networks](https://pak.dynasite.org/Nestimate/articles/transition-networks.html)
+- [Sequence Plots & Comparison](https://pak.dynasite.org/Nestimate/articles/sequence-plots.html)
+- [Clustering & Multi-Level Analysis](https://pak.dynasite.org/Nestimate/articles/clustering.html)
+- [Markov Stability](https://pak.dynasite.org/Nestimate/articles/markov-stability.html)
+- [Sequence Pattern Comparison](https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html)
 
 
 ## Installation
@@ -367,9 +369,9 @@ boot_gl <- boot_glasso(net_pna, iter = 1000)
 
 ## Documentation
 
-- [Transition Networks](https://saqr.me/Nestimate/articles/transition-networks.html)
-- [Clustering & Multilevel](https://saqr.me/Nestimate/articles/clustering.html)
-- [Full Reference](https://saqr.me/Nestimate/reference/)
+- [Transition Networks](https://pak.dynasite.org/Nestimate/articles/transition-networks.html)
+- [Clustering & Multilevel](https://pak.dynasite.org/Nestimate/articles/clustering.html)
+- [Full Reference](https://pak.dynasite.org/Nestimate/reference/)
 
 ## Citation
 

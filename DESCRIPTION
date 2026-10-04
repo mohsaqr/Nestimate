@@ -1,6 +1,6 @@
 Package: Nestimate
 Title: Dynamic, Probabilistic, and Higher-Order Network Analysis
-Version: 0.9.18
+Version: 0.9.20
 Authors@R: c(
     person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
     person("Sonsoles", "López-Pernas", email = "sonsoles.lopez@uef.fi", role = "aut"),
@@ -19,7 +19,7 @@ Description: Estimate, compare, and analyze dynamic and psychological networks
     split-half reliability, centrality stability analysis, mixed Markov
     models, multi-cluster multi-layer networks and clustering.
 License: MIT + file LICENSE
-URL: https://github.com/mohsaqr/Nestimate, https://saqr.me/Nestimate/
+URL: https://github.com/mohsaqr/Nestimate, https://pak.dynasite.org/Nestimate/
 BugReports: https://github.com/mohsaqr/Nestimate/issues
 Language: en-US
 Encoding: UTF-8

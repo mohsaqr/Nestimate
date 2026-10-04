@@ -1,3 +1,12 @@
+# Nestimate 0.9.20
+
+## Documentation
+
+* The documentation site is now `https://pak.dynasite.org/Nestimate/`
+  (`DESCRIPTION` URL, `_pkgdown.yml`, README links). `saqr.me/Nestimate` was a
+  stale copy. The README lists the `permutation-nested-data` and
+  `compare-networks` articles.
+
 # Nestimate 0.9.18
 
 ## Documentation
