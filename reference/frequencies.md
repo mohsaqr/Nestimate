@@ -56,7 +56,7 @@ A square integer matrix of transition frequencies, of class
 the number of times state i was followed by state j. Row and column
 names are the sorted unique states. It behaves as an ordinary matrix and
 can be passed directly to
-[`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md); the
+[`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html); the
 class stamp only adds a
 [`summary()`](https://rdrr.io/r/base/summary.html) method, which returns
 the same counts as a tidy `from`/`to`/`count` data frame.

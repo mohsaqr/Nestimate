@@ -1,5 +1,363 @@
 # Changelog
 
+## Nestimate 0.9.18
+
+### Documentation
+
+- The pkgdown site builds again. Four exported topics
+  ([`state_colors()`](https://saqr.me/Nestimate/reference/state_colors.md),
+  [`set_state_colors()`](https://saqr.me/Nestimate/reference/set_state_colors.md),
+  [`composites()`](https://saqr.me/Nestimate/reference/composites.md),
+  [`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md))
+  were missing from the reference index, which had failed every site
+  build since 0.9.10. The `compare-networks` and
+  `permutation-nested-data` articles now publish.
+
+## Nestimate 0.9.17
+
+### New features
+
+- [`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md)
+  gains `actor =`, passed to the permutation backend: whole actors are
+  reassigned between the networks, the printed header names the actor
+  column, and
+  [`global_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md)
+  gains the rows `ICC`, `Design effect (edges)` and `Design effect (M)`
+  (category `"Nesting"`). Requires `test = "permutation"` (error class
+  `nestimate_compare_actor_needs_permutation`).
+
+## Nestimate 0.9.16
+
+### Breaking changes (development versions only)
+
+- The nesting argument added in 0.9.13
+  ([`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
+  [`permutation_diagnostics()`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md))
+  and 0.9.15
+  ([`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md))
+  is renamed from `block` to `actor`, the column identifying whose
+  sequences they are: the same vocabulary as `build_network(actor = )`.
+  Results carry `actor` and `n_actors`; diagnostic columns use
+  `_sequence` (sequences reassigned) and `_actor` (actors reassigned),
+  e.g. `p_global_sequence` / `p_global_actor`; conditions are
+  `nestimate_bad_actor`, `nestimate_actor_missing`,
+  `nestimate_actor_misaligned`, `nestimate_actor_unsupported` and
+  `nestimate_few_actors`. The printout reads `Actor: Group (200 actors)`
+  and `Nesting in Group: ICC = ...`. Neither name was ever on CRAN.
+
+### Bug fixes
+
+- [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md):
+  columns named in `metadata_cols` (or left out of `state_cols`) are no
+  longer read as sequence positions in wide data. They were moved to
+  `$metadata` only after estimation, so their values became states and
+  created spurious transitions, in single and grouped networks. For
+  `cor`, `pcor`, `glasso`, `ising` and `mgm`, declared metadata columns
+  are no longer entered as variables.
+
+- An ICC that cannot be estimated (one block, or no variation) is
+  reported as not estimable instead of `NaN [NA, NA]` by
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
+  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  and
+  [`permutation_diagnostics()`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md).
+
+## Nestimate 0.9.15
+
+### New features
+
+- [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  gains `block =`, the column identifying the unit that sequences are
+  nested in. Whole units are resampled with replacement, keeping their
+  sequences together (cluster bootstrap, top level only; Davison &
+  Hinkley, 1997; Field & Welsh, 2007). The result reports the ICC
+  (Shrout & Fleiss, 1979) and the design effect (Kish, 1965) for the
+  edges, printed under the bootstrap summary and returned as
+  `clustering` and `clustering_edges`. With one sequence per unit it
+  reproduces the ordinary bootstrap exactly. Transition networks only.
+
+## Nestimate 0.9.14
+
+### Documentation
+
+- New pkgdown article “Comparing two networks with compare_networks()”:
+  high vs low achievers in `group_regulation_long`, every summary table
+  and all eight plot views with a short reading of each.
+
+## Nestimate 0.9.13
+
+### New features
+
+- [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  gains `block =`, the column identifying the unit that sequences are
+  nested in (sessions in students, students in teams). Whole units are
+  reassigned between the groups; units with sequences in both groups, as
+  in repeated-measures designs, have their sequences reassigned within
+  the unit; mixed designs combine the two (Good, 2005; Anderson & ter
+  Braak, 2003). Supported for transition networks (`relative`,
+  `frequency`, `co_occurrence`); association networks raise
+  `nestimate_block_unsupported`. A warning of class
+  `nestimate_few_blocks` is raised when no p-value could fall below
+  `alpha`.
+
+- With `block`,
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  reports the nesting effect: the intraclass correlation (Shrout &
+  Fleiss, 1979) with a jackknife 95% interval, and the design effect
+  (Kish, 1965), the blocked over the unblocked null variance, for the
+  edges and the global statistic M.
+
+- `permutation_diagnostics(x, block =)` runs the ordinary and the
+  blocked test on the same data and returns them side by side as a tidy
+  data frame, one row per pair or, with `level = "edges"`, per edge.
+
+### Improvements
+
+- [`print()`](https://rdrr.io/r/base/print.html) of a `net_permutation`
+  shows the global test (M and S, with p-values) and, with `block`, the
+  ICC and design effects. A grouped result prints every pair in full.
+
+- The
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  help page is reorganised into sections: what is tested, nested data
+  and `block`, ICC and design effect, reading the printed output.
+
+- Building a transition network from a single long sequence now raises a
+  message instead of a warning; running
+  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  or
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  on such a network still warns. Both carry the class
+  `nestimate_single_sequence`.
+
+### Bug fixes
+
+- `\%` in markdown roxygen silently cut the rest of a line from the help
+  pages of
+  [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md),
+  [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md),
+  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+  and
+  [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md);
+  the text is restored.
+
+- Missing space in the
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  print header.
+
+## Nestimate 0.9.12
+
+### New verbs
+
+- `set_state_colors(x, colors)` attaches a palette to a `netobject`,
+  `netobject_group`, `mcml` or `htna`, and every figure drawn from that
+  object then uses it –
+  [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md),
+  [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md),
+  [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  **and**
+  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
+  The cograph half goes through the documented `meta$splot` producer
+  contract (`defaults$node_fill`, stamped in node order), so
+  `splot(net)` needs no arguments and renders byte-identically to
+  `splot(net, node_fill = ...)`. A `state_colors(x) <-` replacement form
+  is also available.
+
+- `state_colors(x)` reads the resolved palette back as a tidy
+  data.frame: one row per key, with `state`, `color` and `source`
+  (`"set"` or `"default"`). It is what the figures actually draw, not
+  just what was passed in.
+
+### Improvements
+
+- States a named palette does not mention are now dealt the Okabe-Ito
+  colours the palette has **not** used, one each, instead of taking
+  their positional slot. Pinning `plan = "#0072B2"` no longer leaves
+  another state defaulting to that same blue. Affects the named form
+  only; an unnamed `state_colors` and the all-default palette are
+  unchanged.
+
+- An attached palette resolves **once**, in the object’s own key order,
+  so every figure drawn from it colours a state identically. Previously
+  only the colours you set were carried and each figure dealt the
+  remaining defaults in its own sort order –
+  [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  sorts states by frequency and
+  [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  alphabetically, so one state could come out amber in one figure and
+  black in the other.
+
+- In-tile labels in
+  [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  take whichever ink (dark or white) has the higher WCAG contrast ratio
+  against the tile, instead of one fixed grey. A percentage on a dark
+  tile – black, navy, dark wine – is now readable, whether the colour
+  came from the default palette or from a palette you set.
+
+## Nestimate 0.9.11
+
+### Fixes
+
+- A named `state_colors` no longer has to match the figure exactly.
+  Names the plot does not draw are dropped with a
+  [`message()`](https://rdrr.io/r/base/message.html) naming them, so one
+  project-wide palette – states from a wider coding scheme, clusters a
+  given call merged away – can be handed to every plot and each takes
+  the keys that apply to it. 0.9.10 raised an error instead, which made
+  a shared palette unusable.
+
+## Nestimate 0.9.10
+
+### Improvements
+
+- `state_colors` accepts a **named** vector everywhere
+  [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md),
+  [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+  and
+  [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  draw, and the names are a lookup rather than a positional list: only
+  the keys you name are overridden, every other key keeps its default,
+  and the vector may be shorter than the number of states. An unnamed
+  vector is still positional, unchanged.
+
+- For an `mcml`, that lookup covers the whole multichannel figure, not
+  only the states. A cluster name colours its `Summary` band, its
+  channel strip and its faded band in the other panels; a group merged
+  by `combine =` is named by its label (the list name, or `"A + B"`);
+  `rest_label` is a key too. So
+  `sequence_plot(fit, combine = list(Task = c("Cognitive", "Regulation")), state_colors = c(Task = "#0072B2"))`
+  recolours the combined cluster and leaves the rest of the palette
+  alone. Previously the cluster and combined keys were drawn from a
+  fixed internal palette with no way to set them.
+
+- A `state_colors` name that matches no key in the figure is now an
+  error naming the available keys, instead of being silently ignored.
+
+## Nestimate 0.9.9
+
+### New verbs
+
+- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+  gains `combine =` and `expand =`. On new input they change the
+  partition before estimation, in any `clusters` form and for every
+  input type: `build_mcml(data, clusters = cl, combine = c("A", "B"))`
+  equals a build with `A` and `B` merged in `cl` (the merged cluster
+  lists its states in cluster-name order). On an existing `mcml` they
+  re-partition it: `build_mcml(mc, combine =)` merges clusters,
+  `build_mcml(mc, expand =)` splits clusters into one cluster per state,
+  and `build_mcml(mc, clusters =)` applies a new partition. The model
+  (macro network, within-cluster networks, sequences) is re-estimated
+  from the sequences the `mcml` carries, with its original `type`,
+  `method` and `directed`. With the partition unchanged the result
+  equals the input; `expand = "all"` reproduces the node-level
+  transition network of the same `type`. Raises
+  `nestimate_mcml_no_sequences` for an `mcml` built from a matrix or an
+  edge list (which keeps only within-cluster edges), and errors when
+  sequence-shaping arguments (`trim`, `exclude`, `end`, `labels`,
+  `actor`, …) are passed with a re-partition, since the carried
+  sequences already reflect them.
+- [`session_ids()`](https://saqr.me/Nestimate/reference/session_ids.md)
+  names the session behind every sequence of a network built from long
+  data, and of a
+  [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) or
+  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  fit on such a network. It returns one row per sequence in model order:
+  `sequence`, the `actor` and `session` columns under their own names,
+  `session_label`, and, for a fit, `cluster` (plus `posterior` for a
+  mixture). The fit’s assignments can then be joined to the input by
+  those columns instead of parsing the `"actor | session"` label, which
+  breaks when an id contains `" | "`. Raises `nestimate_no_session_ids`
+  for wide-data input or for fits made before this version, and
+  `nestimate_session_ids_misaligned` when the metadata and the sequences
+  differ in number.
+- [`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md)
+  returns the tidy item-diagnostic table of a
+  [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+  fit (node, cluster, loading, weight, sign, max_cross, cross_cluster,
+  misfit); `misfit = TRUE`/`FALSE` filters it.
+- [`composites()`](https://saqr.me/Nestimate/reference/composites.md)
+  returns the per-respondent cluster scores of a
+  [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+  fit: one row per input row (input order and row names, `NA` where all
+  of a cluster’s items are missing) and one column per cluster. Raises
+  `nestimate_no_composites` for the descriptive aggregations
+  (`"average"`, `"escoufier"`, `"cancor"`), which form no score.
+
+### Changes
+
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  on an `mcml` gains `combine =`: named clusters are merged into one
+  channel (a character vector for one group, a list for several; list
+  names label the merged channels, default `"A + B"`). The merged group
+  acts as one cluster across the figure (one panel, one Summary key, one
+  faded band) and can itself be opened with `expand =`.
+
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  on an `mcml` gains `rest = c("clusters", "pooled", "none")`: how a
+  cluster’s panel shows the time spent in other clusters (one faded band
+  per cluster, one pooled grey band, or blank, leaving only the panel’s
+  own states). Applies to the carpet and distribution views.
+  `rest_label =` (default `"Other states"`) sets the legend text: the
+  pooled band takes it as is, per-cluster bands read
+  `"Social (Other states)"`. This replaces the former `"(elsewhere)"`
+  wording.
+
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  on an `mcml` now honours `na =` in the distribution view: `na = FALSE`
+  drops the `NA` (ended) band and shows each time point as shares of the
+  sequences still running, as
+  [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+  already did.
+
+- [`macro_network()`](https://saqr.me/Nestimate/reference/macro_network.md)
+  accepts an `mcml_pc` fit and returns its cluster-level network;
+  `expand =` on an `mcml_pc` raises `nestimate_no_expand`, and
+  `method =` or `...` error (the estimator is set in
+  [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)).
+
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  errors when `combine`, `expand`, `rest` or `rest_label` is passed for
+  input that is not an `mcml`, instead of ignoring them.
+
+- [`print.mcml_pc()`](https://saqr.me/Nestimate/reference/print.mcml_pc.md)
+  and its build-time warnings name
+  [`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md)
+  instead of pointing at `$loadings`.
+
+- [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) (and so
+  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+  on long data) keeps the `session` column(s) in the per-sequence
+  metadata under their own names, and returns the metadata explicitly in
+  sequence row order (it was assembled with `merge(sort = FALSE)`, whose
+  order is unspecified).
+
+- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) and
+  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  keep the input network’s `$metadata` (restricted to the fitted rows
+  when [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md)
+  drops sequences with missing covariates).
+
+### Fixes
+
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  on an `mcml` with `type = "heatmap"`/`"index"` and `expand =` drew the
+  other-cluster wash as blank cells: the wash was keyed by the Summary
+  keys, which are states once a cluster is expanded. It is now keyed by
+  cluster.
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  on an `mcml` with `type = "distribution"` and `expand =` no longer
+  fails with “subscript out of bounds” in the default
+  (`normalize = FALSE`) view. The Summary band now opens the expanded
+  cluster into its states, and the other panels draw it as one faded
+  `"<cluster> (<rest_label>)"` band.
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  on an `mcml` with a single channel (one cluster, or every cluster
+  merged by `combine`) no longer fails in the carpet view with
+  “replacement has 1 row, data has 0”.
+- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  on an `mcml`: with `expand =`, each cluster’s faded band in the other
+  panels now has its own colour (expanded clusters all shared one).
+
 ## Nestimate 0.9.5
 
 ### New verbs
@@ -160,9 +518,9 @@
 ## Nestimate 0.9.1
 
 tna-parity release: sequence-side gaps against
-[`tna::build_model()`](http://sonsoles.me/tna/reference/build_model.md)
+[`tna::build_model()`](https://sonsoles.me/tna/reference/build_model.html)
 and
-[`tna::prepare_data()`](http://sonsoles.me/tna/reference/prepare_data.md)
+[`tna::prepare_data()`](https://sonsoles.me/tna/reference/prepare_data.html)
 closed.
 
 ### New estimators

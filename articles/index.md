@@ -31,3 +31,9 @@ Full tutorials
 
 - [Tutorial: Model assessment for transition
   networks](https://saqr.me/Nestimate/articles/tutorial_model_assessment.md):
+
+- [Nested sequences and the permutation
+  test](https://saqr.me/Nestimate/articles/permutation-nested-data.md):
+
+- [Comparing two networks with
+  compare_networks()](https://saqr.me/Nestimate/articles/compare-networks.md):

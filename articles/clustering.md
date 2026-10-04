@@ -22,9 +22,6 @@ label.
 
 library(cograph)
 library(Nestimate)
-#> Registered S3 method overwritten by 'Nestimate':
-#>   method     from   
-#>   print.mcml cograph
 #> 
 #> Attaching package: 'Nestimate'
 #> The following object is masked from 'package:cograph':

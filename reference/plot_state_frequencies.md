@@ -171,8 +171,10 @@ plot_state_frequencies(x, ...)
 
 - colors:
 
-  Optional character vector overriding the default Okabe-Ito state
-  palette. Length must be at least the number of unique states.
+  Optional colors overriding the default Okabe-Ito state palette. Either
+  an unnamed vector applied in state order (length at least the number
+  of unique states), or a named lookup (`c(plan = "#0072B2")`)
+  overriding only the states you name.
 
 - label_size:
 

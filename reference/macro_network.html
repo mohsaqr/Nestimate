@@ -15,7 +15,7 @@ summary."><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,8 @@ summary.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>An <code>mcml</code> built from sequence data. A matrix-derived
+<dd><p>An <code>mcml</code> built from sequence data, or an
+<code>mcml_pc</code> from <code><a href="build_mcml_pc.html">build_mcml_pc</a></code>. A matrix-derived
 <code>mcml</code> carries no node-level data and cannot be expanded.</p></dd>
 
 
@@ -82,16 +83,23 @@ is its own node.</p></dd>
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
 <dd><p>Estimator passed to <code><a href="build_network.html">build_network</a></code>. Default
-<code>"relative"</code> (row-normalised transitions).</p></dd>
+<code>"relative"</code> (row-normalised transitions). Not used for an
+<code>mcml_pc</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Further arguments passed to <code><a href="build_network.html">build_network</a></code>.</p></dd>
+<dd><p>Further arguments passed to <code><a href="build_network.html">build_network</a></code>. Not
+used for an <code>mcml_pc</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>netobject</code> (also a <code>cograph_network</code>) whose nodes are
+    <p>For an <code>mcml_pc</code>: its cluster-level network, the netobject
+estimated by <code><a href="build_mcml_pc.html">build_mcml_pc</a></code>, unchanged. Its estimator is
+set when the fit is built, so <code>method</code> or <code>...</code> raise an
+error, and <code>expand</code> errors with class <code>nestimate_no_expand</code>
+(there are no sequences to re-count).</p>
+<p>For an <code>mcml</code>: a <code>netobject</code> (also a <code>cograph_network</code>) whose nodes are
 the collapsed clusters plus the member states of any expanded cluster,
 with weights re-counted from the sequence data by
 <code><a href="build_network.html">build_network</a></code>. <code>$node_groups</code> is a two-column data

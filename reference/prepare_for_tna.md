@@ -1,7 +1,7 @@
 # Prepare Data for TNA Analysis
 
 Prepare simulated or real data for use with
-[`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md) and
+[`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html) and
 related functions. Handles various input formats and ensures the output
 is compatible with TNA models.
 

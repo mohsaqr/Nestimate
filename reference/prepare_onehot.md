@@ -3,13 +3,13 @@
 Converts binary indicator (one-hot) data into the wide sequence format
 expected by
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
-and [`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md).
+and [`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html).
 Each binary column represents a state; rows where the value is 1 are
 marked with the column name. Supports optional windowed aggregation.
 
 Simultaneous active states are preserved using the same window-span
 representation as
-[`tna::import_onehot()`](http://sonsoles.me/tna/reference/import_onehot.md):
+[`tna::import_onehot()`](https://sonsoles.me/tna/reference/import_onehot.html):
 each input row/window is expanded to one sequence slot per code and
 transition counting occurs between windows, not between simultaneous
 states inside the same row.

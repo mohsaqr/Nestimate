@@ -25,7 +25,8 @@ compare_networks(
   adjust = "none",
   paired = FALSE,
   rope = NULL,
-  seed = NULL
+  seed = NULL,
+  actor = NULL
 )
 
 # S3 method for class 'net_network_comparison'
@@ -129,6 +130,17 @@ plot(
 
   Optional integer seed. Each pair uses `seed + pair index`, so results
   are reproducible and independent of pair order.
+
+- actor:
+
+  Optional column name identifying the actor each sequence belongs to
+  (e.g. `"student_id"` when sessions are nested in students, `"Group"`
+  for students nested in teams). Passed to
+  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
+  which then reassigns whole actors; see its sections *Nested data and
+  actor* and *ICC and design effect*. Requires `test = "permutation"`.
+  The ICC and design effects are added to `global` under the category
+  `"Nesting"`. Default `NULL`.
 
 - x:
 
@@ -256,7 +268,9 @@ networks are undirected only `from <= to` cells are kept.
 [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md))
 adds `perm_effect`, `perm_p`, `perm_sig` to `edges` and `nodes`, and two
 rows `M` (sum of absolute edge differences) and `S` (largest absolute
-edge difference) to `global` with permutation p-values. `"bayes"` (via
+edge difference) to `global` with permutation p-values; with `actor`,
+the reassignment moves whole actors and `global` also gains the rows
+`ICC`, `Design effect (edges)` and `Design effect (M)`. `"bayes"` (via
 [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md))
 adds `bayes_diff` (posterior mean difference), `bayes_ci_lower`,
 `bayes_ci_upper`, `bayes_pd` (probability of direction), `bayes_p`,

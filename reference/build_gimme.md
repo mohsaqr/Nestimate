@@ -5,7 +5,7 @@ data using the unified Structural Equation Modeling (uSEM) framework.
 Implements a data-driven search that identifies:
 
 1.  **Group-level paths**: Directed edges present for a majority
-    (default 75\\
+    (default 75%) of individuals.
 
 2.  **Individual-level paths**: Additional edges specific to each
     person, found after group paths are established.

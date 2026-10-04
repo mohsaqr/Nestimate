@@ -157,6 +157,9 @@ Statistical inference for network estimation
 - [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
   : Permutation Test for Network Comparison
 
+- [`permutation_diagnostics()`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md)
+  : Does Nesting Bias a Permutation Test?
+
 - [`nct()`](https://saqr.me/Nestimate/reference/nct.md) : Network
   Comparison Test
 
@@ -219,12 +222,18 @@ Cluster-based and multilevel network analysis
   Build MCML from Raw Transition Data
 - [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
   : Multi-Cluster Multi-Level Aggregation for Psychometric Networks
+- [`composites()`](https://saqr.me/Nestimate/reference/composites.md) :
+  Cluster Scores From a Psychometric MCML Fit
+- [`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md)
+  : Item Diagnostics From a Psychometric MCML Fit
 - [`macro_network()`](https://saqr.me/Nestimate/reference/macro_network.md)
   : Cluster-Level Network, With One Cluster Expanded
 - [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) :
   Fit a Mixed Markov Model
 - [`compare_mmm()`](https://saqr.me/Nestimate/reference/compare_mmm.md)
   : Compare MMM fits across different k
+- [`session_ids()`](https://saqr.me/Nestimate/reference/session_ids.md)
+  : The session behind each sequence
 
 ## Simplicial Complex Analysis
 
@@ -310,6 +319,11 @@ Helper functions and extractors
   : Extract Initial Probabilities from Model
 - [`extract_transition_matrix()`](https://saqr.me/Nestimate/reference/extract_transition_matrix.md)
   : Extract Transition Matrix from Model
+- [`state_colors()`](https://saqr.me/Nestimate/reference/state_colors.md)
+  : The state colours an object will draw with
+- [`set_state_colors()`](https://saqr.me/Nestimate/reference/set_state_colors.md)
+  [`` `state_colors<-`() ``](https://saqr.me/Nestimate/reference/set_state_colors.md)
+  : Set the state colours carried by a network object
 
 ## Sequence Analysis
 
@@ -446,6 +460,9 @@ Print, summary, plot, and as.data.frame methods for package classes
 
 - [`print(`*`<mcml_pc>`*`)`](https://saqr.me/Nestimate/reference/print.mcml_pc.md)
   : Print an MCML-PC Object
+
+- [`print(`*`<mcml_sequence_plot>`*`)`](https://saqr.me/Nestimate/reference/print.mcml_sequence_plot.md)
+  : Draw a stacked multichannel mcml sequence plot
 
 - [`print(`*`<mmm_compare>`*`)`](https://saqr.me/Nestimate/reference/print.mmm_compare.md)
   : Print Method for mmm_compare

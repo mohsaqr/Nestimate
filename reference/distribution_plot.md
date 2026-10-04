@@ -91,7 +91,11 @@ distribution_plot(
 
 - state_colors:
 
-  Vector of colours, one per state. Defaults to Okabe-Ito.
+  Colours for the state fills. Either an unnamed vector, one colour per
+  state in level order, or a named lookup (`c(plan = "#0072B2")`) where
+  only the states you name are overridden and the rest keep the default
+  Okabe-Ito palette. Names this plot does not draw are dropped with a
+  message, so one palette can be reused across figures.
 
 - na_color:
 

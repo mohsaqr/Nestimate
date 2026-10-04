@@ -11,7 +11,7 @@ a netobject_group, an mcml model, or an htna network."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -215,9 +215,10 @@ first), <code>"alpha"</code>, or <code>"none"</code>.</p></dd>
 
 
 <dt id="arg-colors">colors<a class="anchor" aria-label="anchor" href="#arg-colors"></a></dt>
-<dd><p>Optional character vector overriding the default
-Okabe-Ito state palette. Length must be at least the number of unique
-states.</p></dd>
+<dd><p>Optional colors overriding the default Okabe-Ito state
+palette. Either an unnamed vector applied in state order (length at
+least the number of unique states), or a named lookup
+(<code>c(plan = "#0072B2")</code>) overriding only the states you name.</p></dd>
 
 
 <dt id="arg-label-size">label_size<a class="anchor" aria-label="anchor" href="#arg-label-size"></a></dt>

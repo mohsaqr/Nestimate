@@ -25,7 +25,7 @@ distribution_plot.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,6 +87,9 @@ thin gaps (no dendrogram). Supports grouping via <code>group</code> or a
 <span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  panel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"both"</span>, <span class="st">"summary"</span>, <span class="st">"channels"</span><span class="op">)</span>,</span>
 <span>  expand <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  combine <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rest <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"clusters"</span>, <span class="st">"pooled"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  rest_label <span class="op">=</span> <span class="st">"Other states"</span>,</span>
 <span>  trim_clusterwise <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  row_gap <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  dendrogram_width <span class="op">=</span> <span class="fl">1.2</span>,</span>
@@ -153,8 +156,9 @@ macro <code>Summary</code> panel. <code>type = "heatmap"</code>/<code>"index"</c
 draw the carpet (each channel's own states solid, other clusters a
 faded wash); <code>type = "distribution"</code> draws the stacked
 distribution (add <code>normalize = TRUE</code> for a TraMineR-style
-<code>seqdplot</code> where each time point sums to 1). Returns a
-<code>ggplot</code> object.</p></dd>
+<code>seqdplot</code> where each time point sums to 1). See the section
+<em>Multichannel view of an mcml</em> for the options that shape it,
+and <em>Value</em> for what it returns.</p></dd>
 
 
 </dl></dd>
@@ -185,7 +189,12 @@ one facet per group. Index/distribution only. Ignored for heatmap.</p></dd>
 
 <dt id="arg-scale-geom-na">scale, geom, na<a class="anchor" aria-label="anchor" href="#arg-scale-geom-na"></a></dt>
 <dd><p>Passed to <code><a href="distribution_plot.html">distribution_plot</a></code> when
-<code>type = "distribution"</code>.</p></dd>
+<code>type = "distribution"</code>.
+For an <code>mcml</code> (<code>type = "distribution"</code>), <code>na = FALSE</code>
+drops the <code>NA</code> (ended) band and shows every time point as shares
+of the sequences still running there, so each panel stacks to 100
+percent (cluster panels only with <code>rest = "clusters"</code> or
+<code>"pooled"</code>; a time point where no sequence is running stays empty).</p></dd>
 
 
 <dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
@@ -201,21 +210,21 @@ sequences from stretching the plot. Applies to all three types
 (including the <code>mcml</code> multichannel view). <code>NULL</code> (default)
 plots the full width. A fraction in <code>(0, 1)</code> drops everything
 past that quantile of sequence lengths (e.g. <code>trim = 0.95</code> keeps
-the columns covering the shortest 95\<!-- % of sequences); a value -->
+the columns covering the shortest 95% of sequences); a value
 <code>&gt;= 1</code> is an absolute cut (<code>trim = 50</code> keeps the first 50
 time points).</p></dd>
 
 
 <dt id="arg-panel">panel<a class="anchor" aria-label="anchor" href="#arg-panel"></a></dt>
 <dd><p><code>mcml</code> + <code>type = "distribution"</code> only. Which panel
-to draw, as a single <code>ggplot</code>. <code>"both"</code> (default) puts the
-macro <code>Summary</code> channel and the per-cluster channels on one figure
-sharing a fill scale; <code>"summary"</code> draws the macro channel alone,
+to draw. <code>"both"</code> (default) stacks the macro <code>Summary</code>
+channel and the per-cluster channels on one figure, each with its own
+legend; <code>"summary"</code> draws the macro channel alone,
 keyed and coloured by cluster; <code>"channels"</code> draws the per-cluster
 channels alone, keyed and coloured by state. The macro channel is keyed
-by cluster and the rest by state, so on a shared scale a cluster and a
-state can land on the same colour – drawing one panel avoids that and
-gives it its own legend and default title.</p></dd>
+by cluster and the rest by state, so a cluster and a state can land on
+the same colour – drawing one panel avoids that and gives it a default
+title.</p></dd>
 
 
 <dt id="arg-expand">expand<a class="anchor" aria-label="anchor" href="#arg-expand"></a></dt>
@@ -223,6 +232,40 @@ gives it its own legend and default title.</p></dd>
 are shown individually in the Summary band; <code>"all"</code> or <code>TRUE</code>
 expands every cluster. The per-cluster channels are unaffected. Default
 <code>NULL</code> keys the Summary band by cluster.</p></dd>
+
+
+<dt id="arg-combine">combine<a class="anchor" aria-label="anchor" href="#arg-combine"></a></dt>
+<dd><p>For an <code>mcml</code>, clusters to merge into one channel. A
+character vector merges one group (e.g.
+<code>combine = c("Cognitive", "Affective")</code>); a list merges several,
+and its names label the merged channels (default label
+<code>"Cognitive + Affective"</code>). A merged group acts as one cluster
+throughout the figure: one per-cluster panel holding all its states, one
+key in the Summary band, and one faded band in the other panels.
+<code>expand</code> is resolved after merging, so it can name the merged
+label. Errors on unknown clusters, a group of fewer than two, or a
+cluster in two groups. Default <code>NULL</code> draws the partition as built.</p></dd>
+
+
+<dt id="arg-rest">rest<a class="anchor" aria-label="anchor" href="#arg-rest"></a></dt>
+<dd><p>For an <code>mcml</code>, how a cluster's panel shows the time its
+subjects spend in <em>other</em> clusters. <code>"clusters"</code> (default): one
+faded band (or wash, in the carpet) per other cluster.
+<code>"pooled"</code>: all other clusters as one grey band labelled
+<code>rest_label</code>.
+<code>"none"</code>: left blank, so the panel shows only its own states; in the
+distribution view the <code>NA</code> (ended) band is dropped too, and the
+panel's height at each time point is the share of subjects in that
+cluster. Ignored with <code>normalize = TRUE</code>, which rescales each panel
+to its own states. The Summary panel is unaffected.</p></dd>
+
+
+<dt id="arg-rest-label">rest_label<a class="anchor" aria-label="anchor" href="#arg-rest-label"></a></dt>
+<dd><p>For an <code>mcml</code>, the legend text for time spent in
+other clusters. Default <code>"Other states"</code>; e.g. <code>"Others"</code> or
+<code>"Rest of states"</code>. The pooled band (<code>rest = "pooled"</code>) takes
+it as is; the per-cluster bands read <code>"Social (Other states)"</code>.
+Must not equal a state or cluster name.</p></dd>
 
 
 <dt id="arg-trim-clusterwise">trim_clusterwise<a class="anchor" aria-label="anchor" href="#arg-trim-clusterwise"></a></dt>
@@ -264,7 +307,21 @@ dendrogram (e.g. <code>sort = "start"</code>) or for other types.</p></dd>
 
 
 <dt id="arg-state-colors">state_colors<a class="anchor" aria-label="anchor" href="#arg-state-colors"></a></dt>
-<dd><p>Vector of colours, one per state.</p></dd>
+<dd><p>Colours for the fill keys. Two forms:
+<em>unnamed</em> - one colour per state, in level order (states are
+ordered as <code>sort(unique(...))</code>); <em>named</em> - a lookup, where
+only the keys you name are overridden and every other key keeps its
+default. Names this figure does not draw are dropped with a message
+naming them, so one project-wide palette can be handed to every plot
+and each takes the keys that apply to it.</p>
+<p>For an <code>mcml</code> the named form reaches the whole figure, not just
+the states: a cluster name colours its <code>Summary</code> band, its
+channel strip and its faded band in the other panels, and a group
+merged by <code>combine</code> is named by its label (the list name you
+gave it, or <code>"A + B"</code>). <code>rest_label</code> is a key too. So
+<code>state_colors = c(plan = "#0072B2", "Planning + Monitoring" =
+  "#D55E00")</code> recolours one state and one combined cluster and leaves
+the rest of the palette alone.</p></dd>
 
 
 <dt id="arg-na-color">na_color<a class="anchor" aria-label="anchor" href="#arg-na-color"></a></dt>
@@ -351,8 +408,13 @@ from the device width so the legend looks proportional at 5 in vs
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An <code>mcml</code> input returns a <code>ggplot</code> object (the
-multichannel figure). Every other input draws with base graphics and
+    <p>An <code>mcml</code> input returns the multichannel figure: one panel
+per channel (the macro <code>Summary</code> and one per cluster), stacked,
+each with its own legend of its own clusters or states. When more than
+one channel is drawn this is an <code>mcml_sequence_plot</code> (a
+<code>gtable</code> whose print method draws it); when <code>panel =
+  "summary"</code> leaves a single channel it is a plain <code>ggplot</code>. Every
+other input draws with base graphics and
 returns, invisibly, a list whose shape depends on <code>type</code>:</p><dl><dt><code>"heatmap"</code></dt>
 <dd><p><code>ord</code> (integer row order actually
 plotted), <code>codes</code> (the integer-encoded, trimmed sequence
@@ -373,6 +435,42 @@ the original rows) and <code>groups</code> (panel labels).</p></dd>
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="multichannel-view-of-an-mcml">Multichannel view of an mcml<a class="anchor" aria-label="anchor" href="#multichannel-view-of-an-mcml"></a></h2>
+
+
+<p>An <code>mcml</code> built from sequences stores, for every cluster, the full
+sequence matrix with the other clusters' states blanked out. Each cluster
+is therefore a <em>channel</em>, and <code>sequence_plot()</code> stacks them:</p><dl><dt><code>Summary</code></dt>
+<dd><p>The macro sequence: at every time point, the
+cluster each subject is in.</p></dd>
+
+<dt>One panel per cluster</dt>
+<dd><p>That cluster's own states, plus the time
+its subjects spend in the other clusters.</p></dd>
+
+
+</dl><p>The options apply in this order, so each one sees the result of the one
+before:</p><ol><li><p><code>combine</code> merges clusters into one channel. The merged group
+is then one cluster throughout the figure: one panel with all its
+states, one Summary key, one band in the other panels. The object
+itself is not changed.</p></li>
+<li><p><code>expand</code> opens clusters (including a merged group, by its
+label) into their member states in the Summary panel only.</p></li>
+<li><p><code>rest</code> and <code>rest_label</code> set how a cluster's panel shows
+the other clusters: one faded band per cluster labelled
+<code>"&lt;cluster&gt; (&lt;rest_label&gt;)"</code> (<code>rest = "clusters"</code>), one grey
+band labelled <code>rest_label</code> (<code>"pooled"</code>), or nothing
+(<code>"none"</code>).</p></li>
+<li><p><code>na</code> (distribution only) keeps the <code>NA</code> band of
+sequences that have ended (<code>TRUE</code>, shares of all subjects) or
+drops it (<code>FALSE</code>, shares of the subjects still running, so every
+panel stacks to 100 percent unless <code>rest = "none"</code>). <code>normalize = TRUE</code> instead rescales each
+cluster panel to its own states, which ignores <code>rest</code> and
+<code>na</code>.</p></li>
+</ol><p><code>panel</code> draws the Summary or the cluster panels alone, and
+<code>trim</code> cuts the time axis for every panel at once.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="distribution_plot.html">distribution_plot</a></code>, <code><a href="build_clusters.html">build_clusters</a></code>,
@@ -402,6 +500,34 @@ the original rows) and <code>groups</code> (panel labels).</p></dd>
 <span class="r-plt img"><img src="sequence_plot-5.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># seqdplot (sums to 1)</span></span></span>
 <span class="r-plt img"><img src="sequence_plot-6.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Shape the multichannel view (see the section above).</span></span></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span>,</span></span>
+<span class="r-in"><span>              combine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Cognitive"</span>, <span class="st">"Affective"</span><span class="op">)</span><span class="op">)</span>        <span class="co"># two channels as one</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-7.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span>,</span></span>
+<span class="r-in"><span>              combine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Task <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Cognitive"</span>, <span class="st">"Regulation"</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>              expand <span class="op">=</span> <span class="st">"Task"</span><span class="op">)</span>                              <span class="co"># merge, then open</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-8.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, panel <span class="op">=</span> <span class="st">"channels"</span>,</span></span>
+<span class="r-in"><span>              rest <span class="op">=</span> <span class="st">"pooled"</span>, na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>                  <span class="co"># one grey band, no NA</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-9.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, panel <span class="op">=</span> <span class="st">"channels"</span>,</span></span>
+<span class="r-in"><span>              rest <span class="op">=</span> <span class="st">"pooled"</span>, rest_label <span class="op">=</span> <span class="st">"Rest of states"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-10.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, panel <span class="op">=</span> <span class="st">"channels"</span>,</span></span>
+<span class="r-in"><span>              rest <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span>                                <span class="co"># own states only</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-11.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, rest <span class="op">=</span> <span class="st">"pooled"</span><span class="op">)</span>                         <span class="co"># carpet, pooled wash</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-12.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Colour by name: one state, one cluster, one combined group. Everything</span></span></span>
+<span class="r-in"><span><span class="co"># not named keeps its default colour.</span></span></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span>,</span></span>
+<span class="r-in"><span>              combine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Task <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Cognitive"</span>, <span class="st">"Regulation"</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>              state_colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Task <span class="op">=</span> <span class="st">"#0072B2"</span>, Affective <span class="op">=</span> <span class="st">"#D55E00"</span>,</span></span>
+<span class="r-in"><span>                               emotion <span class="op">=</span> <span class="st">"#CC79A7"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-13.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

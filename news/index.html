@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,134 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.18" id="nestimate-0918">Nestimate 0.9.18<a class="anchor" aria-label="anchor" href="#nestimate-0918"></a></h2>
+<div class="section level3">
+<h3 id="documentation-0-9-18">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-9-18"></a></h3>
+<ul><li>The pkgdown site builds again. Four exported topics (<code><a href="../reference/state_colors.html">state_colors()</a></code>, <code><a href="../reference/set_state_colors.html">set_state_colors()</a></code>, <code><a href="../reference/composites.html">composites()</a></code>, <code><a href="../reference/item_loadings.html">item_loadings()</a></code>) were missing from the reference index, which had failed every site build since 0.9.10. The <code>compare-networks</code> and <code>permutation-nested-data</code> articles now publish.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.17" id="nestimate-0917">Nestimate 0.9.17<a class="anchor" aria-label="anchor" href="#nestimate-0917"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-9-17">New features<a class="anchor" aria-label="anchor" href="#new-features-0-9-17"></a></h3>
+<ul><li>
+<code><a href="../reference/compare_networks.html">compare_networks()</a></code> gains <code>actor =</code>, passed to the permutation backend: whole actors are reassigned between the networks, the printed header names the actor column, and <code><a href="../reference/comparison_tables.html">global_differences()</a></code> gains the rows <code>ICC</code>, <code>Design effect (edges)</code> and <code>Design effect (M)</code> (category <code>"Nesting"</code>). Requires <code>test = "permutation"</code> (error class <code>nestimate_compare_actor_needs_permutation</code>).</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.16" id="nestimate-0916">Nestimate 0.9.16<a class="anchor" aria-label="anchor" href="#nestimate-0916"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-development-versions-only-0-9-16">Breaking changes (development versions only)<a class="anchor" aria-label="anchor" href="#breaking-changes-development-versions-only-0-9-16"></a></h3>
+<ul><li>The nesting argument added in 0.9.13 (<code><a href="../reference/permutation.html">permutation()</a></code>, <code><a href="../reference/permutation_diagnostics.html">permutation_diagnostics()</a></code>) and 0.9.15 (<code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code>) is renamed from <code>block</code> to <code>actor</code>, the column identifying whose sequences they are: the same vocabulary as <code>build_network(actor = )</code>. Results carry <code>actor</code> and <code>n_actors</code>; diagnostic columns use <code>_sequence</code> (sequences reassigned) and <code>_actor</code> (actors reassigned), e.g. <code>p_global_sequence</code> / <code>p_global_actor</code>; conditions are <code>nestimate_bad_actor</code>, <code>nestimate_actor_missing</code>, <code>nestimate_actor_misaligned</code>, <code>nestimate_actor_unsupported</code> and <code>nestimate_few_actors</code>. The printout reads <code>Actor: Group (200 actors)</code> and <code>Nesting in Group: ICC = ...</code>. Neither name was ever on CRAN.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-9-16">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-9-16"></a></h3>
+<ul><li><p><code><a href="../reference/build_network.html">build_network()</a></code>: columns named in <code>metadata_cols</code> (or left out of <code>state_cols</code>) are no longer read as sequence positions in wide data. They were moved to <code>$metadata</code> only after estimation, so their values became states and created spurious transitions, in single and grouped networks. For <code>cor</code>, <code>pcor</code>, <code>glasso</code>, <code>ising</code> and <code>mgm</code>, declared metadata columns are no longer entered as variables.</p></li>
+<li><p>An ICC that cannot be estimated (one block, or no variation) is reported as not estimable instead of <code>NaN [NA, NA]</code> by <code><a href="../reference/permutation.html">permutation()</a></code>, <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> and <code><a href="../reference/permutation_diagnostics.html">permutation_diagnostics()</a></code>.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.15" id="nestimate-0915">Nestimate 0.9.15<a class="anchor" aria-label="anchor" href="#nestimate-0915"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-9-15">New features<a class="anchor" aria-label="anchor" href="#new-features-0-9-15"></a></h3>
+<ul><li>
+<code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> gains <code>block =</code>, the column identifying the unit that sequences are nested in. Whole units are resampled with replacement, keeping their sequences together (cluster bootstrap, top level only; Davison &amp; Hinkley, 1997; Field &amp; Welsh, 2007). The result reports the ICC (Shrout &amp; Fleiss, 1979) and the design effect (Kish, 1965) for the edges, printed under the bootstrap summary and returned as <code>clustering</code> and <code>clustering_edges</code>. With one sequence per unit it reproduces the ordinary bootstrap exactly. Transition networks only.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.14" id="nestimate-0914">Nestimate 0.9.14<a class="anchor" aria-label="anchor" href="#nestimate-0914"></a></h2>
+<div class="section level3">
+<h3 id="documentation-0-9-14">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-9-14"></a></h3>
+<ul><li>New pkgdown article “Comparing two networks with compare_networks()”: high vs low achievers in <code>group_regulation_long</code>, every summary table and all eight plot views with a short reading of each.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.13" id="nestimate-0913">Nestimate 0.9.13<a class="anchor" aria-label="anchor" href="#nestimate-0913"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-9-13">New features<a class="anchor" aria-label="anchor" href="#new-features-0-9-13"></a></h3>
+<ul><li><p><code><a href="../reference/permutation.html">permutation()</a></code> gains <code>block =</code>, the column identifying the unit that sequences are nested in (sessions in students, students in teams). Whole units are reassigned between the groups; units with sequences in both groups, as in repeated-measures designs, have their sequences reassigned within the unit; mixed designs combine the two (Good, 2005; Anderson &amp; ter Braak, 2003). Supported for transition networks (<code>relative</code>, <code>frequency</code>, <code>co_occurrence</code>); association networks raise <code>nestimate_block_unsupported</code>. A warning of class <code>nestimate_few_blocks</code> is raised when no p-value could fall below <code>alpha</code>.</p></li>
+<li><p>With <code>block</code>, <code><a href="../reference/permutation.html">permutation()</a></code> reports the nesting effect: the intraclass correlation (Shrout &amp; Fleiss, 1979) with a jackknife 95% interval, and the design effect (Kish, 1965), the blocked over the unblocked null variance, for the edges and the global statistic M.</p></li>
+<li><p><code>permutation_diagnostics(x, block =)</code> runs the ordinary and the blocked test on the same data and returns them side by side as a tidy data frame, one row per pair or, with <code>level = "edges"</code>, per edge.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-9-13">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-9-13"></a></h3>
+<ul><li><p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> of a <code>net_permutation</code> shows the global test (M and S, with p-values) and, with <code>block</code>, the ICC and design effects. A grouped result prints every pair in full.</p></li>
+<li><p>The <code><a href="../reference/permutation.html">permutation()</a></code> help page is reorganised into sections: what is tested, nested data and <code>block</code>, ICC and design effect, reading the printed output.</p></li>
+<li><p>Building a transition network from a single long sequence now raises a message instead of a warning; running <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> or <code><a href="../reference/permutation.html">permutation()</a></code> on such a network still warns. Both carry the class <code>nestimate_single_sequence</code>.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-9-13">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-9-13"></a></h3>
+<ul><li><p><code>\%</code> in markdown roxygen silently cut the rest of a line from the help pages of <code><a href="../reference/certainty.html">certainty()</a></code>, <code><a href="../reference/build_gimme.html">build_gimme()</a></code>, <code><a href="../reference/build_mcml.html">build_mcml()</a></code> and <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code>; the text is restored.</p></li>
+<li><p>Missing space in the <code><a href="../reference/permutation.html">permutation()</a></code> print header.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.12" id="nestimate-0912">Nestimate 0.9.12<a class="anchor" aria-label="anchor" href="#nestimate-0912"></a></h2>
+<div class="section level3">
+<h3 id="new-verbs-0-9-12">New verbs<a class="anchor" aria-label="anchor" href="#new-verbs-0-9-12"></a></h3>
+<ul><li><p><code>set_state_colors(x, colors)</code> attaches a palette to a <code>netobject</code>, <code>netobject_group</code>, <code>mcml</code> or <code>htna</code>, and every figure drawn from that object then uses it – <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code>, <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code>, <code><a href="../reference/plot_state_frequencies.html">plot_state_frequencies()</a></code> <strong>and</strong> <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code>. The cograph half goes through the documented <code>meta$splot</code> producer contract (<code>defaults$node_fill</code>, stamped in node order), so <code>splot(net)</code> needs no arguments and renders byte-identically to <code>splot(net, node_fill = ...)</code>. A <code>state_colors(x) &lt;-</code> replacement form is also available.</p></li>
+<li><p><code>state_colors(x)</code> reads the resolved palette back as a tidy data.frame: one row per key, with <code>state</code>, <code>color</code> and <code>source</code> (<code>"set"</code> or <code>"default"</code>). It is what the figures actually draw, not just what was passed in.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-9-12">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-9-12"></a></h3>
+<ul><li><p>States a named palette does not mention are now dealt the Okabe-Ito colours the palette has <strong>not</strong> used, one each, instead of taking their positional slot. Pinning <code>plan = "#0072B2"</code> no longer leaves another state defaulting to that same blue. Affects the named form only; an unnamed <code>state_colors</code> and the all-default palette are unchanged.</p></li>
+<li><p>An attached palette resolves <strong>once</strong>, in the object’s own key order, so every figure drawn from it colours a state identically. Previously only the colours you set were carried and each figure dealt the remaining defaults in its own sort order – <code><a href="../reference/plot_state_frequencies.html">plot_state_frequencies()</a></code> sorts states by frequency and <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> alphabetically, so one state could come out amber in one figure and black in the other.</p></li>
+<li><p>In-tile labels in <code><a href="../reference/plot_state_frequencies.html">plot_state_frequencies()</a></code> take whichever ink (dark or white) has the higher WCAG contrast ratio against the tile, instead of one fixed grey. A percentage on a dark tile – black, navy, dark wine – is now readable, whether the colour came from the default palette or from a palette you set.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.11" id="nestimate-0911">Nestimate 0.9.11<a class="anchor" aria-label="anchor" href="#nestimate-0911"></a></h2>
+<div class="section level3">
+<h3 id="fixes-0-9-11">Fixes<a class="anchor" aria-label="anchor" href="#fixes-0-9-11"></a></h3>
+<ul><li>A named <code>state_colors</code> no longer has to match the figure exactly. Names the plot does not draw are dropped with a <code><a href="https://rdrr.io/r/base/message.html" class="external-link">message()</a></code> naming them, so one project-wide palette – states from a wider coding scheme, clusters a given call merged away – can be handed to every plot and each takes the keys that apply to it. 0.9.10 raised an error instead, which made a shared palette unusable.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.10" id="nestimate-0910">Nestimate 0.9.10<a class="anchor" aria-label="anchor" href="#nestimate-0910"></a></h2>
+<div class="section level3">
+<h3 id="improvements-0-9-10">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-9-10"></a></h3>
+<ul><li><p><code>state_colors</code> accepts a <strong>named</strong> vector everywhere <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code>, <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code> and <code><a href="../reference/plot_state_frequencies.html">plot_state_frequencies()</a></code> draw, and the names are a lookup rather than a positional list: only the keys you name are overridden, every other key keeps its default, and the vector may be shorter than the number of states. An unnamed vector is still positional, unchanged.</p></li>
+<li><p>For an <code>mcml</code>, that lookup covers the whole multichannel figure, not only the states. A cluster name colours its <code>Summary</code> band, its channel strip and its faded band in the other panels; a group merged by <code>combine =</code> is named by its label (the list name, or <code>"A + B"</code>); <code>rest_label</code> is a key too. So <code>sequence_plot(fit, combine = list(Task = c("Cognitive", "Regulation")), state_colors = c(Task = "#0072B2"))</code> recolours the combined cluster and leaves the rest of the palette alone. Previously the cluster and combined keys were drawn from a fixed internal palette with no way to set them.</p></li>
+<li><p>A <code>state_colors</code> name that matches no key in the figure is now an error naming the available keys, instead of being silently ignored.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.9" id="nestimate-099">Nestimate 0.9.9<a class="anchor" aria-label="anchor" href="#nestimate-099"></a></h2>
+<div class="section level3">
+<h3 id="new-verbs-0-9-9">New verbs<a class="anchor" aria-label="anchor" href="#new-verbs-0-9-9"></a></h3>
+<ul><li>
+<code><a href="../reference/build_mcml.html">build_mcml()</a></code> gains <code>combine =</code> and <code>expand =</code>. On new input they change the partition before estimation, in any <code>clusters</code> form and for every input type: <code>build_mcml(data, clusters = cl, combine = c("A", "B"))</code> equals a build with <code>A</code> and <code>B</code> merged in <code>cl</code> (the merged cluster lists its states in cluster-name order). On an existing <code>mcml</code> they re-partition it: <code>build_mcml(mc, combine =)</code> merges clusters, <code>build_mcml(mc, expand =)</code> splits clusters into one cluster per state, and <code>build_mcml(mc, clusters =)</code> applies a new partition. The model (macro network, within-cluster networks, sequences) is re-estimated from the sequences the <code>mcml</code> carries, with its original <code>type</code>, <code>method</code> and <code>directed</code>. With the partition unchanged the result equals the input; <code>expand = "all"</code> reproduces the node-level transition network of the same <code>type</code>. Raises <code>nestimate_mcml_no_sequences</code> for an <code>mcml</code> built from a matrix or an edge list (which keeps only within-cluster edges), and errors when sequence-shaping arguments (<code>trim</code>, <code>exclude</code>, <code>end</code>, <code>labels</code>, <code>actor</code>, …) are passed with a re-partition, since the carried sequences already reflect them.</li>
+<li>
+<code><a href="../reference/session_ids.html">session_ids()</a></code> names the session behind every sequence of a network built from long data, and of a <code><a href="../reference/build_mmm.html">build_mmm()</a></code> or <code><a href="../reference/build_clusters.html">build_clusters()</a></code> fit on such a network. It returns one row per sequence in model order: <code>sequence</code>, the <code>actor</code> and <code>session</code> columns under their own names, <code>session_label</code>, and, for a fit, <code>cluster</code> (plus <code>posterior</code> for a mixture). The fit’s assignments can then be joined to the input by those columns instead of parsing the <code>"actor | session"</code> label, which breaks when an id contains <code>" | "</code>. Raises <code>nestimate_no_session_ids</code> for wide-data input or for fits made before this version, and <code>nestimate_session_ids_misaligned</code> when the metadata and the sequences differ in number.</li>
+<li>
+<code><a href="../reference/item_loadings.html">item_loadings()</a></code> returns the tidy item-diagnostic table of a <code><a href="../reference/build_mcml_pc.html">build_mcml_pc()</a></code> fit (node, cluster, loading, weight, sign, max_cross, cross_cluster, misfit); <code>misfit = TRUE</code>/<code>FALSE</code> filters it.</li>
+<li>
+<code><a href="../reference/composites.html">composites()</a></code> returns the per-respondent cluster scores of a <code><a href="../reference/build_mcml_pc.html">build_mcml_pc()</a></code> fit: one row per input row (input order and row names, <code>NA</code> where all of a cluster’s items are missing) and one column per cluster. Raises <code>nestimate_no_composites</code> for the descriptive aggregations (<code>"average"</code>, <code>"escoufier"</code>, <code>"cancor"</code>), which form no score.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changes-0-9-9">Changes<a class="anchor" aria-label="anchor" href="#changes-0-9-9"></a></h3>
+<ul><li><p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code> gains <code>combine =</code>: named clusters are merged into one channel (a character vector for one group, a list for several; list names label the merged channels, default <code>"A + B"</code>). The merged group acts as one cluster across the figure (one panel, one Summary key, one faded band) and can itself be opened with <code>expand =</code>.</p></li>
+<li><p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code> gains <code>rest = c("clusters", "pooled", "none")</code>: how a cluster’s panel shows the time spent in other clusters (one faded band per cluster, one pooled grey band, or blank, leaving only the panel’s own states). Applies to the carpet and distribution views. <code>rest_label =</code> (default <code>"Other states"</code>) sets the legend text: the pooled band takes it as is, per-cluster bands read <code>"Social (Other states)"</code>. This replaces the former <code>"(elsewhere)"</code> wording.</p></li>
+<li><p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code> now honours <code>na =</code> in the distribution view: <code>na = FALSE</code> drops the <code>NA</code> (ended) band and shows each time point as shares of the sequences still running, as <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code> already did.</p></li>
+<li><p><code><a href="../reference/macro_network.html">macro_network()</a></code> accepts an <code>mcml_pc</code> fit and returns its cluster-level network; <code>expand =</code> on an <code>mcml_pc</code> raises <code>nestimate_no_expand</code>, and <code>method =</code> or <code>...</code> error (the estimator is set in <code><a href="../reference/build_mcml_pc.html">build_mcml_pc()</a></code>).</p></li>
+<li><p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> errors when <code>combine</code>, <code>expand</code>, <code>rest</code> or <code>rest_label</code> is passed for input that is not an <code>mcml</code>, instead of ignoring them.</p></li>
+<li><p><code><a href="../reference/print.mcml_pc.html">print.mcml_pc()</a></code> and its build-time warnings name <code><a href="../reference/item_loadings.html">item_loadings()</a></code> instead of pointing at <code>$loadings</code>.</p></li>
+<li><p><code><a href="../reference/prepare.html">prepare()</a></code> (and so <code><a href="../reference/build_network.html">build_network()</a></code> on long data) keeps the <code>session</code> column(s) in the per-sequence metadata under their own names, and returns the metadata explicitly in sequence row order (it was assembled with <code>merge(sort = FALSE)</code>, whose order is unspecified).</p></li>
+<li><p><code><a href="../reference/build_mmm.html">build_mmm()</a></code> and <code><a href="../reference/build_clusters.html">build_clusters()</a></code> keep the input network’s <code>$metadata</code> (restricted to the fitted rows when <code><a href="../reference/build_mmm.html">build_mmm()</a></code> drops sequences with missing covariates).</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixes-0-9-9">Fixes<a class="anchor" aria-label="anchor" href="#fixes-0-9-9"></a></h3>
+<ul><li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code> with <code>type = "heatmap"</code>/<code>"index"</code> and <code>expand =</code> drew the other-cluster wash as blank cells: the wash was keyed by the Summary keys, which are states once a cluster is expanded. It is now keyed by cluster.</li>
+<li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code> with <code>type = "distribution"</code> and <code>expand =</code> no longer fails with “subscript out of bounds” in the default (<code>normalize = FALSE</code>) view. The Summary band now opens the expanded cluster into its states, and the other panels draw it as one faded <code>"&lt;cluster&gt; (&lt;rest_label&gt;)"</code> band.</li>
+<li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code> with a single channel (one cluster, or every cluster merged by <code>combine</code>) no longer fails in the carpet view with “replacement has 1 row, data has 0”.</li>
+<li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code>: with <code>expand =</code>, each cluster’s faded band in the other panels now has its own colour (expanded clusters all shared one).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.5" id="nestimate-095">Nestimate 0.9.5<a class="anchor" aria-label="anchor" href="#nestimate-095"></a></h2>
 <div class="section level3">
@@ -107,7 +235,7 @@
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.1" id="nestimate-091">Nestimate 0.9.1<a class="anchor" aria-label="anchor" href="#nestimate-091"></a></h2>
-<p>tna-parity release: sequence-side gaps against <code><a href="http://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::build_model()</a></code> and <code><a href="http://sonsoles.me/tna/reference/prepare_data.html" class="external-link">tna::prepare_data()</a></code> closed.</p>
+<p>tna-parity release: sequence-side gaps against <code><a href="https://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::build_model()</a></code> and <code><a href="https://sonsoles.me/tna/reference/prepare_data.html" class="external-link">tna::prepare_data()</a></code> closed.</p>
 <div class="section level3">
 <h3 id="new-estimators-0-9-1">New estimators<a class="anchor" aria-label="anchor" href="#new-estimators-0-9-1"></a></h3>
 <ul><li>

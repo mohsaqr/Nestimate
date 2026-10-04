@@ -37,7 +37,7 @@ testing.'><meta property="og:image" content="https://saqr.me/Nestimate/logo.svg"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,7 +103,8 @@ testing.</p>
 <span>  edge_threshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  boundary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"inclusive"</span>, <span class="st">"strict"</span><span class="op">)</span>,</span>
-<span>  ci_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"percentile"</span>, <span class="st">"basic"</span><span class="op">)</span></span>
+<span>  ci_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"percentile"</span>, <span class="st">"basic"</span><span class="op">)</span>,</span>
+<span>  actor <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -168,6 +169,15 @@ which corrects first-order bootstrap bias but can produce bounds
 outside the natural weight range near boundaries (e.g., below 0 for
 transition probabilities close to 0).</p></dd>
 
+
+<dt id="arg-actor">actor<a class="anchor" aria-label="anchor" href="#arg-actor"></a></dt>
+<dd><p>Character or NULL. Name of the column identifying the actor
+each sequence belongs to (e.g. <code>"student_id"</code> for sessions nested
+in students, <code>"Group"</code> for students nested in teams), looked up in
+the network's <code>$metadata</code> or wide sequence data. When supplied,
+whole actors are resampled; see the section <em>Nested data and
+actor</em>. Default <code>NULL</code>: sequences are resampled individually.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -216,11 +226,59 @@ config.</p></dd>
 <dt>consistency_range, edge_threshold</dt>
 <dd><p>Inference parameters.</p></dd>
 
+<dt>actor, n_actors</dt>
+<dd><p>The <code>actor</code> column and its number of
+actors; <code>NULL</code> without <code>actor</code>.</p></dd>
+
+<dt>clustering</dt>
+<dd><p>Only with <code>actor</code>. One-row data frame:
+<code>n_sequences</code>, <code>n_actors</code>, <code>icc</code>, <code>icc_ci_lower</code>,
+<code>icc_ci_upper</code>, <code>deff_edges</code>.</p></dd>
+
+<dt>clustering_edges</dt>
+<dd><p>Only with <code>actor</code>. One row per edge of
+<code>summary</code>: <code>from</code>, <code>to</code>, <code>icc</code>,
+<code>sd_actor</code>, <code>sd_sequence</code>, <code>deff</code>.</p></dd>
+
 
 </dl><p>A <code>netobject_group</code> or <code>mcml</code> input returns a
 <code>"net_bootstrap_group"</code> (named list of <code>net_bootstrap</code>
 results); a <code>wtna_mixed</code> input returns a <code>"wtna_boot_mixed"</code>
 with <code>$transition</code> and <code>$cooccurrence</code> results.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="nested-data-and-actor">Nested data and <code>actor</code><a class="anchor" aria-label="anchor" href="#nested-data-and-actor"></a></h2>
+
+
+<p>The bootstrap resamples sequences as independent units. When sequences
+are nested in actors (sessions in students, students in teams),
+<code>actor</code> names the column identifying the actor, and whole actors
+are resampled with replacement, keeping all their sequences together:
+the cluster bootstrap that resamples at the top level only (Davison &amp;
+Hinkley, 1997, section 3.8; Field &amp; Welsh, 2007). The number of
+sequences per replicate then varies with the actors drawn.</p>
+<p>With <code>actor</code>, the result also reports the nesting effect. The ICC
+is the proportion of the total variance that lies between actors (Shrout
+&amp; Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
+effect. It is computed as in <code><a href="permutation.html">permutation</a></code>. The design effect
+is the ratio of the variance under the nested design to the variance had
+the sequences been sampled independently (Kish, 1965): here, the variance
+of the edge weights over actor-level replicates divided by their variance
+over sequence-level replicates drawn in the same run, reported as the
+median over edges. <code>actor</code> is available for transition networks
+(<code>"relative"</code>, <code>"frequency"</code>, <code>"co_occurrence"</code>).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Davison, A. C., &amp; Hinkley, D. V. (1997). <em>Bootstrap Methods and
+Their Application</em>. Cambridge University Press.</p>
+<p>Field, C. A., &amp; Welsh, A. H. (2007). Bootstrapping clustered data.
+<em>Journal of the Royal Statistical Society: Series B</em>, 69(3),
+369-390.</p>
+<p>Kish, L. (1965). <em>Survey Sampling</em>. Wiley.</p>
+<p>Shrout, P. E., &amp; Fleiss, J. L. (1979). Intraclass correlations: Uses in
+assessing rater reliability. <em>Psychological Bulletin</em>, 86(2),
+420-428.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -283,6 +341,25 @@ with <code>$transition</code> and <code>$cooccurrence</code> results.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14 0.16666667 0.2777778</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 15 0.33333333 0.5555556</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 16 0.12500000 0.2083333</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Students nested in teams: resample whole teams</span></span></span>
+<span class="r-in"><span><span class="va">teams</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span></span>
+<span class="r-in"><span>                       actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span></span>
+<span class="r-in"><span>                       group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">bootstrap_network</span><span class="op">(</span><span class="va">teams</span>, iter <span class="op">=</span> <span class="fl">100</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edge                   High      Low     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   --------------------------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis→consensus   0.579     0.388   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   cohesion→consensus    0.536     0.451   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   adapt→consensus       0.519     0.458   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus→plan        0.364     0.432   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   discuss→consensus     0.424     0.215   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 33 more shared significant edges</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Grouped Bootstrap  [2 groups | 100 iterations | 95% CI]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   High                  41 sig / 76 total  |  Group: 100 actors, ICC -0.003, design effect 1.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Low                   44 sig / 75 total  |  Group: 100 actors, ICC -0.001, design effect 0.98</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Shared (all groups)   38 edges</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

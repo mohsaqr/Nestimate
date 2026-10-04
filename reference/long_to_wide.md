@@ -58,7 +58,7 @@ present in every sequence are kept.
 Converts long format data (one row per action) to the wide format
 expected by
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`tna::tna()`](http://sonsoles.me/tna/reference/build_model.md) and
+[`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html) and
 related functions.
 
 If `time_col` contains non-integer values (e.g., timestamps), the

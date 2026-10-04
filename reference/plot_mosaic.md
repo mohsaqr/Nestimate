@@ -49,9 +49,10 @@ plot_mosaic(
 
 - colors:
 
-  Optional character vector of fill colors. When `fill = "y"`, length
-  must be at least the number of distinct y levels. Defaults to recycled
-  Okabe-Ito.
+  Optional fill colors. Either an unnamed vector applied in level order
+  (when `fill = "y"`, length must be at least the number of distinct y
+  levels), or a named lookup (`c(plan = "#0072B2")`) overriding only the
+  levels you name. Defaults to recycled Okabe-Ito.
 
 - show_labels:
 

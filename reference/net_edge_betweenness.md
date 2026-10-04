@@ -4,10 +4,10 @@ Builds a network in which each edge's weight is replaced by its
 betweenness: the number of shortest paths between all node pairs that
 traverse that edge (fractional when shortest paths tie). This is the
 Nestimate counterpart of
-[`tna::betweenness_network()`](http://sonsoles.me/tna/reference/betweenness_network.md)
+[`tna::betweenness_network()`](https://sonsoles.me/tna/reference/betweenness_network.html)
 and produces identical values for transition networks; the name differs
 to avoid a clash with
-[`tna::betweenness_network()`](http://sonsoles.me/tna/reference/betweenness_network.md)
+[`tna::betweenness_network()`](https://sonsoles.me/tna/reference/betweenness_network.html)
 and
 [`igraph::edge_betweenness()`](https://r.igraph.org/reference/betweenness.html).
 

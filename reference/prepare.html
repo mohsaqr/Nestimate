@@ -11,7 +11,7 @@ detects sessions from time gaps, and handles tie-breaking."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -152,7 +152,10 @@ columns T1, T2, ...).</p></dd>
 <dd><p>The processed long-format data with session IDs.</p></dd>
 
 <dt>meta_data</dt>
-<dd><p>Session-level metadata (session ID, actor).</p></dd>
+<dd><p>Session-level metadata, one row per session in the row
+order of <code>sequence_data</code>: <code>.session_id</code>, <code>.session_label</code>,
+the <code>actor</code> column, the <code>session</code> column(s) under their own
+names, and every other column aggregated per session.</p></dd>
 
 <dt>time_data</dt>
 <dd><p>Parsed time values in wide format (if time provided).</p></dd>

@@ -105,7 +105,10 @@ A list with class `"nestimate_data"` containing:
 
 - meta_data:
 
-  Session-level metadata (session ID, actor).
+  Session-level metadata, one row per session in the row order of
+  `sequence_data`: `.session_id`, `.session_label`, the `actor` column,
+  the `session` column(s) under their own names, and every other column
+  aggregated per session.
 
 - time_data:
 

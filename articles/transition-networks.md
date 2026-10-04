@@ -484,9 +484,10 @@ divergence rather than algorithmic artifacts.
 perm <- permutation(Clusters$`Cluster 1`, Clusters$`Cluster 2`,
                          iter = 100)
 perm
-#> Permutation Test:Transition Network (relative probabilities) [directed]
+#> Permutation Test: Transition Network (relative probabilities) [directed]
 #>   Iterations: 100  |  Alpha: 0.05
 #>   Nodes: 9  |  Edges tested: 81  |  Significant: 9
+#>   Global test (networks differ overall?): M = 2.587 (p = 0.0099)  |  S = 0.244 (p = 0.0099)
 ```
 
 ### Post-hoc Covariate Analysis

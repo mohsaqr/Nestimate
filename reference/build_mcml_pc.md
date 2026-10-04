@@ -332,13 +332,14 @@ An object of class `"mcml_pc"` containing:
 
 **Item diagnostics.** Whenever raw data or a node-level network is
 available, every item's connection strength to *every* cluster is
-computed. The `$loadings` table reports, per item: its signed
-own-cluster loading, its composite weight, its strongest cross-cluster
-loading, and a `misfit` flag set when the cross-cluster loading exceeds
-the own-cluster loading - evidence the item is assigned to the wrong
-cluster. Misfit items trigger a warning; every aggregation silently
-inherits a bad membership, so fix the assignment rather than ignoring
-the flag.
+computed. The
+[`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md)
+table reports, per item: its signed own-cluster loading, its composite
+weight, its strongest cross-cluster loading, and a `misfit` flag set
+when the cross-cluster loading exceeds the own-cluster loading -
+evidence the item is assigned to the wrong cluster. Misfit items trigger
+a warning; every aggregation silently inherits a bad membership, so fix
+the assignment rather than ignoring the flag.
 
 **Reverse-keyed items.** With `signed = TRUE` (default), items whose
 summed within-cluster association is negative are flipped (their
@@ -368,11 +369,11 @@ conditioning on out-of-cluster nodes). Modes without raw data force
 
 **Uncertainty.** The composite/loadings macro network is a full
 netobject carrying its composite data, so
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)`(fit$macro)`
+[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)`(macro_network(fit))`
 (edge-weight CIs) and
-[`vertex_bootstrap`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md)`(fit$macro)`
+[`vertex_bootstrap`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md)`(macro_network(fit))`
 (network-level CIs) work directly;
-[`vertex_compare`](https://saqr.me/Nestimate/reference/vertex_compare.md)`(fit1$macro, fit2$macro)`
+[`vertex_compare`](https://saqr.me/Nestimate/reference/vertex_compare.md)`(macro_network(fit1), macro_network(fit2))`
 compares two groups.
 [`loading_stability`](https://saqr.me/Nestimate/reference/loading_stability.md)
 quantifies how stable the composite weights themselves are under case

@@ -13,7 +13,7 @@ proportional to each row's share of that column's total."><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,9 +100,10 @@ for diverging color).</p></dd>
 
 
 <dt id="arg-colors">colors<a class="anchor" aria-label="anchor" href="#arg-colors"></a></dt>
-<dd><p>Optional character vector of fill colors. When
-<code>fill = "y"</code>, length must be at least the number of distinct y
-levels. Defaults to recycled Okabe-Ito.</p></dd>
+<dd><p>Optional fill colors. Either an unnamed vector applied in
+level order (when <code>fill = "y"</code>, length must be at least the number
+of distinct y levels), or a named lookup (<code>c(plan = "#0072B2")</code>)
+overriding only the levels you name. Defaults to recycled Okabe-Ito.</p></dd>
 
 
 <dt id="arg-show-labels">show_labels<a class="anchor" aria-label="anchor" href="#arg-show-labels"></a></dt>

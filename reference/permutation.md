@@ -1,31 +1,12 @@
 # Permutation Test for Network Comparison
 
-Compares two networks estimated by
+Tests whether two networks estimated by
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
-using a permutation test. Works with all built-in methods (transition
-and association) as well as custom registered estimators. The test
-shuffles which observations belong to which group, re-estimates
-networks, and tests whether observed edge-wise differences exceed
-chance.
-
-For transition methods (`"relative"`, `"frequency"`, `"co_occurrence"`),
-uses a fast pre-computation strategy: per-sequence count matrices are
-computed once, and each permutation iteration only shuffles group labels
-and computes group-wise `colSums`.
-
-For association methods (`"cor"`, `"pcor"`, `"glasso"`, and custom
-estimators), the full estimator is called on each permuted group split.
-
-If either transition network contains only one sequence, the function
-warns that such a network is not recommended for permutation or other
-confirmatory testing.
-
-`permutation()` also accepts two
-[`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
-objects. In that case it permutes the source networks, recomputes edge
-betweenness for each shuffled split, and tests edge-betweenness
-differences. The two edge-betweenness objects must come from the same
-source method and use the same `invert` setting.
+differ more than chance would produce. The sequences (or rows) of both
+networks are pooled, the group labels are shuffled `iter` times, both
+networks are re-estimated on every shuffle, and the observed differences
+are compared with the shuffled ones. Works with every built-in method
+and with registered custom estimators.
 
 ## Usage
 
@@ -39,7 +20,8 @@ permutation(
   adjust = "none",
   measures = NULL,
   nlambda = 50L,
-  seed = NULL
+  seed = NULL,
+  actor = NULL
 )
 ```
 
@@ -103,6 +85,20 @@ permutation(
 - seed:
 
   Integer or NULL. RNG seed for reproducibility.
+
+- actor:
+
+  Character or NULL. Name of the column identifying the actor each
+  sequence belongs to: the person whose sessions they are, or the team
+  of a student. Looked up in the network's `$metadata` (e.g.
+  `"student_id"` when sessions are nested in students, `"Group"` for
+  students nested in teams) or in its wide sequence data. When supplied,
+  whole actors are permuted and the ICC and design effect are reported;
+  see the sections *Nested data and actor* and *ICC and design effect*.
+  Supported for transition methods (`"relative"`, `"frequency"`,
+  `"co_occurrence"`); cannot be combined with `paired = TRUE`, which is
+  the special case of one actor per pair. Default `NULL`: sequences are
+  permuted individually.
 
 ## Value
 
@@ -171,6 +167,41 @@ An object of class `"net_permutation"` containing:
 
   p-value adjustment method used.
 
+- actor:
+
+  The `actor` column name, or `NULL`.
+
+- n_actors:
+
+  Number of distinct actors, or `NULL`.
+
+- null_sd:
+
+  Matrix of the SD of each edge difference over the permutation null
+  (the effect-size denominator).
+
+- null_sd_m:
+
+  SD of the global `M` statistic over the permutation null. Absent on
+  the edge-betweenness path.
+
+- clustering:
+
+  Present only with `actor`. One-row data frame: `n_sequences`,
+  `n_actors`, `design` (`"between"`, `"within"`, `"mixed"`), `icc` with
+  `icc_ci_lower`/`icc_ci_upper` (how alike sequences of one actor are;
+  see
+  [`permutation_diagnostics`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md)),
+  `deff_edges` (median over edges) and `deff_global` (for `M`): the
+  actor-level over the sequence-level null variance, drawn in the same
+  run (the design effect; Kish, 1965). `min_p` is the smallest
+  attainable p-value.
+
+- clustering_edges:
+
+  Present only with `actor`. One row per edge of `summary`: `from`,
+  `to`, `icc`, `null_sd_actor`, `null_sd_sequence`, `deff`.
+
 - centralities:
 
   Present only when `measures` is supplied. A list with `stats` (one row
@@ -184,8 +215,134 @@ both `x` and `y` are `netobject_group`s, or one per group pair when `y`
 is `NULL`. Two `wtna_mixed` inputs return a `"wtna_perm_mixed"` with
 `$transition` and `$cooccurrence` results.
 
+## What is tested
+
+Two kinds of question are answered from the same shuffles.
+
+- Edge tests:
+
+  One test per edge: is the difference in this edge's weight, `x - y`,
+  larger than the shuffles produce? Reported in
+  [`summary()`](https://rdrr.io/r/base/summary.html) with an effect size
+  (observed difference divided by the SD of the shuffled differences)
+  and a p-value
+  `(number of shuffles at least as extreme + 1) / (iter + 1)`. With many
+  edges, some fall below `alpha` by chance; use `adjust` to correct for
+  that.
+
+- Global test:
+
+  One test for the whole network: do the two networks differ at all? Two
+  statistics, as in the Network Comparison Test (van Borkulo et al.,
+  2023): **M**, the sum of the absolute edge differences (the total
+  amount of difference), and **S**, the largest absolute edge
+  difference. Being a single test, it needs no multiplicity correction.
+  It is shown by [`print()`](https://rdrr.io/r/base/print.html).
+
+The smallest attainable p-value is `1 / (iter + 1)`; with the default
+`iter = 1000` it is 0.000999, meaning no shuffle came close.
+
+## Nested data and `actor`
+
+Shuffling treats every sequence as an exchangeable unit. When several
+sequences come from the same actor (sessions of one person, students of
+one team), `actor` names the column identifying that actor. The shuffle
+then respects it (Good, 2005; Anderson & ter Braak, 2003): a person
+whose sequences are all in one group moves to the other group as a
+whole; a person with sequences in both groups has their labels shuffled
+among their own sequences only. Mixed designs combine the two. The
+observed differences do not change; only the p-values and effect sizes
+do. With few persons there are few distinct ways to shuffle them, and a
+warning (class `nestimate_few_actors`) is raised when no p-value could
+fall below `alpha`.
+
+`actor` is available for transition networks (`"relative"`,
+`"frequency"`, `"co_occurrence"`). Association networks (`"cor"`,
+`"pcor"`, `"glasso"`, ...) do not keep row identifiers after estimation
+and raise `nestimate_actor_unsupported`.
+
+## ICC and design effect
+
+With `actor`, [`print()`](https://rdrr.io/r/base/print.html) also
+reports:
+
+- ICC:
+
+  The intraclass correlation, the proportion of the total variance that
+  lies between actors (Shrout & Fleiss, 1979). An ICC close to 0
+  indicates little evidence of a nesting effect. Computed as the one-way
+  ANOVA ICC of each sequence's transition shares within each group,
+  averaged over edges weighted by edge frequency, jackknife
+  bias-corrected, with a 95% interval from the leave-one-actor-out
+  jackknife (Efron & Tibshirani, 1993).
+
+- Design effect:
+
+  The ratio of the variance of an estimate under the clustered design to
+  its variance had the units been sampled independently (Kish, 1965).
+  Here: the variance of the shuffled differences when whole actors are
+  moved, divided by the variance when single sequences are moved, both
+  drawn in the same run. Reported as the median over edges and for the
+  global statistic M. For equal numbers of sequences per actor m, Kish
+  gives the approximation `1 + (m - 1) * ICC`.
+
+## Reading the printed output
+
+
+    Permutation Test: Transition Network (relative probabilities) [directed]
+      Iterations: 1000  |  Alpha: 0.05  |  Actor: Group (200 actors)
+      Nodes: 9  |  Edges tested: 78  |  Significant: 42
+      Global test (networks differ overall?): M = 2.612 (p = 0.000999)  |  ...
+      Nesting in Group: ICC = -0.002 [95% CI -0.006, 0.002]  |  between design
+      Design effect (1 = nesting does not matter): edges 1.03  |  global 1.20
+
+Line 2: settings, and the actor column with its number of actors. Line
+3: edges present in either network and how many differ at `alpha`. Line
+4: the global test. Lines 5-6, only with `actor`: the ICC with its
+interval, whether actors sit in one group (`between`), in both
+(`within`) or either (`mixed`), and the design effects.
+
+## Other inputs
+
+For transition methods, per-sequence count matrices are computed once
+and each shuffle only re-sums them, which keeps large `iter` fast. For
+association methods the estimator is re-run on every shuffle. If a
+transition network rests on a single sequence, a warning (class
+`nestimate_single_sequence`) says it cannot be validated by resampling.
+
+`permutation()` also accepts two
+[`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+objects. It then permutes the source networks, recomputes edge
+betweenness for each shuffle, and tests the edge-betweenness
+differences. Both objects must come from the same source method and use
+the same `invert` setting.
+
+## References
+
+Anderson, M. J., & ter Braak, C. J. F. (2003). Permutation tests for
+multi-factorial analysis of variance. *Journal of Statistical
+Computation and Simulation*, 73(2), 85-113.
+
+Efron, B., & Tibshirani, R. J. (1993). *An Introduction to the
+Bootstrap*. Chapman & Hall.
+
+Good, P. (2005). *Permutation, Parametric, and Bootstrap Tests of
+Hypotheses* (3rd ed.). Springer.
+
+Kish, L. (1965). *Survey Sampling*. Wiley.
+
+Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
+assessing rater reliability. *Psychological Bulletin*, 86(2), 420-428.
+
+van Borkulo, C. D., van Bork, R., Boschloo, L., Kossakowski, J. J., Tio,
+P., Schoevers, R. A., Borsboom, D., & Waldorp, L. J. (2023). Comparing
+network structures on three aspects: A permutation test. *Psychological
+Methods*, 28(6), 1273-1285.
+
 ## See also
 
+[`permutation_diagnostics`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md)
+to compare the actor-level and ordinary tests side by side;
 [`bayes_compare`](https://saqr.me/Nestimate/reference/bayes_compare.md)
 for the Bayesian complement: instead of "is this difference more extreme
 than chance?" it answers "how probable is a difference, and how large?";
@@ -214,9 +371,10 @@ net1 <- build_network(d1, method = "relative")
 net2 <- build_network(d2, method = "relative")
 perm <- permutation(net1, net2, iter = 100, seed = 42)
 print(perm)
-#> Permutation Test:Transition Network (relative probabilities) [directed]
+#> Permutation Test: Transition Network (relative probabilities) [directed]
 #>   Iterations: 100  |  Alpha: 0.05
 #>   Nodes: 4  |  Edges tested: 16  |  Significant: 3
+#>   Global test (networks differ overall?): M = 3.858 (p = 0.0297)  |  S = 0.567 (p = 0.109)
 summary(perm)
 #>    from to   weight_x  weight_y        diff effect_size    p_value   sig
 #> 1     A  A 0.33333333 0.2222222  0.11111111   0.6504300 0.49504950 FALSE
@@ -235,5 +393,22 @@ summary(perm)
 #> 14    D  B 0.00000000 0.2000000 -0.20000000  -0.9828935 0.45544554 FALSE
 #> 15    D  C 0.33333333 0.2000000  0.13333333   0.5436513 0.56435644 FALSE
 #> 16    D  D 0.66666667 0.1000000  0.56666667   2.5117967 0.01980198  TRUE
+
+# Students are nested in teams, and Achiever is a team-level label:
+# permute whole teams, not single students
+net <- build_network(group_regulation_long, method = "relative",
+                     actor = "Actor", action = "Action", time = "Time",
+                     group = "Achiever")
+permutation(net, iter = 100, actor = "Group", seed = 1)
+#> Grouped Permutation Test
+#> Groups: High vs Low 
+#> 
+#> -- High vs Low --
+#> Permutation Test: Transition Network (relative probabilities) [directed]
+#>   Iterations: 100  |  Alpha: 0.05  |  Actor: Group (200 actors)
+#>   Nodes: 9  |  Edges tested: 78  |  Significant: 43
+#>   Global test (networks differ overall?): M = 2.612 (p = 0.0099)  |  S = 0.210 (p = 0.0099)
+#>   Nesting in Group: ICC = -0.002 [95% CI -0.006, 0.002]  |  between design
+#>   Design effect (1 = nesting does not matter): edges 1.03  |  global 1.26
 # }
 ```

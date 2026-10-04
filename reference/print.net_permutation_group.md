@@ -36,7 +36,18 @@ perm  <- permutation(nets1, nets2, iter = 10)
 print(perm)
 #> Grouped Permutation Test
 #> Groups: X, Y 
-#> Use summary() on each element for edge-level results.
+#> 
+#> -- X --
+#> Permutation Test: Transition Network (relative probabilities) [directed]
+#>   Iterations: 10  |  Alpha: 0.05
+#>   Nodes: 3  |  Edges tested: 3  |  Significant: 0
+#>   Global test (networks differ overall?): M = 0.000 (p = 1)  |  S = 0.000 (p = 1)
+#> 
+#> -- Y --
+#> Permutation Test: Transition Network (relative probabilities) [directed]
+#>   Iterations: 10  |  Alpha: 0.05
+#>   Nodes: 3  |  Edges tested: 3  |  Significant: 0
+#>   Global test (networks differ overall?): M = 0.000 (p = 1)  |  S = 0.000 (p = 1)
 # \donttest{
 set.seed(1)
 s1 <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
@@ -49,6 +60,17 @@ perm  <- permutation(nets1, nets2, iter = 20, seed = 1)
 print(perm)
 #> Grouped Permutation Test
 #> Groups: X, Y 
-#> Use summary() on each element for edge-level results.
+#> 
+#> -- X --
+#> Permutation Test: Transition Network (relative probabilities) [directed]
+#>   Iterations: 20  |  Alpha: 0.05
+#>   Nodes: 3  |  Edges tested: 3  |  Significant: 0
+#>   Global test (networks differ overall?): M = 0.000 (p = 1)  |  S = 0.000 (p = 1)
+#> 
+#> -- Y --
+#> Permutation Test: Transition Network (relative probabilities) [directed]
+#>   Iterations: 20  |  Alpha: 0.05
+#>   Nodes: 3  |  Edges tested: 3  |  Significant: 0
+#>   Global test (networks differ overall?): M = 0.000 (p = 1)  |  S = 0.000 (p = 1)
 # }
 ```

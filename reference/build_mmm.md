@@ -162,6 +162,13 @@ An object of class `net_mmm` with components:
   Provenance kept from `netobject` / HTNA input so per-cluster networks
   can be rebuilt the same way; NULL otherwise.
 
+- metadata:
+
+  The `netobject`'s per-sequence metadata, one row per fitted sequence
+  in the row order of `posterior`, so
+  [`session_ids`](https://saqr.me/Nestimate/reference/session_ids.md)
+  can name each sequence; NULL for other input.
+
 ## Initial states
 
 The first sequence column has special status: it is read directly as the

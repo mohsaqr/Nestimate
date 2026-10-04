@@ -2,9 +2,9 @@
 
 Removes weak or non-significant edges from a network, keeping a record
 so the operation can be reversed. This is Nestimate's counterpart of
-[`tna::prune()`](http://sonsoles.me/tna/reference/prune.md); the `net_`
-prefix avoids a name clash with
-[`tna::prune()`](http://sonsoles.me/tna/reference/prune.md).
+[`tna::prune()`](https://sonsoles.me/tna/reference/prune.html); the
+`net_` prefix avoids a name clash with
+[`tna::prune()`](https://sonsoles.me/tna/reference/prune.html).
 
 ## Usage
 
@@ -130,7 +130,7 @@ when its removal leaves the network weakly connected.
 Diagonal self-loops (self-transitions) are observed data: they are
 counted equally when computing the cut-off but are never removed by any
 method. (This is a deliberate divergence from
-[`tna::prune()`](http://sonsoles.me/tna/reference/prune.md), which
+[`tna::prune()`](https://sonsoles.me/tna/reference/prune.html), which
 prunes self-loops like any other edge.)
 
 ## See also

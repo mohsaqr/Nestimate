@@ -28,7 +28,9 @@ build_mcml(
   trim = NULL,
   end = FALSE,
   end_by = NULL,
-  labels = NULL
+  labels = NULL,
+  combine = NULL,
+  expand = NULL
 )
 ```
 
@@ -63,7 +65,9 @@ build_mcml(
 
   mcml
 
-  :   An `mcml` object is returned unchanged.
+  :   An `mcml` object is returned unchanged, unless `clusters`,
+      `combine` or `expand` changes its partition: it is then
+      re-estimated from the sequences it carries (see `combine`).
 
   square numeric matrix
 
@@ -183,8 +187,9 @@ build_mcml(
 
   Optional truncation of each sequence. `NULL` (default) keeps every
   time point. A fraction in `(0, 1)` keeps the columns covering that
-  quantile of sequence lengths (`trim = 0.95` keeps the shortest 95\\
-  (`trim = 10` keeps the first 10 time points). Same semantics as
+  quantile of sequence lengths (`trim = 0.95` keeps the shortest 95%); a
+  value `>= 1` is an absolute cut (`trim = 10` keeps the first 10 time
+  points). Same semantics as
   [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md)'s
   `trim`.
 
@@ -211,6 +216,36 @@ build_mcml(
   Accepts a 2-column data.frame `(name, label)`, a named character
   vector `c(name = "label")`, or a named list. Unmapped names pass
   through unchanged.
+
+- combine, expand:
+
+  Change the partition. On new input they apply to `clusters` (in any of
+  its accepted forms, including auto-detection) before estimation, so
+  `build_mcml(data, clusters = cl, combine = c("A", "B"))` equals a
+  build with `A` and `B` merged in `cl` (the merged cluster lists its
+  states in cluster-name order); this works for every input type,
+  matrices included. On an existing `mcml` they re-partition it (see
+  below). `combine` merges clusters into one: a character vector merges
+  one group, a list merges several and its names label them (default
+  label `"A + B"`). `expand` then splits the named clusters (or
+  `"all"`/`TRUE`) into one cluster per member state, named by the state.
+  For an existing `mcml` the model is re-estimated – macro network,
+  within-cluster networks and stored sequences – from the sequences the
+  `mcml` carries, with its original `type`, `method` and `directed`
+  unless passed explicitly. Any session split, `exclude`, `trim` or
+  `end` applied when it was built is already in those sequences, so
+  passing any of these (or `actor`, `action`, `time`, `session`,
+  `labels`) together with a re-partition is an error. Passing a new
+  `clusters` list instead re-estimates under that partition; with the
+  partition unchanged the result equals the input. Errors with class
+  `nestimate_mcml_no_sequences` when the `mcml` was built from a matrix,
+  from an edge list (only within-cluster edges are kept), or with
+  `compute_within = FALSE`.
+  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  accepts the same two arguments as display options: its `combine` draws
+  exactly what it draws for `build_mcml(x, combine = )`, while its
+  `expand` opens clusters in the Summary panel only and keeps one panel
+  per cluster.
 
 ## Value
 
@@ -294,4 +329,78 @@ summary(cs)
 #>   cluster size within_total between_out between_in
 #> 1      G1    2            2           2          1
 #> 2      G2    2            4           1          2
+
+# Change the partition while building ...
+three <- build_mcml(seqs, list(G1 = "A", G2 = "B", G3 = c("C", "D")))
+build_mcml(seqs, list(G1 = "A", G2 = "B", G3 = c("C", "D")),
+           combine = c("G1", "G2"))
+#> MCML Network
+#> ============
+#> Type: tna  | Method: sum 
+#> Nodes: 4  | Clusters: 2 
+#> Transitions: 9 
+#>   Macro: 3  | Per-cluster: 6 
+#> 
+#> Clusters:
+#>   G1 + G2 (2): A, B
+#>   G3 (2): C, D
+#> 
+#> Macro (cluster-level) weights:
+#>         G1 + G2  G3
+#> G1 + G2     0.5 0.5
+#> G3          0.2 0.8
+
+# ... or re-partition an existing mcml: the model is re-estimated
+build_mcml(three, combine = c("G1", "G2"))           # G1 + G2 as one cluster
+#> MCML Network
+#> ============
+#> Type: tna  | Method: sum 
+#> Nodes: 4  | Clusters: 2 
+#> Transitions: 9 
+#>   Macro: 3  | Per-cluster: 6 
+#> 
+#> Clusters:
+#>   G1 + G2 (2): A, B
+#>   G3 (2): C, D
+#> 
+#> Macro (cluster-level) weights:
+#>         G1 + G2  G3
+#> G1 + G2     0.5 0.5
+#> G3          0.2 0.8
+build_mcml(three, combine = list(AB = c("G1", "G2"))) # named merge
+#> MCML Network
+#> ============
+#> Type: tna  | Method: sum 
+#> Nodes: 4  | Clusters: 2 
+#> Transitions: 9 
+#>   Macro: 3  | Per-cluster: 6 
+#> 
+#> Clusters:
+#>   AB (2): A, B
+#>   G3 (2): C, D
+#> 
+#> Macro (cluster-level) weights:
+#>     AB  G3
+#> AB 0.5 0.5
+#> G3 0.2 0.8
+build_mcml(three, expand = "G3")                      # C and D as clusters
+#> MCML Network
+#> ============
+#> Type: tna  | Method: sum 
+#> Nodes: 4  | Clusters: 4 
+#> Transitions: 9 
+#>   Macro: 9  | Per-cluster: 0 
+#> 
+#> Clusters:
+#>   C (1): C
+#>   D (1): D
+#>   G1 (1): A
+#>   G2 (1): B
+#> 
+#> Macro (cluster-level) weights:
+#>      C      D     G1  G2
+#> C  0.0 0.6667 0.3333 0.0
+#> D  1.0 0.0000 0.0000 0.0
+#> G1 0.0 0.5000 0.0000 0.5
+#> G2 0.5 0.0000 0.5000 0.0
 ```

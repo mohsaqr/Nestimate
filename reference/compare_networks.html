@@ -19,7 +19,7 @@ evidence to the same tables. plot() draws one view per call."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,8 @@ evidence to the same tables. <code><a href="https://rdrr.io/r/graphics/plot.defa
 <span>  adjust <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  paired <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  rope <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  actor <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_network_comparison'</span></span>
@@ -183,6 +184,16 @@ difference scale (Bayesian backend only). Adds <code>bayes_p_rope</code> and a
 results are reproducible and independent of pair order.</p></dd>
 
 
+<dt id="arg-actor">actor<a class="anchor" aria-label="anchor" href="#arg-actor"></a></dt>
+<dd><p>Optional column name identifying the actor each sequence
+belongs to (e.g. <code>"student_id"</code> when sessions are nested in students,
+<code>"Group"</code> for students nested in teams). Passed to <code><a href="permutation.html">permutation()</a></code>, which
+then reassigns whole actors; see its sections <em>Nested data and actor</em>
+and <em>ICC and design effect</em>. Requires <code>test = "permutation"</code>. The ICC
+and design effects are added to <code>global</code> under the category
+<code>"Nesting"</code>. Default <code>NULL</code>.</p></dd>
+
+
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>net_network_comparison</code> object.</p></dd>
 
@@ -283,7 +294,9 @@ are undirected only <code>from &lt;= to</code> cells are kept.</p>
 <p><strong>Inference.</strong> <code>"permutation"</code> (via <code><a href="permutation.html">permutation()</a></code>) adds
 <code>perm_effect</code>, <code>perm_p</code>, <code>perm_sig</code> to <code>edges</code> and <code>nodes</code>, and two rows
 <code>M</code> (sum of absolute edge differences) and <code>S</code> (largest absolute edge
-difference) to <code>global</code> with permutation p-values. <code>"bayes"</code> (via
+difference) to <code>global</code> with permutation p-values; with <code>actor</code>, the
+reassignment moves whole actors and <code>global</code> also gains the rows <code>ICC</code>,
+<code>Design effect (edges)</code> and <code>Design effect (M)</code>. <code>"bayes"</code> (via
 <code><a href="bayes_compare.html">bayes_compare()</a></code>) adds <code>bayes_diff</code> (posterior mean difference),
 <code>bayes_ci_lower</code>, <code>bayes_ci_upper</code>, <code>bayes_pd</code> (probability of direction),
 <code>bayes_p</code>, <code>bayes_sig</code> to <code>edges</code>; with <code>rope</code>, <code>bayes_p_rope</code> (normal

@@ -54,7 +54,7 @@ build_network(
   `"frequency"`, `"co_occurrence"`, `"cor"`, `"pcor"`, `"glasso"`,
   `"ising"`, `"mgm"`, `"attention"`, `"wtna"`, `"wtna_cooccurrence"`,
   `"ngram"`, `"gap"`, `"reverse"`. The last three mirror
-  [`tna::build_model()`](http://sonsoles.me/tna/reference/build_model.md)
+  [`tna::build_model()`](https://sonsoles.me/tna/reference/build_model.html)
   types `"n-gram"` (adjacent pairs counted once per n-gram window
   containing them; `params = list(n_gram = 2)`), `"gap"` (pairs up to
   `max_gap + 1` positions apart, weighted by `1 / distance`;

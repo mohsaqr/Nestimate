@@ -16,8 +16,10 @@ macro_network(x, expand = NULL, method = "relative", ...)
 
 - x:
 
-  An `mcml` built from sequence data. A matrix-derived `mcml` carries no
-  node-level data and cannot be expanded.
+  An `mcml` built from sequence data, or an `mcml_pc` from
+  [`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md).
+  A matrix-derived `mcml` carries no node-level data and cannot be
+  expanded.
 
 - expand:
 
@@ -29,18 +31,26 @@ macro_network(x, expand = NULL, method = "relative", ...)
 
   Estimator passed to
   [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
-  Default `"relative"` (row-normalised transitions).
+  Default `"relative"` (row-normalised transitions). Not used for an
+  `mcml_pc`.
 
 - ...:
 
   Further arguments passed to
   [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  Not used for an `mcml_pc`.
 
 ## Value
 
-A `netobject` (also a `cograph_network`) whose nodes are the collapsed
-clusters plus the member states of any expanded cluster, with weights
-re-counted from the sequence data by
+For an `mcml_pc`: its cluster-level network, the netobject estimated by
+[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md),
+unchanged. Its estimator is set when the fit is built, so `method` or
+`...` raise an error, and `expand` errors with class
+`nestimate_no_expand` (there are no sequences to re-count).
+
+For an `mcml`: a `netobject` (also a `cograph_network`) whose nodes are
+the collapsed clusters plus the member states of any expanded cluster,
+with weights re-counted from the sequence data by
 [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
 `$node_groups` is a two-column data frame (`node`, `group`) mapping
 every node to its cluster, and the same labels are a factor in

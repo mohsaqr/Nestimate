@@ -46,7 +46,7 @@ certainty(
 - ci_level:
 
   Numeric in (0,1). Tail level for credible intervals and the stability
-  decision (default `0.05`, i.e. a 95\\ match
+  decision (default `0.05`, i.e. a 95% interval). Named to match
   [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md).
 
 - inference:

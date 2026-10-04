@@ -2,7 +2,7 @@
 
 Computes centrality measures from a `netobject`, `netobject_group`,
 `mcml`, or `cograph_network`. The built-in measures match
-[`tna::centralities()`](http://sonsoles.me/tna/reference/centralities.md)
+[`tna::centralities()`](https://sonsoles.me/tna/reference/centralities.html)
 without importing `tna` or `igraph`: strength is taken from the weight
 matrix directly, and the path-based measures (betweenness, closeness)
 come from all-pairs shortest paths computed in-package by

@@ -70,8 +70,8 @@ df <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, 6))
 names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
 clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, clusters, aggregation = "composite", method = "cor")
-#> Warning: Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, b1. See $loadings (misfit, cross_cluster).
-#> Warning: Reverse-keyed item(s) flipped in composites: a2, b3. See $loadings (sign).
+#> Warning: Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, b1. See item_loadings(fit, misfit = TRUE).
+#> Warning: Reverse-keyed item(s) flipped in composites: a2, b3. See item_loadings() (column sign).
 nets <- as_networks(fit)
 nets
 #> Group Networks (3 groups)

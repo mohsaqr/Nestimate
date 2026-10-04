@@ -21,7 +21,7 @@ windows, not between simultaneous states inside the same row."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,11 +59,11 @@ windows, not between simultaneous states inside the same row."><meta property="o
 
     <div class="ref-description section level2">
     <p>Converts binary indicator (one-hot) data into the wide sequence format
-expected by <code><a href="build_network.html">build_network</a></code> and <code><a href="http://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::tna()</a></code>. Each binary
+expected by <code><a href="build_network.html">build_network</a></code> and <code><a href="https://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::tna()</a></code>. Each binary
 column represents a state; rows where the value is 1 are marked with the
 column name. Supports optional windowed aggregation.</p>
 <p>Simultaneous active states are preserved using the same window-span
-representation as <code><a href="http://sonsoles.me/tna/reference/import_onehot.html" class="external-link">tna::import_onehot()</a></code>: each input row/window is
+representation as <code><a href="https://sonsoles.me/tna/reference/import_onehot.html" class="external-link">tna::import_onehot()</a></code>: each input row/window is
 expanded to one sequence slot per code and transition counting occurs between
 windows, not between simultaneous states inside the same row.</p>
     </div>

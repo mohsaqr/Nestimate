@@ -4,8 +4,10 @@
 <url><loc>https://saqr.me/Nestimate/articles/clustering.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/cograph-tutorial-nestimate.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/cograph-tutorial-simplicial.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/articles/compare-networks.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/index.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/markov-stability.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/articles/permutation-nested-data.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/sequence-comparison.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/sequence-plots.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/articles/transition-entropy.html</loc></url>
@@ -70,6 +72,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/compare_model.netobject_group.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/compare_networks.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/comparison_tables.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/composites.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/convert_sequence_format.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/cooccurrence.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/distribution_plot.html</loc></url>
@@ -93,6 +96,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/hypergraph_measures.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/hypergraph_transduction.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/index.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/item_loadings.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/learning_activities.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/list_estimators.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/loading_stability.html</loc></url>
@@ -122,6 +126,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/path_dependence.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/pathways.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/permutation.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/permutation_diagnostics.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/persistence_landscape.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/persistent_homology.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/plot.boot_glasso.html</loc></url>
@@ -173,6 +178,7 @@
 <url><loc>https://saqr.me/Nestimate/reference/print.mcml.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.mcml_layer.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.mcml_pc.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/print.mcml_sequence_plot.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.mmm_compare.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.mosaic_analysis.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/print.nestimate_data.html</loc></url>
@@ -235,9 +241,12 @@
 <url><loc>https://saqr.me/Nestimate/reference/rename_models.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/sequence_compare.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/sequence_plot.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/session_ids.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/set_state_colors.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/simplicial_degree.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/simplicial_features.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/srl_strategies.html</loc></url>
+<url><loc>https://saqr.me/Nestimate/reference/state_colors.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/state_distribution.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/state_freq.html</loc></url>
 <url><loc>https://saqr.me/Nestimate/reference/state_frequencies.html</loc></url>

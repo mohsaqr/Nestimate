@@ -142,7 +142,8 @@ A `net_comparison` object: a named list with `matrices`,
 
 ## Details
 
-Mirrors [`tna::compare()`](http://sonsoles.me/tna/reference/compare.md)
+Mirrors
+[`tna::compare()`](https://sonsoles.me/tna/reference/compare.html)
 numerically. Inputs are converted to weight matrices and scaled before
 comparison; the choice of scaling determines how weights from different
 estimators are placed on a common footing.

@@ -51,8 +51,8 @@ names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
 cl <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, cl, aggregation = "loadings",
                      method = "cor")
-#> Warning: Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, a3, b1, b2. See $loadings (misfit, cross_cluster).
-#> Warning: Reverse-keyed item(s) flipped in composites: a2, b3. See $loadings (sign).
+#> Warning: Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, a3, b1, b2. See item_loadings(fit, misfit = TRUE).
+#> Warning: Reverse-keyed item(s) flipped in composites: a2, b3. See item_loadings() (column sign).
 stability <- loading_stability(fit, iter = 50, seed = 1)
 stability
 #> Composite-Weight Stability (case bootstrap, experimental)

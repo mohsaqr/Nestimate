@@ -121,7 +121,7 @@ composite methods can recover. Requires raw data.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -487,7 +487,7 @@ it), <code>method</code>, <code>within</code>, <code>weighting</code>,
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Item diagnostics.</strong> Whenever raw data or a node-level network
 is available, every item's connection strength to <em>every</em> cluster
-is computed. The <code>$loadings</code> table reports, per item: its signed
+is computed. The <code><a href="item_loadings.html">item_loadings()</a></code> table reports, per item: its signed
 own-cluster loading, its composite weight, its strongest cross-cluster
 loading, and a <code>misfit</code> flag set when the cross-cluster loading
 exceeds the own-cluster loading - evidence the item is assigned to the
@@ -520,9 +520,9 @@ out-of-cluster nodes). Modes without raw data force
 (<code>NULL</code>).</p>
 <p><strong>Uncertainty.</strong> The composite/loadings macro network is a full
 netobject carrying its composite data, so
-<code><a href="bootstrap_network.html">bootstrap_network</a>(fit$macro)</code> (edge-weight CIs) and
-<code><a href="vertex_bootstrap.html">vertex_bootstrap</a>(fit$macro)</code> (network-level CIs) work
-directly; <code><a href="vertex_compare.html">vertex_compare</a>(fit1$macro, fit2$macro)</code>
+<code><a href="bootstrap_network.html">bootstrap_network</a>(macro_network(fit))</code> (edge-weight CIs) and
+<code><a href="vertex_bootstrap.html">vertex_bootstrap</a>(macro_network(fit))</code> (network-level CIs) work
+directly; <code><a href="vertex_compare.html">vertex_compare</a>(macro_network(fit1), macro_network(fit2))</code>
 compares two groups. <code><a href="loading_stability.html">loading_stability</a></code> quantifies how
 stable the composite weights themselves are under case resampling.</p>
 <p>All constituent networks are undirected

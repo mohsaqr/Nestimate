@@ -230,6 +230,13 @@ An object of class `"net_clustering"` containing:
   arguments, so per-cluster networks can be rebuilt the same way. NULL
   otherwise.
 
+- metadata:
+
+  For `netobject` input, its per-sequence metadata, one row per
+  clustered sequence, so
+  [`session_ids`](https://saqr.me/Nestimate/reference/session_ids.md)
+  can name each sequence. NULL otherwise.
+
 - htna_partition:
 
   For HTNA input, the preserved node-to-actor partition used to restore
@@ -260,23 +267,23 @@ print(cl)
 #> Sequence Clustering [pam]
 #>   Sequences: 20  |  Clusters: 2
 #>   Dissimilarity: hamming
-#>   Quality: silhouette = 0.315
+#>   Quality: silhouette = 0.222
 #> 
 #>   Cluster  N           Mean within-dist  Medoid
-#>   1        9 (45.0%)   2.333             5
-#>   2        11 (55.0%)  2.000             15
+#>   1        9 (45.0%)   2.444             13
+#>   2        11 (55.0%)  2.236             14
 summary(cl)
 #> Sequence Clustering Summary
 #>   Method:        pam 
 #>   Dissimilarity: hamming 
-#>   Silhouette:    0.315 
+#>   Silhouette:    0.2222 
 #> 
 #> Per-cluster statistics:
 #>  cluster size mean_within_dist
-#>        1    9         2.333333
-#>        2   11         2.000000
+#>        1    9         2.444444
+#>        2   11         2.236364
 #>   cluster size mean_within_dist
-#> 1       1    9         2.333333
-#> 2       2   11         2.000000
+#> 1       1    9         2.444444
+#> 2       2   11         2.236364
 # }
 ```

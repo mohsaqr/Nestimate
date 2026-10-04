@@ -33,7 +33,8 @@ bootstrap_network(
   edge_threshold = NULL,
   seed = NULL,
   boundary = c("inclusive", "strict"),
-  ci_method = c("percentile", "basic")
+  ci_method = c("percentile", "basic"),
+  actor = NULL
 )
 ```
 
@@ -96,6 +97,15 @@ bootstrap_network(
   weight range near boundaries (e.g., below 0 for transition
   probabilities close to 0).
 
+- actor:
+
+  Character or NULL. Name of the column identifying the actor each
+  sequence belongs to (e.g. `"student_id"` for sessions nested in
+  students, `"Group"` for students nested in teams), looked up in the
+  network's `$metadata` or wide sequence data. When supplied, whole
+  actors are resampled; see the section *Nested data and actor*. Default
+  `NULL`: sequences are resampled individually.
+
 ## Value
 
 An object of class `"net_bootstrap"` containing:
@@ -155,9 +165,58 @@ An object of class `"net_bootstrap"` containing:
 
   Inference parameters.
 
+- actor, n_actors:
+
+  The `actor` column and its number of actors; `NULL` without `actor`.
+
+- clustering:
+
+  Only with `actor`. One-row data frame: `n_sequences`, `n_actors`,
+  `icc`, `icc_ci_lower`, `icc_ci_upper`, `deff_edges`.
+
+- clustering_edges:
+
+  Only with `actor`. One row per edge of `summary`: `from`, `to`, `icc`,
+  `sd_actor`, `sd_sequence`, `deff`.
+
 A `netobject_group` or `mcml` input returns a `"net_bootstrap_group"`
 (named list of `net_bootstrap` results); a `wtna_mixed` input returns a
 `"wtna_boot_mixed"` with `$transition` and `$cooccurrence` results.
+
+## Nested data and `actor`
+
+The bootstrap resamples sequences as independent units. When sequences
+are nested in actors (sessions in students, students in teams), `actor`
+names the column identifying the actor, and whole actors are resampled
+with replacement, keeping all their sequences together: the cluster
+bootstrap that resamples at the top level only (Davison & Hinkley, 1997,
+section 3.8; Field & Welsh, 2007). The number of sequences per replicate
+then varies with the actors drawn.
+
+With `actor`, the result also reports the nesting effect. The ICC is the
+proportion of the total variance that lies between actors (Shrout &
+Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
+effect. It is computed as in
+[`permutation`](https://saqr.me/Nestimate/reference/permutation.md). The
+design effect is the ratio of the variance under the nested design to
+the variance had the sequences been sampled independently (Kish, 1965):
+here, the variance of the edge weights over actor-level replicates
+divided by their variance over sequence-level replicates drawn in the
+same run, reported as the median over edges. `actor` is available for
+transition networks (`"relative"`, `"frequency"`, `"co_occurrence"`).
+
+## References
+
+Davison, A. C., & Hinkley, D. V. (1997). *Bootstrap Methods and Their
+Application*. Cambridge University Press.
+
+Field, C. A., & Welsh, A. H. (2007). Bootstrapping clustered data.
+*Journal of the Royal Statistical Society: Series B*, 69(3), 369-390.
+
+Kish, L. (1965). *Survey Sampling*. Wiley.
+
+Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
+assessing rater reliability. *Psychological Bulletin*, 86(2), 420-428.
 
 ## See also
 
@@ -221,5 +280,24 @@ summary(boot)
 #> 14 0.16666667 0.2777778
 #> 15 0.33333333 0.5555556
 #> 16 0.12500000 0.2083333
+
+# Students nested in teams: resample whole teams
+teams <- build_network(group_regulation_long, method = "relative",
+                       actor = "Actor", action = "Action", time = "Time",
+                       group = "Achiever")
+bootstrap_network(teams, iter = 100, actor = "Group", seed = 1)
+#>   Edge                   High      Low     
+#>   --------------------------------------------
+#>   synthesis→consensus   0.579     0.388   
+#>   cohesion→consensus    0.536     0.451   
+#>   adapt→consensus       0.519     0.458   
+#>   consensus→plan        0.364     0.432   
+#>   discuss→consensus     0.424     0.215   
+#>   ... and 33 more shared significant edges
+#> 
+#> Grouped Bootstrap  [2 groups | 100 iterations | 95% CI]
+#>   High                  41 sig / 76 total  |  Group: 100 actors, ICC -0.003, design effect 1.02
+#>   Low                   44 sig / 75 total  |  Group: 100 actors, ICC -0.001, design effect 0.98
+#>   Shared (all groups)   38 edges
 # }
 ```

@@ -3,7 +3,7 @@
 Draws a Hartigan-Friendly mosaic (marimekko geometry, chi-square
 standardized-residual fill) for an integer-weighted network. Equivalent
 in algorithm and appearance to
-[`tna::plot_mosaic()`](http://sonsoles.me/tna/reference/plot_mosaic.md);
+[`tna::plot_mosaic()`](https://sonsoles.me/tna/reference/plot_mosaic.html);
 named differently to avoid an export clash when both packages are
 attached.
 

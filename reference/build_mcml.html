@@ -15,7 +15,7 @@ original transition data to produce the TRUE Markov chain over cluster states.">
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,9 @@ original transition data to produce the TRUE Markov chain over cluster states.</
 <span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  end <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  end_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  labels <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  combine <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  expand <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -106,7 +108,10 @@ the raw data. Otherwise falls back to <code><a href="cluster_summary.html">clust
 vs sequence data. Otherwise falls back to <code><a href="cluster_summary.html">cluster_summary</a></code>.</p></dd>
 
 <dt>mcml</dt>
-<dd><p>An <code>mcml</code> object is returned unchanged.</p></dd>
+<dd><p>An <code>mcml</code> object is returned unchanged, unless
+<code>clusters</code>, <code>combine</code> or <code>expand</code> changes its
+partition: it is then re-estimated from the sequences it carries
+(see <code>combine</code>).</p></dd>
 
 <dt>square numeric matrix</dt>
 <dd><p>Falls back to <code><a href="cluster_summary.html">cluster_summary</a></code>.</p></dd>
@@ -221,7 +226,7 @@ the matching cells are set to <code>NA</code>.</p></dd>
 <dd><p>Optional truncation of each sequence. <code>NULL</code> (default)
 keeps every time point. A fraction in <code>(0, 1)</code> keeps the columns
 covering that quantile of sequence lengths (<code>trim = 0.95</code> keeps the
-shortest 95\<!-- %); a value \code{&gt;= 1} is an absolute cut -->
+shortest 95%); a value <code>&gt;= 1</code> is an absolute cut
 (<code>trim = 10</code> keeps the first 10 time points). Same semantics as
 <code><a href="sequence_plot.html">sequence_plot</a></code>'s <code>trim</code>.</p></dd>
 
@@ -248,6 +253,39 @@ long-format input, since the grouping column lives there.</p></dd>
 names). Accepts a 2-column data.frame <code>(name, label)</code>, a named
 character vector <code>c(name = "label")</code>, or a named list. Unmapped
 names pass through unchanged.</p></dd>
+
+
+<dt id="arg-combine-expand">combine, expand<a class="anchor" aria-label="anchor" href="#arg-combine-expand"></a></dt>
+<dd><p>Change the partition. On new input they apply to
+<code>clusters</code> (in any of its accepted forms, including
+auto-detection) before estimation, so
+<code>build_mcml(data, clusters = cl, combine = c("A", "B"))</code> equals a
+build with <code>A</code> and <code>B</code> merged in <code>cl</code> (the merged
+cluster lists its states in cluster-name order); this works for every
+input type, matrices included. On an existing <code>mcml</code> they
+re-partition it (see below).
+<code>combine</code> merges clusters into one: a character vector merges one
+group, a list merges several and its names label them (default label
+<code>"A + B"</code>). <code>expand</code> then splits the named clusters (or
+<code>"all"</code>/<code>TRUE</code>) into one cluster per member state, named by
+the state. For an existing <code>mcml</code> the model is re-estimated –
+macro network, within-cluster
+networks and stored sequences – from the sequences the <code>mcml</code>
+carries, with its original <code>type</code>, <code>method</code> and
+<code>directed</code> unless passed explicitly. Any session split,
+<code>exclude</code>, <code>trim</code> or <code>end</code> applied when it was built is
+already in those sequences, so passing any of these (or <code>actor</code>,
+<code>action</code>, <code>time</code>, <code>session</code>, <code>labels</code>) together
+with a re-partition is an error. Passing a new <code>clusters</code> list
+instead re-estimates under that partition; with the partition unchanged
+the result equals the input. Errors with class
+<code>nestimate_mcml_no_sequences</code> when the <code>mcml</code> was built from a
+matrix, from an edge list (only within-cluster edges are kept), or with
+<code>compute_within = FALSE</code>.
+<code><a href="sequence_plot.html">sequence_plot</a></code> accepts the same two arguments as display
+options: its <code>combine</code> draws exactly what it draws for
+<code>build_mcml(x, combine = )</code>, while its <code>expand</code> opens clusters
+in the Summary panel only and keeps one panel per cluster.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -328,6 +366,80 @@ cluster expanded</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size within_total between_out between_in</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1      G1    2            2           2          1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2      G2    2            4           1          2</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Change the partition while building ...</span></span></span>
+<span class="r-in"><span><span class="va">three</span> <span class="op">&lt;-</span> <span class="fu">build_mcml</span><span class="op">(</span><span class="va">seqs</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>G1 <span class="op">=</span> <span class="st">"A"</span>, G2 <span class="op">=</span> <span class="st">"B"</span>, G3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">build_mcml</span><span class="op">(</span><span class="va">seqs</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>G1 <span class="op">=</span> <span class="st">"A"</span>, G2 <span class="op">=</span> <span class="st">"B"</span>, G3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>           combine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"G1"</span>, <span class="st">"G2"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MCML Network</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ============</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: tna  | Method: sum </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Nodes: 4  | Clusters: 2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transitions: 9 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Macro: 3  | Per-cluster: 6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Clusters:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G1 + G2 (2): A, B</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G3 (2): C, D</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Macro (cluster-level) weights:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         G1 + G2  G3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G1 + G2     0.5 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G3          0.2 0.8</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># ... or re-partition an existing mcml: the model is re-estimated</span></span></span>
+<span class="r-in"><span><span class="fu">build_mcml</span><span class="op">(</span><span class="va">three</span>, combine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"G1"</span>, <span class="st">"G2"</span><span class="op">)</span><span class="op">)</span>           <span class="co"># G1 + G2 as one cluster</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MCML Network</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ============</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: tna  | Method: sum </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Nodes: 4  | Clusters: 2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transitions: 9 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Macro: 3  | Per-cluster: 6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Clusters:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G1 + G2 (2): A, B</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G3 (2): C, D</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Macro (cluster-level) weights:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         G1 + G2  G3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G1 + G2     0.5 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G3          0.2 0.8</span>
+<span class="r-in"><span><span class="fu">build_mcml</span><span class="op">(</span><span class="va">three</span>, combine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>AB <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"G1"</span>, <span class="st">"G2"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># named merge</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MCML Network</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ============</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: tna  | Method: sum </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Nodes: 4  | Clusters: 2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transitions: 9 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Macro: 3  | Per-cluster: 6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Clusters:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AB (2): A, B</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G3 (2): C, D</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Macro (cluster-level) weights:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     AB  G3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AB 0.5 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G3 0.2 0.8</span>
+<span class="r-in"><span><span class="fu">build_mcml</span><span class="op">(</span><span class="va">three</span>, expand <span class="op">=</span> <span class="st">"G3"</span><span class="op">)</span>                      <span class="co"># C and D as clusters</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MCML Network</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ============</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: tna  | Method: sum </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Nodes: 4  | Clusters: 4 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transitions: 9 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Macro: 9  | Per-cluster: 0 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Clusters:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   C (1): C</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   D (1): D</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G1 (1): A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G2 (1): B</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Macro (cluster-level) weights:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      C      D     G1  G2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> C  0.0 0.6667 0.3333 0.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> D  1.0 0.0000 0.0000 0.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G1 0.0 0.5000 0.0000 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G2 0.5 0.0000 0.5000 0.0</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -11,7 +11,7 @@ matrix. Sequences are probabilistically assigned to components."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -200,6 +200,12 @@ when <code>covariates = NULL</code>.</p></dd>
 <dd><p>Provenance kept
 from <code>netobject</code> / HTNA input so per-cluster networks can be
 rebuilt the same way; NULL otherwise.</p></dd>
+
+<dt>metadata</dt>
+<dd><p>The <code>netobject</code>'s per-sequence metadata, one row
+per fitted sequence in the row order of <code>posterior</code>, so
+<code><a href="session_ids.html">session_ids</a></code> can name each sequence; NULL for other
+input.</p></dd>
 
 
 </dl></div>
