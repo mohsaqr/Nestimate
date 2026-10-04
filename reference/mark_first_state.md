@@ -1,7 +1,7 @@
 # Mark leading-NA cells with an explicit state label
 
 Mirror of
-[`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md)
+[`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md)
 for *left-censored* sequence data. Replaces every cell *before* each
 row's first observed state with the label given by `state`. The
 resulting chain has a structurally *recurrent* "Start" state that
@@ -43,7 +43,7 @@ matters when it had to be made unique.
 ## Details
 
 Unlike
-[`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md),
+[`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md),
 the marked state is **not** absorbing in the resulting transition
 matrix - every transition from "Start" goes to one of the original
 states (the actor's first observed state), and the "Start" row is
@@ -51,8 +51,8 @@ row-stochastic exactly as the data dictates.
 
 ## See also
 
-[`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md),
-[`actor_endpoints()`](https://saqr.me/Nestimate/reference/actor_endpoints.md)
+[`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md),
+[`actor_endpoints()`](https://pak.dynasite.org/Nestimate/reference/actor_endpoints.md)
 
 ## Examples
 

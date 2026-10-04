@@ -1,15 +1,16 @@
 # Promote a psychometric MCML result to a network group
 
 `as_networks()` is the psychometric-network counterpart of
-[`as_tna`](https://saqr.me/Nestimate/reference/as_tna.md). It promotes
-the cluster-level (macro) and within-cluster networks produced by
-[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+[`as_tna`](https://pak.dynasite.org/Nestimate/reference/as_tna.md). It
+promotes the cluster-level (macro) and within-cluster networks produced
+by
+[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
 into a single `netobject_group`, so the result flows into the same
 downstream verbs as any other group of networks
 ([`print()`](https://rdrr.io/r/base/print.html),
 [`summary()`](https://rdrr.io/r/base/summary.html),
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-[`net_centrality`](https://saqr.me/Nestimate/reference/net_centrality.md)).
+[`net_centrality`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)).
 
 ## Usage
 
@@ -28,7 +29,7 @@ as_networks(x)
 - x:
 
   An object to convert. The `mcml_pc` method (from
-  [`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md))
+  [`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md))
   is the primary path.
 
 ## Value
@@ -46,7 +47,8 @@ The default method returns the input unchanged if it is already a
 
 ## Details
 
-Where [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md)
+Where
+[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
 promotes *transition* networks (directed, row-normalised, with initial
 probabilities) and re-wraps raw matrices, `as_networks()` promotes
 *psychometric* networks (undirected; correlation / partial-correlation /
@@ -57,10 +59,10 @@ re-wrapping matrices.
 
 ## See also
 
-[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
 to create the input,
-[`as_tna`](https://saqr.me/Nestimate/reference/as_tna.md) for the
-transition-network counterpart.
+[`as_tna`](https://pak.dynasite.org/Nestimate/reference/as_tna.md) for
+the transition-network counterpart.
 
 ## Examples
 

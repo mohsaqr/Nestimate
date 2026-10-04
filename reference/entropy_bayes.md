@@ -1,9 +1,9 @@
 # Bayesian Transition Entropy
 
 Bayesian estimation of the transition entropy quantities of
-[`transition_entropy`](https://saqr.me/Nestimate/reference/transition_entropy.md)
+[`transition_entropy`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
 and the edge-level decomposition of
-[`entropy_network`](https://saqr.me/Nestimate/reference/entropy_network.md).
+[`entropy_network`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md).
 Each row of the transition matrix gets an independent Dirichlet
 posterior (counts + `prior`); Monte Carlo draws propagate count
 uncertainty into the entropy rate, the per-state branching entropies,
@@ -130,9 +130,9 @@ ed. Wiley.
 
 ## See also
 
-[`transition_entropy`](https://saqr.me/Nestimate/reference/transition_entropy.md),
-[`entropy_network`](https://saqr.me/Nestimate/reference/entropy_network.md),
-[`bayes_compare`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+[`transition_entropy`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md),
+[`entropy_network`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md),
+[`bayes_compare`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
 
 ## Examples
 

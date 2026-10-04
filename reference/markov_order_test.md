@@ -44,8 +44,9 @@ markov_order_test(
   A data.frame (wide format, one sequence per row), a list of character
   vectors (one per trajectory), a `netobject` or `netobject_group`
   carrying its `$data`, or a
-  [`prepare`](https://saqr.me/Nestimate/reference/prepare.md) result
-  (its `sequence_data` is used). NAs are treated as end of sequence.
+  [`prepare`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  result (its `sequence_data` is used). NAs are treated as end of
+  sequence.
 
 - max_order:
 

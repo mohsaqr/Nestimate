@@ -1,11 +1,11 @@
 # Print Method for MMM Clustering Attribute
 
 Prints the clustering metadata attached to the `netobject_group` that
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 materializes from a
-[`cluster_mmm`](https://saqr.me/Nestimate/reference/cluster_mmm.md) fit
-(`attr(grp, "clustering")`). Layout mirrors
-[`print.net_clustering`](https://saqr.me/Nestimate/reference/print.net_clustering.md):
+[`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+fit (`attr(grp, "clustering")`). Layout mirrors
+[`print.net_clustering`](https://pak.dynasite.org/Nestimate/reference/print.net_clustering.md):
 a one-line dimension header, a quality line with AvePP / entropy /
 classification error, information criteria, and a per-cluster table.
 

@@ -4,9 +4,9 @@ Builds the full node-level network from the original data and attaches a
 cluster grouping, producing a single `htna` network in which every actor
 is a node and cluster membership labels the actors. This is the
 node-level counterpart of
-[`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md): where
-`build_mcml` collapses the network to a cluster-level (macro) summary,
-`as_htna` keeps every node and every transition - including the
+[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md):
+where `build_mcml` collapses the network to a cluster-level (macro)
+summary, `as_htna` keeps every node and every transition - including the
 between-cluster transitions an mcml only retains in aggregate.
 
 ## Usage
@@ -29,7 +29,7 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 - x:
 
   Data accepted by
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   (sequence data frame, edgelist, transition matrix, `netobject`, or
   `tna`); or an `mcml` object, which provides the node-cluster
   membership and, when it was built from wide sequence data, the
@@ -46,13 +46,13 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 - method:
 
   Estimator passed to
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
   Default `"relative"` (row-normalized transitions).
 
 - ...:
 
   Further arguments forwarded to
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   (e.g. `actor`, `action`, `time` for long-format data).
 
 - data:
@@ -60,7 +60,7 @@ as_htna(x, clusters = NULL, method = "relative", ...)
   For the `mcml` method, the original data the mcml was built from
   (sequence/edgelist/etc.). Optional when the mcml was built from wide
   sequence data (long-format input counts, since
-  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   widens it first): that source is stashed on the object, so
   `as_htna(mcml)` works on its own. Required for an mcml built from a
   matrix, an aggregate, or an edge list, none of which retain a usable
@@ -86,21 +86,21 @@ data is filtered to within-cluster nodes), so it does not retain a
 faithful node-level transition network. The only faithful source of
 node-level between-cluster transitions is the original data. `as_htna()`
 therefore rebuilds from data via
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md);
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md);
 an `mcml` supplies the cluster membership and either its retained source
 or explicitly supplied original data supplies the transitions.
 
 The result is a genuine `netobject`, so it supports inference
-([`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+([`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
 centrality,
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md)) and
-plots directly as a grouped network with cograph:
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md))
+and plots directly as a grouped network with cograph:
 `cograph::plot_htna(as_htna(data, clusters))`.
 
 ## See also
 
-[`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md),
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md);
+[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md),
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md);
 plot with
 [`cograph::plot_htna()`](https://sonsoles.me/cograph/reference/plot_htna.html).
 

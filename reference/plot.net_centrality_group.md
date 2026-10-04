@@ -25,7 +25,7 @@ plot(
 - x:
 
   A `net_centrality_group` object returned by
-  [`net_centrality`](https://saqr.me/Nestimate/reference/net_centrality.md).
+  [`net_centrality`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md).
 
 - reorder:
 

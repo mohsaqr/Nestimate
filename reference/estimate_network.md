@@ -1,7 +1,7 @@
 # Estimate a Network (Deprecated)
 
 This function is deprecated. Use
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 instead.
 
 ## Usage
@@ -69,16 +69,16 @@ estimate_network(
 - ...:
 
   Additional arguments passed to
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 
 ## Value
 
 A `netobject` (see
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)).
 
 ## See also
 
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

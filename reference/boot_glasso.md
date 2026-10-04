@@ -238,8 +238,8 @@ and centrality-difference procedures reproduced here.)
 
 ## See also
 
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
 
 ## Examples
 
@@ -266,7 +266,7 @@ print(boot)
 #>     expected_influence:    0.00 [Unstable]
 #> 
 #>   Edge differences: 1/15 pairs significantly different
-#>   Timing: 4.3s (bootstrap: 2.6s, case-drop: 1.6s)
+#>   Timing: 7.0s (bootstrap: 4.2s, case-drop: 2.7s)
 summary(boot, type = "edges")
 #>     edge weight    ci_lower  ci_upper inclusion
 #> 1 A -- B      0 -0.15265878 0.3016131      0.24

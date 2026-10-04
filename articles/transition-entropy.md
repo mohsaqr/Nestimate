@@ -28,7 +28,7 @@ coded into nine states.
 
 ## The entropy of a transition network
 
-[`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md)
+[`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
 accepts a fitted network, a transition matrix, or sequence data.
 
 ``` r
@@ -115,10 +115,10 @@ process entropy.
 
 $`H`$ is a sum over transitions: edge $`i \to j`$ contributes exactly
 $`\pi_i P_{ij} \log_2(1/P_{ij})`$.
-[`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.md)
+[`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md)
 returns the fitted network with those terms as edge weights — the same
 object class as
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
 so it prints, summarises, and plots identically. With
 `scaling = "share"` the weights become percentages of $`H`$ and sum to
 100.
@@ -196,7 +196,7 @@ A single $`H`$ summarises the whole observation period. Sliding a window
 across the transition stream — the design of Krejtz et al. (2025), who
 use 30-second windows over gaze transitions — turns entropy into a
 process measure.
-[`entropy_trajectory()`](https://saqr.me/Nestimate/reference/entropy_trajectory.md)
+[`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
 builds transitions within each actor’s sequence, orders them in time,
 and computes one entropy value per window.
 
@@ -231,7 +231,7 @@ two coincide.
 
 Plug-in entropy treats an edge observed three times exactly like one
 observed three thousand times.
-[`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.md)
+[`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
 places an independent Dirichlet posterior on each row of the transition
 matrix (Jeffreys prior 0.5 by default) and pushes Monte Carlo draws
 through the entropy formula, so every quantity — the entropy rate, each
@@ -275,20 +275,20 @@ level.
 ## When to use which
 
 - **One process, one number** —
-  [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md):
+  [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md):
   how predictable is the process; is sequence informative at all
   (redundancy).
 - **Where the uncertainty sits** — `plot(transition_entropy())` for
   states,
-  [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.md)
+  [`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md)
   for transitions. Both display terms of the same equation; use
   `scaling = "share"` for percentage labels.
 - **Change over time** —
-  [`entropy_trajectory()`](https://saqr.me/Nestimate/reference/entropy_trajectory.md):
+  [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md):
   routinization, exploration, phase shifts. Report the window size and
   step.
 - **Sparse data or formal comparison** —
-  [`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.md):
+  [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md):
   credible intervals for $`H`$, per-state and per-edge; group
   differences via the posterior draws; `$model` for a display pruned of
   unstable edges.

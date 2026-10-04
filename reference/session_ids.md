@@ -30,11 +30,11 @@ session_ids(x, ...)
 - x:
 
   A `netobject` from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   on long data, or a `net_mmm`
-  ([`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md)) or
-  `net_clustering`
-  ([`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md))
+  ([`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md))
+  or `net_clustering`
+  ([`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md))
   fitted on such a network.
 
 - ...:
@@ -53,7 +53,7 @@ network's `$data` (and of the fit's assignments):
 - actor and session columns:
 
   The `actor` and `session` columns given to
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
   under their own names and with their own values.
 
 - session_label:
@@ -79,9 +79,9 @@ differ in number.
 
 ## See also
 
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md),
-[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md),
+[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 
 ## Examples
 

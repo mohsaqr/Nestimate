@@ -159,7 +159,7 @@ rel
       Pearson             mean = 0.9721  sd = 0.0107
       Max Abs. Diff.      mean = 0.1431  sd = 0.0479
 
-[`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md)
+[`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
 runs 500 random 50/50 splits. For each split it fits the network on each
 half and compares the two 8×8 weight matrices along four metrics:
 
@@ -352,10 +352,10 @@ cent_stab
         OutStrength      0.90
         Betweenness      0.70
 
-[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
 produces one CS-coefficient per centrality measure. The machinery is the
 same as
-[`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+[`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
 — drop cases, re-estimate, correlate — but the correlation is computed
 between the centrality vectors, not the edge vectors. A node can have
 stable edges and unstable centrality (or vice versa) because centrality
@@ -389,7 +389,7 @@ only on the current action. Is that assumption actually warranted for
 this data, or does the previous-previous action (or further back) carry
 information the network is throwing away?
 
-[`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md)
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
 tests this directly. For each order $`k`$ from 1 to `max_order`, it asks
 whether moving from a $`k`$-th-order Markov model to a
 $`(k+1)`$-th-order one explains significantly more variance in the
@@ -397,9 +397,9 @@ sequence. The test statistic is the classical likelihood-ratio $`G^2`$
 computed on $`(k+1)`$-grams, with a reference distribution built by
 exact within-context permutation — no parametric bootstrap, no plug-in
 MLE. Details are in
-[`?markov_order_test`](https://saqr.me/Nestimate/reference/markov_order_test.md).
+[`?markov_order_test`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md).
 
-[`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md)
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
 reads the sequences straight out of the network — pass the `net` object
 and it pulls one sequence per session from the model.
 
@@ -475,8 +475,8 @@ If it is 2 or higher, the network is a *first-order approximation* to a
 process with memory, and longer pathways are overstated or understated
 depending on which specific higher-order patterns the data contains.
 That is the situation where a higher-order model
-([`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md),
-[`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md))
+([`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+[`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md))
 is indicated, not a signal to abandon the first-order network but to
 supplement it.
 
@@ -490,7 +490,7 @@ the two rank edges differently: an edge leaving a rare state can be a
 rounding error in counts yet dominate its row in probability. Which
 edges does normalisation promote this way, and how far?
 
-[`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+[`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
 builds both views from the data and reports, per edge, the gap between
 them on a common scale. It takes the event log directly, not the fitted
 network, because it needs both the counts and the probabilities.
@@ -539,7 +539,7 @@ probability out of a rare state is not the same evidence as a high
 transition probability out of a common one. When you report a strong
 edge, check whether its source is frequent enough for that probability
 to mean what it appears to mean —
-[`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+[`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
 tells you exactly which edges need that caveat.
 
 ------------------------------------------------------------------------
@@ -560,21 +560,21 @@ different kind of “good”:
 The typical workflow is:
 
 1.  Run
-    [`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md)
+    [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
     first. If the optimal order is 1, you can proceed with a first-order
     transition network and the three stability checks apply directly. If
     it is higher, decide whether to continue with a first-order
     approximation (and report the order test as a caveat) or to move to
     a higher-order model.
 2.  Run
-    [`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+    [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
     and
-    [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md).
+    [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md).
     If both CS-coefficients are above 0.5, report the network and any
     centrality ranking it supports. If one is below 0.25, re-plan: more
     data, a different estimator, or a simpler claim.
 3.  Run
-    [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md)
+    [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
     as a sanity check that the full network does not depend on the
     particular partition you happen to have. A high `cor` here with
     unstable case-dropping is possible — it means the full network is

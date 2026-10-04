@@ -113,7 +113,7 @@ plot_state_frequencies(x, ...)
   - `"bars"` – horizontal bars sorted by frequency, faceted per group.
 
   For chi-square mosaics of a (group x state) contingency table, use
-  [`mosaic_plot`](https://saqr.me/Nestimate/reference/mosaic_plot.md)
+  [`mosaic_plot`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
   directly – it is kept as a separate function with its own dispatch
   surface.
 
@@ -232,7 +232,7 @@ and draws the chart),
 chart alone), and
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) (returns
 the tidy table) – see
-[`state_freq`](https://saqr.me/Nestimate/reference/state_freq.md).
+[`state_freq`](https://pak.dynasite.org/Nestimate/reference/state_freq.md).
 
 ## Details
 

@@ -1,7 +1,7 @@
 # Composite-Weight Stability Under Case Resampling
 
 **Experimental.** Bootstraps the item weights of a
-[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
 fit: rows of the raw data are resampled, the node-level network is
 re-estimated each time, and the connectivity-based composite weights are
 recomputed. Wide intervals mean the weighting (and therefore the

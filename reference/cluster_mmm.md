@@ -63,12 +63,12 @@ cluster_mmm(
   Optional. Covariates integrated into the EM algorithm to model
   covariate-dependent mixing proportions. Accepts a string, character
   vector, formula, or data.frame (same forms as
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)).
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)).
   For `netobject` or `cograph_network` input, names are resolved against
   `$metadata` first, so a typical call is
   `build_mmm(net, k = 3, covariates = "session_label")`. Unlike the
   post-hoc analysis in
-  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md),
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
   these covariates directly influence cluster membership during EM
   estimation (see `covariate_effect`).
 
@@ -94,16 +94,16 @@ cluster_mmm(
   [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html) (warns
   about separation risk); `"chisq"` runs descriptive tests (no logit).
   See
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   for full details.
 
 - cluster_by:
 
   Character. Accepted only as `"mmm"` (the default). Present so
   `cluster_mmm()` and
-  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+  [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
   share the same call shape; any other value raises an error pointing at
-  [`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md).
+  [`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md).
 
 - ...:
 
@@ -113,26 +113,26 @@ cluster_mmm(
 
 A fitted `net_mmm` clustering object. This is the same object contract
 returned by
-[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md). For
-HTNA input, its preserved actor partition is restored when the fit is
-materialized with
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md).
+For HTNA input, its preserved actor partition is restored when the fit
+is materialized with
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 or
-[`Nestimate::as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md).
+[`Nestimate::as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md).
 
 ## Details
 
 To materialize one network per fitted cluster, pass the result to
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 or use `cluster_network(..., cluster_by = "mmm")` for fitting and
 network construction in one call.
 
 ## See also
 
-[`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md),
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md),
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
 and
-[`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
+[`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
 for fitting and immediately materializing per-cluster networks
 
 ## Examples

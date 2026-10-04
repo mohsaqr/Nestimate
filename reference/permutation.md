@@ -1,7 +1,7 @@
 # Permutation Test for Network Comparison
 
 Tests whether two networks estimated by
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 differ more than chance would produce. The sequences (or rows) of both
 networks are pooled, the group labels are shuffled `iter` times, both
 networks are re-estimated on every shuffle, and the observed differences
@@ -30,17 +30,17 @@ permutation(
 - x:
 
   A `netobject` (from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md))
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md))
   or a
-  [`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  [`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
   object.
 
 - y:
 
   A `netobject` (from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md))
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md))
   or a
-  [`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  [`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
   object. Must use the same method and have the same nodes as `x`.
   Default `NULL`: when `x` is a `netobject_group` (or an `mcml`) and `y`
   is left `NULL`, every pair of groups is tested and the result is a
@@ -191,7 +191,7 @@ An object of class `"net_permutation"` containing:
   `n_actors`, `design` (`"between"`, `"within"`, `"mixed"`), `icc` with
   `icc_ci_lower`/`icc_ci_upper` (how alike sequences of one actor are;
   see
-  [`permutation_diagnostics`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md)),
+  [`permutation_diagnostics`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md)),
   `deff_edges` (median over edges) and `deff_global` (for `M`): the
   actor-level over the sequence-level null variance, drawn in the same
   run (the design effect; Kish, 1965). `min_p` is the smallest
@@ -311,7 +311,7 @@ transition network rests on a single sequence, a warning (class
 `nestimate_single_sequence`) says it cannot be validated by resampling.
 
 `permutation()` also accepts two
-[`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+[`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
 objects. It then permutes the source networks, recomputes edge
 betweenness for each shuffle, and tests the edge-betweenness
 differences. Both objects must come from the same source method and use
@@ -341,15 +341,15 @@ Methods*, 28(6), 1273-1285.
 
 ## See also
 
-[`permutation_diagnostics`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md)
+[`permutation_diagnostics`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md)
 to compare the actor-level and ordinary tests side by side;
-[`bayes_compare`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+[`bayes_compare`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
 for the Bayesian complement: instead of "is this difference more extreme
 than chance?" it answers "how probable is a difference, and how large?";
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
-[`print.net_permutation`](https://saqr.me/Nestimate/reference/print.net_permutation.md),
-[`summary.net_permutation`](https://saqr.me/Nestimate/reference/summary.net_permutation.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+[`print.net_permutation`](https://pak.dynasite.org/Nestimate/reference/print.net_permutation.md),
+[`summary.net_permutation`](https://pak.dynasite.org/Nestimate/reference/summary.net_permutation.md)
 
 ## Examples
 

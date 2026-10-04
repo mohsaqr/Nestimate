@@ -4,947 +4,947 @@
 
 Core functions for building networks from data
 
-- [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   : Build a Network
-- [`estimate_network()`](https://saqr.me/Nestimate/reference/estimate_network.md)
+- [`estimate_network()`](https://pak.dynasite.org/Nestimate/reference/estimate_network.md)
   : Estimate a Network (Deprecated)
-- [`register_estimator()`](https://saqr.me/Nestimate/reference/register_estimator.md)
+- [`register_estimator()`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md)
   : Register a Network Estimator
-- [`get_estimator()`](https://saqr.me/Nestimate/reference/get_estimator.md)
+- [`get_estimator()`](https://pak.dynasite.org/Nestimate/reference/get_estimator.md)
   : Retrieve a Registered Estimator
-- [`list_estimators()`](https://saqr.me/Nestimate/reference/list_estimators.md)
+- [`list_estimators()`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md)
   : List All Registered Estimators
-- [`remove_estimator()`](https://saqr.me/Nestimate/reference/remove_estimator.md)
+- [`remove_estimator()`](https://pak.dynasite.org/Nestimate/reference/remove_estimator.md)
   : Remove a Registered Estimator
-- [`build_tna()`](https://saqr.me/Nestimate/reference/build_tna.md) :
-  Build a Transition Network (TNA)
-- [`build_atna()`](https://saqr.me/Nestimate/reference/build_atna.md) :
-  Build an Attention-Weighted Transition Network (ATNA)
-- [`build_ftna()`](https://saqr.me/Nestimate/reference/build_ftna.md) :
-  Build a Frequency Transition Network (FTNA)
-- [`build_cna()`](https://saqr.me/Nestimate/reference/build_cna.md) :
-  Build a Co-occurrence Network (CNA)
-- [`build_cor()`](https://saqr.me/Nestimate/reference/build_cor.md) :
-  Build a Correlation Network
-- [`build_pcor()`](https://saqr.me/Nestimate/reference/build_pcor.md) :
-  Build a Partial Correlation Network
-- [`build_glasso()`](https://saqr.me/Nestimate/reference/build_glasso.md)
+- [`build_tna()`](https://pak.dynasite.org/Nestimate/reference/build_tna.md)
+  : Build a Transition Network (TNA)
+- [`build_atna()`](https://pak.dynasite.org/Nestimate/reference/build_atna.md)
+  : Build an Attention-Weighted Transition Network (ATNA)
+- [`build_ftna()`](https://pak.dynasite.org/Nestimate/reference/build_ftna.md)
+  : Build a Frequency Transition Network (FTNA)
+- [`build_cna()`](https://pak.dynasite.org/Nestimate/reference/build_cna.md)
+  : Build a Co-occurrence Network (CNA)
+- [`build_cor()`](https://pak.dynasite.org/Nestimate/reference/build_cor.md)
+  : Build a Correlation Network
+- [`build_pcor()`](https://pak.dynasite.org/Nestimate/reference/build_pcor.md)
+  : Build a Partial Correlation Network
+- [`build_glasso()`](https://pak.dynasite.org/Nestimate/reference/build_glasso.md)
   : Build a Graphical Lasso Network (EBICglasso)
-- [`build_ising()`](https://saqr.me/Nestimate/reference/build_ising.md)
+- [`build_ising()`](https://pak.dynasite.org/Nestimate/reference/build_ising.md)
   : Build an Ising Network
-- [`wtna()`](https://saqr.me/Nestimate/reference/wtna.md) : Window-based
-  Transition Network Analysis
-- [`cooccurrence()`](https://saqr.me/Nestimate/reference/cooccurrence.md)
+- [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md) :
+  Window-based Transition Network Analysis
+- [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
   : Build a Co-occurrence Network
-- [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+- [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   : Build a Multilevel Vector Autoregression (mlVAR) network
-- [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
+- [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
   : GIMME: Group Iterative Multiple Model Estimation
 
 ## Bayesian Inference
 
 Dirichlet-Multinomial posterior inference for transition networks.
-[`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) is the
-closed-form counterpart of
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md);
-[`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+[`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
+is the closed-form counterpart of
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md);
+[`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
 is the complement of
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md).
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
 
-- [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) :
-  Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
-- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+- [`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
+  : Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
+- [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   : Bayesian Dirichlet-Multinomial comparison of two transition networks
-- [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
-  [`print(`*`<netdifference>`*`)`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+- [`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
+  [`print(`*`<netdifference>`*`)`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
   : Subtract one network from another
-- [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+- [`as_netdifference()`](https://pak.dynasite.org/Nestimate/reference/as_netdifference.md)
   : Coerce an inferential comparison to a network difference
 
 ## Higher-Order Networks
 
 Methods for capturing higher-order dependencies
 
-- [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md) :
-  Build a Higher-Order Network (HON)
-- [`build_honem()`](https://saqr.me/Nestimate/reference/build_honem.md)
+- [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
+  : Build a Higher-Order Network (HON)
+- [`build_honem()`](https://pak.dynasite.org/Nestimate/reference/build_honem.md)
   : Build HONEM Embeddings for Higher-Order Networks
-- [`build_hypa()`](https://saqr.me/Nestimate/reference/build_hypa.md) :
-  Detect Path Anomalies via HYPA
-- [`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md)
+- [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  : Detect Path Anomalies via HYPA
+- [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
   : Build Multi-Order Generative Model (MOGen)
-- [`pathways()`](https://saqr.me/Nestimate/reference/pathways.md) :
-  Extract Pathways from Higher-Order Network Objects
-- [`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md)
+- [`pathways()`](https://pak.dynasite.org/Nestimate/reference/pathways.md)
+  : Extract Pathways from Higher-Order Network Objects
+- [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
   : Extract Transition Table from a MOGen Model
-- [`path_counts()`](https://saqr.me/Nestimate/reference/path_counts.md)
+- [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md)
   : Count Path Frequencies in Trajectory Data
-- [`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md)
+- [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)
   : Hypergraph from bipartite group / event data
-- [`clique_expansion()`](https://saqr.me/Nestimate/reference/clique_expansion.md)
+- [`clique_expansion()`](https://pak.dynasite.org/Nestimate/reference/clique_expansion.md)
   : Clique expansion of a hypergraph
-- [`hypergraph_centrality()`](https://saqr.me/Nestimate/reference/hypergraph_centrality.md)
+- [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
   : Hypergraph eigenvector centralities
-- [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
-  [`print(`*`<net_hypergraph>`*`)`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
-  [`summary(`*`<net_hypergraph>`*`)`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
+- [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
+  [`print(`*`<net_hypergraph>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
+  [`summary(`*`<net_hypergraph>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   : Higher-order hypergraph from a network's clique structure
-- [`hypergraph_measures()`](https://saqr.me/Nestimate/reference/hypergraph_measures.md)
-  [`print(`*`<hypergraph_measures>`*`)`](https://saqr.me/Nestimate/reference/hypergraph_measures.md)
+- [`hypergraph_measures()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md)
+  [`print(`*`<hypergraph_measures>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md)
   : Structural measures for a hypergraph
-- [`hypergraph_cluster()`](https://saqr.me/Nestimate/reference/hypergraph_cluster.md)
+- [`hypergraph_cluster()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   : Spectral clustering of hypergraph vertices
-- [`hypergraph_transduction()`](https://saqr.me/Nestimate/reference/hypergraph_transduction.md)
+- [`hypergraph_transduction()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   : Transductive label spreading on a hypergraph
-- [`hypergraph_laplacian()`](https://saqr.me/Nestimate/reference/hypergraph_laplacian.md)
+- [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md)
   : Normalized hypergraph Laplacian
 
 ## Markov Analysis
 
 Order, structure, entropy, and stability of Markov chains
 
-- [`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.md)
+- [`chain_structure()`](https://pak.dynasite.org/Nestimate/reference/chain_structure.md)
   : Qualitative structure of a discrete-time Markov chain
-- [`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md)
+- [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
   : Test the Markov order of a sequential process
-- [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
-  [`plot(`*`<net_markov_stability>`*`)`](https://saqr.me/Nestimate/reference/markov_stability.md)
+- [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
+  [`plot(`*`<net_markov_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   : Markov Stability Analysis
-- [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)
-  [`summary(`*`<net_mpt>`*`)`](https://saqr.me/Nestimate/reference/passage_time.md)
-  [`plot(`*`<net_mpt>`*`)`](https://saqr.me/Nestimate/reference/passage_time.md)
+- [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
+  [`summary(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
+  [`plot(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   : Mean First Passage Times
-- [`path_dependence()`](https://saqr.me/Nestimate/reference/path_dependence.md)
+- [`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
   : Per-Context Path Dependence at Order k
-- [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md)
+- [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   : Transition Entropy of a Markov Chain
-- [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.md)
+- [`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md)
   : Transition Entropy Network
-- [`entropy_trajectory()`](https://saqr.me/Nestimate/reference/entropy_trajectory.md)
+- [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
   : Sliding-Window Transition Entropy Trajectory
-- [`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.md)
+- [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   : Bayesian Transition Entropy
 
 ## Network Pruning
 
 Non-destructive edge pruning and restoration
 
-- [`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.md) :
-  Prune a Network's Edges
-- [`net_deprune()`](https://saqr.me/Nestimate/reference/net_deprune.md)
+- [`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
+  : Prune a Network's Edges
+- [`net_deprune()`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md)
   : Undo Network Pruning
-- [`net_reprune()`](https://saqr.me/Nestimate/reference/net_reprune.md)
+- [`net_reprune()`](https://pak.dynasite.org/Nestimate/reference/net_reprune.md)
   : Re-apply Network Pruning
-- [`net_pruning_details()`](https://saqr.me/Nestimate/reference/net_pruning_details.md)
+- [`net_pruning_details()`](https://pak.dynasite.org/Nestimate/reference/net_pruning_details.md)
   : Report Network Pruning Details
 
 ## Bootstrap & Inference
 
 Statistical inference for network estimation
 
-- [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+- [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   : Bootstrap a Network Estimate
 
-- [`vertex_bootstrap()`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md)
+- [`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
   : Vertex Bootstrap for Network-Level Statistics
 
-- [`vertex_compare()`](https://saqr.me/Nestimate/reference/vertex_compare.md)
+- [`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
   : Compare Network-Level Statistics of Two Networks
 
-- [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)
+- [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   : Bootstrap for Regularized Partial Correlation Networks
 
-- [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+- [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   : Permutation Test for Network Comparison
 
-- [`permutation_diagnostics()`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md)
+- [`permutation_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md)
   : Does Nesting Bias a Permutation Test?
 
-- [`nct()`](https://saqr.me/Nestimate/reference/nct.md) : Network
-  Comparison Test
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) :
+  Network Comparison Test
 
-- [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md)
+- [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
   : Compare two networks descriptively
 
-- [`compare_model(`*`<netobject_group>`*`)`](https://saqr.me/Nestimate/reference/compare_model.netobject_group.md)
+- [`compare_model(`*`<netobject_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_model.netobject_group.md)
   : Compare two networks within a netobject_group
 
-- [`rename_models()`](https://saqr.me/Nestimate/reference/rename_models.md)
+- [`rename_models()`](https://pak.dynasite.org/Nestimate/reference/rename_models.md)
   :
 
   Rename the models of a `netobject_group`
 
-- [`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
-  [`print(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
-  [`plot(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+- [`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
+  [`print(`*`<magnitude_difference>`*`)`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
+  [`plot(`*`<magnitude_difference>`*`)`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
   : Magnitude difference between the frequency and probability views
 
 ## Reliability & Stability
 
 Assess reliability and stability of network estimates
 
-- [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md)
+- [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
   : Split-Half Reliability for Network Estimates
-- [`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`print(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`summary(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`print(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`summary(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`print(`*`<summary.net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`plot(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`plot(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+- [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`summary(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`summary(`*`<net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<summary.net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`plot(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`plot(`*`<net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
   : Edge-weight Case-dropping Stability
-- [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+- [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   : Centrality Stability Coefficient (CS-coefficient)
-- [`loading_stability()`](https://saqr.me/Nestimate/reference/loading_stability.md)
+- [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
   : Composite-Weight Stability Under Case Resampling
 
 ## Clustering & Grouping
 
 Cluster-based and multilevel network analysis
 
-- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+- [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   : Cluster Sequences by Dissimilarity
-- [`cluster_data()`](https://saqr.me/Nestimate/reference/cluster_data.md)
+- [`cluster_data()`](https://pak.dynasite.org/Nestimate/reference/cluster_data.md)
   : Cluster sequence data (deprecated alias)
-- [`cluster_choice()`](https://saqr.me/Nestimate/reference/cluster_choice.md)
+- [`cluster_choice()`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
   : Cluster Choice – sweep k, dissimilarity and method
-- [`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
-  [`as.data.frame(`*`<net_cluster_diagnostics>`*`)`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
+- [`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
+  [`as.data.frame(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   : Cluster Diagnostics
-- [`cluster_summary()`](https://saqr.me/Nestimate/reference/cluster_summary.md)
+- [`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
   : Cluster Summary Statistics
-- [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+- [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
   : Cluster sequences using Mixed Markov Models
-- [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+- [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
   : Cluster data and build per-cluster networks in one step
-- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md) :
-  Build MCML from Raw Transition Data
-- [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  : Build MCML from Raw Transition Data
+- [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   : Multi-Cluster Multi-Level Aggregation for Psychometric Networks
-- [`composites()`](https://saqr.me/Nestimate/reference/composites.md) :
-  Cluster Scores From a Psychometric MCML Fit
-- [`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md)
+- [`composites()`](https://pak.dynasite.org/Nestimate/reference/composites.md)
+  : Cluster Scores From a Psychometric MCML Fit
+- [`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
   : Item Diagnostics From a Psychometric MCML Fit
-- [`macro_network()`](https://saqr.me/Nestimate/reference/macro_network.md)
+- [`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
   : Cluster-Level Network, With One Cluster Expanded
-- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) :
-  Fit a Mixed Markov Model
-- [`compare_mmm()`](https://saqr.me/Nestimate/reference/compare_mmm.md)
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  : Fit a Mixed Markov Model
+- [`compare_mmm()`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
   : Compare MMM fits across different k
-- [`session_ids()`](https://saqr.me/Nestimate/reference/session_ids.md)
+- [`session_ids()`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
   : The session behind each sequence
 
 ## Simplicial Complex Analysis
 
 Topological analysis of networks
 
-- [`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md)
+- [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
   : Build a Simplicial Complex
-- [`simplicial_features()`](https://saqr.me/Nestimate/reference/simplicial_features.md)
+- [`simplicial_features()`](https://pak.dynasite.org/Nestimate/reference/simplicial_features.md)
   : Tidy Topological Features for One or Many Networks
-- [`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md)
+- [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
   : Persistent Homology
-- [`bottleneck_distance()`](https://saqr.me/Nestimate/reference/bottleneck_distance.md)
+- [`bottleneck_distance()`](https://pak.dynasite.org/Nestimate/reference/bottleneck_distance.md)
   : Bottleneck Distance Between Persistence Diagrams
-- [`persistence_landscape()`](https://saqr.me/Nestimate/reference/persistence_landscape.md)
+- [`persistence_landscape()`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md)
   : Persistence Landscape
-- [`q_analysis()`](https://saqr.me/Nestimate/reference/q_analysis.md) :
-  Q-Analysis
-- [`betti_numbers()`](https://saqr.me/Nestimate/reference/betti_numbers.md)
+- [`q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
+  : Q-Analysis
+- [`betti_numbers()`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md)
   : Betti Numbers
-- [`euler_characteristic()`](https://saqr.me/Nestimate/reference/euler_characteristic.md)
+- [`euler_characteristic()`](https://pak.dynasite.org/Nestimate/reference/euler_characteristic.md)
   : Euler Characteristic
-- [`simplicial_degree()`](https://saqr.me/Nestimate/reference/simplicial_degree.md)
+- [`simplicial_degree()`](https://pak.dynasite.org/Nestimate/reference/simplicial_degree.md)
   : Simplicial Degree
-- [`verify_simplicial()`](https://saqr.me/Nestimate/reference/verify_simplicial.md)
+- [`verify_simplicial()`](https://pak.dynasite.org/Nestimate/reference/verify_simplicial.md)
   : Verify Simplicial Complex Against igraph
 
 ## Data Preparation
 
 Convert and prepare data for network estimation
 
-- [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) :
-  Prepare Event Log Data for Network Estimation
-- [`prepare_for_tna()`](https://saqr.me/Nestimate/reference/prepare_for_tna.md)
+- [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  : Prepare Event Log Data for Network Estimation
+- [`prepare_for_tna()`](https://pak.dynasite.org/Nestimate/reference/prepare_for_tna.md)
   : Prepare Data for TNA Analysis
-- [`action_to_onehot()`](https://saqr.me/Nestimate/reference/action_to_onehot.md)
+- [`action_to_onehot()`](https://pak.dynasite.org/Nestimate/reference/action_to_onehot.md)
   : Convert Action Column to One-Hot Encoding
-- [`prepare_onehot()`](https://saqr.me/Nestimate/reference/prepare_onehot.md)
+- [`prepare_onehot()`](https://pak.dynasite.org/Nestimate/reference/prepare_onehot.md)
   : Import One-Hot Encoded Data into Sequence Format
-- [`wide_to_long()`](https://saqr.me/Nestimate/reference/wide_to_long.md)
+- [`wide_to_long()`](https://pak.dynasite.org/Nestimate/reference/wide_to_long.md)
   : Convert Wide Sequences to Long Format
-- [`long_to_wide()`](https://saqr.me/Nestimate/reference/long_to_wide.md)
+- [`long_to_wide()`](https://pak.dynasite.org/Nestimate/reference/long_to_wide.md)
   : Convert Long Format to Wide Sequences
-- [`convert_sequence_format()`](https://saqr.me/Nestimate/reference/convert_sequence_format.md)
+- [`convert_sequence_format()`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)
   : Convert Sequence Data to Different Formats
-- [`actor_endpoints()`](https://saqr.me/Nestimate/reference/actor_endpoints.md)
+- [`actor_endpoints()`](https://pak.dynasite.org/Nestimate/reference/actor_endpoints.md)
   : Tidy per-actor endpoint summary of a wide-format sequence dataset
-- [`mark_first_state()`](https://saqr.me/Nestimate/reference/mark_first_state.md)
+- [`mark_first_state()`](https://pak.dynasite.org/Nestimate/reference/mark_first_state.md)
   : Mark leading-NA cells with an explicit state label
-- [`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md)
+- [`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md)
   : Mark terminal-NA cells with an explicit state label
 
 ## Utilities
 
 Helper functions and extractors
 
-- [`predictability()`](https://saqr.me/Nestimate/reference/predictability.md)
+- [`predictability()`](https://pak.dynasite.org/Nestimate/reference/predictability.md)
   : Compute Node Predictability
-- [`frequencies()`](https://saqr.me/Nestimate/reference/frequencies.md)
+- [`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.md)
   : Build a Transition Frequency Matrix
-- [`state_frequencies()`](https://saqr.me/Nestimate/reference/state_frequencies.md)
+- [`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md)
   : Compute State Frequencies from Trajectory Data
-- [`net_aggregate_weights()`](https://saqr.me/Nestimate/reference/net_aggregate_weights.md)
+- [`net_aggregate_weights()`](https://pak.dynasite.org/Nestimate/reference/net_aggregate_weights.md)
   : Aggregate Edge Weights
-- [`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.md)
+- [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
   : Compute Centrality Measures for a Network
-- [`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+- [`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
   : Edge Betweenness Network
-- [`coefs()`](https://saqr.me/Nestimate/reference/coefs.md) : Tidy
-  coefficients from a fitted mlvar model
-- [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) : Promote
-  the Layers of an mcml to Networks
-- [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md) : Build
-  a grouped node-level network (htna) from data and a clustering
-- [`as_networks()`](https://saqr.me/Nestimate/reference/as_networks.md)
+- [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md) :
+  Tidy coefficients from a fitted mlvar model
+- [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md) :
+  Promote the Layers of an mcml to Networks
+- [`as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md)
+  : Build a grouped node-level network (htna) from data and a clustering
+- [`as_networks()`](https://pak.dynasite.org/Nestimate/reference/as_networks.md)
   : Promote a psychometric MCML result to a network group
-- [`as_netobject()`](https://saqr.me/Nestimate/reference/as_netobject.md)
+- [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)
   : Coerce a network object to a Nestimate netobject
-- [`validate_netobject()`](https://saqr.me/Nestimate/reference/validate_netobject.md)
+- [`validate_netobject()`](https://pak.dynasite.org/Nestimate/reference/validate_netobject.md)
   : Validate a netobject / cograph_network against the shared schema
-- [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.md)
+- [`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
   : Extract Edge List with Weights
-- [`extract_initial_probs()`](https://saqr.me/Nestimate/reference/extract_initial_probs.md)
+- [`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
   : Extract Initial Probabilities from Model
-- [`extract_transition_matrix()`](https://saqr.me/Nestimate/reference/extract_transition_matrix.md)
+- [`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
   : Extract Transition Matrix from Model
-- [`state_colors()`](https://saqr.me/Nestimate/reference/state_colors.md)
+- [`state_colors()`](https://pak.dynasite.org/Nestimate/reference/state_colors.md)
   : The state colours an object will draw with
-- [`set_state_colors()`](https://saqr.me/Nestimate/reference/set_state_colors.md)
-  [`` `state_colors<-`() ``](https://saqr.me/Nestimate/reference/set_state_colors.md)
+- [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
+  [`` `state_colors<-`() ``](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
   : Set the state colours carried by a network object
 
 ## Sequence Analysis
 
 Sequence visualization, pattern comparison, and association mining
 
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   : Sequence Plot (heatmap, index, or distribution)
-- [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+- [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
   : State Distribution Plot Over Time
-- [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+- [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   : Plot State Frequency Distributions
-- [`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.md)
+- [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
   : Per-Class State Distribution as a Tidy Data Frame
-- [`plot_mosaic()`](https://saqr.me/Nestimate/reference/plot_mosaic.md)
+- [`plot_mosaic()`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
   : Draw a Marimekko / Mosaic Plot from a Tidy Data Frame
-- [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.md)
+- [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
   : Mosaic Plot of a Network's Transition or Co-occurrence Counts
-- [`mosaic_analysis()`](https://saqr.me/Nestimate/reference/mosaic_analysis.md)
+- [`mosaic_analysis()`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md)
   : Two-variable mosaic analysis (chi-square test + flat mosaic)
-- [`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.md)
+- [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
   : Compare Subsequence Patterns Between Groups
-- [`extract_pathways()`](https://saqr.me/Nestimate/reference/extract_pathways.md)
+- [`extract_pathways()`](https://pak.dynasite.org/Nestimate/reference/extract_pathways.md)
   : Cut an Event Log into Pathways
-- [`association_rules()`](https://saqr.me/Nestimate/reference/association_rules.md)
+- [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
   : Discover Association Rules from Sequential or Transaction Data
 
 ## Link Prediction
 
 Predict and evaluate missing connections
 
-- [`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.md)
+- [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
   : Predict Missing or Future Links in a Network
-- [`evaluate_links()`](https://saqr.me/Nestimate/reference/evaluate_links.md)
+- [`evaluate_links()`](https://pak.dynasite.org/Nestimate/reference/evaluate_links.md)
   : Evaluate Link Predictions Against Known Edges
 
 ## Outcome Modelling
 
 Relate network and sequence features to an outcome
 
-- [`outcome_model()`](https://saqr.me/Nestimate/reference/outcome_model.md)
-  [`print(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
-  [`summary(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
-  [`plot(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
+- [`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+  [`print(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+  [`summary(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+  [`plot(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
   : Model Unit-Level Outcomes from Sequence or Network Predictors
-- [`effects_table()`](https://saqr.me/Nestimate/reference/effects_table.md)
+- [`effects_table()`](https://pak.dynasite.org/Nestimate/reference/effects_table.md)
   : Effect Table of a Fitted Outcome Model
 
 ## Data
 
 Example datasets
 
-- [`human_long`](https://saqr.me/Nestimate/reference/long-data.md)
-  [`ai_long`](https://saqr.me/Nestimate/reference/long-data.md) :
-  Human-AI Vibe Coding Interaction Data (Long Format)
-- [`srl_strategies`](https://saqr.me/Nestimate/reference/srl_strategies.md)
+- [`human_long`](https://pak.dynasite.org/Nestimate/reference/long-data.md)
+  [`ai_long`](https://pak.dynasite.org/Nestimate/reference/long-data.md)
+  : Human-AI Vibe Coding Interaction Data (Long Format)
+- [`srl_strategies`](https://pak.dynasite.org/Nestimate/reference/srl_strategies.md)
   : Self-Regulated Learning Strategy Frequencies
-- [`learning_activities`](https://saqr.me/Nestimate/reference/learning_activities.md)
+- [`learning_activities`](https://pak.dynasite.org/Nestimate/reference/learning_activities.md)
   : Online Learning Activity Indicators
-- [`group_regulation_long`](https://saqr.me/Nestimate/reference/group_regulation_long.md)
+- [`group_regulation_long`](https://pak.dynasite.org/Nestimate/reference/group_regulation_long.md)
   : Group Regulation in Collaborative Learning (Long Format)
-- [`chatgpt_srl`](https://saqr.me/Nestimate/reference/chatgpt_srl.md) :
-  ChatGPT Self-Regulated Learning Scale Scores
-- [`trajectories`](https://saqr.me/Nestimate/reference/trajectories.md)
+- [`chatgpt_srl`](https://pak.dynasite.org/Nestimate/reference/chatgpt_srl.md)
+  : ChatGPT Self-Regulated Learning Scale Scores
+- [`trajectories`](https://pak.dynasite.org/Nestimate/reference/trajectories.md)
   : Student Engagement Trajectories
 
 ## S3 Methods
 
 Print, summary, plot, and as.data.frame methods for package classes
 
-- [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
-  [`print(`*`<net_hypergraph>`*`)`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
-  [`summary(`*`<net_hypergraph>`*`)`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
+- [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
+  [`print(`*`<net_hypergraph>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
+  [`summary(`*`<net_hypergraph>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   : Higher-order hypergraph from a network's clique structure
 
-- [`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`print(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`summary(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`print(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`summary(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`print(`*`<summary.net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`plot(`*`<net_casedrop_reliability>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
-  [`plot(`*`<net_casedrop_reliability_group>`*`)`](https://saqr.me/Nestimate/reference/casedrop_reliability.md)
+- [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`summary(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`summary(`*`<net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`print(`*`<summary.net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`plot(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  [`plot(`*`<net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
   : Edge-weight Case-dropping Stability
 
-- [`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md)
-  [`print(`*`<net_network_comparison>`*`)`](https://saqr.me/Nestimate/reference/compare_networks.md)
-  [`plot(`*`<net_network_comparison>`*`)`](https://saqr.me/Nestimate/reference/compare_networks.md)
+- [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
+  [`print(`*`<net_network_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
+  [`plot(`*`<net_network_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
   : Compare two or more networks
 
-- [`summary(`*`<net_network_comparison>`*`)`](https://saqr.me/Nestimate/reference/comparison_tables.md)
-  [`edge_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md)
-  [`node_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md)
-  [`global_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md)
-  [`network_metrics()`](https://saqr.me/Nestimate/reference/comparison_tables.md)
-  [`print(`*`<net_table>`*`)`](https://saqr.me/Nestimate/reference/comparison_tables.md)
+- [`summary(`*`<net_network_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
+  [`edge_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
+  [`node_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
+  [`global_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
+  [`network_metrics()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
+  [`print(`*`<net_table>`*`)`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
   : Tables of a network comparison
 
-- [`hypergraph_measures()`](https://saqr.me/Nestimate/reference/hypergraph_measures.md)
-  [`print(`*`<hypergraph_measures>`*`)`](https://saqr.me/Nestimate/reference/hypergraph_measures.md)
+- [`hypergraph_measures()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md)
+  [`print(`*`<hypergraph_measures>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md)
   : Structural measures for a hypergraph
 
-- [`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
-  [`print(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
-  [`plot(`*`<magnitude_difference>`*`)`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+- [`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
+  [`print(`*`<magnitude_difference>`*`)`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
+  [`plot(`*`<magnitude_difference>`*`)`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
   : Magnitude difference between the frequency and probability views
 
-- [`outcome_model()`](https://saqr.me/Nestimate/reference/outcome_model.md)
-  [`print(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
-  [`summary(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
-  [`plot(`*`<net_outcome_model>`*`)`](https://saqr.me/Nestimate/reference/outcome_model.md)
+- [`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+  [`print(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+  [`summary(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+  [`plot(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
   : Model Unit-Level Outcomes from Sequence or Network Predictors
 
-- [`print(`*`<boot_glasso>`*`)`](https://saqr.me/Nestimate/reference/print.boot_glasso.md)
+- [`print(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.boot_glasso.md)
   : Print Method for boot_glasso
 
-- [`print(`*`<chain_structure>`*`)`](https://saqr.me/Nestimate/reference/print.chain_structure.md)
+- [`print(`*`<chain_structure>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.chain_structure.md)
   :
 
   Print method for `chain_structure`
 
-- [`print(`*`<chain_structure_group>`*`)`](https://saqr.me/Nestimate/reference/print.chain_structure_group.md)
+- [`print(`*`<chain_structure_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.chain_structure_group.md)
   :
 
   Print method for `chain_structure_group`
 
-- [`print(`*`<cluster_choice>`*`)`](https://saqr.me/Nestimate/reference/print.cluster_choice.md)
+- [`print(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.cluster_choice.md)
   : Print Method for cluster_choice
 
-- [`print(`*`<mcml>`*`)`](https://saqr.me/Nestimate/reference/print.mcml.md)
+- [`print(`*`<mcml>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.mcml.md)
   : Print Method for mcml
 
-- [`print(`*`<mcml_layer>`*`)`](https://saqr.me/Nestimate/reference/print.mcml_layer.md)
+- [`print(`*`<mcml_layer>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.mcml_layer.md)
   : Print Method for an mcml Layer
 
-- [`print(`*`<mcml_pc>`*`)`](https://saqr.me/Nestimate/reference/print.mcml_pc.md)
+- [`print(`*`<mcml_pc>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.mcml_pc.md)
   : Print an MCML-PC Object
 
-- [`print(`*`<mcml_sequence_plot>`*`)`](https://saqr.me/Nestimate/reference/print.mcml_sequence_plot.md)
+- [`print(`*`<mcml_sequence_plot>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.mcml_sequence_plot.md)
   : Draw a stacked multichannel mcml sequence plot
 
-- [`print(`*`<mmm_compare>`*`)`](https://saqr.me/Nestimate/reference/print.mmm_compare.md)
+- [`print(`*`<mmm_compare>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.mmm_compare.md)
   : Print Method for mmm_compare
 
-- [`print(`*`<mosaic_analysis>`*`)`](https://saqr.me/Nestimate/reference/print.mosaic_analysis.md)
+- [`print(`*`<mosaic_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.mosaic_analysis.md)
   : Print method for mosaic_analysis objects
 
-- [`print(`*`<nestimate_data>`*`)`](https://saqr.me/Nestimate/reference/print.nestimate_data.md)
+- [`print(`*`<nestimate_data>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.nestimate_data.md)
   : Print Method for nestimate_data
 
-- [`print(`*`<net_association_rules>`*`)`](https://saqr.me/Nestimate/reference/print.net_association_rules.md)
+- [`print(`*`<net_association_rules>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_association_rules.md)
   : Print Method for net_association_rules
 
-- [`print(`*`<net_bayes>`*`)`](https://saqr.me/Nestimate/reference/print.net_bayes.md)
+- [`print(`*`<net_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_bayes.md)
   : Print method for net_bayes
 
-- [`print(`*`<net_bayes_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_bayes_group.md)
+- [`print(`*`<net_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_bayes_group.md)
   : Print method for net_bayes_group
 
-- [`print(`*`<net_bootstrap>`*`)`](https://saqr.me/Nestimate/reference/print.net_bootstrap.md)
+- [`print(`*`<net_bootstrap>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_bootstrap.md)
   : Print Method for net_bootstrap
 
-- [`print(`*`<net_bootstrap_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_bootstrap_group.md)
+- [`print(`*`<net_bootstrap_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_bootstrap_group.md)
   : Print Method for net_bootstrap_group
 
-- [`print(`*`<net_certainty>`*`)`](https://saqr.me/Nestimate/reference/print.net_certainty.md)
+- [`print(`*`<net_certainty>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_certainty.md)
   : Print Method for net_certainty
 
-- [`print(`*`<net_cluster_diagnostics>`*`)`](https://saqr.me/Nestimate/reference/print.net_cluster_diagnostics.md)
+- [`print(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_cluster_diagnostics.md)
   : Print Method for net_cluster_diagnostics
 
-- [`print(`*`<net_clustering>`*`)`](https://saqr.me/Nestimate/reference/print.net_clustering.md)
+- [`print(`*`<net_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_clustering.md)
   : Print Method for net_clustering
 
-- [`print(`*`<net_entropy_bayes>`*`)`](https://saqr.me/Nestimate/reference/print.net_entropy_bayes.md)
+- [`print(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_entropy_bayes.md)
   :
 
   Print method for `net_entropy_bayes`
 
-- [`print(`*`<net_entropy_bayes_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_entropy_bayes_group.md)
+- [`print(`*`<net_entropy_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_entropy_bayes_group.md)
   :
 
   Print method for `net_entropy_bayes_group`
 
-- [`print(`*`<net_entropy_trajectory>`*`)`](https://saqr.me/Nestimate/reference/print.net_entropy_trajectory.md)
+- [`print(`*`<net_entropy_trajectory>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_entropy_trajectory.md)
   :
 
   Print method for `net_entropy_trajectory`
 
-- [`print(`*`<net_hon>`*`)`](https://saqr.me/Nestimate/reference/print.net_hon.md)
+- [`print(`*`<net_hon>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_hon.md)
   : Print Method for net_hon
 
-- [`print(`*`<net_honem>`*`)`](https://saqr.me/Nestimate/reference/print.net_honem.md)
+- [`print(`*`<net_honem>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_honem.md)
   : Print Method for net_honem
 
-- [`print(`*`<net_hypa>`*`)`](https://saqr.me/Nestimate/reference/print.net_hypa.md)
+- [`print(`*`<net_hypa>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_hypa.md)
   : Print Method for net_hypa
 
-- [`print(`*`<net_hypergraph_cluster>`*`)`](https://saqr.me/Nestimate/reference/print.net_hypergraph_cluster.md)
+- [`print(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_hypergraph_cluster.md)
   : Print method for net_hypergraph_cluster
 
-- [`print(`*`<net_hypergraph_transduction>`*`)`](https://saqr.me/Nestimate/reference/print.net_hypergraph_transduction.md)
+- [`print(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_hypergraph_transduction.md)
   : Print method for net_hypergraph_transduction
 
-- [`print(`*`<net_link_prediction>`*`)`](https://saqr.me/Nestimate/reference/print.net_link_prediction.md)
+- [`print(`*`<net_link_prediction>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_link_prediction.md)
   : Print Method for net_link_prediction
 
-- [`print(`*`<net_markov_order>`*`)`](https://saqr.me/Nestimate/reference/print.net_markov_order.md)
+- [`print(`*`<net_markov_order>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_markov_order.md)
   : Print Method for net_markov_order
 
-- [`print(`*`<net_markov_order_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_markov_order_group.md)
+- [`print(`*`<net_markov_order_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_markov_order_group.md)
   :
 
   Print method for `net_markov_order_group`
 
-- [`print(`*`<net_markov_stability_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_markov_stability_group.md)
+- [`print(`*`<net_markov_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_markov_stability_group.md)
   :
 
   Print method for `net_markov_stability_group`
 
-- [`print(`*`<net_mlvar>`*`)`](https://saqr.me/Nestimate/reference/print.net_mlvar.md)
+- [`print(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_mlvar.md)
   : Print method for net_mlvar
 
-- [`print(`*`<net_mmm>`*`)`](https://saqr.me/Nestimate/reference/print.net_mmm.md)
+- [`print(`*`<net_mmm>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_mmm.md)
   : Print Method for net_mmm
 
-- [`print(`*`<net_mmm_clustering>`*`)`](https://saqr.me/Nestimate/reference/print.net_mmm_clustering.md)
+- [`print(`*`<net_mmm_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_mmm_clustering.md)
   : Print Method for MMM Clustering Attribute
 
-- [`print(`*`<net_mogen>`*`)`](https://saqr.me/Nestimate/reference/print.net_mogen.md)
+- [`print(`*`<net_mogen>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_mogen.md)
   : Print Method for net_mogen
 
-- [`print(`*`<net_mpt_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_mpt_group.md)
+- [`print(`*`<net_mpt_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_mpt_group.md)
   :
 
   Print method for `net_mpt_group`
 
-- [`print(`*`<net_nct>`*`)`](https://saqr.me/Nestimate/reference/print.net_nct.md)
+- [`print(`*`<net_nct>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_nct.md)
   : Print Method for net_nct
 
-- [`print(`*`<net_path_dependence>`*`)`](https://saqr.me/Nestimate/reference/print.net_path_dependence.md)
+- [`print(`*`<net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_path_dependence.md)
   :
 
   Print method for `net_path_dependence`
 
-- [`print(`*`<net_permutation>`*`)`](https://saqr.me/Nestimate/reference/print.net_permutation.md)
+- [`print(`*`<net_permutation>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_permutation.md)
   : Print Method for net_permutation
 
-- [`print(`*`<net_permutation_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_permutation_group.md)
+- [`print(`*`<net_permutation_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_permutation_group.md)
   : Print Method for net_permutation_group
 
-- [`print(`*`<net_pruning_details>`*`)`](https://saqr.me/Nestimate/reference/print.net_pruning_details.md)
+- [`print(`*`<net_pruning_details>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_pruning_details.md)
   : Print method for pruning details
 
-- [`print(`*`<net_reliability>`*`)`](https://saqr.me/Nestimate/reference/print.net_reliability.md)
+- [`print(`*`<net_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_reliability.md)
   : Print Method for net_reliability
 
-- [`print(`*`<net_sequence_comparison>`*`)`](https://saqr.me/Nestimate/reference/print.net_sequence_comparison.md)
+- [`print(`*`<net_sequence_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_sequence_comparison.md)
   : Print Method for net_sequence_comparison
 
-- [`print(`*`<net_stability>`*`)`](https://saqr.me/Nestimate/reference/print.net_stability.md)
+- [`print(`*`<net_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_stability.md)
   : Print Method for net_stability
 
-- [`print(`*`<net_stability_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_stability_group.md)
+- [`print(`*`<net_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_stability_group.md)
   : Print Method for net_stability_group
 
-- [`print(`*`<net_transition_entropy>`*`)`](https://saqr.me/Nestimate/reference/print.net_transition_entropy.md)
+- [`print(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_transition_entropy.md)
   :
 
   Print method for `net_transition_entropy`
 
-- [`print(`*`<net_transition_entropy_group>`*`)`](https://saqr.me/Nestimate/reference/print.net_transition_entropy_group.md)
+- [`print(`*`<net_transition_entropy_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_transition_entropy_group.md)
   :
 
   Print method for `net_transition_entropy_group`
 
-- [`print(`*`<net_vertex_bootstrap>`*`)`](https://saqr.me/Nestimate/reference/print.net_vertex_bootstrap.md)
+- [`print(`*`<net_vertex_bootstrap>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_vertex_bootstrap.md)
   : Print a Vertex Bootstrap Result
 
-- [`print(`*`<net_vertex_comparison>`*`)`](https://saqr.me/Nestimate/reference/print.net_vertex_comparison.md)
+- [`print(`*`<net_vertex_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.net_vertex_comparison.md)
   : Print a Two-Network Vertex-Bootstrap Comparison
 
-- [`print(`*`<netobject>`*`)`](https://saqr.me/Nestimate/reference/print.netobject.md)
+- [`print(`*`<netobject>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.netobject.md)
   : Print Method for Network Object
 
-- [`print(`*`<netobject_group>`*`)`](https://saqr.me/Nestimate/reference/print.netobject_group.md)
+- [`print(`*`<netobject_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.netobject_group.md)
   : Print Method for Group Network Object
 
-- [`print(`*`<netobject_ml>`*`)`](https://saqr.me/Nestimate/reference/print.netobject_ml.md)
+- [`print(`*`<netobject_ml>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.netobject_ml.md)
   : Print Method for Multilevel Network Object
 
-- [`print(`*`<pc_loading_stability>`*`)`](https://saqr.me/Nestimate/reference/print.pc_loading_stability.md)
+- [`print(`*`<pc_loading_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.pc_loading_stability.md)
   : Print Composite-Weight Stability
 
-- [`print(`*`<persistence_landscape>`*`)`](https://saqr.me/Nestimate/reference/print.persistence_landscape.md)
+- [`print(`*`<persistence_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.persistence_landscape.md)
   : Print Persistence Landscape
 
-- [`print(`*`<persistent_homology>`*`)`](https://saqr.me/Nestimate/reference/print.persistent_homology.md)
+- [`print(`*`<persistent_homology>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.persistent_homology.md)
   : Print persistent homology results
 
-- [`print(`*`<q_analysis>`*`)`](https://saqr.me/Nestimate/reference/print.q_analysis.md)
+- [`print(`*`<q_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.q_analysis.md)
   : Print Q-analysis results
 
-- [`print(`*`<simplicial_complex>`*`)`](https://saqr.me/Nestimate/reference/print.simplicial_complex.md)
+- [`print(`*`<simplicial_complex>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.simplicial_complex.md)
   : Print a simplicial complex
 
-- [`print(`*`<summary.net_path_dependence>`*`)`](https://saqr.me/Nestimate/reference/print.summary.net_path_dependence.md)
+- [`print(`*`<summary.net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.summary.net_path_dependence.md)
   :
 
   Print method for `summary.net_path_dependence`
 
-- [`print(`*`<summary.net_transition_entropy>`*`)`](https://saqr.me/Nestimate/reference/print.summary.net_transition_entropy.md)
+- [`print(`*`<summary.net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.summary.net_transition_entropy.md)
   :
 
   Print method for `summary.net_transition_entropy`
 
-- [`print(`*`<summary_chain_structure>`*`)`](https://saqr.me/Nestimate/reference/print.summary_chain_structure.md)
+- [`print(`*`<summary_chain_structure>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.summary_chain_structure.md)
   :
 
   Print method for `summary.chain_structure`
 
-- [`print(`*`<tidy_covariates>`*`)`](https://saqr.me/Nestimate/reference/print.tidy_covariates.md)
+- [`print(`*`<tidy_covariates>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.tidy_covariates.md)
   : Print method for tidy covariate output
 
-- [`print(`*`<wtna_boot_mixed>`*`)`](https://saqr.me/Nestimate/reference/print.wtna_boot_mixed.md)
+- [`print(`*`<wtna_boot_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.wtna_boot_mixed.md)
   : Print Method for wtna_boot_mixed
 
-- [`print(`*`<wtna_mixed>`*`)`](https://saqr.me/Nestimate/reference/print.wtna_mixed.md)
+- [`print(`*`<wtna_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.wtna_mixed.md)
   : Print Method for wtna_mixed
 
-- [`print(`*`<wtna_perm_mixed>`*`)`](https://saqr.me/Nestimate/reference/print.wtna_perm_mixed.md)
+- [`print(`*`<wtna_perm_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/print.wtna_perm_mixed.md)
   : Print Method for wtna_perm_mixed
 
-- [`print(`*`<state_freq>`*`)`](https://saqr.me/Nestimate/reference/state_freq.md)
-  [`plot(`*`<state_freq>`*`)`](https://saqr.me/Nestimate/reference/state_freq.md)
-  [`as.data.frame(`*`<state_freq>`*`)`](https://saqr.me/Nestimate/reference/state_freq.md)
+- [`print(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/state_freq.md)
+  [`plot(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/state_freq.md)
+  [`as.data.frame(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/state_freq.md)
   : Print, Plot, and Convert a state_freq Object
 
-- [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
-  [`print(`*`<netdifference>`*`)`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+- [`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
+  [`print(`*`<netdifference>`*`)`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
   : Subtract one network from another
 
-- [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)
-  [`summary(`*`<net_mpt>`*`)`](https://saqr.me/Nestimate/reference/passage_time.md)
-  [`plot(`*`<net_mpt>`*`)`](https://saqr.me/Nestimate/reference/passage_time.md)
+- [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
+  [`summary(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
+  [`plot(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   : Mean First Passage Times
 
-- [`summary(`*`<boot_glasso>`*`)`](https://saqr.me/Nestimate/reference/summary.boot_glasso.md)
+- [`summary(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.boot_glasso.md)
   : Summary Method for boot_glasso
 
-- [`summary(`*`<chain_structure>`*`)`](https://saqr.me/Nestimate/reference/summary.chain_structure.md)
+- [`summary(`*`<chain_structure>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.chain_structure.md)
   :
 
   Tidy per-state summary of a `chain_structure`
 
-- [`summary(`*`<chain_structure_group>`*`)`](https://saqr.me/Nestimate/reference/summary.chain_structure_group.md)
+- [`summary(`*`<chain_structure_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.chain_structure_group.md)
   :
 
   Cross-group comparison of `chain_structure_group`
 
-- [`summary(`*`<cluster_choice>`*`)`](https://saqr.me/Nestimate/reference/summary.cluster_choice.md)
+- [`summary(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.cluster_choice.md)
   : Summary Method for cluster_choice
 
-- [`summary(`*`<mcml>`*`)`](https://saqr.me/Nestimate/reference/summary.mcml.md)
+- [`summary(`*`<mcml>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.mcml.md)
   : Summary Method for mcml
 
-- [`summary(`*`<mcml_pc>`*`)`](https://saqr.me/Nestimate/reference/summary.mcml_pc.md)
+- [`summary(`*`<mcml_pc>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.mcml_pc.md)
   : Summarize an MCML-PC Object
 
-- [`summary(`*`<mmm_compare>`*`)`](https://saqr.me/Nestimate/reference/summary.mmm_compare.md)
+- [`summary(`*`<mmm_compare>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.mmm_compare.md)
   : Summary Method for mmm_compare
 
-- [`summary(`*`<mosaic_analysis>`*`)`](https://saqr.me/Nestimate/reference/summary.mosaic_analysis.md)
+- [`summary(`*`<mosaic_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.mosaic_analysis.md)
   : Summary method for mosaic_analysis objects
 
-- [`summary(`*`<nest_initial_probs>`*`)`](https://saqr.me/Nestimate/reference/summary.nest_initial_probs.md)
+- [`summary(`*`<nest_initial_probs>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.nest_initial_probs.md)
   : Summary Method for Initial Probability Vectors
 
-- [`summary(`*`<nest_transition_counts>`*`)`](https://saqr.me/Nestimate/reference/summary.nest_transition_counts.md)
+- [`summary(`*`<nest_transition_counts>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.nest_transition_counts.md)
   : Summary Method for Transition Count Matrices
 
-- [`summary(`*`<nest_transition_matrix>`*`)`](https://saqr.me/Nestimate/reference/summary.nest_transition_matrix.md)
+- [`summary(`*`<nest_transition_matrix>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.nest_transition_matrix.md)
   : Summary Method for Transition Matrices
 
-- [`summary(`*`<net_association_rules>`*`)`](https://saqr.me/Nestimate/reference/summary.net_association_rules.md)
+- [`summary(`*`<net_association_rules>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_association_rules.md)
   : Summary Method for net_association_rules
 
-- [`summary(`*`<net_bayes>`*`)`](https://saqr.me/Nestimate/reference/summary.net_bayes.md)
+- [`summary(`*`<net_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_bayes.md)
   : Summary method for net_bayes
 
-- [`summary(`*`<net_bayes_group>`*`)`](https://saqr.me/Nestimate/reference/summary.net_bayes_group.md)
+- [`summary(`*`<net_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_bayes_group.md)
   : Summary method for net_bayes_group
 
-- [`summary(`*`<net_bootstrap>`*`)`](https://saqr.me/Nestimate/reference/summary.net_bootstrap.md)
+- [`summary(`*`<net_bootstrap>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_bootstrap.md)
   : Summary Method for net_bootstrap
 
-- [`summary(`*`<net_bootstrap_group>`*`)`](https://saqr.me/Nestimate/reference/summary.net_bootstrap_group.md)
+- [`summary(`*`<net_bootstrap_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_bootstrap_group.md)
   : Summary Method for net_bootstrap_group
 
-- [`summary(`*`<net_clustering>`*`)`](https://saqr.me/Nestimate/reference/summary.net_clustering.md)
+- [`summary(`*`<net_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_clustering.md)
   : Summary Method for net_clustering
 
-- [`summary(`*`<net_entropy_bayes>`*`)`](https://saqr.me/Nestimate/reference/summary.net_entropy_bayes.md)
+- [`summary(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_entropy_bayes.md)
   :
 
   Summary method for `net_entropy_bayes`
 
-- [`summary(`*`<net_entropy_trajectory>`*`)`](https://saqr.me/Nestimate/reference/summary.net_entropy_trajectory.md)
+- [`summary(`*`<net_entropy_trajectory>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_entropy_trajectory.md)
   :
 
   Summary method for `net_entropy_trajectory`
 
-- [`summary(`*`<net_hon>`*`)`](https://saqr.me/Nestimate/reference/summary.net_hon.md)
+- [`summary(`*`<net_hon>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_hon.md)
   : Summary Method for net_hon
 
-- [`summary(`*`<net_honem>`*`)`](https://saqr.me/Nestimate/reference/summary.net_honem.md)
+- [`summary(`*`<net_honem>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_honem.md)
   : Summary Method for net_honem
 
-- [`summary(`*`<net_hypa>`*`)`](https://saqr.me/Nestimate/reference/summary.net_hypa.md)
+- [`summary(`*`<net_hypa>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_hypa.md)
   : Summary Method for net_hypa
 
-- [`summary(`*`<net_hypergraph_cluster>`*`)`](https://saqr.me/Nestimate/reference/summary.net_hypergraph_cluster.md)
+- [`summary(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_hypergraph_cluster.md)
   : Summary method for net_hypergraph_cluster
 
-- [`summary(`*`<net_hypergraph_transduction>`*`)`](https://saqr.me/Nestimate/reference/summary.net_hypergraph_transduction.md)
+- [`summary(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_hypergraph_transduction.md)
   : Summary method for net_hypergraph_transduction
 
-- [`summary(`*`<net_link_prediction>`*`)`](https://saqr.me/Nestimate/reference/summary.net_link_prediction.md)
+- [`summary(`*`<net_link_prediction>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_link_prediction.md)
   : Summary Method for net_link_prediction
 
-- [`summary(`*`<net_markov_order>`*`)`](https://saqr.me/Nestimate/reference/summary.net_markov_order.md)
+- [`summary(`*`<net_markov_order>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_markov_order.md)
   : Summary Method for net_markov_order
 
-- [`summary(`*`<net_mlvar>`*`)`](https://saqr.me/Nestimate/reference/summary.net_mlvar.md)
+- [`summary(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_mlvar.md)
   : Summary method for net_mlvar
 
-- [`summary(`*`<net_mmm>`*`)`](https://saqr.me/Nestimate/reference/summary.net_mmm.md)
+- [`summary(`*`<net_mmm>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_mmm.md)
   : Summary Method for net_mmm
 
-- [`summary(`*`<net_mogen>`*`)`](https://saqr.me/Nestimate/reference/summary.net_mogen.md)
+- [`summary(`*`<net_mogen>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_mogen.md)
   : Summary Method for net_mogen
 
-- [`summary(`*`<net_nct>`*`)`](https://saqr.me/Nestimate/reference/summary.net_nct.md)
+- [`summary(`*`<net_nct>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_nct.md)
   : Summary Method for net_nct
 
-- [`summary(`*`<net_path_dependence>`*`)`](https://saqr.me/Nestimate/reference/summary.net_path_dependence.md)
+- [`summary(`*`<net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_path_dependence.md)
   :
 
   Summary method for `net_path_dependence`
 
-- [`summary(`*`<net_permutation>`*`)`](https://saqr.me/Nestimate/reference/summary.net_permutation.md)
+- [`summary(`*`<net_permutation>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_permutation.md)
   : Summary Method for net_permutation
 
-- [`summary(`*`<net_permutation_group>`*`)`](https://saqr.me/Nestimate/reference/summary.net_permutation_group.md)
+- [`summary(`*`<net_permutation_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_permutation_group.md)
   : Summary Method for net_permutation_group
 
-- [`summary(`*`<net_reliability>`*`)`](https://saqr.me/Nestimate/reference/summary.net_reliability.md)
+- [`summary(`*`<net_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_reliability.md)
   : Summary Method for net_reliability
 
-- [`summary(`*`<net_sequence_comparison>`*`)`](https://saqr.me/Nestimate/reference/summary.net_sequence_comparison.md)
+- [`summary(`*`<net_sequence_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_sequence_comparison.md)
   : Summary Method for net_sequence_comparison
 
-- [`summary(`*`<net_stability>`*`)`](https://saqr.me/Nestimate/reference/summary.net_stability.md)
+- [`summary(`*`<net_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_stability.md)
   : Summary Method for net_stability
 
-- [`summary(`*`<net_stability_group>`*`)`](https://saqr.me/Nestimate/reference/summary.net_stability_group.md)
+- [`summary(`*`<net_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_stability_group.md)
   : Summary Method for net_stability_group
 
-- [`summary(`*`<net_transition_entropy>`*`)`](https://saqr.me/Nestimate/reference/summary.net_transition_entropy.md)
+- [`summary(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_transition_entropy.md)
   :
 
   Summary method for `net_transition_entropy`
 
-- [`summary(`*`<net_vertex_bootstrap>`*`)`](https://saqr.me/Nestimate/reference/summary.net_vertex_bootstrap.md)
+- [`summary(`*`<net_vertex_bootstrap>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_vertex_bootstrap.md)
   : Summarize a Vertex Bootstrap Result
 
-- [`summary(`*`<net_vertex_comparison>`*`)`](https://saqr.me/Nestimate/reference/summary.net_vertex_comparison.md)
+- [`summary(`*`<net_vertex_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.net_vertex_comparison.md)
   : Summarize a Two-Network Vertex-Bootstrap Comparison
 
-- [`summary(`*`<netobject>`*`)`](https://saqr.me/Nestimate/reference/summary.netobject.md)
+- [`summary(`*`<netobject>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.netobject.md)
   : Network metrics for a netobject
 
-- [`summary(`*`<netobject_group>`*`)`](https://saqr.me/Nestimate/reference/summary.netobject_group.md)
+- [`summary(`*`<netobject_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.netobject_group.md)
   : Network metrics for a netobject_group
 
-- [`summary(`*`<wtna_boot_mixed>`*`)`](https://saqr.me/Nestimate/reference/summary.wtna_boot_mixed.md)
+- [`summary(`*`<wtna_boot_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.wtna_boot_mixed.md)
   : Summary Method for wtna_boot_mixed
 
-- [`summary(`*`<wtna_perm_mixed>`*`)`](https://saqr.me/Nestimate/reference/summary.wtna_perm_mixed.md)
+- [`summary(`*`<wtna_perm_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/summary.wtna_perm_mixed.md)
   : Summary Method for wtna_perm_mixed
 
-- [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
-  [`plot(`*`<net_markov_stability>`*`)`](https://saqr.me/Nestimate/reference/markov_stability.md)
+- [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
+  [`plot(`*`<net_markov_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   : Markov Stability Analysis
 
-- [`plot(`*`<boot_glasso>`*`)`](https://saqr.me/Nestimate/reference/plot.boot_glasso.md)
+- [`plot(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.boot_glasso.md)
   : Plot Method for boot_glasso
 
-- [`plot(`*`<chain_structure>`*`)`](https://saqr.me/Nestimate/reference/plot.chain_structure.md)
+- [`plot(`*`<chain_structure>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.chain_structure.md)
   :
 
   Plot method for `chain_structure`
 
-- [`plot(`*`<cluster_choice>`*`)`](https://saqr.me/Nestimate/reference/plot.cluster_choice.md)
+- [`plot(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.cluster_choice.md)
   : Plot Method for cluster_choice
 
-- [`plot(`*`<mcml_pc>`*`)`](https://saqr.me/Nestimate/reference/plot.mcml_pc.md)
+- [`plot(`*`<mcml_pc>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.mcml_pc.md)
   : Plot an MCML-PC Object
 
-- [`plot(`*`<mmm_compare>`*`)`](https://saqr.me/Nestimate/reference/plot.mmm_compare.md)
+- [`plot(`*`<mmm_compare>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.mmm_compare.md)
   : Plot Method for mmm_compare
 
-- [`plot(`*`<mosaic_analysis>`*`)`](https://saqr.me/Nestimate/reference/plot.mosaic_analysis.md)
+- [`plot(`*`<mosaic_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.mosaic_analysis.md)
   : Plot method for mosaic_analysis objects
 
-- [`plot(`*`<net_association_rules>`*`)`](https://saqr.me/Nestimate/reference/plot.net_association_rules.md)
+- [`plot(`*`<net_association_rules>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_association_rules.md)
   : Plot Method for net_association_rules
 
-- [`plot(`*`<net_bayes>`*`)`](https://saqr.me/Nestimate/reference/plot.net_bayes.md)
+- [`plot(`*`<net_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_bayes.md)
   : Plot method for net_bayes
 
-- [`plot(`*`<net_centrality>`*`)`](https://saqr.me/Nestimate/reference/plot.net_centrality.md)
+- [`plot(`*`<net_centrality>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_centrality.md)
   : Plot centrality measures
 
-- [`plot(`*`<net_centrality_group>`*`)`](https://saqr.me/Nestimate/reference/plot.net_centrality_group.md)
+- [`plot(`*`<net_centrality_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_centrality_group.md)
   : Plot grouped centrality measures
 
-- [`plot(`*`<net_cluster_diagnostics>`*`)`](https://saqr.me/Nestimate/reference/plot.net_cluster_diagnostics.md)
+- [`plot(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_cluster_diagnostics.md)
   : Plot Method for net_cluster_diagnostics
 
-- [`plot(`*`<net_clustering>`*`)`](https://saqr.me/Nestimate/reference/plot.net_clustering.md)
+- [`plot(`*`<net_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_clustering.md)
   : Plot Sequence Clustering Results
 
-- [`plot(`*`<net_comparison>`*`)`](https://saqr.me/Nestimate/reference/plot.net_comparison.md)
+- [`plot(`*`<net_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_comparison.md)
   : Plot a network comparison
 
-- [`plot(`*`<net_edge_betweenness>`*`)`](https://saqr.me/Nestimate/reference/plot.net_edge_betweenness.md)
+- [`plot(`*`<net_edge_betweenness>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_edge_betweenness.md)
   : Plot edge-betweenness scores
 
-- [`plot(`*`<net_entropy_bayes>`*`)`](https://saqr.me/Nestimate/reference/plot.net_entropy_bayes.md)
+- [`plot(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_entropy_bayes.md)
   :
 
   Plot method for `net_entropy_bayes`
 
-- [`plot(`*`<net_entropy_trajectory>`*`)`](https://saqr.me/Nestimate/reference/plot.net_entropy_trajectory.md)
+- [`plot(`*`<net_entropy_trajectory>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_entropy_trajectory.md)
   :
 
   Plot method for `net_entropy_trajectory`
 
-- [`plot(`*`<net_honem>`*`)`](https://saqr.me/Nestimate/reference/plot.net_honem.md)
+- [`plot(`*`<net_honem>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_honem.md)
   : Plot Method for net_honem
 
-- [`plot(`*`<net_hypergraph_cluster>`*`)`](https://saqr.me/Nestimate/reference/plot.net_hypergraph_cluster.md)
+- [`plot(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_hypergraph_cluster.md)
   : Plot method for net_hypergraph_cluster
 
-- [`plot(`*`<net_hypergraph_transduction>`*`)`](https://saqr.me/Nestimate/reference/plot.net_hypergraph_transduction.md)
+- [`plot(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_hypergraph_transduction.md)
   : Plot method for net_hypergraph_transduction
 
-- [`plot(`*`<net_markov_order>`*`)`](https://saqr.me/Nestimate/reference/plot.net_markov_order.md)
+- [`plot(`*`<net_markov_order>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_markov_order.md)
   : Plot Method for net_markov_order
 
-- [`plot(`*`<net_mmm>`*`)`](https://saqr.me/Nestimate/reference/plot.net_mmm.md)
+- [`plot(`*`<net_mmm>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_mmm.md)
   : Plot Method for net_mmm
 
-- [`plot(`*`<net_mmm_clustering>`*`)`](https://saqr.me/Nestimate/reference/plot.net_mmm_clustering.md)
+- [`plot(`*`<net_mmm_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_mmm_clustering.md)
   : Plot Method for MMM Clustering Attribute
 
-- [`plot(`*`<net_mogen>`*`)`](https://saqr.me/Nestimate/reference/plot.net_mogen.md)
+- [`plot(`*`<net_mogen>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_mogen.md)
   : Plot Method for net_mogen
 
-- [`plot(`*`<net_path_dependence>`*`)`](https://saqr.me/Nestimate/reference/plot.net_path_dependence.md)
+- [`plot(`*`<net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_path_dependence.md)
   :
 
   Plot method for `net_path_dependence`
 
-- [`plot(`*`<net_reliability>`*`)`](https://saqr.me/Nestimate/reference/plot.net_reliability.md)
+- [`plot(`*`<net_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_reliability.md)
   : Plot Method for net_reliability
 
-- [`plot(`*`<net_sequence_comparison>`*`)`](https://saqr.me/Nestimate/reference/plot.net_sequence_comparison.md)
+- [`plot(`*`<net_sequence_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_sequence_comparison.md)
   : Plot Method for net_sequence_comparison
 
-- [`plot(`*`<net_stability>`*`)`](https://saqr.me/Nestimate/reference/plot.net_stability.md)
+- [`plot(`*`<net_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_stability.md)
   : Plot Method for net_stability
 
-- [`plot(`*`<net_transition_entropy>`*`)`](https://saqr.me/Nestimate/reference/plot.net_transition_entropy.md)
+- [`plot(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_transition_entropy.md)
   :
 
   Plot method for `net_transition_entropy`
 
-- [`plot(`*`<net_vertex_bootstrap>`*`)`](https://saqr.me/Nestimate/reference/plot.net_vertex_bootstrap.md)
+- [`plot(`*`<net_vertex_bootstrap>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_vertex_bootstrap.md)
   : Plot Vertex Bootstrap Distributions
 
-- [`plot(`*`<net_vertex_comparison>`*`)`](https://saqr.me/Nestimate/reference/plot.net_vertex_comparison.md)
+- [`plot(`*`<net_vertex_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.net_vertex_comparison.md)
   : Plot a Two-Network Vertex-Bootstrap Comparison
 
-- [`plot(`*`<pc_loading_stability>`*`)`](https://saqr.me/Nestimate/reference/plot.pc_loading_stability.md)
+- [`plot(`*`<pc_loading_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.pc_loading_stability.md)
   : Plot Composite-Weight Stability
 
-- [`plot(`*`<persistence_landscape>`*`)`](https://saqr.me/Nestimate/reference/plot.persistence_landscape.md)
+- [`plot(`*`<persistence_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.persistence_landscape.md)
   : Plot Persistence Landscape
 
-- [`plot(`*`<persistent_homology>`*`)`](https://saqr.me/Nestimate/reference/plot.persistent_homology.md)
+- [`plot(`*`<persistent_homology>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.persistent_homology.md)
   : Plot Persistent Homology
 
-- [`plot(`*`<q_analysis>`*`)`](https://saqr.me/Nestimate/reference/plot.q_analysis.md)
+- [`plot(`*`<q_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.q_analysis.md)
   : Plot Q-Analysis
 
-- [`plot(`*`<simplicial_complex>`*`)`](https://saqr.me/Nestimate/reference/plot.simplicial_complex.md)
+- [`plot(`*`<simplicial_complex>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot.simplicial_complex.md)
   : Plot a Simplicial Complex
 
-- [`plot_mosaic()`](https://saqr.me/Nestimate/reference/plot_mosaic.md)
+- [`plot_mosaic()`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
   : Draw a Marimekko / Mosaic Plot from a Tidy Data Frame
 
-- [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+- [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   : Plot State Frequency Distributions
 
-- [`as.data.frame(`*`<net_hypergraph_cluster>`*`)`](https://saqr.me/Nestimate/reference/as.data.frame.net_hypergraph_cluster.md)
+- [`as.data.frame(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/as.data.frame.net_hypergraph_cluster.md)
   : Coerce a net_hypergraph_cluster to a data.frame
 
-- [`as.data.frame(`*`<net_hypergraph_transduction>`*`)`](https://saqr.me/Nestimate/reference/as.data.frame.net_hypergraph_transduction.md)
+- [`as.data.frame(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/as.data.frame.net_hypergraph_transduction.md)
   : Coerce a net_hypergraph_transduction to a data.frame
 
-- [`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
-  [`as.data.frame(`*`<net_cluster_diagnostics>`*`)`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
+- [`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
+  [`as.data.frame(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   : Cluster Diagnostics

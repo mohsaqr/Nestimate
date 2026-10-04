@@ -99,8 +99,8 @@ order they occur.
 
 ## See also
 
-[`sequence_compare`](https://saqr.me/Nestimate/reference/sequence_compare.md),
-[`outcome_model`](https://saqr.me/Nestimate/reference/outcome_model.md)
+[`sequence_compare`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md),
+[`outcome_model`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
 
 ## Examples
 

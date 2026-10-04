@@ -28,7 +28,7 @@ simplicial_features(
 - threshold:
 
   Minimum absolute edge weight for an edge to exist (passed to
-  [`build_simplicial`](https://saqr.me/Nestimate/reference/build_simplicial.md)).
+  [`build_simplicial`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)).
   Topology is a step function of this value, so a single threshold is a
   choice, not a result – pass a vector to sweep it and get one row per
   network per threshold.
@@ -45,7 +45,7 @@ simplicial_features(
 - type:
 
   Complex type passed to
-  [`build_simplicial`](https://saqr.me/Nestimate/reference/build_simplicial.md).
+  [`build_simplicial`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md).
   Default `"clique"`.
 
 ## Value
@@ -64,10 +64,10 @@ connected states, a 3-simplex a tetrahedron of four. These count
 
 ## See also
 
-[`build_simplicial`](https://saqr.me/Nestimate/reference/build_simplicial.md),
-[`betti_numbers`](https://saqr.me/Nestimate/reference/betti_numbers.md),
-[`q_analysis`](https://saqr.me/Nestimate/reference/q_analysis.md),
-[`outcome_model`](https://saqr.me/Nestimate/reference/outcome_model.md)
+[`build_simplicial`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md),
+[`betti_numbers`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md),
+[`q_analysis`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md),
+[`outcome_model`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
 
 ## Examples
 

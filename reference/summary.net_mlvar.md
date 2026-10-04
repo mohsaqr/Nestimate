@@ -15,7 +15,7 @@ summary(object, ...)
 - object:
 
   A `net_mlvar` object returned by
-  [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md).
+  [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md).
 
 - ...:
 
@@ -24,9 +24,9 @@ summary(object, ...)
 ## Value
 
 The tidy coefficient `data.frame` - the same table
-[`coefs()`](https://saqr.me/Nestimate/reference/coefs.md) returns, with
-one row per `(outcome, predictor)` pair and columns `outcome`,
-`predictor`, `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`,
+[`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md)
+returns, with one row per `(outcome, predictor)` pair and columns
+`outcome`, `predictor`, `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`,
 `significant`. Returned visibly, so calling `summary(fit)` at the
 console prints the matrices and then the table.
 

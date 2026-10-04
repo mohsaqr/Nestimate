@@ -60,12 +60,12 @@ build_mmm(
   Optional. Covariates integrated into the EM algorithm to model
   covariate-dependent mixing proportions. Accepts a string, character
   vector, formula, or data.frame (same forms as
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)).
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)).
   For `netobject` or `cograph_network` input, names are resolved against
   `$metadata` first, so a typical call is
   `build_mmm(net, k = 3, covariates = "session_label")`. Unlike the
   post-hoc analysis in
-  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md),
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
   these covariates directly influence cluster membership during EM
   estimation (see `covariate_effect`).
 
@@ -91,7 +91,7 @@ build_mmm(
   [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html) (warns
   about separation risk); `"chisq"` runs descriptive tests (no logit).
   See
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   for full details.
 
 ## Value
@@ -166,7 +166,7 @@ An object of class `net_mmm` with components:
 
   The `netobject`'s per-sequence metadata, one row per fitted sequence
   in the row order of `posterior`, so
-  [`session_ids`](https://saqr.me/Nestimate/reference/session_ids.md)
+  [`session_ids`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
   can name each sequence; NULL for other input.
 
 ## Initial states
@@ -176,7 +176,7 @@ per-sequence initial state
 (`init_state[i] <- match(raw_data[i, state_cols[1L]], states)`). The
 function does **not** scan forward to the first non-missing position,
 and it does not apply any `na_syms`-style symbol conversion (unlike
-[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)).
+[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)).
 The state vocabulary is built from the unique non-`NA` values across all
 columns, so if your data uses a sentinel character such as `"*"` or
 `"%"` for missing cells, that sentinel becomes a real state and the
@@ -190,8 +190,8 @@ state.
 
 ## See also
 
-[`compare_mmm`](https://saqr.me/Nestimate/reference/compare_mmm.md),
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`compare_mmm`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md),
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

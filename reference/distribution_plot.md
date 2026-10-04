@@ -4,7 +4,7 @@ Draws how state proportions (or counts) evolve across time points. For
 each time column, tabulates how many sequences are in each state and
 renders the result as a stacked area (default) or stacked bar chart.
 Accepts the same inputs as
-[`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md).
+[`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
 
 ## Usage
 
@@ -46,7 +46,7 @@ distribution_plot(
 - x:
 
   Wide-format sequence data. Accepts the same inputs as
-  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md):
+  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md):
   `data.frame`, `matrix`, `netobject`, `net_clustering`,
   `netobject_group`, `net_mmm`, or `tna`. When clustering info is
   available, one panel is drawn per cluster.
@@ -79,7 +79,7 @@ distribution_plot(
   in `(0, 1)` drops everything past that quantile of sequence lengths
   (e.g. `trim = 0.95`); a value `>= 1` is an absolute cut (`trim = 50`
   keeps the first 50 time points). See
-  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md).
+  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
 
 - trim_clusterwise:
 
@@ -87,7 +87,7 @@ distribution_plot(
   pooled cutoff for every panel so the time axes stay aligned; `TRUE`
   crops each group to its own length quantile (panels can differ in
   width). See
-  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md).
+  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
 
 - state_colors:
 
@@ -109,7 +109,7 @@ distribution_plot(
 - width, height:
 
   Optional device dimensions. See
-  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md).
+  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
 
 - main:
 
@@ -209,8 +209,8 @@ Invisibly, a list describing the drawn figure:
 
 ## See also
 
-[`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md),
-[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+[`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md),
+[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 
 ## Examples
 

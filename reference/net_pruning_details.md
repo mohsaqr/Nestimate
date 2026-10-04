@@ -1,8 +1,8 @@
 # Report Network Pruning Details
 
 Returns the edges removed by
-[`net_prune`](https://saqr.me/Nestimate/reference/net_prune.md) as a
-tidy one-row-per-edge data frame, with the method, cut-off, and
+[`net_prune`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
+as a tidy one-row-per-edge data frame, with the method, cut-off, and
 retained/removed counts attached as attributes and shown by its print
 method.
 
@@ -39,7 +39,7 @@ of such data frames.
 
 ## See also
 
-[`net_prune`](https://saqr.me/Nestimate/reference/net_prune.md)
+[`net_prune`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
 
 ## Examples
 

@@ -22,7 +22,7 @@ summary(object, ...)
 ## Value
 
 The per-group summaries stacked into one data frame: the columns of
-[`summary.net_permutation`](https://saqr.me/Nestimate/reference/summary.net_permutation.md)
+[`summary.net_permutation`](https://pak.dynasite.org/Nestimate/reference/summary.net_permutation.md)
 prefixed by a `group` column naming the group (or group pair) each row
 came from.
 

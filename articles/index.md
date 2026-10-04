@@ -3,37 +3,37 @@
 ### Articles
 
 - [Transition Matrix
-  Entropy](https://saqr.me/Nestimate/articles/transition-entropy.md):
+  Entropy](https://pak.dynasite.org/Nestimate/articles/transition-entropy.md):
 - [Network Estimation and Analysis with
-  Nestimate](https://saqr.me/Nestimate/articles/transition-networks.md):
+  Nestimate](https://pak.dynasite.org/Nestimate/articles/transition-networks.md):
 - [Sequence Pattern Comparison: Early vs Late Human-AI
-  Interactions](https://saqr.me/Nestimate/articles/sequence-comparison.md):
+  Interactions](https://pak.dynasite.org/Nestimate/articles/sequence-comparison.md):
 - [Sequence Plots: heatmap, index, and
-  distribution](https://saqr.me/Nestimate/articles/sequence-plots.md):
+  distribution](https://pak.dynasite.org/Nestimate/articles/sequence-plots.md):
 - [Sequence
-  Clustering](https://saqr.me/Nestimate/articles/clustering.md):
+  Clustering](https://pak.dynasite.org/Nestimate/articles/clustering.md):
 - [Markov Stability
-  Analysis](https://saqr.me/Nestimate/articles/markov-stability.md):
+  Analysis](https://pak.dynasite.org/Nestimate/articles/markov-stability.md):
 
 ### Tutorials
 
 Full tutorials
 
 - [Network Estimation and Visualization with Nestimate +
-  cograph](https://saqr.me/Nestimate/articles/cograph-tutorial-nestimate.md):
+  cograph](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.md):
 
   From raw sequence data to publication-ready statistical network plots
   — build, bootstrap, compare, cluster, and visualize using Nestimate
   and cograph together.
 
 - [Higher-Order Network Analysis with Simplicial
-  Complexes](https://saqr.me/Nestimate/articles/cograph-tutorial-simplicial.md):
+  Complexes](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.md):
 
 - [Tutorial: Model assessment for transition
-  networks](https://saqr.me/Nestimate/articles/tutorial_model_assessment.md):
+  networks](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.md):
 
 - [Nested sequences and the permutation
-  test](https://saqr.me/Nestimate/articles/permutation-nested-data.md):
+  test](https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.md):
 
 - [Comparing two networks with
-  compare_networks()](https://saqr.me/Nestimate/articles/compare-networks.md):
+  compare_networks()](https://pak.dynasite.org/Nestimate/articles/compare-networks.md):

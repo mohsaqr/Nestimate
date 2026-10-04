@@ -84,7 +84,7 @@ An object of class `c("net_mogen", "cograph_network")` with components:
 - count_matrices:
 
   List of the matching raw count matrices, same indexing; read by
-  [`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md).
+  [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md).
 
 - states:
 
@@ -114,7 +114,7 @@ An object of class `c("net_mogen", "cograph_network")` with components:
 
   `cograph_network` edge data.frame with integer `from`/`to` node
   indices and a numeric `weight`. The readable arrow-notation table is
-  [`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md).
+  [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md).
 
 - directed:
 

@@ -128,10 +128,10 @@ cooccurrence(
 A `netobject` (undirected, class `c("netobject", "cograph_network")`)
 with `method = "co_occurrence_fn"` and `$data = NULL` - this function
 does *not* go through
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
 so the result carries no source data and the data-resampling verbs
-([`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md))
+([`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md))
 cannot be run on it. The `$weights` matrix holds the similarity (or raw)
 co-occurrence values, one row/column per retained item. The `$params`
 list records `similarity`, `threshold`, `min_occur`, `diagonal`,
@@ -174,9 +174,9 @@ the American Society for Information Science and Technology*, 60(8),
 
 ## See also
 
-[`build_cna`](https://saqr.me/Nestimate/reference/build_cna.md) for
-sequence-positional co-occurrence via
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
+[`build_cna`](https://pak.dynasite.org/Nestimate/reference/build_cna.md)
+for sequence-positional co-occurrence via
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 
 ## Examples
 

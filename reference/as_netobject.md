@@ -45,7 +45,7 @@ under `$meta$psychnet` so nothing is lost in translation.
 
 ## See also
 
-[`validate_netobject`](https://saqr.me/Nestimate/reference/validate_netobject.md)
+[`validate_netobject`](https://pak.dynasite.org/Nestimate/reference/validate_netobject.md)
 
 ## Examples
 

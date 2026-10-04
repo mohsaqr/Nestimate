@@ -1,7 +1,7 @@
 # Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
 
 Closed-form alternative to
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
 for transition networks. Models the outgoing transitions from each state
 as a Dirichlet-Multinomial process: with a Jeffreys prior the posterior
 for state \\i\\ is \\\mathrm{Dirichlet}(c_i + \mathrm{prior})\\, so each
@@ -10,7 +10,7 @@ credible interval and stability decision are available analytically. No
 resampling, so it runs in microseconds.
 
 The return value has the same structure as
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
 (same slots and summary columns) and carries class
 `c("net_certainty", "net_bootstrap")`, so
 [`summary()`](https://rdrr.io/r/base/summary.html) and any code that
@@ -34,7 +34,7 @@ certainty(
 - x:
 
   A `netobject` from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   using a transition-probability method (`"relative"` / `"tna"`), or a
   `netobject_group`.
 
@@ -47,7 +47,7 @@ certainty(
 
   Numeric in (0,1). Tail level for credible intervals and the stability
   decision (default `0.05`, i.e. a 95% interval). Named to match
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md).
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md).
 
 - inference:
 
@@ -69,7 +69,7 @@ certainty(
 
 For a `netobject`: an object of class
 `c("net_certainty", "net_bootstrap")` with the same fields as
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md):
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md):
 `original`, `mean`, `sd`, `p_values`, `significant`, `ci_lower`,
 `ci_upper`, `cr_lower`, `cr_upper`, `summary`, `model`, `method`,
 `params`, `ci_level`, `inference`, `consistency_range`,
@@ -83,9 +83,9 @@ constituent network, of class
 ## Details
 
 Certainty (this function), stability
-([`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md))
+([`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md))
 and reliability
-([`reliability`](https://saqr.me/Nestimate/reference/network_reliability.md))
+([`reliability`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md))
 answer different questions about an edge: how precisely it is pinned
 down by the observed counts, whether it survives resampling the
 sequences, and whether it is consistent across split-halves. Certainty
@@ -100,9 +100,9 @@ Engagement: A Bayesian Differential Network Analysis. TNA Workshop 2026.
 
 ## See also
 
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
-[`bayes_compare`](https://saqr.me/Nestimate/reference/bayes_compare.md),
-[`network_reliability`](https://saqr.me/Nestimate/reference/network_reliability.md)
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+[`bayes_compare`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md),
+[`network_reliability`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
 
 ## Examples
 

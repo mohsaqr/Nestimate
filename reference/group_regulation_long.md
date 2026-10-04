@@ -46,8 +46,8 @@ package.
 
 ## See also
 
-[`learning_activities`](https://saqr.me/Nestimate/reference/learning_activities.md),
-[`srl_strategies`](https://saqr.me/Nestimate/reference/srl_strategies.md)
+[`learning_activities`](https://pak.dynasite.org/Nestimate/reference/learning_activities.md),
+[`srl_strategies`](https://pak.dynasite.org/Nestimate/reference/srl_strategies.md)
 
 ## Examples
 

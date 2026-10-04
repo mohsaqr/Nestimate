@@ -23,8 +23,9 @@ as_tna(x, ...)
 - x:
 
   An `mcml` object created by
-  [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
-  or [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md).
+  [`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
+  or
+  [`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md).
 
 - ...:
 
@@ -34,7 +35,7 @@ as_tna(x, ...)
 
   For the `mcml` method, names of clusters whose member states replace
   the collapsed cluster node in the `macro` layer (see
-  [`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)).
+  [`macro_network`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)).
   `NULL` (default) keeps the macro fully collapsed. The per-cluster
   layers are unaffected.
 
@@ -49,7 +50,7 @@ weights are already row-normalised, `"frequency"` otherwise).
 The `mcml` method returns that `netobject_group`, each layer keeping the
 data the corresponding `mcml` layer carried. With `expand`, its `macro`
 element is the mixed-resolution network of
-[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)
+[`macro_network`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
 rather than the fully collapsed one.
 
 The default method returns the input unchanged when it already inherits
@@ -84,13 +85,14 @@ never re-normalised, so a sink row needs no special handling. Inspect
 
 ## See also
 
-[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
-and [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md) to
-create the input object,
-[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)
+[`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
+and
+[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+to create the input object,
+[`macro_network`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
 for a macro layer with one cluster expanded,
-[`as_networks`](https://saqr.me/Nestimate/reference/as_networks.md) for
-the psychometric-network counterpart
+[`as_networks`](https://pak.dynasite.org/Nestimate/reference/as_networks.md)
+for the psychometric-network counterpart
 
 ## Examples
 

@@ -2,7 +2,7 @@
 
 Selects two members of a `netobject_group` (by index or name) and
 dispatches to
-[`compare_model.netobject()`](https://saqr.me/Nestimate/reference/compare_model.md).
+[`compare_model.netobject()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md).
 
 ## Usage
 
@@ -38,22 +38,22 @@ compare_model(
 - scaling:
 
   See
-  [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md).
+  [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md).
 
 - measures:
 
   See
-  [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md).
+  [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md).
 
 - network:
 
   See
-  [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md).
+  [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md).
 
 - ...:
 
   Passed to
-  [`compare_model.netobject()`](https://saqr.me/Nestimate/reference/compare_model.md).
+  [`compare_model.netobject()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md).
 
 ## Value
 
@@ -61,7 +61,7 @@ A `net_comparison` object.
 
 ## See also
 
-[`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md),
+[`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md),
 the N-way successor with tidy tables and a
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) that draws one
 view per call.

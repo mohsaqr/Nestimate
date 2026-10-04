@@ -2,7 +2,7 @@
 
 Replaces the names of the constituent networks in a `netobject_group`
 (or any object inheriting from it). Useful when
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 produced generic labels (e.g. `"Cluster 1"`, `"Cluster 2"`) and you want
 to substitute meaningful ones (e.g. `"High engagement"`,
 `"Low engagement"`).

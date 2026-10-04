@@ -2,14 +2,14 @@
 
 Shows what treating nested sequences as independent would cost. The
 comparison is run twice on the same data: once with the ordinary
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md)
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
 test, which shuffles single sequences, and once with `actor`, which
 shuffles whole actors (the persons whose sessions they are, or the teams
 of students). The result places the two side by side, with the ICC and
 design effect that explain any difference between them. See the sections
 *Nested data and actor* and *ICC and design effect* of
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md) for
-what these quantities mean.
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+for what these quantities mean.
 
 ## Usage
 
@@ -41,7 +41,7 @@ permutation_diagnostics(
 
   Character. Column identifying the actor each sequence belongs to, as
   in
-  [`permutation`](https://saqr.me/Nestimate/reference/permutation.md).
+  [`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
 
 - iter:
 
@@ -84,7 +84,7 @@ With `level = "overall"`, one row per compared pair:
 
   How alike the sequences of one actor are, with a 95% interval; as
   printed by
-  [`permutation`](https://saqr.me/Nestimate/reference/permutation.md).
+  [`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
   `NA` interval with fewer than 3 actors.
 
 - deff_edges:
@@ -123,7 +123,7 @@ under either null), `p_sequence`, `p_actor`, `changed`.
 
 The ICC and design effects are those of the actor-level run (see the
 `clustering` element of
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md));
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md));
 the p-values and significance counts compare it with a separate ordinary
 run. Errors with class `nestimate_actor_unsupported` for association
 networks and `nestimate_actor_missing` when `actor` is not a column of
@@ -160,7 +160,7 @@ Computation and Simulation*, 73(2), 85-113.
 
 ## See also
 
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md)
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
 
 ## Examples
 

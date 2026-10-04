@@ -63,7 +63,7 @@ plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
 - format:
 
   Input format passed through to
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md);
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md);
   `"auto"` (default) treats the data as wide when `action` is not a
   column.
 
@@ -112,8 +112,8 @@ An object of class `"magnitude_difference"`: a list with `$edges`
 
 ## See also
 
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
-[`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
 
 ## Examples
 

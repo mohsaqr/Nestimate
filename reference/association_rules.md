@@ -140,8 +140,8 @@ SIGMOD*, 255–264. (lift and conviction)
 
 ## See also
 
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`predict_links`](https://saqr.me/Nestimate/reference/predict_links.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`predict_links`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
 
 ## Examples
 

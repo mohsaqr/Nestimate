@@ -1,6 +1,6 @@
 # Print, Plot, and Convert a state_freq Object
 
-[`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+[`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
 returns a `state_freq` object holding both the rendered chart and the
 tidy frequency table. [`print()`](https://rdrr.io/r/base/print.html)
 shows the table in the console *and* draws the chart on the active

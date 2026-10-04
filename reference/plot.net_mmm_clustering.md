@@ -2,14 +2,14 @@
 
 Plot routines for the MMM clustering metadata attached to the
 `netobject_group` that
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 materializes from a
-[`cluster_mmm`](https://saqr.me/Nestimate/reference/cluster_mmm.md) fit
-(or that
-[`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
+[`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+fit (or that
+[`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
 returns directly with `cluster_by = "mmm"`). Mirrors the type-driven
 surface of
-[`plot.net_clustering`](https://saqr.me/Nestimate/reference/plot.net_clustering.md)
+[`plot.net_clustering`](https://pak.dynasite.org/Nestimate/reference/plot.net_clustering.md)
 but covers only the metrics the EM fit produces – there is no distance
 matrix on an MMM clustering, so `"silhouette"` / `"mds"` / `"heatmap"`
 aren't defined here and the dispatcher raises a clear error if you ask
@@ -38,7 +38,7 @@ plot(
   Character. One of `"posterior"` (default; histogram of max posterior
   probability per sequence, coloured by cluster), `"covariates"` or its
   alias `"predictors"` (covariate forest plot when
-  [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
   was run with `covariates`).
 
 - combined:

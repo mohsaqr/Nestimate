@@ -104,9 +104,9 @@ ed. Wiley.
 
 ## See also
 
-[`transition_entropy`](https://saqr.me/Nestimate/reference/transition_entropy.md)
+[`transition_entropy`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
 for the whole-process snapshot,
-[`entropy_bayes`](https://saqr.me/Nestimate/reference/entropy_bayes.md)
+[`entropy_bayes`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
 for credible intervals on it.
 
 ## Examples

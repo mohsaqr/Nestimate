@@ -36,9 +36,9 @@ the transition matrix and warns.
 
 ## See also
 
-[`extract_transition_matrix`](https://saqr.me/Nestimate/reference/extract_transition_matrix.md)
+[`extract_transition_matrix`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
 for extracting the transition matrix,
-[`extract_edges`](https://saqr.me/Nestimate/reference/extract_edges.md)
+[`extract_edges`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
 for extracting an edge list.
 
 ## Examples

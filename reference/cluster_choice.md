@@ -2,8 +2,8 @@
 
 One-call sweep across any combination of k, dissimilarity metric, and
 clustering algorithm for distance-based sequence clustering. Mirrors
-[`compare_mmm`](https://saqr.me/Nestimate/reference/compare_mmm.md) for
-model-based clustering: returns a data frame with one row per swept
+[`compare_mmm`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
+for model-based clustering: returns a data frame with one row per swept
 configuration, a `best` marker on the silhouette-max row in the print
 method, and a [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
 that adapts to the swept axes.
@@ -25,7 +25,7 @@ cluster_choice(
 - data:
 
   Sequence data (data frame or matrix) – forwarded to
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md).
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md).
 
 - k:
 
@@ -49,7 +49,7 @@ cluster_choice(
 - ...:
 
   Other arguments forwarded to
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   (`weighted`, `lambda`, `q`, `p`, `seed`, `na_syms`, `covariates`,
   `estimator`). Note: `weighted = TRUE` only works with
   `dissimilarity = "hamming"` and is rejected up-front when sweeping
@@ -69,7 +69,7 @@ dissimilarity, method) combination and columns:
   Overall average silhouette width (from
   [`cluster::silhouette`](https://rdrr.io/pkg/cluster/man/silhouette.html),
   computed inside
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)).
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)).
 
 - mean_within_dist:
 
@@ -82,10 +82,10 @@ dissimilarity, method) combination and columns:
 
 ## See also
 
-[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md),
-[`compare_mmm`](https://saqr.me/Nestimate/reference/compare_mmm.md) for
-the model-based equivalent,
-[`cluster_diagnostics`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
+[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+[`compare_mmm`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
+for the model-based equivalent,
+[`cluster_diagnostics`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
 for the post-fit diagnostic surface on a single clustering.
 
 ## Examples

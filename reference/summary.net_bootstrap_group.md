@@ -22,7 +22,7 @@ summary(object, ...)
 ## Value
 
 The per-group summaries stacked into one data frame: the columns of
-[`summary.net_bootstrap`](https://saqr.me/Nestimate/reference/summary.net_bootstrap.md)
+[`summary.net_bootstrap`](https://pak.dynasite.org/Nestimate/reference/summary.net_bootstrap.md)
 prefixed by a `group` column naming the network each row came from.
 
 ## Examples

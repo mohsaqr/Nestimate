@@ -3,7 +3,7 @@
 Builds a Multi-Cluster Multi-Level (MCML) model from raw transition data
 (edge lists or sequences) by recoding node labels to cluster labels and
 counting actual transitions. Unlike
-[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
+[`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
 which aggregates a pre-computed weight matrix, this function works from
 the original transition data to produce the TRUE Markov chain over
 cluster states.
@@ -55,13 +55,13 @@ build_mcml(
 
   :   If `x$data` is non-NULL, uses sequence path on the raw data.
       Otherwise falls back to
-      [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
+      [`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md).
 
   netobject
 
   :   If `x$data` is non-NULL, detects edge list vs sequence data.
       Otherwise falls back to
-      [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
+      [`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md).
 
   mcml
 
@@ -72,7 +72,7 @@ build_mcml(
   square numeric matrix
 
   :   Falls back to
-      [`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md).
+      [`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md).
 
   non-square or character matrix
 
@@ -170,9 +170,9 @@ build_mcml(
 
   Long-format event-log shortcut. When `action` is supplied on a
   data.frame input, the data is passed through
-  [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) to
-  derive a wide sequence, which is then routed to the existing sequence
-  path. Behaves identically to
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  to derive a wide sequence, which is then routed to the existing
+  sequence path. Behaves identically to
   `prepare(...) |> build_network() |> build_mcml()`.
 
 - exclude:
@@ -190,7 +190,7 @@ build_mcml(
   quantile of sequence lengths (`trim = 0.95` keeps the shortest 95%); a
   value `>= 1` is an absolute cut (`trim = 10` keeps the first 10 time
   points). Same semantics as
-  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md)'s
+  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)'s
   `trim`.
 
 - end:
@@ -241,7 +241,7 @@ build_mcml(
   `nestimate_mcml_no_sequences` when the `mcml` was built from a matrix,
   from an edge list (only within-cluster edges are kept), or with
   `compute_within = FALSE`.
-  [`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   accepts the same two arguments as display options: its `combine` draws
   exactly what it draws for `build_mcml(x, combine = )`, while its
   `expand` opens clusters in the Summary panel only and keeps one panel
@@ -250,28 +250,28 @@ build_mcml(
 ## Value
 
 An `mcml` object with the same layout as the return value of
-[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
+[`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
 (`macro`, `clusters`, `cluster_members`, `edges`, `meta`). On the
 sequence and edge-list paths `meta$source` is `"transitions"`,
 `meta$type` records the `type` post-processing, and `edges` is a tidy
 data frame with one row per observed node-level transition and columns
 `from`, `to`, `weight`, `cluster_from`, `cluster_to`, `type`
 (`"within"`/`"between"`). Matrix input falls through to
-[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md),
+[`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md),
 so `meta$source` is `"matrix"` and `edges` is `NULL`. Works with
 [`print()`](https://rdrr.io/r/base/print.html),
 [`summary()`](https://rdrr.io/r/base/summary.html),
-[`as_tna`](https://saqr.me/Nestimate/reference/as_tna.md),
-[`as_htna`](https://saqr.me/Nestimate/reference/as_htna.md) and
-[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md).
+[`as_tna`](https://pak.dynasite.org/Nestimate/reference/as_tna.md),
+[`as_htna`](https://pak.dynasite.org/Nestimate/reference/as_htna.md) and
+[`macro_network`](https://pak.dynasite.org/Nestimate/reference/macro_network.md).
 
 ## See also
 
-[`cluster_summary`](https://saqr.me/Nestimate/reference/cluster_summary.md)
+[`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
 for matrix-based aggregation,
-[`as_tna`](https://saqr.me/Nestimate/reference/as_tna.md) to promote the
-layers to netobjects,
-[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)
+[`as_tna`](https://pak.dynasite.org/Nestimate/reference/as_tna.md) to
+promote the layers to netobjects,
+[`macro_network`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
 for the cluster-level network with one cluster expanded
 
 ## Examples

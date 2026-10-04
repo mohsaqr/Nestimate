@@ -2,9 +2,9 @@
 
 Attaches a palette to the object so every figure drawn from it uses the
 same colours:
-[`sequence_plot`](https://saqr.me/Nestimate/reference/sequence_plot.md),
-[`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md),
-[`plot_state_frequencies`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+[`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md),
+[`distribution_plot`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md),
+[`plot_state_frequencies`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
 and
 [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
 
@@ -61,8 +61,8 @@ honours it. The class is unchanged.
 
 ## See also
 
-[`state_colors`](https://saqr.me/Nestimate/reference/state_colors.md) to
-read the resolved palette back.
+[`state_colors`](https://pak.dynasite.org/Nestimate/reference/state_colors.md)
+to read the resolved palette back.
 
 ## Examples
 

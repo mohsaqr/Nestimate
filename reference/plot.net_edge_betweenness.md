@@ -1,7 +1,7 @@
 # Plot edge-betweenness scores
 
 Draws the edges of a
-[`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+[`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
 network ranked by their betweenness, as a horizontal bar chart. This is
 the tidy, cograph-free companion to the node-link diagram: render the
 diagram with `cograph::splot(eb)` and the ranking with `plot(eb)`.
@@ -18,7 +18,7 @@ plot(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 - x:
 
   A `net_edge_betweenness` network from
-  [`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md).
+  [`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md).
 
 - style:
 

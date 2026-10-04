@@ -1,7 +1,7 @@
 # Item Diagnostics From a Psychometric MCML Fit
 
 The item table behind
-[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md):
+[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md):
 one row per node, reporting how strongly the item connects to its own
 cluster, the weight it carries into that cluster's composite, and
 whether it connects more strongly to some other cluster.
@@ -24,7 +24,7 @@ item_loadings(x, misfit = NULL, ...)
 - x:
 
   An `mcml_pc` object from
-  [`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md).
+  [`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md).
 
 - ...:
 
@@ -48,12 +48,12 @@ cluster that is), and `misfit` (logical).
 
 ## See also
 
-[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
 to create the fit,
-[`loading_stability`](https://saqr.me/Nestimate/reference/loading_stability.md)
+[`loading_stability`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
 for the weights' sampling uncertainty,
-[`composites`](https://saqr.me/Nestimate/reference/composites.md) for
-the scores these weights produce.
+[`composites`](https://pak.dynasite.org/Nestimate/reference/composites.md)
+for the scores these weights produce.
 
 ## Examples
 

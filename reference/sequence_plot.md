@@ -10,7 +10,7 @@ Single entry point for three categorical-sequence visualisations.
   plus a `ncol` x `nrow` facet grid.
 
 - `type = "distribution"`: dispatches to
-  [`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md).
+  [`distribution_plot`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md).
 
 ## Usage
 
@@ -80,23 +80,23 @@ sequence_plot(
   net_clustering
 
   :   From
-      [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md).
+      [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md).
       Uses `$data`, `$assignments` for grouping, and `$distance` for
       dendrogram.
 
   netobject_group
 
   :   From
-      [`cluster_network`](https://saqr.me/Nestimate/reference/cluster_network.md)
+      [`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
       or
-      [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+      [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
       on a clustering. Extracts data and assignments from
       `attr(, "clustering")`.
 
   net_mmm
 
   :   From
-      [`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md).
+      [`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md).
       Uses `$data` (falling back to `$models[[1]]$data`) and
       `$assignments`.
 
@@ -107,7 +107,7 @@ sequence_plot(
   mcml
 
   :   From
-      [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md)
+      [`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
       (built from sequences). Produces a **multichannel** plot: one
       panel per cluster plus a macro `Summary` panel.
       `type = "heatmap"`/`"index"` draw the carpet (each channel's own
@@ -125,7 +125,7 @@ sequence_plot(
 
   Row-ordering strategy for heatmap / within-panel for index. One of
   `"lcs"` (default), `"frequency"`, `"start"`, `"end"`, or any
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   distance (`"hamming"`, `"osa"`, `"lv"`, `"dl"`, `"qgram"`, `"cosine"`,
   `"jaccard"`, `"jw"`).
 
@@ -142,7 +142,7 @@ sequence_plot(
 - scale, geom, na:
 
   Passed to
-  [`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+  [`distribution_plot`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
   when `type = "distribution"`. For an `mcml` (`type = "distribution"`),
   `na = FALSE` drops the `NA` (ended) band and shows every time point as
   shares of the sequences still running there, so each panel stacks to
@@ -376,7 +376,7 @@ invisibly, a list whose shape depends on `type`:
 - `"distribution"`:
 
   Whatever
-  [`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+  [`distribution_plot`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
   returns: `counts`, `proportions`, `levels`, `palette`, `groups`.
 
 ## Multichannel view of an mcml
@@ -422,9 +422,9 @@ the time axis for every panel at once.
 
 ## See also
 
-[`distribution_plot`](https://saqr.me/Nestimate/reference/distribution_plot.md),
-[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md),
-[`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md)
+[`distribution_plot`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md),
+[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
 
 ## Examples
 

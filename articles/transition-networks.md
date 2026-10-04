@@ -8,7 +8,7 @@ weighted directed networks using stochastic Markov models; and
 **Psychological Network Analysis (PNA)**, which estimates the
 conditional dependency structure among variables using regularized
 partial correlations and graphical models. Both paradigms share the same
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 interface, the same validation engine (bootstrap, permutation,
 centrality stability), and the same output format — enabling researchers
 to apply a consistent analytic workflow across fundamentally different
@@ -86,7 +86,7 @@ downstream covariate analysis.
 ### Building Networks
 
 Building networks in Nestimate is a single step:
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 is the universal entry point for all network estimation. It accepts
 long-format event data directly with three key parameters:
 
@@ -95,13 +95,13 @@ long-format event data directly with three key parameters:
 - **`time`**: the column providing temporal ordering
 
 Under the hood,
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 automatically converts the long-format event log into wide-format
 sequences, handling chronological ordering, session detection, and
 metadata preservation. You can also call
-[`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) directly
-to inspect or reuse the processed data before passing it to
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
+[`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+directly to inspect or reuse the processed data before passing it to
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 
 #### Transition Network (TNA)
 
@@ -263,7 +263,7 @@ print(net_atna)
 
 When the data is binary (0/1) — as is common in learning analytics where
 activities are coded as present or absent within time windows —
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 automatically detects the format and uses co-occurrence analysis. The
 resulting undirected network captures which events tend to co-occur.
 
@@ -287,9 +287,9 @@ print(net)
 
 #### Window-based TNA (WTNA)
 
-The [`wtna()`](https://saqr.me/Nestimate/reference/wtna.md) function
-computes networks from one-hot encoded (binary) data using temporal
-windowing. It supports three modes:
+The [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
+function computes networks from one-hot encoded (binary) data using
+temporal windowing. It supports three modes:
 
 - **`"transition"`**: directed transitions between consecutive windows
 - **`"cooccurrence"`**: undirected co-occurrence within windows
@@ -449,7 +449,7 @@ network where groups of sequences are similarly interconnected and each
 exhibits a distinct transition pattern with its own set of transition
 probabilities. Identifying clusters captures the dynamics, revealing
 typical behavioral strategies that learners frequently adopt.
-[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 computes pairwise dissimilarities between sequences and partitions them
 into `k` groups, then builds a separate network for each cluster
 (López-Pernas et al., 2025).
@@ -492,7 +492,7 @@ perm
 
 ### Post-hoc Covariate Analysis
 
-[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 supports post-hoc covariate analysis: covariates do not influence the
 clustering but are analyzed after the fact to characterize who ends up
 in which cluster. This is the appropriate approach when the clustering
@@ -570,7 +570,7 @@ variables (Saqr et al., 2024).
 
 `Nestimate` supports three estimation methods for psychological
 networks, all accessed through the same
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 interface:
 
 - **Correlation networks** (`method = "cor"`) estimate pairwise Pearson

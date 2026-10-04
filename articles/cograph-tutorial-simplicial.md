@@ -196,7 +196,7 @@ reveals signal BIC is too parsimonious to flag.
 
 ### Second-order transition matrix
 
-[`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md)
+[`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
 extracts the transitions at a given order, showing which two-step
 contexts lead to different outcomes:
 
@@ -235,7 +235,7 @@ the data, but its successor distribution is spread out.
 
 [`plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html)
 accepts the
-[`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md)
+[`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
 data.frame directly. It takes the top pathways by count and renders each
 as a smooth blob over a shared circular layout, with the path’s
 intermediate states in blue and the target state in red. Repeated states
@@ -253,7 +253,7 @@ plot_simplicial(net, pathways = mt, max_pathways = 6,
 
 To zoom in on the single most frequent pathway, set `max_pathways = 1`
 and let the data.frame drive the selection. Because
-[`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md)
+[`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
 returns rows already sorted by count, `max_pathways = N` always picks
 the top `N`:
 
@@ -268,7 +268,7 @@ plot_simplicial(net, pathways = mt, max_pathways = 1)
 
 MOGen uses information criteria. A complementary, principled approach is
 the **permutation-exact LRT** in
-[`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md):
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md):
 at each order $`k`$, it tests $`H_0`$: “process is order $`(k-1)`$”
 against $`H_1`$: “process is order $`k`$” by reframing as a
 conditional-independence test on $`(k+1)`$-grams. The null distribution
@@ -323,7 +323,7 @@ freedom for the order-3 test alone), but the data does pay the cost.
 
 Order-selection answers a global question. **Transition entropy**
 answers a per-state question: how predictable is each state’s next move?
-[`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md)
+[`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
 computes the Shannon row-entropy `H(P[i, ]) = -sum_j P[i,j] log P[i,j]`
 for every state, the chain-level entropy rate
 `h(P) = sum_i pi_i H(P[i, ])` (the Shannon-McMillan-Breiman per-step
@@ -959,16 +959,16 @@ verify_simplicial(net$weights, threshold = 0.05)
 
 | Step | Method | Function | What it reveals |
 |----|----|----|----|
-| 1 | **TNA** | [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md) | First-order transition structure |
-| 2 | **MOGen** | [`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md) | Whether higher-order is needed (information criteria) |
-| 3 | **Markov order test** | [`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md) | Whether higher-order is needed (permutation-exact LRT) |
-| 4 | **Transition entropy** | [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md) | Per-state predictability and chain entropy rate |
-| 5 | **HON** | [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md) | Where sequential context changes transitions |
-| 6 | **HYPA** | [`build_hypa()`](https://saqr.me/Nestimate/reference/build_hypa.md) | Which paths are anomalously frequent or rare |
-| 7 | **Visualization** | [`plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html) | Blob diagrams of pathways (also accepts [`mogen_transitions()`](https://saqr.me/Nestimate/reference/mogen_transitions.md) data.frames) |
-| 8 | **Simplicial** | [`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md) | Topological structure |
-| 9 | **Persistence** | [`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md) | Robustness across scales |
-| 10 | **Q-analysis** | [`q_analysis()`](https://saqr.me/Nestimate/reference/q_analysis.md) | Multi-level connectivity |
+| 1 | **TNA** | [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md) | First-order transition structure |
+| 2 | **MOGen** | [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md) | Whether higher-order is needed (information criteria) |
+| 3 | **Markov order test** | [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md) | Whether higher-order is needed (permutation-exact LRT) |
+| 4 | **Transition entropy** | [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md) | Per-state predictability and chain entropy rate |
+| 5 | **HON** | [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md) | Where sequential context changes transitions |
+| 6 | **HYPA** | [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md) | Which paths are anomalously frequent or rare |
+| 7 | **Visualization** | [`plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html) | Blob diagrams of pathways (also accepts [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md) data.frames) |
+| 8 | **Simplicial** | [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md) | Topological structure |
+| 9 | **Persistence** | [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md) | Robustness across scales |
+| 10 | **Q-analysis** | [`q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md) | Multi-level connectivity |
 
 The key progression:
 

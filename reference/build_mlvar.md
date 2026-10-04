@@ -65,11 +65,11 @@ stored as attributes. Each element is a standard
 `c("netobject", "cograph_network")` weight-matrix wrapper (no raw
 `$data`), so [`print()`](https://rdrr.io/r/base/print.html),
 [`summary()`](https://rdrr.io/r/base/summary.html),
-[`coefs()`](https://saqr.me/Nestimate/reference/coefs.md), and
+[`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md), and
 `cograph::splot(fit$temporal)` work directly. See **Dispatch
 limitation** for the verbs that do *not* work on this object
 ([`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
 `centrality()`, reliability/stability). Structure:
 
 - `fit$temporal`:
@@ -91,7 +91,7 @@ limitation** for the verbs that do *not* work on this object
   `method = "mlvar_between"`, `directed = FALSE`.
 
 - `attr(fit, "coefs")` /
-  [`coefs()`](https://saqr.me/Nestimate/reference/coefs.md):
+  [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md):
 
   Tidy `data.frame` with one row per `(outcome, predictor)` pair and
   columns `outcome`, `predictor`, `beta`, `se`, `t`, `p`, `ci_lower`,
@@ -162,20 +162,20 @@ method for `net_mlvar` - plot a single constituent
 (`cograph::splot(fit$temporal)`) instead. The three constituents are
 matrix-wrapped and carry no `$data`, so the data-resampling and
 data-reading verbs do **not** work on the fitted object or its parts:
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
-[`certainty()`](https://saqr.me/Nestimate/reference/certainty.md),
-[`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md),
-[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+[`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md),
+[`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md),
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
 and `centrality()` all need the source panel. Extract a constituent and
 rebuild it through
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 if you need those. Use
-[`coefs()`](https://saqr.me/Nestimate/reference/coefs.md) for the tidy
-model output.
+[`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md) for
+the tidy model output.
 
 ## See also
 
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

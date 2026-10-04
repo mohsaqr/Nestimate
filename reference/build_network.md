@@ -147,8 +147,8 @@ build_network(
   Character. Olson time zone used to interpret naive timestamps in
   long-format data (offset-bearing timestamps such as `...Z` or `+02:00`
   are converted from their offset). Passed to
-  [`prepare`](https://saqr.me/Nestimate/reference/prepare.md). Default:
-  `"UTC"`.
+  [`prepare`](https://pak.dynasite.org/Nestimate/reference/prepare.md).
+  Default: `"UTC"`.
 
 - predictability:
 
@@ -190,7 +190,7 @@ build_network(
   Boundary marker placed in the single cell after each sequence's last
   observed (non-`NA`) state, as an explicit terminal state (a pure sink:
   no outgoing edges, no self-loop – distinct from
-  [`mark_terminal_state`](https://saqr.me/Nestimate/reference/mark_terminal_state.md),
+  [`mark_terminal_state`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md),
   which fills all trailing NAs into an absorbing state). `FALSE`
   (default) adds nothing; `TRUE` uses the label `"End"`; a single string
   uses that string as the label. Same method restriction as `start`.
@@ -342,9 +342,9 @@ tests.
 
 ## See also
 
-[`register_estimator`](https://saqr.me/Nestimate/reference/register_estimator.md),
-[`list_estimators`](https://saqr.me/Nestimate/reference/list_estimators.md),
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+[`register_estimator`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md),
+[`list_estimators`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md),
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
 
 ## Examples
 

@@ -72,7 +72,7 @@ is defined using a distance metric that quantifies how different two
 sequences are.
 
 To implement this method using `Nestimate`, we can use the
-[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 function, which takes either raw sequence data or a network object such
 as the `net` object that we estimated (which also contains the original
 sequences in `$data`):
@@ -253,7 +253,7 @@ clust_complete$silhouette
 
 ### Choosing k, dissimilarity, and method
 
-[`cluster_choice()`](https://saqr.me/Nestimate/reference/cluster_choice.md)
+[`cluster_choice()`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
 sweeps any combination of `k`, `dissimilarity`, and `method` in a single
 call and returns one row per configuration with silhouette, mean
 within-cluster distance, and cluster-size balance. Pass a vector to any
@@ -362,7 +362,7 @@ summary(clust)
 ### Validating the choice with `cluster_diagnostics()`
 
 Once a clustering is fit,
-[`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
+[`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
 returns a uniform diagnostic surface that works for both distance-based
 fits (`net_clustering`) and model-based fits (`net_mmm`,
 `net_mmm_clustering`). The print method shows per-cluster size, mean
@@ -401,8 +401,8 @@ sequences are assigned to the cluster whose transition structure best
 matches their observed behavior.
 
 To implement MMM, we can use
-[`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md), which
-returns a `net_mmm` object with full model details:
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md),
+which returns a `net_mmm` object with full model details:
 
 ``` r
 
@@ -436,7 +436,7 @@ summary(mmm_fit)
 The `net_mmm` object contains posterior probabilities, model fit
 statistics (BIC, AIC, ICL), and per-cluster transition matrices in
 `$models`.
-[`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
+[`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
 works on it too, with MMM-specific columns (mixing share, average
 posterior probability, per-cluster classification error):
 
@@ -479,20 +479,20 @@ The result is a `netobject_group`: a list of `netobject`s sharing the
 same node set, one per cluster. Every group network supports the same
 downstream operations as a single `netobject` — plotting via
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html), resampling via
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
 group-level edge comparison via
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md).
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
 
 Two paths produce the same `netobject_group`:
 
 1.  **Manual** — fit clustering with
-    [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+    [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
     or
-    [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md),
+    [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md),
     then pass the fitted clustering to
-    [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
+    [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 2.  **Shortcut** —
-    [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+    [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
     collapses fitting and network materialization into one call for
     either distance or MMM clustering.
 
@@ -502,18 +502,18 @@ sequence’s transitions.
 
 | Function | Clustering method | Returns |
 |----|----|----|
-| [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md) | Distance-based (Hamming, LCS, etc.) | `net_clustering` |
-| [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md) | Model-based (MMM) | `net_mmm` |
-| [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md) | Distance-based or MMM | `netobject_group` |
+| [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md) | Distance-based (Hamming, LCS, etc.) | `net_clustering` |
+| [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md) | Model-based (MMM) | `net_mmm` |
+| [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md) | Distance-based or MMM | `netobject_group` |
 
 ### From `build_clusters()` to per-cluster networks
 
-[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 returns clustering only; pass it to
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 to get one network per cluster as a `netobject_group` (group networks).
 The shortcut
-[`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+[`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
 (below) does both steps in one call.
 
 ``` r
@@ -539,8 +539,8 @@ networks](clustering_files/figure-html/cluster-networks-plot-1.png)
 ### Shortcut: `cluster_network()` (distance-based)
 
 Combines
-[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md) +
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md) +
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 into one call.
 
 ``` r
@@ -558,9 +558,9 @@ grp_dist
 
 ### Fitted MMM clustering and its networks
 
-[`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+[`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
 returns the fitted clustering object. Passing that fit to
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 materializes one transition network per fitted cluster.
 
 ``` r
@@ -575,7 +575,7 @@ grp_mmm
 #>   Cluster 2  3      9      [0.144, 0.647]  334 (63.5%)
 ```
 
-[`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md)
+[`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
 works directly on either fitted clustering object:
 
 ``` r

@@ -23,7 +23,7 @@ achievers
     ##   High   9      76     [0.001, 0.576]
     ##   Low    9      75     [0.000, 0.462]
 
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 builds one transition network per achievement level from the students’
 action sequences. Both networks have the same nine regulation actions
 and 75 to 76 non-zero transitions.
@@ -44,7 +44,7 @@ permutation(achievers, iter = 1000, seed = 1)
     ##   Nodes: 9  |  Edges tested: 78  |  Significant: 42
     ##   Global test (networks differ overall?): M = 2.612 (p = 0.000999)  |  S = 0.210 (p = 0.000999)
 
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
 pools the 2,000 sequences, reassigns them to High and Low 1,000 times,
 and compares the observed differences with the reassigned ones. Two
 kinds of result are reported. The edge tests ask, for each transition,
@@ -116,7 +116,7 @@ An ICC of 0 means that members of the same unit are no more alike than
 members of different units; an ICC of 1 means that all members of a unit
 are identical and all variation lies between units. A value in between
 is the proportion of variation due to the unit. In
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
 the ICC is computed for each transition: for every student, the share of
 their transitions that is, for example, `plan` to `monitor`; the one-way
 ANOVA ICC of that share across teams is computed within High and within
@@ -130,7 +130,7 @@ nested design to its variance had the units been sampled independently
 whole teams move, divided by the variance when single students move. A
 value of 1 means both reassignments give the same chance variation.
 
-[`permutation_diagnostics()`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md)
+[`permutation_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md)
 runs the ordinary and the team-level test on the same data and reports
 both with these two quantities, one row per compared pair:
 
@@ -223,14 +223,14 @@ High–Low difference does not depend on the nesting of students in teams.
 
 ## When to use which
 
-- [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md):
+- [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md):
   one sequence per student, with no grouping above the student.
 - `permutation(actor = )`: several sequences per student, or students in
   teams, classes or other units. It handles units in one group, units in
   both groups, and mixtures, and reports the ICC and design effect.
 - `paired = TRUE`: exactly one sequence per student in each of two
   conditions.
-- [`permutation_diagnostics()`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md):
+- [`permutation_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md):
   to show next to each other what the ordinary and the team-level test
   conclude.
 - `actor` applies to transition networks (`relative`, `frequency`,

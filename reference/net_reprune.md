@@ -1,7 +1,7 @@
 # Re-apply Network Pruning
 
 Re-applies a previously computed pruning that was undone by
-[`net_deprune`](https://saqr.me/Nestimate/reference/net_deprune.md),
+[`net_deprune`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md),
 without recomputation.
 
 ## Usage
@@ -36,8 +36,8 @@ marked active.
 
 ## See also
 
-[`net_prune`](https://saqr.me/Nestimate/reference/net_prune.md),
-[`net_deprune`](https://saqr.me/Nestimate/reference/net_deprune.md)
+[`net_prune`](https://pak.dynasite.org/Nestimate/reference/net_prune.md),
+[`net_deprune`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md)
 
 ## Examples
 

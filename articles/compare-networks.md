@@ -176,7 +176,7 @@ tail(global_differences(nested, digits = 3), 5)
 Students are nested in teams, and the achievement level is given per
 team. With `actor = "Group"`, the permutation test reassigns whole teams
 instead of single students, and
-[`global_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md)
+[`global_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
 gains three `Nesting` rows. The ICC is −0.002, which indicates little
 evidence of a nesting effect; the design effect is 1.01 for the
 transitions and 1.17 for M. The networks still differ overall (M = 2.61,

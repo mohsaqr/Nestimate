@@ -21,7 +21,7 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 
   A `net_clustering`, `net_mmm`, `netobject_group` (with
   `attr(, "clustering")` attached by
-  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+  [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
   or `build_network(net_mmm)`), or `net_mmm_clustering`.
 
 - ...:
@@ -81,10 +81,10 @@ The returned object carries:
 
 ## See also
 
-[`print.net_cluster_diagnostics`](https://saqr.me/Nestimate/reference/print.net_cluster_diagnostics.md),
-[`plot.net_cluster_diagnostics`](https://saqr.me/Nestimate/reference/plot.net_cluster_diagnostics.md),
-[`compare_mmm`](https://saqr.me/Nestimate/reference/compare_mmm.md) for
-k-sweep model selection (MMM only).
+[`print.net_cluster_diagnostics`](https://pak.dynasite.org/Nestimate/reference/print.net_cluster_diagnostics.md),
+[`plot.net_cluster_diagnostics`](https://pak.dynasite.org/Nestimate/reference/plot.net_cluster_diagnostics.md),
+[`compare_mmm`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
+for k-sweep model selection (MMM only).
 
 ## Examples
 

@@ -3,7 +3,7 @@
 Returns `x - y` as a `netdifference` object: the element-wise difference
 of the two weight matrices. Works on any pair of networks; for an
 edge-betweenness difference, subtract two
-[`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+[`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
 results. Draw the signed difference network with `cograph::splot(d)` or
 `cograph::plot_difference(d)`; cograph handles the colouring and node
 palette.

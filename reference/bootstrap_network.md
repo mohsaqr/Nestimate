@@ -1,7 +1,7 @@
 # Bootstrap a Network Estimate
 
 Non-parametric bootstrap for any network estimated by
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 Works with all built-in methods (transition and association) as well as
 custom registered estimators.
 
@@ -10,7 +10,7 @@ uses a fast pre-computation strategy: per-sequence count matrices are
 computed once, and each bootstrap iteration only resamples sequences via
 `colSums` (C-level) plus lightweight post-processing. Data must be in
 wide format for transition bootstrap; use
-[`convert_sequence_format`](https://saqr.me/Nestimate/reference/convert_sequence_format.md)
+[`convert_sequence_format`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)
 to convert long-format data first.
 
 For association methods (`"cor"`, `"pcor"`, `"glasso"`, and custom
@@ -43,7 +43,7 @@ bootstrap_network(
 - x:
 
   A `netobject` from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
   The data, method, params, scaling, threshold, and level are all
   extracted from this object. A `cograph_network` is coerced first; a
   `netobject_group` or `mcml` bootstraps every constituent network, and
@@ -197,13 +197,14 @@ With `actor`, the result also reports the nesting effect. The ICC is the
 proportion of the total variance that lies between actors (Shrout &
 Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
 effect. It is computed as in
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md). The
-design effect is the ratio of the variance under the nested design to
-the variance had the sequences been sampled independently (Kish, 1965):
-here, the variance of the edge weights over actor-level replicates
-divided by their variance over sequence-level replicates drawn in the
-same run, reported as the median over edges. `actor` is available for
-transition networks (`"relative"`, `"frequency"`, `"co_occurrence"`).
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
+The design effect is the ratio of the variance under the nested design
+to the variance had the sequences been sampled independently (Kish,
+1965): here, the variance of the edge weights over actor-level
+replicates divided by their variance over sequence-level replicates
+drawn in the same run, reported as the median over edges. `actor` is
+available for transition networks (`"relative"`, `"frequency"`,
+`"co_occurrence"`).
 
 ## References
 
@@ -220,11 +221,12 @@ assessing rater reliability. *Psychological Bulletin*, 86(2), 420-428.
 
 ## See also
 
-[`certainty`](https://saqr.me/Nestimate/reference/certainty.md) for the
-closed-form Bayesian counterpart (same result layout, no resampling);
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`print.net_bootstrap`](https://saqr.me/Nestimate/reference/print.net_bootstrap.md),
-[`summary.net_bootstrap`](https://saqr.me/Nestimate/reference/summary.net_bootstrap.md)
+[`certainty`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
+for the closed-form Bayesian counterpart (same result layout, no
+resampling);
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`print.net_bootstrap`](https://pak.dynasite.org/Nestimate/reference/print.net_bootstrap.md),
+[`summary.net_bootstrap`](https://pak.dynasite.org/Nestimate/reference/summary.net_bootstrap.md)
 
 ## Examples
 

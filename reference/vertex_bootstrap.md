@@ -7,12 +7,12 @@ pairs; network-level statistics computed on each replicate give
 bootstrap distributions, standard errors, and confidence intervals.
 
 Unlike
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
 which resamples the underlying cases (sequences or rows) and therefore
 requires the raw data stored in the netobject, the vertex bootstrap
 needs **only the weight matrix**. It works on any `netobject` -
 including data-less ones such as
-[`build_mlvar`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+[`build_mlvar`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
 constituents or `as_tna(mcml)` elements - and on plain weight matrices.
 The two procedures answer different questions: the case bootstrap
 quantifies sampling-of-subjects uncertainty in the edge weights; the
@@ -39,7 +39,7 @@ vertex_bootstrap(
 - x:
 
   A `netobject` (from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   or any builder), a `cograph_network`, or a square numeric weight
   matrix.
 
@@ -144,9 +144,9 @@ Application*. Cambridge University Press.
 
 ## See also
 
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
 for case-resampling edge-weight inference,
-[`centrality_stability`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+[`centrality_stability`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
 for case-dropping centrality stability.
 
 ## Examples

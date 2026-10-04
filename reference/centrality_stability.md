@@ -36,7 +36,7 @@ centrality_stability(
 - x:
 
   A `netobject` from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
   a `cograph_network`, or a `netobject_group` / `mcml` (each constituent
   network is assessed and a `net_stability_group` is returned).
 
@@ -173,8 +173,8 @@ Research Methods* 50(1), 195-212.
 
 ## See also
 
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`network_reliability`](https://saqr.me/Nestimate/reference/network_reliability.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`network_reliability`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
 
 ## Examples
 

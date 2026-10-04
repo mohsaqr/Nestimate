@@ -22,7 +22,7 @@ plot(
 - x:
 
   A `net_comparison` object from
-  [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md).
+  [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md).
 
 - type:
 

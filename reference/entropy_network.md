@@ -3,7 +3,7 @@
 Decomposes the entropy rate of a Markov transition process edge by edge
 and returns the decomposition as a network. The entropy rate \\H =
 -\sum\_{ij} \pi_i P\_{ij} \log P\_{ij}\\
-([`transition_entropy`](https://saqr.me/Nestimate/reference/transition_entropy.md);
+([`transition_entropy`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md);
 Krejtz et al. 2015, 2025) is an additive sum over transitions, so every
 edge \\i \to j\\ owns the exact term \\\pi_i P\_{ij} \log(1/P\_{ij})\\
 of the chain-level uncertainty. **No new quantity is estimated**: the
@@ -133,11 +133,11 @@ movements. *Proceedings of ETRA '25*.
 
 ## See also
 
-[`transition_entropy`](https://saqr.me/Nestimate/reference/transition_entropy.md)
+[`transition_entropy`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
 for the chain- and state-level summary,
-[`entropy_bayes`](https://saqr.me/Nestimate/reference/entropy_bayes.md)
+[`entropy_bayes`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
 for credible intervals on the decomposition,
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 
 ## Examples
 

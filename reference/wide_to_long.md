@@ -73,9 +73,9 @@ point) to the long format used by many TNA functions and analyses.
 
 ## See also
 
-[`long_to_wide`](https://saqr.me/Nestimate/reference/long_to_wide.md)
+[`long_to_wide`](https://pak.dynasite.org/Nestimate/reference/long_to_wide.md)
 for the reverse conversion,
-[`prepare_for_tna`](https://saqr.me/Nestimate/reference/prepare_for_tna.md)
+[`prepare_for_tna`](https://pak.dynasite.org/Nestimate/reference/prepare_for_tna.md)
 for preparing data for TNA analysis.
 
 ## Examples

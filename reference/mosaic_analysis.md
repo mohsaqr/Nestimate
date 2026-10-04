@@ -128,8 +128,8 @@ per-cell table.
 
 ## See also
 
-[`mosaic_plot`](https://saqr.me/Nestimate/reference/mosaic_plot.md) for
-the network/table mosaic (which also accepts `style = "flat"`).
+[`mosaic_plot`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
+for the network/table mosaic (which also accepts `style = "flat"`).
 
 ## Examples
 

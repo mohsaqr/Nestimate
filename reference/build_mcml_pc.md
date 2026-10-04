@@ -3,7 +3,7 @@
 **Experimental.** Aggregates a node-level psychometric network
 (correlation, partial correlation, or EBICglasso) into a cluster-level
 macro network plus per-cluster within networks - the MCML view that
-[`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md)
+[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
 provides for transition networks, adapted to the statistics of
 undirected association networks. The API and the exact aggregation
 formulas may change between releases.
@@ -140,7 +140,7 @@ build_mcml_pc(
   Character. Network estimator for the re-estimation paths and for
   data.frame input: `"pcor"` (default), `"glasso"`, or `"cor"` - the
   same vocabulary as
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
   Ignored (with the netobject's own method used instead) when `x` is a
   netobject and `method` is not given.
 
@@ -240,7 +240,7 @@ build_mcml_pc(
 
   Character vector or NULL. Identifier column(s) to drop from data.frame
   input before analysis (e.g., the `rid`/actor columns produced by
-  [`convert_sequence_format`](https://saqr.me/Nestimate/reference/convert_sequence_format.md)`(format = "frequency")`,
+  [`convert_sequence_format`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)`(format = "frequency")`,
   whose output otherwise feeds this function directly as per-actor
   behavior profiles). Same convention as the association estimators.
 
@@ -333,7 +333,7 @@ An object of class `"mcml_pc"` containing:
 **Item diagnostics.** Whenever raw data or a node-level network is
 available, every item's connection strength to *every* cluster is
 computed. The
-[`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md)
+[`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
 table reports, per item: its signed own-cluster loading, its composite
 weight, its strongest cross-cluster loading, and a `misfit` flag set
 when the cross-cluster loading exceeds the own-cluster loading -
@@ -369,13 +369,13 @@ conditioning on out-of-cluster nodes). Modes without raw data force
 
 **Uncertainty.** The composite/loadings macro network is a full
 netobject carrying its composite data, so
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)`(macro_network(fit))`
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)`(macro_network(fit))`
 (edge-weight CIs) and
-[`vertex_bootstrap`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md)`(macro_network(fit))`
+[`vertex_bootstrap`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)`(macro_network(fit))`
 (network-level CIs) work directly;
-[`vertex_compare`](https://saqr.me/Nestimate/reference/vertex_compare.md)`(macro_network(fit1), macro_network(fit2))`
+[`vertex_compare`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)`(macro_network(fit1), macro_network(fit2))`
 compares two groups.
-[`loading_stability`](https://saqr.me/Nestimate/reference/loading_stability.md)
+[`loading_stability`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
 quantifies how stable the composite weights themselves are under case
 resampling.
 
@@ -404,13 +404,13 @@ correlation networks. *Psychological Methods*, 23(4), 617-634.
 
 ## See also
 
-[`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md) for
-transition networks,
-[`loading_stability`](https://saqr.me/Nestimate/reference/loading_stability.md)
+[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+for transition networks,
+[`loading_stability`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
 for composite-weight stability,
-[`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
 and
-[`vertex_bootstrap`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md)
+[`vertex_bootstrap`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
 for uncertainty on the macro network.
 
 ## Examples

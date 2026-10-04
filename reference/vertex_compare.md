@@ -97,11 +97,11 @@ errors and tests for network statistics. *Connections*, 22(2), 161-170.
 
 ## See also
 
-[`vertex_bootstrap`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md),
-[`nct`](https://saqr.me/Nestimate/reference/nct.md) for the
+[`vertex_bootstrap`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md),
+[`nct`](https://pak.dynasite.org/Nestimate/reference/nct.md) for the
 permutation-based comparison of edge-level structure when raw data are
 available,
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md).
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
 
 ## Examples
 

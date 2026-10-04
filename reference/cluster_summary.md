@@ -32,7 +32,7 @@ cluster_summary(
   netobject
 
   :   A network object built by
-      [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+      [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
       Its weight matrix `x$weights` is aggregated; a bare
       `cograph_network` is coerced to a netobject first.
 
@@ -53,7 +53,7 @@ cluster_summary(
   :   (default) Not usable here: `clusters` is required and `NULL`
       raises an error. Auto-detection of a cluster column in a
       `netobject`'s node table happens in
-      [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md),
+      [`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md),
       which then calls this function with the detected assignment.
 
   vector
@@ -164,8 +164,8 @@ An `mcml` object (S3 class): a list with
 
   `NULL` on this path – a matrix carries no node-level transitions. The
   sequence and edge-list paths of
-  [`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md) fill
-  in a tidy edge table here.
+  [`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  fill in a tidy edge table here.
 
 - meta:
 
@@ -176,8 +176,8 @@ An `mcml` object (S3 class): a list with
 ## Details
 
 This is the core function for Multi-Cluster Multi-Level (MCML) analysis.
-Use [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) to
-convert results to tna objects for further analysis with the tna
+Use [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
+to convert results to tna objects for further analysis with the tna
 package.
 
 ### Workflow
@@ -211,15 +211,15 @@ The `macro$weights` matrix has clusters as both rows and columns:
 Rows are NOT normalized. Entries are elementwise aggregates produced by
 `method`. If the caller wants probabilities, they should normalize
 downstream (e.g. via
-[`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md)). Mixing an
-arithmetic aggregation with row-normalization here (the old
+[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)).
+Mixing an arithmetic aggregation with row-normalization here (the old
 `type = "tna"` combined with `method = "min"` / `"mean"` etc.) produces
 numbers that sum to 1 per row but are not a probability distribution
 over any process; that silently-wrong combination is why `type` was
 removed from the matrix path. The sequence and edgelist paths of
-[`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md) keep
-`type`, where the aggregation is always counts and the post-processing
-chooses between well-defined network constructions.
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+keep `type`, where the aggregation is always counts and the
+post-processing chooses between well-defined network constructions.
 
 ### Choosing method
 
@@ -233,11 +233,11 @@ chooses between well-defined network constructions.
 
 ## See also
 
-[`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md) to
-build an mcml from raw transitions instead of a weight matrix,
-[`as_tna`](https://saqr.me/Nestimate/reference/as_tna.md) to promote the
-layers to netobjects,
-[`macro_network`](https://saqr.me/Nestimate/reference/macro_network.md)
+[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+to build an mcml from raw transitions instead of a weight matrix,
+[`as_tna`](https://pak.dynasite.org/Nestimate/reference/as_tna.md) to
+promote the layers to netobjects,
+[`macro_network`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
 for the cluster-level network with one cluster expanded back into its
 member states
 

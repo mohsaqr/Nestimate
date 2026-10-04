@@ -2,7 +2,7 @@
 
 Named accessors for the tables inside a `net_network_comparison` object
 (from
-[`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md)).
+[`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)).
 Each returns a plain data frame with one row per unit and no row names.
 Numeric columns are rounded to `digits` decimals; p-value columns are
 never rounded.
@@ -71,7 +71,7 @@ print(x, digits = attr(x, "digits") %||% 2L, ...)
   `network_a`, `network_b`, `node`, `measure`, `value_a`, `value_b`,
   `diff`, `abs_diff`, `rank_a`, `rank_b`, `higher`, plus inference
   columns. Errors (class `nestimate_compare_no_nodes`) when
-  [`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md)
+  [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
   was called with no `measures`.
 
 - `global_differences()`: one row per pair x metric: `pair`,

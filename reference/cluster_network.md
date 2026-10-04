@@ -2,7 +2,7 @@
 
 Combines sequence clustering and network estimation into a single call.
 Clusters the data using the specified algorithm, then calls
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 on each cluster subset.
 
 ## Usage
@@ -16,7 +16,7 @@ cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 - data:
 
   Sequence data. Accepts a data frame, matrix, or `netobject`. See
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   for supported formats.
 
 - k:
@@ -26,7 +26,7 @@ cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 - cluster_by:
 
   Character. Clustering algorithm passed to
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)'s
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)'s
   `method` parameter (`"pam"`, `"ward.D2"`, `"ward.D"`, `"complete"`,
   `"average"`, `"single"`, `"mcquitty"`, `"median"`, `"centroid"`), or
   `"mmm"` for Mixed Markov Model clustering. Default: `"pam"`.
@@ -39,14 +39,14 @@ cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 - ...:
 
   Routed to two stages. For distance clustering (`cluster_by != "mmm"`),
-  [`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   arguments `na_syms`, `weighted`, `lambda`, `seed`, `q`, `p`, and
   `covariates` are intercepted and forwarded to the clusterer;
   recognised network-estimation arguments flow to
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
   Unknown arguments error before either stage is run. When
   `cluster_by = "mmm"`, the recognised
-  [`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md)
+  [`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
   arguments (`n_starts`, `max_iter`, `tol`, `smooth`, `seed`,
   `covariates`) are intercepted instead, and the rest flows to
   `build_network`. In both modes, when `data` is a `netobject`, its
@@ -65,9 +65,9 @@ networks match the type of the input network.
 
 ## See also
 
-[`build_clusters`](https://saqr.me/Nestimate/reference/build_clusters.md),
-[`cluster_mmm`](https://saqr.me/Nestimate/reference/cluster_mmm.md),
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+[`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md),
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

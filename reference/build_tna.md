@@ -33,7 +33,7 @@ build_tna(data, start = FALSE, end = FALSE, ...)
   Boundary marker placed in the single cell after each sequence's last
   observed (non-`NA`) state, as an explicit terminal state (a pure sink:
   no outgoing edges, no self-loop – distinct from
-  [`mark_terminal_state`](https://saqr.me/Nestimate/reference/mark_terminal_state.md),
+  [`mark_terminal_state`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md),
   which fills all trailing NAs into an absorbing state). `FALSE`
   (default) adds nothing; `TRUE` uses the label `"End"`; a single string
   uses that string as the label. Same method restriction as `start`.
@@ -41,16 +41,16 @@ build_tna(data, start = FALSE, end = FALSE, ...)
 - ...:
 
   Additional arguments passed to
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 
 ## Value
 
 A `netobject` (see
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)).
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)).
 
 ## See also
 
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

@@ -30,7 +30,7 @@ compare_mmm(data, k = 2:5, return_fits = FALSE, ...)
 - ...:
 
   Arguments passed to
-  [`build_mmm`](https://saqr.me/Nestimate/reference/build_mmm.md).
+  [`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md).
 
 ## Value
 

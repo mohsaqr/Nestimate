@@ -20,7 +20,7 @@ effects_table(
 - x:
 
   A `net_outcome_model` from
-  [`outcome_model`](https://saqr.me/Nestimate/reference/outcome_model.md).
+  [`outcome_model`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md).
 
 - intercept:
 

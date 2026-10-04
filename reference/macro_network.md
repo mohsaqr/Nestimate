@@ -17,7 +17,7 @@ macro_network(x, expand = NULL, method = "relative", ...)
 - x:
 
   An `mcml` built from sequence data, or an `mcml_pc` from
-  [`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md).
+  [`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md).
   A matrix-derived `mcml` carries no node-level data and cannot be
   expanded.
 
@@ -30,20 +30,20 @@ macro_network(x, expand = NULL, method = "relative", ...)
 - method:
 
   Estimator passed to
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
   Default `"relative"` (row-normalised transitions). Not used for an
   `mcml_pc`.
 
 - ...:
 
   Further arguments passed to
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
   Not used for an `mcml_pc`.
 
 ## Value
 
 For an `mcml_pc`: its cluster-level network, the netobject estimated by
-[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md),
+[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md),
 unchanged. Its estimator is set when the fit is built, so `method` or
 `...` raise an error, and `expand` errors with class
 `nestimate_no_expand` (there are no sequences to re-count).
@@ -51,7 +51,7 @@ unchanged. Its estimator is set when the fit is built, so `method` or
 For an `mcml`: a `netobject` (also a `cograph_network`) whose nodes are
 the collapsed clusters plus the member states of any expanded cluster,
 with weights re-counted from the sequence data by
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 `$node_groups` is a two-column data frame (`node`, `group`) mapping
 every node to its cluster, and the same labels are a factor in
 `$nodes$groups`, so the result plots grouped; an expanded cluster's
@@ -61,8 +61,8 @@ none were).
 
 ## See also
 
-[`build_mcml`](https://saqr.me/Nestimate/reference/build_mcml.md),
-[`as_tna`](https://saqr.me/Nestimate/reference/as_tna.md)
+[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md),
+[`as_tna`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
 
 ## Examples
 

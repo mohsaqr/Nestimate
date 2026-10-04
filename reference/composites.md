@@ -1,7 +1,7 @@
 # Cluster Scores From a Psychometric MCML Fit
 
 The per-observation cluster scores that a re-estimated
-[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
 macro network was fitted on: each respondent's weighted, sign-corrected
 score on every cluster. These are the scores to carry into a profile
 analysis, a regression, or any downstream model that needs one number
@@ -41,9 +41,9 @@ which relate clusters without ever forming a score.
 
 ## See also
 
-[`build_mcml_pc`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
 to create the fit,
-[`item_loadings`](https://saqr.me/Nestimate/reference/item_loadings.md)
+[`item_loadings`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
 for the item weights behind these scores.
 
 ## Examples

@@ -1,7 +1,7 @@
 # The state colours an object will draw with
 
 Reads back the palette an object resolves to: the colours set with
-[`set_state_colors`](https://saqr.me/Nestimate/reference/set_state_colors.md)
+[`set_state_colors`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
 plus the defaults filled in for everything else, so the table is what
 the figures actually use.
 
@@ -45,7 +45,7 @@ Okabe-Ito). For an `mcml` the cluster names appear after the states.
 
 ## See also
 
-[`set_state_colors`](https://saqr.me/Nestimate/reference/set_state_colors.md).
+[`set_state_colors`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md).
 
 ## Examples
 

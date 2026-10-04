@@ -2,7 +2,7 @@
 
 Register a custom or built-in network estimator function by name.
 Estimators registered here can be used by
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 via the `method` parameter.
 
 ## Usage
@@ -39,10 +39,10 @@ Invisible `NULL`.
 
 ## See also
 
-[`get_estimator`](https://saqr.me/Nestimate/reference/get_estimator.md),
-[`list_estimators`](https://saqr.me/Nestimate/reference/list_estimators.md),
-[`remove_estimator`](https://saqr.me/Nestimate/reference/remove_estimator.md),
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`get_estimator`](https://pak.dynasite.org/Nestimate/reference/get_estimator.md),
+[`list_estimators`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md),
+[`remove_estimator`](https://pak.dynasite.org/Nestimate/reference/remove_estimator.md),
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

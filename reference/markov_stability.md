@@ -91,7 +91,7 @@ Springer-Verlag.
 
 ## See also
 
-[`passage_time`](https://saqr.me/Nestimate/reference/passage_time.md)
+[`passage_time`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
 
 ## Examples
 

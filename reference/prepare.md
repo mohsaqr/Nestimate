@@ -2,7 +2,7 @@
 
 Converts event log data (actor, action, time) into wide sequence format
 suitable for
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 Automatically parses timestamps, detects sessions from time gaps, and
 handles tie-breaking.
 
@@ -131,8 +131,8 @@ events first.
 
 ## See also
 
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`prepare_onehot`](https://saqr.me/Nestimate/reference/prepare_onehot.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`prepare_onehot`](https://pak.dynasite.org/Nestimate/reference/prepare_onehot.md)
 
 ## Examples
 

@@ -57,7 +57,7 @@ present in every sequence are kept.
 
 Converts long format data (one row per action) to the wide format
 expected by
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
 [`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html) and
 related functions.
 
@@ -67,9 +67,9 @@ indices.
 
 ## See also
 
-[`wide_to_long`](https://saqr.me/Nestimate/reference/wide_to_long.md)
+[`wide_to_long`](https://pak.dynasite.org/Nestimate/reference/wide_to_long.md)
 for the reverse conversion,
-[`prepare_for_tna`](https://saqr.me/Nestimate/reference/prepare_for_tna.md)
+[`prepare_for_tna`](https://pak.dynasite.org/Nestimate/reference/prepare_for_tna.md)
 for preparing data for TNA analysis.
 
 ## Examples

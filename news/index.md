@@ -1,14 +1,23 @@
 # Changelog
 
+## Nestimate 0.9.20
+
+### Documentation
+
+- The documentation site is now `https://pak.dynasite.org/Nestimate/`
+  (`DESCRIPTION` URL, `_pkgdown.yml`, README links). `saqr.me/Nestimate`
+  was a stale copy. The README lists the `permutation-nested-data` and
+  `compare-networks` articles.
+
 ## Nestimate 0.9.18
 
 ### Documentation
 
 - The pkgdown site builds again. Four exported topics
-  ([`state_colors()`](https://saqr.me/Nestimate/reference/state_colors.md),
-  [`set_state_colors()`](https://saqr.me/Nestimate/reference/set_state_colors.md),
-  [`composites()`](https://saqr.me/Nestimate/reference/composites.md),
-  [`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md))
+  ([`state_colors()`](https://pak.dynasite.org/Nestimate/reference/state_colors.md),
+  [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md),
+  [`composites()`](https://pak.dynasite.org/Nestimate/reference/composites.md),
+  [`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md))
   were missing from the reference index, which had failed every site
   build since 0.9.10. The `compare-networks` and
   `permutation-nested-data` articles now publish.
@@ -17,11 +26,11 @@
 
 ### New features
 
-- [`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md)
+- [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
   gains `actor =`, passed to the permutation backend: whole actors are
   reassigned between the networks, the printed header names the actor
   column, and
-  [`global_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md)
+  [`global_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
   gains the rows `ICC`, `Design effect (edges)` and `Design effect (M)`
   (category `"Nesting"`). Requires `test = "permutation"` (error class
   `nestimate_compare_actor_needs_permutation`).
@@ -31,10 +40,10 @@
 ### Breaking changes (development versions only)
 
 - The nesting argument added in 0.9.13
-  ([`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
-  [`permutation_diagnostics()`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md))
+  ([`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
+  [`permutation_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md))
   and 0.9.15
-  ([`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md))
+  ([`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md))
   is renamed from `block` to `actor`, the column identifying whose
   sequences they are: the same vocabulary as `build_network(actor = )`.
   Results carry `actor` and `n_actors`; diagnostic columns use
@@ -47,7 +56,7 @@
 
 ### Bug fixes
 
-- [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md):
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
   columns named in `metadata_cols` (or left out of `state_cols`) are no
   longer read as sequence positions in wide data. They were moved to
   `$metadata` only after estimation, so their values became states and
@@ -57,16 +66,16 @@
 
 - An ICC that cannot be estimated (one block, or no variation) is
   reported as not estimable instead of `NaN [NA, NA]` by
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   and
-  [`permutation_diagnostics()`](https://saqr.me/Nestimate/reference/permutation_diagnostics.md).
+  [`permutation_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md).
 
 ## Nestimate 0.9.15
 
 ### New features
 
-- [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+- [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   gains `block =`, the column identifying the unit that sequences are
   nested in. Whole units are resampled with replacement, keeping their
   sequences together (cluster bootstrap, top level only; Davison &
@@ -88,7 +97,7 @@
 
 ### New features
 
-- [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+- [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   gains `block =`, the column identifying the unit that sequences are
   nested in (sessions in students, students in teams). Whole units are
   reassigned between the groups; units with sequences in both groups, as
@@ -101,7 +110,7 @@
   `alpha`.
 
 - With `block`,
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   reports the nesting effect: the intraclass correlation (Shrout &
   Fleiss, 1979) with a jackknife 95% interval, and the design effect
   (Kish, 1965), the blocked over the unblocked null variance, for the
@@ -118,15 +127,15 @@
   ICC and design effects. A grouped result prints every pair in full.
 
 - The
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   help page is reorganised into sections: what is tested, nested data
   and `block`, ICC and design effect, reading the printed output.
 
 - Building a transition network from a single long sequence now raises a
   message instead of a warning; running
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   or
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   on such a network still warns. Both carry the class
   `nestimate_single_sequence`.
 
@@ -134,15 +143,15 @@
 
 - `\%` in markdown roxygen silently cut the rest of a line from the help
   pages of
-  [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md),
-  [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md),
-  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+  [`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md),
+  [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md),
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   and
-  [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md);
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md);
   the text is restored.
 
 - Missing space in the
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   print header.
 
 ## Nestimate 0.9.12
@@ -152,9 +161,9 @@
 - `set_state_colors(x, colors)` attaches a palette to a `netobject`,
   `netobject_group`, `mcml` or `htna`, and every figure drawn from that
   object then uses it –
-  [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md),
-  [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md),
-  [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md),
+  [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md),
+  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   **and**
   [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
   The cograph half goes through the documented `meta$splot` producer
@@ -181,14 +190,14 @@
   so every figure drawn from it colours a state identically. Previously
   only the colours you set were carried and each figure dealt the
   remaining defaults in its own sort order –
-  [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   sorts states by frequency and
-  [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   alphabetically, so one state could come out amber in one figure and
   black in the other.
 
 - In-tile labels in
-  [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   take whichever ink (dark or white) has the higher WCAG contrast ratio
   against the tile, instead of one fixed grey. A percentage on a dark
   tile – black, navy, dark wine – is now readable, whether the colour
@@ -211,10 +220,10 @@
 ### Improvements
 
 - `state_colors` accepts a **named** vector everywhere
-  [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md),
-  [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md),
+  [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
   and
-  [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   draw, and the names are a lookup rather than a positional list: only
   the keys you name are overridden, every other key keeps its default,
   and the vector may be shorter than the number of states. An unnamed
@@ -237,7 +246,7 @@
 
 ### New verbs
 
-- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   gains `combine =` and `expand =`. On new input they change the
   partition before estimation, in any `clusters` form and for every
   input type: `build_mcml(data, clusters = cl, combine = c("A", "B"))`
@@ -256,11 +265,12 @@
   sequence-shaping arguments (`trim`, `exclude`, `end`, `labels`,
   `actor`, …) are passed with a re-partition, since the carried
   sequences already reflect them.
-- [`session_ids()`](https://saqr.me/Nestimate/reference/session_ids.md)
+- [`session_ids()`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
   names the session behind every sequence of a network built from long
   data, and of a
-  [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) or
-  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  or
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   fit on such a network. It returns one row per sequence in model order:
   `sequence`, the `actor` and `session` columns under their own names,
   `session_label`, and, for a fit, `cluster` (plus `posterior` for a
@@ -270,14 +280,14 @@
   for wide-data input or for fits made before this version, and
   `nestimate_session_ids_misaligned` when the metadata and the sequences
   differ in number.
-- [`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md)
+- [`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
   returns the tidy item-diagnostic table of a
-  [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   fit (node, cluster, loading, weight, sign, max_cross, cross_cluster,
   misfit); `misfit = TRUE`/`FALSE` filters it.
-- [`composites()`](https://saqr.me/Nestimate/reference/composites.md)
+- [`composites()`](https://pak.dynasite.org/Nestimate/reference/composites.md)
   returns the per-respondent cluster scores of a
-  [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   fit: one row per input row (input order and row names, `NA` where all
   of a cluster’s items are missing) and one column per cluster. Raises
   `nestimate_no_composites` for the descriptive aggregations
@@ -285,14 +295,14 @@
 
 ### Changes
 
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   on an `mcml` gains `combine =`: named clusters are merged into one
   channel (a character vector for one group, a list for several; list
   names label the merged channels, default `"A + B"`). The merged group
   acts as one cluster across the figure (one panel, one Summary key, one
   faded band) and can itself be opened with `expand =`.
 
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   on an `mcml` gains `rest = c("clusters", "pooled", "none")`: how a
   cluster’s panel shows the time spent in other clusters (one faded band
   per cluster, one pooled grey band, or blank, leaving only the panel’s
@@ -302,59 +312,62 @@
   `"Social (Other states)"`. This replaces the former `"(elsewhere)"`
   wording.
 
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   on an `mcml` now honours `na =` in the distribution view: `na = FALSE`
   drops the `NA` (ended) band and shows each time point as shares of the
   sequences still running, as
-  [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+  [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
   already did.
 
-- [`macro_network()`](https://saqr.me/Nestimate/reference/macro_network.md)
+- [`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
   accepts an `mcml_pc` fit and returns its cluster-level network;
   `expand =` on an `mcml_pc` raises `nestimate_no_expand`, and
   `method =` or `...` error (the estimator is set in
-  [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)).
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)).
 
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   errors when `combine`, `expand`, `rest` or `rest_label` is passed for
   input that is not an `mcml`, instead of ignoring them.
 
-- [`print.mcml_pc()`](https://saqr.me/Nestimate/reference/print.mcml_pc.md)
+- [`print.mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/print.mcml_pc.md)
   and its build-time warnings name
-  [`item_loadings()`](https://saqr.me/Nestimate/reference/item_loadings.md)
+  [`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
   instead of pointing at `$loadings`.
 
-- [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) (and so
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+- [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  (and so
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   on long data) keeps the `session` column(s) in the per-sequence
   metadata under their own names, and returns the metadata explicitly in
   sequence row order (it was assembled with `merge(sort = FALSE)`, whose
   order is unspecified).
 
-- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) and
-  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  and
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   keep the input network’s `$metadata` (restricted to the fitted rows
-  when [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md)
+  when
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
   drops sequences with missing covariates).
 
 ### Fixes
 
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   on an `mcml` with `type = "heatmap"`/`"index"` and `expand =` drew the
   other-cluster wash as blank cells: the wash was keyed by the Summary
   keys, which are states once a cluster is expanded. It is now keyed by
   cluster.
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   on an `mcml` with `type = "distribution"` and `expand =` no longer
   fails with “subscript out of bounds” in the default
   (`normalize = FALSE`) view. The Summary band now opens the expanded
   cluster into its states, and the other panels draw it as one faded
   `"<cluster> (<rest_label>)"` band.
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   on an `mcml` with a single channel (one cluster, or every cluster
   merged by `combine`) no longer fails in the carpet view with
   “replacement has 1 row, data has 0”.
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   on an `mcml`: with `expand =`, each cluster’s faded band in the other
   panels now has its own colour (expanded clusters all shared one).
 
@@ -362,7 +375,7 @@
 
 ### New verbs
 
-- [`macro_network()`](https://saqr.me/Nestimate/reference/macro_network.md)
+- [`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
   returns the macro (cluster-level) network of an `mcml` with one or
   more named clusters expanded back into their member states and every
   other cluster left collapsed — a network at mixed resolution. It
@@ -370,25 +383,25 @@
   k aggregate, which cannot be disaggregated; a matrix-derived `mcml`
   raises `nestimate_no_expand_source`. `$node_groups` maps each expanded
   state back to its parent cluster, so the result plots grouped.
-- [`extract_pathways()`](https://saqr.me/Nestimate/reference/extract_pathways.md)
+- [`extract_pathways()`](https://pak.dynasite.org/Nestimate/reference/extract_pathways.md)
   cuts a long event log into pathways and returns one row per pathway.
   Three cuts via `type =`: `"unit"` (one pathway per group),
   `"segments"` (one per contiguous run), `"anchored"` (spans around an
   anchor event). `resolve =` appends a resolution label as the closing
   state.
-- [`outcome_model()`](https://saqr.me/Nestimate/reference/outcome_model.md)
+- [`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
   regresses a unit-level outcome on sequence or network predictors —
   pattern indicators,
-  [`simplicial_features()`](https://saqr.me/Nestimate/reference/simplicial_features.md)
+  [`simplicial_features()`](https://pak.dynasite.org/Nestimate/reference/simplicial_features.md)
   output, or any numeric covariate — with family auto-detection, an
   optional `lme4` random intercept, `select = "split"` hold-out
   selection, BH-corrected p-values, confidence intervals and odds
   ratios.
-  [`effects_table()`](https://saqr.me/Nestimate/reference/effects_table.md)
+  [`effects_table()`](https://pak.dynasite.org/Nestimate/reference/effects_table.md)
   is the tidy accessor;
   [`summary()`](https://rdrr.io/r/base/summary.html) returns the same
   table.
-- [`simplicial_features()`](https://saqr.me/Nestimate/reference/simplicial_features.md)
+- [`simplicial_features()`](https://pak.dynasite.org/Nestimate/reference/simplicial_features.md)
   returns topological summaries of one or many networks as a tidy
   data.frame, one row per network per threshold, ready to use as
   regression predictors. Accepts a `netobject`, `netobject_group`,
@@ -396,16 +409,16 @@
 
 ### Extended
 
-- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   gains the `exclude`, `trim`, `end` and `end_by` sequence arguments,
   applied in that fixed order.
-- [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md) is now a
-  generic. `as_tna.mcml(expand =)` delegates to
-  [`macro_network()`](https://saqr.me/Nestimate/reference/macro_network.md)
+- [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
+  is now a generic. `as_tna.mcml(expand =)` delegates to
+  [`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
   for the macro layer only; per-cluster layers are untouched. An
-  [`as_tna.default()`](https://saqr.me/Nestimate/reference/as_tna.md)
+  [`as_tna.default()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
   covers everything else.
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   and its `mcml` method gain `panel = c("both", "summary", "channels")`.
 
 ### Fixes
@@ -417,7 +430,7 @@
   merge, turning every character id into `NA`; the merge then matched
   nothing and failed silently. Sequence keys are now aligned in their
   character form.
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   on an `mcml` errored whenever a singleton cluster was named after its
   own state: the shared fill scale built its levels with
   `factor(levels = c(states, clusters))`, and duplicate levels are an
@@ -447,10 +460,10 @@
   returns the tidy one-row-per-pair overview, as every other Nestimate
   [`summary()`](https://rdrr.io/r/base/summary.html) does; the full
   tables are their own verbs:
-  [`edge_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md),
-  [`node_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md),
-  [`global_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md),
-  [`network_metrics()`](https://saqr.me/Nestimate/reference/comparison_tables.md),
+  [`edge_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
+  [`node_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
+  [`global_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
+  [`network_metrics()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
   each with a `pair` column. All pairs by default, or every network
   against one `reference =`.
 - Ratios are guarded (`NA`, never `Inf`/`NaN`); every cell is kept,
@@ -472,45 +485,45 @@
 - `plot(x, combined = FALSE)` splits a multi-pair view into a named list
   of single-pair plots (one per pair) instead of facetting them into one
   figure, matching the `combined` argument of
-  [`plot.net_reliability()`](https://saqr.me/Nestimate/reference/plot.net_reliability.md),
-  [`plot.simplicial_complex()`](https://saqr.me/Nestimate/reference/plot.simplicial_complex.md)
+  [`plot.net_reliability()`](https://pak.dynasite.org/Nestimate/reference/plot.net_reliability.md),
+  [`plot.simplicial_complex()`](https://pak.dynasite.org/Nestimate/reference/plot.simplicial_complex.md)
   and friends. The base-graphics views draw one panel per page.
 - Optional inference on the same tables: `test = "permutation"`,
   `"bayes"` (with an optional `rope`), `"bootstrap"`, combinable.
   Non-significant results are faded, never deleted.
-- [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+- [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   gains a `$global` data frame with NCT-style `M` (sum of absolute
   differences) and `S` (largest absolute difference) statistics and
   their permutation p-values, computed from the same null.
-- [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md)
+- [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
   is unchanged and will be soft-deprecated once
-  [`compare_networks()`](https://saqr.me/Nestimate/reference/compare_networks.md)
+  [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
   has been through one release.
 
 ### Hypergraph suite
 
-- [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md)
+- [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   promotes a network’s k-cliques (k \>= 3) to hyperedges, following
   Burgio, Matamalas, Gomez and Arenas (2020); underlying pairwise edges
   are retained.
-  [`clique_expansion()`](https://saqr.me/Nestimate/reference/clique_expansion.md)
+  [`clique_expansion()`](https://pak.dynasite.org/Nestimate/reference/clique_expansion.md)
   projects a hypergraph back to a pairwise network in one
   [`tcrossprod()`](https://rdrr.io/r/base/crossprod.html) call, closing
   the event data -\>
-  [`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md)
+  [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)
   -\> hypergraph -\> network cycle.
-- [`hypergraph_measures()`](https://saqr.me/Nestimate/reference/hypergraph_measures.md)
+- [`hypergraph_measures()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md)
   returns the structural-statistics suite (Lee, Choe and Shin 2024); an
   empty hypergraph returns trivial zeros rather than erroring.
-  [`hypergraph_centrality()`](https://saqr.me/Nestimate/reference/hypergraph_centrality.md)
+  [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
   computes Benson’s (2019) three eigenvector centralities.
-- [`hypergraph_laplacian()`](https://saqr.me/Nestimate/reference/hypergraph_laplacian.md)
+- [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md)
   computes the normalized Laplacian, either the Zhou, Huang and
   Scholkopf (2006) form on the binary incidence pattern or the Hayashi,
   Aksoy, Park and Park (2020) weighted form. Built on it:
-  [`hypergraph_cluster()`](https://saqr.me/Nestimate/reference/hypergraph_cluster.md)
+  [`hypergraph_cluster()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   (spectral clustering) and
-  [`hypergraph_transduction()`](https://saqr.me/Nestimate/reference/hypergraph_transduction.md)
+  [`hypergraph_transduction()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   (semi-supervised label propagation), each with print, summary, plot
   and [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
   methods.
@@ -536,8 +549,9 @@ closed.
 
 ### Timezone-safe timestamp parsing
 
-- [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) and
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+- [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  and
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   gain `timezone = "UTC"` (Olson name). Naive timestamps are interpreted
   in that zone; ISO-8601 `Z`/`UTC`/`GMT` markers and numeric offsets
   (`+0200`, `+02:00`) are converted from their offset. Parsing no longer
@@ -565,18 +579,18 @@ pre-delegation baselines — every number is preserved.
   the frozen baseline: `cor` exact, `pcor` within 5.6e-17, `glasso`
   exact on weights, precision, selected lambda, and the EBIC path
   (including `penalize.diagonal` and `refit` branches).
-- [`nct()`](https://saqr.me/Nestimate/reference/nct.md) delegates its
-  inner EBIC-glasso solve; the NCT-specific `nearPD` symmetrization
-  stays local. Seeded runs: networks and p-values exact.
-- [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)
+  delegates its inner EBIC-glasso solve; the NCT-specific `nearPD`
+  symmetrization stays local. Seeded runs: networks and p-values exact.
+- [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   and
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   (glasso branch) delegate the per-resample solve via
   `psychnets::ebic_glasso(lambda_path = )`, keeping the
   fixed-path-across-resamples semantics. Seeded
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   is byte-identical;
-  [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)
+  [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   is identical except wall-clock timing.
 - The internal pure-R glasso kernel (`glasso_pure.R`) and its EBIC
   helpers are deleted; psychnets owns that math now.
@@ -586,7 +600,7 @@ pre-delegation baselines — every number is preserved.
 
 ### Delegated to idiographic (new hard dependency, \>= 0.3.4)
 
-- [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+- [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   keeps its signature, S3 methods, and return object; the lmer
   estimation pipeline now runs in
   [`idiographic::fit_mlvar()`](https://pak.dynasite.org/idiographic/reference/fit_mlvar.html).
@@ -595,10 +609,10 @@ pre-delegation baselines — every number is preserved.
   `mlVAR::mlVAR()` at 8.8e-16 over 954 checks.
 - When the between-subjects network is not estimable (a random-intercept
   SD of zero),
-  [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+  [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   now warns before returning the zero matrix; it previously returned it
   silently. Numbers are unchanged.
-- [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
+- [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
   delegates its whole search to
   [`idiographic::fit_gimme()`](https://pak.dynasite.org/idiographic/reference/fit_gimme.html).
   **This is the one delegation that changes results**: idiographic’s
@@ -611,7 +625,7 @@ pre-delegation baselines — every number is preserved.
   fields and now renders directly with cograph);
   `print`/`summary`/`plot` dispatch to idiographic’s methods. Treat
   pre-0.9.0
-  [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
+  [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
   individual-level results as superseded.
 
 ## Nestimate 0.8.5
@@ -639,7 +653,7 @@ CRAN.
 
 ### Rendering entropy networks with cograph
 
-- [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.md)
+- [`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md)
   now renders with its intended transition-network styling on cograph
   2.4.4, the current CRAN version. The object states its full style
   through cograph’s `meta$splot` producer contract instead of relying on
@@ -651,9 +665,9 @@ CRAN.
 - The [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) examples for
   the MMM clustering attribute now reach it through
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
   matching the 0.8.4 change that made
-  [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
   return the fitted `net_mmm` object.
 
 ## Nestimate 0.8.4
@@ -664,12 +678,12 @@ CRAN.
   (Shannon 1948; Cover & Thomas 2006, ch. 4; the transition entropy of
   Krejtz et al. 2015 and the real-time mobile transition matrix entropy
   of Krejtz et al. 2025):
-  - [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.md)
+  - [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
     — entropy rate H (stationary distribution from the
     eigendecomposition at lambda = 1), stationary entropy, redundancy,
     per-state branching entropies, all with the normalized (scale-free)
     variants; print/summary/plot and `netobject_group` dispatch.
-  - [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.md)
+  - [`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md)
     — the exact edge-level decomposition of H: each edge carries its
     term pi_i P_ij log(1/P_ij); weights sum to H. Displays the summands
     of the entropy-rate equation — no new quantity is estimated.
@@ -680,12 +694,12 @@ CRAN.
     entropy house style via cograph’s `meta$splot` producer contract,
     which states the styling outright rather than relying on cograph
     recognising the method name (cograph \>= 2.4.4).
-  - [`entropy_trajectory()`](https://saqr.me/Nestimate/reference/entropy_trajectory.md)
+  - [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
     — sliding-window entropy over the transition stream (the windowed
     design of Krejtz et al. 2025): tidy per-window table, per-group
     trajectories, loess-trend plot; the per-window estimator weights
     rows by observed occupancy (robust to non-ergodic window fragments).
-  - [`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.md)
+  - [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
     — Dirichlet-posterior estimation: credible intervals for H,
     per-state entropies, and per-edge contributions; edges flagged
     credible when their share of H credibly exceeds `min_share`;
@@ -694,14 +708,14 @@ CRAN.
 
 ### Mixed Markov clustering contract
 
-- [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+- [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
   now returns the fitted `net_mmm` clustering object, retaining
   assignments, posterior probabilities, mixing proportions, fit
   criteria, and fitted component models. Network materialization remains
   the responsibility of `build_network(fit)` or the one-step
   `cluster_network(..., cluster_by = "mmm")` workflow.
-- [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md) gains a
-  `net_mmm` method. An MMM fit created from an HTNA model is
+- [`as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md)
+  gains a `net_mmm` method. An MMM fit created from an HTNA model is
   materialized into an `htna_group` without rerunning the MMM fit, while
   the original actor partition and clustering diagnostics are preserved.
 
@@ -709,8 +723,8 @@ CRAN.
 
 ### HTNA expansion
 
-- [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md) still
-  rebuilds one full node-level network from the original source,
+- [`as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md)
+  still rebuilds one full node-level network from the original source,
   preserving every between-cluster transition, and now completes the
   canonical HTNA contract. Its result inherits from `htna`, `netobject`,
   and `cograph_network`; stores character actor labels in
@@ -723,9 +737,9 @@ CRAN.
 
 ### Session grouping
 
-- [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md) now
-  identifies sessions from the observed combinations of the `actor` and
-  `session` columns instead of
+- [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  now identifies sessions from the observed combinations of the `actor`
+  and `session` columns instead of
   [`base::interaction()`](https://rdrr.io/r/base/interaction.html).
   Three defects are fixed:
 
@@ -756,10 +770,10 @@ CRAN.
 - `time_threshold = FALSE` switches session-interval splitting off, so
   each actor (or actor-session) forms a single sequence regardless of
   gap length. Accepted by
-  [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md),
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md),
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   and
-  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md).
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md).
 
 ### Testing
 
@@ -778,11 +792,11 @@ CRAN.
 
 - Distance clustering and mixed-Markov clustering now preserve HTNA
   inputs.
-  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   and
-  [`cluster_mmm()`](https://saqr.me/Nestimate/reference/cluster_mmm.md)
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
   carry the node-to-actor partition into network materialization, while
-  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+  [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
   returns an `htna_group` directly. Every child remains an `htna` object
   with `$node_groups`, `$nodes$groups`, and `$actor_levels`; clustering
   assignments, posterior probabilities, fit diagnostics, and other outer
@@ -800,31 +814,31 @@ CRAN release: 2026-07-10
 
 - The Bayesian verbs get their own reference section, placed directly
   after Network Estimation:
-  [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md),
-  [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md),
-  [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+  [`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md),
+  [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md),
+  [`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
   and
-  [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md).
+  [`as_netdifference()`](https://pak.dynasite.org/Nestimate/reference/as_netdifference.md).
   They were previously buried in a fourteen-entry “Bootstrap &
   Inference” list.
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   now points at
-  [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) as
-  its closed-form counterpart, and
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  [`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
+  as its closed-form counterpart, and
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   points at
-  [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   as its Bayesian complement, so each pair is reachable from either
   side.
 
-- [`frequencies()`](https://saqr.me/Nestimate/reference/frequencies.md)
+- [`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.md)
   is no longer marked `\keyword{internal}`. The topic page and the
   exported function share a roxygen topic name, so the keyword from the
   topic block leaked onto the function’s own help page even though the
   function is exported (and called by the package).
-  [`cluster_data()`](https://saqr.me/Nestimate/reference/cluster_data.md)
+  [`cluster_data()`](https://pak.dynasite.org/Nestimate/reference/cluster_data.md)
   keeps its internal keyword: it is a deprecated alias for
-  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   and is meant to stay out of the index.
 
 - Dropped the `utils` help page, which documented no exported object.
@@ -849,35 +863,35 @@ CRAN release: 2026-07-10
 
 ### New features
 
-- [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+- [`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
   /
-  [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+  [`as_netdifference()`](https://pak.dynasite.org/Nestimate/reference/as_netdifference.md)
   — verbs for the difference between two networks.
   `subtract_networks(x, y)` returns the edge-wise difference as a
   `netdifference` object;
-  [`as_netdifference()`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+  [`as_netdifference()`](https://pak.dynasite.org/Nestimate/reference/as_netdifference.md)
   promotes an existing comparison result to the same class — a
-  [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   result, or a `netdifference`, which passes through; anything else
   errors — so a difference computed by any route prints the same way.
   Adds `print.netdifference`.
 
-- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+- [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   accepts two
-  [`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  [`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
   objects (source method `"relative"` only). Edge betweenness is
   recomputed on every posterior draw, giving the Bayesian analogue of
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)’s
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)’s
   edge-betweenness dispatch, with posterior mean betweenness matrices
   and the plug-in `observed_diff`.
 
-- [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+- [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   gains a `measures` argument for centrality permutation tests, matching
   the `tna` package’s dispatch.
 
 ### Enhancements
 
-- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)’s
+- [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)’s
   probability-of-direction column is renamed `pd` -\> `p_difference` in
   the [`summary()`](https://rdrr.io/r/base/summary.html) frame, and the
   result now carries class
@@ -888,7 +902,7 @@ CRAN release: 2026-07-10
 
 ### Bug fixes
 
-- [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+- [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   no longer errors with “missing value where TRUE/FALSE needed” when a
   requested measure is undefined on the network (e.g. `Diffusion` is
   `NaN` on a small cyclic net):
@@ -896,18 +910,18 @@ CRAN release: 2026-07-10
   poisoned `if (!any(keep))`. Such measures now drop like zero-variance
   ones.
 
-- [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)’s
+- [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)’s
   default `measures` is restored to
   `c("InStrength", "OutStrength", "Betweenness")`. 0.7.7 had swapped
   `OutStrength` for `Diffusion`, which broke the package: it calls
-  [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   with no `measures` and compares the result against its own explicit
   trio.
   [`centrality()`](https://sonsoles.me/cograph/reference/centrality.html)
   /
-  [`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.md)
+  [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
   keep the `Diffusion` default; only
-  [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   reverts.
 
 - `Suggests: cograph` relaxed from `(>= 2.4.4)` to `(>= 2.3.6)`, the
@@ -928,7 +942,7 @@ CRAN release: 2026-07-10
 ### New features
 
 - [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a
-  [`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  [`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
   result (`plot.net_edge_betweenness`).
 
 ### Enhancements
@@ -947,10 +961,10 @@ Version bump only; no user-visible changes.
 
 ### New features
 
-- [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.md) — builds
-  a grouped node-level network from data and a clustering, keeping every
-  node (unlike
-  [`cluster_summary()`](https://saqr.me/Nestimate/reference/cluster_summary.md),
+- [`as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md)
+  — builds a grouped node-level network from data and a clustering,
+  keeping every node (unlike
+  [`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md),
   which collapses to a cluster-level macro summary). Intended for
   [`cograph::plot_htna()`](https://sonsoles.me/cograph/reference/plot_htna.html).
 
@@ -963,34 +977,34 @@ Version bump only; no user-visible changes.
   previously only the strengths, `Closeness` and `Betweenness`. Adds
   `plot.net_centrality` and `plot.net_centrality_group`.
 
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   and the MCML plots gain layout refinements.
 
 ## Nestimate 0.7.3
 
 ### New features
 
-- [`as_netobject()`](https://saqr.me/Nestimate/reference/as_netobject.md)
+- [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)
   /
-  [`validate_netobject()`](https://saqr.me/Nestimate/reference/validate_netobject.md)
+  [`validate_netobject()`](https://pak.dynasite.org/Nestimate/reference/validate_netobject.md)
   — the boundary layer between (which owns the psychometric-network math
   and emits a lean `cograph_network`) and Nestimate (which owns the
   canonical `netobject` schema).
-  [`as_netobject()`](https://saqr.me/Nestimate/reference/as_netobject.md)
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)
   promotes a `psychnet` result or a bare `cograph_network` to the
   dual-class `c("netobject", "cograph_network")` so it dispatches to
   every Nestimate verb, parking psychnet-specific fields (including the
   GLASSO KKT certificate) under `$meta$psychnet`; `netobject`s pass
   through unchanged.
-  [`validate_netobject()`](https://saqr.me/Nestimate/reference/validate_netobject.md)
+  [`validate_netobject()`](https://pak.dynasite.org/Nestimate/reference/validate_netobject.md)
   enforces the shared structural contract so schema drift on either side
   fails loudly. `psychnet` is not a declared dependency — Nestimate
   never calls it; the converter works by S3 dispatch on whatever
   `psychnet` object the caller supplies.
 
-- [`certainty()`](https://saqr.me/Nestimate/reference/certainty.md) —
-  analytic Bayesian counterpart of
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+- [`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
+  — analytic Bayesian counterpart of
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   for transition networks. Models each state’s outgoing transitions as a
   Dirichlet-Multinomial process (Jeffreys prior) and returns posterior
   mean, sd, credible interval and a stability decision per edge in
@@ -1002,7 +1016,7 @@ Version bump only; no user-visible changes.
 
 ### Enhancements
 
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   gains a multichannel view for `mcml` objects built from sequences.
   `sequence_plot(fit)` draws one carpet panel per cluster channel plus a
   macro `Summary` panel — each channel’s own states solid, the other
@@ -1013,9 +1027,9 @@ Version bump only; no user-visible changes.
   where each time point sums to 1. ggplot-based and dependency-free;
   returns a `ggplot` object.
 
-- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+- [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   results are now 100% compatible with the
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   format: the object carries class `c("net_bayes", "net_permutation")`
   with all `net_permutation` slots (`diff_sig`, `p_values`,
   `effect_size`, `iter`, `alpha`, `paired`, `adjust`), and its `summary`
@@ -1023,17 +1037,17 @@ Version bump only; no user-visible changes.
   (`from, to, weight_x, weight_y, diff, effect_size, p_value, sig` plus
   the Bayesian extras
   `count_x, count_y, ci_lower, ci_upper, ci_width, pd`). A
-  [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+  [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   result is now a drop-in wherever a `net_permutation` is consumed.
 
 ## Nestimate 0.7.2
 
 ### New features
 
-- [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md)
+- [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   — Bayesian Dirichlet-Multinomial comparison of two transition
   networks, a complement to
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md).
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
   Models each source state’s outgoing transitions as a
   Dirichlet-Multinomial process (Jeffreys prior) and returns, per edge,
   a posterior mean difference, a credible interval, the probability of
@@ -1047,11 +1061,12 @@ Version bump only; no user-visible changes.
 
 ### New features
 
-- [`as_networks()`](https://saqr.me/Nestimate/reference/as_networks.md)
+- [`as_networks()`](https://pak.dynasite.org/Nestimate/reference/as_networks.md)
   — promote a
-  [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   result into a `netobject_group` (the psychometric-network counterpart
-  of [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md)).
+  of
+  [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)).
   Singleton clusters with no within-network are dropped with a warning;
   an existing `netobject_group` passes through unchanged.
 
@@ -1059,18 +1074,18 @@ Version bump only; no user-visible changes.
 
 - Vignettes and articles now call package verbs directly instead of
   hand-assembled base-R subsetting rituals:
-  [`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.md)
+  [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
   reads sequences straight from a fitted network
   (`markov_order_test(net)`); HYPA anomaly tables use
   `summary(hypa, order_by = "ratio")`; higher-order pathways use
   `pathways(hon, top = )`; grouped-clustering inspection uses
-  [`cluster_diagnostics()`](https://saqr.me/Nestimate/reference/cluster_diagnostics.md).
+  [`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md).
 
 ## Nestimate 0.7.0
 
 ### New features (experimental)
 
-- [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+- [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   — MCML aggregation for psychometric networks (cor / pcor /
   EBICglasso). Five aggregation methods with explicitly different
   statuses: `"average"` (descriptive block-mean; works without raw
@@ -1111,17 +1126,17 @@ Version bump only; no user-visible changes.
   data). Returns class `mcml_pc` (macro + within netobjects, all
   undirected) with print/summary/plot; the composite/loadings macro is a
   full netobject, so
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
-  [`vertex_bootstrap()`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md),
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+  [`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md),
   and
-  [`vertex_compare()`](https://saqr.me/Nestimate/reference/vertex_compare.md)
+  [`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
   apply to it directly.
   [`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html)
   (\>= 2.3.8) renders the two-layer undirected MCML view. Experimental:
   API and formulas may change.
-- [`loading_stability()`](https://saqr.me/Nestimate/reference/loading_stability.md)
+- [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
   — case-bootstrap stability of the
-  [`build_mcml_pc()`](https://saqr.me/Nestimate/reference/build_mcml_pc.md)
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   composite weights (percentile CIs, sign-flip rates), with print and
   forest-style plot.
 
@@ -1129,28 +1144,28 @@ Version bump only; no user-visible changes.
 
 ### New features
 
-- [`vertex_bootstrap()`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md)
+- [`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
   — Snijders & Borgatti (1999) vertex bootstrap for network-level
   statistics (density, mean weight, strength centralization, weighted
   reciprocity, plus custom `statistic_fn`). Needs only the weight
   matrix, so it works on data-less netobjects
-  ([`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+  ([`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   constituents, `as_tna(mcml)` elements, plain matrices) where
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   cannot run. Returns a tidy one-row-per-statistic
   `net_vertex_bootstrap` with print/summary/plot. Self-loops are
   preserved (diagonal carries the resampled vertex’s own self-weight);
   undirected replicates stay symmetric.
-- [`vertex_compare()`](https://saqr.me/Nestimate/reference/vertex_compare.md)
+- [`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
   — the Snijders & Borgatti two-network test the vertex bootstrap was
   originally proposed for: z-tests and normal-approximation CIs for
   differences in network-level statistics between two networks
   (netobjects, matrices, or precomputed `net_vertex_bootstrap` objects).
   Tidy `net_vertex_comparison` result with print/summary/plot (forest
   plot of differences).
-- [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+- [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   and
-  [`vertex_bootstrap()`](https://saqr.me/Nestimate/reference/vertex_bootstrap.md)
+  [`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
   gain `ci_method = c("percentile", "basic")`: basic intervals (Davison
   & Hinkley 1997, eq. 5.6) reflect the percentile bounds around the
   observed estimate, correcting first-order bootstrap bias. Default
@@ -1160,7 +1175,7 @@ Version bump only; no user-visible changes.
 
 ### Bug fixes
 
-- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   (sequence and edge-list paths) now records the *effective*
   directedness in `$meta$directed`: `FALSE` when
   `type = "cooccurrence"`, whose weights are symmetrized, instead of
@@ -1179,12 +1194,12 @@ Version bump only; no user-visible changes.
   effect size) and a flat mosaic plot. Returns class `mosaic_analysis`
   with a tidy one-row-per-cell `$counts`, a one-row `$stats`, and
   print/summary/plot. Distinct from
-  [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.md),
+  [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md),
   which draws from a fitted network object.
 
 ### Enhancements
 
-- [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.md)
+- [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
   gains `style = c("classic", "flat")`. The flat style uses
   variable-width columns, white gutters and in-tile or side labels,
   sharing the classic style’s geometry and diverging palette;
@@ -1201,21 +1216,21 @@ Version bump only; no user-visible changes.
 
 ### New features
 
-- [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   and the transition wrappers
-  ([`build_tna()`](https://saqr.me/Nestimate/reference/build_tna.md),
-  [`build_ftna()`](https://saqr.me/Nestimate/reference/build_ftna.md),
-  [`build_atna()`](https://saqr.me/Nestimate/reference/build_atna.md),
-  [`build_cna()`](https://saqr.me/Nestimate/reference/build_cna.md))
+  ([`build_tna()`](https://pak.dynasite.org/Nestimate/reference/build_tna.md),
+  [`build_ftna()`](https://pak.dynasite.org/Nestimate/reference/build_ftna.md),
+  [`build_atna()`](https://pak.dynasite.org/Nestimate/reference/build_atna.md),
+  [`build_cna()`](https://pak.dynasite.org/Nestimate/reference/build_cna.md))
   gain `start` and `end` boundary markers: `FALSE` (default), `TRUE`
   (labels `"Start"` / `"End"`) or a custom string. `start` prepends a
   source state to every sequence; `end` places a sink in the single cell
   after each sequence’s last non-`NA` state (not absorbing — see
-  [`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.md)
+  [`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md)
   for that). Honoured by the `relative`, `frequency`, `co_occurrence`
   and `attention` estimators; other methods error.
 
-- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md)
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
   gains `covariate_effect`. `"em"` (default) folds covariates into the
   EM as covariate-dependent mixing, changing the fit; `"posthoc"` fits a
   plain mixture and uses covariates only for the after-fit multinomial
@@ -1227,36 +1242,36 @@ CRAN release: 2026-05-31
 
 ### New features
 
-- [`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md)
+- [`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
   compares the frequency (FTNA) and probability (TNA) views of a
   transition network and quantifies the per-edge discrepancy on a common
   scale, with five metrics, four scalings, and two polar
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) portraits
   (stacked and circular).
 - Full persistent homology with a Vietoris-Rips filtration
-  ([`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md),
+  ([`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md),
   `build_simplicial(type = "vr")`) plus diagram tools
-  [`bottleneck_distance()`](https://saqr.me/Nestimate/reference/bottleneck_distance.md)
+  [`bottleneck_distance()`](https://pak.dynasite.org/Nestimate/reference/bottleneck_distance.md)
   and
-  [`persistence_landscape()`](https://saqr.me/Nestimate/reference/persistence_landscape.md).
+  [`persistence_landscape()`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md).
 - Network comparison:
-  [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md)
+  [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
   (with `netobject_group` dispatch),
-  [`summary.netobject()`](https://saqr.me/Nestimate/reference/summary.netobject.md),
-  [`plot.net_comparison()`](https://saqr.me/Nestimate/reference/plot.net_comparison.md),
+  [`summary.netobject()`](https://pak.dynasite.org/Nestimate/reference/summary.netobject.md),
+  [`plot.net_comparison()`](https://pak.dynasite.org/Nestimate/reference/plot.net_comparison.md),
   and
-  [`rename_models()`](https://saqr.me/Nestimate/reference/rename_models.md)
+  [`rename_models()`](https://pak.dynasite.org/Nestimate/reference/rename_models.md)
   for relabelling grouped network objects.
 
 ### Documentation
 
 - The pkgdown reference index now lists every exported function;
-  [`magnitude_difference()`](https://saqr.me/Nestimate/reference/magnitude_difference.md),
-  [`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.md),
-  [`build_hypergraph()`](https://saqr.me/Nestimate/reference/build_hypergraph.md),
-  [`hypergraph_measures()`](https://saqr.me/Nestimate/reference/hypergraph_measures.md),
+  [`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md),
+  [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md),
+  [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md),
+  [`hypergraph_measures()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md),
   and
-  [`cluster_data()`](https://saqr.me/Nestimate/reference/cluster_data.md)
+  [`cluster_data()`](https://pak.dynasite.org/Nestimate/reference/cluster_data.md)
   were previously absent.
 
 ### Packaging
@@ -1275,29 +1290,29 @@ addressed; two deferred pending design decisions on numeric semantics
 
 #### Bug fixes
 
-- [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+- [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
   now forwards distance-clustering arguments (`na_syms`, `weighted`,
   `lambda`, `seed`, `q`, `p`, `covariates`) to
-  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   instead of silently passing them to
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
   The split runs on caller `...` only — netobject `build_args` continue
   to flow only to the
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   step, protecting attention-method (`atna`) network history from being
   re-routed to weighted Hamming. (audit_clustering
   [\#1](https://github.com/mohsaqr/Nestimate/issues/1))
 - `.auto_detect_clusters()` (used by
-  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   and
-  [`cluster_summary()`](https://saqr.me/Nestimate/reference/cluster_summary.md))
+  [`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md))
   now requires `node_groups` to carry a node identifier column when
   shaped as a data.frame, or be a named atomic vector keyed by node
   label. Previously, a bare `cluster`-only data.frame was read
   positionally — silently mis-assigning nodes whenever `node_groups`
   rows were in a different order than `x$nodes`. (audit_mcml
   [\#1](https://github.com/mohsaqr/Nestimate/issues/1))
-- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+- [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   now rejects all-missing input early with a clear message instead of
   failing indirectly downstream in pam/hclust. (audit_clustering
   [\#4](https://github.com/mohsaqr/Nestimate/issues/4))
@@ -1312,7 +1327,7 @@ addressed; two deferred pending design decisions on numeric semantics
 
 #### Improvements
 
-- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+- [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   validation messages now name the offending argument
   (`"'k' must be at least 2 (got k = 1)"`) rather than dumping the
   failing predicate. Top-level type checks switched to named-condition
@@ -1322,45 +1337,45 @@ addressed; two deferred pending design decisions on numeric semantics
 
 #### Documentation
 
-- [`summary.mcml()`](https://saqr.me/Nestimate/reference/summary.mcml.md)
+- [`summary.mcml()`](https://pak.dynasite.org/Nestimate/reference/summary.mcml.md)
   roxygen corrected — was claiming a printing side effect that doesn’t
   exist. (audit_mcml
   [\#5](https://github.com/mohsaqr/Nestimate/issues/5))
-- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   `clusters = "<col>"` mode now documents its narrow contract: assigns
   each row’s group label to both endpoints, so it only makes sense for
   within-group edge lists. (audit_mcml
   [\#2](https://github.com/mohsaqr/Nestimate/issues/2))
-- [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   `method` parameter doc now steers raw sequence / event-log inputs to
   `"sum"`, since the function counts observed transitions. Other methods
   are for weighted edge lists or pre-existing matrices. (audit_mcml
   [\#4](https://github.com/mohsaqr/Nestimate/issues/4))
-- [`as_tna.mcml()`](https://saqr.me/Nestimate/reference/as_tna.md)
+- [`as_tna.mcml()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
   “Excluded Clusters” section corrected — drop emits a
   [`warning()`](https://rdrr.io/r/base/warning.html) (was claimed
   silent) and only fires for `relative` method (was claimed
   unconditional). (audit_mcml
   [\#6](https://github.com/mohsaqr/Nestimate/issues/6))
-- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+- [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   `na_syms` doc adds an explicit “Missing-value distance rule”
   subsection: NA becomes a comparable sentinel state, not pairwise
   deletion. (audit_clustering
   [\#3](https://github.com/mohsaqr/Nestimate/issues/3))
-- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) adds
-  an “Initial states” section explaining first-column-verbatim init and
-  that build_mmm does NOT honor build_clusters-style `na_syms` — only
-  actual `NA` cells become NA inits. (audit_clustering
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  adds an “Initial states” section explaining first-column-verbatim init
+  and that build_mmm does NOT honor build_clusters-style `na_syms` —
+  only actual `NA` cells become NA inits. (audit_clustering
   [\#5](https://github.com/mohsaqr/Nestimate/issues/5), doc-only path)
 
 #### Tests
 
 - +12 new tests pinning the corrected contracts and the documented edge
   cases (misordered `node_groups` alignment, label propagation through
-  [`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.md),
-  [`as_tna.mcml()`](https://saqr.me/Nestimate/reference/as_tna.md)
+  [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md),
+  [`as_tna.mcml()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
   drop-warning fixture, MMM first-column NA behaviour, and the four-way
-  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.md)
+  [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
   arg-routing contract). Full sweep: 1628 / 1628 pass, 0 fail.
 
 ## Nestimate 0.5.0
@@ -1370,28 +1385,29 @@ addressed; two deferred pending design decisions on numeric semantics
 - `.extract_edges_from_matrix()` no longer drops the diagonal.
   Netobjects built via `.wrap_netobject()` (and therefore everything
   from
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md),
-  [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md),
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
-  [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md),
-  [`wtna()`](https://saqr.me/Nestimate/reference/wtna.md),
-  [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.md)) now have
-  `$edges` containing every non-zero matrix entry, including self-loops.
-  Previously `$weights` and `$edges` were silently inconsistent on any
-  matrix with a non-zero diagonal, causing downstream consumers
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md),
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md),
+  [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md),
+  [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md))
+  now have `$edges` containing every non-zero matrix entry, including
+  self-loops. Previously `$weights` and `$edges` were silently
+  inconsistent on any matrix with a non-zero diagonal, causing
+  downstream consumers
   (e.g. [`cograph::centrality()`](https://sonsoles.me/cograph/reference/centrality.html)
   on an MCML macro) to under-count node degree by 2.
 
 ### New features
 
-- [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md)
+- [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   — native S3 generic for state-frequency plots across `netobject`,
   `netobject_group`, `mcml`, and `htna`. Defaults to a marimekko
   (mosaic) layout where column widths reflect per-group totals and
   segment heights reflect within-group state proportions; also supports
   a colored-bars style and a per-group faceted marimekko. Uses the
   package Okabe-Ito palette throughout.
-- [`plot_mosaic()`](https://saqr.me/Nestimate/reference/plot_mosaic.md)
+- [`plot_mosaic()`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
   — exported low-level marimekko primitive built on `geom_rect()` with
   cumulative-width / cumulative-height geometry. Reusable for any tidy
   `data.frame(group, state, weight)` input.
@@ -1400,9 +1416,9 @@ addressed; two deferred pending design decisions on numeric semantics
 
 ### Bug fixes
 
-- [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)
+- [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   and
-  [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
+  [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   now raise an explicit error naming the dead state when a
   transition-matrix row sums to zero, instead of silently propagating
   `NaN` through `eigen`/`solve`. Zero rows mean the chain is not
@@ -1413,8 +1429,8 @@ addressed; two deferred pending design decisions on numeric semantics
   netobject’s `$data` slot is a numeric matrix (not a data.frame). Any
   downstream caller that row-subsetted `$data` and re-invoked the
   estimator
-  ([`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md),
-  [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md),
+  ([`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md),
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
   `reliability()`) was silently producing NULL centralities caught by
   `tryCatch`, which surfaced as an “all centrality measures have zero
   variance” warning or all-`NaN` correlations. The matrix branch now
@@ -1425,7 +1441,7 @@ addressed; two deferred pending design decisions on numeric semantics
 
 ### New parameters
 
-- [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   gains `state_cols` and `metadata_cols` parameters (both default
   `NULL`). Explicit overrides for the state-vs-metadata column
   classifier, which previously used a “values-in-nodes” heuristic that
@@ -1447,8 +1463,8 @@ addressed; two deferred pending design decisions on numeric semantics
 
 ### Documentation
 
-- [`wtna()`](https://saqr.me/Nestimate/reference/wtna.md) `@param type`
-  now flags that `type = "relative"` combined with
+- [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
+  `@param type` now flags that `type = "relative"` combined with
   `method = "cooccurrence"` produces an asymmetric matrix (conditional
   co-occurrence given row state), not a symmetric undirected weight
   matrix. Use `type = "frequency"` if symmetric counts are required.
@@ -1516,49 +1532,50 @@ CRAN release: 2026-04-20
 
 ### New functions
 
-- [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+- [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   — multilevel VAR networks from ESM/EMA panel data. Estimates temporal
   (directed), contemporaneous (undirected), and between-subjects
   (undirected) networks matching `mlVAR::mlVAR()` at machine precision.
-- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) /
-  [`compare_mmm()`](https://saqr.me/Nestimate/reference/compare_mmm.md)
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  /
+  [`compare_mmm()`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
   — mixture of Markov models via EM, with BIC/AIC/ICL model selection
   and optional covariate regression.
-- [`cooccurrence()`](https://saqr.me/Nestimate/reference/cooccurrence.md)
+- [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
   — standalone co-occurrence network builder supporting 6 input formats
   and 8 similarity methods.
-- [`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.md)
+- [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
   — k-gram pattern comparison across groups with optional permutation
   testing.
-- [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md)
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   /
-  [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md)
+  [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
   — base-R sequence index and state distribution plots with clustering
   integration.
-- [`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md),
-  [`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md),
-  [`q_analysis()`](https://saqr.me/Nestimate/reference/q_analysis.md) —
-  topological analysis of networks via simplicial complexes.
-- [`nct()`](https://saqr.me/Nestimate/reference/nct.md) — Network
-  Comparison Test matching `NetworkComparisonTest::NCT()` at machine
-  precision.
-- [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
+- [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md),
+  [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md),
+  [`q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
+  — topological analysis of networks via simplicial complexes.
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) —
+  Network Comparison Test matching `NetworkComparisonTest::NCT()` at
+  machine precision.
+- [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
   — group iterative mean estimation for idiographic networks via lavaan.
-- [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md),
-  [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
+- [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md),
+  [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   — Markov chain passage times and stability analysis.
-- [`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.md)
+- [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
   /
-  [`evaluate_links()`](https://saqr.me/Nestimate/reference/evaluate_links.md)
+  [`evaluate_links()`](https://pak.dynasite.org/Nestimate/reference/evaluate_links.md)
   — link prediction with 6 structural similarity methods.
-- [`association_rules()`](https://saqr.me/Nestimate/reference/association_rules.md)
+- [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
   — Apriori association rule mining from sequences or binary matrices.
-- [`predictability()`](https://saqr.me/Nestimate/reference/predictability.md)
+- [`predictability()`](https://pak.dynasite.org/Nestimate/reference/predictability.md)
   — node predictability for glasso/pcor/cor networks.
-- [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md),
-  [`build_honem()`](https://saqr.me/Nestimate/reference/build_honem.md),
-  [`build_hypa()`](https://saqr.me/Nestimate/reference/build_hypa.md),
-  [`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md)
+- [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+  [`build_honem()`](https://pak.dynasite.org/Nestimate/reference/build_honem.md),
+  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md),
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
   — higher-order network methods (HON, HONEM, HYPA, MOGen) now
   `cograph_network`-compatible.
 
@@ -1573,10 +1590,11 @@ CRAN release: 2026-04-20
 
 ### API
 
-- [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md),
-  [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md),
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
-  and [`prepare()`](https://saqr.me/Nestimate/reference/prepare.md)
+- [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+  [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md),
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
+  and
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
   replace earlier internal names for consistency with the `build_*`
   naming convention.
 - `mgm` estimator added (`method = "mgm"`) for mixed continuous +
@@ -1585,8 +1603,8 @@ CRAN release: 2026-04-20
 
 ### Bug fixes
 
-- [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md) no
-  longer crashes on platforms where
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  no longer crashes on platforms where
   [`parallel::detectCores()`](https://rdrr.io/r/parallel/detectCores.html)
   returns `NA` (macOS ARM64 CRAN check failure).
 - `gimme` convergence filter now correctly handles all typed `NA`
@@ -1620,13 +1638,13 @@ CRAN release: 2026-04-20
   `$over`, `$under`, `$n_over`, `$n_under` fields to `net_hypa` objects.
   Scores are now pre-sorted with anomalous paths first.
 - HYPA:
-  [`summary.net_hypa()`](https://saqr.me/Nestimate/reference/summary.net_hypa.md)
+  [`summary.net_hypa()`](https://pak.dynasite.org/Nestimate/reference/summary.net_hypa.md)
   now shows over/under-represented paths separately with a configurable
   `n` parameter.
-- [`pathways.netobject()`](https://saqr.me/Nestimate/reference/pathways.md):
+- [`pathways.netobject()`](https://pak.dynasite.org/Nestimate/reference/pathways.md):
   New S3 method to extract higher-order pathways directly from a
   netobject (builds HON or HYPA internally).
-- [`path_counts()`](https://saqr.me/Nestimate/reference/path_counts.md):
+- [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md):
   Now handles NAs in trajectories by stripping them before k-gram
   counting.
 
@@ -1639,9 +1657,9 @@ CRAN release: 2026-04-20
 - Reduced hard dependencies from 6 to 4 Imports (ggplot2, glasso,
   data.table, cluster).
 - Removed igraph from Imports —
-  [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md)
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   and
-  [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)
+  [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   now accept a `centrality_fn` parameter for external centrality
   computation.
 - Removed tna from Imports — moved to Suggests (only used for input
@@ -1664,14 +1682,14 @@ CRAN release: 2026-04-20
 
 - Initial release. Split from Saqrlab v0.3.0.
 - Core estimation via
-  [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   with 8 built-in estimators.
 - Bootstrap inference
-  ([`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md)),
+  ([`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)),
   permutation testing
-  ([`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)),
+  ([`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)),
   EBICglasso bootstrap
-  ([`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md)).
+  ([`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)).
 - Higher-order networks: HON, HONEM, HYPA, MOGen.
 - GIMME, MCML, multilevel VAR, graphical VAR.
 - Temporal network analysis and velocity TNA.

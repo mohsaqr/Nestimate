@@ -65,7 +65,7 @@ wtna(
 
 For `method = "transition"` or `"cooccurrence"`: a
 `c("netobject", "cograph_network")` object (see
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md))
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md))
 with `method` set to `"wtna_transition"` or `"wtna_cooccurrence"`,
 `directed = TRUE` only for transitions, and the windowing settings
 (`type`, `window_size`, `mode`, `codes`, `actor`) recorded in `$params`.
@@ -95,8 +95,8 @@ group and summed.
 
 ## See also
 
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md),
-[`prepare_onehot`](https://saqr.me/Nestimate/reference/prepare_onehot.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`prepare_onehot`](https://pak.dynasite.org/Nestimate/reference/prepare_onehot.md)
 
 ## Examples
 

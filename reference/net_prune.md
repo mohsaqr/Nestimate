@@ -83,7 +83,7 @@ net_prune(
 - ...:
 
   Passed to
-  [`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  [`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   when `method = "bootstrap"`.
 
 ## Value
@@ -96,11 +96,11 @@ attribute. Class is unchanged.
 Pruning is non-destructive: the pruned network carries a `"pruning"`
 attribute holding the original weights, the pruned weights, the
 parameters used, and a tidy table of removed edges. Use
-[`net_deprune`](https://saqr.me/Nestimate/reference/net_deprune.md) to
-restore the original weights and
-[`net_reprune`](https://saqr.me/Nestimate/reference/net_reprune.md) to
-re-apply the pruning, both without recomputation.
-[`net_pruning_details`](https://saqr.me/Nestimate/reference/net_pruning_details.md)
+[`net_deprune`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md)
+to restore the original weights and
+[`net_reprune`](https://pak.dynasite.org/Nestimate/reference/net_reprune.md)
+to re-apply the pruning, both without recomputation.
+[`net_pruning_details`](https://pak.dynasite.org/Nestimate/reference/net_pruning_details.md)
 reports what was removed.
 
 Methods:
@@ -120,7 +120,7 @@ Methods:
 - `"bootstrap"`:
 
   Remove edges deemed non-significant by
-  [`bootstrap_network`](https://saqr.me/Nestimate/reference/bootstrap_network.md)
+  [`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   (pass a precomputed result via `boot`, or extra bootstrap arguments
   via `...`).
 
@@ -135,9 +135,9 @@ prunes self-loops like any other edge.)
 
 ## See also
 
-[`net_deprune`](https://saqr.me/Nestimate/reference/net_deprune.md),
-[`net_reprune`](https://saqr.me/Nestimate/reference/net_reprune.md),
-[`net_pruning_details`](https://saqr.me/Nestimate/reference/net_pruning_details.md)
+[`net_deprune`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md),
+[`net_reprune`](https://pak.dynasite.org/Nestimate/reference/net_reprune.md),
+[`net_pruning_details`](https://pak.dynasite.org/Nestimate/reference/net_pruning_details.md)
 
 ## Examples
 

@@ -2,7 +2,7 @@
 
 Fits a regression of an outcome on predictor columns – pattern
 indicators, topological features from
-[`simplicial_features`](https://saqr.me/Nestimate/reference/simplicial_features.md),
+[`simplicial_features`](https://pak.dynasite.org/Nestimate/reference/simplicial_features.md),
 or any other numeric covariates – and returns a tidy effect table with
 confidence intervals and multiplicity-corrected p-values.
 
@@ -115,7 +115,7 @@ added), `$family`, `$n` (rows the reported model was fitted on),
 `$n_groups` (`NA` unless mixed), `$selected`, `$dropped` (zero-variance
 predictors), `$adjust`, `$select`, `$correction`, `$ci_level`, `$mixed`
 and `$outcome`. Retrieve the table with
-[`effects_table`](https://saqr.me/Nestimate/reference/effects_table.md).
+[`effects_table`](https://pak.dynasite.org/Nestimate/reference/effects_table.md).
 
 `print` returns its input invisibly.
 
@@ -134,8 +134,8 @@ supplied predictor and needs no split.
 
 ## See also
 
-[`simplicial_features`](https://saqr.me/Nestimate/reference/simplicial_features.md),
-[`effects_table`](https://saqr.me/Nestimate/reference/effects_table.md)
+[`simplicial_features`](https://pak.dynasite.org/Nestimate/reference/simplicial_features.md),
+[`effects_table`](https://pak.dynasite.org/Nestimate/reference/effects_table.md)
 
 ## Examples
 

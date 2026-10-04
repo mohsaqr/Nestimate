@@ -40,7 +40,7 @@ build_clusters(
   netobject
 
   :   A network object from
-      [`build_network`](https://saqr.me/Nestimate/reference/build_network.md).
+      [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
       Extracts the stored sequence data. Only valid for sequence-based
       methods (relative, frequency, co_occurrence, attention).
 
@@ -234,7 +234,7 @@ An object of class `"net_clustering"` containing:
 
   For `netobject` input, its per-sequence metadata, one row per
   clustered sequence, so
-  [`session_ids`](https://saqr.me/Nestimate/reference/session_ids.md)
+  [`session_ids`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
   can name each sequence. NULL otherwise.
 
 - htna_partition:

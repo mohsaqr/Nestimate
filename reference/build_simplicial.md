@@ -18,7 +18,7 @@ filtration is constructed: each k-simplex \\\sigma\\ enters at
 filtration diameter; edges with `d(i,j) > max_scale` are excluded.
 Filtration values are attached as `$filtration` on the returned object
 so
-[`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md)
+[`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
 can read them directly.
 
 ## Usage
@@ -80,8 +80,8 @@ build_simplicial(
 - ...:
 
   Additional arguments passed to
-  [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md) when
-  `x` is a `tna`/`netobject` with `type = "pathway"`.
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
+  when `x` is a `tna`/`netobject` with `type = "pathway"`.
 
 ## Value
 
@@ -127,15 +127,15 @@ A `simplicial_complex` object - a list with:
 For `type = "vr"` two further elements are attached: `$filtration`
 (numeric, parallel to `$simplices`: the value at which each simplex
 enters) and `$max_scale` (the cap actually used).
-[`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md)
+[`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
 consumes them directly.
 
 ## See also
 
-[`betti_numbers`](https://saqr.me/Nestimate/reference/betti_numbers.md),
-[`persistent_homology`](https://saqr.me/Nestimate/reference/persistent_homology.md),
-[`simplicial_degree`](https://saqr.me/Nestimate/reference/simplicial_degree.md),
-[`q_analysis`](https://saqr.me/Nestimate/reference/q_analysis.md)
+[`betti_numbers`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md),
+[`persistent_homology`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md),
+[`simplicial_degree`](https://pak.dynasite.org/Nestimate/reference/simplicial_degree.md),
+[`q_analysis`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
 
 ## Examples
 

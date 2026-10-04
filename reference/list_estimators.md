@@ -14,8 +14,8 @@ A data frame with columns `name`, `description`, `directed`.
 
 ## See also
 
-[`register_estimator`](https://saqr.me/Nestimate/reference/register_estimator.md),
-[`get_estimator`](https://saqr.me/Nestimate/reference/get_estimator.md)
+[`register_estimator`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md),
+[`get_estimator`](https://pak.dynasite.org/Nestimate/reference/get_estimator.md)
 
 ## Examples
 

@@ -73,7 +73,7 @@ A `ggplot` object.
 ## Details
 
 Used internally by
-[`plot_state_frequencies`](https://saqr.me/Nestimate/reference/plot_state_frequencies.md);
+[`plot_state_frequencies`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md);
 exposed so that other plot methods (e.g. permutation-residual
 visualisations) can reuse the same geometry by supplying a different
 fill column.

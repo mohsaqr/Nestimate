@@ -102,7 +102,7 @@ the longer history changes the *modal* prediction, not just its
 confidence.
 
 Pair this with
-[`markov_order_test`](https://saqr.me/Nestimate/reference/markov_order_test.md)
+[`markov_order_test`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
 (which decides whether order-k is needed *globally*) to see the
 chain-level decision broken down per context.
 
@@ -113,9 +113,9 @@ ed., chapters 2 and 4. Wiley. (KL divergence and conditional entropy.)
 
 ## See also
 
-[`markov_order_test`](https://saqr.me/Nestimate/reference/markov_order_test.md),
-[`transition_entropy`](https://saqr.me/Nestimate/reference/transition_entropy.md),
-[`build_mogen`](https://saqr.me/Nestimate/reference/build_mogen.md)
+[`markov_order_test`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md),
+[`transition_entropy`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md),
+[`build_mogen`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
 
 ## Examples
 

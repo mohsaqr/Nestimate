@@ -33,7 +33,7 @@ indices (Nestimate) or character labels (psychnet).
 
 ## See also
 
-[`as_netobject`](https://saqr.me/Nestimate/reference/as_netobject.md)
+[`as_netobject`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)
 
 ## Examples
 

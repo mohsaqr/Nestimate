@@ -176,7 +176,7 @@ mosaic_plot(x, ...)
   standardized residual inside each tile, and extra flat styling
   arguments (`tile_label`, `col_label_side`, `row_label_side`,
   `legend_position`, `legend_size`, `label_size`, ...; see
-  [`mosaic_analysis`](https://saqr.me/Nestimate/reference/mosaic_analysis.md))
+  [`mosaic_analysis`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md))
   may be passed via `...`. Not supported for multi-panel `mcml` (level =
   "clusters"), which falls back to the classic faceted style.
 
@@ -222,8 +222,8 @@ sequences. The function errors only when neither integer weights nor
 
 ## See also
 
-[`plot_mosaic`](https://saqr.me/Nestimate/reference/plot_mosaic.md) for
-the lower-level data.frame primitive.
+[`plot_mosaic`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
+for the lower-level data.frame primitive.
 
 ## Examples
 

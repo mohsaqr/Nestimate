@@ -1,7 +1,7 @@
 # Bayesian Dirichlet-Multinomial comparison of two transition networks
 
 Compares two transition networks estimated by
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 (method `"relative"` or `"frequency"`) using a Bayesian
 Dirichlet-Multinomial model. The outgoing transitions from each source
 state are modelled as a Multinomial draw with a Dirichlet prior on the
@@ -13,22 +13,22 @@ between the two networks is available in closed form and a credible
 interval is obtained by Monte Carlo.
 
 This is a complement to
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md): the
-permutation test answers "is this difference more extreme than chance?";
-the Bayesian comparison answers "what is the plausible range of the true
-difference, and how precisely is it estimated given the counts?". An
-edge with few outgoing transitions from its source state yields a wide
-credible interval even when its row-normalised probability looks
-decisive.
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md):
+the permutation test answers "is this difference more extreme than
+chance?"; the Bayesian comparison answers "what is the plausible range
+of the true difference, and how precisely is it estimated given the
+counts?". An edge with few outgoing transitions from its source state
+yields a wide credible interval even when its row-normalised probability
+looks decisive.
 
 `bayes_compare()` also accepts two
-[`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+[`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
 objects (source method `"relative"` only). Edge betweenness is a
 nonlinear function of the whole transition matrix, so instead of Beta
 marginals the full transition matrix is drawn from each group's row-wise
 Dirichlet posterior and edge betweenness is recomputed on every draw -
 the Bayesian analogue of
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md)'s
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)'s
 edge-betweenness dispatch. The result summarises the posterior of
 `EB(x) - EB(y)`: `diff` is the posterior mean difference,
 `prob_x`/`prob_y` hold the posterior mean betweenness matrices, and
@@ -55,9 +55,9 @@ bayes_compare(
 - x:
 
   A `netobject` (from
-  [`build_network`](https://saqr.me/Nestimate/reference/build_network.md)),
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)),
   a `netobject_group`, an `mcml` object, or a
-  [`net_edge_betweenness`](https://saqr.me/Nestimate/reference/net_edge_betweenness.md)
+  [`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
   object. Must use a transition method (`"relative"` / `"frequency"` and
   their aliases).
 
@@ -100,7 +100,7 @@ bayes_compare(
 
 An object of class `c("net_bayes", "netdifference", "net_permutation")`.
 It carries the same fields as a
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md)
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
 result, so it is a drop-in wherever a `net_permutation` is consumed, and
 also carries a `netdifference` difference matrix for cograph difference
 plotting, plus Bayesian extras:
@@ -187,15 +187,15 @@ estimation problems. *Proceedings of the Royal Society of London A*,
 
 ## See also
 
-[`permutation`](https://saqr.me/Nestimate/reference/permutation.md) for
-the frequentist complement;
-[`certainty`](https://saqr.me/Nestimate/reference/certainty.md) for
-single-network posterior edge intervals;
-[`subtract_networks`](https://saqr.me/Nestimate/reference/subtract_networks.md)
+[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+for the frequentist complement;
+[`certainty`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
+for single-network posterior edge intervals;
+[`subtract_networks`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
 and
-[`as_netdifference`](https://saqr.me/Nestimate/reference/as_netdifference.md)
+[`as_netdifference`](https://pak.dynasite.org/Nestimate/reference/as_netdifference.md)
 for the difference verbs;
-[`build_network`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

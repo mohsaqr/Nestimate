@@ -6,7 +6,7 @@ Laplacian-eigenmap + k-means algorithm of Hayashi et al. (2020,
 normalized hypergraph Laplacian are row-normalized to unit length and
 clustered with k-means. With `type = "random_walk"` and a weighted
 incidence (e.g. from
-[`bipartite_groups()`](https://saqr.me/Nestimate/reference/bipartite_groups.md)
+[`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)
 with `weight =`), the edge-dependent vertex weights genuinely change the
 partition - with edge-independent weights the walk collapses to a graph
 random walk (Chitra & Raphael 2019).
@@ -37,7 +37,7 @@ hypergraph_cluster(
 - type, edge_weights:
 
   Passed to
-  [`hypergraph_laplacian()`](https://saqr.me/Nestimate/reference/hypergraph_laplacian.md).
+  [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md).
 
 - nstart:
 

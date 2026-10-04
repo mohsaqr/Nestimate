@@ -44,7 +44,7 @@ hypergraph_transduction(
 - type, edge_weights:
 
   Passed to
-  [`hypergraph_laplacian()`](https://saqr.me/Nestimate/reference/hypergraph_laplacian.md).
+  [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md).
 
 ## Value
 

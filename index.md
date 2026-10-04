@@ -6,7 +6,7 @@
 Nestimate is a comprehensive R package for estimating, validating, and
 comparing networks from behavioral sequence data, psychological scales,
 and longitudinal panel data. A single entry point —
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 — dispatches to 13 built-in estimators. Every network type shares the
 same validation pipeline: bootstrap confidence intervals, permutation
 testing, split-half reliability, and centrality stability. The entire
@@ -15,24 +15,28 @@ package has only 4 hard imports (ggplot2, glasso, data.table, cluster).
 ### Full tutorials
 
 - [Network Estimation &
-  Visualization](https://saqr.me/Nestimate/articles/cograph-tutorial-nestimate.html)
+  Visualization](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html)
 - [Higher-Order & Simplicial
-  Complexes](https://saqr.me/Nestimate/articles/cograph-tutorial-simplicial.html)
+  Complexes](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html)
 - [Model
-  Assessment](https://saqr.me/Nestimate/articles/tutorial_model_assessment.html)
+  Assessment](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html)
+- [Permutation Tests for Nested
+  Data](https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html)
+- [Comparing
+  Networks](https://pak.dynasite.org/Nestimate/articles/compare-networks.html)
 
 ### Quick guides
 
 - [Transition
-  Networks](https://saqr.me/Nestimate/articles/transition-networks.html)
+  Networks](https://pak.dynasite.org/Nestimate/articles/transition-networks.html)
 - [Sequence Plots &
-  Comparison](https://saqr.me/Nestimate/articles/sequence-plots.html)
+  Comparison](https://pak.dynasite.org/Nestimate/articles/sequence-plots.html)
 - [Clustering & Multi-Level
-  Analysis](https://saqr.me/Nestimate/articles/clustering.html)
+  Analysis](https://pak.dynasite.org/Nestimate/articles/clustering.html)
 - [Markov
-  Stability](https://saqr.me/Nestimate/articles/markov-stability.html)
+  Stability](https://pak.dynasite.org/Nestimate/articles/markov-stability.html)
 - [Sequence Pattern
-  Comparison](https://saqr.me/Nestimate/articles/sequence-comparison.html)
+  Comparison](https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html)
 
 ## Installation
 
@@ -49,26 +53,26 @@ devtools::install_github("mohsaqr/Nestimate")
 
 | Area | Key Functions |
 |----|----|
-| Dynamic / Transition Networks | [`build_network()`](https://saqr.me/Nestimate/reference/build_network.md), [`wtna()`](https://saqr.me/Nestimate/reference/wtna.md), [`cooccurrence()`](https://saqr.me/Nestimate/reference/cooccurrence.md) |
+| Dynamic / Transition Networks | [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md), [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md), [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md) |
 | Psychological Networks | `build_network(method = "glasso/pcor/cor/ising/mgm")` |
-| Multilevel VAR | [`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md) |
-| Idiographic Networks | [`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md) |
-| Cluster & Group Networks | [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md), [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md), [`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md) |
-| Higher-Order Networks | [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md), [`build_honem()`](https://saqr.me/Nestimate/reference/build_honem.md), [`build_hypa()`](https://saqr.me/Nestimate/reference/build_hypa.md), [`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md) |
-| Topological Analysis | [`build_simplicial()`](https://saqr.me/Nestimate/reference/build_simplicial.md), [`persistent_homology()`](https://saqr.me/Nestimate/reference/persistent_homology.md), [`q_analysis()`](https://saqr.me/Nestimate/reference/q_analysis.md) |
-| Sequence Visualization | [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.md), [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.md) |
-| Sequence Pattern Comparison | [`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.md) |
-| Association Mining | [`association_rules()`](https://saqr.me/Nestimate/reference/association_rules.md) |
-| Link Prediction | [`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.md), [`evaluate_links()`](https://saqr.me/Nestimate/reference/evaluate_links.md) |
-| Markov Chain Analysis | [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md), [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md) |
-| Statistical Validation | [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md), [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md), [`nct()`](https://saqr.me/Nestimate/reference/nct.md), [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md), [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md) |
+| Multilevel VAR | [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md) |
+| Idiographic Networks | [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md) |
+| Cluster & Group Networks | [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md), [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md), [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md) |
+| Higher-Order Networks | [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md), [`build_honem()`](https://pak.dynasite.org/Nestimate/reference/build_honem.md), [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md), [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md) |
+| Topological Analysis | [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md), [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md), [`q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md) |
+| Sequence Visualization | [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md), [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md) |
+| Sequence Pattern Comparison | [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md) |
+| Association Mining | [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md) |
+| Link Prediction | [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md), [`evaluate_links()`](https://pak.dynasite.org/Nestimate/reference/evaluate_links.md) |
+| Markov Chain Analysis | [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md), [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md) |
+| Statistical Validation | [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md), [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md), [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md), [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md), [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md) |
 
 ------------------------------------------------------------------------
 
 ## Dynamic Networks
 
 All dynamic network methods use
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 Pass an event log with `action`, `actor`, and `time` columns — no
 preprocessing needed.
 
@@ -97,10 +101,10 @@ group_nets <- build_network(human_long, method = "tna",
 
 ### Window-Based TNA
 
-[`wtna()`](https://saqr.me/Nestimate/reference/wtna.md) builds networks
-from binary (one-hot) data using temporal windows — directed transitions
-between windows, undirected co-occurrence within windows, or a mixed
-network combining both.
+[`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md) builds
+networks from binary (one-hot) data using temporal windows — directed
+transitions between windows, undirected co-occurrence within windows, or
+a mixed network combining both.
 
 ``` r
 
@@ -113,7 +117,7 @@ net_mixed <- wtna(learning_activities, actor = "student",
 
 ### Co-occurrence Networks
 
-[`cooccurrence()`](https://saqr.me/Nestimate/reference/cooccurrence.md)
+[`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
 builds undirected co-occurrence networks from 6 input formats (delimited
 fields, long/bipartite, binary matrix, wide sequence, lists) with 8
 similarity methods (Jaccard, cosine, association strength, Dice, and
@@ -154,7 +158,7 @@ predictability(net_gl)   # R-squared per node from network structure
 
 ## Multilevel VAR
 
-[`build_mlvar()`](https://saqr.me/Nestimate/reference/build_mlvar.md)
+[`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
 estimates three networks simultaneously from ESM/EMA diary data — the
 three pillars of mlVAR analysis in a single function call:
 
@@ -184,7 +188,7 @@ coefs(fit)            # tidy data.frame: beta, SE, t, p, CI for every edge
 
 ## Idiographic Networks
 
-[`build_gimme()`](https://saqr.me/Nestimate/reference/build_gimme.md)
+[`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
 estimates a separate network for each person using the Group Iterative
 Mean Estimation (GIMME) algorithm, then aggregates to a group-level
 picture. Use this when between-person heterogeneity matters and a single
@@ -203,13 +207,14 @@ fit_g$individual_networks # one network per person
 
 ### Sequence Clustering
 
-[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 partitions sequences into `k` groups using pairwise distance matrices.
 Supports 9 distance metrics and 8 clustering algorithms. Both
-[`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.md)
-and [`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md)
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+and
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
 results pass directly to
-[`build_network()`](https://saqr.me/Nestimate/reference/build_network.md).
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
 
 ``` r
 
@@ -220,11 +225,11 @@ cluster_nets <- build_network(clust, method = "tna")
 
 ### Mixed Markov Models
 
-[`build_mmm()`](https://saqr.me/Nestimate/reference/build_mmm.md)
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
 discovers latent subgroups of sequences that share similar transition
 dynamics via EM — without pre-labelling groups. BIC/AIC/ICL model
 selection via
-[`compare_mmm()`](https://saqr.me/Nestimate/reference/compare_mmm.md).
+[`compare_mmm()`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md).
 
 ``` r
 
@@ -235,7 +240,7 @@ mmm_nets <- build_network(mmm, method = "tna")
 
 ### MCML
 
-[`build_mcml()`](https://saqr.me/Nestimate/reference/build_mcml.md)
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
 decomposes a network into macro (between-cluster) and micro
 (within-cluster) layers when nodes belong to known groups.
 
@@ -255,10 +260,10 @@ Capture dependencies beyond first-order transitions:
 
 | Function | What it finds |
 |----|----|
-| [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.md) | Variable-length memory paths |
-| [`build_honem()`](https://saqr.me/Nestimate/reference/build_honem.md) | Higher-order network embedding |
-| [`build_hypa()`](https://saqr.me/Nestimate/reference/build_hypa.md) | Statistically anomalous paths (over/under-represented) |
-| [`build_mogen()`](https://saqr.me/Nestimate/reference/build_mogen.md) | Optimal Markov order per node |
+| [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md) | Variable-length memory paths |
+| [`build_honem()`](https://pak.dynasite.org/Nestimate/reference/build_honem.md) | Higher-order network embedding |
+| [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md) | Statistically anomalous paths (over/under-represented) |
+| [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md) | Optimal Markov order per node |
 
 ``` r
 
@@ -310,7 +315,7 @@ distribution_plot(clust, type = "bar")
 
 ## Sequence Pattern Comparison
 
-[`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.md)
+[`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
 extracts all k-gram patterns from grouped sequences, counts per-group
 frequencies, and tests statistical differences via permutation —
 answering the question “do these groups actually behave differently, and
@@ -333,7 +338,7 @@ plot(res, style = "heatmap")        # heatmap for many patterns
 
 ## Association Rule Mining
 
-[`association_rules()`](https://saqr.me/Nestimate/reference/association_rules.md)
+[`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
 mines “if A then B” patterns from sequences or binary matrices using the
 Apriori algorithm. Returns support, confidence, lift, and conviction for
 every rule above a threshold.
@@ -352,10 +357,10 @@ rules2 <- association_rules(binary_mat, min_support = 0.1)
 
 ## Link Prediction
 
-[`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.md)
+[`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
 scores all unobserved node pairs using structural similarity,
 identifying which missing connections are most likely to exist.
-[`evaluate_links()`](https://saqr.me/Nestimate/reference/evaluate_links.md)
+[`evaluate_links()`](https://pak.dynasite.org/Nestimate/reference/evaluate_links.md)
 computes AUC, precision, and recall against held-out edges.
 
 ``` r
@@ -372,10 +377,10 @@ eval$auc
 
 ## Markov Chain Analysis
 
-[`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.md)
+[`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
 measures how stable a network partition is under random-walk dynamics at
 different time scales — a resolution-free way to find communities.
-[`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.md)
+[`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
 computes expected first-passage and return times between states.
 
 ``` r
@@ -419,12 +424,12 @@ boot_gl <- boot_glasso(net_pna, iter = 1000)
 
 | Function | Purpose |
 |----|----|
-| [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.md) | Bootstrap CIs and p-values for each edge |
-| [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md) | Edge-level comparison between two networks |
-| [`nct()`](https://saqr.me/Nestimate/reference/nct.md) | Formal Network Comparison Test (global strength + structure) |
-| [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.md) | Split-half reliability of edge weights |
-| [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.md) | CS-coefficient via case-dropping |
-| [`boot_glasso()`](https://saqr.me/Nestimate/reference/boot_glasso.md) | Edge inclusion, centrality CIs, difference tests for glasso networks |
+| [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md) | Bootstrap CIs and p-values for each edge |
+| [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md) | Edge-level comparison between two networks |
+| [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) | Formal Network Comparison Test (global strength + structure) |
+| [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md) | Split-half reliability of edge weights |
+| [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md) | CS-coefficient via case-dropping |
+| [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md) | Edge inclusion, centrality CIs, difference tests for glasso networks |
 
 ------------------------------------------------------------------------
 
@@ -445,10 +450,10 @@ boot_gl <- boot_glasso(net_pna, iter = 1000)
 ## Documentation
 
 - [Transition
-  Networks](https://saqr.me/Nestimate/articles/transition-networks.html)
+  Networks](https://pak.dynasite.org/Nestimate/articles/transition-networks.html)
 - [Clustering &
-  Multilevel](https://saqr.me/Nestimate/articles/clustering.html)
-- [Full Reference](https://saqr.me/Nestimate/reference/)
+  Multilevel](https://pak.dynasite.org/Nestimate/articles/clustering.html)
+- [Full Reference](https://pak.dynasite.org/Nestimate/reference/)
 
 ## Citation
 

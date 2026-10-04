@@ -136,7 +136,7 @@ plot(
   Optional column name identifying the actor each sequence belongs to
   (e.g. `"student_id"` when sessions are nested in students, `"Group"`
   for students nested in teams). Passed to
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
   which then reassigns whole actors; see its sections *Nested data and
   actor* and *ICC and design effect*. Requires `test = "permutation"`.
   The ICC and design effects are added to `global` under the category
@@ -234,11 +234,11 @@ An object of class `net_network_comparison`: a list with
 [`summary()`](https://rdrr.io/r/base/summary.html) returns the
 one-row-per-pair overview table; the full tables come from the named
 verbs
-[`edge_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md),
-[`node_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md),
-[`global_differences()`](https://saqr.me/Nestimate/reference/comparison_tables.md)
+[`edge_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
+[`node_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
+[`global_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
 and
-[`network_metrics()`](https://saqr.me/Nestimate/reference/comparison_tables.md).
+[`network_metrics()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md).
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws one view
 per call.
 
@@ -265,19 +265,19 @@ diagonal and edges absent from one network (weight 0); when both
 networks are undirected only `from <= to` cells are kept.
 
 **Inference.** `"permutation"` (via
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md))
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md))
 adds `perm_effect`, `perm_p`, `perm_sig` to `edges` and `nodes`, and two
 rows `M` (sum of absolute edge differences) and `S` (largest absolute
 edge difference) to `global` with permutation p-values; with `actor`,
 the reassignment moves whole actors and `global` also gains the rows
 `ICC`, `Design effect (edges)` and `Design effect (M)`. `"bayes"` (via
-[`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md))
+[`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md))
 adds `bayes_diff` (posterior mean difference), `bayes_ci_lower`,
 `bayes_ci_upper`, `bayes_pd` (probability of direction), `bayes_p`,
 `bayes_sig` to `edges`; with `rope`, `bayes_p_rope` (normal
 approximation from the posterior mean and SD) and `bayes_decision`.
 `"bootstrap"` (via
-[`vertex_compare()`](https://saqr.me/Nestimate/reference/vertex_compare.md))
+[`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md))
 appends structural rows (density, mean weight, centralization,
 reciprocity) to `global` with `boot_se`, `boot_ci_lower`,
 `boot_ci_upper`, `boot_z`, `boot_p`, `boot_sig`. Unified `sig` and
@@ -285,7 +285,7 @@ reciprocity) to `global` with `boot_se`, `boot_ci_lower`,
 and `nodes`), else the Bayesian one (on `edges` only – the Bayesian
 backend is edge-level). Permutation and Bayesian tests need networks
 that carry their data
-([`build_network()`](https://saqr.me/Nestimate/reference/build_network.md)
+([`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 output, or `tna` objects, which are rebuilt); plain matrices support
 `"bootstrap"` only.
 
@@ -313,12 +313,12 @@ non-significant difference is faded, never deleted.
 
 ## See also
 
-[`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.md)
+[`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
 (two-network predecessor),
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.md),
-[`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.md),
-[`vertex_compare()`](https://saqr.me/Nestimate/reference/vertex_compare.md),
-[`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.md).
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
+[`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md),
+[`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md),
+[`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md).
 
 ## Examples
 

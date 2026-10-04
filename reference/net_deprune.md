@@ -1,10 +1,10 @@
 # Undo Network Pruning
 
 Restores the original (pre-pruning) weights of a network pruned by
-[`net_prune`](https://saqr.me/Nestimate/reference/net_prune.md), without
-recomputation. The pruning record is kept, so
-[`net_reprune`](https://saqr.me/Nestimate/reference/net_reprune.md) can
-re-apply it.
+[`net_prune`](https://pak.dynasite.org/Nestimate/reference/net_prune.md),
+without recomputation. The pruning record is kept, so
+[`net_reprune`](https://pak.dynasite.org/Nestimate/reference/net_reprune.md)
+can re-apply it.
 
 ## Usage
 
@@ -38,8 +38,8 @@ marked inactive.
 
 ## See also
 
-[`net_prune`](https://saqr.me/Nestimate/reference/net_prune.md),
-[`net_reprune`](https://saqr.me/Nestimate/reference/net_reprune.md)
+[`net_prune`](https://pak.dynasite.org/Nestimate/reference/net_prune.md),
+[`net_reprune`](https://pak.dynasite.org/Nestimate/reference/net_reprune.md)
 
 ## Examples
 
