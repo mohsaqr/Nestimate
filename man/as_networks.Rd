@@ -47,8 +47,11 @@ into a group rather than re-wrapping matrices.
 }
 \examples{
 set.seed(1)
-df <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, 6))
-names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+f <- stats::rnorm(200)
+g <- stats::rnorm(200)
+df <- data.frame(a1 = f + stats::rnorm(200), a2 = f + stats::rnorm(200),
+                 a3 = f + stats::rnorm(200), b1 = g + stats::rnorm(200),
+                 b2 = g + stats::rnorm(200), b3 = g + stats::rnorm(200))
 clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, clusters, aggregation = "composite", method = "cor")
 nets <- as_networks(fit)

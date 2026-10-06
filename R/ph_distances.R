@@ -372,13 +372,11 @@ print.persistence_landscape <- function(x, ...) {
 #' @param ... Ignored.
 #' @return A ggplot.
 #' @examples
-#' \donttest{
 #' mat <- matrix(c(0, .6, .5, .6, 0, .4, .5, .4, 0), 3, 3)
 #' rownames(mat) <- colnames(mat) <- c("A","B","C")
 #' ph <- persistent_homology(mat, n_steps = 5)
 #' pl <- persistence_landscape(ph, k_max = 3, dimension = 0)
 #' plot(pl)
-#' }
 #' @export
 plot.persistence_landscape <- function(x, ...) {
   df <- x$landscape

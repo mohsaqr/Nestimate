@@ -1327,12 +1327,10 @@ print.q_analysis <- function(x, ...) {
 #'   four ggplots when `combined = FALSE`.
 #'
 #' @examples
-#' \donttest{
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
 #' sc <- build_simplicial(mat, threshold = 0.3)
 #' if (requireNamespace("gridExtra", quietly = TRUE)) plot(sc)
-#' }
 #'
 #' @export
 plot.simplicial_complex <- function(x, combined = TRUE, ...) {
@@ -1432,7 +1430,6 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
 #'   of two ggplots when `combined = FALSE`.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
 #'   V2 = c("B","C","A","B","C"),
@@ -1441,7 +1438,6 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
 #' net <- build_network(seqs, method = "relative")
 #' ph  <- persistent_homology(net)
 #' if (requireNamespace("gridExtra", quietly = TRUE)) plot(ph)
-#' }
 #'
 #' @export
 plot.persistent_homology <- function(x, combined = TRUE, ...) {
@@ -1530,7 +1526,6 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
 #'   of two ggplots when `combined = FALSE`.
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(
 #'   V1 = c("A","B","C","A","B"),
 #'   V2 = c("B","C","A","B","C"),
@@ -1540,7 +1535,6 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
 #' sc  <- build_simplicial(net, type = "clique")
 #' qa  <- q_analysis(sc)
 #' if (requireNamespace("gridExtra", quietly = TRUE)) plot(qa)
-#' }
 #'
 #' @export
 plot.q_analysis <- function(x, combined = TRUE, ...) {

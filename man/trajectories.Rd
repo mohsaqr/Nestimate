@@ -22,11 +22,9 @@ hold the engagement state for that week. States: \code{"Active"},
 \code{"Average"}, \code{"Disengaged"}. Missing weeks are \code{NA}.
 }
 \examples{
-\donttest{
 sequence_plot(trajectories, main = "Engagement trajectories")
 sequence_plot(trajectories, k = 3)
 sequence_plot(trajectories, type = "distribution")
-}
 
 }
 \keyword{datasets}

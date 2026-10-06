@@ -26,11 +26,9 @@ Produces a four-panel summary: f-vector, Betti numbers, simplicial
 degree ranking, and degree-by-dimension heatmap.
 }
 \examples{
-\donttest{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")
 sc <- build_simplicial(mat, threshold = 0.3)
 if (requireNamespace("gridExtra", quietly = TRUE)) plot(sc)
-}
 
 }

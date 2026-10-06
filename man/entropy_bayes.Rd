@@ -92,14 +92,12 @@ estimate on sparse data (Dirichlet smoothing pulls rows toward uniform
 but averages over uncertainty); the difference vanishes as counts grow.
 }
 \examples{
-\donttest{
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time")
-eb <- entropy_bayes(net, seed = 1)
+eb <- entropy_bayes(net, draws = 1000, seed = 1)
 eb
 summary(eb)
 plot(eb)
-}
 
 }
 \references{

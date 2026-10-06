@@ -323,8 +323,9 @@
 #' @seealso \code{\link{distribution_plot}}, \code{\link{build_clusters}},
 #'   \code{\link{build_mcml}}
 #' @examples
-#' \donttest{
 #' sequence_plot(trajectories)
+#'
+#' \donttest{
 #' sequence_plot(trajectories, type = "index")
 #' sequence_plot(trajectories, type = "distribution")
 #'

@@ -94,9 +94,9 @@ exponentially damped by path length. Computed via matrix inversion:
 }
 \examples{
 seqs <- data.frame(
-  V1 = sample(LETTERS[1:5], 50, TRUE),
-  V2 = sample(LETTERS[1:5], 50, TRUE),
-  V3 = sample(LETTERS[1:5], 50, TRUE)
+  V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
+  V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
+  V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
 )
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net)

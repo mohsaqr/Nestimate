@@ -79,13 +79,11 @@ states are independent. The deficit \eqn{H(\pi) - h(P)} is reported as
 \code{redundancy} - a measure of how much memory the chain has at order 1.
 }
 \examples{
-\donttest{
 net <- build_network(as.data.frame(trajectories), method = "relative")
 te  <- transition_entropy(net)
 print(te)
 summary(te)
 plot(te)
-}
 
 }
 \references{

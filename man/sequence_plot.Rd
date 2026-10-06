@@ -321,8 +321,9 @@ cluster panel to its own states, which ignores \code{rest} and
 }
 
 \examples{
-\donttest{
 sequence_plot(trajectories)
+
+\donttest{
 sequence_plot(trajectories, type = "index")
 sequence_plot(trajectories, type = "distribution")
 

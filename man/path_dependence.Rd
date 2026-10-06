@@ -79,13 +79,11 @@ order-k is needed \emph{globally}) to see the chain-level decision broken
 down per context.
 }
 \examples{
-\donttest{
 data(trajectories, package = "Nestimate")
 pd <- path_dependence(as.data.frame(trajectories), order = 2)
 print(pd)
 summary(pd)
 plot(pd)
-}
 
 }
 \references{

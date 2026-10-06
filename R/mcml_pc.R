@@ -832,16 +832,17 @@ build_mcml_pc <- function(x,
 #'   \code{ci_level}. Has print and plot methods.
 #'
 #' @examples
-#' \donttest{
 #' set.seed(1)
-#' df <- as.data.frame(matrix(rnorm(600), 100, 6))
-#' names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+#' f <- stats::rnorm(100)
+#' g <- stats::rnorm(100)
+#' df <- data.frame(a1 = f + stats::rnorm(100), a2 = f + stats::rnorm(100),
+#'                  a3 = f + stats::rnorm(100), b1 = g + stats::rnorm(100),
+#'                  b2 = g + stats::rnorm(100), b3 = g + stats::rnorm(100))
 #' cl <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 #' fit <- build_mcml_pc(df, cl, aggregation = "loadings",
 #'                      method = "cor")
 #' stability <- loading_stability(fit, iter = 50, seed = 1)
 #' stability
-#' }
 #'
 #' @export
 loading_stability <- function(x, iter = 200L, ci_level = 0.05,
@@ -1222,8 +1223,11 @@ composites.mcml_pc <- function(x, ...) {
 #'
 #' @examples
 #' set.seed(1)
-#' df <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, 6))
-#' names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+#' f <- stats::rnorm(200)
+#' g <- stats::rnorm(200)
+#' df <- data.frame(a1 = f + stats::rnorm(200), a2 = f + stats::rnorm(200),
+#'                  a3 = f + stats::rnorm(200), b1 = g + stats::rnorm(200),
+#'                  b2 = g + stats::rnorm(200), b3 = g + stats::rnorm(200))
 #' clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 #' fit <- build_mcml_pc(df, clusters, aggregation = "composite", method = "cor")
 #' nets <- as_networks(fit)

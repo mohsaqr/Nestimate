@@ -49,15 +49,14 @@
 #'     \code{weighted}, \code{p_adjust}.}
 #' }
 #' @examples
-#' \dontrun{
 #' set.seed(1)
 #' x1 <- matrix(rnorm(200 * 5), 200, 5)
 #' x2 <- matrix(rnorm(200 * 5), 200, 5)
 #' colnames(x1) <- colnames(x2) <- paste0("V", 1:5)
-#' res <- nct(x1, x2, iter = 100)
+#' # iter = 20 keeps the example fast; a real analysis uses 1000 or more.
+#' res <- nct(x1, x2, iter = 20)
 #' res
 #' summary(res)
-#' }
 #' @export
 nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
                  paired = FALSE, abs = TRUE, weighted = TRUE,

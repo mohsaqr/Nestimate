@@ -1483,13 +1483,11 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
 #'   cluster (invisibly).
 #'
 #' @examples
-#' \donttest{
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 40, TRUE),
 #'                    V2 = sample(c("A","B","C"), 40, TRUE))
 #' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
 #' grp <- build_network(fit)
 #' plot(attr(grp, "clustering"), type = "posterior")
-#' }
 #' @export
 plot.net_mmm_clustering <- function(x, type = c("posterior", "covariates",
                                                  "predictors"),

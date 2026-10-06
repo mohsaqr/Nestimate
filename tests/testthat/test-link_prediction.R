@@ -468,3 +468,19 @@ test_that("pathways returns empty for no predictions", {
   pw <- pathways(pred)
   expect_equal(length(pw), 0)
 })
+
+test_that("summary() reports NA, not -Inf/NaN, when no links are missing", {
+  # A complete directed network on 3 states: every off-diagonal link exists.
+  seqs <- data.frame(
+    V1 = c("A", "B", "C", "A", "B", "C"),
+    V2 = c("B", "C", "A", "C", "A", "B"),
+    V3 = c("C", "A", "B", "B", "C", "A")
+  )
+  pred <- predict_links(build_network(seqs, method = "relative"))
+  expect_identical(nrow(pred$predictions), 0L)
+  s <- expect_silent(summary(pred))
+  expect_true(all(s$n_predictions == 0L))
+  score_cols <- c("score_mean", "score_sd", "score_max", "score_min")
+  expect_true(all(is.na(unlist(s[score_cols]))))
+  expect_false(any(is.infinite(unlist(s[score_cols]))))
+})

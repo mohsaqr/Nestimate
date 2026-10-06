@@ -421,13 +421,11 @@ plot_mosaic <- function(data,
 #' @seealso \code{\link{plot_mosaic}} for the lower-level data.frame primitive.
 #' @export
 #' @examples
-#' \donttest{
 #' data(group_regulation_long, package = "Nestimate")
 #' net <- build_network(group_regulation_long, method = "frequency",
 #'                      format = "long", actor = "Actor", action = "Action",
 #'                      order = "Time")
 #' mosaic_plot(net, seed = 1)
-#' }
 mosaic_plot <- function(x, ...) UseMethod("mosaic_plot")
 
 #' @export
@@ -1968,7 +1966,6 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #'   (returns the tidy table) -- see \code{\link{state_freq}}.
 #'
 #' @examples
-#' \donttest{
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
 #'   data(group_regulation_long, package = "Nestimate")
 #'   nw <- build_network(group_regulation_long,
@@ -1979,7 +1976,6 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #'   print(res)            # tidy frequency table in the console
 #'   plot(res)             # ggplot chart
 #'   head(as.data.frame(res))
-#' }
 #' }
 #' @export
 plot_state_frequencies <- function(x, ...) {
@@ -2262,13 +2258,11 @@ plot_state_frequencies.default <- function(x, ...) {
 #'   \code{"all"}.
 #' @export
 #' @examples
-#' \donttest{
 #' data(group_regulation_long, package = "Nestimate")
 #' net <- build_network(group_regulation_long, method = "frequency",
 #'                      format = "long", actor = "Actor", action = "Action",
 #'                      order = "Time", group = "Course")
 #' state_distribution(net)
-#' }
 state_distribution <- function(x, ...) UseMethod("state_distribution")
 
 #' @export

@@ -223,14 +223,12 @@
 #'   \code{net_markov_order} per group.
 #'
 #' @examples
-#' \donttest{
 #' # Is one previous state enough to predict the next one?
 #' res <- markov_order_test(as.data.frame(trajectories),
 #'                          max_order = 2, n_perm = 99, seed = 1)
 #' res
 #' summary(res)
 #' plot(res)
-#' }
 #' @export
 markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
                                parallel = FALSE, n_cores = 2L, seed = NULL) {

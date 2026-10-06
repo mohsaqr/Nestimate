@@ -92,9 +92,9 @@
 #'
 #' @examples
 #' seqs <- data.frame(
-#'   V1 = sample(LETTERS[1:5], 50, TRUE),
-#'   V2 = sample(LETTERS[1:5], 50, TRUE),
-#'   V3 = sample(LETTERS[1:5], 50, TRUE)
+#'   V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
+#'   V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
+#'   V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
 #' )
 #' net <- build_network(seqs, method = "relative")
 #' pred <- predict_links(net)
@@ -428,11 +428,10 @@ predict_links <- function(x,
 #'   and one precision_at_k column per k value.
 #'
 #' @examples
-#' set.seed(42)
 #' seqs <- data.frame(
-#'   V1 = sample(LETTERS[1:5], 50, TRUE),
-#'   V2 = sample(LETTERS[1:5], 50, TRUE),
-#'   V3 = sample(LETTERS[1:5], 50, TRUE)
+#'   V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
+#'   V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
+#'   V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
 #' )
 #' net <- build_network(seqs, method = "relative")
 #' pred <- predict_links(net, exclude_existing = FALSE)
@@ -511,9 +510,9 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 #'
 #' @examples
 #' seqs <- data.frame(
-#'   V1 = sample(LETTERS[1:4], 30, TRUE),
-#'   V2 = sample(LETTERS[1:4], 30, TRUE),
-#'   V3 = sample(LETTERS[1:4], 30, TRUE)
+#'   V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
+#'   V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
+#'   V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
 #' )
 #' net <- build_network(seqs, method = "relative")
 #' pred <- predict_links(net)
@@ -570,13 +569,15 @@ print.net_link_prediction <- function(x, ...) {
 #' @param ... Additional arguments (ignored).
 #' @return A data frame, one row per method, with columns \code{method},
 #'   \code{n_predictions}, \code{score_mean}, \code{score_sd},
-#'   \code{score_max} and \code{score_min}.
+#'   \code{score_max} and \code{score_min}. A method with no predictions
+#'   (every possible link already exists) has \code{n_predictions = 0} and
+#'   \code{NA} scores.
 #'
 #' @examples
 #' seqs <- data.frame(
-#'   V1 = sample(LETTERS[1:4], 30, TRUE),
-#'   V2 = sample(LETTERS[1:4], 30, TRUE),
-#'   V3 = sample(LETTERS[1:4], 30, TRUE)
+#'   V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
+#'   V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
+#'   V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
 #' )
 #' net <- build_network(seqs, method = "relative")
 #' pred <- predict_links(net)
@@ -586,14 +587,17 @@ print.net_link_prediction <- function(x, ...) {
 summary.net_link_prediction <- function(object, ...) {
   df <- object$predictions
   do.call(rbind, lapply(object$methods, function(m) {
-    sub <- df[df$method == m, , drop = FALSE]
+    score <- df$score[df$method == m]
+    # A complete network has no missing links to score: report NA, not the
+    # NaN / -Inf / Inf that mean() / max() / min() return on an empty vector.
+    has_scores <- length(score) > 0L
     data.frame(
       method        = m,
-      n_predictions = nrow(sub),
-      score_mean    = mean(sub$score, na.rm = TRUE),
-      score_sd      = sd(sub$score, na.rm = TRUE),
-      score_max     = max(sub$score, na.rm = TRUE),
-      score_min     = min(sub$score, na.rm = TRUE),
+      n_predictions = length(score),
+      score_mean    = if (has_scores) mean(score) else NA_real_,
+      score_sd      = if (has_scores) stats::sd(score) else NA_real_,
+      score_max     = if (has_scores) max(score) else NA_real_,
+      score_min     = if (has_scores) min(score) else NA_real_,
       stringsAsFactors = FALSE,
       row.names     = NULL
     )

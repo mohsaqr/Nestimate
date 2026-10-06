@@ -23,7 +23,6 @@ Prints the three weight matrices and the significant temporal edges, then
 returns the tidy coefficient table.
 }
 \examples{
-\donttest{
 # A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by
 # `happy` one beep earlier, so the temporal network should recover it.
 if (requireNamespace("lme4", quietly = TRUE)) {
@@ -47,7 +46,6 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   fit
   coefs(fit)
   summary(fit)
-}
 }
 
 }

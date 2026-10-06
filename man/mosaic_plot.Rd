@@ -200,13 +200,11 @@ sequences. The function errors only when neither integer weights nor
 \code{$data} are available.
 }
 \examples{
-\donttest{
 data(group_regulation_long, package = "Nestimate")
 net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
                      order = "Time")
 mosaic_plot(net, seed = 1)
-}
 }
 \seealso{
 \code{\link{plot_mosaic}} for the lower-level data.frame primitive.

@@ -22,10 +22,8 @@ styling argument (\code{tile_label}, \code{pct_base}, \code{col_label_side},
 \code{legend_size}, ...) may be overridden via \code{...}.
 }
 \examples{
-\donttest{
 data(group_regulation_long, package = "Nestimate")
 res <- mosaic_analysis(group_regulation_long, "Course", "Action",
                        min_count = 20)
 plot(res, tile_label = "percent", legend_position = "bottom")
-}
 }

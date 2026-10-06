@@ -52,11 +52,9 @@ behind every chart, and surfaced as the \code{$table} slot of the
 returned \code{state_freq} object.
 }
 \examples{
-\donttest{
 data(group_regulation_long, package = "Nestimate")
 net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
                      order = "Time", group = "Course")
 state_distribution(net)
-}
 }

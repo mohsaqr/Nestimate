@@ -90,9 +90,7 @@
 #'   }
 #' @seealso \code{\link{sequence_plot}}, \code{\link{build_clusters}}
 #' @examples
-#' \donttest{
 #' distribution_plot(as.data.frame(trajectories))
-#' }
 #' @export
 distribution_plot <- function(x,
                               group          = NULL,

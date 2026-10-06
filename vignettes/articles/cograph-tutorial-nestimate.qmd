@@ -30,7 +30,6 @@ format:
     code-fold: false
     code-tools: false
     theme: cosmo
-    self-contained: true
 execute:
   warning: false
   message: false
@@ -38,7 +37,7 @@ knitr:
   opts_chunk:
     fig.width: 8
     fig.height: 7
-    dpi: 300
+    dpi: 96
 ---
 
 ```{r}

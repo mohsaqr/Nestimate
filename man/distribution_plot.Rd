@@ -148,9 +148,7 @@ renders the result as a stacked area (default) or stacked bar chart.
 Accepts the same inputs as \code{\link{sequence_plot}}.
 }
 \examples{
-\donttest{
 distribution_plot(as.data.frame(trajectories))
-}
 }
 \seealso{
 \code{\link{sequence_plot}}, \code{\link{build_clusters}}

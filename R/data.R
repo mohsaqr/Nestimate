@@ -168,10 +168,8 @@ NULL
 #'   \code{\link{mark_terminal_state}}) are built to read.
 #'
 #' @examples
-#' \donttest{
 #' sequence_plot(trajectories, main = "Engagement trajectories")
 #' sequence_plot(trajectories, k = 3)
 #' sequence_plot(trajectories, type = "distribution")
-#' }
 #'
 "trajectories"

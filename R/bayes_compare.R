@@ -619,14 +619,12 @@ summary.net_bayes <- function(object, ...) {
 #' @return Invisibly, the cograph network returned by \code{cograph::splot()}
 #'   when cograph is available; otherwise a fallback \code{ggplot} object.
 #' @examples
-#' \donttest{
 #' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 #' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
 #' b <- bayes_compare(build_network(s1, method = "relative"),
 #'                    build_network(s2, method = "relative"),
 #'                    draws = 500, seed = 1)
 #' plot(b, significant_only = FALSE)
-#' }
 #' @export
 plot.net_bayes <- function(x, significant_only = TRUE, title = NULL, ...) {
   if (requireNamespace("cograph", quietly = TRUE)) {

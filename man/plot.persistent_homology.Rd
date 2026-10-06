@@ -28,7 +28,6 @@ matrix reduction; essential classes are shown at the filtration boundary
 the diagram or on the threshold grid, so they still render).
 }
 \examples{
-\donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),
   V2 = c("B","C","A","B","C"),
@@ -37,6 +36,5 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 ph  <- persistent_homology(net)
 if (requireNamespace("gridExtra", quietly = TRUE)) plot(ph)
-}
 
 }

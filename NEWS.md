@@ -1,3 +1,24 @@
+# Nestimate 0.9.21
+
+## Bug fixes
+
+* `summary()` of a `predict_links()` result reports `NA` scores for a method
+  with no predictions (every possible link already exists). It returned
+  `NaN` / `-Inf` / `Inf` with one warning per column.
+
+## Documentation
+
+* Every help page now has example code that runs under `R CMD check`. 31 pages
+  had all of it inside `\donttest{}` or `\dontrun{}`; fast examples are
+  unwrapped, and slow ones (`nct()`, `permutation_diagnostics()`,
+  `entropy_bayes()`) run live with fewer iterations.
+* The `predict_links()` family of examples uses fixed data that leaves links
+  to predict, and the `loading_stability()` / `as_networks()` examples use items
+  with real two-factor structure, so neither emits warnings.
+* pkgdown: the `cograph-tutorial-nestimate` article was a 47.8 MB page (300 dpi
+  figures inlined as base64); it is now about 70 KB with figures as separate
+  files. The README no longer lists outdated imports.
+
 # Nestimate 0.9.20
 
 ## Documentation

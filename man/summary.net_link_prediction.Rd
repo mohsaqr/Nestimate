@@ -14,16 +14,18 @@
 \value{
 A data frame, one row per method, with columns \code{method},
 \code{n_predictions}, \code{score_mean}, \code{score_sd},
-\code{score_max} and \code{score_min}.
+\code{score_max} and \code{score_min}. A method with no predictions
+(every possible link already exists) has \code{n_predictions = 0} and
+\code{NA} scores.
 }
 \description{
 Summary Method for net_link_prediction
 }
 \examples{
 seqs <- data.frame(
-  V1 = sample(LETTERS[1:4], 30, TRUE),
-  V2 = sample(LETTERS[1:4], 30, TRUE),
-  V3 = sample(LETTERS[1:4], 30, TRUE)
+  V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
+  V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
+  V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
 )
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net)

@@ -124,7 +124,6 @@ need those. Use \code{\link[=coefs]{coefs()}} for the tidy model output.
 }
 
 \examples{
-\donttest{
 # A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by
 # `happy` one beep earlier, so the temporal network should recover it.
 if (requireNamespace("lme4", quietly = TRUE)) {
@@ -148,7 +147,6 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   fit
   coefs(fit)
   summary(fit)
-}
 }
 
 }

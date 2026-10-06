@@ -20,12 +20,10 @@ carrying the selection context as attributes: \code{optimal_order},
 Summary Method for net_markov_order
 }
 \examples{
-\donttest{
 # Is one previous state enough to predict the next one?
 res <- markov_order_test(as.data.frame(trajectories),
                          max_order = 2, n_perm = 99, seed = 1)
 res
 summary(res)
 plot(res)
-}
 }

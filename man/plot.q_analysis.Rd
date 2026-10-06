@@ -24,7 +24,6 @@ Two panels: Q-vector (components at each connectivity level) and
 structure vector (max simplex dimension per node).
 }
 \examples{
-\donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),
   V2 = c("B","C","A","B","C"),
@@ -34,6 +33,5 @@ net <- build_network(seqs, method = "relative")
 sc  <- build_simplicial(net, type = "clique")
 qa  <- q_analysis(sc)
 if (requireNamespace("gridExtra", quietly = TRUE)) plot(qa)
-}
 
 }

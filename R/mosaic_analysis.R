@@ -238,12 +238,10 @@ mosaic_analysis <- function(data, var1, var2, min_count = 10L,
 #' @return The re-rendered flat mosaic \code{ggplot} object, invisibly; the
 #'   plot is drawn on the active device as a side effect.
 #' @examples
-#' \donttest{
 #' data(group_regulation_long, package = "Nestimate")
 #' res <- mosaic_analysis(group_regulation_long, "Course", "Action",
 #'                        min_count = 20)
 #' plot(res, tile_label = "percent", legend_position = "bottom")
-#' }
 #' @export
 plot.mosaic_analysis <- function(x, ...) {
   args <- utils::modifyList(x$plot_args, list(...))

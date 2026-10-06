@@ -80,13 +80,11 @@
 #' \code{redundancy} - a measure of how much memory the chain has at order 1.
 #'
 #' @examples
-#' \donttest{
 #' net <- build_network(as.data.frame(trajectories), method = "relative")
 #' te  <- transition_entropy(net)
 #' print(te)
 #' summary(te)
 #' plot(te)
-#' }
 #'
 #' @seealso \code{\link{entropy_network}} for the edge-level decomposition,
 #'   \code{\link{entropy_trajectory}} for the sliding-window version,
@@ -490,14 +488,12 @@ entropy_network <- function(x, base = 2,
 #' returned with a warning.
 #'
 #' @examples
-#' \donttest{
 #' tr <- entropy_trajectory(group_regulation_long,
 #'                          action = "Action", actor = "Actor",
 #'                          time = "Time", group = "Achiever")
 #' tr
 #' summary(tr)
 #' plot(tr)
-#' }
 #'
 #' @seealso \code{\link{transition_entropy}} for the whole-process snapshot,
 #'   \code{\link{entropy_bayes}} for credible intervals on it.
@@ -834,14 +830,12 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #' but averages over uncertainty); the difference vanishes as counts grow.
 #'
 #' @examples
-#' \donttest{
 #' net <- build_network(group_regulation_long, method = "relative",
 #'                      actor = "Actor", action = "Action", time = "Time")
-#' eb <- entropy_bayes(net, seed = 1)
+#' eb <- entropy_bayes(net, draws = 1000, seed = 1)
 #' eb
 #' summary(eb)
 #' plot(eb)
-#' }
 #'
 #' @seealso \code{\link{transition_entropy}}, \code{\link{entropy_network}},
 #'   \code{\link{bayes_compare}}

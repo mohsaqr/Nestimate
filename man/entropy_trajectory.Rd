@@ -77,14 +77,12 @@ stream is shorter than \code{window}, one window covering everything is
 returned with a warning.
 }
 \examples{
-\donttest{
 tr <- entropy_trajectory(group_regulation_long,
                          action = "Action", actor = "Actor",
                          time = "Time", group = "Achiever")
 tr
 summary(tr)
 plot(tr)
-}
 
 }
 \references{

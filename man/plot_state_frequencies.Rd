@@ -217,7 +217,6 @@ The bar style produces horizontal bars (state on the y-axis), faceted by
 group when groups exist. All variants use the Okabe-Ito palette.
 }
 \examples{
-\donttest{
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   data(group_regulation_long, package = "Nestimate")
   nw <- build_network(group_regulation_long,
@@ -228,6 +227,5 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   print(res)            # tidy frequency table in the console
   plot(res)             # ggplot chart
   head(as.data.frame(res))
-}
 }
 }
