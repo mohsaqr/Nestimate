@@ -215,8 +215,5 @@ Invisibly, a list describing the drawn figure:
 ## Examples
 
 ``` r
-# \donttest{
 distribution_plot(as.data.frame(trajectories))
-
-# }
 ```

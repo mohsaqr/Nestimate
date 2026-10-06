@@ -19,7 +19,7 @@ correlations derived from the person-mean fixed effects.'><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -214,8 +214,7 @@ need those. Use <code><a href="coefs.html">coefs()</a></code> for the tidy model
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by</span></span></span>
 <span class="r-in"><span><span class="co"># `happy` one beep earlier, so the temporal network should recover it.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
@@ -243,7 +242,6 @@ need those. Use <code><a href="coefs.html">coefs()</a></code> for the tidy model
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1        temporal       3       6       1      0.11569402          2          4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 contemporaneous       3       3       1      0.05304465          1          2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3         between       3       3       1      0.15389239          2          1</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -23,7 +23,7 @@ quantities mean."><meta property="og:image" content="https://pak.dynasite.org/Ne
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -216,35 +216,34 @@ Computation and Simulation</em>, 73(2), 85-113.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Students are nested in teams; Achiever is a team-level label</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Students are nested in teams; Achiever is a team-level label.</span></span></span>
+<span class="r-in"><span><span class="co"># iter = 100 keeps the example fast; a real analysis uses 1000 or more.</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span></span>
 <span class="r-in"><span>                     actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span></span>
 <span class="r-in"><span>                     group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">permutation_diagnostics</span><span class="op">(</span><span class="va">net</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">permutation_diagnostics</span><span class="op">(</span><span class="va">net</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          pair n_sequences n_actors  design          icc icc_ci_lower</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 High vs Low        2000      200 between -0.001697397 -0.005641197</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   icc_ci_upper deff_edges deff_global p_global_sequence p_global_actor</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.002246402   1.036832    1.285395       0.004975124    0.004975124</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.002246402    1.02937    1.256221        0.00990099     0.00990099</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   sig_edges_sequence sig_edges_actor edges_changed min_p_actor</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 41              42             3 0.004975124</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">permutation_diagnostics</span><span class="op">(</span><span class="va">net</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, iter <span class="op">=</span> <span class="fl">200</span>,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 39              43             4  0.00990099</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">permutation_diagnostics</span><span class="op">(</span><span class="va">net</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, iter <span class="op">=</span> <span class="fl">100</span>,</span></span>
 <span class="r-in"><span>                             level <span class="op">=</span> <span class="st">"edges"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          pair  from         to         diff          icc null_sd_sequence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 High vs Low adapt   cohesion -0.014762566  0.010118088       0.03649945</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 High vs Low adapt  consensus  0.055773975 -0.003796296       0.04677298</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 High vs Low adapt coregulate -0.029891304  0.002498496       0.01246761</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 High vs Low adapt    discuss -0.032473790 -0.009052931       0.02085483</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 High vs Low adapt    emotion  0.030430928 -0.007376103       0.03113475</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 High vs Low adapt    monitor -0.006957293 -0.003562251       0.01628239</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   null_sd_actor      deff  p_sequence    p_actor changed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0.03996603 1.1989732 0.666666667 0.71641791   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    0.04215318 0.8122143 0.233830846 0.17910448   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    0.01370900 1.2090521 0.009950249 0.01990050   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    0.01948459 0.8729092 0.119402985 0.09452736   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    0.02814810 0.8173486 0.338308458 0.25373134   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    0.01559177 0.9169695 0.671641791 0.66666667   FALSE</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 High vs Low adapt   cohesion -0.014762566  0.010118088       0.03440568</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 High vs Low adapt  consensus  0.055773975 -0.003796296       0.04481693</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 High vs Low adapt coregulate -0.029891304  0.002498496       0.01193358</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 High vs Low adapt    discuss -0.032473790 -0.009052931       0.02220245</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 High vs Low adapt    emotion  0.030430928 -0.007376103       0.03180921</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 High vs Low adapt    monitor -0.006957293 -0.003562251       0.01576316</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   null_sd_actor      deff p_sequence    p_actor changed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0.04203003 1.4923103 0.62376238 0.69306931   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    0.04262786 0.9046963 0.26732673 0.19801980   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    0.01178398 0.9750852 0.00990099 0.02970297   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    0.01644419 0.5485588 0.13861386 0.04950495    TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    0.02905014 0.8340475 0.33663366 0.24752475   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    0.01595415 1.0243791 0.62376238 0.61386139   FALSE</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

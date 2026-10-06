@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,20 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.21" id="nestimate-0921">Nestimate 0.9.21<a class="anchor" aria-label="anchor" href="#nestimate-0921"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-9-21">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-9-21"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a <code><a href="../reference/predict_links.html">predict_links()</a></code> result reports <code>NA</code> scores for a method with no predictions (every possible link already exists). It returned <code>NaN</code> / <code>-Inf</code> / <code>Inf</code> with one warning per column.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-9-21">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-9-21"></a></h3>
+<ul><li>Every help page now has example code that runs under <code>R CMD check</code>. 31 pages had all of it inside <code>\donttest{}</code> or <code>\dontrun{}</code>; fast examples are unwrapped, and slow ones (<code><a href="../reference/nct.html">nct()</a></code>, <code><a href="../reference/permutation_diagnostics.html">permutation_diagnostics()</a></code>, <code><a href="../reference/entropy_bayes.html">entropy_bayes()</a></code>) run live with fewer iterations.</li>
+<li>The <code><a href="../reference/predict_links.html">predict_links()</a></code> family of examples uses fixed data that leaves links to predict, and the <code><a href="../reference/loading_stability.html">loading_stability()</a></code> / <code><a href="../reference/as_networks.html">as_networks()</a></code> examples use items with real two-factor structure, so neither emits warnings.</li>
+<li>pkgdown: the <code>cograph-tutorial-nestimate</code> article was a 47.8 MB page (300 dpi figures inlined as base64); it is now about 70 KB with figures as separate files. The README no longer lists outdated imports.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.20" id="nestimate-0920">Nestimate 0.9.20<a class="anchor" aria-label="anchor" href="#nestimate-0920"></a></h2>
 <div class="section level3">

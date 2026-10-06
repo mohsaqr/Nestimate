@@ -35,7 +35,7 @@ print(perm)
 #> Permutation Test: Transition Network (relative probabilities) [directed]
 #>   Iterations: 10  |  Alpha: 0.05
 #>   Nodes: 3  |  Edges tested: 6  |  Significant: 0
-#>   Global test (networks differ overall?): M = 6.000 (p = 0.182)  |  S = 1.000 (p = 1)
+#>   Global test (networks differ overall?): M = 6.000 (p = 0.364)  |  S = 1.000 (p = 1)
 # \donttest{
 set.seed(1)
 d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),

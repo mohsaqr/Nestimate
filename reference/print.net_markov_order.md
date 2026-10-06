@@ -26,7 +26,6 @@ The input object, invisibly.
 ## Examples
 
 ``` r
-# \donttest{
 # Is one previous state enough to predict the next one?
 res <- markov_order_test(as.data.frame(trajectories),
                          max_order = 2, n_perm = 99, seed = 1)
@@ -54,6 +53,4 @@ summary(res)
 #> 2        TRUE
 #> 3        TRUE
 plot(res)
-
-# }
 ```

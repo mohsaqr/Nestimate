@@ -255,7 +255,6 @@ group when groups exist. All variants use the Okabe-Ito palette.
 ## Examples
 
 ``` r
-# \donttest{
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   data(group_regulation_long, package = "Nestimate")
   nw <- build_network(group_regulation_long,
@@ -314,5 +313,4 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 #> 4     A    emotion  1517 0.12243745
 #> 5     A   cohesion   923 0.07449556
 #> 6     A coregulate   855 0.06900726
-# }
 ```

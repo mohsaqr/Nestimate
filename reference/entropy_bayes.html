@@ -31,7 +31,7 @@ skeleton."><meta property="og:image" content="https://pak.dynasite.org/Nestimate
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -200,16 +200,15 @@ but averages over uncertainty); the difference vanishes as counts grow.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span></span>
 <span class="r-in"><span>                     actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">eb</span> <span class="op">&lt;-</span> <span class="fu">entropy_bayes</span><span class="op">(</span><span class="va">net</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">eb</span> <span class="op">&lt;-</span> <span class="fu">entropy_bayes</span><span class="op">(</span><span class="va">net</span>, draws <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">eb</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bayesian Transition Entropy (9 states, bits; Dirichlet prior 0.5, 4000 draws)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Bayesian Transition Entropy (9 states, bits; Dirichlet prior 0.5, 1000 draws)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   entropy_rate:       2.411 [2.396, 2.425]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    stationary_entropy: 2.783 [2.770, 2.796]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    redundancy:         0.373 [0.361, 0.385]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stationary_entropy: 2.783 [2.771, 2.796]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    redundancy:         0.373 [0.361, 0.384]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Edges: 78 observed; 31 credible (share of h(P) credibly &gt; 1%).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Use summary() for the edge table, plot() for the posterior, and</span>
@@ -217,172 +216,171 @@ but averages over uncertainty); the difference vanishes as counts grow.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">eb</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain-level posterior:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            quantity   mean     sd ci_lower ci_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        entropy_rate 2.4108 0.0075   2.3958   2.4253</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  stationary_entropy 2.7833 0.0066   2.7703   2.7963</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          redundancy 0.3725 0.0060   0.3609   0.3847</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        entropy_rate 2.4109 0.0074   2.3963   2.4250</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  stationary_entropy 2.7834 0.0066   2.7710   2.7957</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          redundancy 0.3726 0.0060   0.3612   0.3845</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-edge posterior (sorted by contribution):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        from         to count contribution     sd ci_lower ci_upper  share</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus       plan  2505       0.1320 0.0011   0.1298   0.1341 0.0548</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        plan       plan  2304       0.1298 0.0017   0.1264   0.1331 0.0538</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        plan  consensus  1788       0.1267 0.0017   0.1235   0.1300 0.0526</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus    discuss  1190       0.1130 0.0015   0.1101   0.1159 0.0469</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus coregulate  1188       0.1130 0.0014   0.1102   0.1156 0.0469</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        plan    emotion   904       0.0994 0.0017   0.0959   0.1028 0.0412</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss  consensus  1269       0.0798 0.0012   0.0775   0.0822 0.0331</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus  consensus   519       0.0738 0.0021   0.0696   0.0778 0.0306</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss    discuss   770       0.0697 0.0016   0.0665   0.0729 0.0289</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        plan    monitor   465       0.0688 0.0019   0.0650   0.0726 0.0286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus    emotion   460       0.0685 0.0020   0.0646   0.0724 0.0284</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        plan    discuss   418       0.0644 0.0019   0.0606   0.0682 0.0267</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss  synthesis   557       0.0604 0.0014   0.0577   0.0632 0.0251</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion   cohesion   923       0.0575 0.0010   0.0555   0.0594 0.0238</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion  consensus   909       0.0574 0.0010   0.0554   0.0593 0.0238</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss    emotion   418       0.0520 0.0015   0.0491   0.0548 0.0216</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus    monitor   295       0.0515 0.0020   0.0476   0.0554 0.0213</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss coregulate   333       0.0456 0.0016   0.0425   0.0486 0.0189</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate    discuss   539       0.0419 0.0009   0.0402   0.0436 0.0174</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss      adapt   282       0.0412 0.0016   0.0381   0.0442 0.0171</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate       plan   471       0.0404 0.0009   0.0387   0.0422 0.0168</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion    discuss   289       0.0366 0.0013   0.0342   0.0391 0.0152</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion       plan   283       0.0362 0.0013   0.0336   0.0388 0.0150</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate    emotion   339       0.0358 0.0010   0.0338   0.0378 0.0148</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus       plan  2505       0.1320 0.0011   0.1297   0.1341 0.0547</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        plan       plan  2304       0.1298 0.0017   0.1268   0.1330 0.0538</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        plan  consensus  1788       0.1267 0.0017   0.1236   0.1300 0.0526</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus    discuss  1190       0.1130 0.0015   0.1099   0.1158 0.0469</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus coregulate  1188       0.1130 0.0014   0.1104   0.1156 0.0469</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        plan    emotion   904       0.0993 0.0017   0.0959   0.1027 0.0412</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss  consensus  1269       0.0798 0.0012   0.0774   0.0821 0.0331</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus  consensus   519       0.0738 0.0021   0.0695   0.0778 0.0306</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss    discuss   770       0.0697 0.0016   0.0663   0.0727 0.0289</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        plan    monitor   465       0.0689 0.0019   0.0652   0.0727 0.0286</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus    emotion   460       0.0685 0.0020   0.0645   0.0723 0.0284</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        plan    discuss   418       0.0645 0.0019   0.0607   0.0682 0.0267</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss  synthesis   557       0.0604 0.0014   0.0578   0.0633 0.0251</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion   cohesion   923       0.0575 0.0010   0.0554   0.0594 0.0238</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion  consensus   909       0.0574 0.0010   0.0554   0.0594 0.0238</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss    emotion   418       0.0520 0.0015   0.0491   0.0547 0.0216</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus    monitor   295       0.0515 0.0020   0.0476   0.0554 0.0214</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss coregulate   333       0.0456 0.0015   0.0424   0.0485 0.0189</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate    discuss   539       0.0419 0.0009   0.0401   0.0437 0.0174</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss      adapt   282       0.0412 0.0016   0.0383   0.0443 0.0171</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate       plan   471       0.0404 0.0009   0.0386   0.0422 0.0168</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion    discuss   289       0.0366 0.0013   0.0341   0.0391 0.0152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion       plan   283       0.0362 0.0013   0.0337   0.0387 0.0150</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate    emotion   339       0.0358 0.0011   0.0337   0.0378 0.0149</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion  consensus   844       0.0334 0.0008   0.0318   0.0351 0.0139</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        plan   cohesion   155       0.0328 0.0019   0.0291   0.0367 0.0136</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate  consensus   265       0.0319 0.0011   0.0298   0.0341 0.0132</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss   cohesion   188       0.0317 0.0016   0.0287   0.0349 0.0132</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion    emotion   218       0.0310 0.0015   0.0281   0.0339 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion       plan   239       0.0265 0.0010   0.0247   0.0284 0.0110</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        plan   cohesion   155       0.0328 0.0019   0.0292   0.0367 0.0136</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate  consensus   265       0.0319 0.0011   0.0298   0.0342 0.0132</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss   cohesion   188       0.0317 0.0016   0.0284   0.0349 0.0132</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion    emotion   218       0.0310 0.0015   0.0282   0.0338 0.0129</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion       plan   239       0.0265 0.0009   0.0247   0.0283 0.0110</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     monitor    discuss   538       0.0259 0.0007   0.0245   0.0272 0.0107</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate    monitor   170       0.0250 0.0012   0.0227   0.0273 0.0104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        plan coregulate   106       0.0247 0.0018   0.0212   0.0285 0.0102</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion coregulate   202       0.0244 0.0010   0.0224   0.0264 0.0101</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion    emotion   196       0.0240 0.0010   0.0220   0.0260 0.0100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor       plan   309       0.0233 0.0007   0.0218   0.0247 0.0096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus   cohesion    94       0.0225 0.0018   0.0192   0.0262 0.0093</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor  consensus   228       0.0205 0.0008   0.0190   0.0221 0.0085</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate    monitor   170       0.0250 0.0012   0.0227   0.0274 0.0104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        plan coregulate   106       0.0248 0.0018   0.0212   0.0285 0.0103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion coregulate   202       0.0244 0.0010   0.0224   0.0263 0.0101</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion    emotion   196       0.0240 0.0010   0.0218   0.0258 0.0099</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor       plan   309       0.0233 0.0007   0.0219   0.0247 0.0097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus   cohesion    94       0.0225 0.0018   0.0191   0.0260 0.0093</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor  consensus   228       0.0206 0.0008   0.0190   0.0221 0.0085</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     emotion    monitor   103       0.0190 0.0013   0.0163   0.0216 0.0079</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss    monitor    88       0.0186 0.0015   0.0158   0.0216 0.0077</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion coregulate    97       0.0182 0.0013   0.0157   0.0208 0.0076</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion    discuss   101       0.0162 0.0011   0.0141   0.0184 0.0067</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor    emotion   130       0.0153 0.0008   0.0137   0.0169 0.0063</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate   cohesion    71       0.0142 0.0012   0.0119   0.0166 0.0059</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss    monitor    88       0.0186 0.0015   0.0159   0.0215 0.0077</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion coregulate    97       0.0182 0.0013   0.0157   0.0205 0.0075</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion    discuss   101       0.0162 0.0011   0.0142   0.0184 0.0067</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor    emotion   130       0.0153 0.0008   0.0136   0.0169 0.0063</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate   cohesion    71       0.0143 0.0012   0.0120   0.0167 0.0059</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis  consensus   304       0.0137 0.0005   0.0127   0.0148 0.0057</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus  synthesis    48       0.0134 0.0015   0.0106   0.0165 0.0056</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis      adapt   153       0.0131 0.0006   0.0120   0.0141 0.0054</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor coregulate    83       0.0116 0.0009   0.0100   0.0133 0.0048</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss       plan    46       0.0114 0.0013   0.0090   0.0140 0.0047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor   cohesion    80       0.0113 0.0009   0.0096   0.0131 0.0047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion    monitor    56       0.0109 0.0010   0.0089   0.0129 0.0045</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus  synthesis    48       0.0134 0.0015   0.0105   0.0164 0.0055</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis      adapt   153       0.0131 0.0006   0.0120   0.0142 0.0054</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor coregulate    83       0.0117 0.0009   0.0101   0.0133 0.0048</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor   cohesion    80       0.0113 0.0009   0.0097   0.0131 0.0047</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     discuss       plan    46       0.0113 0.0013   0.0090   0.0139 0.0047</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion    monitor    56       0.0109 0.0010   0.0089   0.0130 0.0045</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       adapt   cohesion   139       0.0107 0.0005   0.0098   0.0116 0.0044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       adapt  consensus   243       0.0107 0.0005   0.0098   0.0116 0.0044</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate coregulate    46       0.0104 0.0012   0.0082   0.0128 0.0043</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion   cohesion    46       0.0094 0.0010   0.0075   0.0116 0.0039</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus      adapt    30       0.0092 0.0013   0.0068   0.0120 0.0038</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate  synthesis    37       0.0089 0.0011   0.0069   0.0111 0.0037</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate      adapt    32       0.0080 0.0010   0.0060   0.0101 0.0033</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate coregulate    46       0.0104 0.0012   0.0082   0.0129 0.0043</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion   cohesion    46       0.0094 0.0010   0.0075   0.0113 0.0039</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus      adapt    30       0.0092 0.0014   0.0068   0.0120 0.0038</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate  synthesis    37       0.0089 0.0011   0.0070   0.0111 0.0037</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate      adapt    32       0.0080 0.0011   0.0060   0.0101 0.0033</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       adapt    emotion    61       0.0077 0.0006   0.0065   0.0088 0.0032</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis       plan    49       0.0075 0.0007   0.0062   0.0089 0.0031</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis    emotion    46       0.0072 0.0007   0.0058   0.0086 0.0030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis    discuss    41       0.0067 0.0007   0.0054   0.0082 0.0028</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis       plan    49       0.0075 0.0007   0.0063   0.0088 0.0031</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis    emotion    46       0.0072 0.0007   0.0058   0.0085 0.0030</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis    discuss    41       0.0067 0.0007   0.0055   0.0083 0.0028</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis coregulate    29       0.0053 0.0007   0.0041   0.0067 0.0022</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor    monitor    26       0.0052 0.0008   0.0037   0.0067 0.0021</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       adapt    discuss    30       0.0050 0.0006   0.0039   0.0063 0.0021</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor    monitor    26       0.0052 0.0007   0.0038   0.0067 0.0021</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       adapt    discuss    30       0.0050 0.0006   0.0039   0.0062 0.0021</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     monitor  synthesis    23       0.0047 0.0007   0.0033   0.0062 0.0020</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis   cohesion    22       0.0044 0.0007   0.0032   0.0058 0.0018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis   cohesion    22       0.0045 0.0007   0.0033   0.0058 0.0018</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        plan  synthesis    11       0.0041 0.0010   0.0023   0.0063 0.0017</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor      adapt    16       0.0036 0.0007   0.0023   0.0050 0.0015</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     monitor      adapt    16       0.0036 0.0007   0.0024   0.0050 0.0015</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       adapt    monitor    17       0.0035 0.0006   0.0024   0.0046 0.0014</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion  synthesis     8       0.0027 0.0008   0.0014   0.0044 0.0011</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     emotion  synthesis     8       0.0027 0.0007   0.0014   0.0042 0.0011</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       adapt coregulate    11       0.0025 0.0006   0.0015   0.0037 0.0011</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        plan      adapt     6       0.0025 0.0009   0.0011   0.0044 0.0010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        plan      adapt     6       0.0025 0.0008   0.0011   0.0043 0.0010</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     emotion      adapt     7       0.0024 0.0007   0.0012   0.0040 0.0010</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis    monitor     8       0.0021 0.0006   0.0011   0.0034 0.0009</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion  synthesis     6       0.0020 0.0007   0.0009   0.0035 0.0008</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       adapt       plan     8       0.0020 0.0005   0.0011   0.0031 0.0008</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion      adapt     5       0.0018 0.0006   0.0007   0.0032 0.0007</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis    monitor     8       0.0022 0.0006   0.0011   0.0035 0.0009</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion  synthesis     6       0.0020 0.0007   0.0009   0.0034 0.0008</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       adapt       plan     8       0.0020 0.0005   0.0010   0.0032 0.0008</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    cohesion      adapt     5       0.0018 0.0006   0.0007   0.0031 0.0007</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  share_lower share_upper credible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0537      0.0557     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0522      0.0554     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0510      0.0541     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0523      0.0554     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0511      0.0541     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0456      0.0481     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0457      0.0481     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0397      0.0427     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0322      0.0341     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0289      0.0323     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0276      0.0302     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0270      0.0301     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0321      0.0340     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0288      0.0323     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0275      0.0301     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0270      0.0302     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0268      0.0300     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0251      0.0283     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0239      0.0262     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0252      0.0283     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0240      0.0262     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0230      0.0246     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0230      0.0246     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0204      0.0227     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0198      0.0230     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0197      0.0230     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0176      0.0201     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0167      0.0181     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0158      0.0183     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0166      0.0181     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0159      0.0184     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0160      0.0175     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0142      0.0162     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0141      0.0162     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0140      0.0161     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0140      0.0157     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0132      0.0145     TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0121      0.0152     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0124      0.0141     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0119      0.0145     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0117      0.0141     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0102      0.0118     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0102      0.0113     TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0094      0.0113    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0124      0.0142     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0118      0.0145     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0117      0.0140     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0102      0.0117     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0102      0.0112     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0094      0.0114    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0088      0.0118    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0093      0.0109    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0091      0.0108    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0091      0.0107    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0091      0.0102    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0080      0.0108    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0079      0.0108    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0079      0.0092    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0068      0.0089    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0068      0.0090    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0066      0.0089    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0065      0.0086    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0065      0.0085    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0059      0.0076    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0057      0.0070    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0049      0.0069    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0050      0.0069    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0053      0.0061    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0044      0.0069    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0044      0.0068    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0050      0.0059    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0041      0.0055    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0037      0.0058    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0042      0.0055    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0040      0.0054    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0037      0.0058    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0037      0.0054    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0041      0.0048    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0040      0.0048    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0041      0.0048    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0034      0.0053    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0031      0.0048    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0031      0.0047    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0028      0.0050    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0028      0.0046    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0029      0.0046    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0025      0.0042    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0027      0.0036    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0026      0.0037    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0024      0.0036    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0022      0.0034    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0026      0.0036    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0024      0.0035    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0023      0.0034    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0017      0.0028    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0016      0.0028    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0016      0.0026    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0014      0.0026    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0013      0.0024    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0010      0.0026    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0014      0.0024    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0009      0.0026    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0010      0.0021    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0010      0.0019    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0006      0.0018    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0006      0.0015    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0005      0.0018    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0005      0.0017    FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0005      0.0014    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0004      0.0018    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0005      0.0016    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.0005      0.0015    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0004      0.0014    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0004      0.0013    FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.0003      0.0013    FALSE</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">eb</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="entropy_bayes-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

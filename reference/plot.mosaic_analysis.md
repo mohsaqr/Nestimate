@@ -30,11 +30,8 @@ drawn on the active device as a side effect.
 ## Examples
 
 ``` r
-# \donttest{
 data(group_regulation_long, package = "Nestimate")
 res <- mosaic_analysis(group_regulation_long, "Course", "Action",
                        min_count = 20)
 plot(res, tile_label = "percent", legend_position = "bottom")
-
-# }
 ```

@@ -68,31 +68,32 @@ the transition-network counterpart.
 
 ``` r
 set.seed(1)
-df <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, 6))
-names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+f <- stats::rnorm(200)
+g <- stats::rnorm(200)
+df <- data.frame(a1 = f + stats::rnorm(200), a2 = f + stats::rnorm(200),
+                 a3 = f + stats::rnorm(200), b1 = g + stats::rnorm(200),
+                 b2 = g + stats::rnorm(200), b3 = g + stats::rnorm(200))
 clusters <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, clusters, aggregation = "composite", method = "cor")
-#> Warning: Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, b1. See item_loadings(fit, misfit = TRUE).
-#> Warning: Reverse-keyed item(s) flipped in composites: a2, b3. See item_loadings() (column sign).
 nets <- as_networks(fit)
 nets
 #> Group Networks (3 groups)
 #> 
 #>   Group  Nodes  Edges  Weights
-#>   macro  2      1      [0.028, 0.028]
-#>   A      3      3      [-0.026, 0.068]
-#>   B      3      3      [-0.070, 0.038]
+#>   macro  2      1      [0.007, 0.007]
+#>   A      3      3      [0.443, 0.472]
+#>   B      3      3      [0.462, 0.540]
 summary(nets)
 #> Network metrics by group:
 #>                       metric   macro       A       B
 #>                   Node Count       2       3       3
-#>                   Edge Count       2       2       2
-#>              Network Density       1  0.6667  0.6667
-#>                Mean Distance 0.02847 0.06817 0.03813
-#>            Mean Out-Strength 0.02847 0.07709 0.07688
-#>              SD Out-Strength       0 0.02578 0.03159
-#>             Mean In-Strength 0.02847 0.07709 0.07688
-#>               SD In-Strength       0 0.02578 0.03159
+#>                   Edge Count       2       6       6
+#>              Network Density       1       1       1
+#>                Mean Distance 0.00676  0.4597  0.5117
+#>            Mean Out-Strength 0.00676  0.9193   1.023
+#>              SD Out-Strength       0 0.01531 0.04279
+#>             Mean In-Strength 0.00676  0.9193   1.023
+#>               SD In-Strength       0 0.01531 0.04279
 #>              Mean Out-Degree       1       2       2
 #>                SD Out-Degree       0       0       0
 #>  Centralization (Out-Degree)       0       0       0

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,15 +72,29 @@
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span> <span class="op">*</span> <span class="fl">5</span><span class="op">)</span>, <span class="fl">200</span>, <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span> <span class="op">*</span> <span class="fl">5</span><span class="op">)</span>, <span class="fl">200</span>, <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x2</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="nct.html">nct</a></span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># iter = 20 keeps the example fast; a real analysis uses 1000 or more.</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="nct.html">nct</a></span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, iter <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Network Comparison Test  [20 permutations | unpaired]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Global strength (M):  observed = 0.0000   p = 0.5714</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Network structure (S): observed = 0.0000   p = 0.6667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edge tests (E):       10 edges, 0 significant at p &lt; 0.05</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to diff_observed   p_value significant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    V1 V2  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    V1 V3  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    V2 V3  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    V1 V4  1.387779e-17 0.1428571       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    V2 V4  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    V3 V4  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7    V1 V5  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8    V2 V5  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9    V3 V5  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10   V4 V5  0.000000e+00 1.0000000       FALSE</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

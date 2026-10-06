@@ -35,7 +35,6 @@ ggplots when `combined = FALSE`.
 ## Examples
 
 ``` r
-# \donttest{
 seqs <- data.frame(
   V1 = c("A","B","C","A","B"),
   V2 = c("B","C","A","B","C"),
@@ -46,5 +45,4 @@ sc  <- build_simplicial(net, type = "clique")
 qa  <- q_analysis(sc)
 if (requireNamespace("gridExtra", quietly = TRUE)) plot(qa)
 
-# }
 ```

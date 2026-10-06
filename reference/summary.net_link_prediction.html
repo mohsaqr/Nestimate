@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,38 +69,35 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame, one row per method, with columns <code>method</code>,
 <code>n_predictions</code>, <code>score_mean</code>, <code>score_sd</code>,
-<code>score_max</code> and <code>score_min</code>.</p>
+<code>score_max</code> and <code>score_min</code>. A method with no predictions
+(every possible link already exists) has <code>n_predictions = 0</code> and
+<code>NA</code> scores.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"A"</span>, <span class="st">"C"</span>, <span class="st">"E"</span>, <span class="st">"B"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"E"</span>, <span class="st">"C"</span>, <span class="st">"E"</span>, <span class="st">"A"</span>, <span class="st">"D"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"E"</span>, <span class="st">"A"</span>, <span class="st">"D"</span>, <span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"E"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">seqs</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="predict_links.html">predict_links</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to max; returning -Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to min; returning Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to max; returning -Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to min; returning Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to max; returning -Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to min; returning Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to max; returning -Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to min; returning Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to max; returning -Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to min; returning Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to max; returning -Inf</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to min; returning Inf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    method n_predictions score_mean score_sd score_max score_min</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        common_neighbors             0        NaN       NA      -Inf       Inf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     resource_allocation             0        NaN       NA      -Inf       Inf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3             adamic_adar             0        NaN       NA      -Inf       Inf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 jaccard             0        NaN       NA      -Inf       Inf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 preferential_attachment             0        NaN       NA      -Inf       Inf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                    katz             0        NaN       NA      -Inf       Inf</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    method n_predictions score_mean   score_sd score_max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        common_neighbors            12 0.11284722 0.18530385 0.4722222</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     resource_allocation            12 0.03477045 0.06055055 0.1574074</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3             adamic_adar            12 0.09626854 0.16577482 0.4298352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 jaccard            12 0.14555751 0.11315182 0.3251534</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 preferential_attachment            12 2.25000000 1.13818037 4.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                    katz            12 1.71583160 0.85510259 3.3856655</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    score_min</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.01408451</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.64215374</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -44,26 +44,25 @@ methods.
 ## Examples
 
 ``` r
-# \donttest{
 set.seed(1)
-df <- as.data.frame(matrix(rnorm(600), 100, 6))
-names(df) <- c("a1", "a2", "a3", "b1", "b2", "b3")
+f <- stats::rnorm(100)
+g <- stats::rnorm(100)
+df <- data.frame(a1 = f + stats::rnorm(100), a2 = f + stats::rnorm(100),
+                 a3 = f + stats::rnorm(100), b1 = g + stats::rnorm(100),
+                 b2 = g + stats::rnorm(100), b3 = g + stats::rnorm(100))
 cl <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, cl, aggregation = "loadings",
                      method = "cor")
-#> Warning: Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, a3, b1, b2. See item_loadings(fit, misfit = TRUE).
-#> Warning: Reverse-keyed item(s) flipped in composites: a2, b3. See item_loadings() (column sign).
 stability <- loading_stability(fit, iter = 50, seed = 1)
 stability
 #> Composite-Weight Stability (case bootstrap, experimental)
 #>   50 replicates | 95% percentile CIs
 #> 
 #>  node cluster weight boot_mean boot_sd ci_lower ci_upper sign_flips
-#>    a1       A  0.141     0.212   0.293   -0.459    0.476       0.18
-#>    a2       A -0.367     0.104   0.306   -0.422    0.438       0.68
-#>    a3       A  0.493     0.171   0.317   -0.466    0.466       0.24
-#>    b1       B  0.286     0.247   0.244   -0.455    0.469       0.10
-#>    b2       B  0.271     0.226   0.251   -0.439    0.462       0.12
-#>    b3       B -0.444    -0.174   0.327   -0.469    0.483       0.26
-# }
+#>    a1       A  0.338     0.332   0.021    0.292    0.370          0
+#>    a2       A  0.336     0.339   0.018    0.308    0.375          0
+#>    a3       A  0.326     0.329   0.021    0.290    0.367          0
+#>    b1       B  0.316     0.317   0.022    0.276    0.348          0
+#>    b2       B  0.350     0.346   0.022    0.310    0.393          0
+#>    b3       B  0.334     0.337   0.015    0.307    0.360          0
 ```

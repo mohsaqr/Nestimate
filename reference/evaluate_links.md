@@ -33,11 +33,10 @@ precision_at_k column per k value.
 ## Examples
 
 ``` r
-set.seed(42)
 seqs <- data.frame(
-  V1 = sample(LETTERS[1:5], 50, TRUE),
-  V2 = sample(LETTERS[1:5], 50, TRUE),
-  V3 = sample(LETTERS[1:5], 50, TRUE)
+  V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
+  V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
+  V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
 )
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net, exclude_existing = FALSE)
@@ -45,17 +44,17 @@ pred <- predict_links(net, exclude_existing = FALSE)
 # Evaluate against the network's own edges as the known truth
 evaluate_links(pred, extract_edges(net, threshold = 0.001))
 #>                    method       auc average_precision precision_at_5
-#> 1        common_neighbors 0.3421053         0.9536904              1
-#> 2     resource_allocation 0.3421053         0.9536904              1
-#> 3             adamic_adar 0.3421053         0.9536904              1
-#> 4                 jaccard 0.6578947         0.9817801              1
-#> 5 preferential_attachment 1.0000000         1.0000000              1
-#> 6                    katz 1.0000000         1.0000000              1
+#> 1        common_neighbors 0.5833333         0.4618602            0.4
+#> 2     resource_allocation 0.5833333         0.4618602            0.4
+#> 3             adamic_adar 0.5833333         0.4618602            0.4
+#> 4                 jaccard 0.3333333         0.3240105            0.0
+#> 5 preferential_attachment 0.6875000         0.7002999            0.8
+#> 6                    katz 0.7916667         0.6196293            0.4
 #>   precision_at_10 precision_at_20
-#> 1             0.9            0.95
-#> 2             0.9            0.95
-#> 3             0.9            0.95
-#> 4             1.0            0.95
-#> 5             1.0            0.95
-#> 6             1.0            0.95
+#> 1             0.4             0.4
+#> 2             0.4             0.4
+#> 3             0.4             0.4
+#> 4             0.3             0.4
+#> 5             0.5             0.4
+#> 6             0.7             0.4
 ```

@@ -61,7 +61,6 @@ of the returned `state_freq` object.
 ## Examples
 
 ``` r
-# \donttest{
 data(group_regulation_long, package = "Nestimate")
 net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
@@ -95,5 +94,4 @@ state_distribution(net)
 #> 25     C   cohesion   326 0.05909009
 #> 26     C  synthesis   165 0.02990756
 #> 27     C      adapt   153 0.02773246
-# }
 ```

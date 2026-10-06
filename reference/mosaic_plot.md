@@ -228,12 +228,9 @@ for the lower-level data.frame primitive.
 ## Examples
 
 ``` r
-# \donttest{
 data(group_regulation_long, package = "Nestimate")
 net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
                      order = "Time")
 mosaic_plot(net, seed = 1)
-
-# }
 ```

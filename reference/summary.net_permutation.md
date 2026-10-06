@@ -35,12 +35,12 @@ n2 <- build_network(s2, method = "relative")
 perm <- permutation(n1, n2, iter = 10)
 summary(perm)
 #>   from to weight_x weight_y diff effect_size   p_value   sig
-#> 1    A  B        1        0    1    1.333333 0.5454545 FALSE
-#> 2    A  C        0        1   -1   -1.267449 0.5454545 FALSE
-#> 3    B  A        0        1   -1   -1.360828 0.4545455 FALSE
-#> 4    B  C        1        0    1    1.360828 0.4545455 FALSE
-#> 5    C  A        1        0    1    1.237969 0.7272727 FALSE
-#> 6    C  B        0        1   -1   -1.184698 0.7272727 FALSE
+#> 1    A  B        1        0    1    1.267449 0.5454545 FALSE
+#> 2    A  C        0        1   -1   -1.288313 0.5454545 FALSE
+#> 3    B  A        0        1   -1   -1.490712 0.6363636 FALSE
+#> 4    B  C        1        0    1    1.280369 0.6363636 FALSE
+#> 5    C  A        1        0    1    1.288313 0.5454545 FALSE
+#> 6    C  B        0        1   -1   -1.538462 0.5454545 FALSE
 # \donttest{
 set.seed(1)
 d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),

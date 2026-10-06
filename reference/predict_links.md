@@ -176,31 +176,41 @@ for network estimation.
 
 ``` r
 seqs <- data.frame(
-  V1 = sample(LETTERS[1:5], 50, TRUE),
-  V2 = sample(LETTERS[1:5], 50, TRUE),
-  V3 = sample(LETTERS[1:5], 50, TRUE)
+  V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
+  V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
+  V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
 )
 net <- build_network(seqs, method = "relative")
 pred <- predict_links(net)
 print(pred)
-#> Link Prediction  [directed | weighted | 5 nodes | 19 existing edges]
+#> Link Prediction  [directed | weighted | 5 nodes | 8 existing edges]
 #>   Methods: common_neighbors, resource_allocation, adamic_adar, jaccard, preferential_attachment, katz
 #> 
 #>   Top predicted links (consensus across 6 methods):
-#>     1. E -> C  (avg rank: 1.0, agreed: 6/6)
+#>     1. C -> B  (avg rank: 4.5, agreed: 6/6)
+#>     2. B -> A  (avg rank: 4.8, agreed: 6/6)
+#>     3. C -> A  (avg rank: 5.0, agreed: 6/6)
+#>     4. D -> C  (avg rank: 5.5, agreed: 6/6)
+#>     5. A -> D  (avg rank: 5.8, agreed: 6/6)
+#>     6. D -> A  (avg rank: 6.2, agreed: 6/6)
+#>     7. E -> D  (avg rank: 6.5, agreed: 6/6)
+#>     8. E -> C  (avg rank: 7.5, agreed: 6/6)
+#>     9. B -> E  (avg rank: 7.7, agreed: 6/6)
+#>     10. A -> E  (avg rank: 8.0, agreed: 6/6)
+#>     ... and 2 more predictions
 summary(pred)
-#>                    method n_predictions  score_mean score_sd   score_max
-#> 1        common_neighbors             1  0.39998149       NA  0.39998149
-#> 2     resource_allocation             1  0.04079016       NA  0.04079016
-#> 3             adamic_adar             1  0.17519419       NA  0.17519419
-#> 4                 jaccard             1  0.09383030       NA  0.09383030
-#> 5 preferential_attachment             1 16.00000000       NA 16.00000000
-#> 6                    katz             1  1.10171908       NA  1.10171908
-#>     score_min
-#> 1  0.39998149
-#> 2  0.04079016
-#> 3  0.17519419
-#> 4  0.09383030
-#> 5 16.00000000
-#> 6  1.10171908
+#>                    method n_predictions score_mean   score_sd score_max
+#> 1        common_neighbors            12 0.11284722 0.18530385 0.4722222
+#> 2     resource_allocation            12 0.03477045 0.06055055 0.1574074
+#> 3             adamic_adar            12 0.09626854 0.16577482 0.4298352
+#> 4                 jaccard            12 0.14555751 0.11315182 0.3251534
+#> 5 preferential_attachment            12 2.25000000 1.13818037 4.0000000
+#> 6                    katz            12 1.71583160 0.85510259 3.3856655
+#>    score_min
+#> 1 0.00000000
+#> 2 0.00000000
+#> 3 0.00000000
+#> 4 0.01408451
+#> 5 1.00000000
+#> 6 0.64215374
 ```

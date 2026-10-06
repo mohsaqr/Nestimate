@@ -429,9 +429,10 @@ the time axis for every panel at once.
 ## Examples
 
 ``` r
-# \donttest{
 sequence_plot(trajectories)
 
+
+# \donttest{
 sequence_plot(trajectories, type = "index")
 
 sequence_plot(trajectories, type = "distribution")

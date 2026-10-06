@@ -112,7 +112,6 @@ for credible intervals on it.
 ## Examples
 
 ``` r
-# \donttest{
 tr <- entropy_trajectory(group_regulation_long,
                          action = "Action", actor = "Actor",
                          time = "Time", group = "Achiever")
@@ -133,5 +132,4 @@ summary(tr)
 plot(tr)
 #> `geom_smooth()` using formula = 'y ~ x'
 
-# }
 ```

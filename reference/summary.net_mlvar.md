@@ -33,7 +33,6 @@ console prints the matrices and then the table.
 ## Examples
 
 ``` r
-# \donttest{
 # A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by
 # `happy` one beep earlier, so the temporal network should recover it.
 if (requireNamespace("lme4", quietly = TRUE)) {
@@ -62,5 +61,4 @@ if (requireNamespace("lme4", quietly = TRUE)) {
 #> 1        temporal       3       6       1      0.11569402          2          4
 #> 2 contemporaneous       3       3       1      0.05304465          1          2
 #> 3         between       3       3       1      0.15389239          2          1
-# }
 ```

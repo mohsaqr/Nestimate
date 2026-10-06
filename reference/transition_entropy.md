@@ -148,7 +148,6 @@ for credible intervals;
 ## Examples
 
 ``` r
-# \donttest{
 net <- build_network(as.data.frame(trajectories), method = "relative")
 te  <- transition_entropy(net)
 print(te)
@@ -185,5 +184,4 @@ summary(te)
 #>   redundancy is the relative redundancy (H(pi) - h(P)) / H(pi).
 plot(te)
 
-# }
 ```

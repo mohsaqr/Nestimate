@@ -17,7 +17,7 @@ summary(), plot(), net_centrality)."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,31 +112,32 @@ into a group rather than re-wrapping matrices.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span> <span class="op">*</span> <span class="fl">6</span><span class="op">)</span>, <span class="fl">200</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a1"</span>, <span class="st">"a2"</span>, <span class="st">"a3"</span>, <span class="st">"b1"</span>, <span class="st">"b2"</span>, <span class="st">"b3"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>a1 <span class="op">=</span> <span class="va">f</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, a2 <span class="op">=</span> <span class="va">f</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                 a3 <span class="op">=</span> <span class="va">f</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, b1 <span class="op">=</span> <span class="va">g</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                 b2 <span class="op">=</span> <span class="va">g</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, b3 <span class="op">=</span> <span class="va">g</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a1"</span>, <span class="st">"a2"</span>, <span class="st">"a3"</span><span class="op">)</span>, B <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"b1"</span>, <span class="st">"b2"</span>, <span class="st">"b3"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_mcml_pc.html">build_mcml_pc</a></span><span class="op">(</span><span class="va">df</span>, <span class="va">clusters</span>, aggregation <span class="op">=</span> <span class="st">"composite"</span>, method <span class="op">=</span> <span class="st">"cor"</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Item(s) more strongly connected to another cluster than their own (possible misassignment): a1, a2, b1. See item_loadings(fit, misfit = TRUE).</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Reverse-keyed item(s) flipped in composites: a2, b3. See item_loadings() (column sign).</span>
 <span class="r-in"><span><span class="va">nets</span> <span class="op">&lt;-</span> <span class="fu">as_networks</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">nets</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group Networks (3 groups)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Group  Nodes  Edges  Weights</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   macro  2      1      [0.028, 0.028]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A      3      3      [-0.026, 0.068]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B      3      3      [-0.070, 0.038]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   macro  2      1      [0.007, 0.007]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A      3      3      [0.443, 0.472]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B      3      3      [0.462, 0.540]</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">nets</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Network metrics by group:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                       metric   macro       A       B</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   Node Count       2       3       3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Edge Count       2       2       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Network Density       1  0.6667  0.6667</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Mean Distance 0.02847 0.06817 0.03813</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Out-Strength 0.02847 0.07709 0.07688</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              SD Out-Strength       0 0.02578 0.03159</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Mean In-Strength 0.02847 0.07709 0.07688</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               SD In-Strength       0 0.02578 0.03159</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Edge Count       2       6       6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Network Density       1       1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Mean Distance 0.00676  0.4597  0.5117</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Out-Strength 0.00676  0.9193   1.023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              SD Out-Strength       0 0.01531 0.04279</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Mean In-Strength 0.00676  0.9193   1.023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               SD In-Strength       0 0.01531 0.04279</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Mean Out-Degree       1       2       2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                SD Out-Degree       0       0       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Centralization (Out-Degree)       0       0       0</span>

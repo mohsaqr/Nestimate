@@ -20,7 +20,7 @@ Useful links:
 
 - <https://github.com/mohsaqr/Nestimate>
 
-- <https://saqr.me/Nestimate/>
+- <https://pak.dynasite.org/Nestimate/>
 
 - Report bugs at <https://github.com/mohsaqr/Nestimate/issues>
 

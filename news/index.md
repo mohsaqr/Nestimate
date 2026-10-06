@@ -1,5 +1,38 @@
 # Changelog
 
+## Nestimate 0.9.21
+
+### Bug fixes
+
+- [`summary()`](https://rdrr.io/r/base/summary.html) of a
+  [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
+  result reports `NA` scores for a method with no predictions (every
+  possible link already exists). It returned `NaN` / `-Inf` / `Inf` with
+  one warning per column.
+
+### Documentation
+
+- Every help page now has example code that runs under `R CMD check`. 31
+  pages had all of it inside `\donttest{}` or `\dontrun{}`; fast
+  examples are unwrapped, and slow ones
+  ([`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md),
+  [`permutation_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md),
+  [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md))
+  run live with fewer iterations.
+- The
+  [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
+  family of examples uses fixed data that leaves links to predict, and
+  the
+  [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
+  /
+  [`as_networks()`](https://pak.dynasite.org/Nestimate/reference/as_networks.md)
+  examples use items with real two-factor structure, so neither emits
+  warnings.
+- pkgdown: the `cograph-tutorial-nestimate` article was a 47.8 MB page
+  (300 dpi figures inlined as base64); it is now about 70 KB with
+  figures as separate files. The README no longer lists outdated
+  imports.
+
 ## Nestimate 0.9.20
 
 ### Documentation

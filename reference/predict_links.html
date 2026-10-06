@@ -17,7 +17,7 @@ networks."><meta property="og:image" content="https://pak.dynasite.org/Nestimate
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -221,33 +221,43 @@ networks. <em>Science</em>, 286(5439), 509–512.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="fl">50</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="fl">50</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="fl">50</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  V1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"A"</span>, <span class="st">"C"</span>, <span class="st">"E"</span>, <span class="st">"B"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  V2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"E"</span>, <span class="st">"C"</span>, <span class="st">"E"</span>, <span class="st">"A"</span>, <span class="st">"D"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"E"</span>, <span class="st">"A"</span>, <span class="st">"D"</span>, <span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"E"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">seqs</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">predict_links</span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Link Prediction  [directed | weighted | 5 nodes | 19 existing edges]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Link Prediction  [directed | weighted | 5 nodes | 8 existing edges]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Methods: common_neighbors, resource_allocation, adamic_adar, jaccard, preferential_attachment, katz</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Top predicted links (consensus across 6 methods):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     1. E -&gt; C  (avg rank: 1.0, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1. C -&gt; B  (avg rank: 4.5, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2. B -&gt; A  (avg rank: 4.8, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3. C -&gt; A  (avg rank: 5.0, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     4. D -&gt; C  (avg rank: 5.5, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     5. A -&gt; D  (avg rank: 5.8, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     6. D -&gt; A  (avg rank: 6.2, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     7. E -&gt; D  (avg rank: 6.5, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     8. E -&gt; C  (avg rank: 7.5, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     9. B -&gt; E  (avg rank: 7.7, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     10. A -&gt; E  (avg rank: 8.0, agreed: 6/6)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     ... and 2 more predictions</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    method n_predictions  score_mean score_sd   score_max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        common_neighbors             1  0.39998149       NA  0.39998149</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     resource_allocation             1  0.04079016       NA  0.04079016</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3             adamic_adar             1  0.17519419       NA  0.17519419</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 jaccard             1  0.09383030       NA  0.09383030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 preferential_attachment             1 16.00000000       NA 16.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                    katz             1  1.10171908       NA  1.10171908</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     score_min</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.39998149</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.04079016</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.17519419</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.09383030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 16.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  1.10171908</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    method n_predictions score_mean   score_sd score_max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        common_neighbors            12 0.11284722 0.18530385 0.4722222</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     resource_allocation            12 0.03477045 0.06055055 0.1574074</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3             adamic_adar            12 0.09626854 0.16577482 0.4298352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 jaccard            12 0.14555751 0.11315182 0.3251534</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 preferential_attachment            12 2.25000000 1.13818037 4.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                    katz            12 1.71583160 0.85510259 3.3856655</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    score_min</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.01408451</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.64215374</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

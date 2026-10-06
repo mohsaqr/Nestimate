@@ -120,7 +120,6 @@ ed., chapters 2 and 4. Wiley. (KL divergence and conditional entropy.)
 ## Examples
 
 ``` r
-# \donttest{
 data(trajectories, package = "Nestimate")
 pd <- path_dependence(as.data.frame(trajectories), order = 2)
 print(pd)
@@ -181,5 +180,4 @@ summary(pd)
 #>        0.071           0.087          9       2
 plot(pd)
 
-# }
 ```

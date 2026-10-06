@@ -7,10 +7,9 @@ Nestimate is a comprehensive R package for estimating, validating, and
 comparing networks from behavioral sequence data, psychological scales,
 and longitudinal panel data. A single entry point —
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-— dispatches to 13 built-in estimators. Every network type shares the
+— dispatches to 14 built-in estimators. Every network type shares the
 same validation pipeline: bootstrap confidence intervals, permutation
-testing, split-half reliability, and centrality stability. The entire
-package has only 4 hard imports (ggplot2, glasso, data.table, cluster).
+testing, split-half reliability, and centrality stability.
 
 ### Full tutorials
 
