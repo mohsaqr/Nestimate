@@ -16,6 +16,9 @@ wtna(
   mode = c("non-overlapping", "overlapping"),
   actor = NULL
 )
+
+# S3 method for class 'wtna_mixed'
+print(x, ...)
 ```
 
 ## Arguments
@@ -61,6 +64,15 @@ wtna(
   Character or NULL. Name of the actor/ID column for per-group
   computation. If NULL, treats all rows as one group. Default: NULL.
 
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `wtna_mixed`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
 ## Value
 
 For `method = "transition"` or `"cooccurrence"`: a
@@ -75,6 +87,8 @@ initial state distribution.
 For `method = "both"`: a `wtna_mixed` object - a list with elements
 `$transition` and `$cooccurrence` (each a `netobject` as above) and
 `$method = "wtna_both"`.
+
+In `print.wtna_mixed()`: The input object, invisibly.
 
 ## Details
 

@@ -24,6 +24,23 @@ build_clusters(
   estimator = c("auto", "firth", "multinom", "chisq"),
   ...
 )
+
+# S3 method for class 'net_clustering'
+print(x, digits = 3L, ...)
+
+# S3 method for class 'net_clustering'
+summary(object, ...)
+
+# S3 method for class 'net_clustering'
+plot(
+  x,
+  type = c("silhouette", "mds", "heatmap", "predictors"),
+  combined = TRUE,
+  ...
+)
+
+# S3 method for class 'tidy_covariates'
+print(x, ...)
 ```
 
 ## Arguments
@@ -164,7 +181,39 @@ build_clusters(
 
 - ...:
 
-  Unsupported. Supplying unused arguments raises an error.
+  Unsupported. Supplying unused arguments raises an error. For the S3
+  methods: further arguments passed to or from other methods.
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_clustering` or `tidy_covariates`.
+
+- digits:
+
+  Integer. Decimal places used for floating-point statistics in the
+  printout. Default `3`. Non-breaking: existing `print(x)` calls keep
+  their previous formatting.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_clustering`.
+
+- type:
+
+  Character. Plot type: `"silhouette"` (per-observation silhouette
+  bars), `"mds"` (2D MDS projection), `"heatmap"` (distance matrix
+  heatmap ordered by cluster), or `"predictors"` (odds-ratio forest plot
+  of the post-hoc covariate analysis; requires `covariates` and an
+  estimator that produces coefficients). Default: `"silhouette"`.
+
+- combined:
+
+  Logical. For `type = "predictors"` only: when `TRUE` (default),
+  covariate forest panels are combined into a single faceted plot; when
+  `FALSE`, a list of separate ggplots is returned.
 
 ## Value
 
@@ -241,6 +290,22 @@ An object of class `"net_clustering"` containing:
 
   For HTNA input, the preserved node-to-actor partition used to restore
   HTNA children when networks are built.
+
+In `print.net_clustering()`: The input object, invisibly.
+
+In `summary.net_clustering()`: A data frame of per-cluster statistics,
+one row per cluster, with columns `cluster`, `size` and
+`mean_within_dist`, returned *visibly*. When the clustering was fitted
+with `covariates`, a `tidy_covariates`/`data.frame` (the tidied
+covariate table, with cluster sizes, fit statistics and profiles
+attached as attributes) is returned *invisibly* instead. In both cases
+the printed summary is a side effect.
+
+In `plot.net_clustering()`: A `ggplot` object (invisibly); for
+`type = "predictors"` with `combined = FALSE`, a list of `ggplot`
+objects named by cluster (invisibly).
+
+In `print.tidy_covariates()`: The input invisibly.
 
 ## Examples
 

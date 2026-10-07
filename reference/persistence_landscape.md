@@ -19,6 +19,12 @@ landscape function is zero on the grid.
 
 ``` r
 persistence_landscape(ph, k_max = 5L, dimension = 1L, t_grid = NULL)
+
+# S3 method for class 'persistence_landscape'
+print(x, ...)
+
+# S3 method for class 'persistence_landscape'
+plot(x, ...)
 ```
 
 ## Arguments
@@ -43,6 +49,16 @@ persistence_landscape(ph, k_max = 5L, dimension = 1L, t_grid = NULL)
   Numeric vector of evaluation points. `NULL` (default) uses an even
   grid of 200 points covering the union of pair intervals.
 
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `persistence_landscape`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
 ## Value
 
 A `persistence_landscape` object with:
@@ -62,6 +78,10 @@ A `persistence_landscape` object with:
 - t_grid:
 
   Numeric vector.
+
+In `print.persistence_landscape()`: The input, invisibly.
+
+In `plot.persistence_landscape()`: A ggplot.
 
 ## References
 

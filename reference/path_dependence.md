@@ -12,6 +12,18 @@ histories carry extra predictive information.
 
 ``` r
 path_dependence(x, order = 2L, min_count = 5L, base = 2)
+
+# S3 method for class 'net_path_dependence'
+print(x, top = 10L, digits = 3L, ...)
+
+# S3 method for class 'net_path_dependence'
+summary(object, ...)
+
+# S3 method for class 'summary.net_path_dependence'
+print(x, digits = 3L, ...)
+
+# S3 method for class 'net_path_dependence'
+plot(x, top = 15L, title = NULL, ...)
 ```
 
 ## Arguments
@@ -19,7 +31,11 @@ path_dependence(x, order = 2L, min_count = 5L, base = 2)
 - x:
 
   A wide sequence data.frame / matrix (rows = actors, columns =
-  time-steps), or a `netobject` that carries the source data.
+  time-steps), or a `netobject` that carries the source data. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_path_dependence` (or its
+  [`summary()`](https://rdrr.io/r/base/summary.html)).
 
 - order:
 
@@ -36,6 +52,30 @@ path_dependence(x, order = 2L, min_count = 5L, base = 2)
 - base:
 
   Numeric. Logarithm base for entropy and KL. Default 2 (bits).
+
+- top:
+
+  In `print.net_path_dependence()`: Integer. Number of top contexts to
+  show. Default 10. In `plot.net_path_dependence()`: Integer. Number of
+  contexts to show (top by KL). Default 15.
+
+- digits:
+
+  Integer. Digits to round numeric output. Default 3.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_path_dependence`.
+
+- title:
+
+  Character or `NULL`. Plot title. Default `NULL`, which builds "Path
+  dependence: order k vs order 1" from the fitted order.
 
 ## Value
 
@@ -73,6 +113,14 @@ An object of class `"net_path_dependence"` with
 - states:
 
   character vector
+
+In `print.net_path_dependence()` and
+`print.summary.net_path_dependence()`: `x` invisibly.
+
+In `summary.net_path_dependence()`: A `summary.net_path_dependence` with
+the full sorted table and chain-level summaries.
+
+In `plot.net_path_dependence()`: A ggplot object.
 
 ## Details
 

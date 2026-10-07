@@ -21,7 +21,7 @@ whole-network descriptive."><meta property="og:image" content="https://pak.dynas
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,16 @@ whole-network descriptive.</p>
 <span>  directed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_vertex_comparison'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_vertex_comparison'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_vertex_comparison'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -91,7 +100,9 @@ whole-network descriptive.</p>
 <dd><p>The two networks: <code>netobject</code>s, <code>cograph_network</code>s,
 square weight matrices, or precomputed <code>net_vertex_bootstrap</code>
 objects (then <code>iter</code>, <code>statistics</code>, <code>statistic_fn</code>,
-<code>directed</code>, and <code>seed</code> are ignored for that argument).
+<code>directed</code>, and <code>seed</code> are ignored for that argument). For the
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods, <code>x</code> is an object of class
+<code>net_vertex_comparison</code>.
 The two sides must cover exactly the same statistics; a mismatch
 (e.g., a directed network's <code>reciprocity</code> against an undirected
 one, or precomputed objects built with different <code>statistics</code>
@@ -132,6 +143,18 @@ back to matrix symmetry.</p></dd>
 <dd><p>Character vector of length 2 naming the networks in the
 output (default <code>c("x", "y")</code>).</p></dd>
 
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Number of digits to display (default 3).</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_vertex_comparison</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -150,6 +173,9 @@ confidence interval for the difference.</p></dd>
 
 </dl><p>When both bootstrap SEs are zero (a statistic with no resampling
 variation in either network) <code>z</code> and <code>p_value</code> are <code>NA</code>.</p>
+<p>In <code>print.net_vertex_comparison()</code>: <code>x</code>, invisibly.</p>
+<p>In <code>summary.net_vertex_comparison()</code>: The tidy summary data frame (one row per statistic).</p>
+<p>In <code>plot.net_vertex_comparison()</code>: A ggplot object.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.svg" class="logo" alt=""><h1>Build a Network</h1>
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/R/build_network.R" class="external-link"><code>R/build_network.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/R/build_network.R" class="external-link"><code>R/build_network.R</code></a>, <a href="https://github.com/mohsaqr/Nestimate/blob/main/R/summary_network.R" class="external-link"><code>R/summary_network.R</code></a></small>
       <div class="d-none name"><code>build_network.Rd</code></div>
     </div>
 
@@ -84,7 +84,28 @@ estimator registry, so custom estimators can also be used.</p>
 <span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'netobject'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'netobject_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'netobject_ml'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'netobject'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'netobject_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, combined <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'summary.netobject'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'summary.netobject_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -286,7 +307,24 @@ through unchanged.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to the estimator function.</p></dd>
+<dd><p>Additional arguments passed to the estimator function.
+For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: an object of class <code>netobject</code>, <code>netobject_group</code> or <code>netobject_ml</code> (or its <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>).</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer. Decimal places for the weight summary. Default <code>3</code>. Non-breaking: <code>print(x)</code> keeps the same shape as before, with the addition of a weight-range column.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>netobject</code> or <code>netobject_group</code>.</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>Logical. Combine into one wide data.frame? Default <code>TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -363,6 +401,9 @@ decomposed data.</p>
 <code>net_mmm</code> object), returns an object of class
 <code>"netobject_group"</code>: a named list of <code>netobject</code>s, one per group,
 carrying the grouping column in <code>attr(x, "group_col")</code>.</p>
+<p>In <code>print.netobject()</code>, <code>print.netobject_group()</code> and <code>print.netobject_ml()</code>: The input object, invisibly.</p>
+<p>In <code>summary.netobject()</code>: A <code>data.frame</code> with columns <code>metric</code> and <code>value</code>, of class <code>c("summary.netobject", "data.frame")</code>.</p>
+<p>In <code>summary.netobject_group()</code>: Either a <code>data.frame</code> (one column per group) or a named list of <code>summary.netobject</code> objects, of class <code>c("summary.netobject_group", ...)</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

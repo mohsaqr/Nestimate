@@ -25,7 +25,7 @@ are computed directly from the matrix without igraph."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,22 @@ are computed directly from the matrix without igraph.</p>
 <span>  invert <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  normalize_diffusion <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_stability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_stability_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_stability_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_stability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_stability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -101,7 +116,7 @@ are computed directly from the matrix without igraph.</p>
 <dd><p>A <code>netobject</code> from <code><a href="build_network.html">build_network</a></code>, a
 <code>cograph_network</code>, or a <code>netobject_group</code> / <code>mcml</code>
 (each constituent network is assessed and a
-<code>net_stability_group</code> is returned).</p></dd>
+<code>net_stability_group</code> is returned). For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_stability</code> or <code>net_stability_group</code>.</p></dd>
 
 
 <dt id="arg-measures">measures<a class="anchor" aria-label="anchor" href="#arg-measures"></a></dt>
@@ -181,6 +196,14 @@ when <code>normalize = FALSE</code>. Default: <code>TRUE</code>.</p></dd>
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Integer or NULL. RNG seed for reproducibility.</p></dd>
 
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_stability_group</code> or <code>net_stability</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -224,6 +247,11 @@ row-normalised transition network), those measures are <strong>dropped</strong>:
 retained ones. When <em>every</em> requested measure has zero variance a
 warning is issued and <strong>all</strong> requested names are returned with
 <code>cs = 0</code> and all-<code>NA</code> correlation matrices.</p>
+<p>In <code>print.net_stability()</code>: The input object, invisibly.</p>
+<p>In <code>print.net_stability_group()</code>: The input <code>x</code> invisibly.</p>
+<p>In <code>summary.net_stability_group()</code>: A data frame with columns <code>group</code>, <code>measure</code>, <code>drop_prop</code>, <code>mean_cor</code>, <code>sd_cor</code>, <code>prop_above</code>.</p>
+<p>In <code>summary.net_stability()</code>: A data frame with columns <code>measure</code>, <code>drop_prop</code>, <code>mean_cor</code>, <code>sd_cor</code>, <code>prop_above</code>.</p>
+<p>In <code>plot.net_stability()</code>: A <code>ggplot</code> object (invisibly).</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

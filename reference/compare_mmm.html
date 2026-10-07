@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,7 +49,16 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compare_mmm</span><span class="op">(</span><span class="va">data</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">5</span>, return_fits <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compare_mmm</span><span class="op">(</span><span class="va">data</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">5</span>, return_fits <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mmm_compare'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mmm_compare'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mmm_compare'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,7 +84,16 @@ table is allocated.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Arguments passed to <code><a href="build_mmm.html">build_mmm</a></code>.</p></dd>
+<dd><p>Arguments passed to <code><a href="build_mmm.html">build_mmm</a></code>.
+For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>mmm_compare</code>.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>mmm_compare</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -85,6 +103,9 @@ with columns <code>k</code>, <code>log_likelihood</code>, <code>AIC</code>, <cod
 <code>ICL</code>, <code>AvePP</code>, <code>Entropy</code> and <code>converged</code>. When
 <code>return_fits = TRUE</code>, the fitted <code>net_mmm</code> models are
 attached as <code>attr(result, "fits")</code>.</p>
+<p>In <code>print.mmm_compare()</code>: The comparison table, invisibly, with the printed <code>best</code> marker column (<code>"&lt;-- BIC"</code> / <code>"&lt;-- ICL"</code>) added.</p>
+<p>In <code>summary.mmm_compare()</code>: A tidy data frame with one row per <code>k</code>, plus a <code>best</code> character column flagging the minimum-BIC and minimum-ICL solutions.</p>
+<p>In <code>plot.mmm_compare()</code>: A <code>ggplot</code> object, invisibly.</p>
     </div>
 
     <div class="section level2">

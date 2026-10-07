@@ -48,6 +48,21 @@ bayes_compare(
   bound_threshold = 0.001,
   seed = NULL
 )
+
+# S3 method for class 'net_bayes'
+print(x, ...)
+
+# S3 method for class 'net_bayes'
+summary(object, ...)
+
+# S3 method for class 'net_bayes'
+plot(x, significant_only = TRUE, title = NULL, ...)
+
+# S3 method for class 'net_bayes_group'
+print(x, ...)
+
+# S3 method for class 'net_bayes_group'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -59,7 +74,9 @@ bayes_compare(
   a `netobject_group`, an `mcml` object, or a
   [`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
   object. Must use a transition method (`"relative"` / `"frequency"` and
-  their aliases).
+  their aliases). For the [`print()`](https://rdrr.io/r/base/print.html)
+  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  an object of class `net_bayes` or `net_bayes_group`.
 
 - y:
 
@@ -95,6 +112,23 @@ bayes_compare(
 - seed:
 
   Integer or NULL. RNG seed for reproducible credible intervals.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_bayes` or `net_bayes_group`.
+
+- significant_only:
+
+  Logical. Show only credibly-different edges (default `TRUE`).
+
+- title:
+
+  Optional plot title.
 
 ## Value
 
@@ -172,6 +206,19 @@ plotting, plus Bayesian extras:
 - prior, draws, ci, mean_threshold, bound_threshold:
 
   Bayesian settings.
+
+In `print.net_bayes()` and `print.net_bayes_group()`: The input object,
+invisibly.
+
+In `summary.net_bayes()`: A data frame with edge-level posterior
+differences and intervals.
+
+In `plot.net_bayes()`: Invisibly, the cograph network returned by
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+when cograph is available; otherwise a fallback `ggplot` object.
+
+In `summary.net_bayes_group()`: A combined data frame with a
+`comparison` column.
 
 ## References
 

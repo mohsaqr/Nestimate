@@ -9,7 +9,7 @@ selects the optimal Markov order using AIC, BIC, or likelihood ratio tests."><me
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,16 @@ selects the optimal Markov order using AIC, BIC, or likelihood ratio tests.</p>
 <span>  max_order <span class="op">=</span> <span class="fl">5L</span>,</span>
 <span>  criterion <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"aic"</span>, <span class="st">"bic"</span>, <span class="st">"lrt"</span><span class="op">)</span>,</span>
 <span>  lrt_alpha <span class="op">=</span> <span class="fl">0.01</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mogen'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mogen'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mogen'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ic"</span>, <span class="st">"likelihood"</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -87,6 +96,22 @@ message.</p></dd>
 
 <dt id="arg-lrt-alpha">lrt_alpha<a class="anchor" aria-label="anchor" href="#arg-lrt-alpha"></a></dt>
 <dd><p>Numeric. Significance threshold for LRT (default 0.01).</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_mogen</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_mogen</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Character. Plot type: <code>"ic"</code> (default) or <code>"likelihood"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -164,7 +189,9 @@ readable arrow-notation table is
 <dd><p>Always <code>NULL</code>.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_mogen()</code> and <code>plot.net_mogen()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_mogen()</code>: A per-order model-selection data.frame with columns <code>order</code>, <code>layer_dof</code>, <code>cum_dof</code>, <code>loglik</code>, <code>aic</code>, <code>bic</code>, <code>best</code> (<code>"AIC"</code>/<code>"BIC"</code>/<code>"AIC+BIC"</code> marker) and <code>selected</code> (<code>"&lt;--"</code> on the chosen order), returned visibly; the summary text is printed as a side effect.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>At order k, nodes are k-tuples of states and edges represent transitions

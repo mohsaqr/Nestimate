@@ -21,6 +21,12 @@ predict_links(
   include_self = FALSE,
   katz_damping = NULL
 )
+
+# S3 method for class 'net_link_prediction'
+print(x, ...)
+
+# S3 method for class 'net_link_prediction'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -28,6 +34,8 @@ predict_links(
 - x:
 
   A `netobject`, `mcml`, `cograph_network`, or numeric square matrix.
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `net_link_prediction`.
 
 - methods:
 
@@ -58,6 +66,15 @@ predict_links(
 
   Numeric or NULL. Attenuation factor for Katz index. If NULL,
   auto-computed as `0.9 / spectral_radius(A)`. Default: `NULL`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_link_prediction`.
 
 ## Value
 
@@ -106,6 +123,13 @@ An object of class `"net_link_prediction"` containing:
 - n_existing:
 
   Integer. Number of existing edges.
+
+In `print.net_link_prediction()`: The input object, invisibly.
+
+In `summary.net_link_prediction()`: A data frame, one row per method,
+with columns `method`, `n_predictions`, `score_mean`, `score_sd`,
+`score_max` and `score_min`. A method with no predictions (every
+possible link already exists) has `n_predictions = 0` and `NA` scores.
 
 ## Details
 

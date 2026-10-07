@@ -18,6 +18,12 @@ nct(
   weighted = TRUE,
   p_adjust = "none"
 )
+
+# S3 method for class 'net_nct'
+print(x, ...)
+
+# S3 method for class 'net_nct'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -60,6 +66,20 @@ nct(
   [`stats::p.adjust.methods`](https://rdrr.io/r/stats/p.adjust.html)).
   Default `"none"`.
 
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `net_nct`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_nct`.
+
 ## Value
 
 A list of class `net_nct` with elements:
@@ -97,6 +117,12 @@ A list of class `net_nct` with elements:
 
   List of the settings used: `gamma`, `abs`, `weighted`, `p_adjust`.
 
+In `print.net_nct()`: The input object, invisibly.
+
+In `summary.net_nct()`: A data frame with columns `from`, `to`,
+`diff_observed`, `p_value`, `significant`. Attributes `m_stat` and
+`s_stat` each hold a one-row data frame with `observed` and `p_value`.
+
 ## Details
 
 Follows `NetworkComparisonTest::NCT()` with defaults `abs = TRUE`,
@@ -112,26 +138,22 @@ statistics) rather than bit-for-bit, even under the same seed.
 
 ``` r
 set.seed(1)
-x1 <- matrix(rnorm(200 * 5), 200, 5)
-x2 <- matrix(rnorm(200 * 5), 200, 5)
-colnames(x1) <- colnames(x2) <- paste0("V", 1:5)
+x1 <- matrix(rnorm(100 * 4), 100, 4)
+x2 <- matrix(rnorm(100 * 4), 100, 4)
+colnames(x1) <- colnames(x2) <- paste0("V", 1:4)
 # iter = 20 keeps the example fast; a real analysis uses 1000 or more.
 res <- nct(x1, x2, iter = 20)
 res
 #> Network Comparison Test  [20 permutations | unpaired]
-#>   Global strength (M):  observed = 0.0000   p = 0.5714
-#>   Network structure (S): observed = 0.0000   p = 0.6667
-#>   Edge tests (E):       10 edges, 0 significant at p < 0.05
+#>   Global strength (M):  observed = 0.0000   p = 1.0000
+#>   Network structure (S): observed = 0.0000   p = 1.0000
+#>   Edge tests (E):       6 edges, 0 significant at p < 0.05
 summary(res)
-#>    from to diff_observed   p_value significant
-#> 1    V1 V2  0.000000e+00 1.0000000       FALSE
-#> 2    V1 V3  0.000000e+00 1.0000000       FALSE
-#> 3    V2 V3  0.000000e+00 1.0000000       FALSE
-#> 4    V1 V4  1.387779e-17 0.1428571       FALSE
-#> 5    V2 V4  0.000000e+00 1.0000000       FALSE
-#> 6    V3 V4  0.000000e+00 1.0000000       FALSE
-#> 7    V1 V5  0.000000e+00 1.0000000       FALSE
-#> 8    V2 V5  0.000000e+00 1.0000000       FALSE
-#> 9    V3 V5  0.000000e+00 1.0000000       FALSE
-#> 10   V4 V5  0.000000e+00 1.0000000       FALSE
+#>   from to diff_observed p_value significant
+#> 1   V1 V2             0       1       FALSE
+#> 2   V1 V3             0       1       FALSE
+#> 3   V2 V3             0       1       FALSE
+#> 4   V1 V4             0       1       FALSE
+#> 5   V2 V4             0       1       FALSE
+#> 6   V3 V4             0       1       FALSE
 ```

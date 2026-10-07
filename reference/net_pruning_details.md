@@ -19,23 +19,33 @@ net_pruning_details(x, ...)
 
 # Default S3 method
 net_pruning_details(x, ...)
+
+# S3 method for class 'net_pruning_details'
+print(x, ...)
 ```
 
 ## Arguments
 
 - x:
 
-  A pruned `netobject` or `netobject_group`.
+  A pruned `netobject` or `netobject_group`. For the
+  `net_pruning_details()` and
+  [`print()`](https://rdrr.io/r/base/print.html) methods: an object of
+  class `netobject`, `netobject_group`, `default` or
+  `net_pruning_details`.
 
 - ...:
 
-  Ignored.
+  Ignored. For the S3 methods: further arguments passed to or from other
+  methods.
 
 ## Value
 
 For a `netobject`: a `net_pruning_details` data frame (columns `from`,
 `to`, `weight`) of removed edges. For a `netobject_group`: a named list
 of such data frames.
+
+In `print.net_pruning_details()`: `x`, invisibly.
 
 ## See also
 

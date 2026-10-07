@@ -15,7 +15,7 @@ distance computation for 100-1000x speedup on edit distances."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,24 @@ distance computation for 100-1000x speedup on edit distances.</p>
 <span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  estimator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"firth"</span>, <span class="st">"multinom"</span>, <span class="st">"chisq"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_clustering'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_clustering'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_clustering'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"silhouette"</span>, <span class="st">"mds"</span>, <span class="st">"heatmap"</span>, <span class="st">"predictors"</span><span class="op">)</span>,</span>
+<span>  combined <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'tidy_covariates'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -213,7 +230,28 @@ factors; Kruskal-Wallis + eta-squared for numerics).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Unsupported. Supplying unused arguments raises an error.</p></dd>
+<dd><p>Unsupported. Supplying unused arguments raises an error.
+For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_clustering</code> or <code>tidy_covariates</code>.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer. Decimal places used for floating-point statistics in the printout. Default <code>3</code>. Non-breaking: existing <code>print(x)</code> calls keep their previous formatting.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_clustering</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Character. Plot type: <code>"silhouette"</code> (per-observation silhouette bars), <code>"mds"</code> (2D MDS projection), <code>"heatmap"</code> (distance matrix heatmap ordered by cluster), or <code>"predictors"</code> (odds-ratio forest plot of the post-hoc covariate analysis; requires <code>covariates</code> and an estimator that produces coefficients). Default: <code>"silhouette"</code>.</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>Logical. For <code>type = "predictors"</code> only: when <code>TRUE</code> (default), covariate forest panels are combined into a single faceted plot; when <code>FALSE</code>, a list of separate ggplots is returned.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -274,7 +312,11 @@ each sequence. NULL otherwise.</p></dd>
 partition used to restore HTNA children when networks are built.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_clustering()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_clustering()</code>: A data frame of per-cluster statistics, one row per cluster, with columns <code>cluster</code>, <code>size</code> and <code>mean_within_dist</code>, returned <em>visibly</em>. When the clustering was fitted with <code>covariates</code>, a <code>tidy_covariates</code>/<code>data.frame</code> (the tidied covariate table, with cluster sizes, fit statistics and profiles attached as attributes) is returned <em>invisibly</em> instead. In both cases the printed summary is a side effect.</p>
+<p>In <code>plot.net_clustering()</code>: A <code>ggplot</code> object (invisibly); for <code>type = "predictors"</code> with <code>combined = FALSE</code>, a list of <code>ggplot</code> objects named by cluster (invisibly).</p>
+<p>In <code>print.tidy_covariates()</code>: The input invisibly.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

@@ -227,9 +227,9 @@ fields (see **Value**); nothing was removed.
 
 ``` r
 # \donttest{
-# Create simple panel data (3 subjects, 4 variables, 50 time points).
+# Create simple panel data (3 subjects, 4 variables, 30 time points).
 set.seed(42)
-n_sub <- 3; n_t <- 50; vars <- paste0("V", 1:4)
+n_sub <- 3; n_t <- 30; vars <- paste0("V", 1:4)
 rows <- lapply(seq_len(n_sub), function(i) {
   d <- as.data.frame(matrix(rnorm(n_t * 4), ncol = 4))
   names(d) <- vars; d$id <- i; d
@@ -246,25 +246,25 @@ print(res)
 #> 
 #> Group-level paths found: 0 
 #> 
-#> Individual-level paths:  mean 1.3, range 0-3
+#> Individual-level paths:  mean 0.3, range 0-1
 #> 
 #> Proportion of subjects with each path:
 #> 
 #>   Temporal [directed]
-#>     weights [0.333, 1.000]  |  +6 / -0 edges
-#>        V1 V2   V3   V4
-#>     V1  1  0 0.00 0.00
-#>     V2  0  1 0.33 0.33
-#>     V3  0  0 1.00 0.00
-#>     V4  0  0 0.00 1.00
+#>     weights [1.000, 1.000]  |  +4 / -0 edges
+#>        V1 V2 V3 V4
+#>     V1  1  0  0  0
+#>     V2  0  1  0  0
+#>     V3  0  0  1  0
+#>     V4  0  0  0  1
 #> 
 #>   Contemporaneous [directed]
-#>     weights [0.333, 0.333]  |  +2 / -0 edges
-#>        V1   V2 V3   V4
-#>     V1  0 0.00  0 0.00
-#>     V2  0 0.00  0 0.00
-#>     V3  0 0.00  0 0.33
-#>     V4  0 0.33  0 0.00
+#>     weights [0.333, 0.333]  |  +1 / -0 edges
+#>        V1 V2 V3   V4
+#>     V1  0  0  0 0.33
+#>     V2  0  0  0 0.00
+#>     V3  0  0  0 0.00
+#>     V4  0  0  0 0.00
 #> 
 #>   plot(x)  (faithful gimme-style mixed network) | plot(x, layer = "temporal") 
 #>   edges(x) | nodes(x) | summary(x) | coefs(x) | matrices(x)

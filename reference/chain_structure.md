@@ -10,6 +10,24 @@ absorbing states exist.
 
 ``` r
 chain_structure(x, normalize = TRUE, tol = 1e-10)
+
+# S3 method for class 'chain_structure'
+print(x, ...)
+
+# S3 method for class 'chain_structure'
+plot(x, show_values = TRUE, digits = 2L, ...)
+
+# S3 method for class 'chain_structure'
+summary(object, ...)
+
+# S3 method for class 'chain_structure_group'
+print(x, ...)
+
+# S3 method for class 'chain_structure_group'
+summary(object, ...)
+
+# S3 method for class 'summary_chain_structure'
+print(x, ...)
 ```
 
 ## Arguments
@@ -20,7 +38,11 @@ chain_structure(x, normalize = TRUE, tol = 1e-10)
   sequence data.frame (passed through
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   with `method = "relative"`). A `netobject_group` is also accepted and
-  analysed constituent by constituent.
+  analysed constituent by constituent. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `chain_structure`, `chain_structure_group` or
+  `summary_chain_structure`.
 
 - normalize:
 
@@ -40,6 +62,28 @@ chain_structure(x, normalize = TRUE, tol = 1e-10)
   raising `tol` to ignore tiny transition probabilities never
   reclassifies a near-deterministic state as absorbing). Default
   `1e-10`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+  In `print.chain_structure_group()`: Forwarded to
+  `print.chain_structure`. In `print.summary_chain_structure()`:
+  Forwarded to `print.data.frame`.
+
+- show_values:
+
+  Logical. If `TRUE` (default), prints the numeric probability inside
+  each cell. Set `FALSE` for large state spaces (n \> 10) where labels
+  overlap.
+
+- digits:
+
+  Integer. Decimal places for in-cell labels.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `chain_structure` or `chain_structure_group`.
 
 ## Value
 
@@ -125,6 +169,24 @@ Otherwise a `chain_structure` object: a list with elements
 
   The (possibly normalized) transition matrix used.
 
+In `print.chain_structure()`, `print.chain_structure_group()` and
+`print.summary_chain_structure()`: `x` invisibly.
+
+In `plot.chain_structure()`: A `ggplot` object.
+
+In `summary.chain_structure()`: A `data.frame` with one row per state,
+of class `c("summary_chain_structure", "data.frame")`, carrying the
+chain-level flags (`is_regular`, `is_irreducible`, `is_aperiodic`,
+`is_reversible`, `n_classes`, `absorbing_states`) as attributes, which
+its [`print()`](https://rdrr.io/r/base/print.html) method shows as a
+header. Columns as described above.
+
+In `summary.chain_structure_group()`: A `data.frame` with columns
+`group`, `state`, `classification`, `period`, `persistence`,
+`return_probability`, `sojourn_steps`, plus `stationary_probability` if
+all groups are irreducible and `mean_absorption_time` if any group has
+absorbing states.
+
 ## Details
 
 Built specifically as a diagnostic to run *before* trusting the output
@@ -138,6 +200,20 @@ to check.
 
 The fundamental-matrix absorption math follows Kemeny & Snell (1976);
 the hitting-probability linear system follows Norris (1997).
+
+## Plot colours
+
+Cell colour encodes `P(ever reach j | start at i)`. The diagonal uses
+the return-time convention (`P(return to j in >= 1 steps)`), matching
+`markovchain::hittingProbabilities`. A non-irreducible chain shows zero
+off-block entries – visual evidence of one-way doors between behavioural
+phases. An absorbing chain shows a column of 1's for the absorbing
+state.
+
+## Summary columns
+
+Columns are ordered for readability: identifiers first, classification
+second, dynamic per-state metrics last.
 
 ## References
 

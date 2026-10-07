@@ -17,7 +17,7 @@ network) should not be over-interpreted.'><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,13 @@ network) should not be over-interpreted.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">loading_stability</span><span class="op">(</span><span class="va">x</span>, iter <span class="op">=</span> <span class="fl">200L</span>, ci_level <span class="op">=</span> <span class="fl">0.05</span>, seed <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">loading_stability</span><span class="op">(</span><span class="va">x</span>, iter <span class="op">=</span> <span class="fl">200L</span>, ci_level <span class="op">=</span> <span class="fl">0.05</span>, seed <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'pc_loading_stability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'pc_loading_stability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -72,7 +78,7 @@ network) should not be over-interpreted.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>An <code>mcml_pc</code> object that carries raw data.</p></dd>
+<dd><p>An <code>mcml_pc</code> object that carries raw data. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>pc_loading_stability</code>.</p></dd>
 
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
@@ -88,6 +94,14 @@ re-estimation makes this heavier than a plain bootstrap).</p></dd>
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Integer or NULL. RNG seed.</p></dd>
 
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Number of digits to display (default 3).</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -98,6 +112,8 @@ re-estimation makes this heavier than a plain bootstrap).</p></dd>
 in which the item's sign differed from the observed one),
 <code>boot_weights</code> (iter x n_nodes matrix), <code>iter</code>, and
 <code>ci_level</code>. Has print and plot methods.</p>
+<p>In <code>print.pc_loading_stability()</code>: <code>x</code>, invisibly.</p>
+<p>In <code>plot.pc_loading_stability()</code>: A ggplot object.</p>
     </div>
 
     <div class="section level2">

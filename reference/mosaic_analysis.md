@@ -22,6 +22,15 @@ mosaic_analysis(
   title = "",
   ...
 )
+
+# S3 method for class 'mosaic_analysis'
+plot(x, ...)
+
+# S3 method for class 'mosaic_analysis'
+print(x, ...)
+
+# S3 method for class 'mosaic_analysis'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -71,7 +80,20 @@ mosaic_analysis(
   `label_size`, `palette`). Tile fill uses the ColorBrewer RdBu ramp by
   default (override with `palette`). Column labels auto-rotate to
   vertical when there are more than 6 columns; pass `col_label_angle` to
-  force an angle.
+  force an angle. For the S3 methods: further arguments passed to or
+  from other methods. In `plot.mosaic_analysis()`: Styling overrides
+  forwarded to the flat renderer.
+
+- x:
+
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+  [`print()`](https://rdrr.io/r/base/print.html) methods: an object of
+  class `mosaic_analysis`.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `mosaic_analysis`.
 
 ## Value
 
@@ -125,6 +147,17 @@ An object of class `"mosaic_analysis"`: a list with
 Use [`print()`](https://rdrr.io/r/base/print.html) for the test summary
 and [`summary()`](https://rdrr.io/r/base/summary.html) for the tidy
 per-cell table.
+
+In `plot.mosaic_analysis()`: The re-rendered flat mosaic `ggplot`
+object, invisibly; the plot is drawn on the active device as a side
+effect.
+
+In `print.mosaic_analysis()`: `x`, invisibly.
+
+In `summary.mosaic_analysis()`: The tidy per-cell `data.frame`: one row
+per (var1, var2) cell, with the two variable columns (named after `var1`
+/ `var2`) plus `observed`, `expected`, `residual` and `pct`. The one-row
+test summary is attached as the `"stats"` attribute.
 
 ## See also
 

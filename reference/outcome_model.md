@@ -92,15 +92,18 @@ plot(x, ...)
 
 - x:
 
-  A `net_outcome_model`, for the `print` and `plot` methods.
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_outcome_model`.
 
 - ...:
 
-  Unused.
+  For the S3 methods: further arguments passed to or from other methods.
 
 - object:
 
-  A `net_outcome_model`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_outcome_model`.
 
 ## Value
 
@@ -117,11 +120,13 @@ predictors), `$adjust`, `$select`, `$correction`, `$ci_level`, `$mixed`
 and `$outcome`. Retrieve the table with
 [`effects_table`](https://pak.dynasite.org/Nestimate/reference/effects_table.md).
 
-`print` returns its input invisibly.
+In `print.net_outcome_model()`: `print` returns its input invisibly.
 
-`summary` returns the tidy effect table.
+In `summary.net_outcome_model()`: `summary` returns the tidy effect
+table.
 
-`plot` returns a `ggplot` forest of the effects.
+In `plot.net_outcome_model()`: `plot` returns a `ggplot` forest of the
+effects.
 
 ## Honest inference
 

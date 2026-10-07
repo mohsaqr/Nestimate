@@ -11,7 +11,7 @@ recurrence time, sojourn time, and mean accessibility to/from other states."><me
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,6 +58,15 @@ recurrence time, sojourn time, and mean accessibility to/from other states.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">markov_stability</span><span class="op">(</span><span class="va">x</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_markov_stability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_markov_stability_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_markov_stability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_markov_stability'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"persistence"</span>, <span class="st">"stationary_prob"</span>, <span class="st">"return_time"</span>, <span class="st">"sojourn_time"</span>,</span>
@@ -74,29 +83,29 @@ recurrence time, sojourn time, and mean accessibility to/from other states.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>netobject</code>, <code>cograph_network</code>, <code>tna</code> object,
 row-stochastic numeric transition matrix, or a wide sequence data.frame
-(rows = actors, columns = time-steps).</p></dd>
+(rows = actors, columns = time-steps). For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_markov_stability</code> or <code>net_markov_stability_group</code>.</p></dd>
 
 
 <dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
 <dd><p>Logical. Normalize rows to sum to 1? Default <code>TRUE</code>.</p></dd>
 
 
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Ignored.
+For the S3 methods: further arguments passed to or from other methods. In <code>print.net_markov_stability_group()</code>: Forwarded to <code>print.net_markov_stability</code> for each element.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class
+<code>net_markov_stability</code>.</p></dd>
+
+
 <dt id="arg-metrics">metrics<a class="anchor" aria-label="anchor" href="#arg-metrics"></a></dt>
-<dd><p>Character vector. Which metrics to plot. Options:
-<code>"persistence"</code>, <code>"stationary_prob"</code>, <code>"return_time"</code>,
-<code>"sojourn_time"</code>, <code>"avg_time_to_others"</code>,
-<code>"avg_time_from_others"</code>. Default: all six.</p></dd>
+<dd><p>Character vector. Which metrics to plot. Options: <code>"persistence"</code>, <code>"stationary_prob"</code>, <code>"return_time"</code>, <code>"sojourn_time"</code>, <code>"avg_time_to_others"</code>, <code>"avg_time_from_others"</code>. Default: all six.</p></dd>
 
 
 <dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
-<dd><p>When <code>TRUE</code> (default), all selected metrics are
-shown in one ggplot via <code>facet_wrap(~ metric)</code>. When <code>FALSE</code>,
-returns a named list of single-panel ggplots, one per metric, so each
-can be printed, saved, or re-laid-out independently.</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Ignored.</p></dd>
+<dd><p>When <code>TRUE</code> (default), all selected metrics are shown in one ggplot via <code>facet_wrap(~ metric)</code>. When <code>FALSE</code>, returns a named list of single-panel ggplots, one per metric, so each can be printed, saved, or re-laid-out independently.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -117,10 +126,8 @@ can be printed, saved, or re-laid-out independently.</p></dd>
 </dl><p>For a <code>netobject_group</code> the result is a
 <code>"net_markov_stability_group"</code>: a named list holding one such
 object per group.</p>
-<p><code>plot.net_markov_stability</code> returns a faceted ggplot object
-when <code>combined = TRUE</code>, and (invisibly) a named list of
-single-metric ggplots, one per entry of <code>metrics</code>, when
-<code>combined = FALSE</code>.</p>
+<p>In <code>print.net_markov_stability_group()</code>: <code>x</code> invisibly.</p>
+<p>In <code>plot.net_markov_stability()</code>: <code>plot.net_markov_stability</code> returns a faceted ggplot object when <code>combined = TRUE</code>, and (invisibly) a named list of single-metric ggplots, one per entry of <code>metrics</code>, when <code>combined = FALSE</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

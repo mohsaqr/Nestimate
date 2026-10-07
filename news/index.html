@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,30 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.23" id="nestimate-0923">Nestimate 0.9.23<a class="anchor" aria-label="anchor" href="#nestimate-0923"></a></h2>
+<div class="section level3">
+<h3 id="internal-changes-0-9-23">Internal changes<a class="anchor" aria-label="anchor" href="#internal-changes-0-9-23"></a></h3>
+<ul><li>The <code>mgm</code> and <code>ising</code> estimators delegate to <code><a href="https://pak.dynasite.org/psychnets/reference/mgm_fit.html" class="external-link">psychnets::mgm_fit()</a></code> and <code><a href="https://pak.dynasite.org/psychnets/reference/ising_fit.html" class="external-link">psychnets::ising_fit()</a></code> (glmnet engine), joining <code>cor</code>, <code>pcor</code> and <code>glasso</code>. Results are unchanged: identical to the former in-package code (max absolute difference 0 for Ising over 180 configurations, 5.6e-17 for MGM over 48). Nestimate keeps type detection, input validation and the result fields. The Ising result no longer carries the unused <code>asymm_weights</code> and <code>lambda_selected</code> fields. The unused internal moderated-MGM code is removed.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-9-23">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-9-23"></a></h3>
+<ul><li>Each function has one help page. The 181 <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, <code><a href="https://rdrr.io/r/base/format.html" class="external-link">format()</a></code> and <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> methods are documented on the page of the function that creates their object (<code><a href="../reference/nct.html">?nct</a></code> covers <code><a href="../reference/nct.html">print.net_nct()</a></code> and <code><a href="../reference/nct.html">summary.net_nct()</a></code>), as is <code><a href="../reference/compare_model.html">compare_model()</a></code>’s <code>netobject_group</code> method. 286 help pages become 139; <code><a href="../reference/nct.html">?print.net_nct</a></code> still opens the right page.</li>
+<li>
+<code><a href="../reference/compare_model.html">compare_model()</a></code> and <code><a href="../reference/as_netdifference.html">as_netdifference()</a></code> have examples.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-9-23">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-9-23"></a></h3>
+<ul><li>
+<code>build_network(method = "mgm")</code> no longer fails on data with missing values (“number of observations in y not equal to the number of rows of x”).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-0-9-23">Tests<a class="anchor" aria-label="anchor" href="#tests-0-9-23"></a></h3>
+<ul><li>Equivalence tests against other packages (tna, igraph, mgm, stringdist, <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>) and naive-loop reference implementations are no longer shipped.</li>
+<li>CRAN runs a core of 15 test files (data preparation, estimation registry, extraction, Markov, link prediction, Bayesian verbs, pruning, and the htna contract); every other file is skipped on CRAN and runs locally and in CI. The CRAN test run drops from about 300 s to 22 s.</li>
+<li>Slow examples run with fewer iterations (<code><a href="../reference/boot_glasso.html">boot_glasso()</a></code>, <code><a href="../reference/nct.html">nct()</a></code>, <code><a href="../reference/permutation_diagnostics.html">permutation_diagnostics()</a></code>, <code><a href="../reference/build_gimme.html">build_gimme()</a></code>) and <code><a href="../reference/sequence_plot.html">?sequence_plot</a></code> draws fewer figures.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.21" id="nestimate-0921">Nestimate 0.9.21<a class="anchor" aria-label="anchor" href="#nestimate-0921"></a></h2>
 <div class="section level3">
@@ -175,7 +199,7 @@
 <li><p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> on an <code>mcml</code> now honours <code>na =</code> in the distribution view: <code>na = FALSE</code> drops the <code>NA</code> (ended) band and shows each time point as shares of the sequences still running, as <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code> already did.</p></li>
 <li><p><code><a href="../reference/macro_network.html">macro_network()</a></code> accepts an <code>mcml_pc</code> fit and returns its cluster-level network; <code>expand =</code> on an <code>mcml_pc</code> raises <code>nestimate_no_expand</code>, and <code>method =</code> or <code>...</code> error (the estimator is set in <code><a href="../reference/build_mcml_pc.html">build_mcml_pc()</a></code>).</p></li>
 <li><p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> errors when <code>combine</code>, <code>expand</code>, <code>rest</code> or <code>rest_label</code> is passed for input that is not an <code>mcml</code>, instead of ignoring them.</p></li>
-<li><p><code><a href="../reference/print.mcml_pc.html">print.mcml_pc()</a></code> and its build-time warnings name <code><a href="../reference/item_loadings.html">item_loadings()</a></code> instead of pointing at <code>$loadings</code>.</p></li>
+<li><p><code><a href="../reference/build_mcml_pc.html">print.mcml_pc()</a></code> and its build-time warnings name <code><a href="../reference/item_loadings.html">item_loadings()</a></code> instead of pointing at <code>$loadings</code>.</p></li>
 <li><p><code><a href="../reference/prepare.html">prepare()</a></code> (and so <code><a href="../reference/build_network.html">build_network()</a></code> on long data) keeps the <code>session</code> column(s) in the per-sequence metadata under their own names, and returns the metadata explicitly in sequence row order (it was assembled with <code>merge(sort = FALSE)</code>, whose order is unspecified).</p></li>
 <li><p><code><a href="../reference/build_mmm.html">build_mmm()</a></code> and <code><a href="../reference/build_clusters.html">build_clusters()</a></code> keep the input network’s <code>$metadata</code> (restricted to the fitted rows when <code><a href="../reference/build_mmm.html">build_mmm()</a></code> drops sequences with missing covariates).</p></li>
 </ul></div>
@@ -237,7 +261,7 @@
 <li>
 <code>plot(x)</code> draws one view per call, selected with <code>type =</code> (the package-wide argument name; <code>what =</code> is accepted as an alias): <code>"networks"</code> (default; each network drawn once via <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code>), <code>"difference"</code> (the signed difference network of each pair), <code>"edges"</code> (ranked dumbbell), <code>"nodes"</code>, <code>"global"</code>, <code>"heatmap"</code>, <code>"scatter"</code>, and <code>"inference"</code> (a forest of the edge differences on the difference scale, with credible intervals when the Bayesian backend ran, a filled marker for a significant edge and the p-value in a right-hand column; it raises <code>nestimate_compare_no_test</code> when <code>test = "none"</code>). One sign-to-colour contract (<code>#4A6FE3</code> = first/reference higher, <code>#D33F6A</code> = second higher) backed by line type and marker shape; the heatmap scale follows the data.</li>
 <li>
-<code>plot(x, combined = FALSE)</code> splits a multi-pair view into a named list of single-pair plots (one per pair) instead of facetting them into one figure, matching the <code>combined</code> argument of <code><a href="../reference/plot.net_reliability.html">plot.net_reliability()</a></code>, <code><a href="../reference/plot.simplicial_complex.html">plot.simplicial_complex()</a></code> and friends. The base-graphics views draw one panel per page.</li>
+<code>plot(x, combined = FALSE)</code> splits a multi-pair view into a named list of single-pair plots (one per pair) instead of facetting them into one figure, matching the <code>combined</code> argument of <code><a href="../reference/network_reliability.html">plot.net_reliability()</a></code>, <code><a href="../reference/build_simplicial.html">plot.simplicial_complex()</a></code> and friends. The base-graphics views draw one panel per page.</li>
 <li>Optional inference on the same tables: <code>test = "permutation"</code>, <code>"bayes"</code> (with an optional <code>rope</code>), <code>"bootstrap"</code>, combinable. Non-significant results are faded, never deleted.</li>
 <li>
 <code><a href="../reference/permutation.html">permutation()</a></code> gains a <code>$global</code> data frame with NCT-style <code>M</code> (sum of absolute differences) and <code>S</code> (largest absolute difference) statistics and their permutation p-values, computed from the same null.</li>
@@ -542,7 +566,7 @@
 <ul><li>
 <code><a href="../reference/magnitude_difference.html">magnitude_difference()</a></code> compares the frequency (FTNA) and probability (TNA) views of a transition network and quantifies the per-edge discrepancy on a common scale, with five metrics, four scalings, and two polar <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> portraits (stacked and circular).</li>
 <li>Full persistent homology with a Vietoris-Rips filtration (<code><a href="../reference/persistent_homology.html">persistent_homology()</a></code>, <code>build_simplicial(type = "vr")</code>) plus diagram tools <code><a href="../reference/bottleneck_distance.html">bottleneck_distance()</a></code> and <code><a href="../reference/persistence_landscape.html">persistence_landscape()</a></code>.</li>
-<li>Network comparison: <code><a href="../reference/compare_model.html">compare_model()</a></code> (with <code>netobject_group</code> dispatch), <code><a href="../reference/summary.netobject.html">summary.netobject()</a></code>, <code><a href="../reference/plot.net_comparison.html">plot.net_comparison()</a></code>, and <code><a href="../reference/rename_models.html">rename_models()</a></code> for relabelling grouped network objects.</li>
+<li>Network comparison: <code><a href="../reference/compare_model.html">compare_model()</a></code> (with <code>netobject_group</code> dispatch), <code><a href="../reference/build_network.html">summary.netobject()</a></code>, <code><a href="../reference/compare_model.html">plot.net_comparison()</a></code>, and <code><a href="../reference/rename_models.html">rename_models()</a></code> for relabelling grouped network objects.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="documentation-0-6-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-6-0"></a></h3>
@@ -580,7 +604,7 @@
 <div class="section level4">
 <h4 id="documentation-0-5-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-5-1"></a></h4>
 <ul><li>
-<code><a href="../reference/summary.mcml.html">summary.mcml()</a></code> roxygen corrected — was claiming a printing side effect that doesn’t exist. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/5" class="external-link">#5</a>)</li>
+<code><a href="../reference/build_mcml.html">summary.mcml()</a></code> roxygen corrected — was claiming a printing side effect that doesn’t exist. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/5" class="external-link">#5</a>)</li>
 <li>
 <code><a href="../reference/build_mcml.html">build_mcml()</a></code> <code>clusters = "&lt;col&gt;"</code> mode now documents its narrow contract: assigns each row’s group label to both endpoints, so it only makes sense for within-group edge lists. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/2" class="external-link">#2</a>)</li>
 <li>
@@ -746,7 +770,7 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.4" id="nestimate-034">Nestimate 0.3.4<a class="anchor" aria-label="anchor" href="#nestimate-034"></a></h2>
 <ul><li>HYPA: Renamed <code>hypa_score</code> column to <code>p_value</code> for clarity. Added <code>$over</code>, <code>$under</code>, <code>$n_over</code>, <code>$n_under</code> fields to <code>net_hypa</code> objects. Scores are now pre-sorted with anomalous paths first.</li>
-<li>HYPA: <code><a href="../reference/summary.net_hypa.html">summary.net_hypa()</a></code> now shows over/under-represented paths separately with a configurable <code>n</code> parameter.</li>
+<li>HYPA: <code><a href="../reference/build_hypa.html">summary.net_hypa()</a></code> now shows over/under-represented paths separately with a configurable <code>n</code> parameter.</li>
 <li>
 <code><a href="../reference/pathways.html">pathways.netobject()</a></code>: New S3 method to extract higher-order pathways directly from a netobject (builds HON or HYPA internally).</li>
 <li>

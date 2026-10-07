@@ -15,7 +15,7 @@ to bootnet with richer output."><meta property="og:image" content="https://pak.d
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,16 @@ to bootnet with richer output.</p>
 <span>  cor_method <span class="op">=</span> <span class="st">"pearson"</span>,</span>
 <span>  ncores <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'boot_glasso'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'boot_glasso'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, type <span class="op">=</span> <span class="st">"edges"</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'boot_glasso'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="st">"edges"</span>, measure <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -83,7 +92,7 @@ to bootnet with richer output.</p>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A data frame, numeric matrix (observations x variables), or
-a <code>netobject</code> with <code>method = "glasso"</code>.</p></dd>
+a <code>netobject</code> with <code>method = "glasso"</code>. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>boot_glasso</code>.</p></dd>
 
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
@@ -153,6 +162,22 @@ return a named list (e.g., <code>list(my_metric = ...)</code>).</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Integer or NULL. RNG seed for reproducibility.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods. In <code>plot.boot_glasso()</code>: Additional arguments passed to plotting functions. For <code>type = "edge_diff"</code> and <code>type = "centrality_diff"</code>, accepts <code>order</code>: <code>"sample"</code> (default, sorted by value) or <code>"id"</code> (alphabetical).</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>boot_glasso</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>In <code>summary.boot_glasso()</code>: Character. Summary type: <code>"edges"</code> (default), <code>"centrality"</code>, <code>"cs"</code>, <code>"predictability"</code>, or <code>"all"</code>. In <code>plot.boot_glasso()</code>: Character. Plot type: <code>"edges"</code> (default), <code>"stability"</code>, <code>"edge_diff"</code>, <code>"centrality_diff"</code>, or <code>"inclusion"</code>.</p></dd>
+
+
+<dt id="arg-measure">measure<a class="anchor" aria-label="anchor" href="#arg-measure"></a></dt>
+<dd><p>Character. Centrality measure for <code>type = "centrality_diff"</code> (default: first available measure).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -260,7 +285,10 @@ matrices.</p></dd>
 <dd><p>Named numeric vector with timing in seconds.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.boot_glasso()</code>: The input object, invisibly.</p>
+<p>In <code>summary.boot_glasso()</code>: For <code>type = "edges"</code>, the <code>edge_ci</code> data frame (<code>edge</code>, <code>weight</code>, <code>ci_lower</code>, <code>ci_upper</code>, <code>inclusion</code>) ordered by decreasing absolute weight; for <code>"cs"</code> the <code>cs_data</code> data frame; for <code>"predictability"</code> the <code>predictability_ci</code> data frame; for <code>"centrality"</code> a named list of one data frame per measure (<code>node</code>, <code>value</code>, <code>ci_lower</code>, <code>ci_upper</code>); for <code>"all"</code> a named list holding all four.</p>
+<p>In <code>plot.boot_glasso()</code>: A <code>ggplot</code> object (returned, and so printed when the call is made at the top level).</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating
@@ -287,28 +315,29 @@ edge-difference and centrality-difference procedures reproduced here.)</p>
 <span class="r-in"><span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">60</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"glasso"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu">boot_glasso</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">100</span>, cs_iter <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">42</span>,</span></span>
+<span class="r-in"><span><span class="co"># iter = 20 keeps the example fast; a real analysis uses 1000 or more.</span></span></span>
+<span class="r-in"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu">boot_glasso</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">20</span>, cs_iter <span class="op">=</span> <span class="fl">10</span>, seed <span class="op">=</span> <span class="fl">42</span>,</span></span>
 <span class="r-in"><span>  centrality <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strength"</span>, <span class="st">"expected_influence"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> GLASSO Bootstrap (100 iterations, 50 case-drop per proportion)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> GLASSO Bootstrap (20 iterations, 10 case-drop per proportion)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Data: 15 x 4  |  Alpha: 0.05  |  Gamma: 0.50</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edges: 0/6 significant (CI excludes zero)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mean inclusion probability: 0.32</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Mean inclusion probability: 0.34</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Centrality Stability (CS-coefficient):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     strength:              0.00 [Unstable]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     expected_influence:    0.00 [Unstable]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edge differences: 1/15 pairs significantly different</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Timing: 7.0s (bootstrap: 4.2s, case-drop: 2.7s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Timing: 1.4s (bootstrap: 0.9s, case-drop: 0.5s)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot</span>, type <span class="op">=</span> <span class="st">"edges"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     edge weight    ci_lower  ci_upper inclusion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 A -- B      0 -0.15265878 0.3016131      0.24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 A -- C      0 -0.41694566 0.0000000      0.45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 B -- C      0 -0.37041116 0.2982661      0.43</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 A -- D      0  0.00000000 0.3870411      0.41</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 B -- D      0 -0.19093175 0.2384451      0.21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 C -- D      0 -0.01732718 0.2188424      0.18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 A -- B      0 -0.11158199 0.2237170      0.35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 A -- C      0 -0.35185599 0.0000000      0.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 B -- C      0 -0.30946821 0.2065199      0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 A -- D      0  0.00000000 0.3570903      0.50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 B -- D      0 -0.15048304 0.3105727      0.35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 C -- D      0 -0.03724162 0.1787669      0.15</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

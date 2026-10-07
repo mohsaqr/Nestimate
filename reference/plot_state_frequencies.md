@@ -7,6 +7,12 @@ Nestimate object that carries sequence data: a single `netobject`, a
 ## Usage
 
 ``` r
+# S3 method for class 'nestimate_facet_plot'
+print(x, ...)
+
+# S3 method for class 'nestimate_facet_list'
+print(x, ...)
+
 plot_state_frequencies(x, ...)
 
 # S3 method for class 'netobject'
@@ -91,17 +97,32 @@ plot_state_frequencies(
 
 # Default S3 method
 plot_state_frequencies(x, ...)
+
+# S3 method for class 'state_freq'
+print(x, digits = 1, max_states = 20L, ...)
+
+# S3 method for class 'state_freq'
+plot(x, ...)
+
+# S3 method for class 'state_freq'
+as.data.frame(x, ...)
 ```
 
 ## Arguments
 
 - x:
 
-  A `netobject`, `netobject_group`, `mcml`, or `htna` object.
+  A `netobject`, `netobject_group`, `mcml`, or `htna` object. For the
+  [`print()`](https://rdrr.io/r/base/print.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
+  methods: the `state_freq` object returned by
+  `plot_state_frequencies()`.
 
 - ...:
 
-  Reserved for future use.
+  Reserved for future use. For the S3 methods: further arguments passed
+  to or from other methods.
 
 - style:
 
@@ -219,6 +240,16 @@ plot_state_frequencies(x, ...)
   group rather than by individual state, so state-level palettes can
   collapse onto a smaller categorical legend.
 
+- digits:
+
+  Number of decimal places for proportion / share columns. Default 1.
+
+- max_states:
+
+  Cap on rows shown per group in the per-state table (default 20); the
+  surplus is folded into a single `"(+k more)"` row. The full, uncapped
+  table is returned by `as.data.frame(x)`.
+
 ## Value
 
 A `state_freq` object: a list with the rendered `$plot` (a `ggplot`; a
@@ -231,8 +262,15 @@ and draws the chart),
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (draws the
 chart alone), and
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) (returns
-the tidy table) – see
-[`state_freq`](https://pak.dynasite.org/Nestimate/reference/state_freq.md).
+the tidy table) – see the section below.
+
+[`print()`](https://rdrr.io/r/base/print.html) returns `x` invisibly
+(after printing the table and drawing the chart);
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns
+`invisible(NULL)` after drawing;
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
+the tidy `data.frame`, one row per (group, state) cell with columns
+`group`, `state`, `count`, `proportion`.
 
 ## Details
 
@@ -251,6 +289,17 @@ The marimekko layout is dispatched per class:
 
 The bar style produces horizontal bars (state on the y-axis), faceted by
 group when groups exist. All variants use the Okabe-Ito palette.
+
+## The state_freq object
+
+`plot_state_frequencies()` returns a `state_freq` object holding both
+the rendered chart and the tidy frequency table.
+[`print()`](https://rdrr.io/r/base/print.html) shows the table in the
+console *and* draws the chart on the active graphics device,
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the chart
+alone, and
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
+the tidy table for downstream piping.
 
 ## Examples
 

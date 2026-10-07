@@ -34,6 +34,12 @@ persistent_homology(
   type = "clique",
   max_scale = NULL
 )
+
+# S3 method for class 'persistent_homology'
+print(x, ...)
+
+# S3 method for class 'persistent_homology'
+plot(x, combined = TRUE, ...)
 ```
 
 ## Arguments
@@ -45,7 +51,10 @@ persistent_homology(
   `$filtration` vector (as returned by `build_simplicial(type = "vr")`)
   is also accepted and is used directly: its stored filtration values
   are reduced as they are, so `type` is taken from the complex rather
-  than this argument.
+  than this argument. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `persistent_homology`.
 
 - n_steps:
 
@@ -65,6 +74,17 @@ persistent_homology(
 
   For `type = "vr"` only: cap on edge length. Edges with
   `d(i,j) > max_scale` are excluded. `NULL` (default) uses `max(d)`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- combined:
+
+  When `TRUE` (default), the two panels are stitched side-by-side via
+  [`gridExtra::arrangeGrob`](https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html).
+  When `FALSE`, returns a named list (`betti_curve`, `persistence`) of
+  ggplots.
 
 ## Value
 
@@ -90,6 +110,11 @@ A `persistent_homology` object with:
 - mode:
 
   Either `"clique"` or `"vr"`.
+
+In `print.persistent_homology()`: The input object, invisibly.
+
+In `plot.persistent_homology()`: A grid grob (invisibly) when
+`combined = TRUE`; a named list of two ggplots when `combined = FALSE`.
 
 ## References
 

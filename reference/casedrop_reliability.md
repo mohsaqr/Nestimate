@@ -6,16 +6,6 @@ while the flattened edge-weight vector of the re-estimated network still
 correlates with the original above `threshold` in at least `certainty`
 of iterations.
 
-Plots the four model-level reliability metrics across drop proportions:
-`correlation`, `mean_abs_dev`, `median_abs_dev`, `max_abs_dev`. Each
-panel shows the per-iteration mean with a ribbon at mean +/- sd. The
-`correlation` panel includes a dashed horizontal line at the user's
-`threshold` (default 0.7).
-
-Overlay of per-cluster correlation curves across drop proportions. One
-colour per sub-network; ribbons show mean +/- sd across iterations.
-Dashed horizontal line marks the stability threshold (default 0.7).
-
 ## Usage
 
 ``` r
@@ -60,7 +50,13 @@ plot(
 
 - x:
 
-  A `net_casedrop_reliability_group` object.
+  A `netobject`, `cograph_network`, `netobject_group`, or `mcml`. For
+  the group types this function iterates over each element and returns a
+  named list. For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_casedrop_reliability` or
+  `net_casedrop_reliability_group` (or its
+  [`summary()`](https://rdrr.io/r/base/summary.html)).
 
 - iter:
 
@@ -68,11 +64,14 @@ plot(
 
 - drop_prop:
 
-  Drop proportion at which to report the four metrics (mean +/- sd per
-  network). Must be one of the drop proportions the object was built
-  with. Defaults to the object's median grid value (the stored grid is
-  used, not an assumed `0.7`); pass an explicit value not in the grid to
-  get an error listing the available proportions.
+  Numeric vector of proportions to evaluate. Each entry must lie
+  strictly between 0 and 1. Default `seq(0.1, 0.9, by = 0.1)`. In
+  `summary.net_casedrop_reliability_group()`: Drop proportion at which
+  to report the four metrics (mean +/- sd per network). Must be one of
+  the drop proportions the object was built with. Defaults to the
+  object's median grid value (the stored grid is used, not an assumed
+  `0.7`); pass an explicit value not in the grid to get an error listing
+  the available proportions.
 
 - threshold:
 
@@ -107,11 +106,13 @@ plot(
 
 - ...:
 
-  Additional arguments (ignored).
+  For the S3 methods: further arguments passed to or from other methods.
 
 - object:
 
-  A `net_casedrop_reliability_group`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_casedrop_reliability` or
+  `net_casedrop_reliability_group`.
 
 - combined:
 
@@ -173,18 +174,20 @@ When the original edge vector has zero variance a warning is issued and
 the object is returned with `cs = 0`, an empty `summary`, and all-`NA`
 metric matrices.
 
-The input `x` invisibly.
+In `print.net_casedrop_reliability()`: The input `x` invisibly.
 
-A tidy data frame with columns `metric`, `drop_prop`, `mean`, `sd`
-summarising edge-weight stability across case-dropping iterations.
+In `summary.net_casedrop_reliability()`: A tidy data frame with columns
+`metric`, `drop_prop`, `mean`, `sd` summarising edge-weight stability
+across case-dropping iterations.
 
-A data frame with one row per network containing `cor`, `mean_abs_dev`,
-`median_abs_dev`, `max_abs_dev` formatted as "mean +/- sd".
+In `summary.net_casedrop_reliability_group()`: A data frame with one row
+per network containing `cor`, `mean_abs_dev`, `median_abs_dev`,
+`max_abs_dev` formatted as "mean +/- sd".
 
-A `ggplot` object, or a named list of four ggplots when
-`combined = FALSE`.
+In `plot.net_casedrop_reliability()`: A `ggplot` object, or a named list
+of four ggplots when `combined = FALSE`.
 
-A `ggplot` object.
+In `plot.net_casedrop_reliability_group()`: A `ggplot` object.
 
 ## Details
 

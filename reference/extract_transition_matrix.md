@@ -6,6 +6,9 @@ Extract the transition probability matrix from a TNA model object.
 
 ``` r
 extract_transition_matrix(model, type = c("raw", "scaled"))
+
+# S3 method for class 'nest_transition_matrix'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -29,6 +32,15 @@ extract_transition_matrix(model, type = c("raw", "scaled"))
 
   Default: "raw".
 
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `nest_transition_matrix`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
 ## Value
 
 For a single network: a square numeric matrix with row and column names
@@ -40,6 +52,9 @@ tidy `from`/`to`/`weight` data frame.
 
 For an `mcml` object: a named list of such matrices, with `macro` first
 and then one element per cluster.
+
+In `summary.nest_transition_matrix()`: A tidy data frame with columns
+`from`, `to`, `weight`, with one row per non-zero entry.
 
 ## Details
 

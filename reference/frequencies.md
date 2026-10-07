@@ -15,6 +15,9 @@ frequencies(
   cols = NULL,
   format = c("auto", "long", "wide")
 )
+
+# S3 method for class 'nest_transition_counts'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -49,6 +52,15 @@ frequencies(
   Character. Format of input data: "auto" (detect automatically),
   "long", or "wide". Default: "auto".
 
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `nest_transition_counts`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
 ## Value
 
 A square integer matrix of transition frequencies, of class
@@ -60,6 +72,9 @@ can be passed directly to
 class stamp only adds a
 [`summary()`](https://rdrr.io/r/base/summary.html) method, which returns
 the same counts as a tidy `from`/`to`/`count` data frame.
+
+In `summary.nest_transition_counts()`: A tidy data frame with columns
+`from`, `to`, `count`, with one row per non-zero transition.
 
 ## Details
 

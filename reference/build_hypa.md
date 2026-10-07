@@ -16,6 +16,18 @@ build_hypa(
   p_adjust = "BH",
   k = NULL
 )
+
+# S3 method for class 'net_hypa'
+print(x, ...)
+
+# S3 method for class 'net_hypa'
+summary(
+  object,
+  n = 10L,
+  type = c("all", "over", "under"),
+  order_by = c("sig", "freq", "frequency", "ratio", "path"),
+  ...
+)
 ```
 
 ## Arguments
@@ -67,6 +79,37 @@ build_hypa(
 
   Deprecated. Former name of `order`; if supplied it overrides `order`
   and emits a deprecation message. Use `order` instead.
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `net_hypa`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_hypa`.
+
+- n:
+
+  Integer. Maximum number of paths to display per category (default:
+  10).
+
+- type:
+
+  Character. Which anomalies to show: `"all"` (default), `"over"`, or
+  `"under"`.
+
+- order_by:
+
+  Character. Ranking used within each anomaly direction: `"sig"`
+  (default) ranks by the active tail probability, `"freq"` (or its alias
+  `"frequency"`) by observed count, `"ratio"` by observed/expected
+  ratio, and `"path"` alphabetically.
 
 ## Value
 
@@ -165,6 +208,18 @@ An object of class `c("net_hypa", "cograph_network")` with components:
 - node_groups:
 
   Always `NULL`.
+
+In `print.net_hypa()`: The input object, invisibly.
+
+In `summary.net_hypa()`: A data frame of the reported anomalies, at most
+`n` rows per direction, with columns `order` (the De Bruijn order the
+path was found at), `path`, `observed`, `expected`, `ratio`, `p_tail`
+(the raw tail probability in the reported direction: `p_over` for
+over-represented paths, `p_under` for under-represented ones) and
+`direction` (`"over"`/`"under"`). Returned visibly; the summary text and
+the top-`n` tables are printed as a side effect. When no anomalies were
+detected, a zero-row data frame with the same columns except `order` is
+returned.
 
 ## References
 

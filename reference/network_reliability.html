@@ -23,7 +23,7 @@ bootstrap_network).'><meta property="og:image" content="https://pak.dynasite.org
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,16 @@ for fast resampling (same infrastructure as
 <span>  split <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  scale <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_reliability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_reliability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_reliability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, bins <span class="op">=</span> <span class="fl">60L</span>, combined <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -92,7 +101,7 @@ If unnamed, each model is auto-named from its <code>$method</code>; duplicate
 names are made unique with <code><a href="https://rdrr.io/r/base/make.unique.html" class="external-link">make.unique()</a></code>. A
 <code>netobject_group</code> is flattened into its constituent models (named
 by group), and an <code>mcml</code> or <code>cograph_network</code> is converted
-first.</p></dd>
+first. For the S3 methods: further arguments passed to or from other methods.</p></dd>
 
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
@@ -114,6 +123,22 @@ vs relative).</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Integer or NULL. RNG seed for reproducibility.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_reliability</code>.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_reliability</code>.</p></dd>
+
+
+<dt id="arg-bins">bins<a class="anchor" aria-label="anchor" href="#arg-bins"></a></dt>
+<dd><p>Integer. Number of histogram bins per panel (default 60).</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>When <code>TRUE</code> (default), all four metrics are shown in one ggplot via <code>facet_wrap(~ metric)</code>. When <code>FALSE</code>, returns a named list of four single-panel ggplots, one per metric.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -140,7 +165,10 @@ per model).</p></dd>
 <dd><p>Scaling method used.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_reliability()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_reliability()</code>: A tidy data frame with columns <code>model</code>, <code>metric</code>, <code>mean</code>, <code>sd</code> summarising the split-half iterations.</p>
+<p>In <code>plot.net_reliability()</code>: A <code>ggplot</code> object (invisibly), or a named list of four ggplots when <code>combined = FALSE</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code>, <code><a href="bootstrap_network.html">bootstrap_network</a></code></p></div>

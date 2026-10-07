@@ -29,6 +29,21 @@ centrality_stability(
   normalize_diffusion = TRUE,
   seed = NULL
 )
+
+# S3 method for class 'net_stability'
+print(x, ...)
+
+# S3 method for class 'net_stability_group'
+print(x, ...)
+
+# S3 method for class 'net_stability_group'
+summary(object, ...)
+
+# S3 method for class 'net_stability'
+summary(object, ...)
+
+# S3 method for class 'net_stability'
+plot(x, ...)
 ```
 
 ## Arguments
@@ -38,7 +53,10 @@ centrality_stability(
   A `netobject` from
   [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
   a `cograph_network`, or a `netobject_group` / `mcml` (each constituent
-  network is assessed and a `net_stability_group` is returned).
+  network is assessed and a `net_stability_group` is returned). For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_stability` or `net_stability_group`.
 
 - measures:
 
@@ -113,6 +131,15 @@ centrality_stability(
 
   Integer or NULL. RNG seed for reproducibility.
 
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_stability_group` or `net_stability`.
+
 ## Value
 
 An object of class `"net_stability"`: a list with
@@ -163,6 +190,18 @@ row-normalised transition network), those measures are **dropped**:
 When *every* requested measure has zero variance a warning is issued and
 **all** requested names are returned with `cs = 0` and all-`NA`
 correlation matrices.
+
+In `print.net_stability()`: The input object, invisibly.
+
+In `print.net_stability_group()`: The input `x` invisibly.
+
+In `summary.net_stability_group()`: A data frame with columns `group`,
+`measure`, `drop_prop`, `mean_cor`, `sd_cor`, `prop_above`.
+
+In `summary.net_stability()`: A data frame with columns `measure`,
+`drop_prop`, `mean_cor`, `sd_cor`, `prop_above`.
+
+In `plot.net_stability()`: A `ggplot` object (invisibly).
 
 ## References
 

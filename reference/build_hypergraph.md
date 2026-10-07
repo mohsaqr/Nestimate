@@ -69,15 +69,17 @@ summary(object, ...)
 
 - x:
 
-  A `net_hypergraph` object (for `print`).
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `net_hypergraph`.
 
 - ...:
 
-  Additional arguments (ignored).
+  For the S3 methods: further arguments passed to or from other methods.
 
 - object:
 
-  A `net_hypergraph` object (for `summary`).
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_hypergraph`.
 
 ## Value
 
@@ -112,14 +114,15 @@ A `net_hypergraph` object: a list with components
   Recorded call parameters: `method`, `p`, `include_pairwise`,
   `max_size`, `threshold`, `seed`.
 
-For [`print()`](https://rdrr.io/r/base/print.html), the input `x`
-invisibly.
+In `print.net_hypergraph()`: For
+[`print()`](https://rdrr.io/r/base/print.html), the input `x` invisibly.
 
-For [`summary()`](https://rdrr.io/r/base/summary.html), a data.frame
-with one row per node and columns `node` (node name) and `degree`
-(number of hyperedges containing the node), returned visibly; the
-summary block (node / hyperedge counts, mean and maximum hyperedge size)
-is printed as a side effect.
+In `summary.net_hypergraph()`: For
+[`summary()`](https://rdrr.io/r/base/summary.html), a data.frame with
+one row per node and columns `node` (node name) and `degree` (number of
+hyperedges containing the node), returned visibly; the summary block
+(node / hyperedge counts, mean and maximum hyperedge size) is printed as
+a side effect.
 
 ## Details
 

@@ -17,7 +17,7 @@ netobject_group."><meta property="og:image" content="https://pak.dynasite.org/Ne
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,12 @@ longer have to know which fields live on <code>net_clustering</code> vs.
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cluster_diagnostics</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_cluster_diagnostics'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_cluster_diagnostics'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_cluster_diagnostics'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span>, row.names <span class="op">=</span> <span class="cn">NULL</span>, optional <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -77,16 +83,23 @@ longer have to know which fields live on <code>net_clustering</code> vs.
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>net_clustering</code>, <code>net_mmm</code>, <code>netobject_group</code>
 (with <code>attr(, "clustering")</code> attached by <code><a href="cluster_network.html">cluster_network()</a></code>
-or <code>build_network(net_mmm)</code>), or <code>net_mmm_clustering</code>.</p></dd>
+or <code>build_network(net_mmm)</code>), or <code>net_mmm_clustering</code>. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> methods: an object of class <code>net_cluster_diagnostics</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Unsupported. Supplying unused arguments raises an error.</p></dd>
+<dd><p>Unsupported. Supplying unused arguments raises an error. For the S3 methods: further arguments passed to or from other methods. In <code>plot.net_cluster_diagnostics()</code>: Forwarded to the underlying plot method.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer. Decimal places for floating-point statistics. Default <code>3L</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Character. Forwarded to the underlying plot method. Valid values for distance: <code>"silhouette"</code> (default), <code>"mds"</code>, <code>"heatmap"</code>, <code>"predictors"</code>. Valid values for mmm: <code>"posterior"</code> (default), <code>"covariates"</code> / <code>"predictors"</code>.</p></dd>
 
 
 <dt id="arg-row-names-optional">row.names, optional<a class="anchor" aria-label="anchor" href="#arg-row-names-optional"></a></dt>
-<dd><p>Standard <code>as.data.frame</code> arguments
-(ignored).</p></dd>
+<dd><p>Standard <code>as.data.frame</code> arguments (ignored).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -99,6 +112,8 @@ or <code>build_network(net_mmm)</code>), or <code>net_mmm_clustering</code>.</p>
 <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on that object returns the
 <code>per_cluster</code> data frame itself – one row per cluster, with
 family-specific columns.</p>
+<p>In <code>print.net_cluster_diagnostics()</code>: The input object, invisibly.</p>
+<p>In <code>plot.net_cluster_diagnostics()</code>: Whatever the underlying plot method returns: a <code>ggplot</code> object, invisibly; or, for the covariate forest views called with <code>combined = FALSE</code>, a list of <code>ggplot</code> objects named by cluster (invisibly).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -136,8 +151,8 @@ differ by family. Distance: <code>cluster</code>, <code>size</code>,
 </dl></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="print.net_cluster_diagnostics.html">print.net_cluster_diagnostics</a></code>,
-<code><a href="plot.net_cluster_diagnostics.html">plot.net_cluster_diagnostics</a></code>,
+    <div class="dont-index"><p><code>print.net_cluster_diagnostics</code>,
+<code>plot.net_cluster_diagnostics</code>,
 <code><a href="compare_mmm.html">compare_mmm</a></code> for k-sweep model selection (MMM only).</p></div>
     </div>
 

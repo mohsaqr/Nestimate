@@ -23,6 +23,24 @@ permutation(
   seed = NULL,
   actor = NULL
 )
+
+# S3 method for class 'net_permutation'
+print(x, ...)
+
+# S3 method for class 'net_permutation'
+summary(object, ...)
+
+# S3 method for class 'net_permutation_group'
+print(x, ...)
+
+# S3 method for class 'net_permutation_group'
+summary(object, ...)
+
+# S3 method for class 'wtna_perm_mixed'
+print(x, ...)
+
+# S3 method for class 'wtna_perm_mixed'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -33,7 +51,9 @@ permutation(
   [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md))
   or a
   [`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
-  object.
+  object. For the [`print()`](https://rdrr.io/r/base/print.html) method:
+  an object of class `net_permutation`, `net_permutation_group` or
+  `wtna_perm_mixed`.
 
 - y:
 
@@ -99,6 +119,16 @@ permutation(
   `"co_occurrence"`); cannot be combined with `paired = TRUE`, which is
   the special case of one actor per pair. Default `NULL`: sequences are
   permuted individually.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_permutation`, `net_permutation_group` or
+  `wtna_perm_mixed`.
 
 ## Value
 
@@ -214,6 +244,22 @@ Grouped input returns a `"net_permutation_group"` (a named list of
 both `x` and `y` are `netobject_group`s, or one per group pair when `y`
 is `NULL`. Two `wtna_mixed` inputs return a `"wtna_perm_mixed"` with
 `$transition` and `$cooccurrence` results.
+
+In `print.net_permutation()` and `print.wtna_perm_mixed()`: The input
+object, invisibly.
+
+In `summary.net_permutation()`: The `$summary` data frame: one row per
+edge present in either network, with columns `from`, `to`, `weight_x`,
+`weight_y`, `diff`, `effect_size`, `p_value`, `sig`.
+
+In `print.net_permutation_group()`: `x` invisibly.
+
+In `summary.net_permutation_group()`: The per-group summaries stacked
+into one data frame: the columns of `summary.net_permutation` prefixed
+by a `group` column naming the group (or group pair) each row came from.
+
+In `summary.wtna_perm_mixed()`: A list with transition and co-occurrence
+permutation summaries.
 
 ## What is tested
 
@@ -348,8 +394,7 @@ for the Bayesian complement: instead of "is this difference more extreme
 than chance?" it answers "how probable is a difference, and how large?";
 [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
 [`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
-[`print.net_permutation`](https://pak.dynasite.org/Nestimate/reference/print.net_permutation.md),
-[`summary.net_permutation`](https://pak.dynasite.org/Nestimate/reference/summary.net_permutation.md)
+`print.net_permutation`, `summary.net_permutation`
 
 ## Examples
 

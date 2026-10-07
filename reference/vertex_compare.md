@@ -22,6 +22,15 @@ vertex_compare(
   seed = NULL,
   labels = c("x", "y")
 )
+
+# S3 method for class 'net_vertex_comparison'
+print(x, digits = 3, ...)
+
+# S3 method for class 'net_vertex_comparison'
+summary(object, ...)
+
+# S3 method for class 'net_vertex_comparison'
+plot(x, ...)
 ```
 
 ## Arguments
@@ -31,10 +40,13 @@ vertex_compare(
   The two networks: `netobject`s, `cograph_network`s, square weight
   matrices, or precomputed `net_vertex_bootstrap` objects (then `iter`,
   `statistics`, `statistic_fn`, `directed`, and `seed` are ignored for
-  that argument). The two sides must cover exactly the same statistics;
-  a mismatch (e.g., a directed network's `reciprocity` against an
-  undirected one, or precomputed objects built with different
-  `statistics` selections) is an error, never a silent subset.
+  that argument). For the [`print()`](https://rdrr.io/r/base/print.html)
+  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods,
+  `x` is an object of class `net_vertex_comparison`. The two sides must
+  cover exactly the same statistics; a mismatch (e.g., a directed
+  network's `reciprocity` against an undirected one, or precomputed
+  objects built with different `statistics` selections) is an error,
+  never a silent subset.
 
 - iter:
 
@@ -69,6 +81,19 @@ vertex_compare(
   Character vector of length 2 naming the networks in the output
   (default `c("x", "y")`).
 
+- digits:
+
+  Number of digits to display (default 3).
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_vertex_comparison`.
+
 ## Value
 
 An object of class `"net_vertex_comparison"` containing:
@@ -89,6 +114,13 @@ An object of class `"net_vertex_comparison"` containing:
 
 When both bootstrap SEs are zero (a statistic with no resampling
 variation in either network) `z` and `p_value` are `NA`.
+
+In `print.net_vertex_comparison()`: `x`, invisibly.
+
+In `summary.net_vertex_comparison()`: The tidy summary data frame (one
+row per statistic).
+
+In `plot.net_vertex_comparison()`: A ggplot object.
 
 ## References
 

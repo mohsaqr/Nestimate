@@ -22,6 +22,9 @@ prepare(
   unix_time_unit = c("seconds", "milliseconds", "microseconds"),
   timezone = "UTC"
 )
+
+# S3 method for class 'nestimate_data'
+print(x, ...)
 ```
 
 ## Arguments
@@ -91,6 +94,15 @@ prepare(
   Parsing is therefore independent of the machine's local time zone.
   Default: `"UTC"`.
 
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `nestimate_data`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
 ## Value
 
 A list with class `"nestimate_data"` containing:
@@ -120,6 +132,8 @@ A list with class `"nestimate_data"` containing:
   plus `unique_actors` only when `actor` was supplied (with no `actor`
   every row belongs to one synthetic actor, so the count would be
   meaningless).
+
+In `print.nestimate_data()`: The input object, invisibly.
 
 ## Details
 

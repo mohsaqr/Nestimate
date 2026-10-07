@@ -18,6 +18,15 @@ association_rules(
   min_lift = 1,
   max_length = 5L
 )
+
+# S3 method for class 'net_association_rules'
+print(x, ...)
+
+# S3 method for class 'net_association_rules'
+summary(object, ...)
+
+# S3 method for class 'net_association_rules'
+plot(x, ...)
 ```
 
 ## Arguments
@@ -44,6 +53,10 @@ association_rules(
 
   :   Binary transaction matrix (rows = transactions, columns = items).
 
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_association_rules`.
+
 - min_support:
 
   Numeric. Minimum support threshold. Default: 0.1.
@@ -59,6 +72,15 @@ association_rules(
 - max_length:
 
   Integer. Maximum itemset size. Default: 5.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_association_rules`.
 
 ## Value
 
@@ -97,6 +119,15 @@ An object of class `"net_association_rules"` containing:
 - params:
 
   List of min_support, min_confidence, min_lift, max_length.
+
+In `print.net_association_rules()`: The input object, invisibly.
+
+In `summary.net_association_rules()`: The tidy rules data frame: one row
+per rule, with columns `antecedent`, `consequent`, `support`,
+`confidence`, `lift`, `conviction`, `count` and `n_transactions`.
+
+In `plot.net_association_rules()`: The drawn `ggplot` object, invisibly
+(the plot is also printed). `NULL`, invisibly, when no rule was found.
 
 ## Details
 

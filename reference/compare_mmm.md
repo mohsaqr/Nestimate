@@ -6,6 +6,15 @@ Compare MMM fits across different k
 
 ``` r
 compare_mmm(data, k = 2:5, return_fits = FALSE, ...)
+
+# S3 method for class 'mmm_compare'
+print(x, ...)
+
+# S3 method for class 'mmm_compare'
+summary(object, ...)
+
+# S3 method for class 'mmm_compare'
+plot(x, ...)
 ```
 
 ## Arguments
@@ -31,6 +40,18 @@ compare_mmm(data, k = 2:5, return_fits = FALSE, ...)
 
   Arguments passed to
   [`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md).
+  For the S3 methods: further arguments passed to or from other methods.
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `mmm_compare`.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `mmm_compare`.
 
 ## Value
 
@@ -38,6 +59,15 @@ A `mmm_compare` data frame, one row per requested `k`, with columns `k`,
 `log_likelihood`, `AIC`, `BIC`, `ICL`, `AvePP`, `Entropy` and
 `converged`. When `return_fits = TRUE`, the fitted `net_mmm` models are
 attached as `attr(result, "fits")`.
+
+In `print.mmm_compare()`: The comparison table, invisibly, with the
+printed `best` marker column (`"<-- BIC"` / `"<-- ICL"`) added.
+
+In `summary.mmm_compare()`: A tidy data frame with one row per `k`, plus
+a `best` character column flagging the minimum-BIC and minimum-ICL
+solutions.
+
+In `plot.mmm_compare()`: A `ggplot` object, invisibly.
 
 ## Examples
 

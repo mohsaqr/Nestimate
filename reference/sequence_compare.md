@@ -17,6 +17,23 @@ sequence_compare(
   iter = 1000L,
   adjust = "fdr"
 )
+
+# S3 method for class 'net_sequence_comparison'
+print(x, ...)
+
+# S3 method for class 'net_sequence_comparison'
+summary(object, ...)
+
+# S3 method for class 'net_sequence_comparison'
+plot(
+  x,
+  top_n = 10L,
+  style = c("auto", "pyramid", "heatmap"),
+  sort = c("statistic", "frequency"),
+  alpha = 0.05,
+  show_residuals = FALSE,
+  ...
+)
 ```
 
 ## Arguments
@@ -25,6 +42,9 @@ sequence_compare(
 
   A `netobject_group` (from grouped `build_network`), a `netobject`
   (requires `group`), or a wide-format `data.frame` (requires `group`).
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_sequence_comparison`.
 
 - group:
 
@@ -57,6 +77,43 @@ sequence_compare(
   [`p.adjust`](https://rdrr.io/r/stats/p.adjust.html)). Default:
   `"fdr"`.
 
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_sequence_comparison`.
+
+- top_n:
+
+  Integer. Show top N patterns. Default: 10.
+
+- style:
+
+  Character. `"auto"` (default) draws the back-to-back pyramid for
+  exactly 2 groups and the heatmap for any other number; `"pyramid"` and
+  `"heatmap"` force a specific style.
+
+- sort:
+
+  Character. `"statistic"` (default) ranks patterns by test statistic or
+  residual magnitude. `"frequency"` ranks by total occurrence count
+  across all groups.
+
+- alpha:
+
+  Numeric. Significance threshold for p-value display in the pyramid:
+  patterns with `p_value < alpha` are starred and drawn in bold dark
+  text, the rest stay plain grey. Default: 0.05.
+
+- show_residuals:
+
+  Logical. If `TRUE`, print the standardized residual value inside each
+  pyramid bar. Default: `FALSE`. Ignored for the heatmap (which always
+  shows residuals).
+
 ## Value
 
 An object of class `"net_sequence_comparison"` containing:
@@ -82,6 +139,17 @@ An object of class `"net_sequence_comparison"` containing:
 - params:
 
   List of sub, min_freq, test, iter, adjust.
+
+In `print.net_sequence_comparison()`: The input object, invisibly.
+
+In `summary.net_sequence_comparison()`: The `patterns` data.frame: tidy,
+one row per k-gram pattern, with a frequency, proportion and
+standardized-residual column per group, and the test columns when `test`
+was not `"none"`.
+
+In `plot.net_sequence_comparison()`: The drawn `ggplot` object,
+invisibly (the plot is also printed). `NULL`, invisibly, when the object
+holds no patterns.
 
 ## Details
 

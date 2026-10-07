@@ -12,6 +12,12 @@ to know which fields live on `net_clustering` vs. `net_mmm` vs. the slim
 cluster_diagnostics(x, ...)
 
 # S3 method for class 'net_cluster_diagnostics'
+print(x, digits = 3L, ...)
+
+# S3 method for class 'net_cluster_diagnostics'
+plot(x, type = NULL, ...)
+
+# S3 method for class 'net_cluster_diagnostics'
 as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 ```
 
@@ -22,11 +28,29 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
   A `net_clustering`, `net_mmm`, `netobject_group` (with
   `attr(, "clustering")` attached by
   [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
-  or `build_network(net_mmm)`), or `net_mmm_clustering`.
+  or `build_network(net_mmm)`), or `net_mmm_clustering`. For the
+  [`print()`](https://rdrr.io/r/base/print.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
+  methods: an object of class `net_cluster_diagnostics`.
 
 - ...:
 
-  Unsupported. Supplying unused arguments raises an error.
+  Unsupported. Supplying unused arguments raises an error. For the S3
+  methods: further arguments passed to or from other methods. In
+  `plot.net_cluster_diagnostics()`: Forwarded to the underlying plot
+  method.
+
+- digits:
+
+  Integer. Decimal places for floating-point statistics. Default `3L`.
+
+- type:
+
+  Character. Forwarded to the underlying plot method. Valid values for
+  distance: `"silhouette"` (default), `"mds"`, `"heatmap"`,
+  `"predictors"`. Valid values for mmm: `"posterior"` (default),
+  `"covariates"` / `"predictors"`.
 
 - row.names, optional:
 
@@ -41,6 +65,13 @@ detailed above.
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) on that
 object returns the `per_cluster` data frame itself – one row per
 cluster, with family-specific columns.
+
+In `print.net_cluster_diagnostics()`: The input object, invisibly.
+
+In `plot.net_cluster_diagnostics()`: Whatever the underlying plot method
+returns: a `ggplot` object, invisibly; or, for the covariate forest
+views called with `combined = FALSE`, a list of `ggplot` objects named
+by cluster (invisibly).
 
 ## Details
 
@@ -81,8 +112,7 @@ The returned object carries:
 
 ## See also
 
-[`print.net_cluster_diagnostics`](https://pak.dynasite.org/Nestimate/reference/print.net_cluster_diagnostics.md),
-[`plot.net_cluster_diagnostics`](https://pak.dynasite.org/Nestimate/reference/plot.net_cluster_diagnostics.md),
+`print.net_cluster_diagnostics`, `plot.net_cluster_diagnostics`,
 [`compare_mmm`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
 for k-sweep model selection (MMM only).
 

@@ -17,7 +17,7 @@ Structure vector: highest simplex dimension per node
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,13 @@ are q-connected if they share a face of dimension \(\geq q\). Reports:</p><ul><l
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">q_analysis</span><span class="op">(</span><span class="va">sc</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">q_analysis</span><span class="op">(</span><span class="va">sc</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'q_analysis'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'q_analysis'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, combined <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -71,11 +77,25 @@ are q-connected if they share a face of dimension \(\geq q\). Reports:</p><ul><l
 <dl><dt id="arg-sc">sc<a class="anchor" aria-label="anchor" href="#arg-sc"></a></dt>
 <dd><p>A <code>simplicial_complex</code> object.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>q_analysis</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>When <code>TRUE</code> (default), the two panels are stitched side-by-side via <code><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html" class="external-link">gridExtra::arrangeGrob</a></code>. When <code>FALSE</code>, returns a named list (<code>q_vector</code>, <code>structure_vector</code>) of ggplots.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>q_analysis</code> object with <code>$q_vector</code>,
 <code>$structure_vector</code>, and <code>$max_q</code>.</p>
+<p>In <code>print.q_analysis()</code>: The input object, invisibly.</p>
+<p>In <code>plot.q_analysis()</code>: A grid grob (invisibly) when <code>combined = TRUE</code>; a named list of two ggplots when <code>combined = FALSE</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

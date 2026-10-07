@@ -35,6 +35,18 @@ markov_order_test(
   n_cores = 2L,
   seed = NULL
 )
+
+# S3 method for class 'net_markov_order'
+print(x, ...)
+
+# S3 method for class 'net_markov_order_group'
+print(x, ...)
+
+# S3 method for class 'net_markov_order'
+summary(object, ...)
+
+# S3 method for class 'net_markov_order'
+plot(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
 ```
 
 ## Arguments
@@ -73,6 +85,37 @@ markov_order_test(
 - seed:
 
   Optional integer seed for reproducibility.
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_markov_order` or `net_markov_order_group`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_markov_order_group()`: Forwarded to
+  `print.net_markov_order` for each element.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_markov_order`.
+
+- panel:
+
+  Which panel(s) to render: `"both"`, `"ic"`, or `"permutation"`.
+  Default `"both"`.
+
+- combined:
+
+  When `panel = "both"` and `combined = TRUE` (default), the two panels
+  are drawn side-by-side. If gridExtra is installed they are arranged
+  into a single drawable/saveable gtable (returned); otherwise base
+  `grid` viewports draw both panels and a named list of the two ggplots
+  is returned invisibly. When `FALSE`, returns that named list (`ic`,
+  `permutation`) without drawing. Ignored when `panel != "both"`.
 
 ## Value
 
@@ -136,6 +179,19 @@ An object of class `net_markov_order` with elements:
 
 For a `netobject_group` the result is a `"net_markov_order_group"`: a
 named list holding one `net_markov_order` per group.
+
+In `print.net_markov_order()`: The input object, invisibly.
+
+In `print.net_markov_order_group()`: `x` invisibly.
+
+In `summary.net_markov_order()`: The tidy `test_table` data.frame - one
+row per order tested - carrying the selection context as attributes:
+`optimal_order`, `bic_order`, `aic_order`, `alpha` and `n_perm`.
+
+In `plot.net_markov_order()`: A ggplot (single panel); for
+`panel = "both"`, either a `gridExtra` gtable (when gridExtra is
+installed) or a named list of two ggplots (`ic`, `permutation`) drawn
+side-by-side and returned invisibly.
 
 ## Examples
 

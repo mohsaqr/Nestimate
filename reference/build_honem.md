@@ -8,6 +8,15 @@ matrix powers of the HON transition matrix followed by truncated SVD.
 
 ``` r
 build_honem(hon, dim = 32L, max_power = 10L)
+
+# S3 method for class 'net_honem'
+print(x, ...)
+
+# S3 method for class 'net_honem'
+summary(object, ...)
+
+# S3 method for class 'net_honem'
+plot(x, dims = c(1L, 2L), ...)
 ```
 
 ## Arguments
@@ -28,6 +37,25 @@ build_honem(hon, dim = 32L, max_power = 10L)
 
   Integer. Maximum walk length for neighborhood computation (default
   10). Higher values capture longer-range structure.
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_honem`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_honem`.
+
+- dims:
+
+  Integer vector of length 2. Dimensions to plot (default: `c(1, 2)`).
 
 ## Value
 
@@ -61,6 +89,14 @@ An object of class `net_honem` with components:
 - n_nodes:
 
   Number of nodes embedded.
+
+In `print.net_honem()` and `plot.net_honem()`: The input object,
+invisibly.
+
+In `summary.net_honem()`: A data.frame with one row per node: column
+`node` (node label) followed by `dim1`, `dim2`, ..., `dim`*d* embedding
+coordinates, returned visibly; the summary text is printed as a side
+effect.
 
 ## Details
 

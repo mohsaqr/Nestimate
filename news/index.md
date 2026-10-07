@@ -1,5 +1,69 @@
 # Changelog
 
+## Nestimate 0.9.23
+
+### Internal changes
+
+- The `mgm` and `ising` estimators delegate to
+  [`psychnets::mgm_fit()`](https://pak.dynasite.org/psychnets/reference/mgm_fit.html)
+  and
+  [`psychnets::ising_fit()`](https://pak.dynasite.org/psychnets/reference/ising_fit.html)
+  (glmnet engine), joining `cor`, `pcor` and `glasso`. Results are
+  unchanged: identical to the former in-package code (max absolute
+  difference 0 for Ising over 180 configurations, 5.6e-17 for MGM over
+  48). Nestimate keeps type detection, input validation and the result
+  fields. The Ising result no longer carries the unused `asymm_weights`
+  and `lambda_selected` fields. The unused internal moderated-MGM code
+  is removed.
+
+### Documentation
+
+- Each function has one help page. The 181
+  [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  [`format()`](https://rdrr.io/r/base/format.html) and
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) methods
+  are documented on the page of the function that creates their object
+  ([`?nct`](https://pak.dynasite.org/Nestimate/reference/nct.md) covers
+  [`print.net_nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)
+  and
+  [`summary.net_nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)),
+  as is
+  [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)’s
+  `netobject_group` method. 286 help pages become 139;
+  [`?print.net_nct`](https://pak.dynasite.org/Nestimate/reference/nct.md)
+  still opens the right page.
+- [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
+  and
+  [`as_netdifference()`](https://pak.dynasite.org/Nestimate/reference/as_netdifference.md)
+  have examples.
+
+### Bug fixes
+
+- `build_network(method = "mgm")` no longer fails on data with missing
+  values (“number of observations in y not equal to the number of rows
+  of x”).
+
+### Tests
+
+- Equivalence tests against other packages (tna, igraph, mgm,
+  stringdist, [`glm()`](https://rdrr.io/r/stats/glm.html)) and
+  naive-loop reference implementations are no longer shipped.
+- CRAN runs a core of 15 test files (data preparation, estimation
+  registry, extraction, Markov, link prediction, Bayesian verbs,
+  pruning, and the htna contract); every other file is skipped on CRAN
+  and runs locally and in CI. The CRAN test run drops from about 300 s
+  to 22 s.
+- Slow examples run with fewer iterations
+  ([`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md),
+  [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md),
+  [`permutation_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md),
+  [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md))
+  and
+  [`?sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  draws fewer figures.
+
 ## Nestimate 0.9.21
 
 ### Bug fixes
@@ -362,7 +426,7 @@
   errors when `combine`, `expand`, `rest` or `rest_label` is passed for
   input that is not an `mcml`, instead of ignoring them.
 
-- [`print.mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/print.mcml_pc.md)
+- [`print.mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   and its build-time warnings name
   [`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
   instead of pointing at `$loadings`.
@@ -518,8 +582,8 @@
 - `plot(x, combined = FALSE)` splits a multi-pair view into a named list
   of single-pair plots (one per pair) instead of facetting them into one
   figure, matching the `combined` argument of
-  [`plot.net_reliability()`](https://pak.dynasite.org/Nestimate/reference/plot.net_reliability.md),
-  [`plot.simplicial_complex()`](https://pak.dynasite.org/Nestimate/reference/plot.simplicial_complex.md)
+  [`plot.net_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md),
+  [`plot.simplicial_complex()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
   and friends. The base-graphics views draw one panel per page.
 - Optional inference on the same tables: `test = "permutation"`,
   `"bayes"` (with an optional `rope`), `"bootstrap"`, combinable.
@@ -1290,8 +1354,8 @@ CRAN release: 2026-05-31
 - Network comparison:
   [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
   (with `netobject_group` dispatch),
-  [`summary.netobject()`](https://pak.dynasite.org/Nestimate/reference/summary.netobject.md),
-  [`plot.net_comparison()`](https://pak.dynasite.org/Nestimate/reference/plot.net_comparison.md),
+  [`summary.netobject()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  [`plot.net_comparison()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md),
   and
   [`rename_models()`](https://pak.dynasite.org/Nestimate/reference/rename_models.md)
   for relabelling grouped network objects.
@@ -1370,7 +1434,7 @@ addressed; two deferred pending design decisions on numeric semantics
 
 #### Documentation
 
-- [`summary.mcml()`](https://pak.dynasite.org/Nestimate/reference/summary.mcml.md)
+- [`summary.mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   roxygen corrected — was claiming a printing side effect that doesn’t
   exist. (audit_mcml
   [\#5](https://github.com/mohsaqr/Nestimate/issues/5))
@@ -1671,7 +1735,7 @@ CRAN release: 2026-04-20
   `$over`, `$under`, `$n_over`, `$n_under` fields to `net_hypa` objects.
   Scores are now pre-sorted with anomalous paths first.
 - HYPA:
-  [`summary.net_hypa()`](https://pak.dynasite.org/Nestimate/reference/summary.net_hypa.md)
+  [`summary.net_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
   now shows over/under-represented paths separately with a configurable
   `n` parameter.
 - [`pathways.netobject()`](https://pak.dynasite.org/Nestimate/reference/pathways.md):

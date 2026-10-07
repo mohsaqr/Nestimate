@@ -20,6 +20,12 @@ build_mlvar(
   lag = 1L,
   standardize = FALSE
 )
+
+# S3 method for class 'net_mlvar'
+print(x, ...)
+
+# S3 method for class 'net_mlvar'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -56,6 +62,20 @@ build_mlvar(
   by its pooled SD *before* augmentation. Default `FALSE`, matching
   `mlVAR::mlVAR(scale = FALSE)` - the only setting for which numerical
   equivalence has been validated.
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `net_mlvar`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_mlvar`.
 
 ## Value
 
@@ -113,6 +133,15 @@ limitation** for the verbs that do *not* work on this object
 - `attr(fit, "standardize")`:
 
   Logical; whether pre-augmentation standardization was applied.
+
+In `print.net_mlvar()`: Invisibly returns `x`.
+
+In `summary.net_mlvar()`: The tidy coefficient `data.frame` - the same
+table [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md)
+returns, with one row per `(outcome, predictor)` pair and columns
+`outcome`, `predictor`, `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`,
+`significant`. Returned visibly, so calling `summary(fit)` at the
+console prints the matrices and then the table.
 
 ## Details
 

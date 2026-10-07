@@ -36,6 +36,24 @@ bootstrap_network(
   ci_method = c("percentile", "basic"),
   actor = NULL
 )
+
+# S3 method for class 'net_bootstrap'
+print(x, ...)
+
+# S3 method for class 'net_bootstrap'
+summary(object, ...)
+
+# S3 method for class 'net_bootstrap_group'
+print(x, ...)
+
+# S3 method for class 'net_bootstrap_group'
+summary(object, ...)
+
+# S3 method for class 'wtna_boot_mixed'
+print(x, ...)
+
+# S3 method for class 'wtna_boot_mixed'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -47,7 +65,9 @@ bootstrap_network(
   The data, method, params, scaling, threshold, and level are all
   extracted from this object. A `cograph_network` is coerced first; a
   `netobject_group` or `mcml` bootstraps every constituent network, and
-  a `wtna_mixed` bootstraps both of its components (see **Value**).
+  a `wtna_mixed` bootstraps both of its components (see **Value**). For
+  the [`print()`](https://rdrr.io/r/base/print.html) method: an object
+  of class `net_bootstrap`, `net_bootstrap_group` or `wtna_boot_mixed`.
 
 - iter:
 
@@ -105,6 +125,16 @@ bootstrap_network(
   network's `$metadata` or wide sequence data. When supplied, whole
   actors are resampled; see the section *Nested data and actor*. Default
   `NULL`: sequences are resampled individually.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_bootstrap`, `net_bootstrap_group` or
+  `wtna_boot_mixed`.
 
 ## Value
 
@@ -183,6 +213,23 @@ A `netobject_group` or `mcml` input returns a `"net_bootstrap_group"`
 (named list of `net_bootstrap` results); a `wtna_mixed` input returns a
 `"wtna_boot_mixed"` with `$transition` and `$cooccurrence` results.
 
+In `print.net_bootstrap()` and `print.wtna_boot_mixed()`: The input
+object, invisibly.
+
+In `summary.net_bootstrap()`: The `$summary` data frame: one row per
+non-zero original edge, with columns `from`, `to`, `weight`, `mean`,
+`sd`, `p_value`, `sig`, `ci_lower`, `ci_upper`, plus `cr_lower` and
+`cr_upper` when the bootstrap used `inference = "stability"`.
+
+In `print.net_bootstrap_group()`: `x` invisibly.
+
+In `summary.net_bootstrap_group()`: The per-group summaries stacked into
+one data frame: the columns of `summary.net_bootstrap` prefixed by a
+`group` column naming the network each row came from.
+
+In `summary.wtna_boot_mixed()`: A list with `$transition` and
+`$cooccurrence` summary data frames.
+
 ## Nested data and `actor`
 
 The bootstrap resamples sequences as independent units. When sequences
@@ -225,8 +272,7 @@ assessing rater reliability. *Psychological Bulletin*, 86(2), 420-428.
 for the closed-form Bayesian counterpart (same result layout, no
 resampling);
 [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
-[`print.net_bootstrap`](https://pak.dynasite.org/Nestimate/reference/print.net_bootstrap.md),
-[`summary.net_bootstrap`](https://pak.dynasite.org/Nestimate/reference/summary.net_bootstrap.md)
+`print.net_bootstrap`, `summary.net_bootstrap`
 
 ## Examples
 

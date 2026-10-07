@@ -28,6 +28,18 @@ entropy_bayes(
   base = 2,
   seed = NULL
 )
+
+# S3 method for class 'net_entropy_bayes'
+print(x, digits = 3, ...)
+
+# S3 method for class 'net_entropy_bayes_group'
+print(x, ...)
+
+# S3 method for class 'net_entropy_bayes'
+summary(object, ...)
+
+# S3 method for class 'net_entropy_bayes'
+plot(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 ```
 
 ## Arguments
@@ -37,7 +49,10 @@ entropy_bayes(
   A frequency `netobject` (`build_network(method = "frequency")`), any
   `netobject` that carries its `$data` (counts are rebuilt
   automatically), a count matrix, or a wide sequence data.frame. Group
-  dispatch on `netobject_group`.
+  dispatch on `netobject_group`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_entropy_bayes` or `net_entropy_bayes_group`.
 
 - prior:
 
@@ -66,6 +81,28 @@ entropy_bayes(
 - seed:
 
   Integer or NULL. RNG seed for reproducibility.
+
+- digits:
+
+  Integer. Digits to round numeric output. Default `3`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_entropy_bayes`.
+
+- top:
+
+  Integer. Show at most this many edges, by posterior mean contribution
+  (default `25`).
+
+- title:
+
+  Character. Plot title.
 
 ## Value
 
@@ -109,6 +146,16 @@ An object of class `"net_entropy_bayes"` with:
 
 For a `netobject_group` the result is a `"net_entropy_bayes_group"`: a
 named list holding one such object per group.
+
+In `print.net_entropy_bayes()` and `print.net_entropy_bayes_group()`:
+`x` invisibly.
+
+In `summary.net_entropy_bayes()`: The tidy edge table (data.frame), one
+row per observed transition, sorted by posterior mean contribution,
+returned invisibly. The chain-level and per-edge tables are printed as a
+side effect.
+
+In `plot.net_entropy_bayes()`: A ggplot object.
 
 ## Details
 

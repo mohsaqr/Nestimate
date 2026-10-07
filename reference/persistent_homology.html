@@ -51,7 +51,7 @@ to high. Use max_scale to cap the filtration diameter.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -118,7 +118,13 @@ to high. Use <code>max_scale</code> to cap the filtration diameter.</p></dd>
 <span>  max_dim <span class="op">=</span> <span class="fl">3L</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"clique"</span>,</span>
 <span>  max_scale <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'persistent_homology'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'persistent_homology'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, combined <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -131,7 +137,7 @@ to high. Use <code>max_scale</code> to cap the filtration diameter.</p></dd>
 A <code>simplicial_complex</code> carrying a <code>$filtration</code> vector (as
 returned by <code>build_simplicial(type = "vr")</code>) is also accepted and
 is used directly: its stored filtration values are reduced as they are,
-so <code>type</code> is taken from the complex rather than this argument.</p></dd>
+so <code>type</code> is taken from the complex rather than this argument. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>persistent_homology</code>.</p></dd>
 
 
 <dt id="arg-n-steps">n_steps<a class="anchor" aria-label="anchor" href="#arg-n-steps"></a></dt>
@@ -153,6 +159,14 @@ or <code>"vr"</code> (Vietoris-Rips on distances).</p></dd>
 <dd><p>For <code>type = "vr"</code> only: cap on edge length. Edges
 with <code>d(i,j) &gt; max_scale</code> are excluded. <code>NULL</code> (default)
 uses <code>max(d)</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>When <code>TRUE</code> (default), the two panels are stitched side-by-side via <code><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html" class="external-link">gridExtra::arrangeGrob</a></code>. When <code>FALSE</code>, returns a named list (<code>betti_curve</code>, <code>persistence</code>) of ggplots.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -177,7 +191,9 @@ display only).</p></dd>
 <dd><p>Either <code>"clique"</code> or <code>"vr"</code>.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.persistent_homology()</code>: The input object, invisibly.</p>
+<p>In <code>plot.persistent_homology()</code>: A grid grob (invisibly) when <code>combined = TRUE</code>; a named list of two ggplots when <code>combined = FALSE</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Edelsbrunner, H., Letscher, D., &amp; Zomorodian, A. (2000). Topological

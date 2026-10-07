@@ -15,7 +15,7 @@ and logical matrix indexing for k-itemsets."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,16 @@ and logical matrix indexing for k-itemsets.</p>
 <span>  min_confidence <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  min_lift <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  max_length <span class="op">=</span> <span class="fl">5L</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_association_rules'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_association_rules'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_association_rules'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -91,7 +100,7 @@ columns are item occurrences. Or a binary matrix (0/1).</p></dd>
 columns = items).</p></dd>
 
 
-</dl></dd>
+</dl><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_association_rules</code>.</p></dd>
 
 
 <dt id="arg-min-support">min_support<a class="anchor" aria-label="anchor" href="#arg-min-support"></a></dt>
@@ -108,6 +117,14 @@ columns = items).</p></dd>
 
 <dt id="arg-max-length">max_length<a class="anchor" aria-label="anchor" href="#arg-max-length"></a></dt>
 <dd><p>Integer. Maximum itemset size. Default: 5.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_association_rules</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -141,7 +158,10 @@ on (all items when no item clears <code>min_support</code>).</p></dd>
 <dd><p>List of min_support, min_confidence, min_lift, max_length.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_association_rules()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_association_rules()</code>: The tidy rules data frame: one row per rule, with columns <code>antecedent</code>, <code>consequent</code>, <code>support</code>, <code>confidence</code>, <code>lift</code>, <code>conviction</code>, <code>count</code> and <code>n_transactions</code>.</p>
+<p>In <code>plot.net_association_rules()</code>: The drawn <code>ggplot</code> object, invisibly (the plot is also printed). <code>NULL</code>, invisibly, when no rule was found.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
 

@@ -15,7 +15,7 @@ multiplicity-corrected p-values."><meta property="og:image" content="https://pak
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,16 +148,15 @@ reproducible. The RNG state is restored on exit.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>net_outcome_model</code>, for the <code>print</code> and <code>plot</code>
-methods.</p></dd>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_outcome_model</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Unused.</p></dd>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
-<dd><p>A <code>net_outcome_model</code>.</p></dd>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_outcome_model</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -177,9 +176,9 @@ fit. The remaining elements are the fitted <code>$model</code> (a
 <code>$select</code>, <code>$correction</code>, <code>$ci_level</code>, <code>$mixed</code>
 and <code>$outcome</code>. Retrieve the table with
 <code><a href="effects_table.html">effects_table</a></code>.</p>
-<p><code>print</code> returns its input invisibly.</p>
-<p><code>summary</code> returns the tidy effect table.</p>
-<p><code>plot</code> returns a <code>ggplot</code> forest of the effects.</p>
+<p>In <code>print.net_outcome_model()</code>: <code>print</code> returns its input invisibly.</p>
+<p>In <code>summary.net_outcome_model()</code>: <code>summary</code> returns the tidy effect table.</p>
+<p>In <code>plot.net_outcome_model()</code>: <code>plot</code> returns a <code>ggplot</code> forest of the effects.</p>
     </div>
     <div class="section level2">
     <h2 id="honest-inference">Honest inference<a class="anchor" aria-label="anchor" href="#honest-inference"></a></h2>

@@ -19,7 +19,7 @@ correlations derived from the person-mean fixed effects.'><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,13 @@ correlations derived from the person-mean fixed effects.</p>
 <span>  beep <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lag <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  standardize <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mlvar'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mlvar'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -113,6 +119,18 @@ When provided, lag pairs are only formed within the same day.</p></dd>
 centered and divided by its pooled SD <em>before</em> augmentation. Default
 <code>FALSE</code>, matching <code>mlVAR::mlVAR(scale = FALSE)</code> - the only setting for
 which numerical equivalence has been validated.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: an object of class <code>net_mlvar</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_mlvar</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -162,7 +180,9 @@ after na.omit.</p></dd>
 standardization was applied.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_mlvar()</code>: Invisibly returns <code>x</code>.</p>
+<p>In <code>summary.net_mlvar()</code>: The tidy coefficient <code>data.frame</code> - the same table <code><a href="coefs.html">coefs()</a></code> returns, with one row per <code>(outcome, predictor)</code> pair and columns <code>outcome</code>, <code>predictor</code>, <code>beta</code>, <code>se</code>, <code>t</code>, <code>p</code>, <code>ci_lower</code>, <code>ci_upper</code>, <code>significant</code>. Returned visibly, so calling <code>summary(fit)</code> at the console prints the matrices and then the table.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Estimation is delegated to <code><a href="https://pak.dynasite.org/idiographic/reference/fit_mlvar.html" class="external-link">idiographic::fit_mlvar()</a></code> (the

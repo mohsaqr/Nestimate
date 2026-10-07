@@ -35,6 +35,27 @@ build_network(
   labels = NULL,
   ...
 )
+
+# S3 method for class 'netobject'
+print(x, ...)
+
+# S3 method for class 'netobject_group'
+print(x, digits = 3L, ...)
+
+# S3 method for class 'netobject_ml'
+print(x, ...)
+
+# S3 method for class 'netobject'
+summary(object, ...)
+
+# S3 method for class 'netobject_group'
+summary(object, combined = TRUE, ...)
+
+# S3 method for class 'summary.netobject'
+print(x, ...)
+
+# S3 method for class 'summary.netobject_group'
+print(x, ...)
 ```
 
 ## Arguments
@@ -220,7 +241,29 @@ build_network(
 
 - ...:
 
-  Additional arguments passed to the estimator function.
+  Additional arguments passed to the estimator function. For the S3
+  methods: further arguments passed to or from other methods.
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `netobject`, `netobject_group` or `netobject_ml` (or
+  its [`summary()`](https://rdrr.io/r/base/summary.html)).
+
+- digits:
+
+  Integer. Decimal places for the weight summary. Default `3`.
+  Non-breaking: `print(x)` keeps the same shape as before, with the
+  addition of a weight-range column.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `netobject` or `netobject_group`.
+
+- combined:
+
+  Logical. Combine into one wide data.frame? Default `TRUE`.
 
 ## Value
 
@@ -314,6 +357,16 @@ When `group` is supplied (or `data` is a `net_clustering` / `net_mmm`
 object), returns an object of class `"netobject_group"`: a named list of
 `netobject`s, one per group, carrying the grouping column in
 `attr(x, "group_col")`.
+
+In `print.netobject()`, `print.netobject_group()` and
+`print.netobject_ml()`: The input object, invisibly.
+
+In `summary.netobject()`: A `data.frame` with columns `metric` and
+`value`, of class `c("summary.netobject", "data.frame")`.
+
+In `summary.netobject_group()`: Either a `data.frame` (one column per
+group) or a named list of `summary.netobject` objects, of class
+`c("summary.netobject_group", ...)`.
 
 ## Details
 

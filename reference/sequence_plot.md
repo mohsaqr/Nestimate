@@ -61,6 +61,9 @@ sequence_plot(
   legend_border = NA,
   legend_bty = "n"
 )
+
+# S3 method for class 'mcml_sequence_plot'
+print(x, ...)
 ```
 
 ## Arguments
@@ -116,6 +119,9 @@ sequence_plot(
       `normalize = TRUE` for a TraMineR-style `seqdplot` where each time
       point sums to 1). See the section *Multichannel view of an mcml*
       for the options that shape it, and *Value* for what it returns.
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `mcml_sequence_plot`.
 
 - type:
 
@@ -350,6 +356,10 @@ sequence_plot(
 
   `"n"` or `"o"`.
 
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
 ## Value
 
 An `mcml` input returns the multichannel figure: one panel per channel
@@ -378,6 +388,9 @@ invisibly, a list whose shape depends on `type`:
   Whatever
   [`distribution_plot`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
   returns: `counts`, `proportions`, `levels`, `palette`, `groups`.
+
+In `print.mcml_sequence_plot()`: `x`, invisibly. Called for the side
+effect of drawing it on a new page of the current graphics device.
 
 ## Multichannel view of an mcml
 
@@ -447,29 +460,11 @@ fit <- build_mcml(
   actor = "Actor", action = "Action", time = "Time")
 sequence_plot(fit)                                          # multichannel carpet
 
-sequence_plot(fit, type = "distribution")                  # prevalence + NA band
-
-sequence_plot(fit, type = "distribution", normalize = TRUE) # seqdplot (sums to 1)
-
 
 # Shape the multichannel view (see the section above).
 sequence_plot(fit, type = "distribution",
-              combine = c("Cognitive", "Affective"))        # two channels as one
-
-sequence_plot(fit, type = "distribution",
               combine = list(Task = c("Cognitive", "Regulation")),
               expand = "Task")                              # merge, then open
-
-sequence_plot(fit, type = "distribution", panel = "channels",
-              rest = "pooled", na = FALSE)                  # one grey band, no NA
-
-sequence_plot(fit, type = "distribution", panel = "channels",
-              rest = "pooled", rest_label = "Rest of states")
-
-sequence_plot(fit, type = "distribution", panel = "channels",
-              rest = "none")                                # own states only
-
-sequence_plot(fit, rest = "pooled")                         # carpet, pooled wash
 
 
 # Colour by name: one state, one cluster, one combined group. Everything

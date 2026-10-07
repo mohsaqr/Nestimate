@@ -21,6 +21,21 @@ entropy_trajectory(
   step = NULL,
   base = 2
 )
+
+# S3 method for class 'net_entropy_trajectory'
+print(x, digits = 3, ...)
+
+# S3 method for class 'net_entropy_trajectory'
+summary(object, ...)
+
+# S3 method for class 'net_entropy_trajectory'
+plot(
+  x,
+  normalized = FALSE,
+  span = 0.4,
+  title = "Transition entropy over time",
+  ...
+)
 ```
 
 ## Arguments
@@ -62,6 +77,37 @@ entropy_trajectory(
 
   Numeric. Logarithm base (default `2`, bits).
 
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_entropy_trajectory`.
+
+- digits:
+
+  Integer. Digits to round numeric output. Default `3`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_entropy_trajectory`.
+
+- normalized:
+
+  Logical. Plot `entropy_norm` instead of raw bits (default `FALSE`).
+
+- span:
+
+  Numeric. Loess span (default `0.4`).
+
+- title:
+
+  Character. Plot title.
+
 ## Value
 
 An object of class `"net_entropy_trajectory"` with:
@@ -78,6 +124,14 @@ An object of class `"net_entropy_trajectory"` with:
 - window, step, base, states:
 
   Call metadata; `states` is the global state set.
+
+In `print.net_entropy_trajectory()`: `x` invisibly.
+
+In `summary.net_entropy_trajectory()`: Tidy per-group data.frame:
+windows, mean/sd/min/max entropy, entropy at the first and last window,
+and their difference (negative = routinization).
+
+In `plot.net_entropy_trajectory()`: A ggplot object.
 
 ## Details
 

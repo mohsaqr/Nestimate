@@ -121,7 +121,7 @@ composite methods can recover. Requires raw data.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -231,7 +231,16 @@ composite methods can recover. Requires raw data.</p></dd>
 <span>  id_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fa_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ml"</span>, <span class="st">"paf"</span>, <span class="st">"minres"</span>, <span class="st">"cfa"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mcml_pc'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mcml_pc'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mcml_pc'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">2</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -243,7 +252,7 @@ composite methods can recover. Requires raw data.</p></dd>
 method (<code>cor</code>, <code>pcor</code>, <code>glasso</code>; aliases accepted) -
 its <code>$data</code> and <code>$method</code> are reused - or a numeric
 data.frame of raw observations (then <code>method</code> decides the
-estimator).</p></dd>
+estimator). For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>mcml_pc</code>.</p></dd>
 
 
 <dt id="arg-clusters">clusters<a class="anchor" aria-label="anchor" href="#arg-clusters"></a></dt>
@@ -439,7 +448,15 @@ divergence indicates Heywood-prone or non-unidimensional clusters.</p></dd>
 internally (<code>model</code>, <code>data</code>, <code>covmat</code>,
 <code>n.obs</code>, <code>factors</code>) are ignored with a warning - the
 model is always the one-factor model per cluster, because the
-composite needs exactly one weight per item.</p></dd>
+composite needs exactly one weight per item. For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>In <code>print.mcml_pc()</code>: Number of digits to display (default 3). In <code>plot.mcml_pc()</code>: Number of digits for tile labels (default 2).</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>mcml_pc</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -482,7 +499,10 @@ it), <code>method</code>, <code>within</code>, <code>weighting</code>,
 <code>weighting = "factor"</code>.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.mcml_pc()</code>: <code>x</code>, invisibly.</p>
+<p>In <code>summary.mcml_pc()</code>: Tidy data frame with one row per macro edge (upper triangle), columns <code>from</code>, <code>to</code>, <code>weight</code>.</p>
+<p>In <code>plot.mcml_pc()</code>: A ggplot object.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Item diagnostics.</strong> Whenever raw data or a node-level network

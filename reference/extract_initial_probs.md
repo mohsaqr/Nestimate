@@ -6,6 +6,9 @@ Extract the initial state probability vector from a TNA model object.
 
 ``` r
 extract_initial_probs(model)
+
+# S3 method for class 'nest_initial_probs'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -14,6 +17,15 @@ extract_initial_probs(model)
 
   A `netobject`, TNA model object, `mcml` object, or a list containing
   an `initial` element.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `nest_initial_probs`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
 
 ## Value
 
@@ -26,6 +38,9 @@ tidy `state`/`prob` data frame.
 For an `mcml` object: a named list of such vectors, with `macro` first
 and then one element per cluster (taken from each layer's `$inits`,
 unstamped).
+
+In `summary.nest_initial_probs()`: A tidy data frame with columns
+`state` and `prob`, sorted by decreasing probability.
 
 ## Details
 

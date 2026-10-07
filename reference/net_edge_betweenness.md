@@ -24,13 +24,19 @@ net_edge_betweenness(x, invert = TRUE, ...)
 
 # Default S3 method
 net_edge_betweenness(x, invert = TRUE, ...)
+
+# S3 method for class 'net_edge_betweenness'
+plot(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 ```
 
 ## Arguments
 
 - x:
 
-  A `netobject` or `netobject_group`.
+  A `netobject` or `netobject_group`. For the `net_edge_betweenness()`
+  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  an object of class `netobject`, `netobject_group`, `default` or
+  `net_edge_betweenness`.
 
 - invert:
 
@@ -40,7 +46,25 @@ net_edge_betweenness(x, invert = TRUE, ...)
 
 - ...:
 
-  Additional arguments (ignored).
+  Additional arguments (ignored). For the S3 methods: further arguments
+  passed to or from other methods.
+
+- style:
+
+  Plot style. `"bar"` (default) draws one horizontal bar per edge;
+  `"forest"` draws a forest/lollipop chart (a stem from zero to a point)
+  with a dashed reference line at the mean betweenness; `"delta"` draws
+  each edge's deviation from the mean edge betweenness as a diverging
+  bar (above the mean in blue, below in red).
+
+- top_n:
+
+  Integer or `NULL`. Keep only the `top_n` highest edges. Default `NULL`
+  (all edges with non-zero betweenness).
+
+- labels:
+
+  Logical. Print the betweenness value beside each edge. Default `TRUE`.
 
 ## Value
 
@@ -56,6 +80,8 @@ The object preserves source-network metadata so
 can test edge-betweenness differences by permuting the source networks.
 For a `netobject_group`: a `netobject_group` of such networks, one per
 group.
+
+In `plot.net_edge_betweenness()`: A `ggplot` object.
 
 ## Details
 

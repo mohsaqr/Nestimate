@@ -73,6 +73,15 @@ build_mcml_pc(
   fa_method = c("ml", "paf", "minres", "cfa"),
   ...
 )
+
+# S3 method for class 'mcml_pc'
+print(x, digits = 3, ...)
+
+# S3 method for class 'mcml_pc'
+summary(object, ...)
+
+# S3 method for class 'mcml_pc'
+plot(x, digits = 2, ...)
 ```
 
 ## Arguments
@@ -82,7 +91,10 @@ build_mcml_pc(
   A `netobject` estimated with an undirected association method (`cor`,
   `pcor`, `glasso`; aliases accepted) - its `$data` and `$method` are
   reused - or a numeric data.frame of raw observations (then `method`
-  decides the estimator).
+  decides the estimator). For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `mcml_pc`.
 
 - clusters:
 
@@ -283,7 +295,18 @@ build_mcml_pc(
   for `"ml"`, and `max_iter` / `tol` for `"paf"`. Arguments managed
   internally (`model`, `data`, `covmat`, `n.obs`, `factors`) are ignored
   with a warning - the model is always the one-factor model per cluster,
-  because the composite needs exactly one weight per item.
+  because the composite needs exactly one weight per item. For the S3
+  methods: further arguments passed to or from other methods.
+
+- digits:
+
+  In `print.mcml_pc()`: Number of digits to display (default 3). In
+  `plot.mcml_pc()`: Number of digits for tile labels (default 2).
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `mcml_pc`.
 
 ## Value
 
@@ -327,6 +350,13 @@ An object of class `"mcml_pc"` containing:
   `experimental = TRUE`. `method` and `weighting` are `NA` on the
   descriptive paths that re-estimate nothing, and `fa_method`/`fa_args`
   are set only for `weighting = "factor"`.
+
+In `print.mcml_pc()`: `x`, invisibly.
+
+In `summary.mcml_pc()`: Tidy data frame with one row per macro edge
+(upper triangle), columns `from`, `to`, `weight`.
+
+In `plot.mcml_pc()`: A ggplot object.
 
 ## Details
 

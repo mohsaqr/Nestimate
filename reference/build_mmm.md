@@ -19,6 +19,26 @@ build_mmm(
   covariate_effect = c("em", "posthoc"),
   estimator = c("auto", "firth", "multinom", "chisq")
 )
+
+# S3 method for class 'net_mmm'
+print(x, digits = 3L, ...)
+
+# S3 method for class 'net_mmm'
+summary(object, ...)
+
+# S3 method for class 'net_mmm'
+plot(x, type = c("posterior", "covariates"), combined = TRUE, ...)
+
+# S3 method for class 'net_mmm_clustering'
+print(x, digits = 3L, ...)
+
+# S3 method for class 'net_mmm_clustering'
+plot(
+  x,
+  type = c("posterior", "covariates", "predictors"),
+  combined = TRUE,
+  ...
+)
 ```
 
 ## Arguments
@@ -94,6 +114,48 @@ build_mmm(
   [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   for full details.
 
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_mmm` or `net_mmm_clustering`.
+
+- digits:
+
+  In `print.net_mmm()`: Integer. Decimal places for floating-point
+  statistics. Default `3`. Non-breaking: `print(x)` keeps the same
+  alignment as before. In `print.net_mmm_clustering()`: Integer. Decimal
+  places for floating-point statistics. Default `3`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_mmm`.
+
+- type:
+
+  In `plot.net_mmm()`: Character. Plot type: `"posterior"` (default) or
+  `"covariates"`. In `plot.net_mmm_clustering()`: Character. One of
+  `"posterior"` (default; histogram of max posterior probability per
+  sequence, coloured by cluster), `"covariates"` or its alias
+  `"predictors"` (covariate forest plot when
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+  was run with `covariates`).
+
+- combined:
+
+  In `plot.net_mmm()`: Logical. For `type = "covariates"` only: when
+  `TRUE` (default), covariate forest panels are combined into a single
+  faceted plot; when `FALSE`, a list of separate ggplots is returned. In
+  `plot.net_mmm_clustering()`: Logical. For `type` in `"covariates"` or
+  `"predictors"` only: when `TRUE` (default), forest panels are combined
+  into a single faceted plot; when `FALSE`, a list of separate ggplots
+  is returned.
+
 ## Value
 
 An object of class `net_mmm` with components:
@@ -168,6 +230,35 @@ An object of class `net_mmm` with components:
   in the row order of `posterior`, so
   [`session_ids`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
   can name each sequence; NULL for other input.
+
+In `print.net_mmm()` and `print.net_mmm_clustering()`: The input object,
+invisibly.
+
+In `summary.net_mmm()`: A per-component summary `data.frame`. The class
+and visibility depend on whether the model was fitted with covariates:
+
+- No covariates:
+
+  A plain `data.frame` with one row per component and columns
+  `component`, `prior`, `n_assigned`, `mean_posterior`, `avepp`,
+  returned *visibly* (so it auto-prints after the printed summary
+  block).
+
+- With covariates:
+
+  A `tidy_covariates`/`data.frame` (the tidied covariate table, with the
+  per-component stats attached), returned *invisibly*.
+
+In both cases the printed summary (model fit, per-cluster transition
+matrices, optional covariate profiles) is emitted as a side effect.
+
+In `plot.net_mmm()`: A `ggplot` object, invisibly; for
+`type = "covariates"` with `combined = FALSE`, a list of `ggplot`
+objects named by cluster (invisibly).
+
+In `plot.net_mmm_clustering()`: A `ggplot` object, invisibly; for
+`type = "covariates"` / `"predictors"` with `combined = FALSE`, a list
+of `ggplot` objects named by cluster (invisibly).
 
 ## Initial states
 

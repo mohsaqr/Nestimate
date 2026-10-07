@@ -11,6 +11,9 @@ cluster states.
 ## Usage
 
 ``` r
+# S3 method for class 'mcml_layer'
+print(x, ...)
+
 build_mcml(
   x,
   clusters = NULL,
@@ -32,6 +35,12 @@ build_mcml(
   combine = NULL,
   expand = NULL
 )
+
+# S3 method for class 'mcml'
+print(x, ...)
+
+# S3 method for class 'mcml'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -77,6 +86,13 @@ build_mcml(
   non-square or character matrix
 
   :   Treated as sequence data.
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `mcml_layer` or `mcml`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
 
 - clusters:
 
@@ -247,7 +263,23 @@ build_mcml(
   `expand` opens clusters in the Summary panel only and keeps one panel
   per cluster.
 
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `mcml`.
+
 ## Value
+
+In `print.mcml_layer()`: The input `mcml_layer`, invisibly.
+
+In `print.mcml()`: The input object, invisibly.
+
+In `summary.mcml()`: A tidy data frame with one row per cluster and
+columns `cluster`, `size`, `within_total`, `between_out`, `between_in`.
+For undirected macro networks the in/out split is not meaningful, so
+`between_out` reports total incident weight and `between_in` is `NA`.
+The data frame is returned silently *without* printing the full object –
+call `print(object)` explicitly if you want the verbose dump.
 
 An `mcml` object with the same layout as the return value of
 [`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)

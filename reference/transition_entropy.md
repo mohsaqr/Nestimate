@@ -16,6 +16,21 @@ papers report.
 
 ``` r
 transition_entropy(x, base = 2, normalize = TRUE)
+
+# S3 method for class 'net_transition_entropy'
+print(x, digits = 3, ...)
+
+# S3 method for class 'net_transition_entropy_group'
+print(x, ...)
+
+# S3 method for class 'net_transition_entropy'
+summary(object, ...)
+
+# S3 method for class 'summary.net_transition_entropy'
+print(x, digits = 3, ...)
+
+# S3 method for class 'net_transition_entropy'
+plot(x, title = "Transition Entropy", fill = "#0072B2", ...)
 ```
 
 ## Arguments
@@ -25,7 +40,12 @@ transition_entropy(x, base = 2, normalize = TRUE)
   A `netobject`, `cograph_network`, `tna` object, row-stochastic numeric
   transition matrix, or a wide sequence data.frame (rows = actors,
   columns = time-steps; a relative transition network is built
-  automatically). Group dispatch on `netobject_group`.
+  automatically). Group dispatch on `netobject_group`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_transition_entropy` or
+  `net_transition_entropy_group` (or its
+  [`summary()`](https://rdrr.io/r/base/summary.html)).
 
 - base:
 
@@ -36,6 +56,29 @@ transition_entropy(x, base = 2, normalize = TRUE)
 
   Logical. If `TRUE` (default), rows that do not sum to 1 are normalised
   automatically (with a warning).
+
+- digits:
+
+  Integer. Digits to round numeric output. Default `3`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_transition_entropy_group()`: Forwarded to
+  `print.net_transition_entropy`.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_transition_entropy`.
+
+- title:
+
+  Character. Plot title.
+
+- fill:
+
+  Character. Bar fill colour. Default Okabe-Ito blue.
 
 ## Value
 
@@ -100,6 +143,28 @@ An object of class `"net_transition_entropy"` with:
 For a `netobject_group` the result is a
 `"net_transition_entropy_group"`: a named list holding one such object
 per group.
+
+In `print.net_transition_entropy()`,
+`print.net_transition_entropy_group()` and
+`print.summary.net_transition_entropy()`: `x` invisibly.
+
+In `summary.net_transition_entropy()`: A
+`summary.net_transition_entropy` containing
+
+- table:
+
+  tidy per-state data.frame, sorted by `contribution_pct` descending
+
+- chain:
+
+  tidy chain-level data.frame with raw and normalised \\h(P)\\,
+  \\H(\pi)\\, redundancy, and ceiling
+
+- base:
+
+  logarithm base used
+
+In `plot.net_transition_entropy()`: A ggplot object.
 
 ## Details
 

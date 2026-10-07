@@ -3,29 +3,11 @@
 the maximum proportion of cases (rows of x$data) that can be dropped
 while the flattened edge-weight vector of the re-estimated network
 still correlates with the original above threshold in at least
-certainty of iterations.
-Plots the four model-level reliability metrics across drop
-proportions: correlation, mean_abs_dev, median_abs_dev,
-max_abs_dev. Each panel shows the per-iteration mean with a ribbon
-at mean +/- sd. The correlation panel includes a dashed horizontal
-line at the user's threshold (default 0.7).
-Overlay of per-cluster correlation curves across drop proportions.
-One colour per sub-network; ribbons show mean +/- sd across
-iterations. Dashed horizontal line marks the stability threshold
-(default 0.7)."><meta property="og:description" content="Computes a CS-coefficient for the edge-weight vector of a network:
+certainty of iterations."><meta property="og:description" content="Computes a CS-coefficient for the edge-weight vector of a network:
 the maximum proportion of cases (rows of x$data) that can be dropped
 while the flattened edge-weight vector of the re-estimated network
 still correlates with the original above threshold in at least
-certainty of iterations.
-Plots the four model-level reliability metrics across drop
-proportions: correlation, mean_abs_dev, median_abs_dev,
-max_abs_dev. Each panel shows the per-iteration mean with a ribbon
-at mean +/- sd. The correlation panel includes a dashed horizontal
-line at the user's threshold (default 0.7).
-Overlay of per-cluster correlation curves across drop proportions.
-One colour per sub-network; ribbons show mean +/- sd across
-iterations. Dashed horizontal line marks the stability threshold
-(default 0.7)."><meta property="og:image" content="https://pak.dynasite.org/Nestimate/logo.svg"></head><body>
+certainty of iterations."><meta property="og:image" content="https://pak.dynasite.org/Nestimate/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -33,7 +15,7 @@ iterations. Dashed horizontal line marks the stability threshold
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,15 +57,6 @@ the maximum proportion of cases (rows of <code>x$data</code>) that can be droppe
 while the flattened edge-weight vector of the re-estimated network
 still correlates with the original above <code>threshold</code> in at least
 <code>certainty</code> of iterations.</p>
-<p>Plots the four model-level reliability metrics across drop
-proportions: <code>correlation</code>, <code>mean_abs_dev</code>, <code>median_abs_dev</code>,
-<code>max_abs_dev</code>. Each panel shows the per-iteration mean with a ribbon
-at mean +/- sd. The <code>correlation</code> panel includes a dashed horizontal
-line at the user's <code>threshold</code> (default 0.7).</p>
-<p>Overlay of per-cluster correlation curves across drop proportions.
-One colour per sub-network; ribbons show mean +/- sd across
-iterations. Dashed horizontal line marks the stability threshold
-(default 0.7).</p>
     </div>
 
     <div class="section level2">
@@ -130,7 +103,9 @@ iterations. Dashed horizontal line marks the stability threshold
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>net_casedrop_reliability_group</code> object.</p></dd>
+<dd><p>A <code>netobject</code>, <code>cograph_network</code>, <code>netobject_group</code>, or <code>mcml</code>.
+For the group types this function iterates over each element and
+returns a named list. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_casedrop_reliability</code> or <code>net_casedrop_reliability_group</code> (or its <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>).</p></dd>
 
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
@@ -138,12 +113,8 @@ iterations. Dashed horizontal line marks the stability threshold
 
 
 <dt id="arg-drop-prop">drop_prop<a class="anchor" aria-label="anchor" href="#arg-drop-prop"></a></dt>
-<dd><p>Drop proportion at which to report the four metrics
-(mean +/- sd per network). Must be one of the drop proportions the
-object was built with. Defaults to the object's median grid value
-(the stored grid is used, not an assumed <code>0.7</code>); pass an explicit
-value not in the grid to get an error listing the available
-proportions.</p></dd>
+<dd><p>Numeric vector of proportions to evaluate. Each entry
+must lie strictly between 0 and 1. Default <code>seq(0.1, 0.9, by = 0.1)</code>. In <code>summary.net_casedrop_reliability_group()</code>: Drop proportion at which to report the four metrics (mean +/- sd per network). Must be one of the drop proportions the object was built with. Defaults to the object's median grid value (the stored grid is used, not an assumed <code>0.7</code>); pass an explicit value not in the grid to get an error listing the available proportions.</p></dd>
 
 
 <dt id="arg-threshold">threshold<a class="anchor" aria-label="anchor" href="#arg-threshold"></a></dt>
@@ -178,22 +149,19 @@ edge vector. Default <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments (ignored).</p></dd>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
-<dd><p>A <code>net_casedrop_reliability_group</code>.</p></dd>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_casedrop_reliability</code> or <code>net_casedrop_reliability_group</code>.</p></dd>
 
 
 <dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
-<dd><p>When <code>TRUE</code> (default), all four metrics are shown in
-one ggplot via <code>facet_wrap(~ metric)</code>. When <code>FALSE</code>, returns a named
-list of four single-panel ggplots, one per metric.</p></dd>
+<dd><p>When <code>TRUE</code> (default), all four metrics are shown in one ggplot via <code>facet_wrap(~ metric)</code>. When <code>FALSE</code>, returns a named list of four single-panel ggplots, one per metric.</p></dd>
 
 
 <dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a></dt>
-<dd><p>Which metric to plot. One of <code>"correlation"</code>
-(default), <code>"mean_abs_dev"</code>, <code>"median_abs_dev"</code>, <code>"max_abs_dev"</code>.</p></dd>
+<dd><p>Which metric to plot. One of <code>"correlation"</code> (default), <code>"mean_abs_dev"</code>, <code>"median_abs_dev"</code>, <code>"max_abs_dev"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -235,16 +203,11 @@ constituent network.</p>
 <p>When the original edge vector has zero variance a warning is issued and
 the object is returned with <code>cs = 0</code>, an empty <code>summary</code>, and all-<code>NA</code>
 metric matrices.</p>
-<p>The input <code>x</code> invisibly.</p>
-<p>A tidy data frame with columns <code>metric</code>, <code>drop_prop</code>,
-<code>mean</code>, <code>sd</code> summarising edge-weight stability across
-case-dropping iterations.</p>
-<p>A data frame with one row per network containing
-<code>cor</code>, <code>mean_abs_dev</code>, <code>median_abs_dev</code>, <code>max_abs_dev</code> formatted as
-"mean +/- sd".</p>
-<p>A <code>ggplot</code> object, or a named list of four ggplots when
-<code>combined = FALSE</code>.</p>
-<p>A <code>ggplot</code> object.</p>
+<p>In <code>print.net_casedrop_reliability()</code>: The input <code>x</code> invisibly.</p>
+<p>In <code>summary.net_casedrop_reliability()</code>: A tidy data frame with columns <code>metric</code>, <code>drop_prop</code>, <code>mean</code>, <code>sd</code> summarising edge-weight stability across case-dropping iterations.</p>
+<p>In <code>summary.net_casedrop_reliability_group()</code>: A data frame with one row per network containing <code>cor</code>, <code>mean_abs_dev</code>, <code>median_abs_dev</code>, <code>max_abs_dev</code> formatted as "mean +/- sd".</p>
+<p>In <code>plot.net_casedrop_reliability()</code>: A <code>ggplot</code> object, or a named list of four ggplots when <code>combined = FALSE</code>.</p>
+<p>In <code>plot.net_casedrop_reliability_group()</code>: A <code>ggplot</code> object.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

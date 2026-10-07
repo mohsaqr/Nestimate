@@ -11,7 +11,7 @@ matrix. Sequences are probabilistically assigned to components."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,26 @@ matrix. Sequences are probabilistically assigned to components.</p>
 <span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  covariate_effect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"em"</span>, <span class="st">"posthoc"</span><span class="op">)</span>,</span>
 <span>  estimator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"firth"</span>, <span class="st">"multinom"</span>, <span class="st">"chisq"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mmm'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mmm'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mmm'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"posterior"</span>, <span class="st">"covariates"</span><span class="op">)</span>, combined <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mmm_clustering'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mmm_clustering'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"posterior"</span>, <span class="st">"covariates"</span>, <span class="st">"predictors"</span><span class="op">)</span>,</span>
+<span>  combined <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -143,6 +163,30 @@ under separation); <code>"multinom"</code> forces <code><a href="https://rdrr.io
 (warns about separation risk); <code>"chisq"</code> runs descriptive
 tests (no logit). See <code><a href="build_clusters.html">build_clusters</a></code> for full details.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_mmm</code> or <code>net_mmm_clustering</code>.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>In <code>print.net_mmm()</code>: Integer. Decimal places for floating-point statistics. Default <code>3</code>. Non-breaking: <code>print(x)</code> keeps the same alignment as before. In <code>print.net_mmm_clustering()</code>: Integer. Decimal places for floating-point statistics. Default <code>3</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_mmm</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>In <code>plot.net_mmm()</code>: Character. Plot type: <code>"posterior"</code> (default) or <code>"covariates"</code>. In <code>plot.net_mmm_clustering()</code>: Character. One of <code>"posterior"</code> (default; histogram of max posterior probability per sequence, coloured by cluster), <code>"covariates"</code> or its alias <code>"predictors"</code> (covariate forest plot when <code><a href="cluster_mmm.html">cluster_mmm()</a></code> was run with <code>covariates</code>).</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>In <code>plot.net_mmm()</code>: Logical. For <code>type = "covariates"</code> only: when <code>TRUE</code> (default), covariate forest panels are combined into a single faceted plot; when <code>FALSE</code>, a list of separate ggplots is returned. In <code>plot.net_mmm_clustering()</code>: Logical. For <code>type</code> in <code>"covariates"</code> or <code>"predictors"</code> only: when <code>TRUE</code> (default), forest panels are combined into a single faceted plot; when <code>FALSE</code>, a list of separate ggplots is returned.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -208,7 +252,16 @@ per fitted sequence in the row order of <code>posterior</code>, so
 input.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_mmm()</code> and <code>print.net_mmm_clustering()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_mmm()</code>: A per-component summary <code>data.frame</code>. The class and visibility depend on whether the model was fitted with covariates:</p><dl><dt>No covariates</dt>
+<dd><p>A plain <code>data.frame</code> with one row per component and columns <code>component</code>, <code>prior</code>, <code>n_assigned</code>, <code>mean_posterior</code>, <code>avepp</code>, returned <em>visibly</em> (so it auto-prints after the printed summary block).</p></dd>
+ <dt>With covariates</dt>
+<dd><p>A <code>tidy_covariates</code>/<code>data.frame</code> (the tidied covariate table, with the per-component stats attached), returned <em>invisibly</em>.</p></dd>
+
+</dl><p>In both cases the printed summary (model fit, per-cluster transition matrices, optional covariate profiles) is emitted as a side effect.</p>
+<p>In <code>plot.net_mmm()</code>: A <code>ggplot</code> object, invisibly; for <code>type = "covariates"</code> with <code>combined = FALSE</code>, a list of <code>ggplot</code> objects named by cluster (invisibly).</p>
+<p>In <code>plot.net_mmm_clustering()</code>: A <code>ggplot</code> object, invisibly; for <code>type = "covariates"</code> / <code>"predictors"</code> with <code>combined = FALSE</code>, a list of <code>ggplot</code> objects named by cluster (invisibly).</p>
+    </div>
     <div class="section level2">
     <h2 id="initial-states">Initial states<a class="anchor" aria-label="anchor" href="#initial-states"></a></h2>
 

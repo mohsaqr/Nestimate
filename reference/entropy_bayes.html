@@ -31,7 +31,7 @@ skeleton."><meta property="og:image" content="https://pak.dynasite.org/Nestimate
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,7 +93,19 @@ skeleton.</p>
 <span>  min_share <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  base <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_entropy_bayes'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_entropy_bayes_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_entropy_bayes'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_entropy_bayes'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, top <span class="op">=</span> <span class="fl">25</span>, title <span class="op">=</span> <span class="st">"Bayesian edge entropy contributions"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -105,7 +117,7 @@ skeleton.</p>
 (<code>build_network(method = "frequency")</code>), any <code>netobject</code> that
 carries its <code>$data</code> (counts are rebuilt automatically), a
 count matrix, or a wide sequence data.frame. Group dispatch on
-<code>netobject_group</code>.</p></dd>
+<code>netobject_group</code>. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_entropy_bayes</code> or <code>net_entropy_bayes_group</code>.</p></dd>
 
 
 <dt id="arg-prior">prior<a class="anchor" aria-label="anchor" href="#arg-prior"></a></dt>
@@ -135,6 +147,26 @@ at least 1% of process entropy).</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Integer or NULL. RNG seed for reproducibility.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer. Digits to round numeric output. Default <code>3</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_entropy_bayes</code>.</p></dd>
+
+
+<dt id="arg-top">top<a class="anchor" aria-label="anchor" href="#arg-top"></a></dt>
+<dd><p>Integer. Show at most this many edges, by posterior mean contribution (default <code>25</code>).</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
+<dd><p>Character. Plot title.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -173,6 +205,9 @@ draws (for further analysis or plotting).</p></dd>
 </dl><p>For a <code>netobject_group</code> the result is a
 <code>"net_entropy_bayes_group"</code>: a named list holding one such object
 per group.</p>
+<p>In <code>print.net_entropy_bayes()</code> and <code>print.net_entropy_bayes_group()</code>: <code>x</code> invisibly.</p>
+<p>In <code>summary.net_entropy_bayes()</code>: The tidy edge table (data.frame), one row per observed transition, sorted by posterior mean contribution, returned invisibly. The chain-level and per-edge tables are printed as a side effect.</p>
+<p>In <code>plot.net_entropy_bayes()</code>: A ggplot object.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

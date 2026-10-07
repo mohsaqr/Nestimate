@@ -11,7 +11,16 @@ the mean recurrence time \\1/\pi_i\\.
 passage_time(x, states = NULL, normalize = TRUE)
 
 # S3 method for class 'net_mpt'
+print(x, digits = 1, ...)
+
+# S3 method for class 'net_mpt_group'
+print(x, ...)
+
+# S3 method for class 'net_mpt'
 summary(object, ...)
+
+# S3 method for class 'summary.net_mpt'
+print(x, ...)
 
 # S3 method for class 'net_mpt'
 plot(
@@ -32,7 +41,10 @@ plot(
   A `netobject`, `cograph_network`, `tna` object, row-stochastic numeric
   transition matrix, or a wide sequence data.frame (rows = actors,
   columns = time-steps; a relative transition network is built
-  automatically).
+  automatically). For the [`print()`](https://rdrr.io/r/base/print.html)
+  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  an object of class `net_mpt` or `net_mpt_group` (or its
+  [`summary()`](https://rdrr.io/r/base/summary.html)).
 
 - states:
 
@@ -44,22 +56,24 @@ plot(
   Logical. If `TRUE` (default), rows that do not sum to 1 are normalized
   automatically (with a warning).
 
-- object:
+- digits:
 
-  A `net_mpt` object (for `summary`).
+  Integer. Decimal places displayed in cells. Default `1`.
 
 - ...:
 
-  Ignored.
+  Ignored. For the S3 methods: further arguments passed to or from other
+  methods. In `print.net_mpt_group()`: Forwarded to `print.net_mpt` for
+  each element.
+
+- object:
+
+  A `net_mpt` object (for `summary`).
 
 - log_scale:
 
   Logical. Apply log transform to the fill scale for better contrast?
   Default `TRUE`.
-
-- digits:
-
-  Integer. Decimal places displayed in cells. Default `1`.
 
 - title:
 
@@ -100,14 +114,17 @@ An object of class `"net_mpt"` with:
 For a `netobject_group` the result is a `"net_mpt_group"`: a named list
 holding one `net_mpt` per group.
 
-`summary.net_mpt` returns an object of class `"summary.net_mpt"`: a list
-whose `table` is a data frame with one row per state and columns
-`state`, `return_time`, `stationary`, `mean_out` (mean steps to other
-states) and `mean_in` (mean steps from other states), and whose `object`
-is the `net_mpt` it summarises. Its print method shows the table.
+In `print.net_mpt_group()`: `x` invisibly.
 
-`plot.net_mpt` returns a ggplot object: a from-by-to heatmap of the mean
-first passage time matrix.
+In `summary.net_mpt()`: `summary.net_mpt` returns an object of class
+`"summary.net_mpt"`: a list whose `table` is a data frame with one row
+per state and columns `state`, `return_time`, `stationary`, `mean_out`
+(mean steps to other states) and `mean_in` (mean steps from other
+states), and whose `object` is the `net_mpt` it summarises. Its print
+method shows the table.
+
+In `plot.net_mpt()`: `plot.net_mpt` returns a ggplot object: a
+from-by-to heatmap of the mean first passage time matrix.
 
 ## Details
 

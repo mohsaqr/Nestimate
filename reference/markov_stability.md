@@ -11,6 +11,15 @@ states.
 markov_stability(x, normalize = TRUE)
 
 # S3 method for class 'net_markov_stability'
+print(x, ...)
+
+# S3 method for class 'net_markov_stability_group'
+print(x, ...)
+
+# S3 method for class 'net_markov_stability'
+summary(object, ...)
+
+# S3 method for class 'net_markov_stability'
 plot(
   x,
   metrics = c("persistence", "stationary_prob", "return_time", "sojourn_time",
@@ -26,11 +35,26 @@ plot(
 
   A `netobject`, `cograph_network`, `tna` object, row-stochastic numeric
   transition matrix, or a wide sequence data.frame (rows = actors,
-  columns = time-steps).
+  columns = time-steps). For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_markov_stability` or
+  `net_markov_stability_group`.
 
 - normalize:
 
   Logical. Normalize rows to sum to 1? Default `TRUE`.
+
+- ...:
+
+  Ignored. For the S3 methods: further arguments passed to or from other
+  methods. In `print.net_markov_stability_group()`: Forwarded to
+  `print.net_markov_stability` for each element.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_markov_stability`.
 
 - metrics:
 
@@ -44,10 +68,6 @@ plot(
   via `facet_wrap(~ metric)`. When `FALSE`, returns a named list of
   single-panel ggplots, one per metric, so each can be printed, saved,
   or re-laid-out independently.
-
-- ...:
-
-  Ignored.
 
 ## Value
 
@@ -68,9 +88,12 @@ An object of class `"net_markov_stability"` with:
 For a `netobject_group` the result is a `"net_markov_stability_group"`:
 a named list holding one such object per group.
 
-`plot.net_markov_stability` returns a faceted ggplot object when
-`combined = TRUE`, and (invisibly) a named list of single-metric
-ggplots, one per entry of `metrics`, when `combined = FALSE`.
+In `print.net_markov_stability_group()`: `x` invisibly.
+
+In `plot.net_markov_stability()`: `plot.net_markov_stability` returns a
+faceted ggplot object when `combined = TRUE`, and (invisibly) a named
+list of single-metric ggplots, one per entry of `metrics`, when
+`combined = FALSE`.
 
 ## Details
 

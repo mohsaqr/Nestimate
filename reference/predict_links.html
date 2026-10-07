@@ -17,7 +17,7 @@ networks."><meta property="og:image" content="https://pak.dynasite.org/Nestimate
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,13 @@ networks.</p>
 <span>  exclude_existing <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  include_self <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  katz_damping <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_link_prediction'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_link_prediction'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -82,7 +88,7 @@ networks.</p>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>netobject</code>, <code>mcml</code>, <code>cograph_network</code>, or
-numeric square matrix.</p></dd>
+numeric square matrix. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: an object of class <code>net_link_prediction</code>.</p></dd>
 
 
 <dt id="arg-methods">methods<a class="anchor" aria-label="anchor" href="#arg-methods"></a></dt>
@@ -116,6 +122,14 @@ Default: <code>FALSE</code>.</p></dd>
 <dd><p>Numeric or NULL. Attenuation factor for Katz index.
 If NULL, auto-computed as <code>0.9 / spectral_radius(A)</code>.
 Default: <code>NULL</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_link_prediction</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -157,7 +171,9 @@ only one method was requested.</p></dd>
 <dd><p>Integer. Number of existing edges.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_link_prediction()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_link_prediction()</code>: A data frame, one row per method, with columns <code>method</code>, <code>n_predictions</code>, <code>score_mean</code>, <code>score_sd</code>, <code>score_max</code> and <code>score_min</code>. A method with no predictions (every possible link already exists) has <code>n_predictions = 0</code> and <code>NA</code> scores.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
 

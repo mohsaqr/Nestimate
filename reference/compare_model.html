@@ -23,7 +23,7 @@ correlations."><meta property="og:image" content="https://pak.dynasite.org/Nesti
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,6 +103,28 @@ correlations.</p>
 <span>  measures <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  network <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'netobject_group'</span></span>
+<span><span class="fu">compare_model</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  i <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  j <span class="op">=</span> <span class="fl">2L</span>,</span>
+<span>  scaling <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>  measures <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
+<span>  network <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_comparison'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_comparison'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"scatter"</span>, <span class="st">"heatmap"</span>, <span class="st">"diff_hist"</span>, <span class="st">"weight_dist"</span>, <span class="st">"all"</span><span class="op">)</span>,</span>
+<span>  combined <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -111,11 +133,14 @@ correlations.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>netobject</code>, <code>cograph_network</code>, or numeric square matrix.</p></dd>
+<dd><p>A <code>netobject</code>, <code>cograph_network</code>, or numeric square matrix, or a
+<code>netobject_group</code> whose members <code>i</code> and <code>j</code> are compared. For the
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class
+<code>net_comparison</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Ignored.</p></dd>
+<dd><p>Ignored. For the S3 methods: further arguments passed to or from other methods.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
@@ -185,12 +210,26 @@ with a warning.</p></dd>
 <dd><p>Logical. Include side-by-side network metrics from
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>? Default <code>TRUE</code>.</p></dd>
 
+
+<dt id="arg-i-j">i, j<a class="anchor" aria-label="anchor" href="#arg-i-j"></a></dt>
+<dd><p>For a <code>netobject_group</code>: index or name of the two member
+networks to compare. Defaults <code>1L</code> and <code>2L</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Character. One of <code>"scatter"</code> (default - edge-weight scatter with OLS fit and correlation overlay), <code>"heatmap"</code> (n by n grid of x - y differences using the diverging palette), <code>"diff_hist"</code> (histogram of |x - y| absolute differences with rug + density), <code>"weight_dist"</code> (overlaid distributions of |x| and |y| edge weights), or <code>"all"</code> (2 by 2 grid of all four panels; requires the gridExtra package).</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>When <code>type = "all"</code> and <code>combined = TRUE</code> (default), the four panels are stitched into a 2x2 gtable. When <code>FALSE</code>, returns a named list of the four ggplots so each can be printed, saved, or re-laid-out independently. Ignored for other <code>type</code> values.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>net_comparison</code> object: a named list with <code>matrices</code>,
 <code>difference_matrix</code>, <code>edge_metrics</code>, <code>summary_metrics</code>, optionally
 <code>network_metrics</code>, <code>centrality_differences</code>, <code>centrality_correlations</code>.</p>
+<p>In <code>plot.net_comparison()</code>: A <code>ggplot</code> object; for <code>type = "all"</code> with <code>combined = TRUE</code> a <code>gtable</code> arranged 2 by 2; for <code>type = "all"</code> with <code>combined = FALSE</code> a named list of four ggplots.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -199,6 +238,56 @@ matrices and scaled before comparison; the choice of scaling determines
 how weights from different estimators are placed on a common footing.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">nets</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span></span>
+<span class="r-in"><span>                      actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span></span>
+<span class="r-in"><span>                      group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">compare_model</span><span class="op">(</span><span class="va">nets</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Network comparison</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ==================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Summary metrics:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              category               metric   value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Weight Deviations      Mean Abs. Diff. 0.03225</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Weight Deviations    Median Abs. Diff. 0.01813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Weight Deviations            RMS Diff. 0.05217</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Weight Deviations       Max Abs. Diff.  0.2103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Weight Deviations Rel. Mean Abs. Diff.  0.2902</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Weight Deviations             CV Ratio   1.103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Correlations              Pearson  0.9211</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Correlations             Spearman  0.9153</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Correlations              Kendall  0.7672</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Correlations             Distance  0.8382</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Dissimilarities            Euclidean  0.4695</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Dissimilarities            Manhattan   2.612</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Dissimilarities             Canberra   14.76</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Dissimilarities          Bray-Curtis  0.1451</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Dissimilarities            Frobenius  0.2213</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Similarities               Cosine   0.954</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Similarities              Jaccard  0.7466</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Similarities                 Dice  0.8549</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Similarities              Overlap  0.8549</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Similarities                   RV  0.8983</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Pattern Similarities       Rank Agreement  0.8194</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Pattern Similarities       Sign Agreement  0.9383</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Network metrics (x vs y):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       metric       x       y</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Node Count       9       9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Edge Count      76      75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Network Density       1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Mean Distance 0.04229 0.05596</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Out-Strength       1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              SD Out-Strength  0.9141  0.7186</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Mean In-Strength       1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               SD In-Strength       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Mean Out-Degree   8.444   8.333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                SD Out-Degree    1.13   0.866</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Centralization (Out-Degree) 0.04688  0.0625</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Centralization (In-Degree) 0.04688  0.0625</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  Reciprocity  0.9565  0.9412</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

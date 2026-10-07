@@ -13,6 +13,15 @@ build_mogen(
   criterion = c("aic", "bic", "lrt"),
   lrt_alpha = 0.01
 )
+
+# S3 method for class 'net_mogen'
+print(x, ...)
+
+# S3 method for class 'net_mogen'
+summary(object, ...)
+
+# S3 method for class 'net_mogen'
+plot(x, type = c("ic", "likelihood"), ...)
 ```
 
 ## Arguments
@@ -39,6 +48,25 @@ build_mogen(
 - lrt_alpha:
 
   Numeric. Significance threshold for LRT (default 0.01).
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_mogen`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_mogen`.
+
+- type:
+
+  Character. Plot type: `"ic"` (default) or `"likelihood"`.
 
 ## Value
 
@@ -131,6 +159,15 @@ An object of class `c("net_mogen", "cograph_network")` with components:
 - node_groups:
 
   Always `NULL`.
+
+In `print.net_mogen()` and `plot.net_mogen()`: The input object,
+invisibly.
+
+In `summary.net_mogen()`: A per-order model-selection data.frame with
+columns `order`, `layer_dof`, `cum_dof`, `loglik`, `aic`, `bic`, `best`
+(`"AIC"`/`"BIC"`/`"AIC+BIC"` marker) and `selected` (`"<--"` on the
+chosen order), returned visibly; the summary text is printed as a side
+effect.
 
 ## Details
 

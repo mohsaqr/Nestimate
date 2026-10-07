@@ -27,6 +27,9 @@ certainty(
   consistency_range = c(0.75, 1.25),
   edge_threshold = NULL
 )
+
+# S3 method for class 'net_certainty'
+print(x, ...)
 ```
 
 ## Arguments
@@ -36,7 +39,9 @@ certainty(
   A `netobject` from
   [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   using a transition-probability method (`"relative"` / `"tna"`), or a
-  `netobject_group`.
+  `netobject_group`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) method: an object of
+  class `net_certainty`.
 
 - prior:
 
@@ -65,6 +70,10 @@ certainty(
   Numeric or NULL. Fixed threshold for `inference = "threshold"`. If
   NULL, defaults to the 10th percentile of non-zero edge weights.
 
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
 ## Value
 
 For a `netobject`: an object of class
@@ -79,6 +88,8 @@ For a `netobject`: an object of class
 For a `netobject_group`: a named list of those objects, one per
 constituent network, of class
 `c("net_certainty_group", "net_bootstrap_group", "list")`.
+
+In `print.net_certainty()`: The input object, invisibly.
 
 ## Details
 

@@ -32,6 +32,15 @@ vertex_bootstrap(
   directed = NULL,
   seed = NULL
 )
+
+# S3 method for class 'net_vertex_bootstrap'
+print(x, digits = 3, ...)
+
+# S3 method for class 'net_vertex_bootstrap'
+summary(object, ...)
+
+# S3 method for class 'net_vertex_bootstrap'
+plot(x, bins = 30, ...)
 ```
 
 ## Arguments
@@ -41,7 +50,9 @@ vertex_bootstrap(
   A `netobject` (from
   [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   or any builder), a `cograph_network`, or a square numeric weight
-  matrix.
+  matrix. For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_vertex_bootstrap`.
 
 - iter:
 
@@ -77,6 +88,23 @@ vertex_bootstrap(
 
   Integer or NULL. RNG seed for reproducibility.
 
+- digits:
+
+  Number of digits to display (default 3).
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_vertex_bootstrap`.
+
+- bins:
+
+  Number of histogram bins (default 30).
+
 ## Value
 
 An object of class `"net_vertex_bootstrap"` containing:
@@ -97,6 +125,13 @@ An object of class `"net_vertex_bootstrap"` containing:
 - iter, ci_level, ci_method, directed, n_nodes:
 
   Configuration.
+
+In `print.net_vertex_bootstrap()`: `x`, invisibly.
+
+In `summary.net_vertex_bootstrap()`: The tidy summary data frame (one
+row per statistic).
+
+In `plot.net_vertex_bootstrap()`: A ggplot object.
 
 ## Details
 

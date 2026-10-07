@@ -25,11 +25,12 @@ print(x, ...)
 
 - x:
 
-  A `hypergraph_measures` object.
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `hypergraph_measures`.
 
 - ...:
 
-  Additional arguments (ignored).
+  For the S3 methods: further arguments passed to or from other methods.
 
 ## Value
 
@@ -104,7 +105,7 @@ An object of class `hypergraph_measures` (a named list) with components:
 
   Convenience scalars.
 
-The input `x` invisibly.
+In `print.hypergraph_measures()`: The input `x` invisibly.
 
 ## Details
 

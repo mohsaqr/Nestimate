@@ -11,13 +11,22 @@ recomputed. Wide intervals mean the weighting (and therefore the
 
 ``` r
 loading_stability(x, iter = 200L, ci_level = 0.05, seed = NULL)
+
+# S3 method for class 'pc_loading_stability'
+print(x, digits = 3, ...)
+
+# S3 method for class 'pc_loading_stability'
+plot(x, ...)
 ```
 
 ## Arguments
 
 - x:
 
-  An `mcml_pc` object that carries raw data.
+  An `mcml_pc` object that carries raw data. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `pc_loading_stability`.
 
 - iter:
 
@@ -32,6 +41,14 @@ loading_stability(x, iter = 200L, ci_level = 0.05, seed = NULL)
 
   Integer or NULL. RNG seed.
 
+- digits:
+
+  Number of digits to display (default 3).
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
 ## Value
 
 An object of class `"pc_loading_stability"`: a list with `summary` (tidy
@@ -40,6 +57,10 @@ data frame: `node`, `cluster`, `weight`, `boot_mean`, `boot_sd`,
 which the item's sign differed from the observed one), `boot_weights`
 (iter x n_nodes matrix), `iter`, and `ci_level`. Has print and plot
 methods.
+
+In `print.pc_loading_stability()`: `x`, invisibly.
+
+In `plot.pc_loading_stability()`: A ggplot object.
 
 ## Examples
 

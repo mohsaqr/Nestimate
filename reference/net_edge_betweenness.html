@@ -19,7 +19,7 @@ igraph::edge_betweenness()."><meta property="og:image" content="https://pak.dyna
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,10 @@ clash with <code><a href="https://sonsoles.me/tna/reference/betweenness_network.
 <span><span class="fu">net_edge_betweenness</span><span class="op">(</span><span class="va">x</span>, invert <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Default S3 method</span></span>
-<span><span class="fu">net_edge_betweenness</span><span class="op">(</span><span class="va">x</span>, invert <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">net_edge_betweenness</span><span class="op">(</span><span class="va">x</span>, invert <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_edge_betweenness'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bar"</span>, <span class="st">"forest"</span>, <span class="st">"delta"</span><span class="op">)</span>, top_n <span class="op">=</span> <span class="cn">NULL</span>, labels <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -84,7 +87,7 @@ clash with <code><a href="https://sonsoles.me/tna/reference/betweenness_network.
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>netobject</code> or <code>netobject_group</code>.</p></dd>
+<dd><p>A <code>netobject</code> or <code>netobject_group</code>. For the <code>net_edge_betweenness()</code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>netobject</code>, <code>netobject_group</code>, <code>default</code> or <code>net_edge_betweenness</code>.</p></dd>
 
 
 <dt id="arg-invert">invert<a class="anchor" aria-label="anchor" href="#arg-invert"></a></dt>
@@ -94,7 +97,20 @@ and frequency networks).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments (ignored).</p></dd>
+<dd><p>Additional arguments (ignored).
+For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-style">style<a class="anchor" aria-label="anchor" href="#arg-style"></a></dt>
+<dd><p>Plot style. <code>"bar"</code> (default) draws one horizontal bar per edge; <code>"forest"</code> draws a forest/lollipop chart (a stem from zero to a point) with a dashed reference line at the mean betweenness; <code>"delta"</code> draws each edge's deviation from the mean edge betweenness as a diverging bar (above the mean in blue, below in red).</p></dd>
+
+
+<dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
+<dd><p>Integer or <code>NULL</code>. Keep only the <code>top_n</code> highest edges. Default <code>NULL</code> (all edges with non-zero betweenness).</p></dd>
+
+
+<dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
+<dd><p>Logical. Print the betweenness value beside each edge. Default <code>TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -108,6 +124,7 @@ to render it. The object preserves source-network metadata so
 <code><a href="permutation.html">permutation</a></code> can test edge-betweenness differences by
 permuting the source networks. For a <code>netobject_group</code>: a
 <code>netobject_group</code> of such networks, one per group.</p>
+<p>In <code>plot.net_edge_betweenness()</code>: A <code>ggplot</code> object.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

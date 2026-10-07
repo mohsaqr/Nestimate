@@ -34,6 +34,12 @@ build_simplicial(
   max_scale = NULL,
   ...
 )
+
+# S3 method for class 'simplicial_complex'
+print(x, ...)
+
+# S3 method for class 'simplicial_complex'
+plot(x, combined = TRUE, ...)
 ```
 
 ## Arguments
@@ -41,7 +47,9 @@ build_simplicial(
 - x:
 
   A square matrix, `tna`, `netobject`, `net_hon`, `net_hypa`, or
-  `net_mogen`.
+  `net_mogen`. For the [`print()`](https://rdrr.io/r/base/print.html)
+  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  an object of class `simplicial_complex`.
 
 - type:
 
@@ -81,7 +89,17 @@ build_simplicial(
 
   Additional arguments passed to
   [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
-  when `x` is a `tna`/`netobject` with `type = "pathway"`.
+  when `x` is a `tna`/`netobject` with `type = "pathway"`. For the S3
+  methods: further arguments passed to or from other methods.
+
+- combined:
+
+  When `TRUE` (default), the four panels are stitched into a 2x2 gtable
+  via
+  [`gridExtra::arrangeGrob`](https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html)
+  and drawn. When `FALSE`, returns a named list of the four ggplots
+  (`f_vector`, `betti`, `degree`, `degree_heatmap`) so each can be
+  printed, saved, or re-laid-out independently.
 
 ## Value
 
@@ -129,6 +147,11 @@ For `type = "vr"` two further elements are attached: `$filtration`
 enters) and `$max_scale` (the cap actually used).
 [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
 consumes them directly.
+
+In `print.simplicial_complex()`: The input object, invisibly.
+
+In `plot.simplicial_complex()`: A grid grob (invisibly) when
+`combined = TRUE`; a named list of four ggplots when `combined = FALSE`.
 
 ## See also
 

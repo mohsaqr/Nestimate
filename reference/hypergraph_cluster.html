@@ -23,7 +23,7 @@ edge-independent weights the walk collapses to a graph random walk
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,19 @@ edge-independent weights the walk collapses to a graph random walk
 <span>  edge_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  nstart <span class="op">=</span> <span class="fl">25L</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_hypergraph_cluster'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_hypergraph_cluster'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_hypergraph_cluster'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_hypergraph_cluster'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, what <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"both"</span>, <span class="st">"spectrum"</span>, <span class="st">"embedding"</span><span class="op">)</span>, n_values <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -106,6 +118,26 @@ edge-independent weights the walk collapses to a graph random walk
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional integer seed for the k-means initialization.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_hypergraph_cluster</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_hypergraph_cluster</code>.</p></dd>
+
+
+<dt id="arg-what">what<a class="anchor" aria-label="anchor" href="#arg-what"></a></dt>
+<dd><p>Character. <code>"both"</code> (default), <code>"spectrum"</code>, or <code>"embedding"</code>.</p></dd>
+
+
+<dt id="arg-n-values">n_values<a class="anchor" aria-label="anchor" href="#arg-n-values"></a></dt>
+<dd><p>Integer. How many smallest eigenvalues to show in the spectrum panel (default: <code>min(3 * k, n_nodes)</code>).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -122,6 +154,10 @@ eigenvalue), <code>$sizes</code> (data.frame <code>cluster</code>/<code>size</co
 <code>plot</code> and <code>as.data.frame</code> methods; <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> returns one row
 per node with <code>node</code>, <code>cluster</code>, the stationary probability <code>pi</code>, and
 the embedding coordinates.</p>
+<p>In <code>print.net_hypergraph_cluster()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_hypergraph_cluster()</code>: A data.frame, one row per cluster: <code>cluster</code>, <code>size</code>, <code>share</code>.</p>
+<p>In <code>as.data.frame.net_hypergraph_cluster()</code>: The tidy assignment table: one row per node, columns <code>node</code>, <code>cluster</code>, <code>pi</code> (stationary probability of the node under the Laplacian's random walk) and the spectral-embedding coordinates <code>dim1..dimk</code>.</p>
+<p>In <code>plot.net_hypergraph_cluster()</code>: For <code>"spectrum"</code>/<code>"embedding"</code>, the ggplot object. For <code>"both"</code>, the arranged gtable when gridExtra is installed (drawn on the current device), otherwise the two panels are drawn via grid viewports and the list of the two ggplots is returned invisibly.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

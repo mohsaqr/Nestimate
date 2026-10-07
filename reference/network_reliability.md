@@ -21,6 +21,15 @@ network_reliability(
   scale = "none",
   seed = NULL
 )
+
+# S3 method for class 'net_reliability'
+print(x, ...)
+
+# S3 method for class 'net_reliability'
+summary(object, ...)
+
+# S3 method for class 'net_reliability'
+plot(x, bins = 60L, combined = TRUE, ...)
 ```
 
 ## Arguments
@@ -33,7 +42,8 @@ network_reliability(
   names are made unique with
   [`make.unique()`](https://rdrr.io/r/base/make.unique.html). A
   `netobject_group` is flattened into its constituent models (named by
-  group), and an `mcml` or `cograph_network` is converted first.
+  group), and an `mcml` or `cograph_network` is converted first. For the
+  S3 methods: further arguments passed to or from other methods.
 
 - iter:
 
@@ -54,6 +64,27 @@ network_reliability(
 - seed:
 
   Integer or NULL. RNG seed for reproducibility.
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_reliability`.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_reliability`.
+
+- bins:
+
+  Integer. Number of histogram bins per panel (default 60).
+
+- combined:
+
+  When `TRUE` (default), all four metrics are shown in one ggplot via
+  `facet_wrap(~ metric)`. When `FALSE`, returns a named list of four
+  single-panel ggplots, one per metric.
 
 ## Value
 
@@ -83,6 +114,14 @@ An object of class `"net_reliability"` containing:
 - scale:
 
   Scaling method used.
+
+In `print.net_reliability()`: The input object, invisibly.
+
+In `summary.net_reliability()`: A tidy data frame with columns `model`,
+`metric`, `mean`, `sd` summarising the split-half iterations.
+
+In `plot.net_reliability()`: A `ggplot` object (invisibly), or a named
+list of four ggplots when `combined = FALSE`.
 
 ## See also
 

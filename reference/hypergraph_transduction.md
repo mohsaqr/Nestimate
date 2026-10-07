@@ -20,6 +20,24 @@ hypergraph_transduction(
   type = c("zhou", "random_walk"),
   edge_weights = NULL
 )
+
+# S3 method for class 'net_hypergraph_transduction'
+print(x, ...)
+
+# S3 method for class 'net_hypergraph_transduction'
+summary(object, ...)
+
+# S3 method for class 'net_hypergraph_transduction'
+as.data.frame(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  what = c("predictions", "scores"),
+  ...
+)
+
+# S3 method for class 'net_hypergraph_transduction'
+plot(x, ...)
 ```
 
 ## Arguments
@@ -46,6 +64,39 @@ hypergraph_transduction(
   Passed to
   [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md).
 
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html),
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_hypergraph_transduction`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_hypergraph_transduction`.
+
+- row.names:
+
+  `NULL` (default) or a character vector of row names for the returned
+  data frame.
+
+- optional:
+
+  Ignored; present so the method matches the signature of the
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
+  generic.
+
+- what:
+
+  Character. `"predictions"` (default) for the one-row-per-node table,
+  `"scores"` for the tidy long score table (one row per node x class:
+  `node`, `class`, `score`).
+
 ## Value
 
 An object of class `net_hypergraph_transduction`: a list with
@@ -56,6 +107,21 @@ score matrix), `$xi`, `$type`, `$n_labeled`, `$n_nodes` and `$params`
 (the `edge_weights` used). Has `print`, `summary`, `plot` and
 `as.data.frame` methods; `as.data.frame(x, what = "scores")` returns the
 tidy long score table.
+
+In `print.net_hypergraph_transduction()`: The input object, invisibly.
+
+In `summary.net_hypergraph_transduction()`: A data.frame, one row per
+class: `class`, `n_labeled`, `n_predicted`, `mean_margin` (mean winning
+margin among the nodes predicted into the class).
+
+In `as.data.frame.net_hypergraph_transduction()`: A data.frame selected
+by `what`: for `"predictions"`, one row per node with columns `node`,
+`label` (the given label, `NA` if unlabeled), `predicted`, `score` and
+`margin`; for `"scores"`, one row per node x class with columns `node`,
+`class` and `score`.
+
+In `plot.net_hypergraph_transduction()`: A ggplot object (the score
+heatmap), returned visibly so that `plot(x)` draws it.
 
 ## References
 

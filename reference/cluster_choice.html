@@ -17,7 +17,7 @@ adapts to the swept axes."><meta property="og:image" content="https://pak.dynasi
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,6 +70,21 @@ adapts to the swept axes.</p>
 <span>  dissimilarity <span class="op">=</span> <span class="st">"hamming"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
 <span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'cluster_choice'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'cluster_choice'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'cluster_choice'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"lines"</span>, <span class="st">"bars"</span>, <span class="st">"heatmap"</span>, <span class="st">"tradeoff"</span>, <span class="st">"facet"</span><span class="op">)</span>,</span>
+<span>  abbrev <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  combined <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -108,7 +123,31 @@ adapts to the swept axes.</p>
 <code>estimator</code>).
 Note: <code>weighted = TRUE</code> only works with
 <code>dissimilarity = "hamming"</code> and is rejected up-front when
-sweeping mixed dissimilarities.</p></dd>
+sweeping mixed dissimilarities. For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>cluster_choice</code>.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer. Decimal places for floating-point columns. Default <code>3L</code>.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>cluster_choice</code>.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Character. One of <code>"auto"</code> (default), <code>"lines"</code>, <code>"bars"</code>, <code>"heatmap"</code>, <code>"tradeoff"</code>, <code>"facet"</code>.</p></dd>
+
+
+<dt id="arg-abbrev">abbrev<a class="anchor" aria-label="anchor" href="#arg-abbrev"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, dissimilarity and method names shown on tick labels and point labels are shortened (e.g. <code>"hamming"</code> -&gt; <code>"ham"</code>, <code>"ward.D2"</code> -&gt; <code>"wD2"</code>). The legend shows the full canonical name. Default <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>Only meaningful for <code>type = "facet"</code>. When <code>TRUE</code> (default), all methods are shown in one ggplot via <code>facet_wrap(~ method)</code>. When <code>FALSE</code>, returns a named list of single-panel ggplots, one per method.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -131,7 +170,46 @@ distances, in the units of the row's dissimilarity.</p></dd>
 and their ratio (<code>max / min</code>).</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.cluster_choice()</code>: The input object, invisibly.</p>
+<p>In <code>summary.cluster_choice()</code>: A data frame with the swept configurations, all metrics, and a <code>best</code> character column flagging the silhouette-max row.</p>
+<p>In <code>plot.cluster_choice()</code>: A <code>ggplot</code> object, invisibly; for <code>type = "facet"</code> with <code>combined = FALSE</code>, a named list of ggplots.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="plot-types">Plot types<a class="anchor" aria-label="anchor" href="#plot-types"></a></h2>
+
+
+<p>Type cheat-sheet:</p><dl><dt><code>"auto"</code></dt>
+<dd><p>Default. Picks one of the others based on which
+axes were swept. k-only -&gt; <code>"lines"</code>; one categorical axis
+swept -&gt; <code>"bars"</code>; k plus one categorical -&gt; <code>"lines"</code>;
+k plus two categoricals -&gt; <code>"facet"</code>; both categoricals
+without k -&gt; <code>"heatmap"</code>.</p></dd>
+
+<dt><code>"lines"</code></dt>
+<dd><p>Silhouette across k (and <code>mean_within_dist</code>
+when <code>k</code> is the only swept axis), one line per non-k axis
+when present.</p></dd>
+
+<dt><code>"bars"</code></dt>
+<dd><p>Horizontal bar chart of silhouette per axis
+level. Bars sorted by silhouette.</p></dd>
+
+<dt><code>"heatmap"</code></dt>
+<dd><p>Tiled silhouette across two categorical
+axes. Requires both <code>dissimilarity</code> and <code>method</code> swept.</p></dd>
+
+<dt><code>"tradeoff"</code></dt>
+<dd><p>Scatter: silhouette (y) vs <code>size_ratio</code>
+(x). Works for any sweep; labels each point.</p></dd>
+
+<dt><code>"facet"</code></dt>
+<dd><p>Lines vs k, colour by one categorical axis,
+facet by another. Requires <code>k</code> plus two categoricals.</p></dd>
+
+
+</dl><p>Asking for a type the data can't support raises an error pointing at
+the alternatives.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="build_clusters.html">build_clusters</a></code>, <code><a href="compare_mmm.html">compare_mmm</a></code> for

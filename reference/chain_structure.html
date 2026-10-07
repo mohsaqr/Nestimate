@@ -15,7 +15,7 @@ absorbing states exist."><meta property="og:image" content="https://pak.dynasite
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,25 @@ absorbing states exist.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">chain_structure</span><span class="op">(</span><span class="va">x</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span>, tol <span class="op">=</span> <span class="fl">1e-10</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">chain_structure</span><span class="op">(</span><span class="va">x</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span>, tol <span class="op">=</span> <span class="fl">1e-10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'chain_structure'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'chain_structure'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, show_values <span class="op">=</span> <span class="cn">TRUE</span>, digits <span class="op">=</span> <span class="fl">2L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'chain_structure'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'chain_structure_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'chain_structure_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'summary_chain_structure'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -72,7 +90,7 @@ absorbing states exist.</p>
 <dd><p>A <code>netobject</code>, <code>cograph_network</code>, <code>tna</code> model, transition
 matrix, or sequence data.frame (passed through <code><a href="build_network.html">build_network()</a></code> with
 <code>method = "relative"</code>). A <code>netobject_group</code> is also accepted and
-analysed constituent by constituent.</p></dd>
+analysed constituent by constituent. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>chain_structure</code>, <code>chain_structure_group</code> or <code>summary_chain_structure</code>.</p></dd>
 
 
 <dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
@@ -91,6 +109,22 @@ absorbing-state test: a state is absorbing only when <code>P[i, i]</code> equals
 independent of <code>tol</code> (so raising <code>tol</code> to ignore tiny transition
 probabilities never reclassifies a near-deterministic state as
 absorbing). Default <code>1e-10</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods. In <code>print.chain_structure_group()</code>: Forwarded to <code>print.chain_structure</code>. In <code>print.summary_chain_structure()</code>: Forwarded to <code>print.data.frame</code>.</p></dd>
+
+
+<dt id="arg-show-values">show_values<a class="anchor" aria-label="anchor" href="#arg-show-values"></a></dt>
+<dd><p>Logical. If <code>TRUE</code> (default), prints the numeric probability inside each cell. Set <code>FALSE</code> for large state spaces (n &gt; 10) where labels overlap.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer. Decimal places for in-cell labels.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>chain_structure</code> or <code>chain_structure_group</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -159,7 +193,11 @@ number of steps until absorption from each transient state.</p></dd>
 <dd><p>The (possibly normalized) transition matrix used.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.chain_structure()</code>, <code>print.chain_structure_group()</code> and <code>print.summary_chain_structure()</code>: <code>x</code> invisibly.</p>
+<p>In <code>plot.chain_structure()</code>: A <code>ggplot</code> object.</p>
+<p>In <code>summary.chain_structure()</code>: A <code>data.frame</code> with one row per state, of class <code>c("summary_chain_structure", "data.frame")</code>, carrying the chain-level flags (<code>is_regular</code>, <code>is_irreducible</code>, <code>is_aperiodic</code>, <code>is_reversible</code>, <code>n_classes</code>, <code>absorbing_states</code>) as attributes, which its <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method shows as a header. Columns as described above.</p>
+<p>In <code>summary.chain_structure_group()</code>: A <code>data.frame</code> with columns <code>group</code>, <code>state</code>, <code>classification</code>, <code>period</code>, <code>persistence</code>, <code>return_probability</code>, <code>sojourn_steps</code>, plus <code>stationary_probability</code> if all groups are irreducible and <code>mean_absorption_time</code> if any group has absorbing states.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Built specifically as a diagnostic to run <em>before</em> trusting the output
@@ -168,6 +206,24 @@ regular chain (irreducible + aperiodic) so that the stationary
 distribution is unique and meaningful. Use <code>is_regular</code> to check.</p>
 <p>The fundamental-matrix absorption math follows Kemeny &amp; Snell (1976);
 the hitting-probability linear system follows Norris (1997).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="plot-colours">Plot colours<a class="anchor" aria-label="anchor" href="#plot-colours"></a></h2>
+
+
+<p>Cell colour encodes <code>P(ever reach j | start at i)</code>. The diagonal
+uses the return-time convention (<code>P(return to j in &gt;= 1 steps)</code>),
+matching <code>markovchain::hittingProbabilities</code>. A non-irreducible chain
+shows zero off-block entries – visual evidence of one-way doors
+between behavioural phases. An absorbing chain shows a column of 1's
+for the absorbing state.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="summary-columns">Summary columns<a class="anchor" aria-label="anchor" href="#summary-columns"></a></h2>
+
+
+<p>Columns are ordered for readability: identifiers first, classification
+second, dynamic per-state metrics last.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

@@ -166,31 +166,31 @@ Computation and Simulation*, 73(2), 85-113.
 
 ``` r
 # Students are nested in teams; Achiever is a team-level label.
-# iter = 100 keeps the example fast; a real analysis uses 1000 or more.
+# iter = 50 keeps the example fast; a real analysis uses 1000 or more.
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
-permutation_diagnostics(net, actor = "Group", iter = 100, seed = 1)
+permutation_diagnostics(net, actor = "Group", iter = 50, seed = 1)
 #>          pair n_sequences n_actors  design          icc icc_ci_lower
 #> 1 High vs Low        2000      200 between -0.001697397 -0.005641197
 #>   icc_ci_upper deff_edges deff_global p_global_sequence p_global_actor
-#> 1  0.002246402    1.02937    1.256221        0.00990099     0.00990099
+#> 1  0.002246402   1.069592    1.186787        0.01960784     0.01960784
 #>   sig_edges_sequence sig_edges_actor edges_changed min_p_actor
-#> 1                 39              43             4  0.00990099
-head(permutation_diagnostics(net, actor = "Group", iter = 100,
+#> 1                 38              42             4  0.01960784
+head(permutation_diagnostics(net, actor = "Group", iter = 50,
                              level = "edges", seed = 1))
 #>          pair  from         to         diff          icc null_sd_sequence
-#> 1 High vs Low adapt   cohesion -0.014762566  0.010118088       0.03440568
-#> 2 High vs Low adapt  consensus  0.055773975 -0.003796296       0.04481693
-#> 3 High vs Low adapt coregulate -0.029891304  0.002498496       0.01193358
-#> 4 High vs Low adapt    discuss -0.032473790 -0.009052931       0.02220245
-#> 5 High vs Low adapt    emotion  0.030430928 -0.007376103       0.03180921
-#> 6 High vs Low adapt    monitor -0.006957293 -0.003562251       0.01576316
+#> 1 High vs Low adapt   cohesion -0.014762566  0.010118088       0.03366031
+#> 2 High vs Low adapt  consensus  0.055773975 -0.003796296       0.04581149
+#> 3 High vs Low adapt coregulate -0.029891304  0.002498496       0.01144616
+#> 4 High vs Low adapt    discuss -0.032473790 -0.009052931       0.02089267
+#> 5 High vs Low adapt    emotion  0.030430928 -0.007376103       0.02759746
+#> 6 High vs Low adapt    monitor -0.006957293 -0.003562251       0.01333857
 #>   null_sd_actor      deff p_sequence    p_actor changed
-#> 1    0.04203003 1.4923103 0.62376238 0.69306931   FALSE
-#> 2    0.04262786 0.9046963 0.26732673 0.19801980   FALSE
-#> 3    0.01178398 0.9750852 0.00990099 0.02970297   FALSE
-#> 4    0.01644419 0.5485588 0.13861386 0.04950495    TRUE
-#> 5    0.02905014 0.8340475 0.33663366 0.24752475   FALSE
-#> 6    0.01595415 1.0243791 0.62376238 0.61386139   FALSE
+#> 1    0.04169614 1.5344598 0.64705882 0.68627451   FALSE
+#> 2    0.04532698 0.9789597 0.21568627 0.27450980   FALSE
+#> 3    0.01121761 0.9604642 0.01960784 0.01960784   FALSE
+#> 4    0.01396427 0.4467334 0.15686275 0.03921569    TRUE
+#> 5    0.02870211 1.0816567 0.39215686 0.23529412   FALSE
+#> 6    0.01470229 1.2149298 0.74509804 0.60784314   FALSE
 ```

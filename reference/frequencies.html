@@ -11,7 +11,7 @@ all sequences."><meta property="og:image" content="https://pak.dynasite.org/Nest
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,10 @@ all sequences.</p>
 <span>  time <span class="op">=</span> <span class="st">"Time"</span>,</span>
 <span>  cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"long"</span>, <span class="st">"wide"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'nest_transition_counts'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -98,6 +101,14 @@ format). If NULL, all non-ID columns are used. Default: NULL.</p></dd>
 <dd><p>Character. Format of input data: "auto" (detect automatically),
 "long", or "wide". Default: "auto".</p></dd>
 
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>nest_transition_counts</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -108,6 +119,7 @@ Row and column names are the sorted unique states. It behaves as an
 ordinary matrix and can be passed directly to <code><a href="https://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::tna()</a></code>; the
 class stamp only adds a <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method, which returns the same
 counts as a tidy <code>from</code>/<code>to</code>/<code>count</code> data frame.</p>
+<p>In <code>summary.nest_transition_counts()</code>: A tidy data frame with columns <code>from</code>, <code>to</code>, <code>count</code>, with one row per non-zero transition.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

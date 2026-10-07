@@ -22,6 +22,18 @@ hypergraph_cluster(
   nstart = 25L,
   seed = NULL
 )
+
+# S3 method for class 'net_hypergraph_cluster'
+print(x, ...)
+
+# S3 method for class 'net_hypergraph_cluster'
+summary(object, ...)
+
+# S3 method for class 'net_hypergraph_cluster'
+as.data.frame(x, ...)
+
+# S3 method for class 'net_hypergraph_cluster'
+plot(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
 ```
 
 ## Arguments
@@ -47,6 +59,31 @@ hypergraph_cluster(
 
   Optional integer seed for the k-means initialization.
 
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html),
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `net_hypergraph_cluster`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_hypergraph_cluster`.
+
+- what:
+
+  Character. `"both"` (default), `"spectrum"`, or `"embedding"`.
+
+- n_values:
+
+  Integer. How many smallest eigenvalues to show in the spectrum panel
+  (default: `min(3 * k, n_nodes)`).
+
 ## Value
 
 An object of class `net_hypergraph_cluster`: a list with `$clusters`
@@ -62,6 +99,22 @@ row-normalized spectral embedding used by k-means, dims `dim1..dimk`),
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
 one row per node with `node`, `cluster`, the stationary probability
 `pi`, and the embedding coordinates.
+
+In `print.net_hypergraph_cluster()`: The input object, invisibly.
+
+In `summary.net_hypergraph_cluster()`: A data.frame, one row per
+cluster: `cluster`, `size`, `share`.
+
+In `as.data.frame.net_hypergraph_cluster()`: The tidy assignment table:
+one row per node, columns `node`, `cluster`, `pi` (stationary
+probability of the node under the Laplacian's random walk) and the
+spectral-embedding coordinates `dim1..dimk`.
+
+In `plot.net_hypergraph_cluster()`: For `"spectrum"`/`"embedding"`, the
+ggplot object. For `"both"`, the arranged gtable when gridExtra is
+installed (drawn on the current device), otherwise the two panels are
+drawn via grid viewports and the list of the two ggplots is returned
+invisibly.
 
 ## Details
 

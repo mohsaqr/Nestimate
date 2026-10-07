@@ -59,7 +59,7 @@ invert setting."><meta property="og:image" content="https://pak.dynasite.org/Nes
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -136,7 +136,22 @@ difference of the two input networks. Both inputs must use the same
 <span>  mean_threshold <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  bound_threshold <span class="op">=</span> <span class="fl">0.001</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bayes'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bayes'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bayes'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, significant_only <span class="op">=</span> <span class="cn">TRUE</span>, title <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bayes_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bayes_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -147,7 +162,7 @@ difference of the two input networks. Both inputs must use the same
 <dd><p>A <code>netobject</code> (from <code><a href="build_network.html">build_network</a></code>), a
 <code>netobject_group</code>, an <code>mcml</code> object, or a
 <code><a href="net_edge_betweenness.html">net_edge_betweenness</a></code> object. Must use a transition
-method (<code>"relative"</code> / <code>"frequency"</code> and their aliases).</p></dd>
+method (<code>"relative"</code> / <code>"frequency"</code> and their aliases). For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_bayes</code> or <code>net_bayes_group</code>.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
@@ -185,6 +200,22 @@ but negligibly small.</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Integer or NULL. RNG seed for reproducible credible intervals.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_bayes</code> or <code>net_bayes_group</code>.</p></dd>
+
+
+<dt id="arg-significant-only">significant_only<a class="anchor" aria-label="anchor" href="#arg-significant-only"></a></dt>
+<dd><p>Logical. Show only credibly-different edges (default <code>TRUE</code>).</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
+<dd><p>Optional plot title.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -252,7 +283,11 @@ nearest bound exceed their thresholds).</p></dd>
 <dd><p>Bayesian settings.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_bayes()</code> and <code>print.net_bayes_group()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_bayes()</code>: A data frame with edge-level posterior differences and intervals.</p>
+<p>In <code>plot.net_bayes()</code>: Invisibly, the cograph network returned by <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code> when cograph is available; otherwise a fallback <code>ggplot</code> object.</p>
+<p>In <code>summary.net_bayes_group()</code>: A combined data frame with a <code>comparison</code> column.</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Johnston, L. &amp; Jendoubi, T. (2026). How Delivery Mode Reshapes Resource

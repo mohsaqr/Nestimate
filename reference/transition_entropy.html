@@ -27,7 +27,7 @@ those papers report."><meta property="og:image" content="https://pak.dynasite.or
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,22 @@ those papers report.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">transition_entropy</span><span class="op">(</span><span class="va">x</span>, base <span class="op">=</span> <span class="fl">2</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">transition_entropy</span><span class="op">(</span><span class="va">x</span>, base <span class="op">=</span> <span class="fl">2</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_transition_entropy'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_transition_entropy_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_transition_entropy'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'summary.net_transition_entropy'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_transition_entropy'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, title <span class="op">=</span> <span class="st">"Transition Entropy"</span>, fill <span class="op">=</span> <span class="st">"#0072B2"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -90,7 +105,7 @@ those papers report.</p>
 <dd><p>A <code>netobject</code>, <code>cograph_network</code>, <code>tna</code> object,
 row-stochastic numeric transition matrix, or a wide sequence data.frame
 (rows = actors, columns = time-steps; a relative transition network is
-built automatically). Group dispatch on <code>netobject_group</code>.</p></dd>
+built automatically). Group dispatch on <code>netobject_group</code>. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_transition_entropy</code> or <code>net_transition_entropy_group</code> (or its <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>).</p></dd>
 
 
 <dt id="arg-base">base<a class="anchor" aria-label="anchor" href="#arg-base"></a></dt>
@@ -101,6 +116,26 @@ built automatically). Group dispatch on <code>netobject_group</code>.</p></dd>
 <dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
 <dd><p>Logical. If <code>TRUE</code> (default), rows that do not sum
 to 1 are normalised automatically (with a warning).</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer. Digits to round numeric output. Default <code>3</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods. In <code>print.net_transition_entropy_group()</code>: Forwarded to <code>print.net_transition_entropy</code>.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_transition_entropy</code>.</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
+<dd><p>Character. Plot title.</p></dd>
+
+
+<dt id="arg-fill">fill<a class="anchor" aria-label="anchor" href="#arg-fill"></a></dt>
+<dd><p>Character. Bar fill colour. Default Okabe-Ito blue.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -160,6 +195,15 @@ entropy removed by order-1 memory), <strong>not</strong>
 </dl><p>For a <code>netobject_group</code> the result is a
 <code>"net_transition_entropy_group"</code>: a named list holding one such
 object per group.</p>
+<p>In <code>print.net_transition_entropy()</code>, <code>print.net_transition_entropy_group()</code> and <code>print.summary.net_transition_entropy()</code>: <code>x</code> invisibly.</p>
+<p>In <code>summary.net_transition_entropy()</code>: A <code>summary.net_transition_entropy</code> containing</p><dl><dt>table</dt>
+<dd><p>tidy per-state data.frame, sorted by <code>contribution_pct</code> descending</p></dd>
+ <dt>chain</dt>
+<dd><p>tidy chain-level data.frame with raw and normalised \(h(P)\), \(H(\pi)\), redundancy, and ceiling</p></dd>
+ <dt>base</dt>
+<dd><p>logarithm base used</p></dd>
+
+</dl><p>In <code>plot.net_transition_entropy()</code>: A ggplot object.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

@@ -18,6 +18,12 @@ build_hon(
   collapse_repeats = FALSE,
   method = "hon+"
 )
+
+# S3 method for class 'net_hon'
+print(x, ...)
+
+# S3 method for class 'net_hon'
+summary(object, ...)
 ```
 
 ## Arguments
@@ -59,6 +65,20 @@ build_hon(
   Character. Algorithm to use: `"hon+"` (default, parameter-free
   BuildHON+ with lazy observation building and MaxDivergence pruning) or
   `"hon"` (original BuildHON with eager observation building).
+
+- x:
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
+  object of class `net_hon`.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `net_hon`.
 
 ## Value
 
@@ -132,6 +152,15 @@ An S3 object of class `c("net_hon", "cograph_network")` containing:
 - node_groups:
 
   Always `NULL`.
+
+In `print.net_hon()`: The input object, invisibly.
+
+In `summary.net_hon()`: The `cograph_network` edge data.frame
+`object$edges`: one row per non-zero cell of the adjacency matrix, with
+integer `from`/`to` node indices and a numeric `weight`. Returned
+visibly; the summary text (counts, first-order states, order
+distribution) is printed as a side effect. The arrow-notation table with
+`path`/`count`/`probability` is `object$ho_edges`.
 
 ## Details
 

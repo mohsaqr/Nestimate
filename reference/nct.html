@@ -15,7 +15,7 @@ permutation of group labels."><meta property="og:image" content="https://pak.dyn
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,13 @@ permutation of group labels.</p>
 <span>  abs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  weighted <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  p_adjust <span class="op">=</span> <span class="st">"none"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_nct'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_nct'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -114,6 +120,18 @@ Default <code>TRUE</code>.</p></dd>
 <dd><p>P-value adjustment method for the per-edge tests
 (any method in <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">stats::p.adjust.methods</a></code>). Default <code>"none"</code>.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: an object of class <code>net_nct</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_nct</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -146,7 +164,9 @@ column names).</p></dd>
 <code>weighted</code>, <code>p_adjust</code>.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_nct()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_nct()</code>: A data frame with columns <code>from</code>, <code>to</code>, <code>diff_observed</code>, <code>p_value</code>, <code>significant</code>. Attributes <code>m_stat</code> and <code>s_stat</code> each hold a one-row data frame with <code>observed</code> and <code>p_value</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Follows <code>NetworkComparisonTest::NCT()</code> with defaults
@@ -162,28 +182,24 @@ bit-for-bit, even under the same seed.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span> <span class="op">*</span> <span class="fl">5</span><span class="op">)</span>, <span class="fl">200</span>, <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span> <span class="op">*</span> <span class="fl">5</span><span class="op">)</span>, <span class="fl">200</span>, <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x2</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="fl">4</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="fl">4</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x2</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># iter = 20 keeps the example fast; a real analysis uses 1000 or more.</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">nct</span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, iter <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Network Comparison Test  [20 permutations | unpaired]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Global strength (M):  observed = 0.0000   p = 0.5714</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Network structure (S): observed = 0.0000   p = 0.6667</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Edge tests (E):       10 edges, 0 significant at p &lt; 0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Global strength (M):  observed = 0.0000   p = 1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Network structure (S): observed = 0.0000   p = 1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edge tests (E):       6 edges, 0 significant at p &lt; 0.05</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    from to diff_observed   p_value significant</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    V1 V2  0.000000e+00 1.0000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    V1 V3  0.000000e+00 1.0000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    V2 V3  0.000000e+00 1.0000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    V1 V4  1.387779e-17 0.1428571       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    V2 V4  0.000000e+00 1.0000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    V3 V4  0.000000e+00 1.0000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    V1 V5  0.000000e+00 1.0000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8    V2 V5  0.000000e+00 1.0000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9    V3 V5  0.000000e+00 1.0000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10   V4 V5  0.000000e+00 1.0000000       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   from to diff_observed p_value significant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   V1 V2             0       1       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   V1 V3             0       1       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   V2 V3             0       1       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   V1 V4             0       1       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   V2 V4             0       1       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   V3 V4             0       1       FALSE</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

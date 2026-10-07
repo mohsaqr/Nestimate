@@ -37,7 +37,7 @@ testing.'><meta property="og:image" content="https://pak.dynasite.org/Nestimate/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,7 +105,25 @@ testing.</p>
 <span>  boundary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"inclusive"</span>, <span class="st">"strict"</span><span class="op">)</span>,</span>
 <span>  ci_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"percentile"</span>, <span class="st">"basic"</span><span class="op">)</span>,</span>
 <span>  actor <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bootstrap'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bootstrap'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bootstrap_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_bootstrap_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'wtna_boot_mixed'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'wtna_boot_mixed'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -118,7 +136,7 @@ The data, method, params, scaling, threshold, and level are all
 extracted from this object. A <code>cograph_network</code> is coerced
 first; a <code>netobject_group</code> or <code>mcml</code> bootstraps every
 constituent network, and a <code>wtna_mixed</code> bootstraps both of its
-components (see <strong>Value</strong>).</p></dd>
+components (see <strong>Value</strong>). For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: an object of class <code>net_bootstrap</code>, <code>net_bootstrap_group</code> or <code>wtna_boot_mixed</code>.</p></dd>
 
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
@@ -177,6 +195,14 @@ in students, <code>"Group"</code> for students nested in teams), looked up in
 the network's <code>$metadata</code> or wide sequence data. When supplied,
 whole actors are resampled; see the section <em>Nested data and
 actor</em>. Default <code>NULL</code>: sequences are resampled individually.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_bootstrap</code>, <code>net_bootstrap_group</code> or <code>wtna_boot_mixed</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -245,6 +271,11 @@ actors; <code>NULL</code> without <code>actor</code>.</p></dd>
 <code>"net_bootstrap_group"</code> (named list of <code>net_bootstrap</code>
 results); a <code>wtna_mixed</code> input returns a <code>"wtna_boot_mixed"</code>
 with <code>$transition</code> and <code>$cooccurrence</code> results.</p>
+<p>In <code>print.net_bootstrap()</code> and <code>print.wtna_boot_mixed()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_bootstrap()</code>: The <code>$summary</code> data frame: one row per non-zero original edge, with columns <code>from</code>, <code>to</code>, <code>weight</code>, <code>mean</code>, <code>sd</code>, <code>p_value</code>, <code>sig</code>, <code>ci_lower</code>, <code>ci_upper</code>, plus <code>cr_lower</code> and <code>cr_upper</code> when the bootstrap used <code>inference = "stability"</code>.</p>
+<p>In <code>print.net_bootstrap_group()</code>: <code>x</code> invisibly.</p>
+<p>In <code>summary.net_bootstrap_group()</code>: The per-group summaries stacked into one data frame: the columns of <code>summary.net_bootstrap</code> prefixed by a <code>group</code> column naming the network each row came from.</p>
+<p>In <code>summary.wtna_boot_mixed()</code>: A list with <code>$transition</code> and <code>$cooccurrence</code> summary data frames.</p>
     </div>
     <div class="section level2">
     <h2 id="nested-data-and-actor">Nested data and <code>actor</code><a class="anchor" aria-label="anchor" href="#nested-data-and-actor"></a></h2>
@@ -284,8 +315,8 @@ assessing rater reliability. <em>Psychological Bulletin</em>, 86(2),
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="certainty.html">certainty</a></code> for the closed-form Bayesian counterpart
 (same result layout, no resampling);
-<code><a href="build_network.html">build_network</a></code>, <code><a href="print.net_bootstrap.html">print.net_bootstrap</a></code>,
-<code><a href="summary.net_bootstrap.html">summary.net_bootstrap</a></code></p></div>
+<code><a href="build_network.html">build_network</a></code>, <code>print.net_bootstrap</code>,
+<code>summary.net_bootstrap</code></p></div>
     </div>
 
     <div class="section level2">

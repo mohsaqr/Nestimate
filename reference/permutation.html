@@ -17,7 +17,7 @@ with registered custom estimators."><meta property="og:image" content="https://p
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,25 @@ with registered custom estimators.</p>
 <span>  nlambda <span class="op">=</span> <span class="fl">50L</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  actor <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_permutation'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_permutation'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_permutation_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_permutation_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'wtna_perm_mixed'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'wtna_perm_mixed'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -84,7 +102,7 @@ with registered custom estimators.</p>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>netobject</code> (from <code><a href="build_network.html">build_network</a></code>) or a
-<code><a href="net_edge_betweenness.html">net_edge_betweenness</a></code> object.</p></dd>
+<code><a href="net_edge_betweenness.html">net_edge_betweenness</a></code> object. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: an object of class <code>net_permutation</code>, <code>net_permutation_group</code> or <code>wtna_perm_mixed</code>.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
@@ -151,6 +169,14 @@ methods (<code>"relative"</code>, <code>"frequency"</code>, <code>"co_occurrence
 cannot be combined with <code>paired = TRUE</code>, which is the special case
 of one actor per pair. Default <code>NULL</code>: sequences are permuted
 individually.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_permutation</code>, <code>net_permutation_group</code> or <code>wtna_perm_mixed</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -249,6 +275,11 @@ when both <code>x</code> and <code>y</code> are <code>netobject_group</code>s, o
 group pair when <code>y</code> is <code>NULL</code>. Two <code>wtna_mixed</code> inputs
 return a <code>"wtna_perm_mixed"</code> with <code>$transition</code> and
 <code>$cooccurrence</code> results.</p>
+<p>In <code>print.net_permutation()</code> and <code>print.wtna_perm_mixed()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_permutation()</code>: The <code>$summary</code> data frame: one row per edge present in either network, with columns <code>from</code>, <code>to</code>, <code>weight_x</code>, <code>weight_y</code>, <code>diff</code>, <code>effect_size</code>, <code>p_value</code>, <code>sig</code>.</p>
+<p>In <code>print.net_permutation_group()</code>: <code>x</code> invisibly.</p>
+<p>In <code>summary.net_permutation_group()</code>: The per-group summaries stacked into one data frame: the columns of <code>summary.net_permutation</code> prefixed by a <code>group</code> column naming the group (or group pair) each row came from.</p>
+<p>In <code>summary.wtna_perm_mixed()</code>: A list with transition and co-occurrence permutation summaries.</p>
     </div>
     <div class="section level2">
     <h2 id="what-is-tested">What is tested<a class="anchor" aria-label="anchor" href="#what-is-tested"></a></h2>
@@ -378,8 +409,8 @@ actor-level and ordinary tests side by side; <code><a href="bayes_compare.html">
 "is this difference more extreme than chance?" it answers "how probable is
 a difference, and how large?";
 <code><a href="build_network.html">build_network</a></code>, <code><a href="bootstrap_network.html">bootstrap_network</a></code>,
-<code><a href="print.net_permutation.html">print.net_permutation</a></code>,
-<code><a href="summary.net_permutation.html">summary.net_permutation</a></code></p></div>
+<code>print.net_permutation</code>,
+<code>summary.net_permutation</code></p></div>
     </div>
 
     <div class="section level2">

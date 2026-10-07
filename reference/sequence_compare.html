@@ -13,7 +13,7 @@ group differences."><meta property="og:image" content="https://pak.dynasite.org/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,23 @@ group differences.</p>
 <span>  test <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"permutation"</span>, <span class="st">"chisq"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
 <span>  iter <span class="op">=</span> <span class="fl">1000L</span>,</span>
 <span>  adjust <span class="op">=</span> <span class="st">"fdr"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_sequence_comparison'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_sequence_comparison'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_sequence_comparison'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  top_n <span class="op">=</span> <span class="fl">10L</span>,</span>
+<span>  style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"pyramid"</span>, <span class="st">"heatmap"</span><span class="op">)</span>,</span>
+<span>  sort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"statistic"</span>, <span class="st">"frequency"</span><span class="op">)</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  show_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -76,7 +93,7 @@ group differences.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>netobject_group</code> (from grouped <code>build_network</code>),
 a <code>netobject</code> (requires <code>group</code>), or a wide-format
-<code>data.frame</code> (requires <code>group</code>).</p></dd>
+<code>data.frame</code> (requires <code>group</code>). For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_sequence_comparison</code>.</p></dd>
 
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
@@ -108,6 +125,34 @@ threshold in <em>every</em> group. Default: 5.</p></dd>
 <dd><p>Character. P-value correction method (see
 <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">p.adjust</a></code>). Default: <code>"fdr"</code>.</p></dd>
 
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_sequence_comparison</code>.</p></dd>
+
+
+<dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
+<dd><p>Integer. Show top N patterns. Default: 10.</p></dd>
+
+
+<dt id="arg-style">style<a class="anchor" aria-label="anchor" href="#arg-style"></a></dt>
+<dd><p>Character. <code>"auto"</code> (default) draws the back-to-back pyramid for exactly 2 groups and the heatmap for any other number; <code>"pyramid"</code> and <code>"heatmap"</code> force a specific style.</p></dd>
+
+
+<dt id="arg-sort">sort<a class="anchor" aria-label="anchor" href="#arg-sort"></a></dt>
+<dd><p>Character. <code>"statistic"</code> (default) ranks patterns by test statistic or residual magnitude. <code>"frequency"</code> ranks by total occurrence count across all groups.</p></dd>
+
+
+<dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
+<dd><p>Numeric. Significance threshold for p-value display in the pyramid: patterns with <code>p_value &lt; alpha</code> are starred and drawn in bold dark text, the rest stay plain grey. Default: 0.05.</p></dd>
+
+
+<dt id="arg-show-residuals">show_residuals<a class="anchor" aria-label="anchor" href="#arg-show-residuals"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, print the standardized residual value inside each pyramid bar. Default: <code>FALSE</code>. Ignored for the heatmap (which always shows residuals).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -132,7 +177,10 @@ patterns meeting <code>min_freq</code> in every group.</p></dd>
 <dd><p>List of sub, min_freq, test, iter, adjust.</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_sequence_comparison()</code>: The input object, invisibly.</p>
+<p>In <code>summary.net_sequence_comparison()</code>: The <code>patterns</code> data.frame: tidy, one row per k-gram pattern, with a frequency, proportion and standardized-residual column per group, and the test columns when <code>test</code> was not <code>"none"</code>.</p>
+<p>In <code>plot.net_sequence_comparison()</code>: The drawn <code>ggplot</code> object, invisibly (the plot is also printed). <code>NULL</code>, invisibly, when the object holds no patterns.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Standardized residuals are always computed from a 2xG contingency table

@@ -22,13 +22,42 @@ net_centrality(
   centrality_fn = NULL,
   ...
 )
+
+# S3 method for class 'net_centrality'
+plot(
+  x,
+  reorder = TRUE,
+  ncol = 3L,
+  type = c("bar", "line", "heatmap"),
+  scales = c("free_x", "fixed"),
+  profile_scale = c("measure", "none"),
+  labels = TRUE,
+  drop_zero = FALSE,
+  ...
+)
+
+# S3 method for class 'net_centrality_group'
+plot(
+  x,
+  reorder = TRUE,
+  ncol = 3L,
+  type = c("bar", "line", "delta"),
+  scales = c("free_x", "fixed"),
+  palette = "Set2",
+  profile_scale = c("measure", "none"),
+  labels = FALSE,
+  drop_zero = FALSE,
+  ...
+)
 ```
 
 ## Arguments
 
 - x:
 
-  A `netobject`, `netobject_group`, `mcml`, or `cograph_network`.
+  A `netobject`, `netobject_group`, `mcml`, or `cograph_network`. For
+  the [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
+  an object of class `net_centrality` or `net_centrality_group`.
 
 - measures:
 
@@ -67,7 +96,65 @@ net_centrality(
 
 - ...:
 
-  Additional arguments (ignored).
+  Additional arguments (ignored). For the S3 methods: further arguments
+  passed to or from other methods.
+
+- reorder:
+
+  In `plot.net_centrality()`: Logical. Reorder states within each
+  centrality panel by centrality value. Default: `TRUE`. In
+  `plot.net_centrality_group()`: Logical. Reorder states by their mean
+  value within each centrality panel. Default: `TRUE`.
+
+- ncol:
+
+  Integer. Number of facet columns. Default: `3`.
+
+- type:
+
+  In `plot.net_centrality()`: Plot type. `"bar"` shows one faceted
+  horizontal bar chart per measure; `"line"` shows state profiles as
+  lines across measures (the value `"profile"` is still accepted as an
+  alias); `"heatmap"` shows a states-by-measures tile grid, each measure
+  scaled to 0–1 for cross-measure comparability with the raw value
+  printed in the tile. Default: `"bar"`. In
+  `plot.net_centrality_group()`: Plot type. `"bar"` shows grouped bars
+  within each measure; `"line"` facets by state and draws one line per
+  group across centrality measures (`"profile"` is accepted as an
+  alias); `"delta"` draws a diverging bar of group differences. With two
+  groups it is the per-state difference (second group minus first); with
+  three or more groups it is each group's deviation from the per-state
+  group mean, so the largest gaps stand out either way. Default:
+  `"bar"`.
+
+- scales:
+
+  Facet scale mode. `"free_x"` (default) uses free centrality axes;
+  `"fixed"` keeps a common centrality axis.
+
+- profile_scale:
+
+  Scaling used by `type = "line"`. `"measure"` (default) rescales each
+  centrality measure to 0–1 before drawing cross-measure profiles;
+  `"none"` uses raw values.
+
+- labels:
+
+  In `plot.net_centrality()`: Logical. Add compact value labels.
+  Default: `TRUE`. In `plot.net_centrality_group()`: Logical. Add
+  compact value labels. Default: `FALSE`.
+
+- drop_zero:
+
+  In `plot.net_centrality()`: Logical. Drop measures whose values are
+  all (near) zero so empty panels do not waste space. Default: `FALSE`
+  (every requested measure is shown). In `plot.net_centrality_group()`:
+  Logical. Drop measures whose values are all (near) zero so empty
+  panels do not waste space. Default: `FALSE`.
+
+- palette:
+
+  Brewer palette for groups. Default: `"Set2"`.
 
 ## Value
 
@@ -76,6 +163,9 @@ one row per node, with a `state` column and one further column per
 requested measure (node names are also the row names). For a
 `netobject_group` or an `mcml`: a `net_centrality_group` list of such
 data frames, one per group.
+
+In `plot.net_centrality()` and `plot.net_centrality_group()`: A `ggplot`
+object.
 
 ## References
 

@@ -47,7 +47,7 @@ rejected, and max_order when no test accepts."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -117,7 +117,19 @@ rejected, and <code>max_order</code> when no test accepts.</p>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_markov_order'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_markov_order_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_markov_order'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_markov_order'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, panel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"both"</span>, <span class="st">"ic"</span>, <span class="st">"permutation"</span><span class="op">)</span>, combined <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -156,6 +168,26 @@ Default <code>FALSE</code> (set <code>TRUE</code> only on Unix-like systems).</p
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional integer seed for reproducibility.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_markov_order</code> or <code>net_markov_order_group</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods. In <code>print.net_markov_order_group()</code>: Forwarded to <code>print.net_markov_order</code> for each element.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_markov_order</code>.</p></dd>
+
+
+<dt id="arg-panel">panel<a class="anchor" aria-label="anchor" href="#arg-panel"></a></dt>
+<dd><p>Which panel(s) to render: <code>"both"</code>, <code>"ic"</code>, or <code>"permutation"</code>. Default <code>"both"</code>.</p></dd>
+
+
+<dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
+<dd><p>When <code>panel = "both"</code> and <code>combined = TRUE</code> (default), the two panels are drawn side-by-side. If <span class="pkg">gridExtra</span> is installed they are arranged into a single drawable/saveable gtable (returned); otherwise base <code>grid</code> viewports draw both panels and a named list of the two ggplots is returned invisibly. When <code>FALSE</code>, returns that named list (<code>ic</code>, <code>permutation</code>) without drawing. Ignored when <code>panel != "both"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -212,6 +244,10 @@ order actually tested, which is capped at
 </dl><p>For a <code>netobject_group</code> the result is a
 <code>"net_markov_order_group"</code>: a named list holding one
 <code>net_markov_order</code> per group.</p>
+<p>In <code>print.net_markov_order()</code>: The input object, invisibly.</p>
+<p>In <code>print.net_markov_order_group()</code>: <code>x</code> invisibly.</p>
+<p>In <code>summary.net_markov_order()</code>: The tidy <code>test_table</code> data.frame - one row per order tested - carrying the selection context as attributes: <code>optimal_order</code>, <code>bic_order</code>, <code>aic_order</code>, <code>alpha</code> and <code>n_perm</code>.</p>
+<p>In <code>plot.net_markov_order()</code>: A ggplot (single panel); for <code>panel = "both"</code>, either a <code>gridExtra</code> gtable (when <span class="pkg">gridExtra</span> is installed) or a named list of two ggplots (<code>ic</code>, <code>permutation</code>) drawn side-by-side and returned invisibly.</p>
     </div>
 
     <div class="section level2">

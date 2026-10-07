@@ -69,11 +69,13 @@ plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
 
 - x:
 
-  A `magnitude_difference` object.
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `magnitude_difference`.
 
 - ...:
 
-  Passed to plotting helpers (ignored by `print`).
+  For the S3 methods: further arguments passed to or from other methods.
 
 - type:
 
@@ -95,20 +97,9 @@ An object of class `"magnitude_difference"`: a list with `$edges`
 `signed` = `tna - ftna`, and `value` = the chosen metric), `$metric`,
 `$scale`, `$weights_ftna`, `$weights_tna`, and `$states`.
 
-`print` invisibly returns `x`.
+In `print.magnitude_difference()`: `print` invisibly returns `x`.
 
-`plot` returns a `ggplot` object.
-
-## Methods (by generic)
-
-- `print(magnitude_difference)`: Print a compact summary of the per-edge
-  magnitude-difference distribution.
-
-- `plot(magnitude_difference)`: Plot the per-edge magnitude difference
-  as a polar portrait. `type = "stacked"` (default) draws one sector per
-  from-state with stacked wedges (grey base = shared value, colored tip
-  = magnitude difference); `type = "circular"` draws a chord-style
-  diagram with signed differences on a diverging blue-orange scale.
+In `plot.magnitude_difference()`: `plot` returns a `ggplot` object.
 
 ## See also
 

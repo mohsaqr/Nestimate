@@ -19,7 +19,7 @@ predictive information."><meta property="og:image" content="https://pak.dynasite
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,19 @@ predictive information.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">path_dependence</span><span class="op">(</span><span class="va">x</span>, order <span class="op">=</span> <span class="fl">2L</span>, min_count <span class="op">=</span> <span class="fl">5L</span>, base <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">path_dependence</span><span class="op">(</span><span class="va">x</span>, order <span class="op">=</span> <span class="fl">2L</span>, min_count <span class="op">=</span> <span class="fl">5L</span>, base <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_path_dependence'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, top <span class="op">=</span> <span class="fl">10L</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_path_dependence'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'summary.net_path_dependence'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_path_dependence'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, top <span class="op">=</span> <span class="fl">15L</span>, title <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -76,7 +88,7 @@ predictive information.</p>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A wide sequence data.frame / matrix (rows = actors, columns =
-time-steps), or a <code>netobject</code> that carries the source data.</p></dd>
+time-steps), or a <code>netobject</code> that carries the source data. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_path_dependence</code> (or its <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>).</p></dd>
 
 
 <dt id="arg-order">order<a class="anchor" aria-label="anchor" href="#arg-order"></a></dt>
@@ -93,6 +105,26 @@ Default 5. Very small samples produce noisy KL estimates.</p></dd>
 
 <dt id="arg-base">base<a class="anchor" aria-label="anchor" href="#arg-base"></a></dt>
 <dd><p>Numeric. Logarithm base for entropy and KL. Default 2 (bits).</p></dd>
+
+
+<dt id="arg-top">top<a class="anchor" aria-label="anchor" href="#arg-top"></a></dt>
+<dd><p>In <code>print.net_path_dependence()</code>: Integer. Number of top contexts to show. Default 10. In <code>plot.net_path_dependence()</code>: Integer. Number of contexts to show (top by KL). Default 15.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Integer. Digits to round numeric output. Default 3.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: an object of class <code>net_path_dependence</code>.</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
+<dd><p>Character or <code>NULL</code>. Plot title. Default <code>NULL</code>, which builds "Path dependence: order k vs order 1" from the fitted order.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -126,7 +158,10 @@ under order-1), <code>top_ok</code> (most likely next state under order-k),
 <dd><p>character vector</p></dd>
 
 
-</dl></div>
+</dl><p>In <code>print.net_path_dependence()</code> and <code>print.summary.net_path_dependence()</code>: <code>x</code> invisibly.</p>
+<p>In <code>summary.net_path_dependence()</code>: A <code>summary.net_path_dependence</code> with the full sorted table and chain-level summaries.</p>
+<p>In <code>plot.net_path_dependence()</code>: A ggplot object.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>For each context \(c = (s_1, \ldots, s_{k-1})\) occurring at least

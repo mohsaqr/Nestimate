@@ -23,6 +23,15 @@ boot_glasso(
   ncores = 1L,
   seed = NULL
 )
+
+# S3 method for class 'boot_glasso'
+print(x, ...)
+
+# S3 method for class 'boot_glasso'
+summary(object, type = "edges", ...)
+
+# S3 method for class 'boot_glasso'
+plot(x, type = "edges", measure = NULL, ...)
 ```
 
 ## Arguments
@@ -30,7 +39,10 @@ boot_glasso(
 - x:
 
   A data frame, numeric matrix (observations x variables), or a
-  `netobject` with `method = "glasso"`.
+  `netobject` with `method = "glasso"`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
+  object of class `boot_glasso`.
 
 - iter:
 
@@ -97,6 +109,31 @@ boot_glasso(
 - seed:
 
   Integer or NULL. RNG seed for reproducibility.
+
+- ...:
+
+  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.boot_glasso()`: Additional arguments passed to plotting
+  functions. For `type = "edge_diff"` and `type = "centrality_diff"`,
+  accepts `order`: `"sample"` (default, sorted by value) or `"id"`
+  (alphabetical).
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
+  object of class `boot_glasso`.
+
+- type:
+
+  In `summary.boot_glasso()`: Character. Summary type: `"edges"`
+  (default), `"centrality"`, `"cs"`, `"predictability"`, or `"all"`. In
+  `plot.boot_glasso()`: Character. Plot type: `"edges"` (default),
+  `"stability"`, `"edge_diff"`, `"centrality_diff"`, or `"inclusion"`.
+
+- measure:
+
+  Character. Centrality measure for `type = "centrality_diff"` (default:
+  first available measure).
 
 ## Value
 
@@ -227,6 +264,19 @@ An object of class `"boot_glasso"` containing:
 
   Named numeric vector with timing in seconds.
 
+In `print.boot_glasso()`: The input object, invisibly.
+
+In `summary.boot_glasso()`: For `type = "edges"`, the `edge_ci` data
+frame (`edge`, `weight`, `ci_lower`, `ci_upper`, `inclusion`) ordered by
+decreasing absolute weight; for `"cs"` the `cs_data` data frame; for
+`"predictability"` the `predictability_ci` data frame; for
+`"centrality"` a named list of one data frame per measure (`node`,
+`value`, `ci_lower`, `ci_upper`); for `"all"` a named list holding all
+four.
+
+In `plot.boot_glasso()`: A `ggplot` object (returned, and so printed
+when the call is made at the top level).
+
 ## References
 
 Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
@@ -253,27 +303,28 @@ set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
 colnames(mat) <- LETTERS[1:4]
 net <- build_network(as.data.frame(mat), method = "glasso")
-boot <- boot_glasso(net, iter = 100, cs_iter = 50, seed = 42,
+# iter = 20 keeps the example fast; a real analysis uses 1000 or more.
+boot <- boot_glasso(net, iter = 20, cs_iter = 10, seed = 42,
   centrality = c("strength", "expected_influence"))
 print(boot)
-#> GLASSO Bootstrap (100 iterations, 50 case-drop per proportion)
+#> GLASSO Bootstrap (20 iterations, 10 case-drop per proportion)
 #>   Data: 15 x 4  |  Alpha: 0.05  |  Gamma: 0.50
 #>   Edges: 0/6 significant (CI excludes zero)
-#>   Mean inclusion probability: 0.32
+#>   Mean inclusion probability: 0.34
 #> 
 #>   Centrality Stability (CS-coefficient):
 #>     strength:              0.00 [Unstable]
 #>     expected_influence:    0.00 [Unstable]
 #> 
 #>   Edge differences: 1/15 pairs significantly different
-#>   Timing: 7.0s (bootstrap: 4.2s, case-drop: 2.7s)
+#>   Timing: 1.4s (bootstrap: 0.9s, case-drop: 0.5s)
 summary(boot, type = "edges")
 #>     edge weight    ci_lower  ci_upper inclusion
-#> 1 A -- B      0 -0.15265878 0.3016131      0.24
-#> 2 A -- C      0 -0.41694566 0.0000000      0.45
-#> 3 B -- C      0 -0.37041116 0.2982661      0.43
-#> 4 A -- D      0  0.00000000 0.3870411      0.41
-#> 5 B -- D      0 -0.19093175 0.2384451      0.21
-#> 6 C -- D      0 -0.01732718 0.2188424      0.18
+#> 1 A -- B      0 -0.11158199 0.2237170      0.35
+#> 2 A -- C      0 -0.35185599 0.0000000      0.45
+#> 3 B -- C      0 -0.30946821 0.2065199      0.25
+#> 4 A -- D      0  0.00000000 0.3570903      0.50
+#> 5 B -- D      0 -0.15048304 0.3105727      0.35
+#> 6 C -- D      0 -0.03724162 0.1787669      0.15
 # }
 ```
