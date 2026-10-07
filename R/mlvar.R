@@ -235,12 +235,12 @@ coefs.default <- function(x, ...) {
 
 # ---- S3 methods --------------------------------------------------------
 
-#' Print method for net_mlvar
-#'
-#' @param x A `net_mlvar` object returned by [build_mlvar()].
-#' @param ... Unused; present for S3 consistency.
-#' @return Invisibly returns `x`.
-#' @inherit build_mlvar examples
+#' @rdname build_mlvar
+#' @param x For the \code{print()} method: an object of class \code{net_mlvar}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_mlvar}.
+#' @return In \code{print.net_mlvar()}: Invisibly returns `x`.
+#' @return In \code{summary.net_mlvar()}: The tidy coefficient `data.frame` - the same table [coefs()] returns, with one row per `(outcome, predictor)` pair and columns `outcome`, `predictor`, `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`, `significant`. Returned visibly, so calling `summary(fit)` at the console prints the matrices and then the table.
 #' @export
 print.net_mlvar <- function(x, ...) {
   coef_df <- attr(x, "coefs")
@@ -262,19 +262,7 @@ print.net_mlvar <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary method for net_mlvar
-#'
-#' Prints the three weight matrices and the significant temporal edges, then
-#' returns the tidy coefficient table.
-#'
-#' @param object A `net_mlvar` object returned by [build_mlvar()].
-#' @param ... Unused; present for S3 consistency.
-#' @return The tidy coefficient `data.frame` - the same table [coefs()]
-#'   returns, with one row per `(outcome, predictor)` pair and columns
-#'   `outcome`, `predictor`, `beta`, `se`, `t`, `p`, `ci_lower`, `ci_upper`,
-#'   `significant`. Returned visibly, so calling `summary(fit)` at the
-#'   console prints the matrices and then the table.
-#' @inherit build_mlvar examples
+#' @rdname build_mlvar
 #' @export
 summary.net_mlvar <- function(object, ...) {
   coef_df <- attr(object, "coefs")

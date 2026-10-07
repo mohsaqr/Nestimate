@@ -2,6 +2,8 @@
 % Please edit documentation in R/simplicial.R
 \name{build_simplicial}
 \alias{build_simplicial}
+\alias{print.simplicial_complex}
+\alias{plot.simplicial_complex}
 \title{Build a Simplicial Complex}
 \usage{
 build_simplicial(
@@ -14,10 +16,14 @@ build_simplicial(
   max_scale = NULL,
   ...
 )
+
+\method{print}{simplicial_complex}(x, ...)
+
+\method{plot}{simplicial_complex}(x, combined = TRUE, ...)
 }
 \arguments{
 \item{x}{A square matrix, \code{tna}, \code{netobject},
-\code{net_hon}, \code{net_hypa}, or \code{net_mogen}.}
+\code{net_hon}, \code{net_hypa}, or \code{net_mogen}. For the \code{print()} and \code{plot()} methods: an object of class \code{simplicial_complex}.}
 
 \item{type}{Construction type: \code{"clique"} (default), \code{"pathway"},
 or \code{"vr"} (alias \code{"rips"}).}
@@ -44,7 +50,10 @@ ratio; over-represented paths are ranked by largest ratio.}
 in the filtration. \code{NULL} (default) uses \code{max(d)}.}
 
 \item{...}{Additional arguments passed to \code{build_hon()} when
-\code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.}
+\code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.
+For the S3 methods: further arguments passed to or from other methods.}
+
+\item{combined}{When \code{TRUE} (default), the four panels are stitched into a 2x2 gtable via \code{gridExtra::arrangeGrob} and drawn. When \code{FALSE}, returns a named list of the four ggplots (\code{f_vector}, \code{betti}, \code{degree}, \code{degree_heatmap}) so each can be printed, saved, or re-laid-out independently.}
 }
 \value{
 A \code{simplicial_complex} object - a list with:
@@ -69,6 +78,10 @@ For \code{type = "vr"} two further elements are attached:
 \code{$filtration} (numeric, parallel to \code{$simplices}: the value at
 which each simplex enters) and \code{$max_scale} (the cap actually
 used). \code{persistent_homology()} consumes them directly.
+
+In \code{print.simplicial_complex()}: The input object, invisibly.
+
+In \code{plot.simplicial_complex()}: A grid grob (invisibly) when \code{combined = TRUE}; a named list of four ggplots when \code{combined = FALSE}.
 }
 \description{
 Constructs a simplicial complex from a network or higher-order pathway

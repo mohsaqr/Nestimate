@@ -43,7 +43,7 @@
 #'
 #' @param x A \code{netobject} from \code{\link{build_network}} using a
 #'   transition-probability method (\code{"relative"} / \code{"tna"}), or a
-#'   \code{netobject_group}.
+#'   \code{netobject_group}. For the \code{print()} method: an object of class \code{net_certainty}.
 #' @param prior Numeric. Dirichlet prior concentration added to every cell
 #'   (default \code{0.5}, the Jeffreys prior).
 #' @param ci_level Numeric in (0,1). Tail level for credible intervals and the
@@ -220,14 +220,9 @@ certainty <- function(x,
 }
 
 
-#' Print Method for net_certainty
-#'
-#' @param x A \code{net_certainty} object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
-#' @examples
-#' seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
-#' print(certainty(build_network(seqs, method = "relative")))
+#' @rdname certainty
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{print.net_certainty()}: The input object, invisibly.
 #' @export
 print.net_certainty <- function(x, ...) {
   method_labels <- c(

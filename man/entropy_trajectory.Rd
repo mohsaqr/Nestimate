@@ -2,6 +2,9 @@
 % Please edit documentation in R/transition_entropy.R
 \name{entropy_trajectory}
 \alias{entropy_trajectory}
+\alias{print.net_entropy_trajectory}
+\alias{summary.net_entropy_trajectory}
+\alias{plot.net_entropy_trajectory}
 \title{Sliding-Window Transition Entropy Trajectory}
 \usage{
 entropy_trajectory(
@@ -13,6 +16,18 @@ entropy_trajectory(
   window = 500L,
   step = NULL,
   base = 2
+)
+
+\method{print}{net_entropy_trajectory}(x, digits = 3, ...)
+
+\method{summary}{net_entropy_trajectory}(object, ...)
+
+\method{plot}{net_entropy_trajectory}(
+  x,
+  normalized = FALSE,
+  span = 0.4,
+  title = "Transition entropy over time",
+  ...
 )
 }
 \arguments{
@@ -38,6 +53,20 @@ trajectories (e.g. condition, achievement level).}
 \code{window \%/\% 5}).}
 
 \item{base}{Numeric. Logarithm base (default \code{2}, bits).}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_entropy_trajectory}.}
+
+\item{digits}{Integer. Digits to round numeric output. Default \code{3}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_entropy_trajectory}.}
+
+\item{normalized}{Logical. Plot \code{entropy_norm} instead of raw bits (default \code{FALSE}).}
+
+\item{span}{Numeric. Loess span (default \code{0.4}).}
+
+\item{title}{Character. Plot title.}
 }
 \value{
 An object of class \code{"net_entropy_trajectory"} with:
@@ -53,6 +82,12 @@ zero; in \eqn{[0, 1]}).}
 \item{window, step, base, states}{Call metadata; \code{states} is the
 global state set.}
 }
+
+In \code{print.net_entropy_trajectory()}: \code{x} invisibly.
+
+In \code{summary.net_entropy_trajectory()}: Tidy per-group data.frame: windows, mean/sd/min/max entropy, entropy at the first and last window, and their difference (negative = routinization).
+
+In \code{plot.net_entropy_trajectory()}: A ggplot object.
 }
 \description{
 Tracks transition entropy over time: transitions are built within each

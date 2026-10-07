@@ -5,6 +5,7 @@
 \alias{net_edge_betweenness.netobject}
 \alias{net_edge_betweenness.netobject_group}
 \alias{net_edge_betweenness.default}
+\alias{plot.net_edge_betweenness}
 \title{Edge Betweenness Network}
 \usage{
 net_edge_betweenness(x, invert = TRUE, ...)
@@ -14,15 +15,24 @@ net_edge_betweenness(x, invert = TRUE, ...)
 \method{net_edge_betweenness}{netobject_group}(x, invert = TRUE, ...)
 
 \method{net_edge_betweenness}{default}(x, invert = TRUE, ...)
+
+\method{plot}{net_edge_betweenness}(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} or \code{netobject_group}.}
+\item{x}{A \code{netobject} or \code{netobject_group}. For the \code{net_edge_betweenness()} and \code{plot()} methods: an object of class \code{netobject}, \code{netobject_group}, \code{default} or \code{net_edge_betweenness}.}
 
 \item{invert}{Logical. Invert weights to distances by \code{1/w} before
 computing shortest paths? Default \code{TRUE} (correct for probability
 and frequency networks).}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{Additional arguments (ignored).
+For the S3 methods: further arguments passed to or from other methods.}
+
+\item{style}{Plot style. \code{"bar"} (default) draws one horizontal bar per edge; \code{"forest"} draws a forest/lollipop chart (a stem from zero to a point) with a dashed reference line at the mean betweenness; \code{"delta"} draws each edge's deviation from the mean edge betweenness as a diverging bar (above the mean in blue, below in red).}
+
+\item{top_n}{Integer or \code{NULL}. Keep only the \code{top_n} highest edges. Default \code{NULL} (all edges with non-zero betweenness).}
+
+\item{labels}{Logical. Print the betweenness value beside each edge. Default \code{TRUE}.}
 }
 \value{
 For a \code{netobject}: a new network of class
@@ -34,6 +44,8 @@ to render it. The object preserves source-network metadata so
 \code{\link{permutation}} can test edge-betweenness differences by
 permuting the source networks. For a \code{netobject_group}: a
 \code{netobject_group} of such networks, one per group.
+
+In \code{plot.net_edge_betweenness()}: A \code{ggplot} object.
 }
 \description{
 Builds a network in which each edge's weight is replaced by its

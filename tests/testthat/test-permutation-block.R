@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- permutation(block = ): cluster-level permutation for nested data ----
 
 # Sessions nested in persons, long format. Each person has an idiosyncratic
@@ -146,6 +149,7 @@ test_that("block is forwarded through grouped dispatch", {
 })
 
 test_that("block works with a team label on bundled data", {
+  skip_on_cran()  # full 2000-sequence bundled data
   net <- build_network(group_regulation_long, method = "relative",
                        actor = "Actor", action = "Action", time = "Time",
                        group = "Achiever")

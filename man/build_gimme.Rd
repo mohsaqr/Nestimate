@@ -141,9 +141,9 @@ gained fields (see \strong{Value}); nothing was removed.
 \examples{
 \dontshow{if (requireNamespace("lavaan", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
-# Create simple panel data (3 subjects, 4 variables, 50 time points).
+# Create simple panel data (3 subjects, 4 variables, 30 time points).
 set.seed(42)
-n_sub <- 3; n_t <- 50; vars <- paste0("V", 1:4)
+n_sub <- 3; n_t <- 30; vars <- paste0("V", 1:4)
 rows <- lapply(seq_len(n_sub), function(i) {
   d <- as.data.frame(matrix(rnorm(n_t * 4), ncol = 4))
   names(d) <- vars; d$id <- i; d

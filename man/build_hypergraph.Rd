@@ -49,11 +49,11 @@ an edge).}
 \item{seed}{Optional integer for reproducible Bernoulli sampling when
 \verb{0 < p < 1}.}
 
-\item{x}{A \code{net_hypergraph} object (for \code{print}).}
+\item{x}{For the \code{print()} method: an object of class \code{net_hypergraph}.}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 
-\item{object}{A \code{net_hypergraph} object (for \code{summary}).}
+\item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph}.}
 }
 \value{
 A \code{net_hypergraph} object: a list with components
@@ -71,12 +71,9 @@ of each size, named \code{size_2}, \code{size_3}, ...}
 \code{include_pairwise}, \code{max_size}, \code{threshold}, \code{seed}.}
 }
 
-For \code{print()}, the input \code{x} invisibly.
+In \code{print.net_hypergraph()}: For \code{print()}, the input \code{x} invisibly.
 
-For \code{summary()}, a data.frame with one row per node and columns
-\code{node} (node name) and \code{degree} (number of hyperedges containing the
-node), returned visibly; the summary block (node / hyperedge counts,
-mean and maximum hyperedge size) is printed as a side effect.
+In \code{summary.net_hypergraph()}: For \code{summary()}, a data.frame with one row per node and columns \code{node} (node name) and \code{degree} (number of hyperedges containing the node), returned visibly; the summary block (node / hyperedge counts, mean and maximum hyperedge size) is printed as a side effect.
 }
 \description{
 Takes a network and produces a hypergraph by promoting k-cliques (k >= 3)

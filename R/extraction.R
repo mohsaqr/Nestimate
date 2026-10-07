@@ -99,13 +99,10 @@ extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
 }
 
 
-#' Summary Method for Transition Matrices
-#'
-#' @param object A \code{nest_transition_matrix} returned by
-#'   \code{\link{extract_transition_matrix}}.
-#' @param ... Additional arguments (ignored).
-#' @return A tidy data frame with columns \code{from}, \code{to},
-#'   \code{weight}, with one row per non-zero entry.
+#' @rdname extract_transition_matrix
+#' @param object For the \code{summary()} method: an object of class \code{nest_transition_matrix}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{summary.nest_transition_matrix()}: A tidy data frame with columns \code{from}, \code{to}, \code{weight}, with one row per non-zero entry.
 #' @export
 summary.nest_transition_matrix <- function(object, ...) {
   .matrix_to_long_df(unclass(object), value_col = "weight")
@@ -212,13 +209,10 @@ extract_initial_probs <- function(model) {
 }
 
 
-#' Summary Method for Initial Probability Vectors
-#'
-#' @param object A \code{nest_initial_probs} named numeric vector returned
-#'   by \code{\link{extract_initial_probs}}.
-#' @param ... Additional arguments (ignored).
-#' @return A tidy data frame with columns \code{state} and \code{prob},
-#'   sorted by decreasing probability.
+#' @rdname extract_initial_probs
+#' @param object For the \code{summary()} method: an object of class \code{nest_initial_probs}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{summary.nest_initial_probs()}: A tidy data frame with columns \code{state} and \code{prob}, sorted by decreasing probability.
 #' @export
 summary.nest_initial_probs <- function(object, ...) {
   v <- unclass(object)

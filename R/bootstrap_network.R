@@ -48,7 +48,7 @@
 #'   extracted from this object. A \code{cograph_network} is coerced
 #'   first; a \code{netobject_group} or \code{mcml} bootstraps every
 #'   constituent network, and a \code{wtna_mixed} bootstraps both of its
-#'   components (see \strong{Value}).
+#'   components (see \strong{Value}). For the \code{print()} method: an object of class \code{net_bootstrap}, \code{net_bootstrap_group} or \code{wtna_boot_mixed}.
 #' @param iter Integer. Number of bootstrap iterations (default: 1000).
 #' @param ci_level Numeric. Significance level for CIs and p-values
 #'   (default: 0.05).
@@ -865,29 +865,14 @@ bootstrap_network <- function(x,
 
 # ---- S3 Methods ----
 
-#' Print Method for net_bootstrap
-#'
-#' @param x A \code{net_bootstrap} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
-#'   method = "relative")
-#' boot <- bootstrap_network(net, iter = 10)
-#' print(boot)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),
-#'   V3 = c("C","A","C","B","A")
-#' )
-#' net  <- build_network(seqs, method = "relative")
-#' boot <- bootstrap_network(net, iter = 20)
-#' print(boot)
-#' }
-#'
+#' @rdname bootstrap_network
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_bootstrap}, \code{net_bootstrap_group} or \code{wtna_boot_mixed}.
+#' @return In \code{print.net_bootstrap()} and \code{print.wtna_boot_mixed()}: The input object, invisibly.
+#' @return In \code{summary.net_bootstrap()}: The \code{$summary} data frame: one row per non-zero original edge, with columns \code{from}, \code{to}, \code{weight}, \code{mean}, \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower}, \code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when the bootstrap used \code{inference = "stability"}.
+#' @return In \code{print.net_bootstrap_group()}: \code{x} invisibly.
+#' @return In \code{summary.net_bootstrap_group()}: The per-group summaries stacked into one data frame: the columns of \code{\link{summary.net_bootstrap}} prefixed by a \code{group} column naming the network each row came from.
+#' @return In \code{summary.wtna_boot_mixed()}: A list with \code{$transition} and \code{$cooccurrence} summary data frames.
 #' @export
 print.net_bootstrap <- function(x, ...) {
   method_labels <- c(
@@ -955,60 +940,13 @@ print.net_bootstrap <- function(x, ...) {
 }
 
 
-#' Summary Method for net_bootstrap
-#'
-#' @param object A \code{net_bootstrap} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The \code{$summary} data frame: one row per non-zero original
-#'   edge, with columns \code{from}, \code{to}, \code{weight},
-#'   \code{mean}, \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower},
-#'   \code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when the
-#'   bootstrap used \code{inference = "stability"}.
-#'
-#' @examples
-#' net <- build_network(data.frame(V1 = c("A","B","C"), V2 = c("B","C","A")),
-#'   method = "relative")
-#' boot <- bootstrap_network(net, iter = 10)
-#' summary(boot)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),
-#'   V3 = c("C","A","C","B","A")
-#' )
-#' net  <- build_network(seqs, method = "relative")
-#' boot <- bootstrap_network(net, iter = 20)
-#' summary(boot)
-#' }
-#'
+#' @rdname bootstrap_network
 #' @export
 summary.net_bootstrap <- function(object, ...) {
   object$summary
 }
 
-#' Print Method for net_bootstrap_group
-#' @param x A \code{net_bootstrap_group} object.
-#' @param ... Ignored.
-#' @return \code{x} invisibly.
-#' @examples
-#' seqs <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","C","A"),
-#'   V3 = c("C","A","B","B"), grp = c("X","X","Y","Y"))
-#' nets <- build_network(seqs, method = "relative", group = "grp")
-#' boot <- bootstrap_network(nets, iter = 10)
-#' print(boot)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = c("A","B","A","C","B","A"),
-#'   V2 = c("B","C","B","A","C","B"),
-#'   V3 = c("C","A","C","B","A","C"),
-#'   grp = c("X","X","X","Y","Y","Y")
-#' )
-#' nets <- build_network(seqs, method = "relative", group = "grp")
-#' boot <- bootstrap_network(nets, iter = 20)
-#' print(boot)
-#' }
+#' @rdname bootstrap_network
 #' @export
 print.net_bootstrap_group <- function(x, ...) {
   grp_names <- names(x)
@@ -1088,30 +1026,7 @@ print.net_bootstrap_group <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary Method for net_bootstrap_group
-#' @param object A \code{net_bootstrap_group} object.
-#' @param ... Ignored.
-#' @return The per-group summaries stacked into one data frame: the
-#'   columns of \code{\link{summary.net_bootstrap}} prefixed by a
-#'   \code{group} column naming the network each row came from.
-#' @examples
-#' seqs <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","C","A"),
-#'   V3 = c("C","A","B","B"), grp = c("X","X","Y","Y"))
-#' nets <- build_network(seqs, method = "relative", group = "grp")
-#' boot <- bootstrap_network(nets, iter = 10)
-#' summary(boot)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = c("A","B","A","C","B","A"),
-#'   V2 = c("B","C","B","A","C","B"),
-#'   V3 = c("C","A","C","B","A","C"),
-#'   grp = c("X","X","X","Y","Y","Y")
-#' )
-#' nets <- build_network(seqs, method = "relative", group = "grp")
-#' boot <- bootstrap_network(nets, iter = 20)
-#' summary(boot)
-#' }
+#' @rdname bootstrap_network
 #' @export
 summary.net_bootstrap_group <- function(object, ...) {
   do.call(rbind, lapply(names(object), function(nm) {
@@ -1122,30 +1037,7 @@ summary.net_bootstrap_group <- function(object, ...) {
 }
 
 
-#' Print Method for wtna_boot_mixed
-#'
-#' @param x A \code{wtna_boot_mixed} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' oh <- data.frame(A = c(1,0,1,0), B = c(0,1,0,1), C = c(1,1,0,0))
-#' mixed <- wtna(oh, method = "both")
-#' boot  <- bootstrap_network(mixed, iter = 10)
-#' print(boot)
-#' \donttest{
-#' set.seed(1)
-#' oh <- data.frame(
-#'   A = c(1,0,1,0,1,0,1,0),
-#'   B = c(0,1,0,1,0,1,0,1),
-#'   C = c(1,1,0,0,1,1,0,0)
-#' )
-#' mixed <- wtna(oh, method = "both")
-#' boot  <- bootstrap_network(mixed, iter = 20)
-#' print(boot)
-#' }
-#'
+#' @rdname bootstrap_network
 #' @export
 print.wtna_boot_mixed <- function(x, ...) {
   cat("Mixed Window TNA Bootstrap\n")
@@ -1157,30 +1049,7 @@ print.wtna_boot_mixed <- function(x, ...) {
 }
 
 
-#' Summary Method for wtna_boot_mixed
-#'
-#' @param object A \code{wtna_boot_mixed} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return A list with \code{$transition} and \code{$cooccurrence} summary data frames.
-#'
-#' @examples
-#' oh <- data.frame(A = c(1,0,1,0), B = c(0,1,0,1), C = c(1,1,0,0))
-#' mixed <- wtna(oh, method = "both")
-#' boot  <- bootstrap_network(mixed, iter = 10)
-#' summary(boot)
-#' \donttest{
-#' set.seed(1)
-#' oh <- data.frame(
-#'   A = c(1,0,1,0,1,0,1,0),
-#'   B = c(0,1,0,1,0,1,0,1),
-#'   C = c(1,1,0,0,1,1,0,0)
-#' )
-#' mixed <- wtna(oh, method = "both")
-#' boot  <- bootstrap_network(mixed, iter = 20)
-#' summary(boot)
-#' }
-#'
+#' @rdname bootstrap_network
 #' @export
 summary.wtna_boot_mixed <- function(object, ...) {
   list(

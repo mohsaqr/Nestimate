@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ===========================================================================
 # Section 1: Internal — .hypa_fit_xi
 # ===========================================================================

@@ -2,6 +2,9 @@
 % Please edit documentation in R/vertex_bootstrap.R
 \name{vertex_bootstrap}
 \alias{vertex_bootstrap}
+\alias{print.net_vertex_bootstrap}
+\alias{summary.net_vertex_bootstrap}
+\alias{plot.net_vertex_bootstrap}
 \title{Vertex Bootstrap for Network-Level Statistics}
 \usage{
 vertex_bootstrap(
@@ -14,10 +17,16 @@ vertex_bootstrap(
   directed = NULL,
   seed = NULL
 )
+
+\method{print}{net_vertex_bootstrap}(x, digits = 3, ...)
+
+\method{summary}{net_vertex_bootstrap}(object, ...)
+
+\method{plot}{net_vertex_bootstrap}(x, bins = 30, ...)
 }
 \arguments{
 \item{x}{A \code{netobject} (from \code{\link{build_network}} or any
-builder), a \code{cograph_network}, or a square numeric weight matrix.}
+builder), a \code{cograph_network}, or a square numeric weight matrix. For the \code{print()} and \code{plot()} methods: an object of class \code{net_vertex_bootstrap}.}
 
 \item{iter}{Integer. Number of bootstrap replicates (default 1000).}
 
@@ -40,6 +49,14 @@ the built-ins.}
 back to matrix symmetry.}
 
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
+
+\item{digits}{Number of digits to display (default 3).}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_vertex_bootstrap}.}
+
+\item{bins}{Number of histogram bins (default 30).}
 }
 \value{
 An object of class \code{"net_vertex_bootstrap"} containing:
@@ -51,6 +68,12 @@ An object of class \code{"net_vertex_bootstrap"} containing:
 \item{observed}{Named vector of observed statistics.}
 \item{iter, ci_level, ci_method, directed, n_nodes}{Configuration.}
 }
+
+In \code{print.net_vertex_bootstrap()}: \code{x}, invisibly.
+
+In \code{summary.net_vertex_bootstrap()}: The tidy summary data frame (one row per statistic).
+
+In \code{plot.net_vertex_bootstrap()}: A ggplot object.
 }
 \description{
 Non-parametric vertex bootstrap of a single observed network

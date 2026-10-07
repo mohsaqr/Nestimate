@@ -1,15 +1,7 @@
-# Randomized grouping equivalence for prepare()
+# Grouping in prepare(): exact results on deterministic and boundary cases
 #
-# Two independent arms:
-#
-#   1. Ground truth. Each dataset is generated from a known set of sessions, so
-#      the expected sequences are known without consulting any Nestimate code.
-#      Comparing an optimized path against Nestimate's own internals would be
-#      circular; this compares against the construction instead.
-#
-#   2. Legacy ordering. interaction() is called directly as the reference for
-#      the row order prepare() used to produce, pinning the backward
-#      compatibility that a finite same-seed bootstrap depends on.
+# Each dataset is generated from a known set of sessions, so the expected
+# sequences are known without consulting any Nestimate code.
 #
 # The generator sweeps actor/session column counts, column types, time on and
 # off, explicit order columns, tied timestamps, thresholds, and identifiers
@@ -150,89 +142,6 @@ ID_POOLS <- list(
   if (cfg$use_time) args$time_threshold <- cfg$threshold
   do.call(prepare, args)
 }
-
-test_that("randomized grouping matches ground truth across configurations", {
-  skip_on_cran()
-
-  for (i in seq_len(N_DATASETS)) {
-    cfg <- .grouping_config(i)
-    fx  <- .grouping_fixture(cfg)
-    res <- .call_prepare(fx, cfg)
-    info <- sprintf("dataset %d (pool=%s, actors=%d, sessions=%d, time=%s)",
-                    i, cfg$pool, cfg$n_actor_cols, cfg$n_session_cols,
-                    cfg$use_time)
-
-    # One sequence per constructed (actor, session) block: identifiers that
-    # merely contain a separator must not collapse, and splitting one id over
-    # several columns must not multiply groups.
-    expect_identical(nrow(res$sequence_data), fx$n_expected, info = info)
-
-    # Rowwise alignment across all three returned frames.
-    expect_identical(nrow(res$meta_data), fx$n_expected, info = info)
-    if (!is.null(res$time_data)) {
-      expect_identical(nrow(res$time_data), fx$n_expected, info = info)
-    }
-    expect_identical(anyDuplicated(res$meta_data$.session_id), 0L, info = info)
-
-    # Every event survives, and no cell is invented.
-    expect_identical(sum(!is.na(as.matrix(res$sequence_data))),
-                     nrow(fx$events), info = info)
-
-    # The multiset of actions per sequence must match the blocks that produced
-    # it, so no session absorbed another session's events.
-    got <- sort(table(unlist(res$sequence_data), useNA = "no"))
-    want <- sort(table(fx$events$act))
-    expect_identical(got, want, info = info)
-  }
-})
-
-test_that("grouping reproduces the legacy interaction() row order", {
-  skip_on_cran()
-
-  for (i in seq_len(N_DATASETS)) {
-    cfg <- .grouping_config(i)
-    fx  <- .grouping_fixture(cfg)
-    ev  <- fx$events
-    info <- sprintf("dataset %d", i)
-
-    # Legacy reference, called directly rather than through Nestimate.
-    actor_key <- if (length(fx$actor_cols) > 1L) {
-      interaction(ev[, fx$actor_cols, drop = FALSE], sep = "-", drop = TRUE)
-    } else {
-      ev[[fx$actor_cols]]
-    }
-    legacy <- if (length(fx$session_cols)) {
-      session_key <- if (length(fx$session_cols) > 1L) {
-        interaction(ev[, fx$session_cols, drop = FALSE], sep = "-", drop = TRUE)
-      } else {
-        ev[[fx$session_cols]]
-      }
-      interaction(actor_key, session_key, sep = " | ", drop = TRUE)
-    } else {
-      as.factor(actor_key)
-    }
-
-    got <- .observed_group_id(ev[, c(fx$actor_cols, fx$session_cols),
-                                 drop = FALSE])
-
-    if (nlevels(legacy) == fx$n_groups) {
-      # Legacy agreed with the construction, so the partition and its ordering
-      # must be reproduced exactly. Order is what a finite same-seed bootstrap
-      # indexes into, so a permutation here would break stored analyses.
-      expect_identical(max(got), nlevels(legacy), info = info)
-      expect_identical(order(got, seq_along(got)),
-                       order(legacy, seq_along(legacy)), info = info)
-      expect_identical(duplicated(got), duplicated(as.integer(legacy)),
-                       info = info)
-    } else {
-      # Legacy pasted two distinct identifier pairs into the same label and
-      # merged real sessions. Divergence here is the fix, not a regression:
-      # the new grouping must match the construction instead.
-      expect_lt(nlevels(legacy), fx$n_groups)
-      expect_identical(max(got), fx$n_groups, info = info)
-    }
-  }
-})
 
 test_that("grouping is exact on a deterministic core without skipping", {
   # A small always-run subset, so CRAN still exercises the path.

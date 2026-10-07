@@ -175,7 +175,7 @@
 #' @param x A `netobject`, `cograph_network`, `tna` model, transition
 #'   matrix, or sequence data.frame (passed through `build_network()` with
 #'   `method = "relative"`). A `netobject_group` is also accepted and
-#'   analysed constituent by constituent.
+#'   analysed constituent by constituent. For the \code{print()} and \code{plot()} methods: an object of class \code{chain_structure}, \code{chain_structure_group} or \code{summary_chain_structure}.
 #' @param normalize Logical. If `TRUE` (default), rows of the transition
 #'   matrix are renormalized to sum to 1 before analysis (see
 #'   [passage_time()] for the same convention).
@@ -362,13 +362,15 @@ chain_structure <- function(x, normalize = TRUE, tol = 1e-10) {
 # S3 methods
 # ---------------------------------------------------------------------------
 
-#' Print method for `chain_structure`
-#'
-#' Prints a compact chain-level header. For the full per-state table,
-#' call `summary()` on the same object.
-#' @param x A `chain_structure` object.
-#' @param ... Ignored.
-#' @return `x` invisibly.
+#' @rdname chain_structure
+#' @param ... For the S3 methods: further arguments passed to or from other methods. In \code{print.chain_structure_group()}: Forwarded to `print.chain_structure`. In \code{print.summary_chain_structure()}: Forwarded to `print.data.frame`.
+#' @param show_values Logical. If `TRUE` (default), prints the numeric probability inside each cell. Set `FALSE` for large state spaces (n > 10) where labels overlap.
+#' @param digits Integer. Decimal places for in-cell labels.
+#' @param object For the \code{summary()} method: an object of class \code{chain_structure} or \code{chain_structure_group}.
+#' @return In \code{print.chain_structure()}, \code{print.chain_structure_group()} and \code{print.summary_chain_structure()}: `x` invisibly.
+#' @return In \code{plot.chain_structure()}: A `ggplot` object.
+#' @return In \code{summary.chain_structure()}: A `data.frame` with one row per state, of class `c("summary_chain_structure", "data.frame")`, carrying the chain-level flags (`is_regular`, `is_irreducible`, `is_aperiodic`, `is_reversible`, `n_classes`, `absorbing_states`) as attributes, which its `print()` method shows as a header. Columns as described above.
+#' @return In \code{summary.chain_structure_group()}: A `data.frame` with columns `group`, `state`, `classification`, `period`, `persistence`, `return_probability`, `sojourn_steps`, plus `stationary_probability` if all groups are irreducible and `mean_absorption_time` if any group has absorbing states.
 #' @export
 print.chain_structure <- function(x, ...) {
   rev <- x$is_reversible
@@ -388,28 +390,14 @@ print.chain_structure <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot method for `chain_structure`
-#'
-#' Renders the hitting-probability matrix as a heatmap, with rows and
-#' columns ordered by communicating class so the block structure is
-#' visible at a glance. State labels along both axes are coloured by
-#' classification (absorbing / recurrent / transient). The subtitle
-#' summarises the chain-level properties (regular, reversible).
-#'
+#' @rdname chain_structure
+#' @section Plot colours:
 #' Cell colour encodes `P(ever reach j | start at i)`. The diagonal
 #' uses the return-time convention (`P(return to j in >= 1 steps)`),
 #' matching `markovchain::hittingProbabilities`. A non-irreducible chain
 #' shows zero off-block entries -- visual evidence of one-way doors
 #' between behavioural phases. An absorbing chain shows a column of 1's
 #' for the absorbing state.
-#'
-#' @param x A `chain_structure` object.
-#' @param show_values Logical. If `TRUE` (default), prints the numeric
-#'   probability inside each cell. Set `FALSE` for large state spaces
-#'   (n > 10) where labels overlap.
-#' @param digits Integer. Decimal places for in-cell labels.
-#' @param ... Ignored.
-#' @return A `ggplot` object.
 #' @export
 plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
@@ -498,29 +486,10 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
   p
 }
 
-#' Tidy per-state summary of a `chain_structure`
-#'
-#' Returns a single data.frame with one row per state, combining every
-#' per-state metric `chain_structure()` computes. Always includes
-#' `state`, `classification`, `period`, `persistence` (the diagonal of
-#' the transition matrix), `return_probability` (the diagonal of the
-#' hitting matrix) and `sojourn_steps` (`1 / (1 - persistence)`, which is
-#' `Inf` for an absorbing state). Adds the chain's
-#' `stationary_probability` when the chain is irreducible, and absorption
-#' columns when it has any absorbing states: `absorption_probability` for a
-#' single absorbing state or one `absorbed_in_<state>` column per state
-#' when there are several, plus `mean_absorption_time`.
-#'
+#' @rdname chain_structure
+#' @section Summary columns:
 #' Columns are ordered for readability: identifiers first, classification
 #' second, dynamic per-state metrics last.
-#'
-#' @param object A `chain_structure` object.
-#' @param ... Ignored.
-#' @return A `data.frame` with one row per state, of class
-#'   `c("summary_chain_structure", "data.frame")`, carrying the chain-level
-#'   flags (`is_regular`, `is_irreducible`, `is_aperiodic`,
-#'   `is_reversible`, `n_classes`, `absorbing_states`) as attributes, which
-#'   its `print()` method shows as a header. Columns as described above.
 #' @export
 summary.chain_structure <- function(object, ...) {
   state_names <- object$states
@@ -575,13 +544,7 @@ summary.chain_structure <- function(object, ...) {
   out
 }
 
-#' Print method for `chain_structure_group`
-#'
-#' One header line per group, followed by each group's per-state
-#' table (via `summary.chain_structure`).
-#' @param x A `chain_structure_group` (named list of `chain_structure`).
-#' @param ... Forwarded to `print.chain_structure`.
-#' @return `x` invisibly.
+#' @rdname chain_structure
 #' @export
 print.chain_structure_group <- function(x, ...) {
   cat(sprintf("Chain structure -- %d groups: %s\n\n",
@@ -594,20 +557,7 @@ print.chain_structure_group <- function(x, ...) {
   invisible(x)
 }
 
-#' Cross-group comparison of `chain_structure_group`
-#'
-#' Produces a single tidy data.frame with one row per (group, state)
-#' combination, combining classification, persistence, sojourn, and --
-#' when applicable -- stationary or mean-absorption-time columns. Useful
-#' for side-by-side reporting of `chain_structure()` across the
-#' members of a `netobject_group`.
-#'
-#' @param object A `chain_structure_group`.
-#' @param ... Ignored.
-#' @return A `data.frame` with columns `group`, `state`, `classification`,
-#'   `period`, `persistence`, `return_probability`, `sojourn_steps`, plus
-#'   `stationary_probability` if all groups are irreducible and
-#'   `mean_absorption_time` if any group has absorbing states.
+#' @rdname chain_structure
 #' @export
 summary.chain_structure_group <- function(object, ...) {
   parts <- lapply(names(object), function(nm) {
@@ -632,12 +582,7 @@ summary.chain_structure_group <- function(object, ...) {
   out
 }
 
-#' Print method for `summary.chain_structure`
-#'
-#' Prints a one-line chain header followed by the tidy per-state table.
-#' @param x A `summary_chain_structure` object.
-#' @param ... Forwarded to `print.data.frame`.
-#' @return `x` invisibly.
+#' @rdname chain_structure
 #' @export
 print.summary_chain_structure <- function(x, ...) {
   rev <- attr(x, "is_reversible")

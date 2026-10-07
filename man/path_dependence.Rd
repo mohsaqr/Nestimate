@@ -2,13 +2,25 @@
 % Please edit documentation in R/path_dependence.R
 \name{path_dependence}
 \alias{path_dependence}
+\alias{print.net_path_dependence}
+\alias{summary.net_path_dependence}
+\alias{print.summary.net_path_dependence}
+\alias{plot.net_path_dependence}
 \title{Per-Context Path Dependence at Order k}
 \usage{
 path_dependence(x, order = 2L, min_count = 5L, base = 2)
+
+\method{print}{net_path_dependence}(x, top = 10L, digits = 3L, ...)
+
+\method{summary}{net_path_dependence}(object, ...)
+
+\method{print}{summary.net_path_dependence}(x, digits = 3L, ...)
+
+\method{plot}{net_path_dependence}(x, top = 15L, title = NULL, ...)
 }
 \arguments{
 \item{x}{A wide sequence data.frame / matrix (rows = actors, columns =
-time-steps), or a \code{netobject} that carries the source data.}
+time-steps), or a \code{netobject} that carries the source data. For the \code{print()} and \code{plot()} methods: an object of class \code{net_path_dependence} (or its \code{summary()}).}
 
 \item{order}{Integer. Order of the conditioning context. \code{order = 2}
 (default) compares 2-step memory against 1-step; \code{order = 3}
@@ -19,6 +31,16 @@ value is an error rather than being silently truncated.}
 Default 5. Very small samples produce noisy KL estimates.}
 
 \item{base}{Numeric. Logarithm base for entropy and KL. Default 2 (bits).}
+
+\item{top}{In \code{print.net_path_dependence()}: Integer. Number of top contexts to show. Default 10. In \code{plot.net_path_dependence()}: Integer. Number of contexts to show (top by KL). Default 15.}
+
+\item{digits}{Integer. Digits to round numeric output. Default 3.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_path_dependence}.}
+
+\item{title}{Character or \code{NULL}. Plot title. Default \code{NULL}, which builds "Path dependence: order k vs order 1" from the fitted order.}
 }
 \value{
 An object of class \code{"net_path_dependence"} with
@@ -40,6 +62,12 @@ under order-1), \code{top_ok} (most likely next state under order-k),
 \item{min_count}{integer}
 \item{states}{character vector}
 }
+
+In \code{print.net_path_dependence()} and \code{print.summary.net_path_dependence()}: \code{x} invisibly.
+
+In \code{summary.net_path_dependence()}: A \code{summary.net_path_dependence} with the full sorted table and chain-level summaries.
+
+In \code{plot.net_path_dependence()}: A ggplot object.
 }
 \description{
 Diagnoses where a chain's order-1 Markov assumption fails by comparing,

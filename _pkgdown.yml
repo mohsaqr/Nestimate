@@ -92,7 +92,8 @@ reference:
       - permutation_diagnostics
       - nct
       - compare_model
-      - compare_model.netobject_group
+      - compare_networks
+      - comparison_tables
       - rename_models
       - magnitude_difference
 
@@ -208,14 +209,6 @@ reference:
       - group_regulation_long
       - chatgpt_srl
       - trajectories
-
-  - title: S3 Methods
-    desc: Print, summary, plot, and as.data.frame methods for package classes
-    contents:
-      - starts_with("print.")
-      - starts_with("summary.")
-      - starts_with("plot.")
-      - starts_with("as.data.frame.")
 
 authors:
   Mohammed Saqr:

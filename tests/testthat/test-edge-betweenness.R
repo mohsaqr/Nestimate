@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 test_that("net_edge_betweenness returns a betweenness netobject", {
   seqs <- data.frame(
     V1 = c("A", "B", "A", "C", "B"), V2 = c("B", "C", "B", "A", "C"),

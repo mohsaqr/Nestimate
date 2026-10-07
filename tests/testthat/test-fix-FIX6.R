@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Regression tests for FIX6 (A11 data-prep / conversion / wtna findings).
 #
 # A11-F01 (CRITICAL) convert_sequence_format(id_col=NULL) on wide V1,V2,V3

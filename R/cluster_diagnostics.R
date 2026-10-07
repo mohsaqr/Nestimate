@@ -48,8 +48,8 @@
 #'
 #' @param x A \code{net_clustering}, \code{net_mmm}, \code{netobject_group}
 #'   (with \code{attr(, "clustering")} attached by \code{cluster_network()}
-#'   or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
+#'   or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}. For the \code{print()}, \code{plot()} and \code{as.data.frame()} methods: an object of class \code{net_cluster_diagnostics}.
+#' @param ... Unsupported. Supplying unused arguments raises an error. For the S3 methods: further arguments passed to or from other methods. In \code{plot.net_cluster_diagnostics()}: Forwarded to the underlying plot method.
 #' @return \code{cluster_diagnostics()} returns a
 #'   \code{net_cluster_diagnostics} object: a list carrying
 #'   \code{family}, \code{k}, \code{n}, \code{sizes}, the
@@ -284,17 +284,12 @@ cluster_diagnostics.netobject_group <- function(x, ...) {
 # print method
 # ---------------------------------------------------------------------------
 
-#' Print Method for net_cluster_diagnostics
-#'
-#' Prints a uniform header, family-specific quality / IC line, and a
-#' per-cluster table. Layout matches \code{\link{print.net_clustering}}
-#' and \code{\link{print.net_mmm}}.
-#'
-#' @param x A \code{net_cluster_diagnostics} object.
-#' @param digits Integer. Decimal places for floating-point statistics.
-#'   Default \code{3L}.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return The input object, invisibly.
+#' @rdname cluster_diagnostics
+#' @param digits Integer. Decimal places for floating-point statistics. Default \code{3L}.
+#' @param type Character. Forwarded to the underlying plot method. Valid values for distance: \code{"silhouette"} (default), \code{"mds"}, \code{"heatmap"}, \code{"predictors"}. Valid values for mmm: \code{"posterior"} (default), \code{"covariates"} / \code{"predictors"}.
+#' @param row.names,optional Standard \code{as.data.frame} arguments (ignored).
+#' @return In \code{print.net_cluster_diagnostics()}: The input object, invisibly.
+#' @return In \code{plot.net_cluster_diagnostics()}: Whatever the underlying plot method returns: a \code{ggplot} object, invisibly; or, for the covariate forest views called with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
 #' @export
 print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
   dots <- list(...)
@@ -379,26 +374,7 @@ print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
 # plot method -- delegates to the source's plot method
 # ---------------------------------------------------------------------------
 
-#' Plot Method for net_cluster_diagnostics
-#'
-#' Delegates to the original clustering object's plot method
-#' (\code{\link{plot.net_clustering}} for distance-based diagnostics,
-#' \code{\link{plot.net_mmm_clustering}} or \code{\link{plot.net_mmm}}
-#' for model-based). The diagnostics object itself stores no plot
-#' geometry -- it just keeps a reference to the source so the existing
-#' visual layer is reused.
-#'
-#' @param x A \code{net_cluster_diagnostics} object.
-#' @param type Character. Forwarded to the underlying plot method. Valid
-#'   values for distance: \code{"silhouette"} (default), \code{"mds"},
-#'   \code{"heatmap"}, \code{"predictors"}. Valid values for mmm:
-#'   \code{"posterior"} (default), \code{"covariates"} /
-#'   \code{"predictors"}.
-#' @param ... Forwarded to the underlying plot method.
-#' @return Whatever the underlying plot method returns: a \code{ggplot}
-#'   object, invisibly; or, for the covariate forest views called with
-#'   \code{combined = FALSE}, a list of \code{ggplot} objects named by
-#'   cluster (invisibly).
+#' @rdname cluster_diagnostics
 #' @export
 plot.net_cluster_diagnostics <- function(x, type = NULL, ...) {
   if (is.null(type)) {
@@ -413,8 +389,6 @@ plot.net_cluster_diagnostics <- function(x, type = NULL, ...) {
 
 #' @rdname cluster_diagnostics
 #' @method as.data.frame net_cluster_diagnostics
-#' @param row.names,optional Standard \code{as.data.frame} arguments
-#'   (ignored).
 #' @export
 as.data.frame.net_cluster_diagnostics <- function(x, row.names = NULL,
                                                    optional = FALSE, ...) {

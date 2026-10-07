@@ -1185,28 +1185,12 @@ build_hon <- function(data, max_order = 5L, min_freq = 1L,
 # S3 methods
 # ---------------------------------------------------------------------------
 
-#' Print Method for net_hon
-#'
-#' @param x A \code{net_hon} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
-#' hon <- build_hon(seqs, max_order = 2)
-#' print(hon)
-#'
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' hon <- build_hon(seqs, max_order = 2L)
-#' print(hon)
-#' }
-#'
+#' @rdname build_hon
+#' @param x For the \code{print()} method: an object of class \code{net_hon}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_hon}.
+#' @return In \code{print.net_hon()}: The input object, invisibly.
+#' @return In \code{summary.net_hon()}: The \code{cograph_network} edge data.frame \code{object$edges}: one row per non-zero cell of the adjacency matrix, with integer \code{from}/\code{to} node indices and a numeric \code{weight}. Returned visibly; the summary text (counts, first-order states, order distribution) is printed as a side effect. The arrow-notation table with \code{path}/\code{count}/\code{probability} is \code{object$ho_edges}.
 #' @export
 print.net_hon <- function(x, ...) {
   cat("Higher-Order Network (HON)\n")
@@ -1220,33 +1204,7 @@ print.net_hon <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary Method for net_hon
-#'
-#' @param object A \code{net_hon} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The \code{cograph_network} edge data.frame \code{object$edges}:
-#'   one row per non-zero cell of the adjacency matrix, with integer
-#'   \code{from}/\code{to} node indices and a numeric \code{weight}. Returned
-#'   visibly; the summary text (counts, first-order states, order
-#'   distribution) is printed as a side effect. The arrow-notation table with
-#'   \code{path}/\code{count}/\code{probability} is \code{object$ho_edges}.
-#'
-#' @examples
-#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
-#' hon <- build_hon(seqs, max_order = 2)
-#' summary(hon)
-#'
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' hon <- build_hon(seqs, max_order = 2L)
-#' summary(hon)
-#' }
-#'
+#' @rdname build_hon
 #' @export
 summary.net_hon <- function(object, ...) {
   cat("Higher-Order Network (HON) Summary\n")

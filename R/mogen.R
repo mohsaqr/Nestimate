@@ -623,28 +623,13 @@ state_frequencies <- function(data) {
 # S3 methods
 # ---------------------------------------------------------------------------
 
-#' Print Method for net_mogen
-#'
-#' @param x A \code{net_mogen} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
-#' mg <- build_mogen(seqs, max_order = 2)
-#' print(mg)
-#'
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' mog <- build_mogen(seqs, max_order = 2L)
-#' print(mog)
-#' }
-#'
+#' @rdname build_mogen
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_mogen}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_mogen}.
+#' @param type Character. Plot type: \code{"ic"} (default) or \code{"likelihood"}.
+#' @return In \code{print.net_mogen()} and \code{plot.net_mogen()}: The input object, invisibly.
+#' @return In \code{summary.net_mogen()}: A per-order model-selection data.frame with columns \code{order}, \code{layer_dof}, \code{cum_dof}, \code{loglik}, \code{aic}, \code{bic}, \code{best} (\code{"AIC"}/\code{"BIC"}/\code{"AIC+BIC"} marker) and \code{selected} (\code{"<--"} on the chosen order), returned visibly; the summary text is printed as a side effect.
 #' @export
 print.net_mogen <- function(x, ...) {
   cat("Multi-Order Generative Model (MOGen)\n")
@@ -674,32 +659,7 @@ print.net_mogen <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary Method for net_mogen
-#'
-#' @param object A \code{net_mogen} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return A per-order model-selection data.frame with columns \code{order},
-#'   \code{layer_dof}, \code{cum_dof}, \code{loglik}, \code{aic}, \code{bic},
-#'   \code{best} (\code{"AIC"}/\code{"BIC"}/\code{"AIC+BIC"} marker) and
-#'   \code{selected} (\code{"<--"} on the chosen order), returned visibly;
-#'   the summary text is printed as a side effect.
-#'
-#' @examples
-#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
-#' mg <- build_mogen(seqs, max_order = 2)
-#' summary(mg)
-#'
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' mog <- build_mogen(seqs, max_order = 2L)
-#' summary(mog)
-#' }
-#'
+#' @rdname build_mogen
 #' @export
 summary.net_mogen <- function(object, ...) {
   cat("Multi-Order Generative Model (MOGen) Summary\n\n")
@@ -735,29 +695,7 @@ summary.net_mogen <- function(object, ...) {
   res
 }
 
-#' Plot Method for net_mogen
-#'
-#' @param x A \code{net_mogen} object.
-#' @param type Character. Plot type: \code{"ic"} (default) or \code{"likelihood"}.
-#' @param ... Additional arguments passed to \code{\link[graphics]{plot}}.
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
-#' mg <- build_mogen(seqs, max_order = 2)
-#' plot(mg)
-#'
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B"),
-#'   V2 = c("B","C","A","B","C"),
-#'   V3 = c("C","A","B","C","A")
-#' )
-#' mog <- build_mogen(seqs, max_order = 2L)
-#' plot(mog, type = "ic")
-#' }
-#'
+#' @rdname build_mogen
 #' @export
 plot.net_mogen <- function(x, type = c("ic", "likelihood"), ...) {
   type <- match.arg(type)

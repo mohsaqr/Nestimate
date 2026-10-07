@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for actor_endpoints() and mark_terminal_state().
 
 test_that("actor_endpoints returns one row per actor with the expected columns", {

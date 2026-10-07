@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for build_clusters / build_mmm `estimator` argument
 # (firth | multinom | chisq).
 

@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- compare_networks(actor = ): nesting-aware permutation backend ----
 
 .cn_actor_nets <- function() {

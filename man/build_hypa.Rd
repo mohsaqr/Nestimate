@@ -2,6 +2,8 @@
 % Please edit documentation in R/hypa.R
 \name{build_hypa}
 \alias{build_hypa}
+\alias{print.net_hypa}
+\alias{summary.net_hypa}
 \title{Detect Path Anomalies via HYPA}
 \usage{
 build_hypa(
@@ -11,6 +13,16 @@ build_hypa(
   min_count = 5L,
   p_adjust = "BH",
   k = NULL
+)
+
+\method{print}{net_hypa}(x, ...)
+
+\method{summary}{net_hypa}(
+  object,
+  n = 10L,
+  type = c("all", "over", "under"),
+  order_by = c("sig", "freq", "frequency", "ratio", "path"),
+  ...
 )
 }
 \arguments{
@@ -52,6 +64,18 @@ p-values are adjusted separately (two-sided testing).}
 
 \item{k}{Deprecated. Former name of \code{order}; if supplied it overrides
 \code{order} and emits a deprecation message. Use \code{order} instead.}
+
+\item{x}{For the \code{print()} method: an object of class \code{net_hypa}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_hypa}.}
+
+\item{n}{Integer. Maximum number of paths to display per category (default: 10).}
+
+\item{type}{Character. Which anomalies to show: \code{"all"} (default), \code{"over"}, or \code{"under"}.}
+
+\item{order_by}{Character. Ranking used within each anomaly direction: \code{"sig"} (default) ranks by the active tail probability, \code{"freq"} (or its alias \code{"frequency"}) by observed count, \code{"ratio"} by observed/expected ratio, and \code{"path"} alphabetically.}
 }
 \value{
 An object of class \code{c("net_hypa", "cograph_network")} with
@@ -93,6 +117,10 @@ lowest-order De Bruijn graph nodes (arrow notation).}
 \item{meta}{cograph meta list of the lowest-order graph.}
 \item{node_groups}{Always \code{NULL}.}
 }
+
+In \code{print.net_hypa()}: The input object, invisibly.
+
+In \code{summary.net_hypa()}: A data frame of the reported anomalies, at most \code{n} rows per direction, with columns \code{order} (the De Bruijn order the path was found at), \code{path}, \code{observed}, \code{expected}, \code{ratio}, \code{p_tail} (the raw tail probability in the reported direction: \code{p_over} for over-represented paths, \code{p_under} for under-represented ones) and \code{direction} (\code{"over"}/\code{"under"}). Returned visibly; the summary text and the top-\code{n} tables are printed as a side effect. When no anomalies were detected, a zero-row data frame with the same columns except \code{order} is returned.
 }
 \description{
 Constructs a k-th order De Bruijn graph from sequential trajectory data and

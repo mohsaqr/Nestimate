@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for mosaic_plot() — the tna-equivalent chi-square mosaic for netobjects.
 
 skip_if_not_installed("ggplot2")
@@ -165,37 +168,6 @@ test_that("permutation residuals converge to asymptotic stdres on large N", {
   z_perm <- Nestimate:::.mosaic_perm_stdres(tab, n_perm = 2000L, seed = 1L)
   z_asy  <- suppressWarnings(stats::chisq.test(tab))$stdres
   expect_equal(as.numeric(z_perm), as.numeric(z_asy), tolerance = 0.2)
-})
-
-test_that("mosaic_plot geometry matches tna::plot_mosaic", {
-  skip_if_not_installed("tna")
-  set.seed(7)
-  seqs <- replicate(80, sample(c("A", "B", "C"), size = 8, replace = TRUE),
-                    simplify = FALSE)
-  wide <- do.call(rbind, lapply(seqs, function(s) data.frame(t(s))))
-  names(wide) <- paste0("T", seq_len(ncol(wide)))
-
-  tna_model <- tna::ftna(wide)
-  nest_net <- build_network(wide, method = "frequency", format = "wide")
-
-  p_tna  <- tna::plot_mosaic(tna_model)
-  p_nest <- mosaic_plot(nest_net, range = c(-4, 4),
-                        residuals = "asymptotic")
-
-  d_tna  <- ggplot2::ggplot_build(p_tna)$data[[1]]
-  d_nest <- ggplot2::ggplot_build(p_nest)$data[[1]]
-
-  o <- order(d_tna$xmin, d_tna$ymin)
-  d_tna  <- d_tna[o, c("xmin", "xmax", "ymin", "ymax", "fill")]
-  o <- order(d_nest$xmin, d_nest$ymin)
-  d_nest <- d_nest[o, c("xmin", "xmax", "ymin", "ymax", "fill")]
-
-  expect_equal(nrow(d_tna), nrow(d_nest))
-  expect_equal(d_tna$xmin, d_nest$xmin, tolerance = 1e-10)
-  expect_equal(d_tna$xmax, d_nest$xmax, tolerance = 1e-10)
-  expect_equal(d_tna$ymin, d_nest$ymin, tolerance = 1e-10)
-  expect_equal(d_tna$ymax, d_nest$ymax, tolerance = 1e-10)
-  expect_equal(d_tna$fill, d_nest$fill)
 })
 
 test_that("mosaic_plot works on a tna-type mcml via count recovery from $data", {

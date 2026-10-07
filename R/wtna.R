@@ -546,26 +546,10 @@ wtna <- function(data,
 
 
 
-#' Print Method for wtna_mixed
-#'
-#' @param x A \code{wtna_mixed} object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
-#' @examples
-#' oh <- matrix(c(1,0,0, 0,1,0, 0,0,1, 1,0,0), nrow = 4, byrow = TRUE,
-#'              dimnames = list(NULL, c("A","B","C")))
-#' mixed <- wtna(oh, method = "both")
-#' print(mixed)
-#'
-#' \donttest{
-#' oh <- data.frame(
-#'   A = c(1,0,1,0,1,0,1,0),
-#'   B = c(0,1,0,1,0,1,0,1),
-#'   C = c(1,1,0,0,1,1,0,0)
-#' )
-#' mixed <- wtna(oh, method = "both")
-#' print(mixed)
-#' }
+#' @rdname wtna
+#' @param x For the \code{print()} method: an object of class \code{wtna_mixed}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{print.wtna_mixed()}: The input object, invisibly.
 #' @export
 print.wtna_mixed <- function(x, ...) {
   cat("Mixed Window TNA (transition + co-occurrence)\n")

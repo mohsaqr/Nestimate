@@ -64,12 +64,11 @@ Default \code{10}.}
 \item{seed}{Optional integer seed for the split, so the result is
 reproducible. The RNG state is restored on exit.}
 
-\item{x}{A \code{net_outcome_model}, for the \code{print} and \code{plot}
-methods.}
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_outcome_model}.}
 
-\item{...}{Unused.}
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 
-\item{object}{A \code{net_outcome_model}.}
+\item{object}{For the \code{summary()} method: an object of class \code{net_outcome_model}.}
 }
 \value{
 An object of class \code{net_outcome_model}: a list whose
@@ -88,11 +87,11 @@ fit. The remaining elements are the fitted \code{$model} (a
 and \code{$outcome}. Retrieve the table with
 \code{\link{effects_table}}.
 
-\code{print} returns its input invisibly.
+In \code{print.net_outcome_model()}: \code{print} returns its input invisibly.
 
-\code{summary} returns the tidy effect table.
+In \code{summary.net_outcome_model()}: \code{summary} returns the tidy effect table.
 
-\code{plot} returns a \code{ggplot} forest of the effects.
+In \code{plot.net_outcome_model()}: \code{plot} returns a \code{ggplot} forest of the effects.
 }
 \description{
 Fits a regression of an outcome on predictor columns -- pattern

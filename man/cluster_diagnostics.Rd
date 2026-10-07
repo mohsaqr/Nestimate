@@ -2,22 +2,31 @@
 % Please edit documentation in R/cluster_diagnostics.R
 \name{cluster_diagnostics}
 \alias{cluster_diagnostics}
+\alias{print.net_cluster_diagnostics}
+\alias{plot.net_cluster_diagnostics}
 \alias{as.data.frame.net_cluster_diagnostics}
 \title{Cluster Diagnostics}
 \usage{
 cluster_diagnostics(x, ...)
+
+\method{print}{net_cluster_diagnostics}(x, digits = 3L, ...)
+
+\method{plot}{net_cluster_diagnostics}(x, type = NULL, ...)
 
 \method{as.data.frame}{net_cluster_diagnostics}(x, row.names = NULL, optional = FALSE, ...)
 }
 \arguments{
 \item{x}{A \code{net_clustering}, \code{net_mmm}, \code{netobject_group}
 (with \code{attr(, "clustering")} attached by \code{cluster_network()}
-or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}.}
+or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}. For the \code{print()}, \code{plot()} and \code{as.data.frame()} methods: an object of class \code{net_cluster_diagnostics}.}
 
-\item{...}{Unsupported. Supplying unused arguments raises an error.}
+\item{...}{Unsupported. Supplying unused arguments raises an error. For the S3 methods: further arguments passed to or from other methods. In \code{plot.net_cluster_diagnostics()}: Forwarded to the underlying plot method.}
 
-\item{row.names, optional}{Standard \code{as.data.frame} arguments
-(ignored).}
+\item{digits}{Integer. Decimal places for floating-point statistics. Default \code{3L}.}
+
+\item{type}{Character. Forwarded to the underlying plot method. Valid values for distance: \code{"silhouette"} (default), \code{"mds"}, \code{"heatmap"}, \code{"predictors"}. Valid values for mmm: \code{"posterior"} (default), \code{"covariates"} / \code{"predictors"}.}
+
+\item{row.names, optional}{Standard \code{as.data.frame} arguments (ignored).}
 }
 \value{
 \code{cluster_diagnostics()} returns a
@@ -28,6 +37,10 @@ or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}.}
 \code{as.data.frame()} on that object returns the
 \code{per_cluster} data frame itself -- one row per cluster, with
 family-specific columns.
+
+In \code{print.net_cluster_diagnostics()}: The input object, invisibly.
+
+In \code{plot.net_cluster_diagnostics()}: Whatever the underlying plot method returns: a \code{ggplot} object, invisibly; or, for the covariate forest views called with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
 }
 \description{
 Unified entry point for clustering quality information. Returns a

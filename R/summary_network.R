@@ -4,18 +4,7 @@
 # directly so we do not depend on igraph at runtime. Distances reuse
 # `.floyd_warshall_sp()` from R/centrality_measures.R.
 
-#' Network metrics for a netobject
-#'
-#' Computes node count, edge count, density, mean shortest-path distance,
-#' mean and SD of in/out strength, mean and SD of in/out degree, in/out
-#' degree centralization (Freeman), and reciprocity. Mirrors the metric set
-#' returned by `tna::summary.tna()` so a Nestimate netobject and the
-#' equivalent tna model report numerically identical descriptive metrics.
-#'
-#' @param object A `netobject` (or `cograph_network`) object.
-#' @param ... Ignored.
-#' @return A `data.frame` with columns `metric` and `value`, of class
-#'   `c("summary.netobject", "data.frame")`.
+#' @rdname build_network
 #' @export
 summary.netobject <- function(object, ...) {
   stopifnot(inherits(object, "netobject") || inherits(object, "cograph_network"))
@@ -26,18 +15,7 @@ summary.netobject <- function(object, ...) {
   .summary_metrics_from_weights(W, directed)
 }
 
-#' Network metrics for a netobject_group
-#'
-#' Returns one summary per constituent network. With `combined = TRUE`
-#' (default) the per-group tables are joined into a single wide
-#' `data.frame` with one column per group; with `combined = FALSE`
-#' returns a named list.
-#'
-#' @param object A `netobject_group`.
-#' @param combined Logical. Combine into one wide data.frame? Default `TRUE`.
-#' @param ... Ignored.
-#' @return Either a `data.frame` (one column per group) or a named list of
-#'   `summary.netobject` objects, of class `c("summary.netobject_group", ...)`.
+#' @rdname build_network
 #' @export
 summary.netobject_group <- function(object, combined = TRUE, ...) {
   stopifnot(inherits(object, "netobject_group"))
@@ -168,6 +146,7 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
 
 # ---- print methods ----
 
+#' @rdname build_network
 #' @export
 print.summary.netobject <- function(x, ...) {
   cat("Network metrics:\n")
@@ -188,6 +167,7 @@ print.summary.netobject <- function(x, ...) {
   }, character(1L))
 }
 
+#' @rdname build_network
 #' @export
 print.summary.netobject_group <- function(x, ...) {
   if (isFALSE(attr(x, "combined"))) {

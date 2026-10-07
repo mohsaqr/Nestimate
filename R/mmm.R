@@ -834,7 +834,7 @@ build_mmm <- function(data,
 #'   keeps the historical lightweight return shape -- only the comparison
 #'   table is allocated.
 #' @param ... Arguments passed to \code{\link{build_mmm}}.
-#'
+#' For the S3 methods: further arguments passed to or from other methods.
 #' @return A \code{mmm_compare} data frame, one row per requested \code{k},
 #'   with columns \code{k}, \code{log_likelihood}, \code{AIC}, \code{BIC},
 #'   \code{ICL}, \code{AvePP}, \code{Entropy} and \code{converged}. When
@@ -901,38 +901,17 @@ compare_mmm <- function(data, k = 2:5, return_fits = FALSE, ...) {
 # S3 methods
 # ---------------------------------------------------------------------------
 
-#' Print Method for net_mmm
-#'
-#' Compact summary of a Mixed Markov Model fit. Header carries dimensions
-#' and information criteria; cluster table carries N, mixing share, and
-#' per-cluster average posterior probability (AvePP). Layout matches
-#' \code{\link{print.net_clustering}} so distance- and model-based
-#' clusterings can be compared at a glance.
-#'
-#' @param x A \code{net_mmm} object.
-#' @param digits Integer. Decimal places for floating-point statistics.
-#'   Default \code{3}. Non-breaking: \code{print(x)} keeps the same
-#'   alignment as before.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
-#'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-#' print(mmm)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = sample(c("A","B","C"), 30, TRUE),
-#'   V2 = sample(c("A","B","C"), 30, TRUE),
-#'   V3 = sample(c("A","B","C"), 30, TRUE)
-#' )
-#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
-#' print(mmm)
-#' }
-#'
+#' @rdname build_mmm
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_mmm} or \code{net_mmm_clustering}.
+#' @param digits In \code{print.net_mmm()}: Integer. Decimal places for floating-point statistics. Default \code{3}. Non-breaking: \code{print(x)} keeps the same alignment as before. In \code{print.net_mmm_clustering()}: Integer. Decimal places for floating-point statistics. Default \code{3}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_mmm}.
+#' @param type In \code{plot.net_mmm()}: Character. Plot type: \code{"posterior"} (default) or \code{"covariates"}. In \code{plot.net_mmm_clustering()}: Character. One of \code{"posterior"} (default; histogram of max posterior probability per sequence, coloured by cluster), \code{"covariates"} or its alias \code{"predictors"} (covariate forest plot when \code{cluster_mmm()} was run with \code{covariates}).
+#' @param combined In \code{plot.net_mmm()}: Logical. For \code{type = "covariates"} only: when \code{TRUE} (default), covariate forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned. In \code{plot.net_mmm_clustering()}: Logical. For \code{type} in \code{"covariates"} or \code{"predictors"} only: when \code{TRUE} (default), forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned.
+#' @return In \code{print.net_mmm()} and \code{print.net_mmm_clustering()}: The input object, invisibly.
+#' @return In \code{summary.net_mmm()}: A per-component summary \code{data.frame}. The class and visibility depend on whether the model was fitted with covariates: \describe{ \item{No covariates}{A plain \code{data.frame} with one row per component and columns \code{component}, \code{prior}, \code{n_assigned}, \code{mean_posterior}, \code{avepp}, returned \emph{visibly} (so it auto-prints after the printed summary block).} \item{With covariates}{A \code{tidy_covariates}/\code{data.frame} (the tidied covariate table, with the per-component stats attached), returned \emph{invisibly}.} } In both cases the printed summary (model fit, per-cluster transition matrices, optional covariate profiles) is emitted as a side effect.
+#' @return In \code{plot.net_mmm()}: A \code{ggplot} object, invisibly; for \code{type = "covariates"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
+#' @return In \code{plot.net_mmm_clustering()}: A \code{ggplot} object, invisibly; for \code{type = "covariates"} / \code{"predictors"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
 #' @export
 print.net_mmm <- function(x, digits = 3L, ...) {
   .net_mmm_check_unused_dots("print.net_mmm", ...)
@@ -980,41 +959,7 @@ print.net_mmm <- function(x, digits = 3L, ...) {
   invisible(x)
 }
 
-#' Summary Method for net_mmm
-#'
-#' @param object A \code{net_mmm} object.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#'
-#' @return A per-component summary \code{data.frame}. The class and visibility
-#'   depend on whether the model was fitted with covariates:
-#'   \describe{
-#'     \item{No covariates}{A plain \code{data.frame} with one row per
-#'       component and columns \code{component}, \code{prior},
-#'       \code{n_assigned}, \code{mean_posterior}, \code{avepp}, returned
-#'       \emph{visibly} (so it auto-prints after the printed summary block).}
-#'     \item{With covariates}{A \code{tidy_covariates}/\code{data.frame}
-#'       (the tidied covariate table, with the per-component stats attached),
-#'       returned \emph{invisibly}.}
-#'   }
-#'   In both cases the printed summary (model fit, per-cluster transition
-#'   matrices, optional covariate profiles) is emitted as a side effect.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
-#'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-#' summary(mmm)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = sample(c("A","B","C"), 30, TRUE),
-#'   V2 = sample(c("A","B","C"), 30, TRUE),
-#'   V3 = sample(c("A","B","C"), 30, TRUE)
-#' )
-#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
-#' summary(mmm)
-#' }
-#'
+#' @rdname build_mmm
 #' @export
 summary.net_mmm <- function(object, ...) {
   .net_mmm_check_unused_dots("summary.net_mmm", ...)
@@ -1060,36 +1005,7 @@ summary.net_mmm <- function(object, ...) {
   component_stats
 }
 
-#' Plot Method for net_mmm
-#'
-#' @param x A \code{net_mmm} object.
-#' @param type Character. Plot type: \code{"posterior"} (default) or \code{"covariates"}.
-#' @param combined Logical. For \code{type = "covariates"} only: when
-#'   \code{TRUE} (default), covariate forest panels are combined into a
-#'   single faceted plot; when \code{FALSE}, a list of separate ggplots
-#'   is returned.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#'
-#' @return A \code{ggplot} object, invisibly; for
-#'   \code{type = "covariates"} with \code{combined = FALSE}, a list of
-#'   \code{ggplot} objects named by cluster (invisibly).
-#'
-#' @examples
-#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
-#'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' mmm <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-#' plot(mmm, type = "posterior")
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = sample(c("A","B","C"), 30, TRUE),
-#'   V2 = sample(c("A","B","C"), 30, TRUE),
-#'   V3 = sample(c("A","B","C"), 30, TRUE)
-#' )
-#' mmm <- build_mmm(seqs, k = 2, n_starts = 5, seed = 1)
-#' plot(mmm, type = "posterior")
-#' }
-#'
+#' @rdname build_mmm
 #' @export
 plot.net_mmm <- function(x, type = c("posterior", "covariates"),
                           combined = TRUE, ...) {
@@ -1139,30 +1055,12 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"),
   invisible(p)
 }
 
-#' Print Method for mmm_compare
-#'
-#' @param x An \code{mmm_compare} object.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#'
-#' @return The comparison table, invisibly, with the printed \code{best}
-#'   marker column (\code{"<-- BIC"} / \code{"<-- ICL"}) added.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
-#'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
-#' print(cmp)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = sample(c("A","B","C"), 30, TRUE),
-#'   V2 = sample(c("A","B","C"), 30, TRUE),
-#'   V3 = sample(c("A","B","C"), 30, TRUE)
-#' )
-#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 5, seed = 1)
-#' print(cmp)
-#' }
-#'
+#' @rdname compare_mmm
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{mmm_compare}.
+#' @param object For the \code{summary()} method: an object of class \code{mmm_compare}.
+#' @return In \code{print.mmm_compare()}: The comparison table, invisibly, with the printed \code{best} marker column (\code{"<-- BIC"} / \code{"<-- ICL"}) added.
+#' @return In \code{summary.mmm_compare()}: A tidy data frame with one row per \code{k}, plus a \code{best} character column flagging the minimum-BIC and minimum-ICL solutions.
+#' @return In \code{plot.mmm_compare()}: A \code{ggplot} object, invisibly.
 #' @export
 print.mmm_compare <- function(x, ...) {
   .mmm_compare_check_unused_dots(...)
@@ -1176,12 +1074,7 @@ print.mmm_compare <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary Method for mmm_compare
-#'
-#' @param object An \code{mmm_compare} object (a data.frame subclass).
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return A tidy data frame with one row per \code{k}, plus a \code{best}
-#'   character column flagging the minimum-BIC and minimum-ICL solutions.
+#' @rdname compare_mmm
 #' @export
 summary.mmm_compare <- function(object, ...) {
   .mmm_compare_check_unused_dots(...)
@@ -1199,29 +1092,7 @@ summary.mmm_compare <- function(object, ...) {
   out
 }
 
-#' Plot Method for mmm_compare
-#'
-#' @param x An \code{mmm_compare} object.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#'
-#' @return A \code{ggplot} object, invisibly.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
-#'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 1, max_iter = 10, seed = 1)
-#' plot(cmp)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = sample(c("A","B","C"), 30, TRUE),
-#'   V2 = sample(c("A","B","C"), 30, TRUE),
-#'   V3 = sample(c("A","B","C"), 30, TRUE)
-#' )
-#' cmp <- compare_mmm(seqs, k = 2:3, n_starts = 5, seed = 1)
-#' plot(cmp)
-#' }
-#'
+#' @rdname compare_mmm
 #' @export
 plot.mmm_compare <- function(x, ...) {
   .mmm_compare_check_unused_dots(...)
@@ -1388,29 +1259,7 @@ cluster_mmm <- function(data, k = 2L, n_starts = 50L, max_iter = 200L,
             estimator = estimator)
 }
 
-#' Print Method for MMM Clustering Attribute
-#'
-#' Prints the clustering metadata attached to the \code{netobject_group}
-#' that \code{\link{build_network}} materializes from a
-#' \code{\link{cluster_mmm}} fit (\code{attr(grp, "clustering")}).
-#' Layout mirrors \code{\link{print.net_clustering}}: a one-line dimension
-#' header, a quality line with AvePP / entropy / classification error,
-#' information criteria, and a per-cluster table.
-#'
-#' @param x A \code{net_mmm_clustering} object.
-#' @param digits Integer. Decimal places for floating-point statistics.
-#'   Default \code{3}.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
-#'                    V2 = sample(c("A","B","C"), 30, TRUE))
-#' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
-#' grp <- build_network(fit)
-#' print(attr(grp, "clustering"))
-#'
+#' @rdname build_mmm
 #' @export
 print.net_mmm_clustering <- function(x, digits = 3L, ...) {
   .net_mmm_check_unused_dots("print.net_mmm_clustering", ...)
@@ -1454,40 +1303,7 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
   invisible(x)
 }
 
-#' Plot Method for MMM Clustering Attribute
-#'
-#' Plot routines for the MMM clustering metadata attached to the
-#' \code{netobject_group} that \code{\link{build_network}} materializes from
-#' a \code{\link{cluster_mmm}} fit (or that \code{\link{cluster_network}}
-#' returns directly with \code{cluster_by = "mmm"}).
-#' Mirrors the type-driven surface of
-#' \code{\link{plot.net_clustering}} but covers only the metrics the EM
-#' fit produces -- there is no distance matrix on an MMM clustering, so
-#' \code{"silhouette"} / \code{"mds"} / \code{"heatmap"} aren't defined
-#' here and the dispatcher raises a clear error if you ask for one of
-#' those on an MMM result.
-#'
-#' @param x A \code{net_mmm_clustering} object.
-#' @param type Character. One of \code{"posterior"} (default; histogram of
-#'   max posterior probability per sequence, coloured by cluster),
-#'   \code{"covariates"} or its alias \code{"predictors"} (covariate
-#'   forest plot when \code{cluster_mmm()} was run with \code{covariates}).
-#' @param combined Logical. For \code{type} in \code{"covariates"} or
-#'   \code{"predictors"} only: when \code{TRUE} (default), forest panels
-#'   are combined into a single faceted plot; when \code{FALSE}, a list
-#'   of separate ggplots is returned.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return A \code{ggplot} object, invisibly; for
-#'   \code{type = "covariates"} / \code{"predictors"} with
-#'   \code{combined = FALSE}, a list of \code{ggplot} objects named by
-#'   cluster (invisibly).
-#'
-#' @examples
-#' seqs <- data.frame(V1 = sample(c("A","B","C"), 40, TRUE),
-#'                    V2 = sample(c("A","B","C"), 40, TRUE))
-#' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
-#' grp <- build_network(fit)
-#' plot(attr(grp, "clustering"), type = "posterior")
+#' @rdname build_mmm
 #' @export
 plot.net_mmm_clustering <- function(x, type = c("posterior", "covariates",
                                                  "predictors"),

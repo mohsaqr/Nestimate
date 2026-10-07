@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for mosaic_analysis() and mosaic_plot(style = "flat")
 
 make_df <- function(n = 300, seed = 1) {

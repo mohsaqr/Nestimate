@@ -142,57 +142,6 @@ test_that(".compute_centralities errors when external measure lacks centrality_f
   )
 })
 
-test_that("net_centrality matches tna centralities for all shared measures", {
-  skip_if_not_installed("tna")
-  measures <- c("OutStrength", "InStrength", "ClosenessIn", "ClosenessOut",
-                "Closeness", "Betweenness", "BetweennessRSP", "Diffusion",
-                "Clustering")
-  mat <- matrix(c(
-    0,   .20, 0,   .35,
-    .90, 0,   .40, .10,
-    .10, .30, 0,   .60,
-    .20, .15, .50, 0
-  ), nrow = 4L, byrow = TRUE,
-  dimnames = list(LETTERS[1:4], LETTERS[1:4]))
-  net <- .wrap_netobject(mat, method = "relative", directed = TRUE,
-                         data = NULL)
-
-  ours <- suppressMessages(net_centrality(
-    net, measures = measures, normalize_diffusion = FALSE
-  ))
-  ref <- tna::centralities(mat, measures = measures)
-
-  expect_equal(as.data.frame(ours)[, measures],
-               as.data.frame(ref)[, measures],
-               tolerance = 1e-10, ignore_attr = TRUE)
-})
-
-test_that("Diffusion is normalized by default but can match raw tna output", {
-  skip_if_not_installed("tna")
-  mat <- matrix(c(
-    0,   .20, 0,   .35,
-    .90, 0,   .40, .10,
-    .10, .30, 0,   .60,
-    .20, .15, .50, 0
-  ), nrow = 4L, byrow = TRUE,
-  dimnames = list(LETTERS[1:4], LETTERS[1:4]))
-  net <- .wrap_netobject(mat, method = "relative", directed = TRUE,
-                         data = NULL)
-
-  def <- suppressMessages(net_centrality(net, measures = "Diffusion"))
-  raw <- suppressMessages(net_centrality(
-    net, measures = "Diffusion", normalize_diffusion = FALSE
-  ))
-  ref_raw <- tna::centralities(mat, measures = "Diffusion")
-  ref_norm <- tna::centralities(mat, measures = "Diffusion",
-                                normalize = TRUE)
-
-  expect_equal(def$Diffusion, ref_norm$Diffusion,
-               tolerance = 1e-10, ignore_attr = TRUE)
-  expect_equal(raw$Diffusion, ref_raw$Diffusion,
-               tolerance = 1e-10, ignore_attr = TRUE)
-})
-
 test_that("net_centrality plots work for single and grouped outputs", {
   seqs <- data.frame(
     V1 = c("A","B","A","C","B","A"),

@@ -370,29 +370,15 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
 # S3 methods
 # ---------------------------------------------------------------------------
 
-#' Print Method for net_hypa
-#'
-#' @param x A \code{net_hypa} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
-#' hyp <- build_hypa(seqs, order = 2)
-#' print(hyp)
-#'
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B","C","A","B","C","A"),
-#'   V2 = c("B","C","A","B","C","A","B","C","A","B"),
-#'   V3 = c("C","A","B","C","A","B","C","A","B","C"),
-#'   V4 = c("A","B","C","A","B","C","A","B","C","A")
-#' )
-#' hypa <- build_hypa(seqs, order = 2L)
-#' print(hypa)
-#' }
-#'
+#' @rdname build_hypa
+#' @param x For the \code{print()} method: an object of class \code{net_hypa}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_hypa}.
+#' @param n Integer. Maximum number of paths to display per category (default: 10).
+#' @param type Character. Which anomalies to show: \code{"all"} (default), \code{"over"}, or \code{"under"}.
+#' @param order_by Character. Ranking used within each anomaly direction: \code{"sig"} (default) ranks by the active tail probability, \code{"freq"} (or its alias \code{"frequency"}) by observed count, \code{"ratio"} by observed/expected ratio, and \code{"path"} alphabetically.
+#' @return In \code{print.net_hypa()}: The input object, invisibly.
+#' @return In \code{summary.net_hypa()}: A data frame of the reported anomalies, at most \code{n} rows per direction, with columns \code{order} (the De Bruijn order the path was found at), \code{path}, \code{observed}, \code{expected}, \code{ratio}, \code{p_tail} (the raw tail probability in the reported direction: \code{p_over} for over-represented paths, \code{p_under} for under-represented ones) and \code{direction} (\code{"over"}/\code{"under"}). Returned visibly; the summary text and the top-\code{n} tables are printed as a side effect. When no anomalies were detected, a zero-row data frame with the same columns except \code{order} is returned.
 #' @export
 print.net_hypa <- function(x, ...) {
   ord_str <- paste(x$order, collapse = ", ")
@@ -414,48 +400,7 @@ print.net_hypa <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary Method for net_hypa
-#'
-#' @param object A \code{net_hypa} object.
-#' @param n Integer. Maximum number of paths to display per category
-#'   (default: 10).
-#' @param type Character. Which anomalies to show: \code{"all"} (default),
-#'   \code{"over"}, or \code{"under"}.
-#' @param order_by Character. Ranking used within each anomaly direction:
-#'   \code{"sig"} (default) ranks by the active tail probability,
-#'   \code{"freq"} (or its alias \code{"frequency"}) by observed count,
-#'   \code{"ratio"} by observed/expected ratio, and \code{"path"}
-#'   alphabetically.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return A data frame of the reported anomalies, at most \code{n} rows per
-#'   direction, with columns \code{order} (the De Bruijn order the path was
-#'   found at), \code{path}, \code{observed}, \code{expected}, \code{ratio},
-#'   \code{p_tail} (the raw tail probability in the reported direction:
-#'   \code{p_over} for over-represented paths, \code{p_under} for
-#'   under-represented ones) and \code{direction}
-#'   (\code{"over"}/\code{"under"}). Returned visibly; the summary text and
-#'   the top-\code{n} tables are printed as a side effect. When no anomalies
-#'   were detected, a zero-row data frame with the same columns except
-#'   \code{order} is returned.
-#'
-#' @examples
-#' seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
-#' hyp <- build_hypa(seqs, order = 2)
-#' summary(hyp)
-#'
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","C","A","B","C","A","B","C","A"),
-#'   V2 = c("B","C","A","B","C","A","B","C","A","B"),
-#'   V3 = c("C","A","B","C","A","B","C","A","B","C"),
-#'   V4 = c("A","B","C","A","B","C","A","B","C","A")
-#' )
-#' hypa <- build_hypa(seqs, order = 2L)
-#' summary(hypa)
-#' summary(hypa, type = "over", n = 5)
-#' }
-#'
+#' @rdname build_hypa
 #' @export
 summary.net_hypa <- function(object, n = 10L,
                              type = c("all", "over", "under"),

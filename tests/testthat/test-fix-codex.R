@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Regression tests for the 3 Codex P2 findings raised against the audit-fix
 # diff: frequencies.R wide-id inference, plot_state_frequencies.R mosaic
 # recount, hypa.R post-Filter order metadata.

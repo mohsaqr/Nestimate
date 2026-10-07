@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Regression tests for FIX4 — A06 (mcml / mmm) confirmed findings.
 #
 # A06-F01: build_mcml(type="semi_markov") was byte-identical to type="tna"

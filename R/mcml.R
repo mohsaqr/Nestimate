@@ -45,18 +45,12 @@
 }
 
 
-#' Print Method for an mcml Layer
-#'
-#' Compact view of one mcml layer (the macro layer or a single
-#' within-cluster network): a header line with the node and non-zero edge
-#' counts and the weight range, the rounded weight matrix, the initial
-#' probabilities as a bar chart, and the dimensions of any attached data --
-#' rather than the raw list contents.
-#'
-#' @param x An \code{mcml_layer}, as held in \code{$macro} and in each
-#'   element of \code{$clusters} of an \code{mcml}.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return The input \code{mcml_layer}, invisibly.
+#' @rdname build_mcml
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{mcml}.
+#' @return In \code{print.mcml_layer()}: The input \code{mcml_layer}, invisibly.
+#' @return In \code{print.mcml()}: The input object, invisibly.
+#' @return In \code{summary.mcml()}: A tidy data frame with one row per cluster and columns \code{cluster}, \code{size}, \code{within_total}, \code{between_out}, \code{between_in}. For undirected macro networks the in/out split is not meaningful, so \code{between_out} reports total incident weight and \code{between_in} is \code{NA}. The data frame is returned silently \emph{without} printing the full object -- call \code{print(object)} explicitly if you want the verbose dump.
 #' @export
 print.mcml_layer <- function(x, ...) {
   .mcml_check_unused_dots("print.mcml_layer", ...)
@@ -761,7 +755,7 @@ cluster_summary <- function(x,
 #'     \item{square numeric matrix}{Falls back to \code{\link{cluster_summary}}.}
 #'     \item{non-square or character matrix}{Treated as sequence data.}
 #'   }
-#'
+#' For the \code{print()} method: an object of class \code{mcml_layer} or \code{mcml}.
 #' @param clusters Cluster/group assignments. Accepts:
 #'   \describe{
 #'     \item{named list}{Direct mapping. List names = cluster names, values =
@@ -2535,28 +2529,7 @@ as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
 # S3 Methods
 # ==============================================================================
 
-#' Print Method for mcml
-#'
-#' @param x An \code{mcml} object.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
-#' clusters <- list(G1 = c("A","B"), G2 = c("C"))
-#' cs <- build_mcml(seqs, clusters)
-#' print(cs)
-#' \donttest{
-#' seqs <- data.frame(
-#'   T1 = c("A","B","A"), T2 = c("B","C","B"),
-#'   T3 = c("C","A","C"), T4 = c("A","B","A")
-#' )
-#' clusters <- c("Alpha", "Beta", "Alpha")
-#' cs <- build_mcml(seqs, clusters, type = "raw")
-#' print(cs)
-#' }
-#'
+#' @rdname build_mcml
 #' @export
 print.mcml <- function(x, ...) {
   .mcml_check_unused_dots("print.mcml", ...)
@@ -2593,34 +2566,7 @@ print.mcml <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary Method for mcml
-#'
-#' @param object An \code{mcml} object.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#'
-#' @return A tidy data frame with one row per cluster and columns
-#'   \code{cluster}, \code{size}, \code{within_total}, \code{between_out},
-#'   \code{between_in}. For undirected macro networks the in/out split is
-#'   not meaningful, so \code{between_out} reports total incident weight
-#'   and \code{between_in} is \code{NA}. The data frame is returned
-#'   silently \emph{without} printing the full object -- call
-#'   \code{print(object)} explicitly if you want the verbose dump.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
-#' clusters <- list(G1 = c("A","B"), G2 = c("C"))
-#' cs <- build_mcml(seqs, clusters)
-#' summary(cs)
-#' \donttest{
-#' seqs <- data.frame(
-#'   T1 = c("A","B","A"), T2 = c("B","C","B"),
-#'   T3 = c("C","A","C"), T4 = c("A","B","A")
-#' )
-#' clusters <- c("Alpha", "Beta", "Alpha")
-#' cs <- build_mcml(seqs, clusters, type = "raw")
-#' summary(cs)
-#' }
-#'
+#' @rdname build_mcml
 #' @export
 summary.mcml <- function(object, ...) {
   .mcml_check_unused_dots("summary.mcml", ...)

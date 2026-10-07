@@ -2,6 +2,10 @@
 % Please edit documentation in R/hypergraph_laplacian.R
 \name{hypergraph_cluster}
 \alias{hypergraph_cluster}
+\alias{print.net_hypergraph_cluster}
+\alias{summary.net_hypergraph_cluster}
+\alias{as.data.frame.net_hypergraph_cluster}
+\alias{plot.net_hypergraph_cluster}
 \title{Spectral clustering of hypergraph vertices}
 \usage{
 hypergraph_cluster(
@@ -12,6 +16,14 @@ hypergraph_cluster(
   nstart = 25L,
   seed = NULL
 )
+
+\method{print}{net_hypergraph_cluster}(x, ...)
+
+\method{summary}{net_hypergraph_cluster}(object, ...)
+
+\method{as.data.frame}{net_hypergraph_cluster}(x, ...)
+
+\method{plot}{net_hypergraph_cluster}(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
 }
 \arguments{
 \item{hg}{A connected \code{net_hypergraph}.}
@@ -23,6 +35,16 @@ hypergraph_cluster(
 \item{nstart}{Integer. k-means random restarts (default 25).}
 
 \item{seed}{Optional integer seed for the k-means initialization.}
+
+\item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_cluster}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph_cluster}.}
+
+\item{what}{Character. \code{"both"} (default), \code{"spectrum"}, or \code{"embedding"}.}
+
+\item{n_values}{Integer. How many smallest eigenvalues to show in the spectrum panel (default: \code{min(3 * k, n_nodes)}).}
 }
 \value{
 An object of class \code{net_hypergraph_cluster}: a list with
@@ -38,6 +60,14 @@ eigenvalue), \verb{$sizes} (data.frame \code{cluster}/\code{size}), \verb{$pi}
 \code{plot} and \code{as.data.frame} methods; \code{as.data.frame()} returns one row
 per node with \code{node}, \code{cluster}, the stationary probability \code{pi}, and
 the embedding coordinates.
+
+In \code{print.net_hypergraph_cluster()}: The input object, invisibly.
+
+In \code{summary.net_hypergraph_cluster()}: A data.frame, one row per cluster: \code{cluster}, \code{size}, \code{share}.
+
+In \code{as.data.frame.net_hypergraph_cluster()}: The tidy assignment table: one row per node, columns \code{node}, \code{cluster}, \code{pi} (stationary probability of the node under the Laplacian's random walk) and the spectral-embedding coordinates \code{dim1..dimk}.
+
+In \code{plot.net_hypergraph_cluster()}: For \code{"spectrum"}/\code{"embedding"}, the ggplot object. For \code{"both"}, the arranged gtable when gridExtra is installed (drawn on the current device), otherwise the two panels are drawn via grid viewports and the list of the two ggplots is returned invisibly.
 }
 \description{
 Partitions the nodes of a hypergraph into \code{k} clusters with the

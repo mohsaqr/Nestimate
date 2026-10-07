@@ -2,6 +2,10 @@
 % Please edit documentation in R/cluster_data.R
 \name{build_clusters}
 \alias{build_clusters}
+\alias{print.net_clustering}
+\alias{summary.net_clustering}
+\alias{plot.net_clustering}
+\alias{print.tidy_covariates}
 \title{Cluster Sequences by Dissimilarity}
 \usage{
 build_clusters(
@@ -19,6 +23,19 @@ build_clusters(
   estimator = c("auto", "firth", "multinom", "chisq"),
   ...
 )
+
+\method{print}{net_clustering}(x, digits = 3L, ...)
+
+\method{summary}{net_clustering}(object, ...)
+
+\method{plot}{net_clustering}(
+  x,
+  type = c("silhouette", "mds", "heatmap", "predictors"),
+  combined = TRUE,
+  ...
+)
+
+\method{print}{tidy_covariates}(x, ...)
 }
 \arguments{
 \item{data}{Input data. Accepts multiple formats:
@@ -113,7 +130,18 @@ astronomical ORs with degenerate CIs (silent failure).
 (chi-square + Cramer's V + standardized adjusted residuals for
 factors; Kruskal-Wallis + eta-squared for numerics).}
 
-\item{...}{Unsupported. Supplying unused arguments raises an error.}
+\item{...}{Unsupported. Supplying unused arguments raises an error.
+For the S3 methods: further arguments passed to or from other methods.}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_clustering} or \code{tidy_covariates}.}
+
+\item{digits}{Integer. Decimal places used for floating-point statistics in the printout. Default \code{3}. Non-breaking: existing \code{print(x)} calls keep their previous formatting.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_clustering}.}
+
+\item{type}{Character. Plot type: \code{"silhouette"} (per-observation silhouette bars), \code{"mds"} (2D MDS projection), \code{"heatmap"} (distance matrix heatmap ordered by cluster), or \code{"predictors"} (odds-ratio forest plot of the post-hoc covariate analysis; requires \code{covariates} and an estimator that produces coefficients). Default: \code{"silhouette"}.}
+
+\item{combined}{Logical. For \code{type = "predictors"} only: when \code{TRUE} (default), covariate forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned.}
 }
 \value{
 An object of class \code{"net_clustering"} containing:
@@ -142,6 +170,14 @@ each sequence. NULL otherwise.}
 \item{htna_partition}{For HTNA input, the preserved node-to-actor
 partition used to restore HTNA children when networks are built.}
 }
+
+In \code{print.net_clustering()}: The input object, invisibly.
+
+In \code{summary.net_clustering()}: A data frame of per-cluster statistics, one row per cluster, with columns \code{cluster}, \code{size} and \code{mean_within_dist}, returned \emph{visibly}. When the clustering was fitted with \code{covariates}, a \code{tidy_covariates}/\code{data.frame} (the tidied covariate table, with cluster sizes, fit statistics and profiles attached as attributes) is returned \emph{invisibly} instead. In both cases the printed summary is a side effect.
+
+In \code{plot.net_clustering()}: A \code{ggplot} object (invisibly); for \code{type = "predictors"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
+
+In \code{print.tidy_covariates()}: The input invisibly.
 }
 \description{
 Clusters wide-format sequences using pairwise string dissimilarity and

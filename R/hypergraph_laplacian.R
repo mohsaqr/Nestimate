@@ -436,11 +436,16 @@ hypergraph_transduction <- function(hg, labels, xi = 0.99,
 
 # ---- S3: net_hypergraph_cluster ----------------------------------------
 
-#' Print method for net_hypergraph_cluster
-#'
-#' @param x A `net_hypergraph_cluster` object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
+#' @rdname hypergraph_cluster
+#' @param x For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_cluster}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_hypergraph_cluster}.
+#' @param what Character. `"both"` (default), `"spectrum"`, or `"embedding"`.
+#' @param n_values Integer. How many smallest eigenvalues to show in the spectrum panel (default: `min(3 * k, n_nodes)`).
+#' @return In \code{print.net_hypergraph_cluster()}: The input object, invisibly.
+#' @return In \code{summary.net_hypergraph_cluster()}: A data.frame, one row per cluster: `cluster`, `size`, `share`.
+#' @return In \code{as.data.frame.net_hypergraph_cluster()}: The tidy assignment table: one row per node, columns `node`, `cluster`, `pi` (stationary probability of the node under the Laplacian's random walk) and the spectral-embedding coordinates `dim1..dimk`.
+#' @return In \code{plot.net_hypergraph_cluster()}: For `"spectrum"`/`"embedding"`, the ggplot object. For `"both"`, the arranged gtable when gridExtra is installed (drawn on the current device), otherwise the two panels are drawn via grid viewports and the list of the two ggplots is returned invisibly.
 #' @export
 print.net_hypergraph_cluster <- function(x, ...) {
   cat("Hypergraph spectral clustering (", x$type, " Laplacian)\n", sep = "")
@@ -453,11 +458,7 @@ print.net_hypergraph_cluster <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary method for net_hypergraph_cluster
-#'
-#' @param object A `net_hypergraph_cluster` object.
-#' @param ... Additional arguments (ignored).
-#' @return A data.frame, one row per cluster: `cluster`, `size`, `share`.
+#' @rdname hypergraph_cluster
 #' @export
 summary.net_hypergraph_cluster <- function(object, ...) {
   out <- object$sizes
@@ -465,14 +466,7 @@ summary.net_hypergraph_cluster <- function(object, ...) {
   out
 }
 
-#' Coerce a net_hypergraph_cluster to a data.frame
-#'
-#' @param x A `net_hypergraph_cluster` object.
-#' @param ... Additional arguments (ignored).
-#' @return The tidy assignment table: one row per node, columns `node`,
-#'   `cluster`, `pi` (stationary probability of the node under the
-#'   Laplacian's random walk) and the spectral-embedding coordinates
-#'   `dim1..dimk`.
+#' @rdname hypergraph_cluster
 #' @export
 as.data.frame.net_hypergraph_cluster <- function(x, ...) {
   out <- x$clusters
@@ -480,26 +474,7 @@ as.data.frame.net_hypergraph_cluster <- function(x, ...) {
   cbind(out, as.data.frame(x$embedding), row.names = NULL)
 }
 
-#' Plot method for net_hypergraph_cluster
-#'
-#' Two diagnostic panels. `"spectrum"`: scree plot of the Laplacian
-#' spectrum with the k used for clustering marked - the eigengap after k
-#' supports (or questions) the choice of k. `"embedding"`: the nodes in
-#' the first two spectral-embedding dimensions, labelled, coloured and
-#' shaped by cluster, sized by stationary probability - the geometry
-#' k-means actually clustered. `"both"` (default) arranges the two side
-#' by side (via gridExtra when available, base grid viewports otherwise).
-#'
-#' @param x A `net_hypergraph_cluster` object.
-#' @param what Character. `"both"` (default), `"spectrum"`, or
-#'   `"embedding"`.
-#' @param n_values Integer. How many smallest eigenvalues to show in the
-#'   spectrum panel (default: `min(3 * k, n_nodes)`).
-#' @param ... Additional arguments (ignored).
-#' @return For `"spectrum"`/`"embedding"`, the ggplot object. For
-#'   `"both"`, the arranged gtable when gridExtra is installed (drawn on
-#'   the current device), otherwise the two panels are drawn via grid
-#'   viewports and the list of the two ggplots is returned invisibly.
+#' @rdname hypergraph_cluster
 #' @export
 plot.net_hypergraph_cluster <- function(x,
                                         what = c("both", "spectrum",
@@ -579,11 +554,17 @@ plot.net_hypergraph_cluster <- function(x,
 
 # ---- S3: net_hypergraph_transduction -----------------------------------
 
-#' Print method for net_hypergraph_transduction
-#'
-#' @param x A `net_hypergraph_transduction` object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
+#' @rdname hypergraph_transduction
+#' @param x For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_transduction}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_hypergraph_transduction}.
+#' @param row.names `NULL` (default) or a character vector of row names for the returned data frame.
+#' @param optional Ignored; present so the method matches the signature of the [as.data.frame()] generic.
+#' @param what Character. `"predictions"` (default) for the one-row-per-node table, `"scores"` for the tidy long score table (one row per node x class: `node`, `class`, `score`).
+#' @return In \code{print.net_hypergraph_transduction()}: The input object, invisibly.
+#' @return In \code{summary.net_hypergraph_transduction()}: A data.frame, one row per class: `class`, `n_labeled`, `n_predicted`, `mean_margin` (mean winning margin among the nodes predicted into the class).
+#' @return In \code{as.data.frame.net_hypergraph_transduction()}: A data.frame selected by `what`: for `"predictions"`, one row per node with columns `node`, `label` (the given label, `NA` if unlabeled), `predicted`, `score` and `margin`; for `"scores"`, one row per node x class with columns `node`, `class` and `score`.
+#' @return In \code{plot.net_hypergraph_transduction()}: A ggplot object (the score heatmap), returned visibly so that `plot(x)` draws it.
 #' @export
 print.net_hypergraph_transduction <- function(x, ...) {
   cat("Hypergraph transductive label spreading (", x$type,
@@ -597,13 +578,7 @@ print.net_hypergraph_transduction <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary method for net_hypergraph_transduction
-#'
-#' @param object A `net_hypergraph_transduction` object.
-#' @param ... Additional arguments (ignored).
-#' @return A data.frame, one row per class: `class`, `n_labeled`,
-#'   `n_predicted`, `mean_margin` (mean winning margin among the nodes
-#'   predicted into the class).
+#' @rdname hypergraph_transduction
 #' @export
 summary.net_hypergraph_transduction <- function(object, ...) {
   p <- object$predictions
@@ -621,21 +596,7 @@ summary.net_hypergraph_transduction <- function(object, ...) {
   out
 }
 
-#' Coerce a net_hypergraph_transduction to a data.frame
-#'
-#' @param x A `net_hypergraph_transduction` object.
-#' @param row.names `NULL` (default) or a character vector of row names for
-#'   the returned data frame.
-#' @param optional Ignored; present so the method matches the signature of
-#'   the [as.data.frame()] generic.
-#' @param what Character. `"predictions"` (default) for the one-row-per-node
-#'   table, `"scores"` for the tidy long score table (one row per node x
-#'   class: `node`, `class`, `score`).
-#' @param ... Additional arguments (ignored).
-#' @return A data.frame selected by `what`: for `"predictions"`, one row per
-#'   node with columns `node`, `label` (the given label, `NA` if unlabeled),
-#'   `predicted`, `score` and `margin`; for `"scores"`, one row per node x
-#'   class with columns `node`, `class` and `score`.
+#' @rdname hypergraph_transduction
 #' @export
 as.data.frame.net_hypergraph_transduction <- function(
     x, row.names = NULL, optional = FALSE,
@@ -655,20 +616,7 @@ as.data.frame.net_hypergraph_transduction <- function(
   out
 }
 
-#' Plot method for net_hypergraph_transduction
-#'
-#' Heatmap of the full node-by-class score matrix: rows are nodes (grouped
-#' by predicted class), columns are classes, tile shading and printed
-#' values are the spreading scores. Seed nodes (given labels) carry a
-#' black tile border, and each node's winning class is marked with a dot,
-#' so agreement between seeds, scores, and decisions is visible in one
-#' panel. Rows whose winning and runner-up scores are close (small
-#' `margin`) are the assignments to distrust.
-#'
-#' @param x A `net_hypergraph_transduction` object.
-#' @param ... Additional arguments (ignored).
-#' @return A ggplot object (the score heatmap), returned visibly so that
-#'   `plot(x)` draws it.
+#' @rdname hypergraph_transduction
 #' @export
 plot.net_hypergraph_transduction <- function(x, ...) {
   sc <- as.data.frame(x, what = "scores")

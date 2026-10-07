@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- estimate_network() Tests ----
 # estimate_network() is deprecated; these tests verify backward compat.
 

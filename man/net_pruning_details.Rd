@@ -5,6 +5,7 @@
 \alias{net_pruning_details.netobject}
 \alias{net_pruning_details.netobject_group}
 \alias{net_pruning_details.default}
+\alias{print.net_pruning_details}
 \title{Report Network Pruning Details}
 \usage{
 net_pruning_details(x, ...)
@@ -14,16 +15,20 @@ net_pruning_details(x, ...)
 \method{net_pruning_details}{netobject_group}(x, ...)
 
 \method{net_pruning_details}{default}(x, ...)
+
+\method{print}{net_pruning_details}(x, ...)
 }
 \arguments{
-\item{x}{A pruned \code{netobject} or \code{netobject_group}.}
+\item{x}{A pruned \code{netobject} or \code{netobject_group}. For the \code{net_pruning_details()} and \code{print()} methods: an object of class \code{netobject}, \code{netobject_group}, \code{default} or \code{net_pruning_details}.}
 
-\item{...}{Ignored.}
+\item{...}{Ignored. For the S3 methods: further arguments passed to or from other methods.}
 }
 \value{
 For a \code{netobject}: a \code{net_pruning_details} data frame
 (columns \code{from}, \code{to}, \code{weight}) of removed edges. For a
 \code{netobject_group}: a named list of such data frames.
+
+In \code{print.net_pruning_details()}: \code{x}, invisibly.
 }
 \description{
 Returns the edges removed by \code{\link{net_prune}} as a tidy

@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # build_mcml(<mcml>, combine =, expand =, clusters =): re-partition and
 # re-estimate an existing mcml from the sequences it carries.
 

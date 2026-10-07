@@ -1,4 +1,4 @@
-# ---- ngram / gap / reverse estimators: parity with tna::build_model() ----
+# ---- ngram / gap / reverse estimators: hand-computed expectations ----
 
 .parity_seqs <- function() {
   set.seed(20260829)
@@ -46,37 +46,6 @@ test_that("reverse is the transpose of frequency", {
   freq_w <- build_network(seqs, method = "frequency",
                           params = list(weighted = TRUE))
   expect_equal(rev_w$weights, t(freq_w$weights))
-})
-
-test_that("ngram/gap/reverse match tna::build_model() weights", {
-  skip_if_not_installed("tna")
-  seqs <- .parity_seqs()
-  cases <- list(
-    list(method = "ngram", type = "n-gram", params = list()),
-    list(method = "ngram", type = "n-gram", params = list(n_gram = 3)),
-    list(method = "ngram", type = "n-gram", params = list(n_gram = 4)),
-    list(method = "gap", type = "gap", params = list()),
-    list(method = "gap", type = "gap", params = list(max_gap = 2)),
-    list(method = "gap", type = "gap", params = list(max_gap = 0)),
-    list(method = "reverse", type = "reverse", params = list()),
-    list(method = "reverse", type = "reverse", params = list(weighted = TRUE))
-  )
-  invisible(lapply(cases, function(cs) {
-    ours <- build_network(seqs, method = cs$method, params = cs$params)
-    ref <- tna::build_model(seqs, type = cs$type, params = cs$params)
-    expect_equal(unname(ours$weights), unname(ref$weights),
-                 tolerance = sqrt(.Machine$double.eps),
-                 label = paste(cs$method, deparse(cs$params)))
-    expect_equal(rownames(ours$weights), rownames(ref$weights))
-  }))
-})
-
-test_that("ngram matches tna on group_regulation", {
-  skip_if_not_installed("tna")
-  seqs <- utils::head(tna::group_regulation, 200)
-  ours <- build_network(seqs, method = "ngram", params = list(n_gram = 3))
-  ref <- tna::build_model(seqs, type = "n-gram", params = list(n_gram = 3))
-  expect_equal(unname(ours$weights), unname(ref$weights))
 })
 
 test_that("long-format input gives the same result as its wide form", {

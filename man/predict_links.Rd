@@ -2,6 +2,8 @@
 % Please edit documentation in R/link_prediction.R
 \name{predict_links}
 \alias{predict_links}
+\alias{print.net_link_prediction}
+\alias{summary.net_link_prediction}
 \title{Predict Missing or Future Links in a Network}
 \usage{
 predict_links(
@@ -14,10 +16,14 @@ predict_links(
   include_self = FALSE,
   katz_damping = NULL
 )
+
+\method{print}{net_link_prediction}(x, ...)
+
+\method{summary}{net_link_prediction}(object, ...)
 }
 \arguments{
 \item{x}{A \code{netobject}, \code{mcml}, \code{cograph_network}, or
-numeric square matrix.}
+numeric square matrix. For the \code{print()} method: an object of class \code{net_link_prediction}.}
 
 \item{methods}{Character vector. One or more of:
 \code{"common_neighbors"}, \code{"resource_allocation"},
@@ -39,6 +45,10 @@ Default: \code{FALSE}.}
 \item{katz_damping}{Numeric or NULL. Attenuation factor for Katz index.
 If NULL, auto-computed as \code{0.9 / spectral_radius(A)}.
 Default: \code{NULL}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_link_prediction}.}
 }
 \value{
 An object of class \code{"net_link_prediction"} containing:
@@ -60,6 +70,10 @@ only one method was requested.}
 \item{n_nodes}{Integer.}
 \item{n_existing}{Integer. Number of existing edges.}
 }
+
+In \code{print.net_link_prediction()}: The input object, invisibly.
+
+In \code{summary.net_link_prediction()}: A data frame, one row per method, with columns \code{method}, \code{n_predictions}, \code{score_mean}, \code{score_sd}, \code{score_max} and \code{score_min}. A method with no predictions (every possible link already exists) has \code{n_predictions = 0} and \code{NA} scores.
 }
 \description{
 Computes link prediction scores for all node pairs using one or more

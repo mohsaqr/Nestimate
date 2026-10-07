@@ -2,6 +2,8 @@
 % Please edit documentation in R/nct.R
 \name{nct}
 \alias{nct}
+\alias{print.net_nct}
+\alias{summary.net_nct}
 \title{Network Comparison Test}
 \usage{
 nct(
@@ -14,6 +16,10 @@ nct(
   weighted = TRUE,
   p_adjust = "none"
 )
+
+\method{print}{net_nct}(x, ...)
+
+\method{summary}{net_nct}(object, ...)
 }
 \arguments{
 \item{data1}{A numeric matrix or data.frame of observations from group 1.}
@@ -37,6 +43,12 @@ Default \code{TRUE}.}
 
 \item{p_adjust}{P-value adjustment method for the per-edge tests
 (any method in \code{stats::p.adjust.methods}). Default \code{"none"}.}
+
+\item{x}{For the \code{print()} method: an object of class \code{net_nct}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_nct}.}
 }
 \value{
 A list of class \code{net_nct} with elements:
@@ -56,6 +68,10 @@ column names).}
 \item{params}{List of the settings used: \code{gamma}, \code{abs},
 \code{weighted}, \code{p_adjust}.}
 }
+
+In \code{print.net_nct()}: The input object, invisibly.
+
+In \code{summary.net_nct()}: A data frame with columns \code{from}, \code{to}, \code{diff_observed}, \code{p_value}, \code{significant}. Attributes \code{m_stat} and \code{s_stat} each hold a one-row data frame with \code{observed} and \code{p_value}.
 }
 \description{
 Tests whether two networks estimated from independent samples differ at
@@ -76,9 +92,9 @@ bit-for-bit, even under the same seed.
 }
 \examples{
 set.seed(1)
-x1 <- matrix(rnorm(200 * 5), 200, 5)
-x2 <- matrix(rnorm(200 * 5), 200, 5)
-colnames(x1) <- colnames(x2) <- paste0("V", 1:5)
+x1 <- matrix(rnorm(100 * 4), 100, 4)
+x2 <- matrix(rnorm(100 * 4), 100, 4)
+colnames(x1) <- colnames(x2) <- paste0("V", 1:4)
 # iter = 20 keeps the example fast; a real analysis uses 1000 or more.
 res <- nct(x1, x2, iter = 20)
 res

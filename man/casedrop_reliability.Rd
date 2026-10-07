@@ -41,16 +41,14 @@ casedrop_reliability(
 )
 }
 \arguments{
-\item{x}{A \code{net_casedrop_reliability_group} object.}
+\item{x}{A \code{netobject}, \code{cograph_network}, \code{netobject_group}, or \code{mcml}.
+For the group types this function iterates over each element and
+returns a named list. For the \code{print()} and \code{plot()} methods: an object of class \code{net_casedrop_reliability} or \code{net_casedrop_reliability_group} (or its \code{summary()}).}
 
 \item{iter}{Integer. Iterations per drop proportion. Default \code{1000}.}
 
-\item{drop_prop}{Drop proportion at which to report the four metrics
-(mean +/- sd per network). Must be one of the drop proportions the
-object was built with. Defaults to the object's median grid value
-(the stored grid is used, not an assumed \code{0.7}); pass an explicit
-value not in the grid to get an error listing the available
-proportions.}
+\item{drop_prop}{Numeric vector of proportions to evaluate. Each entry
+must lie strictly between 0 and 1. Default \code{seq(0.1, 0.9, by = 0.1)}. In \code{summary.net_casedrop_reliability_group()}: Drop proportion at which to report the four metrics (mean +/- sd per network). Must be one of the drop proportions the object was built with. Defaults to the object's median grid value (the stored grid is used, not an assumed \code{0.7}); pass an explicit value not in the grid to get an error listing the available proportions.}
 
 \item{threshold}{Numeric in \verb{[0, 1]}. Minimum edge-vector correlation
 for an iteration to count as stable. Default \code{0.7}.}
@@ -71,16 +69,13 @@ edge vector. Default \code{FALSE}.}
 
 \item{digits}{Digits to display. Default \code{3}.}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 
-\item{object}{A \code{net_casedrop_reliability_group}.}
+\item{object}{For the \code{summary()} method: an object of class \code{net_casedrop_reliability} or \code{net_casedrop_reliability_group}.}
 
-\item{combined}{When \code{TRUE} (default), all four metrics are shown in
-one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named
-list of four single-panel ggplots, one per metric.}
+\item{combined}{When \code{TRUE} (default), all four metrics are shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named list of four single-panel ggplots, one per metric.}
 
-\item{metric}{Which metric to plot. One of \code{"correlation"}
-(default), \code{"mean_abs_dev"}, \code{"median_abs_dev"}, \code{"max_abs_dev"}.}
+\item{metric}{Which metric to plot. One of \code{"correlation"} (default), \code{"mean_abs_dev"}, \code{"median_abs_dev"}, \code{"max_abs_dev"}.}
 }
 \value{
 An object of class \code{net_casedrop_reliability} with:
@@ -110,20 +105,15 @@ When the original edge vector has zero variance a warning is issued and
 the object is returned with \code{cs = 0}, an empty \code{summary}, and all-\code{NA}
 metric matrices.
 
-The input \code{x} invisibly.
+In \code{print.net_casedrop_reliability()}: The input \code{x} invisibly.
 
-A tidy data frame with columns \code{metric}, \code{drop_prop},
-\code{mean}, \code{sd} summarising edge-weight stability across
-case-dropping iterations.
+In \code{summary.net_casedrop_reliability()}: A tidy data frame with columns \code{metric}, \code{drop_prop}, \code{mean}, \code{sd} summarising edge-weight stability across case-dropping iterations.
 
-A data frame with one row per network containing
-\code{cor}, \code{mean_abs_dev}, \code{median_abs_dev}, \code{max_abs_dev} formatted as
-"mean +/- sd".
+In \code{summary.net_casedrop_reliability_group()}: A data frame with one row per network containing \code{cor}, \code{mean_abs_dev}, \code{median_abs_dev}, \code{max_abs_dev} formatted as "mean +/- sd".
 
-A \code{ggplot} object, or a named list of four ggplots when
-\code{combined = FALSE}.
+In \code{plot.net_casedrop_reliability()}: A \code{ggplot} object, or a named list of four ggplots when \code{combined = FALSE}.
 
-A \code{ggplot} object.
+In \code{plot.net_casedrop_reliability_group()}: A \code{ggplot} object.
 }
 \description{
 Computes a \strong{CS-coefficient for the edge-weight vector} of a network:
@@ -131,17 +121,6 @@ the maximum proportion of cases (rows of \code{x$data}) that can be dropped
 while the flattened edge-weight vector of the re-estimated network
 still correlates with the original above \code{threshold} in at least
 \code{certainty} of iterations.
-
-Plots the four model-level reliability metrics across drop
-proportions: \code{correlation}, \code{mean_abs_dev}, \code{median_abs_dev},
-\code{max_abs_dev}. Each panel shows the per-iteration mean with a ribbon
-at mean +/- sd. The \code{correlation} panel includes a dashed horizontal
-line at the user's \code{threshold} (default 0.7).
-
-Overlay of per-cluster correlation curves across drop proportions.
-One colour per sub-network; ribbons show mean +/- sd across
-iterations. Dashed horizontal line marks the stability threshold
-(default 0.7).
 }
 \details{
 Complements \code{\link[=centrality_stability]{centrality_stability()}}: that function asks whether

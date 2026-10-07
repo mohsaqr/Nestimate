@@ -2,16 +2,32 @@
 % Please edit documentation in R/simplicial.R
 \name{q_analysis}
 \alias{q_analysis}
+\alias{print.q_analysis}
+\alias{plot.q_analysis}
 \title{Q-Analysis}
 \usage{
 q_analysis(sc)
+
+\method{print}{q_analysis}(x, ...)
+
+\method{plot}{q_analysis}(x, combined = TRUE, ...)
 }
 \arguments{
 \item{sc}{A \code{simplicial_complex} object.}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{q_analysis}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{combined}{When \code{TRUE} (default), the two panels are stitched side-by-side via \code{gridExtra::arrangeGrob}. When \code{FALSE}, returns a named list (\code{q_vector}, \code{structure_vector}) of ggplots.}
 }
 \value{
 A \code{q_analysis} object with \code{$q_vector},
 \code{$structure_vector}, and \code{$max_q}.
+
+In \code{print.q_analysis()}: The input object, invisibly.
+
+In \code{plot.q_analysis()}: A grid grob (invisibly) when \code{combined = TRUE}; a named list of two ggplots when \code{combined = FALSE}.
 }
 \description{
 Computes Q-connectivity structure (Atkin 1974). Two maximal simplices

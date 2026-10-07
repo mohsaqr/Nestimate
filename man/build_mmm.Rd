@@ -2,6 +2,11 @@
 % Please edit documentation in R/mmm.R
 \name{build_mmm}
 \alias{build_mmm}
+\alias{print.net_mmm}
+\alias{summary.net_mmm}
+\alias{plot.net_mmm}
+\alias{print.net_mmm_clustering}
+\alias{plot.net_mmm_clustering}
 \title{Fit a Mixed Markov Model}
 \usage{
 build_mmm(
@@ -15,6 +20,21 @@ build_mmm(
   covariates = NULL,
   covariate_effect = c("em", "posthoc"),
   estimator = c("auto", "firth", "multinom", "chisq")
+)
+
+\method{print}{net_mmm}(x, digits = 3L, ...)
+
+\method{summary}{net_mmm}(object, ...)
+
+\method{plot}{net_mmm}(x, type = c("posterior", "covariates"), combined = TRUE, ...)
+
+\method{print}{net_mmm_clustering}(x, digits = 3L, ...)
+
+\method{plot}{net_mmm_clustering}(
+  x,
+  type = c("posterior", "covariates", "predictors"),
+  combined = TRUE,
+  ...
 )
 }
 \arguments{
@@ -68,6 +88,18 @@ Firth's penalised likelihood via \code{brglm2::brmultinom} (finite
 under separation); \code{"multinom"} forces \code{nnet::multinom}
 (warns about separation risk); \code{"chisq"} runs descriptive
 tests (no logit). See \code{\link{build_clusters}} for full details.}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_mmm} or \code{net_mmm_clustering}.}
+
+\item{digits}{In \code{print.net_mmm()}: Integer. Decimal places for floating-point statistics. Default \code{3}. Non-breaking: \code{print(x)} keeps the same alignment as before. In \code{print.net_mmm_clustering()}: Integer. Decimal places for floating-point statistics. Default \code{3}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_mmm}.}
+
+\item{type}{In \code{plot.net_mmm()}: Character. Plot type: \code{"posterior"} (default) or \code{"covariates"}. In \code{plot.net_mmm_clustering()}: Character. One of \code{"posterior"} (default; histogram of max posterior probability per sequence, coloured by cluster), \code{"covariates"} or its alias \code{"predictors"} (covariate forest plot when \code{cluster_mmm()} was run with \code{covariates}).}
+
+\item{combined}{In \code{plot.net_mmm()}: Logical. For \code{type = "covariates"} only: when \code{TRUE} (default), covariate forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned. In \code{plot.net_mmm_clustering()}: Logical. For \code{type} in \code{"covariates"} or \code{"predictors"} only: when \code{TRUE} (default), forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned.}
 }
 \value{
 An object of class \code{net_mmm} with components:
@@ -104,6 +136,14 @@ per fitted sequence in the row order of \code{posterior}, so
 \code{\link{session_ids}} can name each sequence; NULL for other
 input.}
 }
+
+In \code{print.net_mmm()} and \code{print.net_mmm_clustering()}: The input object, invisibly.
+
+In \code{summary.net_mmm()}: A per-component summary \code{data.frame}. The class and visibility depend on whether the model was fitted with covariates: \describe{ \item{No covariates}{A plain \code{data.frame} with one row per component and columns \code{component}, \code{prior}, \code{n_assigned}, \code{mean_posterior}, \code{avepp}, returned \emph{visibly} (so it auto-prints after the printed summary block).} \item{With covariates}{A \code{tidy_covariates}/\code{data.frame} (the tidied covariate table, with the per-component stats attached), returned \emph{invisibly}.} } In both cases the printed summary (model fit, per-cluster transition matrices, optional covariate profiles) is emitted as a side effect.
+
+In \code{plot.net_mmm()}: A \code{ggplot} object, invisibly; for \code{type = "covariates"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
+
+In \code{plot.net_mmm_clustering()}: A \code{ggplot} object, invisibly; for \code{type = "covariates"} / \code{"predictors"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
 }
 \description{
 Discovers latent subgroups with different transition dynamics using

@@ -2,6 +2,10 @@
 % Please edit documentation in R/markov_order.R
 \name{markov_order_test}
 \alias{markov_order_test}
+\alias{print.net_markov_order}
+\alias{print.net_markov_order_group}
+\alias{summary.net_markov_order}
+\alias{plot.net_markov_order}
 \title{Test the Markov order of a sequential process}
 \usage{
 markov_order_test(
@@ -13,6 +17,14 @@ markov_order_test(
   n_cores = 2L,
   seed = NULL
 )
+
+\method{print}{net_markov_order}(x, ...)
+
+\method{print}{net_markov_order_group}(x, ...)
+
+\method{summary}{net_markov_order}(object, ...)
+
+\method{plot}{net_markov_order}(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
 }
 \arguments{
 \item{data}{A data.frame (wide format, one sequence per row), a list
@@ -34,6 +46,16 @@ Default \code{FALSE} (set \code{TRUE} only on Unix-like systems).}
 \item{n_cores}{Integer. Cores for parallel execution. Default 2.}
 
 \item{seed}{Optional integer seed for reproducibility.}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_order} or \code{net_markov_order_group}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods. In \code{print.net_markov_order_group()}: Forwarded to \code{print.net_markov_order} for each element.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_markov_order}.}
+
+\item{panel}{Which panel(s) to render: \code{"both"}, \code{"ic"}, or \code{"permutation"}. Default \code{"both"}.}
+
+\item{combined}{When \code{panel = "both"} and \code{combined = TRUE} (default), the two panels are drawn side-by-side. If \pkg{gridExtra} is installed they are arranged into a single drawable/saveable gtable (returned); otherwise base \code{grid} viewports draw both panels and a named list of the two ggplots is returned invisibly. When \code{FALSE}, returns that named list (\code{ic}, \code{permutation}) without drawing. Ignored when \code{panel != "both"}.}
 }
 \value{
 An object of class \code{net_markov_order} with elements:
@@ -68,6 +90,14 @@ order actually tested, which is capped at
 For a \code{netobject_group} the result is a
 \code{"net_markov_order_group"}: a named list holding one
 \code{net_markov_order} per group.
+
+In \code{print.net_markov_order()}: The input object, invisibly.
+
+In \code{print.net_markov_order_group()}: \code{x} invisibly.
+
+In \code{summary.net_markov_order()}: The tidy \code{test_table} data.frame - one row per order tested - carrying the selection context as attributes: \code{optimal_order}, \code{bic_order}, \code{aic_order}, \code{alpha} and \code{n_perm}.
+
+In \code{plot.net_markov_order()}: A ggplot (single panel); for \code{panel = "both"}, either a \code{gridExtra} gtable (when \pkg{gridExtra} is installed) or a named list of two ggplots (\code{ic}, \code{permutation}) drawn side-by-side and returned invisibly.
 }
 \description{
 Principled test of whether a categorical sequence is best described

@@ -127,7 +127,7 @@
 #'       \code{seqdplot} where each time point sums to 1). See the section
 #'       \emph{Multichannel view of an mcml} for the options that shape it,
 #'       and \emph{Value} for what it returns.}
-#'   }
+#'   } For the \code{print()} method: an object of class \code{mcml_sequence_plot}.
 #' @param type One of \code{"heatmap"} (default), \code{"index"}, or
 #'   \code{"distribution"}.
 #' @param sort Row-ordering strategy for heatmap / within-panel for index.
@@ -337,22 +337,11 @@
 #'                   Affective  = "emotion"),
 #'   actor = "Actor", action = "Action", time = "Time")
 #' sequence_plot(fit)                                          # multichannel carpet
-#' sequence_plot(fit, type = "distribution")                  # prevalence + NA band
-#' sequence_plot(fit, type = "distribution", normalize = TRUE) # seqdplot (sums to 1)
 #'
 #' # Shape the multichannel view (see the section above).
 #' sequence_plot(fit, type = "distribution",
-#'               combine = c("Cognitive", "Affective"))        # two channels as one
-#' sequence_plot(fit, type = "distribution",
 #'               combine = list(Task = c("Cognitive", "Regulation")),
 #'               expand = "Task")                              # merge, then open
-#' sequence_plot(fit, type = "distribution", panel = "channels",
-#'               rest = "pooled", na = FALSE)                  # one grey band, no NA
-#' sequence_plot(fit, type = "distribution", panel = "channels",
-#'               rest = "pooled", rest_label = "Rest of states")
-#' sequence_plot(fit, type = "distribution", panel = "channels",
-#'               rest = "none")                                # own states only
-#' sequence_plot(fit, rest = "pooled")                         # carpet, pooled wash
 #'
 #' # Colour by name: one state, one cluster, one combined group. Everything
 #' # not named keeps its default colour.

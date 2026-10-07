@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Helper: simulate an order-k Markov sequence
 .sim_order_k <- function(k, n_seqs = 20L, len = 80L, states = letters[1:4],
                           seed = 1L) {

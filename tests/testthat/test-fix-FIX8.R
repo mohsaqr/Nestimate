@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Regression tests for FIX8 (audit findings A12-F01..F06, A05-F01, A08-F01).
 #
 # All assertions are structural (layer_data / syntax / object diffs) because

@@ -2,6 +2,8 @@
 % Please edit documentation in R/mlvar.R
 \name{build_mlvar}
 \alias{build_mlvar}
+\alias{print.net_mlvar}
+\alias{summary.net_mlvar}
 \title{Build a Multilevel Vector Autoregression (mlVAR) network}
 \usage{
 build_mlvar(
@@ -13,6 +15,10 @@ build_mlvar(
   lag = 1L,
   standardize = FALSE
 )
+
+\method{print}{net_mlvar}(x, ...)
+
+\method{summary}{net_mlvar}(object, ...)
 }
 \arguments{
 \item{data}{A \code{data.frame} containing the panel data.}
@@ -33,6 +39,12 @@ When provided, lag pairs are only formed within the same day.}
 centered and divided by its pooled SD \emph{before} augmentation. Default
 \code{FALSE}, matching \code{mlVAR::mlVAR(scale = FALSE)} - the only setting for
 which numerical equivalence has been validated.}
+
+\item{x}{For the \code{print()} method: an object of class \code{net_mlvar}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_mlvar}.}
 }
 \value{
 A dual-class \code{c("net_mlvar", "netobject_group")} object - a
@@ -66,6 +78,10 @@ after na.omit.}
 \item{\code{attr(fit, "standardize")}}{Logical; whether pre-augmentation
 standardization was applied.}
 }
+
+In \code{print.net_mlvar()}: Invisibly returns \code{x}.
+
+In \code{summary.net_mlvar()}: The tidy coefficient \code{data.frame} - the same table \code{\link[=coefs]{coefs()}} returns, with one row per \verb{(outcome, predictor)} pair and columns \code{outcome}, \code{predictor}, \code{beta}, \code{se}, \code{t}, \code{p}, \code{ci_lower}, \code{ci_upper}, \code{significant}. Returned visibly, so calling \code{summary(fit)} at the console prints the matrices and then the table.
 }
 \description{
 Estimates three networks from ESM/EMA panel data, matching

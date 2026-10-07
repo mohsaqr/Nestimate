@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Regression: Codex P2 on the fix diff -- build_network(method="mgm",
 # level=, group=) validated the mgm `level` length against raw ncol(data),
 # before the group column is dropped for the per-group recursion. A correct

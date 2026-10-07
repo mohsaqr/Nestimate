@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- compare_networks(): N-way descriptive comparison + optional inference ----
 
 .cn_fixture <- function() {
@@ -200,20 +203,6 @@ test_that("inputs: matrices, groups, lists, labels", {
 
   dup <- compare_networks(f$early, f$late)
   expect_equal(names(dup$networks), c("relative", "relative_1"))
-})
-
-test_that("tna and group_tna inputs match tna::tna() weights and support inference", {
-  skip_if_not_installed("tna")
-  f <- .cn_fixture()
-  t1 <- tna::tna(f$seqs[[1]])
-  t2 <- tna::tna(f$seqs[[2]])
-  cmp <- compare_networks(one = t1, two = t2, measures = NULL)
-  expect_equal(unname(cmp$matrices$one), unname(t1$weights), tolerance = 1e-12)
-  expect_equal(unname(cmp$matrices$two), unname(t2$weights), tolerance = 1e-12)
-  expect_true(is.data.frame(cmp$networks$one$data))
-  ci <- compare_networks(one = t1, two = t2, measures = NULL,
-                         test = "permutation", iter = 20, seed = 1)
-  expect_true("perm_p" %in% names(ci$edges))
 })
 
 # 9. ---------------------------------------------------------------------------

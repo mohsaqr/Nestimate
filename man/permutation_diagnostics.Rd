@@ -103,12 +103,12 @@ actor-level test cannot reject anything.}
 
 \examples{
 # Students are nested in teams; Achiever is a team-level label.
-# iter = 100 keeps the example fast; a real analysis uses 1000 or more.
+# iter = 50 keeps the example fast; a real analysis uses 1000 or more.
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
-permutation_diagnostics(net, actor = "Group", iter = 100, seed = 1)
-head(permutation_diagnostics(net, actor = "Group", iter = 100,
+permutation_diagnostics(net, actor = "Group", iter = 50, seed = 1)
+head(permutation_diagnostics(net, actor = "Group", iter = 50,
                              level = "edges", seed = 1))
 }
 \references{

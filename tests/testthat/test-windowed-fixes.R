@@ -1,4 +1,7 @@
-# Equivalence tests locking the correct behavior for three regressions caught
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
+# Worked-example regression tests locking the correct behavior for three regressions caught
 # by the 2026-05-10 Codex review of the working tree:
 #
 #   #1  prepare_onehot(window_size = 1L, window_type = "overlapping") drops

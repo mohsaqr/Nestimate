@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for plot_state_frequencies() and plot_mosaic()
 # Validates: ggplot return shape, layer count, palette correctness across
 # all four supported classes (netobject, netobject_group, mcml, htna)

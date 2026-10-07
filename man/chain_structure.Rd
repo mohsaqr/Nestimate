@@ -2,15 +2,33 @@
 % Please edit documentation in R/chain_structure.R
 \name{chain_structure}
 \alias{chain_structure}
+\alias{print.chain_structure}
+\alias{plot.chain_structure}
+\alias{summary.chain_structure}
+\alias{print.chain_structure_group}
+\alias{summary.chain_structure_group}
+\alias{print.summary_chain_structure}
 \title{Qualitative structure of a discrete-time Markov chain}
 \usage{
 chain_structure(x, normalize = TRUE, tol = 1e-10)
+
+\method{print}{chain_structure}(x, ...)
+
+\method{plot}{chain_structure}(x, show_values = TRUE, digits = 2L, ...)
+
+\method{summary}{chain_structure}(object, ...)
+
+\method{print}{chain_structure_group}(x, ...)
+
+\method{summary}{chain_structure_group}(object, ...)
+
+\method{print}{summary_chain_structure}(x, ...)
 }
 \arguments{
 \item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} model, transition
 matrix, or sequence data.frame (passed through \code{build_network()} with
 \code{method = "relative"}). A \code{netobject_group} is also accepted and
-analysed constituent by constituent.}
+analysed constituent by constituent. For the \code{print()} and \code{plot()} methods: an object of class \code{chain_structure}, \code{chain_structure_group} or \code{summary_chain_structure}.}
 
 \item{normalize}{Logical. If \code{TRUE} (default), rows of the transition
 matrix are renormalized to sum to 1 before analysis (see
@@ -25,6 +43,14 @@ absorbing-state test: a state is absorbing only when \code{P[i, i]} equals
 independent of \code{tol} (so raising \code{tol} to ignore tiny transition
 probabilities never reclassifies a near-deterministic state as
 absorbing). Default \code{1e-10}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods. In \code{print.chain_structure_group()}: Forwarded to \code{print.chain_structure}. In \code{print.summary_chain_structure()}: Forwarded to \code{print.data.frame}.}
+
+\item{show_values}{Logical. If \code{TRUE} (default), prints the numeric probability inside each cell. Set \code{FALSE} for large state spaces (n > 10) where labels overlap.}
+
+\item{digits}{Integer. Decimal places for in-cell labels.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{chain_structure} or \code{chain_structure_group}.}
 }
 \value{
 For a \code{netobject_group}, a \code{c("chain_structure_group", "list")}:
@@ -64,6 +90,14 @@ or \code{NULL} if no transient -> absorbing pathway exists. \verb{[i, j] = P(eve
 number of steps until absorption from each transient state.}
 \item{\code{P}}{The (possibly normalized) transition matrix used.}
 }
+
+In \code{print.chain_structure()}, \code{print.chain_structure_group()} and \code{print.summary_chain_structure()}: \code{x} invisibly.
+
+In \code{plot.chain_structure()}: A \code{ggplot} object.
+
+In \code{summary.chain_structure()}: A \code{data.frame} with one row per state, of class \code{c("summary_chain_structure", "data.frame")}, carrying the chain-level flags (\code{is_regular}, \code{is_irreducible}, \code{is_aperiodic}, \code{is_reversible}, \code{n_classes}, \code{absorbing_states}) as attributes, which its \code{print()} method shows as a header. Columns as described above.
+
+In \code{summary.chain_structure_group()}: A \code{data.frame} with columns \code{group}, \code{state}, \code{classification}, \code{period}, \code{persistence}, \code{return_probability}, \code{sojourn_steps}, plus \code{stationary_probability} if all groups are irreducible and \code{mean_absorption_time} if any group has absorbing states.
 }
 \description{
 Computes properties that depend only on the transition matrix support,
@@ -81,6 +115,22 @@ distribution is unique and meaningful. Use \code{is_regular} to check.
 The fundamental-matrix absorption math follows Kemeny & Snell (1976);
 the hitting-probability linear system follows Norris (1997).
 }
+\section{Plot colours}{
+
+Cell colour encodes \verb{P(ever reach j | start at i)}. The diagonal
+uses the return-time convention (\verb{P(return to j in >= 1 steps)}),
+matching \code{markovchain::hittingProbabilities}. A non-irreducible chain
+shows zero off-block entries -- visual evidence of one-way doors
+between behavioural phases. An absorbing chain shows a column of 1's
+for the absorbing state.
+}
+
+\section{Summary columns}{
+
+Columns are ordered for readability: identifiers first, classification
+second, dynamic per-state metrics last.
+}
+
 \examples{
 net <- build_network(as.data.frame(trajectories), method = "relative")
 cs  <- chain_structure(net)

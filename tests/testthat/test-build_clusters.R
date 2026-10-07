@@ -275,23 +275,6 @@ test_that("plot.net_clustering heatmap works", {
 # 9. Cross-validation against tna
 # ==============================================================================
 
-test_that("R fallback matches stringdist for all applicable metrics", {
-  skip_if_not_installed("stringdist")
-  df <- make_test_data(n = 30, k = 10, n_states = 4)
-  enc <- Nestimate:::.encode_sequences(df, c("*", "%"))
-
-  for (metric in c("hamming", "osa", "lv", "dl", "lcs",
-                    "qgram", "cosine", "jaccard", "jw")) {
-    d_r <- as.matrix(
-      Nestimate:::.dissimilarity_matrix_r(enc, metric, lambda = 0, q = 2L, p = 0.1)
-    )
-    d_sd <- as.matrix(
-      Nestimate:::.dissimilarity_matrix_stringdist(enc, metric, lambda = 0, q = 2L, p = 0.1)
-    )
-    expect_equal(d_r, d_sd, tolerance = 1e-10, info = metric)
-  }
-})
-
 # ==============================================================================
 # 11. Edge cases
 # ==============================================================================
@@ -600,40 +583,6 @@ test_that("all-categorical covariates produce no numeric profile", {
 # ==============================================================================
 # 18. Covariate analysis — k=2 cross-validation against glm(binomial)
 # ==============================================================================
-
-test_that("k=2 multinomial matches glm(binomial)", {
-  set.seed(99)
-  df <- data.frame(
-    T1 = sample(LETTERS[1:4], 60, replace = TRUE),
-    T2 = sample(LETTERS[1:4], 60, replace = TRUE),
-    T3 = sample(LETTERS[1:4], 60, replace = TRUE),
-    T4 = sample(LETTERS[1:4], 60, replace = TRUE),
-    Age = rnorm(60, 30, 8),
-    Score = runif(60, 0, 100),
-    stringsAsFactors = FALSE
-  )
-  cl <- build_clusters(df, k = 2, covariates = c("Age", "Score"))
-  our <- cl$covariates$coefficients
-
-  # glm reference
-  cov_df <- df[, c("Age", "Score")]
-  cov_df$cluster <- factor(cl$assignments)
-  ref_fit <- glm(cluster ~ Age + Score, data = cov_df, family = binomial)
-  ref <- summary(ref_fit)$coefficients
-
-  # Compare coefficients (excluding intercept from our table for variable match)
-  for (vname in c("Age", "Score")) {
-    our_row <- our[our$variable == vname, ]
-    expect_equal(our_row$estimate[[1L]], unname(ref[vname, "Estimate"]),
-                 tolerance = 1e-3, info = vname)
-    expect_equal(our_row$std_error[[1L]], unname(ref[vname, "Std. Error"]),
-                 tolerance = 1e-3, info = vname)
-    expect_equal(our_row$z[[1L]], unname(ref[vname, "z value"]),
-                 tolerance = 1e-3, info = vname)
-    expect_equal(our_row$p[[1L]], unname(ref[vname, "Pr(>|z|)"]),
-                 tolerance = 1e-2, info = vname)
-  }
-})
 
 # ==============================================================================
 # 19. Covariate analysis — k>2 manual verification

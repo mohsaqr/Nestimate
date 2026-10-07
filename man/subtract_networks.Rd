@@ -15,7 +15,7 @@ matrix. Both must share the same nodes in the same order.}
 
 \item{max_print}{Integer. Rows to show in \code{print()}. Default \code{12}.}
 
-\item{...}{Ignored.}
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 }
 \value{
 A \code{netdifference} object: a \code{netobject} whose

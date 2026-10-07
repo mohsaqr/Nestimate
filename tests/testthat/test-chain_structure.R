@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Smoke + identity tests for chain_structure().
 # Numerical equivalence vs markovchain lives in
 # local_testing_and_equivalence/test-equiv-chain_structure.R.

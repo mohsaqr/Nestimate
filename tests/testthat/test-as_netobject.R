@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Boundary tests: psychnet (cograph_network) <-> Nestimate netobject.
 
 # A faithful stand-in for a psychnet EBICglasso result, matching the live

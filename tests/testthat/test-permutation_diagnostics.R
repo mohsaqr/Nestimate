@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- permutation_diagnostics(): does nesting bias a permutation test? ----
 
 # Sessions nested in persons; person-specific transition matrices with

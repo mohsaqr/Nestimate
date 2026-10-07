@@ -118,45 +118,16 @@
 
 
 #' @rdname compare_networks
-#' @param type For `plot()`: one view per call. `"networks"` (default) draws
-#'   each network once with `cograph::splot()`; `"difference"` draws the
-#'   signed difference network of each pair; `"edges"` is a ranked dumbbell
-#'   of the largest edge differences; `"nodes"` the same for centralities;
-#'   `"global"` the 22 comparison metrics; `"heatmap"` the signed difference
-#'   matrix; `"scatter"` weight against weight; `"inference"` is a forest of
-#'   the edge differences on the difference scale, with credible intervals
-#'   when the Bayesian backend ran and the p-value printed per edge. It needs
-#'   `test != "none"` and raises `nestimate_compare_no_test` otherwise.
-#' @param pair Optional selection of comparisons to draw; default all. Any of:
-#'   the pair name(s) as printed (`"A vs B"`); the two network names
-#'   (`c("A", "B")`, either order); one network name (`"A"`, every pair it
-#'   takes part in); or index/indices into the pair table (`1`, `c(1, 3)`).
-#'   For `type = "networks"` this selects the networks taking part in the
-#'   chosen pairs.
-#' @param combined When `TRUE` (default), a multi-pair view is one figure
-#'   (facets for the `ggplot` views, one base-graphics page for `"networks"`
-#'   and `"difference"`). When `FALSE`, the view is split: the `ggplot`
-#'   views return a named list of single-pair plots, one per pair, and the
-#'   base-graphics views draw one panel per page.
-#' @param top_n Number of edges shown in the edge view (largest absolute
-#'   differences first). Default `20`.
+#' @param type For `plot()`: one view per call. `"networks"` (default) draws each network once with `cograph::splot()`; `"difference"` draws the signed difference network of each pair; `"edges"` is a ranked dumbbell of the largest edge differences; `"nodes"` the same for centralities; `"global"` the 22 comparison metrics; `"heatmap"` the signed difference matrix; `"scatter"` weight against weight; `"inference"` is a forest of the edge differences on the difference scale, with credible intervals when the Bayesian backend ran and the p-value printed per edge. It needs `test != "none"` and raises `nestimate_compare_no_test` otherwise.
+#' @param pair Optional selection of comparisons to draw; default all. Any of: the pair name(s) as printed (`"A vs B"`); the two network names (`c("A", "B")`, either order); one network name (`"A"`, every pair it takes part in); or index/indices into the pair table (`1`, `c(1, 3)`). For `type = "networks"` this selects the networks taking part in the chosen pairs.
+#' @param combined When `TRUE` (default), a multi-pair view is one figure (facets for the `ggplot` views, one base-graphics page for `"networks"` and `"difference"`). When `FALSE`, the view is split: the `ggplot` views return a named list of single-pair plots, one per pair, and the base-graphics views draw one panel per page.
+#' @param top_n Number of edges shown in the edge view (largest absolute differences first). Default `20`.
 #' @param measure Optional centrality measure(s) to restrict the node view.
-#' @param labels For `compare_networks()`: optional character vector naming
-#'   the networks (one per network after flattening groups); overrides
-#'   argument names. For `plot()`: logical; print the signed difference on
-#'   the edge and node views, default `TRUE` (the heatmap always shows its
-#'   values).
-#' @param digits Decimals in printed values. Default `2`.
-#' @param what Deprecated alias for `type`, kept so existing calls keep
-#'   working.
-#' @param ... For `compare_networks()`: two or more networks, in any mix of:
-#'   `netobject`, `netobject_group` (members are flattened and keep their
-#'   names), `cograph_network` / `psychnet`, `mcml`, `tna`, `group_tna`,
-#'   square numeric matrices, or one unnamed `list` of these. Name the
-#'   arguments to name the networks (`compare_networks(early = a, late = b)`).
-#'   For `plot()`: passed to `cograph::splot()` for the network views (e.g.
-#'   `layout`, `node_size`, `minimum`); ignored by the other views and by
-#'   `print()`.
+#' @param digits In \code{plot.net_network_comparison()}: Decimals in printed values. Default `2`. In \code{print.net_network_comparison()}: Decimals shown. Default `2`.
+#' @param what Deprecated alias for `type`, kept so existing calls keep working.
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_network_comparison}.
+#' @return In \code{plot.net_network_comparison()}: `plot()` returns a `ggplot` for `type = "edges"`, `"nodes"`, `"global"`, `"heatmap"`, `"scatter"` and `"inference"`, or a named list of such plots (one per pair) when `combined = FALSE`. `type = "networks"` and `type = "difference"` draw in base graphics -- with `cograph::splot()` when cograph is installed, otherwise with a built-in circular drawer -- and return `NULL` invisibly.
+#' @return In \code{print.net_network_comparison()}: `print()` returns `x` invisibly.
 #' @section Reading the figures:
 #' One colour contract in every view and every backend: `"#4A6FE3"` marks
 #' `network_a` (the reference, when one is set) as the higher of the two,
@@ -167,12 +138,6 @@
 #' sign. When `test` was run, evidence is shown by opacity and a starred
 #' (edge and node views) or annotated (inference view) label: a
 #' non-significant difference is faded, never deleted.
-#' @return `plot()` returns a `ggplot` for `type = "edges"`, `"nodes"`,
-#'   `"global"`, `"heatmap"`, `"scatter"` and `"inference"`, or a named list of such plots
-#'   (one per pair) when `combined = FALSE`. `type = "networks"` and
-#'   `type = "difference"` draw in base graphics -- with `cograph::splot()`
-#'   when cograph is installed, otherwise with a built-in circular drawer --
-#'   and return `NULL` invisibly.
 #' @export
 plot.net_network_comparison <- function(x,
                                         type = c("networks", "difference",

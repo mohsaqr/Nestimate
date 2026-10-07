@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 test_that("sequence_plot draws from a data.frame + hclust", {
   set.seed(1L)
   states <- c("A", "B", "C")

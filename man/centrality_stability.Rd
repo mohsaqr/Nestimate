@@ -2,6 +2,11 @@
 % Please edit documentation in R/centrality_stability.R
 \name{centrality_stability}
 \alias{centrality_stability}
+\alias{print.net_stability}
+\alias{print.net_stability_group}
+\alias{summary.net_stability_group}
+\alias{summary.net_stability}
+\alias{plot.net_stability}
 \title{Centrality Stability Coefficient (CS-coefficient)}
 \usage{
 centrality_stability(
@@ -19,12 +24,22 @@ centrality_stability(
   normalize_diffusion = TRUE,
   seed = NULL
 )
+
+\method{print}{net_stability}(x, ...)
+
+\method{print}{net_stability_group}(x, ...)
+
+\method{summary}{net_stability_group}(object, ...)
+
+\method{summary}{net_stability}(object, ...)
+
+\method{plot}{net_stability}(x, ...)
 }
 \arguments{
 \item{x}{A \code{netobject} from \code{\link{build_network}}, a
 \code{cograph_network}, or a \code{netobject_group} / \code{mcml}
 (each constituent network is assessed and a
-\code{net_stability_group} is returned).}
+\code{net_stability_group} is returned). For the \code{print()} and \code{plot()} methods: an object of class \code{net_stability} or \code{net_stability_group}.}
 
 \item{measures}{Character vector. Centrality measures to assess.
 Defaults to \code{c("InStrength", "OutStrength", "Betweenness")}. Pass
@@ -79,6 +94,10 @@ Default: \code{TRUE}, matching \code{tna}.}
 when \code{normalize = FALSE}. Default: \code{TRUE}.}
 
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_stability_group} or \code{net_stability}.}
 }
 \value{
 An object of class \code{"net_stability"}: a list with
@@ -108,6 +127,16 @@ row-normalised transition network), those measures are \strong{dropped}:
 retained ones. When \emph{every} requested measure has zero variance a
 warning is issued and \strong{all} requested names are returned with
 \code{cs = 0} and all-\code{NA} correlation matrices.
+
+In \code{print.net_stability()}: The input object, invisibly.
+
+In \code{print.net_stability_group()}: The input \code{x} invisibly.
+
+In \code{summary.net_stability_group()}: A data frame with columns \code{group}, \code{measure}, \code{drop_prop}, \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
+
+In \code{summary.net_stability()}: A data frame with columns \code{measure}, \code{drop_prop}, \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
+
+In \code{plot.net_stability()}: A \code{ggplot} object (invisibly).
 }
 \description{
 Estimates the stability of centrality indices under case-dropping.

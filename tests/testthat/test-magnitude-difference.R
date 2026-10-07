@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for magnitude_difference(): structure, metrics, scalings, S3 methods.
 # Compares the frequency (FTNA) and probability (TNA) views of a transition
 # network and quantifies the per-edge discrepancy.

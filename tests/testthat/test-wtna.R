@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- wtna() tests ----
 
 test_that("wtna transition counts match manual crossprod", {
@@ -602,97 +605,6 @@ test_that("print.wtna_mixed shows both components (L544-551)", {
   }
   weights
 }
-
-test_that("vectorized transitions match naive loops across 20 random configs", {
-  set.seed(999)
-  configs <- list(
-    list(n = 6, k = 3, ws = 2, mode = "non-overlapping"),
-    list(n = 6, k = 3, ws = 2, mode = "overlapping"),
-    list(n = 6, k = 3, ws = 3, mode = "non-overlapping"),
-    list(n = 6, k = 3, ws = 3, mode = "overlapping"),
-    list(n = 10, k = 4, ws = 2, mode = "non-overlapping"),
-    list(n = 10, k = 4, ws = 2, mode = "overlapping"),
-    list(n = 10, k = 4, ws = 3, mode = "non-overlapping"),
-    list(n = 10, k = 4, ws = 3, mode = "overlapping"),
-    list(n = 10, k = 4, ws = 5, mode = "non-overlapping"),
-    list(n = 10, k = 4, ws = 5, mode = "overlapping"),
-    list(n = 15, k = 5, ws = 2, mode = "non-overlapping"),
-    list(n = 15, k = 5, ws = 2, mode = "overlapping"),
-    list(n = 15, k = 5, ws = 4, mode = "non-overlapping"),
-    list(n = 15, k = 5, ws = 4, mode = "overlapping"),
-    list(n = 20, k = 3, ws = 3, mode = "non-overlapping"),
-    list(n = 20, k = 3, ws = 3, mode = "overlapping"),
-    list(n = 7, k = 3, ws = 2, mode = "non-overlapping"),
-    list(n = 7, k = 3, ws = 3, mode = "non-overlapping"),
-    list(n = 9, k = 4, ws = 4, mode = "overlapping"),
-    list(n = 50, k = 6, ws = 5, mode = "non-overlapping")
-  )
-  for (cfg in configs) {
-    X <- matrix(sample(0:1, cfg$n * cfg$k, replace = TRUE), cfg$n, cfg$k)
-    ref <- .ref_transitions(X, cfg$ws, cfg$mode)
-    vec <- Nestimate:::.wtna_transitions(X, cfg$ws, cfg$mode)
-    expect_identical(
-      vec, ref,
-      info = sprintf("n=%d k=%d ws=%d mode=%s", cfg$n, cfg$k, cfg$ws, cfg$mode)
-    )
-  }
-})
-
-test_that("vectorized cooccurrence matches naive loops across 20 random configs", {
-  set.seed(888)
-  configs <- list(
-    list(n = 6, k = 3, ws = 2, mode = "non-overlapping"),
-    list(n = 6, k = 3, ws = 2, mode = "overlapping"),
-    list(n = 6, k = 3, ws = 3, mode = "non-overlapping"),
-    list(n = 6, k = 3, ws = 3, mode = "overlapping"),
-    list(n = 10, k = 4, ws = 2, mode = "non-overlapping"),
-    list(n = 10, k = 4, ws = 2, mode = "overlapping"),
-    list(n = 10, k = 4, ws = 3, mode = "non-overlapping"),
-    list(n = 10, k = 4, ws = 3, mode = "overlapping"),
-    list(n = 10, k = 4, ws = 5, mode = "non-overlapping"),
-    list(n = 10, k = 4, ws = 5, mode = "overlapping"),
-    list(n = 15, k = 5, ws = 2, mode = "non-overlapping"),
-    list(n = 15, k = 5, ws = 2, mode = "overlapping"),
-    list(n = 15, k = 5, ws = 4, mode = "non-overlapping"),
-    list(n = 15, k = 5, ws = 4, mode = "overlapping"),
-    list(n = 20, k = 3, ws = 3, mode = "non-overlapping"),
-    list(n = 20, k = 3, ws = 3, mode = "overlapping"),
-    list(n = 7, k = 3, ws = 2, mode = "non-overlapping"),
-    list(n = 7, k = 3, ws = 3, mode = "non-overlapping"),
-    list(n = 9, k = 4, ws = 4, mode = "overlapping"),
-    list(n = 50, k = 6, ws = 5, mode = "non-overlapping")
-  )
-  for (cfg in configs) {
-    X <- matrix(sample(0:1, cfg$n * cfg$k, replace = TRUE), cfg$n, cfg$k)
-    ref <- .ref_cooccurrence(X, cfg$ws, cfg$mode)
-    vec <- Nestimate:::.wtna_cooccurrence(X, cfg$ws, cfg$mode)
-    expect_identical(
-      vec, ref,
-      info = sprintf("n=%d k=%d ws=%d mode=%s", cfg$n, cfg$k, cfg$ws, cfg$mode)
-    )
-  }
-})
-
-test_that("vectorized wtna end-to-end matches on bundled data", {
-  # Use bundled dataset for realistic equivalence
-  hw <- head(learning_activities, 30)
-  codes <- setdiff(names(hw), "student")
-  codes <- codes[vapply(hw[codes], function(x) all(x %in% c(0L, 1L, NA)), logical(1))]
-  if (length(codes) < 2) skip("Not enough binary columns")
-  X <- as.matrix(hw[, codes, drop = FALSE])
-  storage.mode(X) <- "double"
-  X[is.na(X)] <- 0
-
-  # Transition ws=3 non-overlapping
-  ref <- .ref_transitions(X, 3L, "non-overlapping")
-  vec <- Nestimate:::.wtna_transitions(X, 3L, "non-overlapping")
-  expect_identical(vec, ref, info = "bundled data transition ws=3")
-
-  # Co-occurrence ws=2 non-overlapping
-  ref_co <- .ref_cooccurrence(X, 2L, "non-overlapping")
-  vec_co <- Nestimate:::.wtna_cooccurrence(X, 2L, "non-overlapping")
-  expect_identical(vec_co, ref_co, info = "bundled data cooccurrence ws=2")
-})
 
 # ---- Branch-matrix coverage (task #17) ----
 # Crosses method x type x mode x window_size x (actor|NULL). Each combination

@@ -18,7 +18,7 @@
 #' @param x A \code{netobject} from \code{\link{build_network}}, a
 #'   \code{cograph_network}, or a \code{netobject_group} / \code{mcml}
 #'   (each constituent network is assessed and a
-#'   \code{net_stability_group} is returned).
+#'   \code{net_stability_group} is returned). For the \code{print()} and \code{plot()} methods: an object of class \code{net_stability} or \code{net_stability_group}.
 #' @param measures Character vector. Centrality measures to assess.
 #'   Defaults to \code{c("InStrength", "OutStrength", "Betweenness")}. Pass
 #'   \code{"all"} for every built-in measure: \code{"OutStrength"},
@@ -475,36 +475,14 @@ centrality_stability <- function(x,
 
 # ---- S3 Methods ----
 
-#' Print Method for net_stability
-#'
-#' @param x A \code{net_stability} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- data.frame(
-#'   T1 = c("plan", "code", "debug", "plan", "test", "code"),
-#'   T2 = c("code", "debug", "code", "plan", "code", "test"),
-#'   T3 = c("debug", "code", "plan", "code", "debug", "plan"),
-#'   T4 = c("test", "plan", "test", "debug", "plan", "code")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3, seed = 1)
-#' print(cs)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = sample(c("A","B","C"), 30, TRUE),
-#'   V2 = sample(c("A","B","C"), 30, TRUE),
-#'   V3 = sample(c("A","B","C"), 30, TRUE)
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' stab <- centrality_stability(net, measures = c("InStrength","OutStrength"),
-#'                               iter = 10)
-#' print(stab)
-#' }
-#'
+#' @rdname centrality_stability
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_stability_group} or \code{net_stability}.
+#' @return In \code{print.net_stability()}: The input object, invisibly.
+#' @return In \code{print.net_stability_group()}: The input `x` invisibly.
+#' @return In \code{summary.net_stability_group()}: A data frame with columns \code{group}, \code{measure}, \code{drop_prop}, \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
+#' @return In \code{summary.net_stability()}: A data frame with columns \code{measure}, \code{drop_prop}, \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
+#' @return In \code{plot.net_stability()}: A \code{ggplot} object (invisibly).
 #' @export
 print.net_stability <- function(x, ...) {
   cat(sprintf("Centrality Stability (%d iterations, threshold = %.1f)\n",
@@ -518,12 +496,7 @@ print.net_stability <- function(x, ...) {
   invisible(x)
 }
 
-#' Print Method for net_stability_group
-#'
-#' @param x A `net_stability_group` (returned by `centrality_stability()`
-#'   when called on a `netobject_group` or an `mcml`).
-#' @param ... Additional arguments (ignored).
-#' @return The input `x` invisibly.
+#' @rdname centrality_stability
 #' @export
 print.net_stability_group <- function(x, ...) {
   measures <- unique(unlist(lapply(x, function(e) names(e$cs))))
@@ -536,16 +509,7 @@ print.net_stability_group <- function(x, ...) {
 }
 
 
-#' Summary Method for net_stability_group
-#'
-#' @description
-#' Per-network stability as a tidy data frame. Stacks \code{summary()}
-#' results for each network with a \code{group} column.
-#'
-#' @param object A \code{net_stability_group} object.
-#' @param ... Additional arguments (ignored).
-#' @return A data frame with columns \code{group}, \code{measure},
-#'   \code{drop_prop}, \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
+#' @rdname centrality_stability
 #' @export
 summary.net_stability_group <- function(object, ...) {
   do.call(rbind, lapply(names(object), function(nm) {
@@ -556,40 +520,7 @@ summary.net_stability_group <- function(object, ...) {
 }
 
 
-#' Summary Method for net_stability
-#'
-#' @description
-#' Returns the mean correlation at each drop proportion for each measure.
-#'
-#' @param object A \code{net_stability} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return A data frame with columns \code{measure}, \code{drop_prop},
-#'   \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
-#'
-#' @examples
-#' seqs <- data.frame(
-#'   T1 = c("plan", "code", "debug", "plan", "test", "code"),
-#'   T2 = c("code", "debug", "code", "plan", "code", "test"),
-#'   T3 = c("debug", "code", "plan", "code", "debug", "plan"),
-#'   T4 = c("test", "plan", "test", "debug", "plan", "code")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' cs <- centrality_stability(net, iter = 10, drop_prop = 0.3, seed = 1)
-#' summary(cs)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = sample(c("A","B","C"), 30, TRUE),
-#'   V2 = sample(c("A","B","C"), 30, TRUE),
-#'   V3 = sample(c("A","B","C"), 30, TRUE)
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' stab <- centrality_stability(net, measures = c("InStrength","OutStrength"),
-#'                               iter = 10)
-#' summary(stab)
-#' }
-#'
+#' @rdname centrality_stability
 #' @export
 summary.net_stability <- function(object, ...) {
   rows <- do.call(rbind, lapply(object$measures, function(m) {
@@ -612,41 +543,7 @@ summary.net_stability <- function(object, ...) {
 }
 
 
-#' Plot Method for net_stability
-#'
-#' @description
-#' Plots mean correlation vs drop proportion for each centrality measure.
-#' The CS-coefficient is marked where the curve crosses the threshold.
-#'
-#' @param x A \code{net_stability} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return A \code{ggplot} object (invisibly).
-#'
-#' @examples
-#' seqs <- data.frame(
-#'   T1 = c("plan", "code", "debug", "plan", "test", "code"),
-#'   T2 = c("code", "debug", "code", "plan", "code", "test"),
-#'   T3 = c("debug", "code", "plan", "code", "debug", "plan"),
-#'   T4 = c("test", "plan", "test", "debug", "plan", "code")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' cs <- centrality_stability(net, iter = 10,
-#'   drop_prop = c(0.1, 0.3, 0.5), seed = 1)
-#' plot(cs)
-#' \donttest{
-#' set.seed(1)
-#' seqs <- data.frame(
-#'   V1 = sample(c("A","B","C"), 30, TRUE),
-#'   V2 = sample(c("A","B","C"), 30, TRUE),
-#'   V3 = sample(c("A","B","C"), 30, TRUE)
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' stab <- centrality_stability(net, measures = c("InStrength","OutStrength"),
-#'                               iter = 10)
-#' plot(stab)
-#' }
-#'
+#' @rdname centrality_stability
 #' @export
 plot.net_stability <- function(x, ...) {
   summ <- summary(x)

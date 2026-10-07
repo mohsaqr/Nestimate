@@ -12,7 +12,7 @@
 #' networks.
 #'
 #' @param x A \code{netobject}, \code{mcml}, \code{cograph_network}, or
-#'   numeric square matrix.
+#'   numeric square matrix. For the \code{print()} method: an object of class \code{net_link_prediction}.
 #' @param methods Character vector. One or more of:
 #'   \code{"common_neighbors"}, \code{"resource_allocation"},
 #'   \code{"adamic_adar"}, \code{"jaccard"}, \code{"preferential_attachment"},
@@ -502,22 +502,11 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 
 # ---- S3 Methods ----
 
-#' Print Method for net_link_prediction
-#'
-#' @param x A \code{net_link_prediction} object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- data.frame(
-#'   V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
-#'   V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
-#'   V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' pred <- predict_links(net)
-#' print(pred)
-#'
+#' @rdname predict_links
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_link_prediction}.
+#' @return In \code{print.net_link_prediction()}: The input object, invisibly.
+#' @return In \code{summary.net_link_prediction()}: A data frame, one row per method, with columns \code{method}, \code{n_predictions}, \code{score_mean}, \code{score_sd}, \code{score_max} and \code{score_min}. A method with no predictions (every possible link already exists) has \code{n_predictions = 0} and \code{NA} scores.
 #' @export
 print.net_link_prediction <- function(x, ...) {
   dir_lbl <- if (x$directed) "directed" else "undirected"
@@ -563,26 +552,7 @@ print.net_link_prediction <- function(x, ...) {
 }
 
 
-#' Summary Method for net_link_prediction
-#'
-#' @param object A \code{net_link_prediction} object.
-#' @param ... Additional arguments (ignored).
-#' @return A data frame, one row per method, with columns \code{method},
-#'   \code{n_predictions}, \code{score_mean}, \code{score_sd},
-#'   \code{score_max} and \code{score_min}. A method with no predictions
-#'   (every possible link already exists) has \code{n_predictions = 0} and
-#'   \code{NA} scores.
-#'
-#' @examples
-#' seqs <- data.frame(
-#'   V1 = c("A", "B", "C", "D", "A", "C", "E", "B"),
-#'   V2 = c("B", "C", "D", "E", "C", "E", "A", "D"),
-#'   V3 = c("C", "D", "E", "A", "D", "A", "B", "E")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' pred <- predict_links(net)
-#' summary(pred)
-#'
+#' @rdname predict_links
 #' @export
 summary.net_link_prediction <- function(object, ...) {
   df <- object$predictions

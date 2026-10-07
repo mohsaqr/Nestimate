@@ -2,10 +2,19 @@
 % Please edit documentation in R/markov.R
 \name{markov_stability}
 \alias{markov_stability}
+\alias{print.net_markov_stability}
+\alias{print.net_markov_stability_group}
+\alias{summary.net_markov_stability}
 \alias{plot.net_markov_stability}
 \title{Markov Stability Analysis}
 \usage{
 markov_stability(x, normalize = TRUE)
+
+\method{print}{net_markov_stability}(x, ...)
+
+\method{print}{net_markov_stability_group}(x, ...)
+
+\method{summary}{net_markov_stability}(object, ...)
 
 \method{plot}{net_markov_stability}(
   x,
@@ -18,21 +27,19 @@ markov_stability(x, normalize = TRUE)
 \arguments{
 \item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} object,
 row-stochastic numeric transition matrix, or a wide sequence data.frame
-(rows = actors, columns = time-steps).}
+(rows = actors, columns = time-steps). For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_stability} or \code{net_markov_stability_group}.}
 
 \item{normalize}{Logical. Normalize rows to sum to 1? Default \code{TRUE}.}
 
-\item{metrics}{Character vector. Which metrics to plot. Options:
-\code{"persistence"}, \code{"stationary_prob"}, \code{"return_time"},
-\code{"sojourn_time"}, \code{"avg_time_to_others"},
-\code{"avg_time_from_others"}. Default: all six.}
+\item{...}{Ignored.
+For the S3 methods: further arguments passed to or from other methods. In \code{print.net_markov_stability_group()}: Forwarded to \code{print.net_markov_stability} for each element.}
 
-\item{combined}{When \code{TRUE} (default), all selected metrics are
-shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE},
-returns a named list of single-panel ggplots, one per metric, so each
-can be printed, saved, or re-laid-out independently.}
+\item{object}{For the \code{summary()} method: an object of class
+\code{net_markov_stability}.}
 
-\item{...}{Ignored.}
+\item{metrics}{Character vector. Which metrics to plot. Options: \code{"persistence"}, \code{"stationary_prob"}, \code{"return_time"}, \code{"sojourn_time"}, \code{"avg_time_to_others"}, \code{"avg_time_from_others"}. Default: all six.}
+
+\item{combined}{When \code{TRUE} (default), all selected metrics are shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named list of single-panel ggplots, one per metric, so each can be printed, saved, or re-laid-out independently.}
 }
 \value{
 An object of class \code{"net_markov_stability"} with:
@@ -50,10 +57,9 @@ For a \code{netobject_group} the result is a
 \code{"net_markov_stability_group"}: a named list holding one such
 object per group.
 
-\code{plot.net_markov_stability} returns a faceted ggplot object
-when \code{combined = TRUE}, and (invisibly) a named list of
-single-metric ggplots, one per entry of \code{metrics}, when
-\code{combined = FALSE}.
+In \code{print.net_markov_stability_group()}: \code{x} invisibly.
+
+In \code{plot.net_markov_stability()}: \code{plot.net_markov_stability} returns a faceted ggplot object when \code{combined = TRUE}, and (invisibly) a named list of single-metric ggplots, one per entry of \code{metrics}, when \code{combined = FALSE}.
 }
 \description{
 Computes per-state stability metrics from a transition network:

@@ -2,6 +2,9 @@
 % Please edit documentation in R/cluster_choice.R
 \name{cluster_choice}
 \alias{cluster_choice}
+\alias{print.cluster_choice}
+\alias{summary.cluster_choice}
+\alias{plot.cluster_choice}
 \title{Cluster Choice -- sweep k, dissimilarity and method}
 \usage{
 cluster_choice(
@@ -9,6 +12,18 @@ cluster_choice(
   k = 2:5,
   dissimilarity = "hamming",
   method = "ward.D2",
+  ...
+)
+
+\method{print}{cluster_choice}(x, digits = 3L, ...)
+
+\method{summary}{cluster_choice}(object, ...)
+
+\method{plot}{cluster_choice}(
+  x,
+  type = c("auto", "lines", "bars", "heatmap", "tradeoff", "facet"),
+  abbrev = FALSE,
+  combined = TRUE,
   ...
 )
 }
@@ -35,7 +50,19 @@ cluster_choice(
 \code{estimator}).
 Note: \code{weighted = TRUE} only works with
 \code{dissimilarity = "hamming"} and is rejected up-front when
-sweeping mixed dissimilarities.}
+sweeping mixed dissimilarities. For the S3 methods: further arguments passed to or from other methods.}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{cluster_choice}.}
+
+\item{digits}{Integer. Decimal places for floating-point columns. Default \code{3L}.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{cluster_choice}.}
+
+\item{type}{Character. One of \code{"auto"} (default), \code{"lines"}, \code{"bars"}, \code{"heatmap"}, \code{"tradeoff"}, \code{"facet"}.}
+
+\item{abbrev}{Logical. If \code{TRUE}, dissimilarity and method names shown on tick labels and point labels are shortened (e.g. \code{"hamming"} -> \code{"ham"}, \code{"ward.D2"} -> \code{"wD2"}). The legend shows the full canonical name. Default \code{FALSE}.}
+
+\item{combined}{Only meaningful for \code{type = "facet"}. When \code{TRUE} (default), all methods are shown in one ggplot via \code{facet_wrap(~ method)}. When \code{FALSE}, returns a named list of single-panel ggplots, one per method.}
 }
 \value{
 A \code{cluster_choice} object (a data.frame subclass) with
@@ -50,6 +77,12 @@ distances, in the units of the row's dissimilarity.}
 \item{min_size, max_size, size_ratio}{Cluster-size balance bounds
 and their ratio (\code{max / min}).}
 }
+
+In \code{print.cluster_choice()}: The input object, invisibly.
+
+In \code{summary.cluster_choice()}: A data frame with the swept configurations, all metrics, and a \code{best} character column flagging the silhouette-max row.
+
+In \code{plot.cluster_choice()}: A \code{ggplot} object, invisibly; for \code{type = "facet"} with \code{combined = FALSE}, a named list of ggplots.
 }
 \description{
 One-call sweep across any combination of k, dissimilarity metric, and
@@ -59,6 +92,32 @@ frame with one row per swept configuration, a \code{best} marker on
 the silhouette-max row in the print method, and a \code{plot()} that
 adapts to the swept axes.
 }
+\section{Plot types}{
+
+Type cheat-sheet:
+\describe{
+\item{\code{"auto"}}{Default. Picks one of the others based on which
+axes were swept. k-only -> \code{"lines"}; one categorical axis
+swept -> \code{"bars"}; k plus one categorical -> \code{"lines"};
+k plus two categoricals -> \code{"facet"}; both categoricals
+without k -> \code{"heatmap"}.}
+\item{\code{"lines"}}{Silhouette across k (and \code{mean_within_dist}
+when \code{k} is the only swept axis), one line per non-k axis
+when present.}
+\item{\code{"bars"}}{Horizontal bar chart of silhouette per axis
+level. Bars sorted by silhouette.}
+\item{\code{"heatmap"}}{Tiled silhouette across two categorical
+axes. Requires both \code{dissimilarity} and \code{method} swept.}
+\item{\code{"tradeoff"}}{Scatter: silhouette (y) vs \code{size_ratio}
+(x). Works for any sweep; labels each point.}
+\item{\code{"facet"}}{Lines vs k, colour by one categorical axis,
+facet by another. Requires \code{k} plus two categoricals.}
+}
+
+Asking for a type the data can't support raises an error pointing at
+the alternatives.
+}
+
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 40, TRUE),
                    V2 = sample(c("A","B","C"), 40, TRUE))

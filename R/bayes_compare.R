@@ -50,7 +50,7 @@
 #' @param x A \code{netobject} (from \code{\link{build_network}}), a
 #'   \code{netobject_group}, an \code{mcml} object, or a
 #'   \code{\link{net_edge_betweenness}} object. Must use a transition
-#'   method (\code{"relative"} / \code{"frequency"} and their aliases).
+#'   method (\code{"relative"} / \code{"frequency"} and their aliases). For the \code{print()} and \code{plot()} methods: an object of class \code{net_bayes} or \code{net_bayes_group}.
 #' @param y A second object of the same kind as \code{x}, or \code{NULL}.
 #'   When \code{x} is a \code{netobject_group} and \code{y} is \code{NULL},
 #'   all pairwise comparisons among the groups are returned.
@@ -549,18 +549,15 @@ bayes_compare <- function(x, y = NULL,
 
 # ---- S3 Methods ----
 
-#' Print method for net_bayes
-#'
-#' @param x A \code{net_bayes} object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
-#' @examples
-#' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
-#' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
-#' b <- bayes_compare(build_network(s1, method = "relative"),
-#'                    build_network(s2, method = "relative"),
-#'                    draws = 500, seed = 1)
-#' print(b)
+#' @rdname bayes_compare
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_bayes} or \code{net_bayes_group}.
+#' @param significant_only Logical. Show only credibly-different edges (default \code{TRUE}).
+#' @param title Optional plot title.
+#' @return In \code{print.net_bayes()} and \code{print.net_bayes_group()}: The input object, invisibly.
+#' @return In \code{summary.net_bayes()}: A data frame with edge-level posterior differences and intervals.
+#' @return In \code{plot.net_bayes()}: Invisibly, the cograph network returned by \code{cograph::splot()} when cograph is available; otherwise a fallback \code{ggplot} object.
+#' @return In \code{summary.net_bayes_group()}: A combined data frame with a \code{comparison} column.
 #' @export
 print.net_bayes <- function(x, ...) {
   method_labels <- c(
@@ -586,45 +583,14 @@ print.net_bayes <- function(x, ...) {
 }
 
 
-#' Summary method for net_bayes
-#'
-#' @param object A \code{net_bayes} object.
-#' @param ... Additional arguments (ignored).
-#' @return A data frame with edge-level posterior differences and intervals.
-#' @examples
-#' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
-#' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
-#' b <- bayes_compare(build_network(s1, method = "relative"),
-#'                    build_network(s2, method = "relative"),
-#'                    draws = 500, seed = 1)
-#' summary(b)
+#' @rdname bayes_compare
 #' @export
 summary.net_bayes <- function(object, ...) {
   object$summary
 }
 
 
-#' Plot method for net_bayes
-#'
-#' Draws a differential transition network as a directed chord diagram.
-#' Edge colour encodes the signed posterior mean difference (\code{x}
-#' stronger vs \code{y} stronger) and edge width its magnitude.
-#'
-#' @param x A \code{net_bayes} object.
-#' @param significant_only Logical. Show only credibly-different edges
-#'   (default \code{TRUE}).
-#' @param title Optional plot title.
-#' @param ... Additional arguments passed to \code{cograph::splot()} when
-#'   cograph is available.
-#' @return Invisibly, the cograph network returned by \code{cograph::splot()}
-#'   when cograph is available; otherwise a fallback \code{ggplot} object.
-#' @examples
-#' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
-#' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
-#' b <- bayes_compare(build_network(s1, method = "relative"),
-#'                    build_network(s2, method = "relative"),
-#'                    draws = 500, seed = 1)
-#' plot(b, significant_only = FALSE)
+#' @rdname bayes_compare
 #' @export
 plot.net_bayes <- function(x, significant_only = TRUE, title = NULL, ...) {
   if (requireNamespace("cograph", quietly = TRUE)) {
@@ -693,16 +659,7 @@ plot.net_bayes <- function(x, significant_only = TRUE, title = NULL, ...) {
 }
 
 
-#' Print method for net_bayes_group
-#'
-#' @param x A \code{net_bayes_group} object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
-#' @examples
-#' s <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
-#'                 grp = c("X","X","Y","Y"))
-#' nets <- build_network(s, method = "relative", group = "grp")
-#' print(bayes_compare(nets, draws = 200, seed = 1))
+#' @rdname bayes_compare
 #' @export
 print.net_bayes_group <- function(x, ...) {
   cat("Grouped Bayesian Dirichlet-Multinomial Comparison\n")
@@ -712,16 +669,7 @@ print.net_bayes_group <- function(x, ...) {
 }
 
 
-#' Summary method for net_bayes_group
-#'
-#' @param object A \code{net_bayes_group} object.
-#' @param ... Additional arguments (ignored).
-#' @return A combined data frame with a \code{comparison} column.
-#' @examples
-#' s <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
-#'                 grp = c("X","X","Y","Y"))
-#' nets <- build_network(s, method = "relative", group = "grp")
-#' summary(bayes_compare(nets, draws = 200, seed = 1))
+#' @rdname bayes_compare
 #' @export
 summary.net_bayes_group <- function(object, ...) {
   do.call(rbind, lapply(names(object), function(nm) {

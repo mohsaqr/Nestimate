@@ -2,6 +2,11 @@
 % Please edit documentation in R/bayes_compare.R
 \name{bayes_compare}
 \alias{bayes_compare}
+\alias{print.net_bayes}
+\alias{summary.net_bayes}
+\alias{plot.net_bayes}
+\alias{print.net_bayes_group}
+\alias{summary.net_bayes_group}
 \title{Bayesian Dirichlet-Multinomial comparison of two transition networks}
 \usage{
 bayes_compare(
@@ -14,12 +19,22 @@ bayes_compare(
   bound_threshold = 0.001,
   seed = NULL
 )
+
+\method{print}{net_bayes}(x, ...)
+
+\method{summary}{net_bayes}(object, ...)
+
+\method{plot}{net_bayes}(x, significant_only = TRUE, title = NULL, ...)
+
+\method{print}{net_bayes_group}(x, ...)
+
+\method{summary}{net_bayes_group}(object, ...)
 }
 \arguments{
 \item{x}{A \code{netobject} (from \code{\link{build_network}}), a
 \code{netobject_group}, an \code{mcml} object, or a
 \code{\link{net_edge_betweenness}} object. Must use a transition
-method (\code{"relative"} / \code{"frequency"} and their aliases).}
+method (\code{"relative"} / \code{"frequency"} and their aliases). For the \code{print()} and \code{plot()} methods: an object of class \code{net_bayes} or \code{net_bayes_group}.}
 
 \item{y}{A second object of the same kind as \code{x}, or \code{NULL}.
 When \code{x} is a \code{netobject_group} and \code{y} is \code{NULL},
@@ -43,6 +58,14 @@ credible-interval bound nearest zero exceeds this in absolute value
 but negligibly small.}
 
 \item{seed}{Integer or NULL. RNG seed for reproducible credible intervals.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_bayes} or \code{net_bayes_group}.}
+
+\item{significant_only}{Logical. Show only credibly-different edges (default \code{TRUE}).}
+
+\item{title}{Optional plot title.}
 }
 \value{
 An object of class
@@ -82,6 +105,14 @@ nearest bound exceed their thresholds).}
 \code{adjust = "none"}).}
 \item{prior, draws, ci, mean_threshold, bound_threshold}{Bayesian settings.}
 }
+
+In \code{print.net_bayes()} and \code{print.net_bayes_group()}: The input object, invisibly.
+
+In \code{summary.net_bayes()}: A data frame with edge-level posterior differences and intervals.
+
+In \code{plot.net_bayes()}: Invisibly, the cograph network returned by \code{cograph::splot()} when cograph is available; otherwise a fallback \code{ggplot} object.
+
+In \code{summary.net_bayes_group()}: A combined data frame with a \code{comparison} column.
 }
 \description{
 Compares two transition networks estimated by \code{\link{build_network}}

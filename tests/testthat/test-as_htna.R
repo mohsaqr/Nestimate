@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for as_htna(): full node-level network grouped by cluster, rebuilt from
 # the original data (the node-level counterpart of build_mcml()).
 

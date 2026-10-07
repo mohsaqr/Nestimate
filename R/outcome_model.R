@@ -314,11 +314,13 @@ effects_table <- function(x, intercept = FALSE, significant = FALSE,
   out
 }
 
-#' @param x A \code{net_outcome_model}, for the \code{print} and \code{plot}
-#'   methods.
-#' @param ... Unused.
 #' @rdname outcome_model
-#' @return \code{print} returns its input invisibly.
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_outcome_model}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_outcome_model}.
+#' @return In \code{print.net_outcome_model()}: \code{print} returns its input invisibly.
+#' @return In \code{summary.net_outcome_model()}: \code{summary} returns the tidy effect table.
+#' @return In \code{plot.net_outcome_model()}: \code{plot} returns a \code{ggplot} forest of the effects.
 #' @export
 print.net_outcome_model <- function(x, ...) {
   cat("Outcome Model\n=============\n")
@@ -339,13 +341,10 @@ print.net_outcome_model <- function(x, ...) {
 }
 
 #' @rdname outcome_model
-#' @param object A \code{net_outcome_model}.
-#' @return \code{summary} returns the tidy effect table.
 #' @export
 summary.net_outcome_model <- function(object, ...) effects_table(object)
 
 #' @rdname outcome_model
-#' @return \code{plot} returns a \code{ggplot} forest of the effects.
 #' @export
 plot.net_outcome_model <- function(x, ...) {
   d <- effects_table(x)

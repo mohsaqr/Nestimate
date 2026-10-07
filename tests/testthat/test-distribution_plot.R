@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 test_that("distribution_plot runs on a matrix with default args", {
   set.seed(1L)
   states <- c("A", "B", "C")

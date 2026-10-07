@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- prepare(): timezone-aware timestamp parsing ----
 
 .tz_strings <- c("2024-01-01 10:00:00", "2024-01-01T10:00:00Z",

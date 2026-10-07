@@ -285,19 +285,10 @@ prepare <- function(data,
 }
 
 
-#' Print Method for nestimate_data
-#' @param x A \code{nestimate_data} object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
-#' @examples
-#' events <- data.frame(
-#'   actor  = c("u1","u1","u1","u2","u2","u2"),
-#'   action = c("A","B","C","B","A","C"),
-#'   time   = c(1,2,3,1,2,3)
-#' )
-#' nd <- prepare(events, action = "action",
-#'               actor = "actor", time = "time")
-#' print(nd)
+#' @rdname prepare
+#' @param x For the \code{print()} method: an object of class \code{nestimate_data}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{print.nestimate_data()}: The input object, invisibly.
 #' @export
 print.nestimate_data <- function(x, ...) {
   cat("Prepared Data for Network Estimation\n")

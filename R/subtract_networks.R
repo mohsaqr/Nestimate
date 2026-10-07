@@ -58,6 +58,13 @@ subtract_networks <- function(x, y) {
 #' @param x An object with network-difference fields.
 #' @param ... Additional arguments passed to methods.
 #' @return A \code{netdifference} object suitable for \code{cograph::splot()}.
+#' @examples
+#' s1 <- data.frame(V1 = c("A", "B", "C"), V2 = c("B", "C", "A"))
+#' s2 <- data.frame(V1 = c("A", "C", "B"), V2 = c("C", "B", "A"))
+#' b <- bayes_compare(build_network(s1, method = "relative"),
+#'                    build_network(s2, method = "relative"),
+#'                    draws = 500, seed = 1)
+#' as_netdifference(b, significant_only = FALSE)
 #' @export
 as_netdifference <- function(x, ...) {
   UseMethod("as_netdifference")
@@ -107,7 +114,7 @@ as_netdifference.default <- function(x, ...) {
 
 #' @rdname subtract_networks
 #' @param max_print Integer. Rows to show in \code{print()}. Default \code{12}.
-#' @param ... Ignored.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
 #' @export
 print.netdifference <- function(x, max_print = 12L, ...) {
   d <- x$weights

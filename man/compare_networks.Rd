@@ -47,7 +47,7 @@ square numeric matrices, or one unnamed \code{list} of these. Name the
 arguments to name the networks (\code{compare_networks(early = a, late = b)}).
 For \code{plot()}: passed to \code{cograph::splot()} for the network views (e.g.
 \code{layout}, \code{node_size}, \code{minimum}); ignored by the other views and by
-\code{print()}.}
+\code{print()}. For the S3 methods: further arguments passed to or from other methods. In \code{plot.net_network_comparison()}: For \code{compare_networks()}: two or more networks, in any mix of: \code{netobject}, \code{netobject_group} (members are flattened and keep their names), \code{cograph_network} / \code{psychnet}, \code{mcml}, \code{tna}, \code{group_tna}, square numeric matrices, or one unnamed \code{list} of these. Name the arguments to name the networks (\code{compare_networks(early = a, late = b)}). For \code{plot()}: passed to \code{cograph::splot()} for the network views (e.g. \code{layout}, \code{node_size}, \code{minimum}); ignored by the other views and by \code{print()}.}
 
 \item{reference}{\code{NULL} (default) compares all pairs. A single network name
 or index compares every other network against that one; the reference is
@@ -69,7 +69,7 @@ Unknown names are dropped with a warning.}
 the networks (one per network after flattening groups); overrides
 argument names. For \code{plot()}: logical; print the signed difference on
 the edge and node views, default \code{TRUE} (the heatmap always shows its
-values).}
+values). In \code{plot.net_network_comparison()}: For \code{compare_networks()}: optional character vector naming the networks (one per network after flattening groups); overrides argument names. For \code{plot()}: logical; print the signed difference on the edge and node views, default \code{TRUE} (the heatmap always shows its values).}
 
 \item{test}{Character vector of inference backends, any of \code{"none"}
 (default), \code{"permutation"}, \code{"bayes"}, \code{"bootstrap"}. Several may be
@@ -101,40 +101,21 @@ and \emph{ICC and design effect}. Requires \code{test = "permutation"}. The ICC
 and design effects are added to \code{global} under the category
 \code{"Nesting"}. Default \code{NULL}.}
 
-\item{x}{A \code{net_network_comparison} object.}
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_network_comparison}.}
 
-\item{digits}{Decimals in printed values. Default \code{2}.}
+\item{digits}{In \code{plot.net_network_comparison()}: Decimals in printed values. Default \code{2}. In \code{print.net_network_comparison()}: Decimals shown. Default \code{2}.}
 
-\item{type}{For \code{plot()}: one view per call. \code{"networks"} (default) draws
-each network once with \code{cograph::splot()}; \code{"difference"} draws the
-signed difference network of each pair; \code{"edges"} is a ranked dumbbell
-of the largest edge differences; \code{"nodes"} the same for centralities;
-\code{"global"} the 22 comparison metrics; \code{"heatmap"} the signed difference
-matrix; \code{"scatter"} weight against weight; \code{"inference"} is a forest of
-the edge differences on the difference scale, with credible intervals
-when the Bayesian backend ran and the p-value printed per edge. It needs
-\code{test != "none"} and raises \code{nestimate_compare_no_test} otherwise.}
+\item{type}{For \code{plot()}: one view per call. \code{"networks"} (default) draws each network once with \code{cograph::splot()}; \code{"difference"} draws the signed difference network of each pair; \code{"edges"} is a ranked dumbbell of the largest edge differences; \code{"nodes"} the same for centralities; \code{"global"} the 22 comparison metrics; \code{"heatmap"} the signed difference matrix; \code{"scatter"} weight against weight; \code{"inference"} is a forest of the edge differences on the difference scale, with credible intervals when the Bayesian backend ran and the p-value printed per edge. It needs \code{test != "none"} and raises \code{nestimate_compare_no_test} otherwise.}
 
-\item{pair}{Optional selection of comparisons to draw; default all. Any of:
-the pair name(s) as printed (\code{"A vs B"}); the two network names
-(\code{c("A", "B")}, either order); one network name (\code{"A"}, every pair it
-takes part in); or index/indices into the pair table (\code{1}, \code{c(1, 3)}).
-For \code{type = "networks"} this selects the networks taking part in the
-chosen pairs.}
+\item{pair}{Optional selection of comparisons to draw; default all. Any of: the pair name(s) as printed (\code{"A vs B"}); the two network names (\code{c("A", "B")}, either order); one network name (\code{"A"}, every pair it takes part in); or index/indices into the pair table (\code{1}, \code{c(1, 3)}). For \code{type = "networks"} this selects the networks taking part in the chosen pairs.}
 
-\item{combined}{When \code{TRUE} (default), a multi-pair view is one figure
-(facets for the \code{ggplot} views, one base-graphics page for \code{"networks"}
-and \code{"difference"}). When \code{FALSE}, the view is split: the \code{ggplot}
-views return a named list of single-pair plots, one per pair, and the
-base-graphics views draw one panel per page.}
+\item{combined}{When \code{TRUE} (default), a multi-pair view is one figure (facets for the \code{ggplot} views, one base-graphics page for \code{"networks"} and \code{"difference"}). When \code{FALSE}, the view is split: the \code{ggplot} views return a named list of single-pair plots, one per pair, and the base-graphics views draw one panel per page.}
 
-\item{top_n}{Number of edges shown in the edge view (largest absolute
-differences first). Default \code{20}.}
+\item{top_n}{Number of edges shown in the edge view (largest absolute differences first). Default \code{20}.}
 
 \item{measure}{Optional centrality measure(s) to restrict the node view.}
 
-\item{what}{Deprecated alias for \code{type}, kept so existing calls keep
-working.}
+\item{what}{Deprecated alias for \code{type}, kept so existing calls keep working.}
 }
 \value{
 An object of class \code{net_network_comparison}: a list with
@@ -169,14 +150,9 @@ come from the named verbs \code{\link[=edge_differences]{edge_differences()}}, \
 \code{\link[=global_differences]{global_differences()}} and \code{\link[=network_metrics]{network_metrics()}}. \code{plot()} draws one view
 per call.
 
-\code{print()} returns \code{x} invisibly.
+In \code{plot.net_network_comparison()}: \code{plot()} returns a \code{ggplot} for \code{type = "edges"}, \code{"nodes"}, \code{"global"}, \code{"heatmap"}, \code{"scatter"} and \code{"inference"}, or a named list of such plots (one per pair) when \code{combined = FALSE}. \code{type = "networks"} and \code{type = "difference"} draw in base graphics -- with \code{cograph::splot()} when cograph is installed, otherwise with a built-in circular drawer -- and return \code{NULL} invisibly.
 
-\code{plot()} returns a \code{ggplot} for \code{type = "edges"}, \code{"nodes"},
-\code{"global"}, \code{"heatmap"}, \code{"scatter"} and \code{"inference"}, or a named list of such plots
-(one per pair) when \code{combined = FALSE}. \code{type = "networks"} and
-\code{type = "difference"} draw in base graphics -- with \code{cograph::splot()}
-when cograph is installed, otherwise with a built-in circular drawer --
-and return \code{NULL} invisibly.
+In \code{print.net_network_comparison()}: \code{print()} returns \code{x} invisibly.
 }
 \description{
 Compares any number of networks pairwise (all pairs, or every network

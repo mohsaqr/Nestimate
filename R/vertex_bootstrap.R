@@ -47,7 +47,7 @@
 #' }
 #'
 #' @param x A \code{netobject} (from \code{\link{build_network}} or any
-#'   builder), a \code{cograph_network}, or a square numeric weight matrix.
+#'   builder), a \code{cograph_network}, or a square numeric weight matrix. For the \code{print()} and \code{plot()} methods: an object of class \code{net_vertex_bootstrap}.
 #' @param iter Integer. Number of bootstrap replicates (default 1000).
 #' @param ci_level Numeric. Significance level for the confidence
 #'   intervals (default 0.05 for 95% CIs).
@@ -313,12 +313,14 @@ vertex_bootstrap <- function(x,
 }
 
 
-#' Print a Vertex Bootstrap Result
-#'
-#' @param x A \code{net_vertex_bootstrap} object.
+#' @rdname vertex_bootstrap
 #' @param digits Number of digits to display (default 3).
-#' @param ... Additional arguments (ignored).
-#' @return \code{x}, invisibly.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_vertex_bootstrap}.
+#' @param bins Number of histogram bins (default 30).
+#' @return In \code{print.net_vertex_bootstrap()}: \code{x}, invisibly.
+#' @return In \code{summary.net_vertex_bootstrap()}: The tidy summary data frame (one row per statistic).
+#' @return In \code{plot.net_vertex_bootstrap()}: A ggplot object.
 #' @export
 print.net_vertex_bootstrap <- function(x, digits = 3, ...) {
   cat("Vertex Bootstrap (Snijders & Borgatti)\n")
@@ -334,26 +336,14 @@ print.net_vertex_bootstrap <- function(x, digits = 3, ...) {
 }
 
 
-#' Summarize a Vertex Bootstrap Result
-#'
-#' @param object A \code{net_vertex_bootstrap} object.
-#' @param ... Additional arguments (ignored).
-#' @return The tidy summary data frame (one row per statistic).
+#' @rdname vertex_bootstrap
 #' @export
 summary.net_vertex_bootstrap <- function(object, ...) {
   object$summary
 }
 
 
-#' Plot Vertex Bootstrap Distributions
-#'
-#' Histogram of the bootstrap distribution per statistic, with the observed
-#' value (solid line) and confidence bounds (dashed lines).
-#'
-#' @param x A \code{net_vertex_bootstrap} object.
-#' @param bins Number of histogram bins (default 30).
-#' @param ... Additional arguments (ignored).
-#' @return A ggplot object.
+#' @rdname vertex_bootstrap
 #' @export
 plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
   long <- data.frame(
@@ -406,7 +396,9 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 #' @param x,y The two networks: \code{netobject}s, \code{cograph_network}s,
 #'   square weight matrices, or precomputed \code{net_vertex_bootstrap}
 #'   objects (then \code{iter}, \code{statistics}, \code{statistic_fn},
-#'   \code{directed}, and \code{seed} are ignored for that argument).
+#'   \code{directed}, and \code{seed} are ignored for that argument). For the
+#'   \code{print()} and \code{plot()} methods, \code{x} is an object of class
+#'   \code{net_vertex_comparison}.
 #'   The two sides must cover exactly the same statistics; a mismatch
 #'   (e.g., a directed network's \code{reciprocity} against an undirected
 #'   one, or precomputed objects built with different \code{statistics}
@@ -528,12 +520,13 @@ vertex_compare <- function(x, y,
 }
 
 
-#' Print a Two-Network Vertex-Bootstrap Comparison
-#'
-#' @param x A \code{net_vertex_comparison} object.
+#' @rdname vertex_compare
 #' @param digits Number of digits to display (default 3).
-#' @param ... Additional arguments (ignored).
-#' @return \code{x}, invisibly.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_vertex_comparison}.
+#' @return In \code{print.net_vertex_comparison()}: \code{x}, invisibly.
+#' @return In \code{summary.net_vertex_comparison()}: The tidy summary data frame (one row per statistic).
+#' @return In \code{plot.net_vertex_comparison()}: A ggplot object.
 #' @export
 print.net_vertex_comparison <- function(x, digits = 3, ...) {
   cat("Two-Network Vertex Bootstrap Comparison (Snijders & Borgatti)\n")
@@ -553,26 +546,14 @@ print.net_vertex_comparison <- function(x, digits = 3, ...) {
 }
 
 
-#' Summarize a Two-Network Vertex-Bootstrap Comparison
-#'
-#' @param object A \code{net_vertex_comparison} object.
-#' @param ... Additional arguments (ignored).
-#' @return The tidy summary data frame (one row per statistic).
+#' @rdname vertex_compare
 #' @export
 summary.net_vertex_comparison <- function(object, ...) {
   object$summary
 }
 
 
-#' Plot a Two-Network Vertex-Bootstrap Comparison
-#'
-#' Forest plot of the statistic differences with normal-approximation
-#' confidence intervals; differences whose interval excludes zero are the
-#' statistically distinguishable ones.
-#'
-#' @param x A \code{net_vertex_comparison} object.
-#' @param ... Additional arguments (ignored).
-#' @return A ggplot object.
+#' @rdname vertex_compare
 #' @export
 plot.net_vertex_comparison <- function(x, ...) {
   df <- x$summary

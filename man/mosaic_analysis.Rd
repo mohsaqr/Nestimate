@@ -2,6 +2,9 @@
 % Please edit documentation in R/mosaic_analysis.R
 \name{mosaic_analysis}
 \alias{mosaic_analysis}
+\alias{plot.mosaic_analysis}
+\alias{print.mosaic_analysis}
+\alias{summary.mosaic_analysis}
 \title{Two-variable mosaic analysis (chi-square test + flat mosaic)}
 \usage{
 mosaic_analysis(
@@ -15,6 +18,12 @@ mosaic_analysis(
   title = "",
   ...
 )
+
+\method{plot}{mosaic_analysis}(x, ...)
+
+\method{print}{mosaic_analysis}(x, ...)
+
+\method{summary}{mosaic_analysis}(object, ...)
 }
 \arguments{
 \item{data}{A data.frame containing the two variables.}
@@ -46,7 +55,12 @@ and the \code{pct} column: \code{"total"} (default), \code{"row"}
 \code{legend_size}, \code{label_size}, \code{palette}). Tile fill uses the
 ColorBrewer RdBu ramp by default (override with \code{palette}). Column
 labels auto-rotate to vertical when there are more than 6 columns; pass
-\code{col_label_angle} to force an angle.}
+\code{col_label_angle} to force an angle.
+For the S3 methods: further arguments passed to or from other methods. In \code{plot.mosaic_analysis()}: Styling overrides forwarded to the flat renderer.}
+
+\item{x}{For the \code{plot()} and \code{print()} methods: an object of class \code{mosaic_analysis}.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{mosaic_analysis}.}
 }
 \value{
 An object of class \code{"mosaic_analysis"}: a list with
@@ -69,6 +83,12 @@ arguments retained so \code{plot()} can re-render without re-testing.}
 }
 Use \code{print()} for the test summary and \code{summary()} for the tidy
 per-cell table.
+
+In \code{plot.mosaic_analysis()}: The re-rendered flat mosaic \code{ggplot} object, invisibly; the plot is drawn on the active device as a side effect.
+
+In \code{print.mosaic_analysis()}: \code{x}, invisibly.
+
+In \code{summary.mosaic_analysis()}: The tidy per-cell \code{data.frame}: one row per (var1, var2) cell, with the two variable columns (named after \code{var1} / \code{var2}) plus \code{observed}, \code{expected}, \code{residual} and \code{pct}. The one-row test summary is attached as the \code{"stats"} attribute.
 }
 \description{
 Analyses the association between two categorical columns of a data.frame.

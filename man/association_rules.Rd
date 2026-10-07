@@ -2,6 +2,9 @@
 % Please edit documentation in R/association_rules.R
 \name{association_rules}
 \alias{association_rules}
+\alias{print.net_association_rules}
+\alias{summary.net_association_rules}
+\alias{plot.net_association_rules}
 \title{Discover Association Rules from Sequential or Transaction Data}
 \usage{
 association_rules(
@@ -11,6 +14,12 @@ association_rules(
   min_lift = 1,
   max_length = 5L
 )
+
+\method{print}{net_association_rules}(x, ...)
+
+\method{summary}{net_association_rules}(object, ...)
+
+\method{plot}{net_association_rules}(x, ...)
 }
 \arguments{
 \item{x}{Input data. Accepts:
@@ -22,7 +31,7 @@ a transaction of its unique states.}
 columns are item occurrences. Or a binary matrix (0/1).}
 \item{matrix}{Binary transaction matrix (rows = transactions,
 columns = items).}
-}}
+} For the \code{print()} and \code{plot()} methods: an object of class \code{net_association_rules}.}
 
 \item{min_support}{Numeric. Minimum support threshold. Default: 0.1.}
 
@@ -31,6 +40,10 @@ columns = items).}
 \item{min_lift}{Numeric. Minimum lift threshold. Default: 1.0.}
 
 \item{max_length}{Integer. Maximum itemset size. Default: 5.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_association_rules}.}
 }
 \value{
 An object of class \code{"net_association_rules"} containing:
@@ -50,6 +63,12 @@ on (all items when no item clears \code{min_support}).}
 \item{n_rules}{Integer.}
 \item{params}{List of min_support, min_confidence, min_lift, max_length.}
 }
+
+In \code{print.net_association_rules()}: The input object, invisibly.
+
+In \code{summary.net_association_rules()}: The tidy rules data frame: one row per rule, with columns \code{antecedent}, \code{consequent}, \code{support}, \code{confidence}, \code{lift}, \code{conviction}, \code{count} and \code{n_transactions}.
+
+In \code{plot.net_association_rules()}: The drawn \code{ggplot} object, invisibly (the plot is also printed). \code{NULL}, invisibly, when no rule was found.
 }
 \description{
 Discovers association rules using the Apriori algorithm with proper

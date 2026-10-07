@@ -44,14 +44,13 @@ raw weights.}
 \item{format}{Input format passed through to \code{\link[=build_network]{build_network()}};
 \code{"auto"} (default) treats the data as wide when \code{action} is not a column.}
 
-\item{x}{A \code{magnitude_difference} object.}
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{magnitude_difference}.}
 
-\item{...}{Passed to plotting helpers (ignored by \code{print}).}
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 
 \item{type}{Plot style, \code{"stacked"} (default) or \code{"circular"}.}
 
-\item{min_show}{For \code{type = "circular"}, drop edges whose magnitude is
-below this fraction of the maximum.}
+\item{min_show}{For \code{type = "circular"}, drop edges whose magnitude is below this fraction of the maximum.}
 
 \item{title}{Plot title. \code{NULL} generates one from the metric and scale.}
 }
@@ -61,9 +60,9 @@ An object of class \code{"magnitude_difference"}: a list with
 \code{tna}, \code{signed} = \code{tna - ftna}, and \code{value} = the chosen metric),
 \verb{$metric}, \verb{$scale}, \verb{$weights_ftna}, \verb{$weights_tna}, and \verb{$states}.
 
-\code{print} invisibly returns \code{x}.
+In \code{print.magnitude_difference()}: \code{print} invisibly returns \code{x}.
 
-\code{plot} returns a \code{ggplot} object.
+In \code{plot.magnitude_difference()}: \code{plot} returns a \code{ggplot} object.
 }
 \description{
 Quantifies, per edge, how much row-normalization moves a transition
@@ -75,18 +74,6 @@ can be modest in probability, and a rare-source edge can dominate its row
 in probability. The per-edge discrepancy on a common scale is the
 \emph{magnitude difference}.
 }
-\section{Methods (by generic)}{
-\itemize{
-\item \code{print(magnitude_difference)}: Print a compact summary of the per-edge
-magnitude-difference distribution.
-
-\item \code{plot(magnitude_difference)}: Plot the per-edge magnitude difference as
-a polar portrait. \code{type = "stacked"} (default) draws one sector per
-from-state with stacked wedges (grey base = shared value, colored tip =
-magnitude difference); \code{type = "circular"} draws a chord-style diagram
-with signed differences on a diverging blue-orange scale.
-
-}}
 \examples{
 data(group_regulation_long, package = "Nestimate")
 fit <- magnitude_difference(group_regulation_long,

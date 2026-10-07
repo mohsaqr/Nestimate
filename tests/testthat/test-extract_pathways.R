@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # extract_pathways() -- cutting an event log into pathways.
 
 make_log <- function() {

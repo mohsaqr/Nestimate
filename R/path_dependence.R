@@ -81,7 +81,7 @@
 #' predictive information.
 #'
 #' @param x A wide sequence data.frame / matrix (rows = actors, columns =
-#'   time-steps), or a \code{netobject} that carries the source data.
+#'   time-steps), or a \code{netobject} that carries the source data. For the \code{print()} and \code{plot()} methods: an object of class \code{net_path_dependence} (or its \code{summary()}).
 #' @param order Integer. Order of the conditioning context. \code{order = 2}
 #'   (default) compares 2-step memory against 1-step; \code{order = 3}
 #'   compares 3-step memory; etc. Must be a whole number; a non-integer
@@ -268,13 +268,15 @@ path_dependence <- function(x, order = 2L, min_count = 5L, base = 2) {
 }
 
 
-#' Print method for `net_path_dependence`
-#'
-#' @param x A `net_path_dependence` object.
-#' @param top Integer. Number of top contexts to show. Default 10.
+#' @rdname path_dependence
+#' @param top In \code{print.net_path_dependence()}: Integer. Number of top contexts to show. Default 10. In \code{plot.net_path_dependence()}: Integer. Number of contexts to show (top by KL). Default 15.
 #' @param digits Integer. Digits to round numeric output. Default 3.
-#' @param ... Ignored.
-#' @return `x` invisibly.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_path_dependence}.
+#' @param title Character or `NULL`. Plot title. Default `NULL`, which builds "Path dependence: order k vs order 1" from the fitted order.
+#' @return In \code{print.net_path_dependence()} and \code{print.summary.net_path_dependence()}: `x` invisibly.
+#' @return In \code{summary.net_path_dependence()}: A `summary.net_path_dependence` with the full sorted table and chain-level summaries.
+#' @return In \code{plot.net_path_dependence()}: A ggplot object.
 #' @export
 print.net_path_dependence <- function(x, top = 10L, digits = 3L, ...) {
   unit <- switch(as.character(x$base),
@@ -304,12 +306,7 @@ print.net_path_dependence <- function(x, top = 10L, digits = 3L, ...) {
 }
 
 
-#' Summary method for `net_path_dependence`
-#'
-#' @param object A `net_path_dependence` object.
-#' @param ... Ignored.
-#' @return A `summary.net_path_dependence` with the full sorted table and
-#'   chain-level summaries.
+#' @rdname path_dependence
 #' @export
 summary.net_path_dependence <- function(object, ...) {
   structure(
@@ -325,12 +322,7 @@ summary.net_path_dependence <- function(object, ...) {
   )
 }
 
-#' Print method for `summary.net_path_dependence`
-#'
-#' @param x A `summary.net_path_dependence` object.
-#' @param digits Integer. Digits to round numeric output. Default 3.
-#' @param ... Ignored.
-#' @return `x` invisibly.
+#' @rdname path_dependence
 #' @export
 print.summary.net_path_dependence <- function(x, digits = 3L, ...) {
   unit <- switch(as.character(x$base),
@@ -361,20 +353,7 @@ print.summary.net_path_dependence <- function(x, digits = 3L, ...) {
 }
 
 
-#' Plot method for `net_path_dependence`
-#'
-#' @description
-#' Lollipop chart of per-context KL divergence, sorted descending. Point
-#' size is proportional to context count; points where the modal next
-#' state flips between orders are marked with an X to highlight
-#' substantively meaningful order-2 effects.
-#'
-#' @param x A `net_path_dependence` object.
-#' @param top Integer. Number of contexts to show (top by KL). Default 15.
-#' @param title Character or `NULL`. Plot title. Default `NULL`, which
-#'   builds "Path dependence: order k vs order 1" from the fitted order.
-#' @param ... Ignored.
-#' @return A ggplot object.
+#' @rdname path_dependence
 #' @export
 plot.net_path_dependence <- function(x,
                                      top = 15L,

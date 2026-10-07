@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for build_mcml_pc() (experimental MCML for psychometric networks)
 
 # Block-structured Gaussian data: within-block r = .5, between A-B = .30,

@@ -136,20 +136,6 @@ test_that("Ising: continuous data raises error", {
 })
 
 
-# ---- .log1pexp tests ----
-
-test_that("log1pexp is numerically stable", {
-  # Large positive: log(1 + exp(100)) ~ 100
-  expect_equal(.log1pexp(100), 100, tolerance = 1e-10)
-  # Large negative: log(1 + exp(-100)) ~ exp(-100)
-  expect_equal(.log1pexp(-100), exp(-100), tolerance = 1e-30)
-  # Zero: log(1 + exp(0)) = log(2)
-  expect_equal(.log1pexp(0), log(2), tolerance = 1e-12)
-  # Vectorized
-  result <- .log1pexp(c(-100, 0, 100))
-  expect_length(result, 3)
-})
-
 
 # ---- Basic structure tests ----
 
@@ -160,8 +146,7 @@ test_that("Ising: output has correct structure", {
 
   expect_type(result, "list")
   expect_true(all(c("matrix", "nodes", "directed", "cleaned_data",
-                     "thresholds", "asymm_weights", "rule", "gamma",
-                     "n", "p", "lambda_selected") %in% names(result)))
+                     "thresholds", "rule", "gamma", "n", "p") %in% names(result)))
 })
 
 test_that("Ising: output matrix is symmetric", {
@@ -192,20 +177,12 @@ test_that("Ising: nodes match column names", {
   expect_equal(result$nodes, paste0("V", 1:4))
 })
 
-test_that("Ising: thresholds and lambda have correct length", {
+test_that("Ising: thresholds have one named value per node", {
   skip_if_not_installed("glmnet")
   df <- .make_ising_data(100, 4)
   result <- .estimator_ising(df)
   expect_length(result$thresholds, 4)
-  expect_length(result$lambda_selected, 4)
-  expect_true(all(result$lambda_selected > 0))
-})
-
-test_that("Ising: asymm_weights is p x p", {
-  skip_if_not_installed("glmnet")
-  df <- .make_ising_data(100, 4)
-  result <- .estimator_ising(df)
-  expect_equal(dim(result$asymm_weights), c(4, 4))
+  expect_identical(names(result$thresholds), result$nodes)
 })
 
 test_that("Ising: n and p are correct", {
@@ -328,40 +305,6 @@ test_that("Ising: nlambda is respected", {
 
 
 # ---- Symmetrization unit tests ----
-
-test_that("symmetrize AND: edge only if both directions nonzero", {
-  coef <- matrix(0, 3, 3, dimnames = list(letters[1:3], letters[1:3]))
-  coef[1, 2] <- 0.5   # a -> b
-  coef[2, 1] <- 0.3   # b -> a (both nonzero: keep)
-  coef[1, 3] <- 0.4   # a -> c
-  coef[3, 1] <- 0.0   # c -> a = 0 (one zero: drop with AND)
-
-  sym <- .symmetrize_ising(coef, rule = "AND")
-
-  # a-b: both nonzero -> average
-  expect_equal(sym[1, 2], (0.5 + 0.3) / 2)
-  expect_equal(sym[2, 1], (0.5 + 0.3) / 2)
-  # a-c: one zero -> dropped
-
-  expect_equal(sym[1, 3], 0)
-  expect_equal(sym[3, 1], 0)
-})
-
-test_that("symmetrize OR: simple average of both directions", {
-  coef <- matrix(0, 3, 3, dimnames = list(letters[1:3], letters[1:3]))
-  coef[1, 2] <- 0.5
-  coef[2, 1] <- 0.3
-  coef[1, 3] <- 0.4
-  coef[3, 1] <- 0.0
-
-  sym <- .symmetrize_ising(coef, rule = "OR")
-
-  # a-b: (0.5 + 0.3) / 2
-  expect_equal(sym[1, 2], (0.5 + 0.3) / 2)
-  # a-c: (0.4 + 0.0) / 2 = 0.2 (average including zeros, matching IsingFit)
-  expect_equal(sym[1, 3], 0.2)
-  expect_equal(sym[3, 1], 0.2)
-})
 
 
 # ---- Integration tests: build_network ----

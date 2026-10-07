@@ -2,6 +2,12 @@
 % Please edit documentation in R/bootstrap_network.R
 \name{bootstrap_network}
 \alias{bootstrap_network}
+\alias{print.net_bootstrap}
+\alias{summary.net_bootstrap}
+\alias{print.net_bootstrap_group}
+\alias{summary.net_bootstrap_group}
+\alias{print.wtna_boot_mixed}
+\alias{summary.wtna_boot_mixed}
 \title{Bootstrap a Network Estimate}
 \usage{
 bootstrap_network(
@@ -16,6 +22,18 @@ bootstrap_network(
   ci_method = c("percentile", "basic"),
   actor = NULL
 )
+
+\method{print}{net_bootstrap}(x, ...)
+
+\method{summary}{net_bootstrap}(object, ...)
+
+\method{print}{net_bootstrap_group}(x, ...)
+
+\method{summary}{net_bootstrap_group}(object, ...)
+
+\method{print}{wtna_boot_mixed}(x, ...)
+
+\method{summary}{wtna_boot_mixed}(object, ...)
 }
 \arguments{
 \item{x}{A \code{netobject} from \code{\link{build_network}}.
@@ -23,7 +41,7 @@ The data, method, params, scaling, threshold, and level are all
 extracted from this object. A \code{cograph_network} is coerced
 first; a \code{netobject_group} or \code{mcml} bootstraps every
 constituent network, and a \code{wtna_mixed} bootstraps both of its
-components (see \strong{Value}).}
+components (see \strong{Value}). For the \code{print()} method: an object of class \code{net_bootstrap}, \code{net_bootstrap_group} or \code{wtna_boot_mixed}.}
 
 \item{iter}{Integer. Number of bootstrap iterations (default: 1000).}
 
@@ -64,6 +82,10 @@ in students, \code{"Group"} for students nested in teams), looked up in
 the network's \code{$metadata} or wide sequence data. When supplied,
 whole actors are resampled; see the section \emph{Nested data and
 actor}. Default \code{NULL}: sequences are resampled individually.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_bootstrap}, \code{net_bootstrap_group} or \code{wtna_boot_mixed}.}
 }
 \value{
 An object of class \code{"net_bootstrap"} containing:
@@ -100,6 +122,16 @@ A \code{netobject_group} or \code{mcml} input returns a
 \code{"net_bootstrap_group"} (named list of \code{net_bootstrap}
 results); a \code{wtna_mixed} input returns a \code{"wtna_boot_mixed"}
 with \code{$transition} and \code{$cooccurrence} results.
+
+In \code{print.net_bootstrap()} and \code{print.wtna_boot_mixed()}: The input object, invisibly.
+
+In \code{summary.net_bootstrap()}: The \code{$summary} data frame: one row per non-zero original edge, with columns \code{from}, \code{to}, \code{weight}, \code{mean}, \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower}, \code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when the bootstrap used \code{inference = "stability"}.
+
+In \code{print.net_bootstrap_group()}: \code{x} invisibly.
+
+In \code{summary.net_bootstrap_group()}: The per-group summaries stacked into one data frame: the columns of \code{\link{summary.net_bootstrap}} prefixed by a \code{group} column naming the network each row came from.
+
+In \code{summary.wtna_boot_mixed()}: A list with \code{$transition} and \code{$cooccurrence} summary data frames.
 }
 \description{
 Non-parametric bootstrap for any network estimated by

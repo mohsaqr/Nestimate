@@ -2,6 +2,9 @@
 % Please edit documentation in R/boot_glasso.R
 \name{boot_glasso}
 \alias{boot_glasso}
+\alias{print.boot_glasso}
+\alias{summary.boot_glasso}
+\alias{plot.boot_glasso}
 \title{Bootstrap for Regularized Partial Correlation Networks}
 \usage{
 boot_glasso(
@@ -18,10 +21,16 @@ boot_glasso(
   ncores = 1L,
   seed = NULL
 )
+
+\method{print}{boot_glasso}(x, ...)
+
+\method{summary}{boot_glasso}(object, type = "edges", ...)
+
+\method{plot}{boot_glasso}(x, type = "edges", measure = NULL, ...)
 }
 \arguments{
 \item{x}{A data frame, numeric matrix (observations x variables), or
-a \code{netobject} with \code{method = "glasso"}.}
+a \code{netobject} with \code{method = "glasso"}. For the \code{print()} and \code{plot()} methods: an object of class \code{boot_glasso}.}
 
 \item{iter}{Integer. Number of nonparametric bootstrap iterations
 (default: 1000).}
@@ -69,6 +78,14 @@ return a named list (e.g., \code{list(my_metric = ...)}).}
 (default: 1, sequential).}
 
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods. In \code{plot.boot_glasso()}: Additional arguments passed to plotting functions. For \code{type = "edge_diff"} and \code{type = "centrality_diff"}, accepts \code{order}: \code{"sample"} (default, sorted by value) or \code{"id"} (alphabetical).}
+
+\item{object}{For the \code{summary()} method: an object of class \code{boot_glasso}.}
+
+\item{type}{In \code{summary.boot_glasso()}: Character. Summary type: \code{"edges"} (default), \code{"centrality"}, \code{"cs"}, \code{"predictability"}, or \code{"all"}. In \code{plot.boot_glasso()}: Character. Plot type: \code{"edges"} (default), \code{"stability"}, \code{"edge_diff"}, \code{"centrality_diff"}, or \code{"inclusion"}.}
+
+\item{measure}{Character. Centrality measure for \code{type = "centrality_diff"} (default: first available measure).}
 }
 \value{
 An object of class \code{"boot_glasso"} containing:
@@ -116,6 +133,12 @@ matrices.}
 \item{lambda_selected}{Selected lambda for original data.}
 \item{timing}{Named numeric vector with timing in seconds.}
 }
+
+In \code{print.boot_glasso()}: The input object, invisibly.
+
+In \code{summary.boot_glasso()}: For \code{type = "edges"}, the \code{edge_ci} data frame (\code{edge}, \code{weight}, \code{ci_lower}, \code{ci_upper}, \code{inclusion}) ordered by decreasing absolute weight; for \code{"cs"} the \code{cs_data} data frame; for \code{"predictability"} the \code{predictability_ci} data frame; for \code{"centrality"} a named list of one data frame per measure (\code{node}, \code{value}, \code{ci_lower}, \code{ci_upper}); for \code{"all"} a named list holding all four.
+
+In \code{plot.boot_glasso()}: A \code{ggplot} object (returned, and so printed when the call is made at the top level).
 }
 \description{
 Fast, single-call bootstrap for EBICglasso partial correlation networks.
@@ -134,7 +157,8 @@ set.seed(42)
 mat <- matrix(rnorm(60), ncol = 4)
 colnames(mat) <- LETTERS[1:4]
 net <- build_network(as.data.frame(mat), method = "glasso")
-boot <- boot_glasso(net, iter = 100, cs_iter = 50, seed = 42,
+# iter = 20 keeps the example fast; a real analysis uses 1000 or more.
+boot <- boot_glasso(net, iter = 20, cs_iter = 10, seed = 42,
   centrality = c("strength", "expected_influence"))
 print(boot)
 summary(boot, type = "edges")

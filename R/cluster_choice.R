@@ -39,7 +39,7 @@
 #'   \code{estimator}).
 #'   Note: \code{weighted = TRUE} only works with
 #'   \code{dissimilarity = "hamming"} and is rejected up-front when
-#'   sweeping mixed dissimilarities.
+#'   sweeping mixed dissimilarities. For the S3 methods: further arguments passed to or from other methods.
 #' @return A \code{cluster_choice} object (a data.frame subclass) with
 #'   one row per (k, dissimilarity, method) combination and columns:
 #'   \describe{
@@ -175,13 +175,16 @@ cluster_choice <- function(data,
 # S3 methods
 # ---------------------------------------------------------------------------
 
-#' Print Method for cluster_choice
-#'
-#' @param x A \code{cluster_choice} object.
-#' @param digits Integer. Decimal places for floating-point columns.
-#'   Default \code{3L}.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return The input object, invisibly.
+#' @rdname cluster_choice
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{cluster_choice}.
+#' @param digits Integer. Decimal places for floating-point columns. Default \code{3L}.
+#' @param object For the \code{summary()} method: an object of class \code{cluster_choice}.
+#' @param type Character. One of \code{"auto"} (default), \code{"lines"}, \code{"bars"}, \code{"heatmap"}, \code{"tradeoff"}, \code{"facet"}.
+#' @param abbrev Logical. If \code{TRUE}, dissimilarity and method names shown on tick labels and point labels are shortened (e.g. \code{"hamming"} -> \code{"ham"}, \code{"ward.D2"} -> \code{"wD2"}). The legend shows the full canonical name. Default \code{FALSE}.
+#' @param combined Only meaningful for \code{type = "facet"}. When \code{TRUE} (default), all methods are shown in one ggplot via \code{facet_wrap(~ method)}. When \code{FALSE}, returns a named list of single-panel ggplots, one per method.
+#' @return In \code{print.cluster_choice()}: The input object, invisibly.
+#' @return In \code{summary.cluster_choice()}: A data frame with the swept configurations, all metrics, and a \code{best} character column flagging the silhouette-max row.
+#' @return In \code{plot.cluster_choice()}: A \code{ggplot} object, invisibly; for \code{type = "facet"} with \code{combined = FALSE}, a named list of ggplots.
 #' @export
 print.cluster_choice <- function(x, digits = 3L, ...) {
   .cluster_choice_check_unused_dots("print.cluster_choice", ...)
@@ -224,12 +227,7 @@ print.cluster_choice <- function(x, digits = 3L, ...) {
   invisible(x)
 }
 
-#' Summary Method for cluster_choice
-#'
-#' @param object A \code{cluster_choice} object.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return A data frame with the swept configurations, all metrics, and
-#'   a \code{best} character column flagging the silhouette-max row.
+#' @rdname cluster_choice
 #' @export
 summary.cluster_choice <- function(object, ...) {
   .cluster_choice_check_unused_dots("summary.cluster_choice", ...)
@@ -272,12 +270,8 @@ summary.cluster_choice <- function(object, ...) {
   ifelse(is.na(out), as.character(x), out)
 }
 
-#' Plot Method for cluster_choice
-#'
-#' Six explicit chart types plus a smart \code{"auto"} default. The user
-#' picks the shape; the function does not editorialise (no "best"
-#' annotation, no interpretive subtitles, no inferred recommendation).
-#'
+#' @rdname cluster_choice
+#' @section Plot types:
 #' Type cheat-sheet:
 #' \describe{
 #'   \item{\code{"auto"}}{Default. Picks one of the others based on which
@@ -297,24 +291,9 @@ summary.cluster_choice <- function(object, ...) {
 #'   \item{\code{"facet"}}{Lines vs k, colour by one categorical axis,
 #'     facet by another. Requires \code{k} plus two categoricals.}
 #' }
-#'
+#' 
 #' Asking for a type the data can't support raises an error pointing at
 #' the alternatives.
-#'
-#' @param x A \code{cluster_choice} object.
-#' @param type Character. One of \code{"auto"} (default), \code{"lines"},
-#'   \code{"bars"}, \code{"heatmap"}, \code{"tradeoff"}, \code{"facet"}.
-#' @param abbrev Logical. If \code{TRUE}, dissimilarity and method names
-#'   shown on tick labels and point labels are shortened (e.g.
-#'   \code{"hamming"} -> \code{"ham"}, \code{"ward.D2"} -> \code{"wD2"}).
-#'   The legend shows the full canonical name. Default \code{FALSE}.
-#' @param combined Only meaningful for \code{type = "facet"}. When
-#'   \code{TRUE} (default), all methods are shown in one ggplot via
-#'   \code{facet_wrap(~ method)}. When \code{FALSE}, returns a named list
-#'   of single-panel ggplots, one per method.
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#' @return A \code{ggplot} object, invisibly; for \code{type = "facet"}
-#'   with \code{combined = FALSE}, a named list of ggplots.
 #' @export
 plot.cluster_choice <- function(x,
                                  type   = c("auto", "lines", "bars",

@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Grouping safety for prepare_onehot()
 #
 # prepare_onehot() used to key its actor/session, aggregation, and reshape

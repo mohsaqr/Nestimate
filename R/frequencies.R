@@ -84,13 +84,10 @@ frequencies <- function(data,
 }
 
 
-#' Summary Method for Transition Count Matrices
-#'
-#' @param object A \code{nest_transition_counts} matrix returned by
-#'   \code{\link{frequencies}()}.
-#' @param ... Additional arguments (ignored).
-#' @return A tidy data frame with columns \code{from}, \code{to},
-#'   \code{count}, with one row per non-zero transition.
+#' @rdname frequencies
+#' @param object For the \code{summary()} method: an object of class \code{nest_transition_counts}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{summary.nest_transition_counts()}: A tidy data frame with columns \code{from}, \code{to}, \code{count}, with one row per non-zero transition.
 #' @export
 summary.nest_transition_counts <- function(object, ...) {
   .matrix_to_long_df(unclass(object), value_col = "count",

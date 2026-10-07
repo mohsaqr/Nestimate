@@ -2,6 +2,9 @@
 % Please edit documentation in R/reliability.R
 \name{network_reliability}
 \alias{network_reliability}
+\alias{print.net_reliability}
+\alias{summary.net_reliability}
+\alias{plot.net_reliability}
 \title{Split-Half Reliability for Network Estimates}
 \usage{
 network_reliability(
@@ -11,6 +14,12 @@ network_reliability(
   scale = "none",
   seed = NULL
 )
+
+\method{print}{net_reliability}(x, ...)
+
+\method{summary}{net_reliability}(object, ...)
+
+\method{plot}{net_reliability}(x, bins = 60L, combined = TRUE, ...)
 }
 \arguments{
 \item{...}{One or more \code{netobject}s (from \code{\link{build_network}}).
@@ -18,7 +27,7 @@ If unnamed, each model is auto-named from its \code{$method}; duplicate
 names are made unique with \code{make.unique()}. A
 \code{netobject_group} is flattened into its constituent models (named
 by group), and an \code{mcml} or \code{cograph_network} is converted
-first.}
+first. For the S3 methods: further arguments passed to or from other methods.}
 
 \item{iter}{Integer. Number of split-half iterations (default: 1000).}
 
@@ -32,6 +41,14 @@ Use scaling when comparing models on different scales (e.g. frequency
 vs relative).}
 
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_reliability}.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_reliability}.}
+
+\item{bins}{Integer. Number of histogram bins per panel (default 60).}
+
+\item{combined}{When \code{TRUE} (default), all four metrics are shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named list of four single-panel ggplots, one per metric.}
 }
 \value{
 An object of class \code{"net_reliability"} containing:
@@ -46,6 +63,12 @@ per model).}
 \item{split}{Split fraction.}
 \item{scale}{Scaling method used.}
 }
+
+In \code{print.net_reliability()}: The input object, invisibly.
+
+In \code{summary.net_reliability()}: A tidy data frame with columns \code{model}, \code{metric}, \code{mean}, \code{sd} summarising the split-half iterations.
+
+In \code{plot.net_reliability()}: A \code{ggplot} object (invisibly), or a named list of four ggplots when \code{combined = FALSE}.
 }
 \description{
 Assesses the stability of network estimates by repeatedly splitting

@@ -1,3 +1,41 @@
+# Nestimate 0.9.23
+
+## Internal changes
+
+* The `mgm` and `ising` estimators delegate to `psychnets::mgm_fit()` and
+  `psychnets::ising_fit()` (glmnet engine), joining `cor`, `pcor` and `glasso`.
+  Results are unchanged: identical to the former in-package code (max absolute
+  difference 0 for Ising over 180 configurations, 5.6e-17 for MGM over 48).
+  Nestimate keeps type detection, input validation and the result fields. The
+  Ising result no longer carries the unused `asymm_weights` and
+  `lambda_selected` fields. The unused internal moderated-MGM code is removed.
+
+## Documentation
+
+* Each function has one help page. The 181 `print()`, `summary()`, `plot()`,
+  `format()` and `as.data.frame()` methods are documented on the page of the
+  function that creates their object (`?nct` covers `print.net_nct()` and
+  `summary.net_nct()`), as is `compare_model()`'s `netobject_group` method.
+  286 help pages become 139; `?print.net_nct` still opens the right page.
+* `compare_model()` and `as_netdifference()` have examples.
+
+## Bug fixes
+
+* `build_network(method = "mgm")` no longer fails on data with missing values
+  ("number of observations in y not equal to the number of rows of x").
+
+## Tests
+
+* Equivalence tests against other packages (tna, igraph, mgm, stringdist,
+  `glm()`) and naive-loop reference implementations are no longer shipped.
+* CRAN runs a core of 15 test files (data preparation, estimation registry,
+  extraction, Markov, link prediction, Bayesian verbs, pruning, and the htna
+  contract); every other file is skipped on CRAN and runs locally and in CI.
+  The CRAN test run drops from about 300 s to 22 s.
+* Slow examples run with fewer iterations (`boot_glasso()`, `nct()`,
+  `permutation_diagnostics()`, `build_gimme()`) and `?sequence_plot` draws
+  fewer figures.
+
 # Nestimate 0.9.21
 
 ## Bug fixes

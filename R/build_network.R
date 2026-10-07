@@ -129,7 +129,7 @@
 #'   are auto-detected as state via the values-in-nodes rule. Cannot overlap
 #'   with \code{state_cols}. Default: \code{NULL}.
 #' @param ... Additional arguments passed to the estimator function.
-#'
+#' For the S3 methods: further arguments passed to or from other methods.
 #' @return An object of class \code{c("netobject", "cograph_network")} containing:
 #' \describe{
 #'   \item{data}{The state columns of the cleaned input data, as a data frame.}
@@ -1042,26 +1042,14 @@ build_network <- function(data,
 
 # ---- S3 methods ----
 
-#' Print Method for Network Object
-#'
-#' @param x A \code{netobject}.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
-#' net <- build_network(seqs, method = "relative")
-#' print(net)
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
-#'   V3 = c("C","A","C","B")
-#' )
-#' net <- build_network(seqs, method = "relative")
-#' print(net)
-#' }
-#'
+#' @rdname build_network
+#' @param x For the \code{print()} method: an object of class \code{netobject}, \code{netobject_group} or \code{netobject_ml} (or its \code{summary()}).
+#' @param digits Integer. Decimal places for the weight summary. Default \code{3}. Non-breaking: \code{print(x)} keeps the same shape as before, with the addition of a weight-range column.
+#' @param object For the \code{summary()} method: an object of class \code{netobject} or \code{netobject_group}.
+#' @param combined Logical. Combine into one wide data.frame? Default `TRUE`.
+#' @return In \code{print.netobject()}, \code{print.netobject_group()} and \code{print.netobject_ml()}: The input object, invisibly.
+#' @return In \code{summary.netobject()}: A `data.frame` with columns `metric` and `value`, of class `c("summary.netobject", "data.frame")`.
+#' @return In \code{summary.netobject_group()}: Either a `data.frame` (one column per group) or a named list of `summary.netobject` objects, of class `c("summary.netobject_group", ...)`.
 #' @export
 print.netobject <- function(x, ...) {
   method_labels <- c(
@@ -1161,40 +1149,7 @@ print.netobject <- function(x, ...) {
 }
 
 
-#' Print Method for Group Network Object
-#'
-#' Compact summary of a \code{netobject_group}. Header surfaces the source
-#' (a clustering attached by \code{\link{cluster_network}} or
-#' \code{\link{cluster_mmm}}, or a plain split by \code{group_col}). The
-#' per-group table carries node and edge counts, weight range, and -- when
-#' a clustering attribute is present -- N and percentage of sequences per
-#' cluster (matching the layout used by \code{\link{print.net_clustering}}
-#' and \code{\link{print.net_mmm}}).
-#'
-#' @param x A \code{netobject_group}.
-#' @param digits Integer. Decimal places for the weight summary. Default
-#'   \code{3}. Non-breaking: \code{print(x)} keeps the same shape as
-#'   before, with the addition of a weight-range column.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' seqs <- data.frame(V1 = c("A","B","A","B"), V2 = c("B","A","B","A"),
-#'                    grp = c("X","X","Y","Y"))
-#' nets <- build_network(seqs, method = "relative", group = "grp")
-#' print(nets)
-#' \donttest{
-#' seqs <- data.frame(
-#'   V1 = c("A","B","A","C","B","A"),
-#'   V2 = c("B","C","B","A","C","B"),
-#'   V3 = c("C","A","C","B","A","C"),
-#'   grp = c("X","X","X","Y","Y","Y")
-#' )
-#' nets <- build_network(seqs, method = "relative", group = "grp")
-#' print(nets)
-#' }
-#'
+#' @rdname build_network
 #' @export
 print.netobject_group <- function(x, digits = 3L, ...) {
   digits <- as.integer(digits)
@@ -1273,32 +1228,7 @@ print.netobject_group <- function(x, digits = 3L, ...) {
 }
 
 
-#' Print Method for Multilevel Network Object
-#'
-#' @param x A \code{netobject_ml}.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' set.seed(1)
-#' obs <- data.frame(id = rep(1:3, each = 5),
-#'                   A = rnorm(15), B = rnorm(15), C = rnorm(15))
-#' net_ml <- build_network(obs, method = "cor",
-#'                          params = list(id = "id"), level = "both")
-#' print(net_ml)
-#' \donttest{
-#' set.seed(1)
-#' obs <- data.frame(
-#'   id  = rep(1:5, each = 8),
-#'   A   = rnorm(40), B = rnorm(40),
-#'   C   = rnorm(40), D = rnorm(40)
-#' )
-#' net_ml <- build_network(obs, method = "cor",
-#'                          params = list(id = "id"), level = "both")
-#' print(net_ml)
-#' }
-#'
+#' @rdname build_network
 #' @export
 print.netobject_ml <- function(x, ...) {
   cat(sprintf("Multilevel Network (method: %s)\n", x$method))

@@ -5,6 +5,9 @@
 \alias{compare_model.netobject}
 \alias{compare_model.cograph_network}
 \alias{compare_model.matrix}
+\alias{compare_model.netobject_group}
+\alias{print.net_comparison}
+\alias{plot.net_comparison}
 \title{Compare two networks descriptively}
 \usage{
 compare_model(x, ...)
@@ -35,11 +38,33 @@ compare_model(x, ...)
   network = TRUE,
   ...
 )
+
+\method{compare_model}{netobject_group}(
+  x,
+  i = 1L,
+  j = 2L,
+  scaling = "none",
+  measures = character(0),
+  network = TRUE,
+  ...
+)
+
+\method{print}{net_comparison}(x, ...)
+
+\method{plot}{net_comparison}(
+  x,
+  type = c("scatter", "heatmap", "diff_hist", "weight_dist", "all"),
+  combined = TRUE,
+  ...
+)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{cograph_network}, or numeric square matrix.}
+\item{x}{A \code{netobject}, \code{cograph_network}, or numeric square matrix, or a
+\code{netobject_group} whose members \code{i} and \code{j} are compared. For the
+\code{print()} and \code{plot()} methods: an object of class
+\code{net_comparison}.}
 
-\item{...}{Ignored.}
+\item{...}{Ignored. For the S3 methods: further arguments passed to or from other methods.}
 
 \item{y}{A \code{netobject}, \code{cograph_network}, or numeric square matrix.}
 
@@ -78,11 +103,20 @@ with a warning.}
 
 \item{network}{Logical. Include side-by-side network metrics from
 \code{summary()}? Default \code{TRUE}.}
+
+\item{i, j}{For a \code{netobject_group}: index or name of the two member
+networks to compare. Defaults \code{1L} and \code{2L}.}
+
+\item{type}{Character. One of \code{"scatter"} (default - edge-weight scatter with OLS fit and correlation overlay), \code{"heatmap"} (n by n grid of x - y differences using the diverging palette), \code{"diff_hist"} (histogram of |x - y| absolute differences with rug + density), \code{"weight_dist"} (overlaid distributions of |x| and |y| edge weights), or \code{"all"} (2 by 2 grid of all four panels; requires the gridExtra package).}
+
+\item{combined}{When \code{type = "all"} and \code{combined = TRUE} (default), the four panels are stitched into a 2x2 gtable. When \code{FALSE}, returns a named list of the four ggplots so each can be printed, saved, or re-laid-out independently. Ignored for other \code{type} values.}
 }
 \value{
 A \code{net_comparison} object: a named list with \code{matrices},
 \code{difference_matrix}, \code{edge_metrics}, \code{summary_metrics}, optionally
 \code{network_metrics}, \code{centrality_differences}, \code{centrality_correlations}.
+
+In \code{plot.net_comparison()}: A \code{ggplot} object; for \code{type = "all"} with \code{combined = TRUE} a \code{gtable} arranged 2 by 2; for \code{type = "all"} with \code{combined = FALSE} a named list of four ggplots.
 }
 \description{
 Computes a battery of descriptive comparison metrics between two networks
@@ -99,4 +133,10 @@ correlations.
 Mirrors \code{tna::compare()} numerically. Inputs are converted to weight
 matrices and scaled before comparison; the choice of scaling determines
 how weights from different estimators are placed on a common footing.
+}
+\examples{
+nets <- build_network(group_regulation_long, method = "relative",
+                      actor = "Actor", action = "Action", time = "Time",
+                      group = "Achiever")
+compare_model(nets)
 }

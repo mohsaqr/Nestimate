@@ -1623,135 +1623,6 @@
 }
 
 
-#' Numerically stable log(1 + exp(x))
-#'
-#' Avoids overflow for large x and precision loss for small x.
-#'
-#' @param x Numeric vector.
-#' @return Numeric vector of log(1 + exp(x)).
-#' @noRd
-.log1pexp <- function(x) {
-  out <- numeric(length(x))
-  big <- x > 20
-  small <- x < -20
-  mid <- !big & !small
-  out[big] <- x[big]
-  out[small] <- exp(x[small])
-  out[mid] <- log1p(exp(x[mid]))
-  out
-}
-
-
-#' Nodewise L1-penalized logistic regression with EBIC selection
-#'
-#' Core algorithm for Ising model estimation (IsingFit approach).
-#' For each node j, fits L1-penalized logistic regression of \code{X[,j]} on \code{X[,-j]}
-#' using glmnet, then selects lambda via EBIC.
-#'
-#' @param mat Numeric matrix of binary (0/1) values (n x p).
-#' @param gamma Numeric. EBIC hyperparameter (0 = BIC, higher = sparser).
-#' @param nlambda Integer. Number of lambda values in the regularization path.
-#'
-#' @return A list with:
-#'   \describe{
-#'     \item{coef_matrix}{p x p asymmetric coefficient matrix (row j = regression
-#'       of node j on others).}
-#'     \item{thresholds}{Numeric vector of intercepts (length p).}
-#'     \item{lambda_selected}{Numeric vector of selected lambda per node.}
-#'   }
-#' @noRd
-.ising_nodewise_ebic <- function(mat, gamma = 0.25, nlambda = 100L) {
-  n <- nrow(mat)
-  p <- ncol(mat)
-  n_predictors <- p - 1L
-  node_names <- colnames(mat)
-
-  coef_matrix <- matrix(0, nrow = p, ncol = p,
-                         dimnames = list(node_names, node_names))
-  thresholds <- numeric(p)
-  names(thresholds) <- node_names
-  lambda_selected <- numeric(p)
-  names(lambda_selected) <- node_names
-
-  for (j in seq_len(p)) {
-    y <- mat[, j]
-    X <- mat[, -j, drop = FALSE]
-
-    # Fit L1-penalized logistic regression
-    fit <- glmnet::glmnet(X, y, family = "binomial", nlambda = nlambda)
-
-    # Compute EBIC for each lambda in the path
-    # Nodewise EBIC (IsingFit): -2*loglik + k*log(n) + 2*gamma*k*log(p-1)
-    n_lam <- length(fit$lambda)
-    ebic_vals <- numeric(n_lam)
-
-    for (k in seq_len(n_lam)) {
-      beta_k <- fit$beta[, k]
-      intercept_k <- fit$a0[k]
-
-      # Linear predictor
-      eta <- as.vector(X %*% beta_k) + intercept_k
-
-      # Log-likelihood: sum(y * eta - log(1 + exp(eta)))
-      loglik <- sum(y * eta - .log1pexp(eta))
-
-      # Number of nonzero coefficients (excluding intercept)
-      n_edges <- sum(abs(beta_k) > 0)
-
-      # Nodewise EBIC = -2*loglik + k*log(n) + 2*gamma*k*log(p-1)
-      ebic_vals[k] <- -2 * loglik + n_edges * log(n) +
-        2 * n_edges * gamma * log(n_predictors)
-    }
-
-    # Select lambda minimizing EBIC
-    best_idx <- which.min(ebic_vals)
-    best_beta <- fit$beta[, best_idx]
-    best_intercept <- fit$a0[best_idx]
-
-    # Place coefficients in the row for node j
-    other_idx <- seq_len(p)[-j]
-    coef_matrix[j, other_idx] <- as.vector(best_beta)
-    thresholds[j] <- best_intercept
-    lambda_selected[j] <- fit$lambda[best_idx]
-  }
-
-  list(
-    coef_matrix = coef_matrix,
-    thresholds = thresholds,
-    lambda_selected = lambda_selected
-  )
-}
-
-
-#' Symmetrize asymmetric Ising coefficient matrix
-#'
-#' @param coef_matrix p x p asymmetric coefficient matrix from nodewise
-#'   regression.
-#' @param rule Character. Symmetrization rule: \code{"AND"} (default) or
-#'   \code{"OR"}.
-#'
-#' @return Symmetric p x p weight matrix with zero diagonal.
-#' @noRd
-.symmetrize_ising <- function(coef_matrix, rule = "AND") {
-  p <- nrow(coef_matrix)
-  sym <- matrix(0, nrow = p, ncol = p,
-                dimnames = dimnames(coef_matrix))
-
-  if (rule == "AND") {
-    # Edge only if BOTH directions nonzero; weight = average
-    both_nonzero <- (coef_matrix != 0) & (t(coef_matrix) != 0)
-    sym[both_nonzero] <- (coef_matrix[both_nonzero] +
-                            t(coef_matrix)[both_nonzero]) / 2
-  } else if (rule == "OR") {
-    # Simple average of both directions (matches IsingFit)
-    sym <- (coef_matrix + t(coef_matrix)) / 2
-  }
-
-  diag(sym) <- 0
-  sym
-}
-
-
 #' Ising Model Network Estimator
 #'
 #' Estimates an Ising model network using nodewise L1-penalized logistic
@@ -1777,12 +1648,10 @@
 #'     \item{directed}{Logical: always FALSE.}
 #'     \item{cleaned_data}{Cleaned binary data matrix.}
 #'     \item{thresholds}{Numeric vector of node thresholds (intercepts).}
-#'     \item{asymm_weights}{Asymmetric coefficient matrix before symmetrization.}
 #'     \item{rule}{Symmetrization rule used.}
 #'     \item{gamma}{EBIC hyperparameter used.}
 #'     \item{n}{Sample size.}
 #'     \item{p}{Number of variables.}
-#'     \item{lambda_selected}{Per-node selected lambda values.}
 #'   }
 #'
 #' @references
@@ -1812,30 +1681,28 @@
   stopifnot(is.integer(nlambda), length(nlambda) == 1, nlambda >= 2L)
   rule <- match.arg(rule, c("AND", "OR"))
 
-  # Prepare input
+  # Prepare input: listwise NA removal and the binary (0/1) check
   prepared <- .prepare_ising_input(data, id_col = id_col)
   mat <- prepared$mat
-  n <- prepared$n
-  p <- prepared$p
   nodes <- prepared$nodes
 
-  # Run nodewise logistic regression with EBIC
-  nodewise <- .ising_nodewise_ebic(mat, gamma = gamma, nlambda = nlambda)
-
-  # Symmetrize
-  sym_matrix <- .symmetrize_ising(nodewise$coef_matrix, rule = rule)
+  # Nodewise L1 logistic regression + EBIC + symmetrization is owned by
+  # psychnets. native = FALSE selects its glmnet engine, which reproduces
+  # Nestimate's former in-package estimator exactly.
+  fit <- psychnets::ising_fit(as.data.frame(mat), gamma = gamma, rule = rule,
+                              nlambda = nlambda, native = FALSE)
+  sym_matrix <- fit$weights
+  dimnames(sym_matrix) <- list(nodes, nodes)
 
   list(
     matrix = sym_matrix,
     nodes = nodes,
     directed = FALSE,
     cleaned_data = mat,
-    thresholds = nodewise$thresholds,
-    asymm_weights = nodewise$coef_matrix,
+    thresholds = stats::setNames(fit$thresholds, nodes),
     rule = rule,
     gamma = gamma,
-    n = n,
-    p = p,
-    lambda_selected = nodewise$lambda_selected
+    n = prepared$n,
+    p = prepared$p
   )
 }

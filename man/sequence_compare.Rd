@@ -2,6 +2,9 @@
 % Please edit documentation in R/sequence_compare.R
 \name{sequence_compare}
 \alias{sequence_compare}
+\alias{print.net_sequence_comparison}
+\alias{summary.net_sequence_comparison}
+\alias{plot.net_sequence_comparison}
 \title{Compare Subsequence Patterns Between Groups}
 \usage{
 sequence_compare(
@@ -13,11 +16,25 @@ sequence_compare(
   iter = 1000L,
   adjust = "fdr"
 )
+
+\method{print}{net_sequence_comparison}(x, ...)
+
+\method{summary}{net_sequence_comparison}(object, ...)
+
+\method{plot}{net_sequence_comparison}(
+  x,
+  top_n = 10L,
+  style = c("auto", "pyramid", "heatmap"),
+  sort = c("statistic", "frequency"),
+  alpha = 0.05,
+  show_residuals = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{netobject_group} (from grouped \code{build_network}),
 a \code{netobject} (requires \code{group}), or a wide-format
-\code{data.frame} (requires \code{group}).}
+\code{data.frame} (requires \code{group}). For the \code{print()} and \code{plot()} methods: an object of class \code{net_sequence_comparison}.}
 
 \item{group}{Character or vector. Column name or vector of group labels.
 Not needed for \code{netobject_group}.}
@@ -36,6 +53,20 @@ threshold in \emph{every} group. Default: 5.}
 
 \item{adjust}{Character. P-value correction method (see
 \code{\link[stats]{p.adjust}}). Default: \code{"fdr"}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_sequence_comparison}.}
+
+\item{top_n}{Integer. Show top N patterns. Default: 10.}
+
+\item{style}{Character. \code{"auto"} (default) draws the back-to-back pyramid for exactly 2 groups and the heatmap for any other number; \code{"pyramid"} and \code{"heatmap"} force a specific style.}
+
+\item{sort}{Character. \code{"statistic"} (default) ranks patterns by test statistic or residual magnitude. \code{"frequency"} ranks by total occurrence count across all groups.}
+
+\item{alpha}{Numeric. Significance threshold for p-value display in the pyramid: patterns with \code{p_value < alpha} are starred and drawn in bold dark text, the rest stay plain grey. Default: 0.05.}
+
+\item{show_residuals}{Logical. If \code{TRUE}, print the standardized residual value inside each pyramid bar. Default: \code{FALSE}. Ignored for the heatmap (which always shows residuals).}
 }
 \value{
 An object of class \code{"net_sequence_comparison"} containing:
@@ -53,6 +84,12 @@ otherwise.}
 patterns meeting \code{min_freq} in every group.}
 \item{params}{List of sub, min_freq, test, iter, adjust.}
 }
+
+In \code{print.net_sequence_comparison()}: The input object, invisibly.
+
+In \code{summary.net_sequence_comparison()}: The \code{patterns} data.frame: tidy, one row per k-gram pattern, with a frequency, proportion and standardized-residual column per group, and the test columns when \code{test} was not \code{"none"}.
+
+In \code{plot.net_sequence_comparison()}: The drawn \code{ggplot} object, invisibly (the plot is also printed). \code{NULL}, invisibly, when the object holds no patterns.
 }
 \description{
 Extracts all k-gram patterns (subsequences of length k) from sequences

@@ -2,6 +2,12 @@
 % Please edit documentation in R/permutation_test.R
 \name{permutation}
 \alias{permutation}
+\alias{print.net_permutation}
+\alias{summary.net_permutation}
+\alias{print.net_permutation_group}
+\alias{summary.net_permutation_group}
+\alias{print.wtna_perm_mixed}
+\alias{summary.wtna_perm_mixed}
 \title{Permutation Test for Network Comparison}
 \usage{
 permutation(
@@ -16,10 +22,22 @@ permutation(
   seed = NULL,
   actor = NULL
 )
+
+\method{print}{net_permutation}(x, ...)
+
+\method{summary}{net_permutation}(object, ...)
+
+\method{print}{net_permutation_group}(x, ...)
+
+\method{summary}{net_permutation_group}(object, ...)
+
+\method{print}{wtna_perm_mixed}(x, ...)
+
+\method{summary}{wtna_perm_mixed}(object, ...)
 }
 \arguments{
 \item{x}{A \code{netobject} (from \code{\link{build_network}}) or a
-\code{\link{net_edge_betweenness}} object.}
+\code{\link{net_edge_betweenness}} object. For the \code{print()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.}
 
 \item{y}{A \code{netobject} (from \code{\link{build_network}}) or a
 \code{\link{net_edge_betweenness}} object.
@@ -68,6 +86,10 @@ methods (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"});
 cannot be combined with \code{paired = TRUE}, which is the special case
 of one actor per pair. Default \code{NULL}: sequences are permuted
 individually.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.}
 }
 \value{
 An object of class \code{"net_permutation"} containing:
@@ -124,6 +146,16 @@ when both \code{x} and \code{y} are \code{netobject_group}s, or one per
 group pair when \code{y} is \code{NULL}. Two \code{wtna_mixed} inputs
 return a \code{"wtna_perm_mixed"} with \code{$transition} and
 \code{$cooccurrence} results.
+
+In \code{print.net_permutation()} and \code{print.wtna_perm_mixed()}: The input object, invisibly.
+
+In \code{summary.net_permutation()}: The \code{$summary} data frame: one row per edge present in either network, with columns \code{from}, \code{to}, \code{weight_x}, \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value}, \code{sig}.
+
+In \code{print.net_permutation_group()}: \code{x} invisibly.
+
+In \code{summary.net_permutation_group()}: The per-group summaries stacked into one data frame: the columns of \code{\link{summary.net_permutation}} prefixed by a \code{group} column naming the group (or group pair) each row came from.
+
+In \code{summary.wtna_perm_mixed()}: A list with transition and co-occurrence permutation summaries.
 }
 \description{
 Tests whether two networks estimated by \code{\link{build_network}}

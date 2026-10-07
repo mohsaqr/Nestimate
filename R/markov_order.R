@@ -366,12 +366,16 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
 # S3 methods
 # ---------------------------------------------------------------------------
 
-#' Print Method for net_markov_order
-#'
-#' @param x A \code{net_markov_order} object.
-#' @param ... Ignored.
-#' @return The input object, invisibly.
-#' @inherit markov_order_test examples
+#' @rdname markov_order_test
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_order} or \code{net_markov_order_group}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods. In \code{print.net_markov_order_group()}: Forwarded to `print.net_markov_order` for each element.
+#' @param object For the \code{summary()} method: an object of class \code{net_markov_order}.
+#' @param panel Which panel(s) to render: \code{"both"}, \code{"ic"}, or \code{"permutation"}. Default \code{"both"}.
+#' @param combined When \code{panel = "both"} and \code{combined = TRUE} (default), the two panels are drawn side-by-side. If \pkg{gridExtra} is installed they are arranged into a single drawable/saveable gtable (returned); otherwise base \code{grid} viewports draw both panels and a named list of the two ggplots is returned invisibly. When \code{FALSE}, returns that named list (\code{ic}, \code{permutation}) without drawing. Ignored when \code{panel != "both"}.
+#' @return In \code{print.net_markov_order()}: The input object, invisibly.
+#' @return In \code{print.net_markov_order_group()}: `x` invisibly.
+#' @return In \code{summary.net_markov_order()}: The tidy \code{test_table} data.frame - one row per order tested - carrying the selection context as attributes: \code{optimal_order}, \code{bic_order}, \code{aic_order}, \code{alpha} and \code{n_perm}.
+#' @return In \code{plot.net_markov_order()}: A ggplot (single panel); for \code{panel = "both"}, either a \code{gridExtra} gtable (when \pkg{gridExtra} is installed) or a named list of two ggplots (\code{ic}, \code{permutation}) drawn side-by-side and returned invisibly.
 #' @export
 print.net_markov_order <- function(x, ...) {
   cat(sprintf("Markov Order Test  [within-w permutation, n_perm = %d, alpha = %.3f]\n",
@@ -389,12 +393,7 @@ print.net_markov_order <- function(x, ...) {
   invisible(x)
 }
 
-#' Print method for `net_markov_order_group`
-#'
-#' @param x A `net_markov_order_group` (named list of `net_markov_order`
-#'   results, one per group).
-#' @param ... Forwarded to `print.net_markov_order` for each element.
-#' @return `x` invisibly.
+#' @rdname markov_order_test
 #' @export
 print.net_markov_order_group <- function(x, ...) {
   cat(sprintf("Markov Order Test -- %d groups: %s\n\n",
@@ -408,14 +407,7 @@ print.net_markov_order_group <- function(x, ...) {
 }
 
 
-#' Summary Method for net_markov_order
-#'
-#' @param object A \code{net_markov_order} object.
-#' @param ... Ignored.
-#' @return The tidy \code{test_table} data.frame - one row per order tested -
-#'   carrying the selection context as attributes: \code{optimal_order},
-#'   \code{bic_order}, \code{aic_order}, \code{alpha} and \code{n_perm}.
-#' @inherit markov_order_test examples
+#' @rdname markov_order_test
 #' @export
 summary.net_markov_order <- function(object, ...) {
   out <- object$test_table
@@ -428,37 +420,7 @@ summary.net_markov_order <- function(object, ...) {
 }
 
 
-#' Plot Method for net_markov_order
-#'
-#' @description
-#' Two-panel professional visualization:
-#' \itemize{
-#'   \item Panel A: log-likelihood, AIC, BIC across tested orders with
-#'     the selected order highlighted (both the permutation-selected
-#'     order and the BIC-minimizing order are marked).
-#'   \item Panel B: permutation null density per order with the observed
-#'     \eqn{G^2} as a vertical marker; colored by rejection at
-#'     \code{alpha}.
-#' }
-#' Uses the Okabe-Ito colorblind-safe palette.
-#'
-#' @param x A \code{net_markov_order} object.
-#' @param panel Which panel(s) to render: \code{"both"}, \code{"ic"},
-#'   or \code{"permutation"}. Default \code{"both"}.
-#' @param combined When \code{panel = "both"} and \code{combined = TRUE}
-#'   (default), the two panels are drawn side-by-side. If \pkg{gridExtra}
-#'   is installed they are arranged into a single drawable/saveable
-#'   gtable (returned); otherwise base \code{grid} viewports draw both
-#'   panels and a named list of the two ggplots is returned invisibly.
-#'   When \code{FALSE}, returns that named list (\code{ic},
-#'   \code{permutation}) without drawing. Ignored when
-#'   \code{panel != "both"}.
-#' @param ... Ignored.
-#' @return A ggplot (single panel); for \code{panel = "both"}, either a
-#'   \code{gridExtra} gtable (when \pkg{gridExtra} is installed) or a
-#'   named list of two ggplots (\code{ic}, \code{permutation}) drawn
-#'   side-by-side and returned invisibly.
-#' @inherit markov_order_test examples
+#' @rdname markov_order_test
 #' @export
 plot.net_markov_order <- function(x,
                                    panel = c("both", "ic", "permutation"),

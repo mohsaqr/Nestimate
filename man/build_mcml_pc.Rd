@@ -2,6 +2,9 @@
 % Please edit documentation in R/mcml_pc.R
 \name{build_mcml_pc}
 \alias{build_mcml_pc}
+\alias{print.mcml_pc}
+\alias{summary.mcml_pc}
+\alias{plot.mcml_pc}
 \title{Multi-Cluster Multi-Level Aggregation for Psychometric Networks}
 \usage{
 build_mcml_pc(
@@ -19,13 +22,19 @@ build_mcml_pc(
   fa_method = c("ml", "paf", "minres", "cfa"),
   ...
 )
+
+\method{print}{mcml_pc}(x, digits = 3, ...)
+
+\method{summary}{mcml_pc}(object, ...)
+
+\method{plot}{mcml_pc}(x, digits = 2, ...)
 }
 \arguments{
 \item{x}{A \code{netobject} estimated with an undirected association
 method (\code{cor}, \code{pcor}, \code{glasso}; aliases accepted) -
 its \code{$data} and \code{$method} are reused - or a numeric
 data.frame of raw observations (then \code{method} decides the
-estimator).}
+estimator). For the \code{print()} and \code{plot()} methods: an object of class \code{mcml_pc}.}
 
 \item{clusters}{Cluster membership in any of three forms: a named list of
 node-label vectors (names = cluster labels); a two-column
@@ -165,7 +174,11 @@ divergence indicates Heywood-prone or non-unidimensional clusters.}
 internally (\code{model}, \code{data}, \code{covmat},
 \code{n.obs}, \code{factors}) are ignored with a warning - the
 model is always the one-factor model per cluster, because the
-composite needs exactly one weight per item.}
+composite needs exactly one weight per item. For the S3 methods: further arguments passed to or from other methods.}
+
+\item{digits}{In \code{print.mcml_pc()}: Number of digits to display (default 3). In \code{plot.mcml_pc()}: Number of digits for tile labels (default 2).}
+
+\item{object}{For the \code{summary()} method: an object of class \code{mcml_pc}.}
 }
 \value{
 An object of class \code{"mcml_pc"} containing:
@@ -194,6 +207,12 @@ it), \code{method}, \code{within}, \code{weighting},
 \code{fa_method}/\code{fa_args} are set only for
 \code{weighting = "factor"}.}
 }
+
+In \code{print.mcml_pc()}: \code{x}, invisibly.
+
+In \code{summary.mcml_pc()}: Tidy data frame with one row per macro edge (upper triangle), columns \code{from}, \code{to}, \code{weight}.
+
+In \code{plot.mcml_pc()}: A ggplot object.
 }
 \description{
 \strong{Experimental.} Aggregates a node-level psychometric network

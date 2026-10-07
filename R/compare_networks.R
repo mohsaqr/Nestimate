@@ -20,7 +20,7 @@
 #'   arguments to name the networks (`compare_networks(early = a, late = b)`).
 #'   For `plot()`: passed to `cograph::splot()` for the network views (e.g.
 #'   `layout`, `node_size`, `minimum`); ignored by the other views and by
-#'   `print()`.
+#'   `print()`. For the S3 methods: further arguments passed to or from other methods. In \code{plot.net_network_comparison()}: For `compare_networks()`: two or more networks, in any mix of: `netobject`, `netobject_group` (members are flattened and keep their names), `cograph_network` / `psychnet`, `mcml`, `tna`, `group_tna`, square numeric matrices, or one unnamed `list` of these. Name the arguments to name the networks (`compare_networks(early = a, late = b)`). For `plot()`: passed to `cograph::splot()` for the network views (e.g. `layout`, `node_size`, `minimum`); ignored by the other views and by `print()`.
 #' @param reference `NULL` (default) compares all pairs. A single network name
 #'   or index compares every other network against that one; the reference is
 #'   always `network_a`, so `diff = reference - other`.
@@ -38,7 +38,7 @@
 #'   the networks (one per network after flattening groups); overrides
 #'   argument names. For `plot()`: logical; print the signed difference on
 #'   the edge and node views, default `TRUE` (the heatmap always shows its
-#'   values).
+#'   values). In \code{plot.net_network_comparison()}: For `compare_networks()`: optional character vector naming the networks (one per network after flattening groups); overrides argument names. For `plot()`: logical; print the signed difference on the edge and node views, default `TRUE` (the heatmap always shows its values).
 #' @param test Character vector of inference backends, any of `"none"`
 #'   (default), `"permutation"`, `"bayes"`, `"bootstrap"`. Several may be
 #'   combined; each fills the columns it supports (see Details).
@@ -839,9 +839,6 @@ compare_networks <- function(...,
 }
 
 #' @rdname compare_networks
-#' @param x A `net_network_comparison` object.
-#' @param digits Decimals shown. Default `2`.
-#' @return `print()` returns `x` invisibly.
 #' @export
 print.net_network_comparison <- function(x, digits = 2L, ...) {
   digits <- .cn_check_digits(digits)

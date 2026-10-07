@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Regression tests for FIX5 (audit_folder findings A03-F01..A03-F05)
 #
 # A03-F01  build_hypa() had no help page; build_hypa's roxygen was

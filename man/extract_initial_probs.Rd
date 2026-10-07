@@ -2,13 +2,20 @@
 % Please edit documentation in R/extraction.R
 \name{extract_initial_probs}
 \alias{extract_initial_probs}
+\alias{summary.nest_initial_probs}
 \title{Extract Initial Probabilities from Model}
 \usage{
 extract_initial_probs(model)
+
+\method{summary}{nest_initial_probs}(object, ...)
 }
 \arguments{
 \item{model}{A \code{netobject}, TNA model object, \code{mcml} object, or
 a list containing an \code{initial} element.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{nest_initial_probs}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 }
 \value{
 For a single network: a named numeric vector of initial state
@@ -20,6 +27,8 @@ frame.
 For an \code{mcml} object: a named list of such vectors, with
 \code{macro} first and then one element per cluster (taken from each
 layer's \code{$inits}, unstamped).
+
+In \code{summary.nest_initial_probs()}: A tidy data frame with columns \code{state} and \code{prob}, sorted by decreasing probability.
 }
 \description{
 Extract the initial state probability vector from a TNA model object.

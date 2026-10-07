@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # session_ids(): the session behind each sequence of a network or a fit.
 
 # Long events in which every session's first action encodes the session, so

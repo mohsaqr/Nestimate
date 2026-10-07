@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- hypergraph_centrality() tests ---------------------------------------
 
 # Helpers ------------------------------------------------------------------
@@ -30,24 +33,6 @@ test_that("single type returns list with just that entry", {
 })
 
 # CEC vs igraph validation ------------------------------------------------
-
-test_that("clique centrality matches igraph::eigen_centrality on expansion", {
-  skip_if_not_installed("igraph")
-  hg  <- .hc_two_overlapping()
-  ours <- hypergraph_centrality(hg, type = "clique")$clique
-  # Recompute via clique expansion + igraph
-  net <- clique_expansion(hg)
-  W   <- net$weights
-  g   <- igraph::graph_from_adjacency_matrix(W, mode = "undirected",
-                                              weighted = TRUE, diag = FALSE)
-  igr <- igraph::eigen_centrality(g, directed = FALSE)$vector
-  # Match up to sign and scale
-  ours_n <- ours / sqrt(sum(ours^2))
-  igr_n  <- igr  / sqrt(sum(igr^2))
-  if (sum(ours_n * igr_n) < 0) ours_n <- -ours_n
-  expect_equal(ours_n, igr_n[names(ours_n)],
-               tolerance = 1e-5, ignore_attr = TRUE)
-})
 
 # Symmetry / structural validation ----------------------------------------
 

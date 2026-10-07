@@ -2,6 +2,7 @@
 % Please edit documentation in R/wtna.R
 \name{wtna}
 \alias{wtna}
+\alias{print.wtna_mixed}
 \title{Window-based Transition Network Analysis}
 \usage{
 wtna(
@@ -13,6 +14,8 @@ wtna(
   mode = c("non-overlapping", "overlapping"),
   actor = NULL
 )
+
+\method{print}{wtna_mixed}(x, ...)
 }
 \arguments{
 \item{data}{Data frame with one-hot encoded columns (0/1 binary).}
@@ -42,6 +45,10 @@ Default: \code{"non-overlapping"}.}
 
 \item{actor}{Character or NULL. Name of the actor/ID column for per-group
 computation. If NULL, treats all rows as one group. Default: NULL.}
+
+\item{x}{For the \code{print()} method: an object of class \code{wtna_mixed}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 }
 \value{
 For \code{method = "transition"} or \code{"cooccurrence"}: a
@@ -57,6 +64,8 @@ distribution.
 For \code{method = "both"}: a \code{wtna_mixed} object - a list with
 elements \code{$transition} and \code{$cooccurrence} (each a
 \code{netobject} as above) and \code{$method = "wtna_both"}.
+
+In \code{print.wtna_mixed()}: The input object, invisibly.
 }
 \description{
 Computes networks from one-hot (binary indicator) data using temporal

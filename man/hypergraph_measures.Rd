@@ -13,9 +13,9 @@ hypergraph_measures(hg)
 \item{hg}{A \code{net_hypergraph} (from \code{\link[=build_hypergraph]{build_hypergraph()}} or
 \code{\link[=bipartite_groups]{bipartite_groups()}}).}
 
-\item{x}{A \code{hypergraph_measures} object.}
+\item{x}{For the \code{print()} method: an object of class \code{hypergraph_measures}.}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 }
 \value{
 An object of class \code{hypergraph_measures} (a named list) with
@@ -57,7 +57,7 @@ in at least one hyperedge.}
 \item{\code{n_nodes}, \code{n_hyperedges}}{Convenience scalars.}
 }
 
-The input \code{x} invisibly.
+In \code{print.hypergraph_measures()}: The input \code{x} invisibly.
 }
 \description{
 Computes a comprehensive structural-statistics suite for a

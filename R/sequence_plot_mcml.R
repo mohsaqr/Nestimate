@@ -346,16 +346,9 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   stacked
 }
 
-#' Draw a stacked multichannel mcml sequence plot
-#'
-#' Print method for the figure \code{\link{sequence_plot}} returns for an
-#' \code{mcml} with more than one channel: one panel per channel (the macro
-#' \code{Summary} and one per cluster), each with its own legend.
-#'
-#' @param x An \code{mcml_sequence_plot} (a \code{gtable}).
-#' @param ... Ignored.
-#' @return \code{x}, invisibly. Called for the side effect of drawing it on a
-#'   new page of the current graphics device.
+#' @rdname sequence_plot
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{print.mcml_sequence_plot()}: \code{x}, invisibly. Called for the side effect of drawing it on a new page of the current graphics device.
 #' @export
 print.mcml_sequence_plot <- function(x, ...) {
   grid::grid.newpage()

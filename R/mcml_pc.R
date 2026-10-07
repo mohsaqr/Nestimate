@@ -108,7 +108,7 @@
 #'   method (\code{cor}, \code{pcor}, \code{glasso}; aliases accepted) -
 #'   its \code{$data} and \code{$method} are reused - or a numeric
 #'   data.frame of raw observations (then \code{method} decides the
-#'   estimator).
+#'   estimator). For the \code{print()} and \code{plot()} methods: an object of class \code{mcml_pc}.
 #' @param clusters Cluster membership in any of three forms: a named list of
 #'   node-label vectors (names = cluster labels); a two-column
 #'   \code{data.frame} read by position (first column = node names, second =
@@ -232,7 +232,7 @@
 #'   internally (\code{model}, \code{data}, \code{covmat},
 #'   \code{n.obs}, \code{factors}) are ignored with a warning - the
 #'   model is always the one-factor model per cluster, because the
-#'   composite needs exactly one weight per item.
+#'   composite needs exactly one weight per item. For the S3 methods: further arguments passed to or from other methods.
 #' @param id_col Character vector or NULL. Identifier column(s) to drop
 #'   from data.frame input before analysis (e.g., the \code{rid}/actor
 #'   columns produced by
@@ -816,7 +816,7 @@ build_mcml_pc <- function(x,
 #' mean the weighting (and therefore the \code{"loadings"} macro
 #' network) should not be over-interpreted.
 #'
-#' @param x An \code{mcml_pc} object that carries raw data.
+#' @param x An \code{mcml_pc} object that carries raw data. For the \code{print()} and \code{plot()} methods: an object of class \code{pc_loading_stability}.
 #' @param iter Integer. Bootstrap replicates (default 200; node-level
 #'   re-estimation makes this heavier than a plain bootstrap).
 #' @param ci_level Numeric. Significance level for percentile CIs
@@ -916,12 +916,11 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
 }
 
 
-#' Print Composite-Weight Stability
-#'
-#' @param x A \code{pc_loading_stability} object.
+#' @rdname loading_stability
 #' @param digits Number of digits to display (default 3).
-#' @param ... Additional arguments (ignored).
-#' @return \code{x}, invisibly.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{print.pc_loading_stability()}: \code{x}, invisibly.
+#' @return In \code{plot.pc_loading_stability()}: A ggplot object.
 #' @export
 print.pc_loading_stability <- function(x, digits = 3, ...) {
   cat("Composite-Weight Stability (case bootstrap, experimental)\n")
@@ -935,14 +934,7 @@ print.pc_loading_stability <- function(x, digits = 3, ...) {
 }
 
 
-#' Plot Composite-Weight Stability
-#'
-#' Signed composite weights with bootstrap percentile intervals, faceted
-#' by cluster.
-#'
-#' @param x A \code{pc_loading_stability} object.
-#' @param ... Additional arguments (ignored).
-#' @return A ggplot object.
+#' @rdname loading_stability
 #' @export
 plot.pc_loading_stability <- function(x, ...) {
   df <- x$summary
@@ -967,12 +959,12 @@ plot.pc_loading_stability <- function(x, ...) {
 }
 
 
-#' Print an MCML-PC Object
-#'
-#' @param x An \code{mcml_pc} object.
-#' @param digits Number of digits to display (default 3).
-#' @param ... Additional arguments (ignored).
-#' @return \code{x}, invisibly.
+#' @rdname build_mcml_pc
+#' @param digits In \code{print.mcml_pc()}: Number of digits to display (default 3). In \code{plot.mcml_pc()}: Number of digits for tile labels (default 2).
+#' @param object For the \code{summary()} method: an object of class \code{mcml_pc}.
+#' @return In \code{print.mcml_pc()}: \code{x}, invisibly.
+#' @return In \code{summary.mcml_pc()}: Tidy data frame with one row per macro edge (upper triangle), columns \code{from}, \code{to}, \code{weight}.
+#' @return In \code{plot.mcml_pc()}: A ggplot object.
 #' @export
 print.mcml_pc <- function(x, digits = 3, ...) {
   m <- x$meta
@@ -998,12 +990,7 @@ print.mcml_pc <- function(x, digits = 3, ...) {
 }
 
 
-#' Summarize an MCML-PC Object
-#'
-#' @param object An \code{mcml_pc} object.
-#' @param ... Additional arguments (ignored).
-#' @return Tidy data frame with one row per macro edge (upper triangle),
-#'   columns \code{from}, \code{to}, \code{weight}.
+#' @rdname build_mcml_pc
 #' @export
 summary.mcml_pc <- function(object, ...) {
   W <- object$macro$weights
@@ -1018,17 +1005,7 @@ summary.mcml_pc <- function(object, ...) {
 }
 
 
-#' Plot an MCML-PC Object
-#'
-#' Heatmap of the macro (cluster-level) weights with the package's
-#' diverging palette. For the two-layer network rendering use
-#' \code{cograph::plot_mcml()}, which accepts \code{mcml_pc} objects and
-#' draws them undirected.
-#'
-#' @param x An \code{mcml_pc} object.
-#' @param digits Number of digits for tile labels (default 2).
-#' @param ... Additional arguments (ignored).
-#' @return A ggplot object.
+#' @rdname build_mcml_pc
 #' @export
 plot.mcml_pc <- function(x, digits = 2, ...) {
   W <- x$macro$weights

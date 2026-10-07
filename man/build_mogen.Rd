@@ -2,6 +2,9 @@
 % Please edit documentation in R/mogen.R
 \name{build_mogen}
 \alias{build_mogen}
+\alias{print.net_mogen}
+\alias{summary.net_mogen}
+\alias{plot.net_mogen}
 \title{Build Multi-Order Generative Model (MOGen)}
 \usage{
 build_mogen(
@@ -10,6 +13,12 @@ build_mogen(
   criterion = c("aic", "bic", "lrt"),
   lrt_alpha = 0.01
 )
+
+\method{print}{net_mogen}(x, ...)
+
+\method{summary}{net_mogen}(object, ...)
+
+\method{plot}{net_mogen}(x, type = c("ic", "likelihood"), ...)
 }
 \arguments{
 \item{data}{A data.frame (rows = trajectories, columns = time points), a
@@ -28,6 +37,14 @@ message.}
 (default), \code{"bic"}, or \code{"lrt"} (likelihood ratio test).}
 
 \item{lrt_alpha}{Numeric. Significance threshold for LRT (default 0.01).}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_mogen}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_mogen}.}
+
+\item{type}{Character. Plot type: \code{"ic"} (default) or \code{"likelihood"}.}
 }
 \value{
 An object of class \code{c("net_mogen", "cograph_network")} with
@@ -65,6 +82,10 @@ readable arrow-notation table is
 \item{meta}{\code{cograph_network} metadata list.}
 \item{node_groups}{Always \code{NULL}.}
 }
+
+In \code{print.net_mogen()} and \code{plot.net_mogen()}: The input object, invisibly.
+
+In \code{summary.net_mogen()}: A per-order model-selection data.frame with columns \code{order}, \code{layer_dof}, \code{cum_dof}, \code{loglik}, \code{aic}, \code{bic}, \code{best} (\code{"AIC"}/\code{"BIC"}/\code{"AIC+BIC"} marker) and \code{selected} (\code{"<--"} on the chosen order), returned visibly; the summary text is printed as a side effect.
 }
 \description{
 Constructs higher-order De Bruijn graphs from sequential trajectory data and

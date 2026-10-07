@@ -339,17 +339,11 @@ persistence_landscape <- function(ph, k_max = 5L, dimension = 1L,
   ), class = "persistence_landscape")
 }
 
-#' Print Persistence Landscape
-#'
-#' @param x A \code{persistence_landscape} object.
-#' @param ... Ignored.
-#' @return The input, invisibly.
-#' @examples
-#' mat <- matrix(c(0, .6, .5, .6, 0, .4, .5, .4, 0), 3, 3)
-#' rownames(mat) <- colnames(mat) <- c("A","B","C")
-#' ph <- persistent_homology(mat, n_steps = 5)
-#' pl <- persistence_landscape(ph, k_max = 3, dimension = 0)
-#' print(pl)
+#' @rdname persistence_landscape
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{persistence_landscape}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @return In \code{print.persistence_landscape()}: The input, invisibly.
+#' @return In \code{plot.persistence_landscape()}: A ggplot.
 #' @export
 print.persistence_landscape <- function(x, ...) {
   cat(sprintf("Persistence Landscape (dimension %d, k_max = %d)\n",
@@ -366,17 +360,7 @@ print.persistence_landscape <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot Persistence Landscape
-#'
-#' @param x A \code{persistence_landscape} object.
-#' @param ... Ignored.
-#' @return A ggplot.
-#' @examples
-#' mat <- matrix(c(0, .6, .5, .6, 0, .4, .5, .4, 0), 3, 3)
-#' rownames(mat) <- colnames(mat) <- c("A","B","C")
-#' ph <- persistent_homology(mat, n_steps = 5)
-#' pl <- persistence_landscape(ph, k_max = 3, dimension = 0)
-#' plot(pl)
+#' @rdname persistence_landscape
 #' @export
 plot.persistence_landscape <- function(x, ...) {
   df <- x$landscape

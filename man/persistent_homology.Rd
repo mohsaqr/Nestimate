@@ -2,6 +2,8 @@
 % Please edit documentation in R/simplicial.R
 \name{persistent_homology}
 \alias{persistent_homology}
+\alias{print.persistent_homology}
+\alias{plot.persistent_homology}
 \title{Persistent Homology}
 \usage{
 persistent_homology(
@@ -11,6 +13,10 @@ persistent_homology(
   type = "clique",
   max_scale = NULL
 )
+
+\method{print}{persistent_homology}(x, ...)
+
+\method{plot}{persistent_homology}(x, combined = TRUE, ...)
 }
 \arguments{
 \item{x}{A square matrix, \code{tna}, or \code{netobject}. For
@@ -18,7 +24,7 @@ persistent_homology(
 A \code{simplicial_complex} carrying a \code{$filtration} vector (as
 returned by \code{build_simplicial(type = "vr")}) is also accepted and
 is used directly: its stored filtration values are reduced as they are,
-so \code{type} is taken from the complex rather than this argument.}
+so \code{type} is taken from the complex rather than this argument. For the \code{print()} and \code{plot()} methods: an object of class \code{persistent_homology}.}
 
 \item{n_steps}{Number of grid points for the reported Betti curve
 (default 20). The persistence diagram itself is exact - it does not
@@ -32,6 +38,10 @@ or \code{"vr"} (Vietoris-Rips on distances).}
 \item{max_scale}{For \code{type = "vr"} only: cap on edge length. Edges
 with \code{d(i,j) > max_scale} are excluded. \code{NULL} (default)
 uses \code{max(d)}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{combined}{When \code{TRUE} (default), the two panels are stitched side-by-side via \code{gridExtra::arrangeGrob}. When \code{FALSE}, returns a named list (\code{betti_curve}, \code{persistence}) of ggplots.}
 }
 \value{
 A \code{persistent_homology} object with:
@@ -48,6 +58,10 @@ display only).}
 \item{thresholds}{Numeric vector of grid thresholds.}
 \item{mode}{Either \code{"clique"} or \code{"vr"}.}
 }
+
+In \code{print.persistent_homology()}: The input object, invisibly.
+
+In \code{plot.persistent_homology()}: A grid grob (invisibly) when \code{combined = TRUE}; a named list of two ggplots when \code{combined = FALSE}.
 }
 \description{
 Computes persistent homology via full boundary-matrix reduction over

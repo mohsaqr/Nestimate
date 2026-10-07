@@ -2,6 +2,8 @@
 % Please edit documentation in R/hon.R
 \name{build_hon}
 \alias{build_hon}
+\alias{print.net_hon}
+\alias{summary.net_hon}
 \title{Build a Higher-Order Network (HON)}
 \usage{
 build_hon(
@@ -11,6 +13,10 @@ build_hon(
   collapse_repeats = FALSE,
   method = "hon+"
 )
+
+\method{print}{net_hon}(x, ...)
+
+\method{summary}{net_hon}(object, ...)
 }
 \arguments{
 \item{data}{One of:
@@ -40,6 +46,12 @@ within each trajectory are collapsed before analysis. Default \code{FALSE}.}
 parameter-free BuildHON+ with lazy observation building and MaxDivergence
 pruning) or \code{"hon"} (original BuildHON with eager observation
 building).}
+
+\item{x}{For the \code{print()} method: an object of class \code{net_hon}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_hon}.}
 }
 \value{
 An S3 object of class
@@ -75,6 +87,10 @@ arrow-notation node names). Stored as a data.frame for
 (\code{source}, \code{layout}, \code{tna$method = "hon"}).}
 \item{node_groups}{Always \code{NULL}.}
 }
+
+In \code{print.net_hon()}: The input object, invisibly.
+
+In \code{summary.net_hon()}: The \code{cograph_network} edge data.frame \code{object$edges}: one row per non-zero cell of the adjacency matrix, with integer \code{from}/\code{to} node indices and a numeric \code{weight}. Returned visibly; the summary text (counts, first-order states, order distribution) is printed as a side effect. The arrow-notation table with \code{path}/\code{count}/\code{probability} is \code{object$ho_edges}.
 }
 \description{
 Constructs a Higher-Order Network from sequential data, faithfully

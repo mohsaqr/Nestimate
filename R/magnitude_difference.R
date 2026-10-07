@@ -184,11 +184,14 @@ magnitude_difference <- function(data, actor = "Actor", action = "Action",
   out
 }
 
-#' @describeIn magnitude_difference Print a compact summary of the per-edge
-#'   magnitude-difference distribution.
-#' @param x A `magnitude_difference` object.
-#' @param ... Passed to plotting helpers (ignored by `print`).
-#' @return `print` invisibly returns `x`.
+#' @rdname magnitude_difference
+#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{magnitude_difference}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param type Plot style, `"stacked"` (default) or `"circular"`.
+#' @param min_show For `type = "circular"`, drop edges whose magnitude is below this fraction of the maximum.
+#' @param title Plot title. `NULL` generates one from the metric and scale.
+#' @return In \code{print.magnitude_difference()}: `print` invisibly returns `x`.
+#' @return In \code{plot.magnitude_difference()}: `plot` returns a `ggplot` object.
 #' @export
 print.magnitude_difference <- function(x, ...) {
   cat("magnitude_difference object\n")
@@ -462,16 +465,7 @@ print.magnitude_difference <- function(x, ...) {
                     plot.margin = ggplot2::margin(8, 8, 8, 8))
 }
 
-#' @describeIn magnitude_difference Plot the per-edge magnitude difference as
-#'   a polar portrait. `type = "stacked"` (default) draws one sector per
-#'   from-state with stacked wedges (grey base = shared value, colored tip =
-#'   magnitude difference); `type = "circular"` draws a chord-style diagram
-#'   with signed differences on a diverging blue-orange scale.
-#' @param type Plot style, `"stacked"` (default) or `"circular"`.
-#' @param min_show For `type = "circular"`, drop edges whose magnitude is
-#'   below this fraction of the maximum.
-#' @param title Plot title. `NULL` generates one from the metric and scale.
-#' @return `plot` returns a `ggplot` object.
+#' @rdname magnitude_difference
 #' @export
 plot.magnitude_difference <- function(x, type = c("stacked", "circular"),
                                       min_show = 0.01,

@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Regression tests for FIX7 (audit findings A10-F01 .. A10-F04).
 #
 # A10-F01: chain_structure(tol=) must NOT double as the absorbing-state

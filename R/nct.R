@@ -50,9 +50,9 @@
 #' }
 #' @examples
 #' set.seed(1)
-#' x1 <- matrix(rnorm(200 * 5), 200, 5)
-#' x2 <- matrix(rnorm(200 * 5), 200, 5)
-#' colnames(x1) <- colnames(x2) <- paste0("V", 1:5)
+#' x1 <- matrix(rnorm(100 * 4), 100, 4)
+#' x2 <- matrix(rnorm(100 * 4), 100, 4)
+#' colnames(x1) <- colnames(x2) <- paste0("V", 1:4)
 #' # iter = 20 keeps the example fast; a real analysis uses 1000 or more.
 #' res <- nct(x1, x2, iter = 20)
 #' res
@@ -180,12 +180,12 @@ nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
 }
 
 
-#' Print Method for net_nct
-#'
-#' @param x A \code{net_nct} object.
-#' @param ... Ignored.
-#' @return The input object, invisibly.
-#' @inherit nct examples
+#' @rdname nct
+#' @param x For the \code{print()} method: an object of class \code{net_nct}.
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_nct}.
+#' @return In \code{print.net_nct()}: The input object, invisibly.
+#' @return In \code{summary.net_nct()}: A data frame with columns \code{from}, \code{to}, \code{diff_observed}, \code{p_value}, \code{significant}. Attributes \code{m_stat} and \code{s_stat} each hold a one-row data frame with \code{observed} and \code{p_value}.
 #' @export
 print.net_nct <- function(x, ...) {
   cat(sprintf("Network Comparison Test  [%d permutations | %s]\n",
@@ -206,19 +206,7 @@ print.net_nct <- function(x, ...) {
 }
 
 
-#' Summary Method for net_nct
-#'
-#' @description
-#' Returns a tidy data frame with one row per edge test. The global M
-#' (strength) and S (structure) statistics are attached as attributes.
-#'
-#' @param object A \code{net_nct} object.
-#' @param ... Ignored.
-#' @return A data frame with columns \code{from}, \code{to},
-#'   \code{diff_observed}, \code{p_value}, \code{significant}. Attributes
-#'   \code{m_stat} and \code{s_stat} each hold a one-row data frame with
-#'   \code{observed} and \code{p_value}.
-#' @inherit nct examples
+#' @rdname nct
 #' @export
 summary.net_nct <- function(object, ...) {
   ed <- object$E$edge_names

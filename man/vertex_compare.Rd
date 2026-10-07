@@ -2,6 +2,9 @@
 % Please edit documentation in R/vertex_bootstrap.R
 \name{vertex_compare}
 \alias{vertex_compare}
+\alias{print.net_vertex_comparison}
+\alias{summary.net_vertex_comparison}
+\alias{plot.net_vertex_comparison}
 \title{Compare Network-Level Statistics of Two Networks}
 \usage{
 vertex_compare(
@@ -15,12 +18,20 @@ vertex_compare(
   seed = NULL,
   labels = c("x", "y")
 )
+
+\method{print}{net_vertex_comparison}(x, digits = 3, ...)
+
+\method{summary}{net_vertex_comparison}(object, ...)
+
+\method{plot}{net_vertex_comparison}(x, ...)
 }
 \arguments{
 \item{x, y}{The two networks: \code{netobject}s, \code{cograph_network}s,
 square weight matrices, or precomputed \code{net_vertex_bootstrap}
 objects (then \code{iter}, \code{statistics}, \code{statistic_fn},
-\code{directed}, and \code{seed} are ignored for that argument).
+\code{directed}, and \code{seed} are ignored for that argument). For the
+\code{print()} and \code{plot()} methods, \code{x} is an object of class
+\code{net_vertex_comparison}.
 The two sides must cover exactly the same statistics; a mismatch
 (e.g., a directed network's \code{reciprocity} against an undirected
 one, or precomputed objects built with different \code{statistics}
@@ -46,6 +57,12 @@ back to matrix symmetry.}
 
 \item{labels}{Character vector of length 2 naming the networks in the
 output (default \code{c("x", "y")}).}
+
+\item{digits}{Number of digits to display (default 3).}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_vertex_comparison}.}
 }
 \value{
 An object of class \code{"net_vertex_comparison"} containing:
@@ -59,6 +76,12 @@ confidence interval for the difference.}
 }
 When both bootstrap SEs are zero (a statistic with no resampling
 variation in either network) \code{z} and \code{p_value} are \code{NA}.
+
+In \code{print.net_vertex_comparison()}: \code{x}, invisibly.
+
+In \code{summary.net_vertex_comparison()}: The tidy summary data frame (one row per statistic).
+
+In \code{plot.net_vertex_comparison()}: A ggplot object.
 }
 \description{
 Snijders & Borgatti (1999) two-network test: each network's statistics

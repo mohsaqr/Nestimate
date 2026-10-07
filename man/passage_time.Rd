@@ -2,13 +2,22 @@
 % Please edit documentation in R/markov.R
 \name{passage_time}
 \alias{passage_time}
+\alias{print.net_mpt}
+\alias{print.net_mpt_group}
 \alias{summary.net_mpt}
+\alias{print.summary.net_mpt}
 \alias{plot.net_mpt}
 \title{Mean First Passage Times}
 \usage{
 passage_time(x, states = NULL, normalize = TRUE)
 
+\method{print}{net_mpt}(x, digits = 1, ...)
+
+\method{print}{net_mpt_group}(x, ...)
+
 \method{summary}{net_mpt}(object, ...)
+
+\method{print}{summary.net_mpt}(x, ...)
 
 \method{plot}{net_mpt}(
   x,
@@ -24,7 +33,7 @@ passage_time(x, states = NULL, normalize = TRUE)
 \item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} object,
 row-stochastic numeric transition matrix, or a wide sequence data.frame
 (rows = actors, columns = time-steps; a relative transition network is
-built automatically).}
+built automatically). For the \code{print()} and \code{plot()} methods: an object of class \code{net_mpt} or \code{net_mpt_group} (or its \code{summary()}).}
 
 \item{states}{Character vector. Restrict output to these states.
 \code{NULL} (default) keeps all states.}
@@ -32,22 +41,20 @@ built automatically).}
 \item{normalize}{Logical. If \code{TRUE} (default), rows that do not sum
 to 1 are normalized automatically (with a warning).}
 
+\item{digits}{Integer. Decimal places displayed in cells. Default \code{1}.}
+
+\item{...}{Ignored.
+For the S3 methods: further arguments passed to or from other methods. In \code{print.net_mpt_group()}: Forwarded to \code{print.net_mpt} for each element.}
+
 \item{object}{A \code{net_mpt} object (for \code{summary}).}
 
-\item{...}{Ignored.}
-
-\item{log_scale}{Logical. Apply log transform to the fill scale for better
-contrast? Default \code{TRUE}.}
-
-\item{digits}{Integer. Decimal places displayed in cells. Default \code{1}.}
+\item{log_scale}{Logical. Apply log transform to the fill scale for better contrast? Default \code{TRUE}.}
 
 \item{title}{Character. Plot title.}
 
-\item{low}{Character. Hex colour for the low end (short passage time).
-Default dark green \code{"#004d00"}.}
+\item{low}{Character. Hex colour for the low end (short passage time). Default dark green \code{"#004d00"}.}
 
-\item{high}{Character. Hex colour for the high end (long passage time).
-Default pale green \code{"#ccffcc"}.}
+\item{high}{Character. Hex colour for the high end (long passage time). Default pale green \code{"#ccffcc"}.}
 }
 \value{
 An object of class \code{"net_mpt"} with:
@@ -62,15 +69,11 @@ Diagonal = mean recurrence time \eqn{1/\pi_i}.}
 For a \code{netobject_group} the result is a \code{"net_mpt_group"}: a
 named list holding one \code{net_mpt} per group.
 
-\code{summary.net_mpt} returns an object of class
-\code{"summary.net_mpt"}: a list whose \code{table} is a data frame with
-one row per state and columns \code{state}, \code{return_time},
-\code{stationary}, \code{mean_out} (mean steps to other states) and
-\code{mean_in} (mean steps from other states), and whose \code{object}
-is the \code{net_mpt} it summarises. Its print method shows the table.
+In \code{print.net_mpt_group()}: \code{x} invisibly.
 
-\code{plot.net_mpt} returns a ggplot object: a from-by-to heatmap
-of the mean first passage time matrix.
+In \code{summary.net_mpt()}: \code{summary.net_mpt} returns an object of class \code{"summary.net_mpt"}: a list whose \code{table} is a data frame with one row per state and columns \code{state}, \code{return_time}, \code{stationary}, \code{mean_out} (mean steps to other states) and \code{mean_in} (mean steps from other states), and whose \code{object} is the \code{net_mpt} it summarises. Its print method shows the table.
+
+In \code{plot.net_mpt()}: \code{plot.net_mpt} returns a ggplot object: a from-by-to heatmap of the mean first passage time matrix.
 }
 \description{
 Computes the full matrix of mean first passage times (MFPT) for a Markov

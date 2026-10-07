@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Tests for vertex_bootstrap() and bootstrap_network(ci_method =)
 
 make_test_net <- function(method = "relative", seed = 7, n = 40) {

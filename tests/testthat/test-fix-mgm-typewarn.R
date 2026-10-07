@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # Regression: mgm numeric-vs-categorical type detection must not be silent.
 # The auto-detect logic is unchanged (mgm::mgm() machine-precision
 # equivalence preserved); the *surprising* numeric->categorical

@@ -2,6 +2,10 @@
 % Please edit documentation in R/hypergraph_laplacian.R
 \name{hypergraph_transduction}
 \alias{hypergraph_transduction}
+\alias{print.net_hypergraph_transduction}
+\alias{summary.net_hypergraph_transduction}
+\alias{as.data.frame.net_hypergraph_transduction}
+\alias{plot.net_hypergraph_transduction}
 \title{Transductive label spreading on a hypergraph}
 \usage{
 hypergraph_transduction(
@@ -11,6 +15,20 @@ hypergraph_transduction(
   type = c("zhou", "random_walk"),
   edge_weights = NULL
 )
+
+\method{print}{net_hypergraph_transduction}(x, ...)
+
+\method{summary}{net_hypergraph_transduction}(object, ...)
+
+\method{as.data.frame}{net_hypergraph_transduction}(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  what = c("predictions", "scores"),
+  ...
+)
+
+\method{plot}{net_hypergraph_transduction}(x, ...)
 }
 \arguments{
 \item{hg}{A connected \code{net_hypergraph}.}
@@ -25,6 +43,18 @@ larger values weight the hypergraph structure more relative to the
 initial labels.}
 
 \item{type, edge_weights}{Passed to \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}.}
+
+\item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_transduction}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+
+\item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph_transduction}.}
+
+\item{row.names}{\code{NULL} (default) or a character vector of row names for the returned data frame.}
+
+\item{optional}{Ignored; present so the method matches the signature of the \code{\link[=as.data.frame]{as.data.frame()}} generic.}
+
+\item{what}{Character. \code{"predictions"} (default) for the one-row-per-node table, \code{"scores"} for the tidy long score table (one row per node x class: \code{node}, \code{class}, \code{score}).}
 }
 \value{
 An object of class \code{net_hypergraph_transduction}: a list with
@@ -35,6 +65,14 @@ An object of class \code{net_hypergraph_transduction}: a list with
 and \verb{$params} (the \code{edge_weights} used).
 Has \code{print}, \code{summary}, \code{plot} and \code{as.data.frame} methods;
 \code{as.data.frame(x, what = "scores")} returns the tidy long score table.
+
+In \code{print.net_hypergraph_transduction()}: The input object, invisibly.
+
+In \code{summary.net_hypergraph_transduction()}: A data.frame, one row per class: \code{class}, \code{n_labeled}, \code{n_predicted}, \code{mean_margin} (mean winning margin among the nodes predicted into the class).
+
+In \code{as.data.frame.net_hypergraph_transduction()}: A data.frame selected by \code{what}: for \code{"predictions"}, one row per node with columns \code{node}, \code{label} (the given label, \code{NA} if unlabeled), \code{predicted}, \code{score} and \code{margin}; for \code{"scores"}, one row per node x class with columns \code{node}, \code{class} and \code{score}.
+
+In \code{plot.net_hypergraph_transduction()}: A ggplot object (the score heatmap), returned visibly so that \code{plot(x)} draws it.
 }
 \description{
 Semi-supervised classification of hypergraph nodes by the regularization

@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 test_that(".data_bearing_classes is the canonical 4-class set", {
   expect_setequal(
     Nestimate:::.data_bearing_classes,

@@ -98,7 +98,7 @@
 #' the same \code{invert} setting.
 #'
 #' @param x A \code{netobject} (from \code{\link{build_network}}) or a
-#'   \code{\link{net_edge_betweenness}} object.
+#'   \code{\link{net_edge_betweenness}} object. For the \code{print()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.
 #' @param y A \code{netobject} (from \code{\link{build_network}}) or a
 #'   \code{\link{net_edge_betweenness}} object.
 #'   Must use the same method and have the same nodes as \code{x}.
@@ -1347,32 +1347,14 @@ permutation <- function(x, y = NULL,
 
 # ---- S3 Methods ----
 
-#' Print Method for net_permutation
-#'
-#' @param x A \code{net_permutation} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The input object, invisibly.
-#'
-#' @examples
-#' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
-#' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
-#' n1 <- build_network(s1, method = "relative")
-#' n2 <- build_network(s2, method = "relative")
-#' perm <- permutation(n1, n2, iter = 10)
-#' print(perm)
-#' \donttest{
-#' set.seed(1)
-#' d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),
-#'                  V3 = c("C","A","C"))
-#' d2 <- data.frame(V1 = c("C","A","C"), V2 = c("A","B","A"),
-#'                  V3 = c("B","C","B"))
-#' net1 <- build_network(d1, method = "relative")
-#' net2 <- build_network(d2, method = "relative")
-#' perm <- permutation(net1, net2, iter = 20, seed = 1)
-#' print(perm)
-#' }
-#'
+#' @rdname permutation
+#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param object For the \code{summary()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.
+#' @return In \code{print.net_permutation()} and \code{print.wtna_perm_mixed()}: The input object, invisibly.
+#' @return In \code{summary.net_permutation()}: The \code{$summary} data frame: one row per edge present in either network, with columns \code{from}, \code{to}, \code{weight_x}, \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value}, \code{sig}.
+#' @return In \code{print.net_permutation_group()}: \code{x} invisibly.
+#' @return In \code{summary.net_permutation_group()}: The per-group summaries stacked into one data frame: the columns of \code{\link{summary.net_permutation}} prefixed by a \code{group} column naming the group (or group pair) each row came from.
+#' @return In \code{summary.wtna_perm_mixed()}: A list with transition and co-occurrence permutation summaries.
 #' @export
 print.net_permutation <- function(x, ...) {
   method_labels <- c(
@@ -1436,66 +1418,14 @@ print.net_permutation <- function(x, ...) {
 }
 
 
-#' Summary Method for net_permutation
-#'
-#' @param object A \code{net_permutation} object.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return The \code{$summary} data frame: one row per edge present in
-#'   either network, with columns \code{from}, \code{to},
-#'   \code{weight_x}, \code{weight_y}, \code{diff}, \code{effect_size},
-#'   \code{p_value}, \code{sig}.
-#'
-#' @examples
-#' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
-#' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
-#' n1 <- build_network(s1, method = "relative")
-#' n2 <- build_network(s2, method = "relative")
-#' perm <- permutation(n1, n2, iter = 10)
-#' summary(perm)
-#' \donttest{
-#' set.seed(1)
-#' d1 <- data.frame(V1 = c("A","B","A"), V2 = c("B","C","B"),
-#'                  V3 = c("C","A","C"))
-#' d2 <- data.frame(V1 = c("C","A","C"), V2 = c("A","B","A"),
-#'                  V3 = c("B","C","B"))
-#' net1 <- build_network(d1, method = "relative")
-#' net2 <- build_network(d2, method = "relative")
-#' perm <- permutation(net1, net2, iter = 20, seed = 1)
-#' summary(perm)
-#' }
-#'
+#' @rdname permutation
 #' @export
 summary.net_permutation <- function(object, ...) {
   object$summary
 }
 
 
-#' Print Method for net_permutation_group
-#'
-#' @param x A \code{net_permutation_group} object.
-#' @param ... Additional arguments (ignored).
-#' @return \code{x} invisibly.
-#' @examples
-#' s1 <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
-#'   V3 = c("C","A","C","B"), grp = c("X","X","Y","Y"))
-#' s2 <- data.frame(V1 = c("C","A","C","B"), V2 = c("A","B","A","C"),
-#'   V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
-#' nets1 <- build_network(s1, method = "relative", group = "grp")
-#' nets2 <- build_network(s2, method = "relative", group = "grp")
-#' perm  <- permutation(nets1, nets2, iter = 10)
-#' print(perm)
-#' \donttest{
-#' set.seed(1)
-#' s1 <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
-#'                  V3 = c("C","A","C","B"), grp = c("X","X","Y","Y"))
-#' s2 <- data.frame(V1 = c("C","A","C","B"), V2 = c("A","B","A","C"),
-#'                  V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
-#' nets1 <- build_network(s1, method = "relative", group = "grp")
-#' nets2 <- build_network(s2, method = "relative", group = "grp")
-#' perm  <- permutation(nets1, nets2, iter = 20, seed = 1)
-#' print(perm)
-#' }
+#' @rdname permutation
 #' @export
 print.net_permutation_group <- function(x, ...) {
   cat("Grouped Permutation Test\n")
@@ -1507,36 +1437,7 @@ print.net_permutation_group <- function(x, ...) {
   invisible(x)
 }
 
-#' Summary Method for net_permutation_group
-#'
-#' Returns a combined summary data frame across all groups.
-#'
-#' @param object A \code{net_permutation_group} object.
-#' @param ... Additional arguments (ignored).
-#' @return The per-group summaries stacked into one data frame: the
-#'   columns of \code{\link{summary.net_permutation}} prefixed by a
-#'   \code{group} column naming the group (or group pair) each row came
-#'   from.
-#' @examples
-#' s1 <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
-#'   V3 = c("C","A","C","B"), grp = c("X","X","Y","Y"))
-#' s2 <- data.frame(V1 = c("C","A","C","B"), V2 = c("A","B","A","C"),
-#'   V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
-#' nets1 <- build_network(s1, method = "relative", group = "grp")
-#' nets2 <- build_network(s2, method = "relative", group = "grp")
-#' perm  <- permutation(nets1, nets2, iter = 10)
-#' summary(perm)
-#' \donttest{
-#' set.seed(1)
-#' s1 <- data.frame(V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),
-#'                  V3 = c("C","A","C","B"), grp = c("X","X","Y","Y"))
-#' s2 <- data.frame(V1 = c("C","A","C","B"), V2 = c("A","B","A","C"),
-#'                  V3 = c("B","C","B","A"), grp = c("X","X","Y","Y"))
-#' nets1 <- build_network(s1, method = "relative", group = "grp")
-#' nets2 <- build_network(s2, method = "relative", group = "grp")
-#' perm  <- permutation(nets1, nets2, iter = 20, seed = 1)
-#' summary(perm)
-#' }
+#' @rdname permutation
 #' @export
 summary.net_permutation_group <- function(object, ...) {
   do.call(rbind, lapply(names(object), function(nm) {
@@ -1547,11 +1448,7 @@ summary.net_permutation_group <- function(object, ...) {
 }
 
 
-#' Print Method for wtna_perm_mixed
-#'
-#' @param x A \code{wtna_perm_mixed} object.
-#' @param ... Additional arguments (ignored).
-#' @return The input object, invisibly.
+#' @rdname permutation
 #' @export
 print.wtna_perm_mixed <- function(x, ...) {
   cat("Mixed WTNA Permutation Test (transition + co-occurrence)\n")
@@ -1563,11 +1460,7 @@ print.wtna_perm_mixed <- function(x, ...) {
 }
 
 
-#' Summary Method for wtna_perm_mixed
-#'
-#' @param object A \code{wtna_perm_mixed} object.
-#' @param ... Additional arguments (ignored).
-#' @return A list with transition and co-occurrence permutation summaries.
+#' @rdname permutation
 #' @export
 summary.wtna_perm_mixed <- function(object, ...) {
   list(

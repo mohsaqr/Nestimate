@@ -2,6 +2,7 @@
 % Please edit documentation in R/prepare_data.R
 \name{prepare}
 \alias{prepare}
+\alias{print.nestimate_data}
 \title{Prepare Event Log Data for Network Estimation}
 \usage{
 prepare(
@@ -17,6 +18,8 @@ prepare(
   unix_time_unit = c("seconds", "milliseconds", "microseconds"),
   timezone = "UTC"
 )
+
+\method{print}{nestimate_data}(x, ...)
 }
 \arguments{
 \item{data}{Data frame with event log columns.}
@@ -64,6 +67,10 @@ Timestamps that end in \code{Z}, \code{UTC}, \code{GMT} or a numeric
 offset such as \code{+02:00} are converted from that offset. Parsing is
 therefore independent of the machine's local time zone.
 Default: \code{"UTC"}.}
+
+\item{x}{For the \code{print()} method: an object of class \code{nestimate_data}.}
+
+\item{...}{For the S3 methods: further arguments passed to or from other methods.}
 }
 \value{
 A list with class \code{"nestimate_data"} containing:
@@ -82,6 +89,8 @@ names, and every other column aggregated per session.}
 \code{actor} every row belongs to one synthetic actor, so the count
 would be meaningless).}
 }
+
+In \code{print.nestimate_data()}: The input object, invisibly.
 }
 \description{
 Converts event log data (actor, action, time) into wide sequence format

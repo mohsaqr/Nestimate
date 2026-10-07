@@ -1697,8 +1697,8 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
 }
 
 
+#' @rdname plot_state_frequencies
 #' @export
-#' @keywords internal
 print.nestimate_facet_plot <- function(x, ...) {
   grid::grid.newpage()
   grid::grid.draw(x)
@@ -1706,8 +1706,8 @@ print.nestimate_facet_plot <- function(x, ...) {
 }
 
 
+#' @rdname plot_state_frequencies
 #' @export
-#' @keywords internal
 print.nestimate_facet_list <- function(x, ...) {
   for (p in x) print(p)
   invisible(x)
@@ -1878,7 +1878,9 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #' group when groups exist. All variants use the Okabe-Ito palette.
 #'
 #' @param x A \code{netobject}, \code{netobject_group}, \code{mcml}, or
-#'   \code{htna} object.
+#'   \code{htna} object. For the \code{print()}, \code{plot()} and
+#'   \code{as.data.frame()} methods: the \code{state_freq} object returned by
+#'   \code{plot_state_frequencies()}.
 #' @param style One of:
 #'   \itemize{
 #'     \item \code{"marimekko"} (default) -- per-group treemap panels with
@@ -1953,7 +1955,8 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #' @param ncol For \code{legend = "per_facet"} with \code{combine = TRUE}:
 #'   number of columns in the grid arrangement. \code{NULL} (default)
 #'   picks 1, 2, or 3 columns based on the number of panels.
-#' @param ... Reserved for future use.
+#' @param ... Reserved for future use. For the S3 methods: further arguments
+#'   passed to or from other methods.
 #'
 #' @return A \code{state_freq} object: a list with the rendered \code{$plot}
 #'   (a \code{ggplot}; a \code{gtable} or a list of ggplots under
@@ -1963,7 +1966,7 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #'   \code{$style}, \code{$metric}, \code{$source_class}. The class supports
 #'   \code{print()} (prints the tidy table and draws the chart),
 #'   \code{plot()} (draws the chart alone), and \code{as.data.frame()}
-#'   (returns the tidy table) -- see \code{\link{state_freq}}.
+#'   (returns the tidy table) -- see the section below.
 #'
 #' @examples
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
@@ -2327,28 +2330,26 @@ state_distribution.default <- function(x, ...) {
   out
 }
 
-#' Print, Plot, and Convert a state_freq Object
-#'
+#' @section The state_freq object:
 #' \code{plot_state_frequencies()} returns a \code{state_freq} object holding
 #' both the rendered chart and the tidy frequency table. \code{print()} shows
 #' the table in the console \emph{and} draws the chart on the active graphics
 #' device, \code{plot()} draws the chart alone, and \code{as.data.frame()}
 #' returns the tidy table for downstream piping.
 #'
-#' @param x A \code{state_freq} object.
 #' @param digits Number of decimal places for proportion / share columns.
 #'   Default 1.
 #' @param max_states Cap on rows shown per group in the per-state table
 #'   (default 20); the surplus is folded into a single \code{"(+k more)"}
 #'   row. The full, uncapped table is returned by
 #'   \code{as.data.frame(x)}.
-#' @param ... Unused.
 #' @return \code{print()} returns \code{x} invisibly (after printing the
 #'   table and drawing the chart); \code{plot()} returns \code{invisible(NULL)}
 #'   after drawing; \code{as.data.frame()} returns the tidy
 #'   \code{data.frame}, one row per (group, state) cell with columns
 #'   \code{group}, \code{state}, \code{count}, \code{proportion}.
 #' @name state_freq
+#' @rdname plot_state_frequencies
 NULL
 
 # Draw whatever kind of plot object a state_freq carries: a single ggplot,
@@ -2368,8 +2369,8 @@ NULL
   invisible(NULL)
 }
 
+#' @rdname plot_state_frequencies
 #' @export
-#' @rdname state_freq
 print.state_freq <- function(x, digits = 1, max_states = 20L, ...) {
   tbl <- x$table
   groups <- unique(as.character(tbl$group))
@@ -2428,15 +2429,15 @@ print.state_freq <- function(x, digits = 1, max_states = 20L, ...) {
   invisible(x)
 }
 
+#' @rdname plot_state_frequencies
 #' @export
-#' @rdname state_freq
 plot.state_freq <- function(x, ...) {
   .draw_state_freq_plot(x$plot)
   invisible(NULL)
 }
 
+#' @rdname plot_state_frequencies
 #' @export
-#' @rdname state_freq
 as.data.frame.state_freq <- function(x, ...) x$table
 
 

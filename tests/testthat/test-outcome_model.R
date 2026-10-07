@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # outcome_model() -- unit-level outcome regression with honest inference.
 
 make_binary <- function(n = 400L, seed = 1L) {

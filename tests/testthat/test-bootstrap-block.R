@@ -1,3 +1,6 @@
+# Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
+testthat::skip_on_cran()
+
 # ---- bootstrap_network(block = ): cluster bootstrap for nested data ----
 
 # Sessions nested in persons, long format; person-specific transition
@@ -69,6 +72,7 @@ test_that("blocked result prints the nesting lines; plain does not", {
 })
 
 test_that("block is forwarded through grouped dispatch", {
+  skip_on_cran()  # full 2000-sequence bundled data
   teams <- build_network(group_regulation_long, method = "relative",
                          actor = "Actor", action = "Action", time = "Time",
                          group = "Achiever")
