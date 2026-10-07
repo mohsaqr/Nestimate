@@ -23,7 +23,7 @@ edge-independent weights the walk collapses to a graph random walk
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,7 +124,7 @@ edge-independent weights the walk collapses to a graph random walk
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>as.data.frame.net_hypergraph_cluster()</code>, <code>plot.net_hypergraph_cluster()</code>, <code>print.net_hypergraph_cluster()</code> and <code>summary.net_hypergraph_cluster()</code>: Additional arguments (ignored).</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -164,6 +164,12 @@ the embedding coordinates.</p>
     <p>k-means is stochastic: <code>nstart</code> restarts are used and a <code>seed</code> fixes
 the result. Report stability across seeds for consequential results.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_hypergraph_cluster()</code>: Two diagnostic panels. <code>"spectrum"</code>: scree plot of the Laplacian spectrum with the k used for clustering marked - the eigengap after k supports (or questions) the choice of k. <code>"embedding"</code>: the nodes in the first two spectral-embedding dimensions, labelled, coloured and shaped by cluster, sized by stationary probability - the geometry k-means actually clustered. <code>"both"</code> (default) arranges the two side by side (via gridExtra when available, base grid viewports otherwise).</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Hayashi, K., Aksoy, S. G., Park, C. H., &amp; Park, H. (2020). Hypergraph

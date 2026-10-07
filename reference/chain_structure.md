@@ -65,8 +65,9 @@ print(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
-  In `print.chain_structure_group()`: Forwarded to
+  In `plot.chain_structure()`, `print.chain_structure()`,
+  `summary.chain_structure()` and `summary.chain_structure_group()`:
+  Ignored. In `print.chain_structure_group()`: Forwarded to
   `print.chain_structure`. In `print.summary_chain_structure()`:
   Forwarded to `print.data.frame`.
 
@@ -200,6 +201,43 @@ to check.
 
 The fundamental-matrix absorption math follows Kemeny & Snell (1976);
 the hitting-probability linear system follows Norris (1997).
+
+## Methods
+
+- `plot.chain_structure()`: Renders the hitting-probability matrix as a
+  heatmap, with rows and columns ordered by communicating class so the
+  block structure is visible at a glance. State labels along both axes
+  are coloured by classification (absorbing / recurrent / transient).
+  The subtitle summarises the chain-level properties (regular,
+  reversible).
+
+- `print.chain_structure()`: Prints a compact chain-level header. For
+  the full per-state table, call
+  [`summary()`](https://rdrr.io/r/base/summary.html) on the same object.
+
+- `print.chain_structure_group()`: One header line per group, followed
+  by each group's per-state table (via `summary.chain_structure`).
+
+- `print.summary_chain_structure()`: Prints a one-line chain header
+  followed by the tidy per-state table.
+
+- `summary.chain_structure()`: Returns a single data.frame with one row
+  per state, combining every per-state metric `chain_structure()`
+  computes. Always includes `state`, `classification`, `period`,
+  `persistence` (the diagonal of the transition matrix),
+  `return_probability` (the diagonal of the hitting matrix) and
+  `sojourn_steps` (`1 / (1 - persistence)`, which is `Inf` for an
+  absorbing state). Adds the chain's `stationary_probability` when the
+  chain is irreducible, and absorption columns when it has any absorbing
+  states: `absorption_probability` for a single absorbing state or one
+  `absorbed_in_<state>` column per state when there are several, plus
+  `mean_absorption_time`.
+
+- `summary.chain_structure_group()`: Produces a single tidy data.frame
+  with one row per (group, state) combination, combining classification,
+  persistence, sojourn, and – when applicable – stationary or
+  mean-absorption-time columns. Useful for side-by-side reporting of
+  `chain_structure()` across the members of a `netobject_group`.
 
 ## Plot colours
 

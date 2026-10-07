@@ -77,7 +77,8 @@ plot(x, combined = TRUE, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.persistent_homology()`: Ignored. In
+  `print.persistent_homology()`: Additional arguments (unused).
 
 - combined:
 
@@ -115,6 +116,16 @@ In `print.persistent_homology()`: The input object, invisibly.
 
 In `plot.persistent_homology()`: A grid grob (invisibly) when
 `combined = TRUE`; a named list of two ggplots when `combined = FALSE`.
+
+## Methods
+
+- `plot.persistent_homology()`: Two panels: Betti curve (threshold vs
+  Betti number) and persistence diagram (birth vs death). Persistence
+  pairs come from full boundary- matrix reduction; essential classes are
+  shown at the filtration boundary (`death = 0` in clique mode; in VR
+  mode their stored `death = Inf` is capped for display at the largest
+  finite value in the diagram or on the threshold grid, so they still
+  render).
 
 ## References
 

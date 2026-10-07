@@ -122,7 +122,10 @@ summary(object, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_permutation()`, `print.net_permutation_group()`,
+  `print.wtna_perm_mixed()`, `summary.net_permutation()`,
+  `summary.net_permutation_group()` and `summary.wtna_perm_mixed()`:
+  Additional arguments (ignored).
 
 - object:
 
@@ -362,6 +365,11 @@ objects. It then permutes the source networks, recomputes edge
 betweenness for each shuffle, and tests the edge-betweenness
 differences. Both objects must come from the same source method and use
 the same `invert` setting.
+
+## Methods
+
+- `summary.net_permutation_group()`: Returns a combined summary data
+  frame across all groups.
 
 ## References
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,28 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.24" id="nestimate-0924">Nestimate 0.9.24<a class="anchor" aria-label="anchor" href="#nestimate-0924"></a></h2>
+<div class="section level3">
+<h3 id="documentation-0-9-24">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-9-24"></a></h3>
+<ul><li>Fixes to the 0.9.23 help-page merge, found in review:
+<ul><li>Pages are named after their function again: <code>build_mcml</code> and <code>plot_state_frequencies</code> had been named after a <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method, and their usage now lists the function before its methods.</li>
+<li>The descriptions of 51 methods (what a plot draws, what a print shows) are restored, as a “Methods” section on each function’s page.</li>
+<li>Each page’s <code>...</code> entry states what each method does with extra arguments: methods that reject them say so, <code><a href="../reference/bayes_compare.html">plot.net_bayes()</a></code> names <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code>, and the rest say they are ignored.</li>
+<li>
+<code>compare_networks</code>: the <code>...</code> and <code>labels</code> entries no longer repeat; <code>net_edge_betweenness</code> and <code>net_pruning_details</code> no longer list a non-existent class.</li>
+<li>Every S3 method has a documented return value.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="behaviour-notes-0-9-24">Behaviour notes<a class="anchor" aria-label="anchor" href="#behaviour-notes-0-9-24"></a></h3>
+<ul><li>The <code>mgm</code> estimator rejects <code>scale = FALSE</code> with a classed error (<code>nestimate_mgm_unscaled</code>); this started in 0.9.23 and was not listed there. Missing values are handled pairwise, now passed explicitly.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-0-9-24">Tests<a class="anchor" aria-label="anchor" href="#tests-0-9-24"></a></h3>
+<ul><li>Two more reference-implementation tests (a hand-written linear solve for <code><a href="../reference/passage_time.html">passage_time()</a></code>, a manual <code>multinom</code> re-computation) and unused reference helpers moved to the local suite; section headers that claimed equivalence tests are renamed. New tests: mgm on data with missing values, and the <code>scale = FALSE</code> error.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.23" id="nestimate-0923">Nestimate 0.9.23<a class="anchor" aria-label="anchor" href="#nestimate-0923"></a></h2>
 <div class="section level3">

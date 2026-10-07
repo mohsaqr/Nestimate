@@ -181,8 +181,10 @@ print(x, ...)
 
 - ...:
 
-  Unsupported. Supplying unused arguments raises an error. For the S3
-  methods: further arguments passed to or from other methods.
+  Unsupported. Supplying unused arguments raises an error. In
+  `plot.net_clustering()`, `print.net_clustering()` and
+  `summary.net_clustering()`: Unsupported. Supplying unused arguments
+  raises an error. In `print.tidy_covariates()`: Ignored.
 
 - x:
 
@@ -306,6 +308,22 @@ In `plot.net_clustering()`: A `ggplot` object (invisibly); for
 objects named by cluster (invisibly).
 
 In `print.tidy_covariates()`: The input invisibly.
+
+## Methods
+
+- `print.net_clustering()`: Compact, fixed-width summary of a
+  sequence-clustering result. The header carries the clustering method
+  and dissimilarity; the per-cluster table carries cluster size (count
+  and percentage) and mean within-cluster distance when available.
+  Optional medoid and covariate lines surface only when those fields are
+  populated.
+
+- `print.tidy_covariates()`: Prints a one-line header naming the
+  estimator, then the data.frame. The full human-readable view
+  (per-cluster stats, profiles, OR/test tables) was already printed by
+  [`summary()`](https://rdrr.io/r/base/summary.html) when this object
+  was produced, so this method intentionally stays minimal to avoid
+  duplication. Auto-prints when the user types the variable at the REPL.
 
 ## Examples
 

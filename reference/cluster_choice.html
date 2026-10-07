@@ -17,7 +17,7 @@ adapts to the swept axes."><meta property="og:image" content="https://pak.dynasi
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -123,7 +123,7 @@ adapts to the swept axes.</p>
 <code>estimator</code>).
 Note: <code>weighted = TRUE</code> only works with
 <code>dissimilarity = "hamming"</code> and is rejected up-front when
-sweeping mixed dissimilarities. For the S3 methods: further arguments passed to or from other methods.</p></dd>
+sweeping mixed dissimilarities. In <code>plot.cluster_choice()</code>, <code>print.cluster_choice()</code> and <code>summary.cluster_choice()</code>: Unsupported. Supplying unused arguments raises an error.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
@@ -174,6 +174,12 @@ and their ratio (<code>max / min</code>).</p></dd>
 <p>In <code>summary.cluster_choice()</code>: A data frame with the swept configurations, all metrics, and a <code>best</code> character column flagging the silhouette-max row.</p>
 <p>In <code>plot.cluster_choice()</code>: A <code>ggplot</code> object, invisibly; for <code>type = "facet"</code> with <code>combined = FALSE</code>, a named list of ggplots.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.cluster_choice()</code>: Six explicit chart types plus a smart <code>"auto"</code> default. The user picks the shape; the function does not editorialise (no "best" annotation, no interpretive subtitles, no inferred recommendation).</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="plot-types">Plot types<a class="anchor" aria-label="anchor" href="#plot-types"></a></h2>
 

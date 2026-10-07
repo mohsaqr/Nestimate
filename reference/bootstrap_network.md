@@ -128,7 +128,10 @@ summary(object, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_bootstrap()`, `print.wtna_boot_mixed()`,
+  `summary.net_bootstrap()` and `summary.wtna_boot_mixed()`: Additional
+  arguments (ignored). In `print.net_bootstrap_group()` and
+  `summary.net_bootstrap_group()`: Ignored.
 
 - object:
 

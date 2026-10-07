@@ -46,7 +46,10 @@ plot(x, dims = c(1L, 2L), ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_honem()`: Additional arguments passed to
+  [`plot`](https://rdrr.io/r/graphics/plot.default.html). In
+  `print.net_honem()` and `summary.net_honem()`: Additional arguments
+  (ignored).
 
 - object:
 

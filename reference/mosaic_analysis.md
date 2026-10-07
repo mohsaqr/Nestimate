@@ -80,9 +80,9 @@ summary(object, ...)
   `label_size`, `palette`). Tile fill uses the ColorBrewer RdBu ramp by
   default (override with `palette`). Column labels auto-rotate to
   vertical when there are more than 6 columns; pass `col_label_angle` to
-  force an angle. For the S3 methods: further arguments passed to or
-  from other methods. In `plot.mosaic_analysis()`: Styling overrides
-  forwarded to the flat renderer.
+  force an angle. In `plot.mosaic_analysis()`: Styling overrides
+  forwarded to the flat renderer. In `print.mosaic_analysis()` and
+  `summary.mosaic_analysis()`: Ignored.
 
 - x:
 
@@ -158,6 +158,14 @@ In `summary.mosaic_analysis()`: The tidy per-cell `data.frame`: one row
 per (var1, var2) cell, with the two variable columns (named after `var1`
 / `var2`) plus `observed`, `expected`, `residual` and `pct`. The one-row
 test summary is attached as the `"stats"` attribute.
+
+## Methods
+
+- `plot.mosaic_analysis()`: Re-renders the flat mosaic from the stored
+  contingency table and residuals, so styling can be changed without
+  re-running the test. Any flat-mosaic styling argument (`tile_label`,
+  `pct_base`, `col_label_side`, `legend_size`, ...) may be overridden
+  via `...`.
 
 ## See also
 

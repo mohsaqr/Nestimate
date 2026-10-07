@@ -23,7 +23,7 @@ a handful of labeled ones."><meta property="og:image" content="https://pak.dynas
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,7 +130,7 @@ initial labels.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>as.data.frame.net_hypergraph_transduction()</code>, <code>plot.net_hypergraph_transduction()</code>, <code>print.net_hypergraph_transduction()</code> and <code>summary.net_hypergraph_transduction()</code>: Additional arguments (ignored).</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -164,6 +164,12 @@ Has <code>print</code>, <code>summary</code>, <code>plot</code> and <code>as.dat
 <p>In <code>as.data.frame.net_hypergraph_transduction()</code>: A data.frame selected by <code>what</code>: for <code>"predictions"</code>, one row per node with columns <code>node</code>, <code>label</code> (the given label, <code>NA</code> if unlabeled), <code>predicted</code>, <code>score</code> and <code>margin</code>; for <code>"scores"</code>, one row per node x class with columns <code>node</code>, <code>class</code> and <code>score</code>.</p>
 <p>In <code>plot.net_hypergraph_transduction()</code>: A ggplot object (the score heatmap), returned visibly so that <code>plot(x)</code> draws it.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_hypergraph_transduction()</code>: Heatmap of the full node-by-class score matrix: rows are nodes (grouped by predicted class), columns are classes, tile shading and printed values are the spreading scores. Seed nodes (given labels) carry a black tile border, and each node's winning class is marked with a dot, so agreement between seeds, scores, and decisions is visible in one panel. Rows whose winning and runner-up scores are close (small <code>margin</code>) are the assignments to distrust.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Zhou, D., Huang, J., &amp; Scholkopf, B. (2006). Learning with hypergraphs:

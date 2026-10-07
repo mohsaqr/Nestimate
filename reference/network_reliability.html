@@ -23,7 +23,7 @@ bootstrap_network).'><meta property="og:image" content="https://pak.dynasite.org
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,7 +101,7 @@ If unnamed, each model is auto-named from its <code>$method</code>; duplicate
 names are made unique with <code><a href="https://rdrr.io/r/base/make.unique.html" class="external-link">make.unique()</a></code>. A
 <code>netobject_group</code> is flattened into its constituent models (named
 by group), and an <code>mcml</code> or <code>cograph_network</code> is converted
-first. For the S3 methods: further arguments passed to or from other methods.</p></dd>
+first. In <code>plot.net_reliability()</code> and <code>print.net_reliability()</code>: Additional arguments (ignored). In <code>summary.net_reliability()</code>: Ignored.</p></dd>
 
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
@@ -169,6 +169,12 @@ per model).</p></dd>
 <p>In <code>summary.net_reliability()</code>: A tidy data frame with columns <code>model</code>, <code>metric</code>, <code>mean</code>, <code>sd</code> summarising the split-half iterations.</p>
 <p>In <code>plot.net_reliability()</code>: A <code>ggplot</code> object (invisibly), or a named list of four ggplots when <code>combined = FALSE</code>.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_reliability()</code>: Density plots of split-half metrics faceted by metric type. Multi-model comparisons show overlaid densities colored by model.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code>, <code><a href="bootstrap_network.html">bootstrap_network</a></code></p></div>

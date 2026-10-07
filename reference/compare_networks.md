@@ -62,18 +62,6 @@ plot(
   [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
   for the network views (e.g. `layout`, `node_size`, `minimum`); ignored
   by the other views and by
-  [`print()`](https://rdrr.io/r/base/print.html). For the S3 methods:
-  further arguments passed to or from other methods. In
-  `plot.net_network_comparison()`: For `compare_networks()`: two or more
-  networks, in any mix of: `netobject`, `netobject_group` (members are
-  flattened and keep their names), `cograph_network` / `psychnet`,
-  `mcml`, `tna`, `group_tna`, square numeric matrices, or one unnamed
-  `list` of these. Name the arguments to name the networks
-  (`compare_networks(early = a, late = b)`). For
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html): passed to
-  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
-  for the network views (e.g. `layout`, `node_size`, `minimum`); ignored
-  by the other views and by
   [`print()`](https://rdrr.io/r/base/print.html).
 
 - reference:
@@ -104,13 +92,7 @@ plot(
   networks (one per network after flattening groups); overrides argument
   names. For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
   logical; print the signed difference on the edge and node views,
-  default `TRUE` (the heatmap always shows its values). In
-  `plot.net_network_comparison()`: For `compare_networks()`: optional
-  character vector naming the networks (one per network after flattening
-  groups); overrides argument names. For
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html): logical;
-  print the signed difference on the edge and node views, default `TRUE`
-  (the heatmap always shows its values).
+  default `TRUE` (the heatmap always shows its values).
 
 - test:
 

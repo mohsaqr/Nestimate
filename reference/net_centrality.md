@@ -96,8 +96,8 @@ plot(
 
 - ...:
 
-  Additional arguments (ignored). For the S3 methods: further arguments
-  passed to or from other methods.
+  Additional arguments (ignored). In `plot.net_centrality()` and
+  `plot.net_centrality_group()`: Additional arguments ignored.
 
 - reorder:
 

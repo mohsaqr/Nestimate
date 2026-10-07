@@ -15,7 +15,7 @@ absorbing states exist."><meta property="og:image" content="https://pak.dynasite
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,7 +112,7 @@ absorbing). Default <code>1e-10</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods. In <code>print.chain_structure_group()</code>: Forwarded to <code>print.chain_structure</code>. In <code>print.summary_chain_structure()</code>: Forwarded to <code>print.data.frame</code>.</p></dd>
+<dd><p>In <code>plot.chain_structure()</code>, <code>print.chain_structure()</code>, <code>summary.chain_structure()</code> and <code>summary.chain_structure_group()</code>: Ignored. In <code>print.chain_structure_group()</code>: Forwarded to <code>print.chain_structure</code>. In <code>print.summary_chain_structure()</code>: Forwarded to <code>print.data.frame</code>.</p></dd>
 
 
 <dt id="arg-show-values">show_values<a class="anchor" aria-label="anchor" href="#arg-show-values"></a></dt>
@@ -207,6 +207,17 @@ distribution is unique and meaningful. Use <code>is_regular</code> to check.</p>
 <p>The fundamental-matrix absorption math follows Kemeny &amp; Snell (1976);
 the hitting-probability linear system follows Norris (1997).</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.chain_structure()</code>: Renders the hitting-probability matrix as a heatmap, with rows and columns ordered by communicating class so the block structure is visible at a glance. State labels along both axes are coloured by classification (absorbing / recurrent / transient). The subtitle summarises the chain-level properties (regular, reversible).</p></li>
+<li><p><code>print.chain_structure()</code>: Prints a compact chain-level header. For the full per-state table, call <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> on the same object.</p></li>
+<li><p><code>print.chain_structure_group()</code>: One header line per group, followed by each group's per-state table (via <code>summary.chain_structure</code>).</p></li>
+<li><p><code>print.summary_chain_structure()</code>: Prints a one-line chain header followed by the tidy per-state table.</p></li>
+<li><p><code>summary.chain_structure()</code>: Returns a single data.frame with one row per state, combining every per-state metric <code>chain_structure()</code> computes. Always includes <code>state</code>, <code>classification</code>, <code>period</code>, <code>persistence</code> (the diagonal of the transition matrix), <code>return_probability</code> (the diagonal of the hitting matrix) and <code>sojourn_steps</code> (<code>1 / (1 - persistence)</code>, which is <code>Inf</code> for an absorbing state). Adds the chain's <code>stationary_probability</code> when the chain is irreducible, and absorption columns when it has any absorbing states: <code>absorption_probability</code> for a single absorbing state or one <code>absorbed_in_&lt;state&gt;</code> column per state when there are several, plus <code>mean_absorption_time</code>.</p></li>
+<li><p><code>summary.chain_structure_group()</code>: Produces a single tidy data.frame with one row per (group, state) combination, combining classification, persistence, sojourn, and – when applicable – stationary or mean-absorption-time columns. Useful for side-by-side reporting of <code>chain_structure()</code> across the members of a <code>netobject_group</code>.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="plot-colours">Plot colours<a class="anchor" aria-label="anchor" href="#plot-colours"></a></h2>
 

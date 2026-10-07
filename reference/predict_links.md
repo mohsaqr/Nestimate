@@ -69,7 +69,8 @@ summary(object, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_link_prediction()` and `summary.net_link_prediction()`:
+  Additional arguments (ignored).
 
 - object:
 
@@ -212,12 +213,12 @@ print(pred)
 #> 
 #>   Top predicted links (consensus across 6 methods):
 #>     1. C -> B  (avg rank: 4.5, agreed: 6/6)
-#>     2. B -> A  (avg rank: 4.8, agreed: 6/6)
+#>     2. B -> A  (avg rank: 5.0, agreed: 6/6)
 #>     3. C -> A  (avg rank: 5.0, agreed: 6/6)
 #>     4. D -> C  (avg rank: 5.5, agreed: 6/6)
 #>     5. A -> D  (avg rank: 5.8, agreed: 6/6)
 #>     6. D -> A  (avg rank: 6.2, agreed: 6/6)
-#>     7. E -> D  (avg rank: 6.5, agreed: 6/6)
+#>     7. E -> D  (avg rank: 6.3, agreed: 6/6)
 #>     8. E -> C  (avg rank: 7.5, agreed: 6/6)
 #>     9. B -> E  (avg rank: 7.7, agreed: 6/6)
 #>     10. A -> E  (avg rank: 8.0, agreed: 6/6)

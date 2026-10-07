@@ -815,8 +815,8 @@ Cluster-based and multilevel network analysis
   : Cluster sequences using Mixed Markov Models
 - [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
   : Cluster data and build per-cluster networks in one step
-- [`print(`*`<mcml_layer>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
-  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  [`print(`*`<mcml_layer>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   [`print(`*`<mcml>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   [`summary(`*`<mcml>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   : Build MCML from Raw Transition Data
@@ -960,9 +960,9 @@ Sequence visualization, pattern comparison, and association mining
   : Sequence Plot (heatmap, index, or distribution)
 - [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
   : State Distribution Plot Over Time
-- [`print(`*`<nestimate_facet_plot>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
+- [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
+  [`print(`*`<nestimate_facet_plot>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`print(`*`<nestimate_facet_list>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
-  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`print(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`plot(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`as.data.frame(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)

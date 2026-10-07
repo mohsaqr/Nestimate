@@ -22,7 +22,9 @@ print(x, max_print = 12L, ...)
 - x, y:
 
   A `netobject`, `cograph_network`, or numeric square matrix. Both must
-  share the same nodes in the same order.
+  share the same nodes in the same order. For the
+  [`print()`](https://rdrr.io/r/base/print.html) method, `x` is the
+  `netdifference` object.
 
 - max_print:
 
@@ -31,7 +33,7 @@ print(x, max_print = 12L, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.netdifference()`: Ignored.
 
 ## Value
 

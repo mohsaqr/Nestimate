@@ -25,7 +25,7 @@ are computed directly from the matrix without igraph."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -198,7 +198,7 @@ when <code>normalize = FALSE</code>. Default: <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>plot.net_stability()</code>, <code>print.net_stability()</code>, <code>print.net_stability_group()</code>, <code>summary.net_stability()</code> and <code>summary.net_stability_group()</code>: Additional arguments (ignored).</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -253,6 +253,14 @@ warning is issued and <strong>all</strong> requested names are returned with
 <p>In <code>summary.net_stability()</code>: A data frame with columns <code>measure</code>, <code>drop_prop</code>, <code>mean_cor</code>, <code>sd_cor</code>, <code>prop_above</code>.</p>
 <p>In <code>plot.net_stability()</code>: A <code>ggplot</code> object (invisibly).</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_stability()</code>: Plots mean correlation vs drop proportion for each centrality measure. The CS-coefficient is marked where the curve crosses the threshold.</p></li>
+<li><p><code>summary.net_stability()</code>: Returns the mean correlation at each drop proportion for each measure.</p></li>
+<li><p><code>summary.net_stability_group()</code>: Per-network stability as a tidy data frame. Stacks <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> results for each network with a <code>group</code> column.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating

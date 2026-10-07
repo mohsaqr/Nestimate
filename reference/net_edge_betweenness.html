@@ -19,7 +19,7 @@ igraph::edge_betweenness()."><meta property="og:image" content="https://pak.dyna
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,7 +87,7 @@ clash with <code><a href="https://sonsoles.me/tna/reference/betweenness_network.
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>netobject</code> or <code>netobject_group</code>. For the <code>net_edge_betweenness()</code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>netobject</code>, <code>netobject_group</code>, <code>default</code> or <code>net_edge_betweenness</code>.</p></dd>
+<dd><p>A <code>netobject</code> or <code>netobject_group</code>. For the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: an object of class <code>net_edge_betweenness</code>.</p></dd>
 
 
 <dt id="arg-invert">invert<a class="anchor" aria-label="anchor" href="#arg-invert"></a></dt>
@@ -98,7 +98,7 @@ and frequency networks).</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments (ignored).
-For the S3 methods: further arguments passed to or from other methods.</p></dd>
+In <code>plot.net_edge_betweenness()</code>: Additional arguments (ignored).</p></dd>
 
 
 <dt id="arg-style">style<a class="anchor" aria-label="anchor" href="#arg-style"></a></dt>
@@ -137,6 +137,12 @@ probable route rather than the one with the fewest hops. Pass
 an asymmetric betweenness matrix; an undirected (symmetric) network
 yields a symmetric one.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_edge_betweenness()</code>: Draws the edges of a <code>net_edge_betweenness</code> network ranked by their betweenness, as a horizontal bar chart. This is the tidy, cograph-free companion to the node-link diagram: render the diagram with <code>cograph::splot(eb)</code> and the ranking with <code>plot(eb)</code>.</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

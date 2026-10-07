@@ -19,7 +19,7 @@ transition entropy through task phases this way)."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -146,7 +146,7 @@ trajectories (e.g. condition, achievement level).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>plot.net_entropy_trajectory()</code>, <code>print.net_entropy_trajectory()</code> and <code>summary.net_entropy_trajectory()</code>: Ignored.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -199,6 +199,12 @@ converges to the stationary entropy rate for long stationary stretches.</p>
 stream is shorter than <code>window</code>, one window covering everything is
 returned with a warning.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_entropy_trajectory()</code>: Raw per-window entropy as faint lines with a loess-smoothed trend per group, Okabe-Ito coloured. Declining trend = routinization; level shifts = phase changes.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Krejtz, K., Hughes, C.J., Stasiak, I., Duchowski, A., &amp; Krejtz, I.

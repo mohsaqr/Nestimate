@@ -39,7 +39,7 @@ summary(object, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `summary.nest_transition_matrix()`: Additional arguments (ignored).
 
 ## Value
 

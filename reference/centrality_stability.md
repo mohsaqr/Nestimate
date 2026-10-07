@@ -133,7 +133,9 @@ plot(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_stability()`, `print.net_stability()`,
+  `print.net_stability_group()`, `summary.net_stability()` and
+  `summary.net_stability_group()`: Additional arguments (ignored).
 
 - object:
 
@@ -202,6 +204,19 @@ In `summary.net_stability()`: A data frame with columns `measure`,
 `drop_prop`, `mean_cor`, `sd_cor`, `prop_above`.
 
 In `plot.net_stability()`: A `ggplot` object (invisibly).
+
+## Methods
+
+- `plot.net_stability()`: Plots mean correlation vs drop proportion for
+  each centrality measure. The CS-coefficient is marked where the curve
+  crosses the threshold.
+
+- `summary.net_stability()`: Returns the mean correlation at each drop
+  proportion for each measure.
+
+- `summary.net_stability_group()`: Per-network stability as a tidy data
+  frame. Stacks [`summary()`](https://rdrr.io/r/base/summary.html)
+  results for each network with a `group` column.
 
 ## References
 

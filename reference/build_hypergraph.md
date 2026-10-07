@@ -74,7 +74,8 @@ summary(object, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_hypergraph()`: Additional arguments (ignored). In
+  `summary.net_hypergraph()`: Ignored.
 
 - object:
 

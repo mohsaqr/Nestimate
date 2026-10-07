@@ -11,7 +11,7 @@ recurrence time, sojourn time, and mean accessibility to/from other states."><me
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,7 +92,7 @@ row-stochastic numeric transition matrix, or a wide sequence data.frame
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Ignored.
-For the S3 methods: further arguments passed to or from other methods. In <code>print.net_markov_stability_group()</code>: Forwarded to <code>print.net_markov_stability</code> for each element.</p></dd>
+In <code>plot.net_markov_stability()</code>, <code>print.net_markov_stability()</code> and <code>summary.net_markov_stability()</code>: Ignored. In <code>print.net_markov_stability_group()</code>: Forwarded to <code>print.net_markov_stability</code> for each element.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -126,8 +126,10 @@ For the S3 methods: further arguments passed to or from other methods. In <code>
 </dl><p>For a <code>netobject_group</code> the result is a
 <code>"net_markov_stability_group"</code>: a named list holding one such
 object per group.</p>
+<p>In <code>print.net_markov_stability()</code>: <code>x</code>, invisibly.</p>
 <p>In <code>print.net_markov_stability_group()</code>: <code>x</code> invisibly.</p>
 <p>In <code>plot.net_markov_stability()</code>: <code>plot.net_markov_stability</code> returns a faceted ggplot object when <code>combined = TRUE</code>, and (invisibly) a named list of single-metric ggplots, one per entry of <code>metrics</code>, when <code>combined = FALSE</code>.</p>
+<p>In <code>summary.net_markov_stability()</code>: the per-state stability table (the <code>$stability</code> data frame: one row per state with <code>state</code>, <code>persistence</code>, <code>stationary_prob</code>, <code>return_time</code>, <code>sojourn_time</code>, <code>avg_time_to_others</code>, <code>avg_time_from_others</code>), after printing the attractor and the most persistent state.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

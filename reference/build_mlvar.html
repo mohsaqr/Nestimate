@@ -19,7 +19,7 @@ correlations derived from the person-mean fixed effects.'><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,7 +126,7 @@ which numerical equivalence has been validated.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>print.net_mlvar()</code> and <code>summary.net_mlvar()</code>: Unused; present for S3 consistency.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -227,6 +227,12 @@ data-reading verbs do <strong>not</strong> work on the fitted object or its part
 Extract a constituent and rebuild it through <code><a href="build_network.html">build_network()</a></code> if you
 need those. Use <code><a href="coefs.html">coefs()</a></code> for the tidy model output.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>summary.net_mlvar()</code>: Prints the three weight matrices and the significant temporal edges, then returns the tidy coefficient table.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="build_network.html">build_network()</a></code></p></div>

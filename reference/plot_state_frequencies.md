@@ -7,13 +7,13 @@ Nestimate object that carries sequence data: a single `netobject`, a
 ## Usage
 
 ``` r
+plot_state_frequencies(x, ...)
+
 # S3 method for class 'nestimate_facet_plot'
 print(x, ...)
 
 # S3 method for class 'nestimate_facet_list'
 print(x, ...)
-
-plot_state_frequencies(x, ...)
 
 # S3 method for class 'netobject'
 plot_state_frequencies(
@@ -117,12 +117,17 @@ as.data.frame(x, ...)
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
   [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
   methods: the `state_freq` object returned by
-  `plot_state_frequencies()`.
+  `plot_state_frequencies()`; for the
+  [`print()`](https://rdrr.io/r/base/print.html) methods of the
+  per-facet figure, an object of class `nestimate_facet_plot` or
+  `nestimate_facet_list`.
 
 - ...:
 
-  Reserved for future use. For the S3 methods: further arguments passed
-  to or from other methods.
+  Reserved for future use. In `as.data.frame.state_freq()`,
+  `plot.state_freq()`, `print.state_freq()`,
+  `print.nestimate_facet_list()` and `print.nestimate_facet_plot()`:
+  ignored.
 
 - style:
 

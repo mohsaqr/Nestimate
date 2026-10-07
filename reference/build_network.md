@@ -241,8 +241,11 @@ print(x, ...)
 
 - ...:
 
-  Additional arguments passed to the estimator function. For the S3
-  methods: further arguments passed to or from other methods.
+  Additional arguments passed to the estimator function. In
+  `print.netobject()`, `print.netobject_group()` and
+  `print.netobject_ml()`: Additional arguments (ignored). In
+  `print.summary.netobject()`, `print.summary.netobject_group()`,
+  `summary.netobject()` and `summary.netobject_group()`: Ignored.
 
 - x:
 
@@ -368,6 +371,10 @@ In `summary.netobject_group()`: Either a `data.frame` (one column per
 group) or a named list of `summary.netobject` objects, of class
 `c("summary.netobject_group", ...)`.
 
+In `print.summary.netobject()`: `x`, invisibly.
+
+In `print.summary.netobject_group()`: `x`, invisibly.
+
 ## Details
 
 The function works as follows:
@@ -392,6 +399,34 @@ allowed and treats all rows as one sequence in row/time order. The
 function warns because a one-sequence transition network is not
 recommended and cannot be validated by bootstrap or other confirmatory
 tests.
+
+## Methods
+
+- `print.netobject_group()`: Compact summary of a `netobject_group`.
+  Header surfaces the source (a clustering attached by
+  [`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
+  or
+  [`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md),
+  or a plain split by `group_col`). The per-group table carries node and
+  edge counts, weight range, and – when a clustering attribute is
+  present – N and percentage of sequences per cluster (matching the
+  layout used by
+  [`print.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  and
+  [`print.net_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)).
+
+- `summary.netobject()`: Computes node count, edge count, density, mean
+  shortest-path distance, mean and SD of in/out strength, mean and SD of
+  in/out degree, in/out degree centralization (Freeman), and
+  reciprocity. Mirrors the metric set returned by
+  [`tna::summary.tna()`](https://sonsoles.me/tna/reference/summary.tna.html)
+  so a Nestimate netobject and the equivalent tna model report
+  numerically identical descriptive metrics.
+
+- `summary.netobject_group()`: Returns one summary per constituent
+  network. With `combined = TRUE` (default) the per-group tables are
+  joined into a single wide `data.frame` with one column per group; with
+  `combined = FALSE` returns a named list.
 
 ## See also
 

@@ -75,7 +75,9 @@ plot(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_association_rules()`: Additional arguments passed to
+  `ggplot2` functions. In `print.net_association_rules()` and
+  `summary.net_association_rules()`: Additional arguments (ignored).
 
 - object:
 
@@ -159,6 +161,11 @@ efficiency at k \>= 4.
 
   (1 - P(B)) / (1 - confidence). Measures departure from independence.
   Higher = stronger implication.
+
+## Methods
+
+- `plot.net_association_rules()`: Scatter plot of association rules:
+  support vs confidence, with point size proportional to lift.
 
 ## References
 

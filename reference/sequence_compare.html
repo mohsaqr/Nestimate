@@ -13,7 +13,7 @@ group differences."><meta property="og:image" content="https://pak.dynasite.org/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -127,7 +127,7 @@ threshold in <em>every</em> group. Default: 5.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>plot.net_sequence_comparison()</code>, <code>print.net_sequence_comparison()</code> and <code>summary.net_sequence_comparison()</code>: Additional arguments (ignored).</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -211,6 +211,26 @@ proportions are returned.</p></dd>
 </dl><p>P-values are adjusted once across all patterns (not per-pattern) using
 any method supported by <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">p.adjust</a></code>. The default is
 <code>"fdr"</code> (Benjamini-Hochberg).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="plot-styles">Plot styles<a class="anchor" aria-label="anchor" href="#plot-styles"></a></h2>
+
+
+<p>Visualizes pattern-level standardized residuals across groups. Two styles
+are available, and <code>style = "auto"</code> (the default) picks between them
+by the number of groups:</p><dl><dt><code>"pyramid"</code></dt>
+<dd><p>Back-to-back bars of pattern proportions, shaded
+by each side's standardized residual. Requires exactly 2 groups; an
+explicit <code>style = "pyramid"</code> on any other number is an error.</p></dd>
+
+<dt><code>"heatmap"</code></dt>
+<dd><p>One tile per (pattern, group) cell, colored by
+standardized residual. Works for any number of groups.</p></dd>
+
+
+</dl><p>Residuals are read directly from the <code>resid_&lt;group&gt;</code> columns in
+<code>$patterns</code>, which are always populated regardless of the inference
+method chosen in <code>sequence_compare</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

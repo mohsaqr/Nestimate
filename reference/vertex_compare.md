@@ -87,7 +87,8 @@ plot(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_vertex_comparison()`, `print.net_vertex_comparison()` and
+  `summary.net_vertex_comparison()`: Additional arguments (ignored).
 
 - object:
 
@@ -121,6 +122,13 @@ In `summary.net_vertex_comparison()`: The tidy summary data frame (one
 row per statistic).
 
 In `plot.net_vertex_comparison()`: A ggplot object.
+
+## Methods
+
+- `plot.net_vertex_comparison()`: Forest plot of the statistic
+  differences with normal-approximation confidence intervals;
+  differences whose interval excludes zero are the statistically
+  distinguishable ones.
 
 ## References
 

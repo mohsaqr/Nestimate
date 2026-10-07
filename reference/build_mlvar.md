@@ -70,7 +70,8 @@ summary(object, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_mlvar()` and `summary.net_mlvar()`: Unused; present for
+  S3 consistency.
 
 - object:
 
@@ -201,6 +202,11 @@ rebuild it through
 if you need those. Use
 [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md) for
 the tidy model output.
+
+## Methods
+
+- `summary.net_mlvar()`: Prints the three weight matrices and the
+  significant temporal edges, then returns the tidy coefficient table.
 
 ## See also
 

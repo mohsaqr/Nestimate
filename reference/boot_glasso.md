@@ -112,11 +112,11 @@ plot(x, type = "edges", measure = NULL, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
   In `plot.boot_glasso()`: Additional arguments passed to plotting
   functions. For `type = "edge_diff"` and `type = "centrality_diff"`,
   accepts `order`: `"sample"` (default, sorted by value) or `"id"`
-  (alphabetical).
+  (alphabetical). In `print.boot_glasso()` and `summary.boot_glasso()`:
+  Additional arguments (ignored).
 
 - object:
 
@@ -277,6 +277,10 @@ four.
 In `plot.boot_glasso()`: A `ggplot` object (returned, and so printed
 when the call is made at the top level).
 
+## Methods
+
+- `plot.boot_glasso()`: Plots bootstrap results for GLASSO networks.
+
 ## References
 
 Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
@@ -317,7 +321,7 @@ print(boot)
 #>     expected_influence:    0.00 [Unstable]
 #> 
 #>   Edge differences: 1/15 pairs significantly different
-#>   Timing: 1.4s (bootstrap: 0.9s, case-drop: 0.5s)
+#>   Timing: 1.3s (bootstrap: 0.8s, case-drop: 0.4s)
 summary(boot, type = "edges")
 #>     edge weight    ci_lower  ci_upper inclusion
 #> 1 A -- B      0 -0.11158199 0.2237170      0.35

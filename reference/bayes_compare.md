@@ -115,7 +115,11 @@ summary(object, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_bayes()`: Additional arguments passed to
+  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+  when cograph is available. In `print.net_bayes()`,
+  `print.net_bayes_group()`, `summary.net_bayes()` and
+  `summary.net_bayes_group()`: Additional arguments (ignored).
 
 - object:
 
@@ -219,6 +223,13 @@ when cograph is available; otherwise a fallback `ggplot` object.
 
 In `summary.net_bayes_group()`: A combined data frame with a
 `comparison` column.
+
+## Methods
+
+- `plot.net_bayes()`: Draws a differential transition network as a
+  directed chord diagram. Edge colour encodes the signed posterior mean
+  difference (`x` stronger vs `y` stronger) and edge width its
+  magnitude.
 
 ## References
 

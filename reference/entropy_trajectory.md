@@ -89,7 +89,8 @@ plot(
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_entropy_trajectory()`, `print.net_entropy_trajectory()`
+  and `summary.net_entropy_trajectory()`: Ignored.
 
 - object:
 
@@ -146,6 +147,12 @@ stationary entropy rate for long stationary stretches.
 Windows shorter than `window` at the tail are dropped; if the whole
 stream is shorter than `window`, one window covering everything is
 returned with a warning.
+
+## Methods
+
+- `plot.net_entropy_trajectory()`: Raw per-window entropy as faint lines
+  with a loess-smoothed trend per group, Okabe-Ito coloured. Declining
+  trend = routinization; level shifts = phase changes.
 
 ## References
 

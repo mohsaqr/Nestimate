@@ -89,8 +89,9 @@ plot(x, combined = TRUE, ...)
 
   Additional arguments passed to
   [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
-  when `x` is a `tna`/`netobject` with `type = "pathway"`. For the S3
-  methods: further arguments passed to or from other methods.
+  when `x` is a `tna`/`netobject` with `type = "pathway"`. In
+  `plot.simplicial_complex()`: Ignored. In `print.simplicial_complex()`:
+  Additional arguments (unused).
 
 - combined:
 
@@ -152,6 +153,12 @@ In `print.simplicial_complex()`: The input object, invisibly.
 
 In `plot.simplicial_complex()`: A grid grob (invisibly) when
 `combined = TRUE`; a named list of four ggplots when `combined = FALSE`.
+
+## Methods
+
+- `plot.simplicial_complex()`: Produces a four-panel summary: f-vector,
+  Betti numbers, simplicial degree ranking, and degree-by-dimension
+  heatmap.
 
 ## See also
 

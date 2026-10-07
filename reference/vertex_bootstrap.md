@@ -94,7 +94,8 @@ plot(x, bins = 30, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_vertex_bootstrap()`, `print.net_vertex_bootstrap()` and
+  `summary.net_vertex_bootstrap()`: Additional arguments (ignored).
 
 - object:
 
@@ -168,6 +169,12 @@ matrix):
   Directed networks only. Weighted reciprocity
   `sum(pmin(|W|, |t(W)|)) / sum(|W|)` over off-diagonal cells: the
   proportion of total weight that is reciprocated.
+
+## Methods
+
+- `plot.net_vertex_bootstrap()`: Histogram of the bootstrap distribution
+  per statistic, with the observed value (solid line) and confidence
+  bounds (dashed lines).
 
 ## References
 

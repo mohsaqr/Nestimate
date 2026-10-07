@@ -33,10 +33,9 @@ plot(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 
 - x:
 
-  A `netobject` or `netobject_group`. For the `net_edge_betweenness()`
-  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
-  an object of class `netobject`, `netobject_group`, `default` or
-  `net_edge_betweenness`.
+  A `netobject` or `netobject_group`. For the
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: an
+  object of class `net_edge_betweenness`.
 
 - invert:
 
@@ -46,8 +45,8 @@ plot(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 
 - ...:
 
-  Additional arguments (ignored). For the S3 methods: further arguments
-  passed to or from other methods.
+  Additional arguments (ignored). In `plot.net_edge_betweenness()`:
+  Additional arguments (ignored).
 
 - style:
 
@@ -94,6 +93,14 @@ probable route rather than the one with the fewest hops. Pass
 Directedness is taken from the network itself. A directed network yields
 an asymmetric betweenness matrix; an undirected (symmetric) network
 yields a symmetric one.
+
+## Methods
+
+- `plot.net_edge_betweenness()`: Draws the edges of a
+  `net_edge_betweenness` network ranked by their betweenness, as a
+  horizontal bar chart. This is the tidy, cograph-free companion to the
+  node-link diagram: render the diagram with `cograph::splot(eb)` and
+  the ranking with `plot(eb)`.
 
 ## Examples
 

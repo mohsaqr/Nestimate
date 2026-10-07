@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -308,7 +308,7 @@ through unchanged.</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to the estimator function.
-For the S3 methods: further arguments passed to or from other methods.</p></dd>
+In <code>print.netobject()</code>, <code>print.netobject_group()</code> and <code>print.netobject_ml()</code>: Additional arguments (ignored). In <code>print.summary.netobject()</code>, <code>print.summary.netobject_group()</code>, <code>summary.netobject()</code> and <code>summary.netobject_group()</code>: Ignored.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
@@ -404,6 +404,8 @@ carrying the grouping column in <code>attr(x, "group_col")</code>.</p>
 <p>In <code>print.netobject()</code>, <code>print.netobject_group()</code> and <code>print.netobject_ml()</code>: The input object, invisibly.</p>
 <p>In <code>summary.netobject()</code>: A <code>data.frame</code> with columns <code>metric</code> and <code>value</code>, of class <code>c("summary.netobject", "data.frame")</code>.</p>
 <p>In <code>summary.netobject_group()</code>: Either a <code>data.frame</code> (one column per group) or a named list of <code>summary.netobject</code> objects, of class <code>c("summary.netobject_group", ...)</code>.</p>
+<p>In <code>print.summary.netobject()</code>: <code>x</code>, invisibly.</p>
+<p>In <code>print.summary.netobject_group()</code>: <code>x</code>, invisibly.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -421,6 +423,14 @@ order. The function warns because a one-sequence transition network is not
 recommended and cannot be validated by bootstrap or other confirmatory
 tests.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>print.netobject_group()</code>: Compact summary of a <code>netobject_group</code>. Header surfaces the source (a clustering attached by <code><a href="cluster_network.html">cluster_network</a></code> or <code><a href="cluster_mmm.html">cluster_mmm</a></code>, or a plain split by <code>group_col</code>). The per-group table carries node and edge counts, weight range, and – when a clustering attribute is present – N and percentage of sequences per cluster (matching the layout used by <code><a href="build_clusters.html">print.net_clustering</a></code> and <code><a href="build_mmm.html">print.net_mmm</a></code>).</p></li>
+<li><p><code>summary.netobject()</code>: Computes node count, edge count, density, mean shortest-path distance, mean and SD of in/out strength, mean and SD of in/out degree, in/out degree centralization (Freeman), and reciprocity. Mirrors the metric set returned by <code><a href="https://sonsoles.me/tna/reference/summary.tna.html" class="external-link">tna::summary.tna()</a></code> so a Nestimate netobject and the equivalent tna model report numerically identical descriptive metrics.</p></li>
+<li><p><code>summary.netobject_group()</code>: Returns one summary per constituent network. With <code>combined = TRUE</code> (default) the per-group tables are joined into a single wide <code>data.frame</code> with one column per group; with <code>combined = FALSE</code> returns a named list.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="register_estimator.html">register_estimator</a></code>, <code><a href="list_estimators.html">list_estimators</a></code>,

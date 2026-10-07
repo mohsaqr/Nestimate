@@ -27,7 +27,7 @@ those papers report."><meta property="og:image" content="https://pak.dynasite.or
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -123,7 +123,7 @@ to 1 are normalised automatically (with a warning).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods. In <code>print.net_transition_entropy_group()</code>: Forwarded to <code>print.net_transition_entropy</code>.</p></dd>
+<dd><p>In <code>plot.net_transition_entropy()</code>, <code>print.net_transition_entropy()</code>, <code>print.summary.net_transition_entropy()</code> and <code>summary.net_transition_entropy()</code>: Ignored. In <code>print.net_transition_entropy_group()</code>: Forwarded to <code>print.net_transition_entropy</code>.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -217,6 +217,13 @@ with the help of <code><a href="chain_structure.html">chain_structure</a></code>
 states are independent. The deficit \(H(\pi) - h(P)\) is reported as
 <code>redundancy</code> - a measure of how much memory the chain has at order 1.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_transition_entropy()</code>: Bar chart of per-state row entropy with overlaid horizontal lines at the entropy rate \(h(P)\) (chain-level summary) and the maximum row entropy \(\log_b n\) (uniform branching). Bar widths are proportional to the stationary probability so the visual area sums to the entropy rate.</p></li>
+<li><p><code>summary.net_transition_entropy()</code>: Returns a tidy per-state contribution table sorted by share of the chain-level entropy rate (largest first), so the dominant contributors to \(h(P)\) are visible at a glance. Each row contains the stationary mass, the raw and normalised row entropy, the additive contribution \(\pi_i H(P_{i\cdot})\), and that contribution as a percentage of \(h(P)\).</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Cover, T.M. &amp; Thomas, J.A. (2006). <em>Elements of Information Theory</em>,

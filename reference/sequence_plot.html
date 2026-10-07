@@ -25,7 +25,7 @@ distribution_plot.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -410,7 +410,7 @@ from the device width so the legend looks proportional at 5 in vs
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>print.mcml_sequence_plot()</code>: Ignored.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -479,6 +479,12 @@ cluster panel to its own states, which ignores <code>rest</code> and
 </ol><p><code>panel</code> draws the Summary or the cluster panels alone, and
 <code>trim</code> cuts the time axis for every panel at once.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>print.mcml_sequence_plot()</code>: Print method for the figure <code>sequence_plot</code> returns for an <code>mcml</code> with more than one channel: one panel per channel (the macro <code>Summary</code> and one per cluster), each with its own legend.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="distribution_plot.html">distribution_plot</a></code>, <code><a href="build_clusters.html">build_clusters</a></code>,

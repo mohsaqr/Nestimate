@@ -358,7 +358,7 @@ print(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.mcml_sequence_plot()`: Ignored.
 
 ## Value
 
@@ -432,6 +432,13 @@ before:
 
 `panel` draws the Summary or the cluster panels alone, and `trim` cuts
 the time axis for every panel at once.
+
+## Methods
+
+- `print.mcml_sequence_plot()`: Print method for the figure
+  `sequence_plot` returns for an `mcml` with more than one channel: one
+  panel per channel (the macro `Summary` and one per cluster), each with
+  its own legend.
 
 ## See also
 

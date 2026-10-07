@@ -71,7 +71,7 @@ print(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.wtna_mixed()`: Additional arguments (ignored).
 
 ## Value
 

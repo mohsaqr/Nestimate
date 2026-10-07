@@ -15,7 +15,7 @@ distance computation for 100-1000x speedup on edit distances."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -231,7 +231,7 @@ factors; Kruskal-Wallis + eta-squared for numerics).</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Unsupported. Supplying unused arguments raises an error.
-For the S3 methods: further arguments passed to or from other methods.</p></dd>
+In <code>plot.net_clustering()</code>, <code>print.net_clustering()</code> and <code>summary.net_clustering()</code>: Unsupported. Supplying unused arguments raises an error. In <code>print.tidy_covariates()</code>: Ignored.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
@@ -317,6 +317,13 @@ partition used to restore HTNA children when networks are built.</p></dd>
 <p>In <code>plot.net_clustering()</code>: A <code>ggplot</code> object (invisibly); for <code>type = "predictors"</code> with <code>combined = FALSE</code>, a list of <code>ggplot</code> objects named by cluster (invisibly).</p>
 <p>In <code>print.tidy_covariates()</code>: The input invisibly.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>print.net_clustering()</code>: Compact, fixed-width summary of a sequence-clustering result. The header carries the clustering method and dissimilarity; the per-cluster table carries cluster size (count and percentage) and mean within-cluster distance when available. Optional medoid and covariate lines surface only when those fields are populated.</p></li>
+<li><p><code>print.tidy_covariates()</code>: Prints a one-line header naming the estimator, then the data.frame. The full human-readable view (per-cluster stats, profiles, OR/test tables) was already printed by <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> when this object was produced, so this method intentionally stays minimal to avoid duplication. Auto-prints when the user types the variable at the REPL.</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

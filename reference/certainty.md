@@ -72,7 +72,7 @@ print(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_certainty()`: Additional arguments (ignored).
 
 ## Value
 

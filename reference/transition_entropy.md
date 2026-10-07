@@ -63,8 +63,10 @@ plot(x, title = "Transition Entropy", fill = "#0072B2", ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
-  In `print.net_transition_entropy_group()`: Forwarded to
+  In `plot.net_transition_entropy()`, `print.net_transition_entropy()`,
+  `print.summary.net_transition_entropy()` and
+  `summary.net_transition_entropy()`: Ignored. In
+  `print.net_transition_entropy_group()`: Forwarded to
   `print.net_transition_entropy`.
 
 - object:
@@ -178,6 +180,21 @@ one stationary distribution among many - interpret with the help of
 The relation \\h(P) \leq H(\pi)\\ holds with equality iff successive
 states are independent. The deficit \\H(\pi) - h(P)\\ is reported as
 `redundancy` - a measure of how much memory the chain has at order 1.
+
+## Methods
+
+- `plot.net_transition_entropy()`: Bar chart of per-state row entropy
+  with overlaid horizontal lines at the entropy rate \\h(P)\\
+  (chain-level summary) and the maximum row entropy \\\log_b n\\
+  (uniform branching). Bar widths are proportional to the stationary
+  probability so the visual area sums to the entropy rate.
+
+- `summary.net_transition_entropy()`: Returns a tidy per-state
+  contribution table sorted by share of the chain-level entropy rate
+  (largest first), so the dominant contributors to \\h(P)\\ are visible
+  at a glance. Each row contains the stationary mass, the raw and
+  normalised row entropy, the additive contribution \\\pi_i
+  H(P\_{i\cdot})\\, and that contribution as a percentage of \\h(P)\\.
 
 ## References
 

@@ -73,7 +73,7 @@ summary(object, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_nct()` and `summary.net_nct()`: Ignored.
 
 - object:
 
@@ -133,6 +133,12 @@ symmetrization (matching NCT's `NCT_estimator_GGM` default). The glasso
 solver is not the Fortran one NCT wraps, so results agree to
 independent-solver precision (of the order of `1e-4` on the test
 statistics) rather than bit-for-bit, even under the same seed.
+
+## Methods
+
+- `summary.net_nct()`: Returns a tidy data frame with one row per edge
+  test. The global M (strength) and S (structure) statistics are
+  attached as attributes.
 
 ## Examples
 

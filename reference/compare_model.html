@@ -23,7 +23,7 @@ correlations."><meta property="og:image" content="https://pak.dynasite.org/Nesti
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -140,7 +140,7 @@ correlations.</p>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Ignored. For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>Ignored. In <code>plot.net_comparison()</code> and <code>print.net_comparison()</code>: Ignored.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
@@ -229,6 +229,7 @@ networks to compare. Defaults <code>1L</code> and <code>2L</code>.</p></dd>
     <p>A <code>net_comparison</code> object: a named list with <code>matrices</code>,
 <code>difference_matrix</code>, <code>edge_metrics</code>, <code>summary_metrics</code>, optionally
 <code>network_metrics</code>, <code>centrality_differences</code>, <code>centrality_correlations</code>.</p>
+<p>In <code>print.net_comparison()</code>: <code>x</code>, invisibly.</p>
 <p>In <code>plot.net_comparison()</code>: A <code>ggplot</code> object; for <code>type = "all"</code> with <code>combined = TRUE</code> a <code>gtable</code> arranged 2 by 2; for <code>type = "all"</code> with <code>combined = FALSE</code> a named list of four ggplots.</p>
     </div>
     <div class="section level2">
@@ -237,6 +238,13 @@ networks to compare. Defaults <code>1L</code> and <code>2L</code>.</p></dd>
 matrices and scaled before comparison; the choice of scaling determines
 how weights from different estimators are placed on a common footing.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>compare_model.netobject_group()</code>: Selects two members of a <code>netobject_group</code> (by index or name) and dispatches to <code>compare_model.netobject()</code>. See also <code><a href="compare_networks.html">compare_networks</a></code>, the N-way successor with tidy tables and a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> that draws one view per call.</p></li>
+<li><p><code>plot.net_comparison()</code>: Visualises a <code>net_comparison</code> object. Currently supports the edge-weight scatterplot (default), with the diagonal reference (perfect agreement) and the OLS regression line annotated by Pearson, Spearman, and Kendall correlations.</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

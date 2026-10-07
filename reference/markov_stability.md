@@ -47,8 +47,9 @@ plot(
 
 - ...:
 
-  Ignored. For the S3 methods: further arguments passed to or from other
-  methods. In `print.net_markov_stability_group()`: Forwarded to
+  Ignored. In `plot.net_markov_stability()`,
+  `print.net_markov_stability()` and `summary.net_markov_stability()`:
+  Ignored. In `print.net_markov_stability_group()`: Forwarded to
   `print.net_markov_stability` for each element.
 
 - object:
@@ -88,12 +89,20 @@ An object of class `"net_markov_stability"` with:
 For a `netobject_group` the result is a `"net_markov_stability_group"`:
 a named list holding one such object per group.
 
+In `print.net_markov_stability()`: `x`, invisibly.
+
 In `print.net_markov_stability_group()`: `x` invisibly.
 
 In `plot.net_markov_stability()`: `plot.net_markov_stability` returns a
 faceted ggplot object when `combined = TRUE`, and (invisibly) a named
 list of single-metric ggplots, one per entry of `metrics`, when
 `combined = FALSE`.
+
+In `summary.net_markov_stability()`: the per-state stability table (the
+`$stability` data frame: one row per state with `state`, `persistence`,
+`stationary_prob`, `return_time`, `sojourn_time`, `avg_time_to_others`,
+`avg_time_from_others`), after printing the attractor and the most
+persistent state.
 
 ## Details
 

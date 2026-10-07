@@ -129,7 +129,9 @@ plot(
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_mmm()`, `plot.net_mmm_clustering()`, `print.net_mmm()`,
+  `print.net_mmm_clustering()` and `summary.net_mmm()`: Unsupported.
+  Supplying unused arguments raises an error.
 
 - object:
 
@@ -278,6 +280,40 @@ calling `build_mmm()` (then
 EM treats as an uninformative initial distribution), or left-trim the
 leading missings so each sequence's first column carries an observed
 state.
+
+## Methods
+
+- `plot.net_mmm_clustering()`: Plot routines for the MMM clustering
+  metadata attached to the `netobject_group` that
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  materializes from a
+  [`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+  fit (or that
+  [`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
+  returns directly with `cluster_by = "mmm"`). Mirrors the type-driven
+  surface of
+  [`plot.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  but covers only the metrics the EM fit produces – there is no distance
+  matrix on an MMM clustering, so `"silhouette"` / `"mds"` / `"heatmap"`
+  aren't defined here and the dispatcher raises a clear error if you ask
+  for one of those on an MMM result.
+
+- `print.net_mmm()`: Compact summary of a Mixed Markov Model fit. Header
+  carries dimensions and information criteria; cluster table carries N,
+  mixing share, and per-cluster average posterior probability (AvePP).
+  Layout matches
+  [`print.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  so distance- and model-based clusterings can be compared at a glance.
+
+- `print.net_mmm_clustering()`: Prints the clustering metadata attached
+  to the `netobject_group` that
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  materializes from a
+  [`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+  fit (`attr(grp, "clustering")`). Layout mirrors
+  [`print.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md):
+  a one-line dimension header, a quality line with AvePP / entropy /
+  classification error, information criteria, and a per-cluster table.
 
 ## See also
 

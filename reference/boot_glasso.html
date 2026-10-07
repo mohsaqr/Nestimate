@@ -15,7 +15,7 @@ to bootnet with richer output."><meta property="og:image" content="https://pak.d
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -165,7 +165,7 @@ return a named list (e.g., <code>list(my_metric = ...)</code>).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods. In <code>plot.boot_glasso()</code>: Additional arguments passed to plotting functions. For <code>type = "edge_diff"</code> and <code>type = "centrality_diff"</code>, accepts <code>order</code>: <code>"sample"</code> (default, sorted by value) or <code>"id"</code> (alphabetical).</p></dd>
+<dd><p>In <code>plot.boot_glasso()</code>: Additional arguments passed to plotting functions. For <code>type = "edge_diff"</code> and <code>type = "centrality_diff"</code>, accepts <code>order</code>: <code>"sample"</code> (default, sorted by value) or <code>"id"</code> (alphabetical). In <code>print.boot_glasso()</code> and <code>summary.boot_glasso()</code>: Additional arguments (ignored).</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -290,6 +290,12 @@ matrices.</p></dd>
 <p>In <code>plot.boot_glasso()</code>: A <code>ggplot</code> object (returned, and so printed when the call is made at the top level).</p>
     </div>
     <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.boot_glasso()</code>: Plots bootstrap results for GLASSO networks.</p></li>
+</ul></div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating
 psychological networks and their accuracy: A tutorial paper.
@@ -329,7 +335,7 @@ edge-difference and centrality-difference procedures reproduced here.)</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     expected_influence:    0.00 [Unstable]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edge differences: 1/15 pairs significantly different</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Timing: 1.4s (bootstrap: 0.9s, case-drop: 0.5s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Timing: 1.3s (bootstrap: 0.8s, case-drop: 0.4s)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot</span>, type <span class="op">=</span> <span class="st">"edges"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     edge weight    ci_lower  ci_upper inclusion</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 A -- B      0 -0.11158199 0.2237170      0.35</span>

@@ -13,7 +13,7 @@ the mean recurrence time \(1/\pi_i\)."><meta property="og:image" content="https:
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,7 +111,7 @@ to 1 are normalized automatically (with a warning).</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Ignored.
-For the S3 methods: further arguments passed to or from other methods. In <code>print.net_mpt_group()</code>: Forwarded to <code>print.net_mpt</code> for each element.</p></dd>
+In <code>plot.net_mpt()</code>, <code>print.net_mpt()</code>, <code>print.summary.net_mpt()</code> and <code>summary.net_mpt()</code>: Ignored. In <code>print.net_mpt_group()</code>: Forwarded to <code>print.net_mpt</code> for each element.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -153,9 +153,11 @@ Diagonal = mean recurrence time \(1/\pi_i\).</p></dd>
 
 </dl><p>For a <code>netobject_group</code> the result is a <code>"net_mpt_group"</code>: a
 named list holding one <code>net_mpt</code> per group.</p>
+<p>In <code>print.net_mpt()</code>: <code>x</code>, invisibly.</p>
 <p>In <code>print.net_mpt_group()</code>: <code>x</code> invisibly.</p>
 <p>In <code>summary.net_mpt()</code>: <code>summary.net_mpt</code> returns an object of class <code>"summary.net_mpt"</code>: a list whose <code>table</code> is a data frame with one row per state and columns <code>state</code>, <code>return_time</code>, <code>stationary</code>, <code>mean_out</code> (mean steps to other states) and <code>mean_in</code> (mean steps from other states), and whose <code>object</code> is the <code>net_mpt</code> it summarises. Its print method shows the table.</p>
 <p>In <code>plot.net_mpt()</code>: <code>plot.net_mpt</code> returns a ggplot object: a from-by-to heatmap of the mean first passage time matrix.</p>
+<p>In <code>print.summary.net_mpt()</code>: <code>x</code>, invisibly.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

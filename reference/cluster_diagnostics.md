@@ -36,10 +36,11 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 
 - ...:
 
-  Unsupported. Supplying unused arguments raises an error. For the S3
-  methods: further arguments passed to or from other methods. In
-  `plot.net_cluster_diagnostics()`: Forwarded to the underlying plot
-  method.
+  Unsupported. Supplying unused arguments raises an error. In
+  `as.data.frame.net_cluster_diagnostics()` and
+  `print.net_cluster_diagnostics()`: Unsupported. Supplying unused
+  arguments raises an error. In `plot.net_cluster_diagnostics()`:
+  Forwarded to the underlying plot method.
 
 - digits:
 
@@ -109,6 +110,26 @@ The returned object carries:
   The original clustering object, kept by reference so
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) can delegate
   without recomputing anything.
+
+## Methods
+
+- `plot.net_cluster_diagnostics()`: Delegates to the original clustering
+  object's plot method
+  ([`plot.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  for distance-based diagnostics,
+  [`plot.net_mmm_clustering`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  or
+  [`plot.net_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  for model-based). The diagnostics object itself stores no plot
+  geometry – it just keeps a reference to the source so the existing
+  visual layer is reused.
+
+- `print.net_cluster_diagnostics()`: Prints a uniform header,
+  family-specific quality / IC line, and a per-cluster table. Layout
+  matches
+  [`print.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  and
+  [`print.net_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md).
 
 ## See also
 

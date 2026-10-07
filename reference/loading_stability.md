@@ -47,7 +47,8 @@ plot(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.pc_loading_stability()` and `print.pc_loading_stability()`:
+  Additional arguments (ignored).
 
 ## Value
 
@@ -61,6 +62,11 @@ methods.
 In `print.pc_loading_stability()`: `x`, invisibly.
 
 In `plot.pc_loading_stability()`: A ggplot object.
+
+## Methods
+
+- `plot.pc_loading_stability()`: Signed composite weights with bootstrap
+  percentile intervals, faceted by cluster.
 
 ## Examples
 

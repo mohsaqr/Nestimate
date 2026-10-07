@@ -42,8 +42,9 @@ plot(x, bins = 60L, combined = TRUE, ...)
   names are made unique with
   [`make.unique()`](https://rdrr.io/r/base/make.unique.html). A
   `netobject_group` is flattened into its constituent models (named by
-  group), and an `mcml` or `cograph_network` is converted first. For the
-  S3 methods: further arguments passed to or from other methods.
+  group), and an `mcml` or `cograph_network` is converted first. In
+  `plot.net_reliability()` and `print.net_reliability()`: Additional
+  arguments (ignored). In `summary.net_reliability()`: Ignored.
 
 - iter:
 
@@ -122,6 +123,12 @@ In `summary.net_reliability()`: A tidy data frame with columns `model`,
 
 In `plot.net_reliability()`: A `ggplot` object (invisibly), or a named
 list of four ggplots when `combined = FALSE`.
+
+## Methods
+
+- `plot.net_reliability()`: Density plots of split-half metrics faceted
+  by metric type. Multi-model comparisons show overlaid densities
+  colored by model.
 
 ## See also
 

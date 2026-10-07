@@ -75,7 +75,9 @@ plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.magnitude_difference()`: Ignored. In
+  `print.magnitude_difference()`: Passed to plotting helpers (ignored by
+  `print`).
 
 - type:
 

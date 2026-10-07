@@ -47,7 +47,7 @@ rejected, and max_order when no test accepts."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@ Default <code>FALSE</code> (set <code>TRUE</code> only on Unix-like systems).</p
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods. In <code>print.net_markov_order_group()</code>: Forwarded to <code>print.net_markov_order</code> for each element.</p></dd>
+<dd><p>In <code>plot.net_markov_order()</code>, <code>print.net_markov_order()</code> and <code>summary.net_markov_order()</code>: Ignored. In <code>print.net_markov_order_group()</code>: Forwarded to <code>print.net_markov_order</code> for each element.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -248,6 +248,18 @@ order actually tested, which is capped at
 <p>In <code>print.net_markov_order_group()</code>: <code>x</code> invisibly.</p>
 <p>In <code>summary.net_markov_order()</code>: The tidy <code>test_table</code> data.frame - one row per order tested - carrying the selection context as attributes: <code>optimal_order</code>, <code>bic_order</code>, <code>aic_order</code>, <code>alpha</code> and <code>n_perm</code>.</p>
 <p>In <code>plot.net_markov_order()</code>: A ggplot (single panel); for <code>panel = "both"</code>, either a <code>gridExtra</code> gtable (when <span class="pkg">gridExtra</span> is installed) or a named list of two ggplots (<code>ic</code>, <code>permutation</code>) drawn side-by-side and returned invisibly.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="plot-panels">Plot panels<a class="anchor" aria-label="anchor" href="#plot-panels"></a></h2>
+
+
+<p>Two-panel professional visualization:</p><ul><li><p>Panel A: log-likelihood, AIC, BIC across tested orders with
+the selected order highlighted (both the permutation-selected
+order and the BIC-minimizing order are marked).</p></li>
+<li><p>Panel B: permutation null density per order with the observed
+\(G^2\) as a vertical marker; colored by rejection at
+<code>alpha</code>.</p></li>
+</ul><p>Uses the Okabe-Ito colorblind-safe palette.</p>
     </div>
 
     <div class="section level2">

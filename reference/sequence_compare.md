@@ -79,7 +79,9 @@ plot(
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_sequence_comparison()`, `print.net_sequence_comparison()`
+  and `summary.net_sequence_comparison()`: Additional arguments
+  (ignored).
 
 - object:
 
@@ -186,6 +188,27 @@ P-values are adjusted once across all patterns (not per-pattern) using
 any method supported by
 [`p.adjust`](https://rdrr.io/r/stats/p.adjust.html). The default is
 `"fdr"` (Benjamini-Hochberg).
+
+## Plot styles
+
+Visualizes pattern-level standardized residuals across groups. Two
+styles are available, and `style = "auto"` (the default) picks between
+them by the number of groups:
+
+- `"pyramid"`:
+
+  Back-to-back bars of pattern proportions, shaded by each side's
+  standardized residual. Requires exactly 2 groups; an explicit
+  `style = "pyramid"` on any other number is an error.
+
+- `"heatmap"`:
+
+  One tile per (pattern, group) cell, colored by standardized residual.
+  Works for any number of groups.
+
+Residuals are read directly from the `resid_<group>` columns in
+`$patterns`, which are always populated regardless of the inference
+method chosen in `sequence_compare`.
 
 ## References
 

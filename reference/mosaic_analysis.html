@@ -19,7 +19,7 @@ output is a tidy one-row-per-cell data.frame."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -140,7 +140,7 @@ and the <code>pct</code> column: <code>"total"</code> (default), <code>"row"</co
 ColorBrewer RdBu ramp by default (override with <code>palette</code>). Column
 labels auto-rotate to vertical when there are more than 6 columns; pass
 <code>col_label_angle</code> to force an angle.
-For the S3 methods: further arguments passed to or from other methods. In <code>plot.mosaic_analysis()</code>: Styling overrides forwarded to the flat renderer.</p></dd>
+In <code>plot.mosaic_analysis()</code>: Styling overrides forwarded to the flat renderer. In <code>print.mosaic_analysis()</code> and <code>summary.mosaic_analysis()</code>: Ignored.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
@@ -195,6 +195,12 @@ per-cell table.</p>
 <p>In <code>print.mosaic_analysis()</code>: <code>x</code>, invisibly.</p>
 <p>In <code>summary.mosaic_analysis()</code>: The tidy per-cell <code>data.frame</code>: one row per (var1, var2) cell, with the two variable columns (named after <code>var1</code> / <code>var2</code>) plus <code>observed</code>, <code>expected</code>, <code>residual</code> and <code>pct</code>. The one-row test summary is attached as the <code>"stats"</code> attribute.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.mosaic_analysis()</code>: Re-renders the flat mosaic from the stored contingency table and residuals, so styling can be changed without re-running the test. Any flat-mosaic styling argument (<code>tile_label</code>, <code>pct_base</code>, <code>col_label_side</code>, <code>legend_size</code>, ...) may be overridden via <code>...</code>.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="mosaic_plot.html">mosaic_plot</a></code> for the network/table mosaic (which also

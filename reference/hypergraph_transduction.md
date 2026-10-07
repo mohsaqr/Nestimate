@@ -73,7 +73,11 @@ plot(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `as.data.frame.net_hypergraph_transduction()`,
+  `plot.net_hypergraph_transduction()`,
+  `print.net_hypergraph_transduction()` and
+  `summary.net_hypergraph_transduction()`: Additional arguments
+  (ignored).
 
 - object:
 
@@ -122,6 +126,17 @@ by `what`: for `"predictions"`, one row per node with columns `node`,
 
 In `plot.net_hypergraph_transduction()`: A ggplot object (the score
 heatmap), returned visibly so that `plot(x)` draws it.
+
+## Methods
+
+- `plot.net_hypergraph_transduction()`: Heatmap of the full
+  node-by-class score matrix: rows are nodes (grouped by predicted
+  class), columns are classes, tile shading and printed values are the
+  spreading scores. Seed nodes (given labels) carry a black tile border,
+  and each node's winning class is marked with a dot, so agreement
+  between seeds, scores, and decisions is visible in one panel. Rows
+  whose winning and runner-up scores are close (small `margin`) are the
+  assignments to distrust.
 
 ## References
 

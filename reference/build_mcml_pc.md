@@ -295,8 +295,9 @@ plot(x, digits = 2, ...)
   for `"ml"`, and `max_iter` / `tol` for `"paf"`. Arguments managed
   internally (`model`, `data`, `covmat`, `n.obs`, `factors`) are ignored
   with a warning - the model is always the one-factor model per cluster,
-  because the composite needs exactly one weight per item. For the S3
-  methods: further arguments passed to or from other methods.
+  because the composite needs exactly one weight per item. In
+  `plot.mcml_pc()`, `print.mcml_pc()` and `summary.mcml_pc()`:
+  Additional arguments (ignored).
 
 - digits:
 
@@ -413,6 +414,14 @@ All constituent networks are undirected (`meta$directed = FALSE`), so
 renderers that auto-detect directedness (e.g.
 [`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html))
 draw the result without arrowheads.
+
+## Methods
+
+- `plot.mcml_pc()`: Heatmap of the macro (cluster-level) weights with
+  the package's diverging palette. For the two-layer network rendering
+  use
+  [`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html),
+  which accepts `mcml_pc` objects and draws them undirected.
 
 ## References
 

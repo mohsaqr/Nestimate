@@ -57,7 +57,8 @@ plot(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.persistence_landscape()` and `print.persistence_landscape()`:
+  Ignored.
 
 ## Value
 

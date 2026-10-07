@@ -106,7 +106,13 @@ plot(
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_casedrop_reliability()`,
+  `plot.net_casedrop_reliability_group()`,
+  `print.net_casedrop_reliability()`,
+  `print.summary.net_casedrop_reliability_group()`,
+  `summary.net_casedrop_reliability()` and
+  `summary.net_casedrop_reliability_group()`: Additional arguments
+  (ignored). In `print.net_casedrop_reliability_group()`: Ignored.
 
 - object:
 
@@ -212,6 +218,20 @@ and so does not rely on the i.i.d. assumption. This makes it the
 appropriate robustness check for **edgelist-derived** networks (where
 rows of `$data` lack actor grouping), since dropping rows at random is a
 well-posed operation regardless of within-actor correlation.
+
+## Methods
+
+- `plot.net_casedrop_reliability()`: Plots the four model-level
+  reliability metrics across drop proportions: `correlation`,
+  `mean_abs_dev`, `median_abs_dev`, `max_abs_dev`. Each panel shows the
+  per-iteration mean with a ribbon at mean +/- sd. The `correlation`
+  panel includes a dashed horizontal line at the user's `threshold`
+  (default 0.7).
+
+- `plot.net_casedrop_reliability_group()`: Overlay of per-cluster
+  correlation curves across drop proportions. One colour per
+  sub-network; ribbons show mean +/- sd across iterations. Dashed
+  horizontal line marks the stability threshold (default 0.7).
 
 ## References
 

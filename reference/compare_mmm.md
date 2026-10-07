@@ -40,7 +40,9 @@ plot(x, ...)
 
   Arguments passed to
   [`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md).
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.mmm_compare()`, `print.mmm_compare()` and
+  `summary.mmm_compare()`: Unsupported. Supplying unused arguments
+  raises an error.
 
 - x:
 

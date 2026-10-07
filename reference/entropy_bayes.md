@@ -88,7 +88,9 @@ plot(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_entropy_bayes()`, `print.net_entropy_bayes()`,
+  `print.net_entropy_bayes_group()` and `summary.net_entropy_bayes()`:
+  Ignored.
 
 - object:
 
@@ -169,6 +171,14 @@ are never credible under any sensible `min_share`.
 The posterior mean entropy rate is typically slightly below the plug-in
 estimate on sparse data (Dirichlet smoothing pulls rows toward uniform
 but averages over uncertainty); the difference vanishes as counts grow.
+
+## Methods
+
+- `plot.net_entropy_bayes()`: Forest plot of the per-edge entropy
+  contributions: posterior mean and credible interval, credible edges in
+  Okabe-Ito blue, unstable (non-credible) edges in grey. The dashed line
+  marks `min_share` of the posterior-mean entropy rate - the stability
+  criterion.
 
 ## References
 

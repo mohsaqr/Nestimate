@@ -68,8 +68,9 @@ plot(
   (`weighted`, `lambda`, `q`, `p`, `seed`, `na_syms`, `covariates`,
   `estimator`). Note: `weighted = TRUE` only works with
   `dissimilarity = "hamming"` and is rejected up-front when sweeping
-  mixed dissimilarities. For the S3 methods: further arguments passed to
-  or from other methods.
+  mixed dissimilarities. In `plot.cluster_choice()`,
+  `print.cluster_choice()` and `summary.cluster_choice()`: Unsupported.
+  Supplying unused arguments raises an error.
 
 - x:
 
@@ -137,6 +138,13 @@ silhouette-max row.
 
 In `plot.cluster_choice()`: A `ggplot` object, invisibly; for
 `type = "facet"` with `combined = FALSE`, a named list of ggplots.
+
+## Methods
+
+- `plot.cluster_choice()`: Six explicit chart types plus a smart
+  `"auto"` default. The user picks the shape; the function does not
+  editorialise (no "best" annotation, no interpretive subtitles, no
+  inferred recommendation).
 
 ## Plot types
 

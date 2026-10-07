@@ -65,7 +65,9 @@ plot(x, top = 15L, title = NULL, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_path_dependence()`, `print.net_path_dependence()`,
+  `print.summary.net_path_dependence()` and
+  `summary.net_path_dependence()`: Ignored.
 
 - object:
 
@@ -153,6 +155,14 @@ Pair this with
 [`markov_order_test`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
 (which decides whether order-k is needed *globally*) to see the
 chain-level decision broken down per context.
+
+## Methods
+
+- `plot.net_path_dependence()`: Lollipop chart of per-context KL
+  divergence, sorted descending. Point size is proportional to context
+  count; points where the modal next state flips between orders are
+  marked with an X to highlight substantively meaningful order-2
+  effects.
 
 ## References
 

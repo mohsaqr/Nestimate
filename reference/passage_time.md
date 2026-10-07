@@ -62,9 +62,10 @@ plot(
 
 - ...:
 
-  Ignored. For the S3 methods: further arguments passed to or from other
-  methods. In `print.net_mpt_group()`: Forwarded to `print.net_mpt` for
-  each element.
+  Ignored. In `plot.net_mpt()`, `print.net_mpt()`,
+  `print.summary.net_mpt()` and `summary.net_mpt()`: Ignored. In
+  `print.net_mpt_group()`: Forwarded to `print.net_mpt` for each
+  element.
 
 - object:
 
@@ -114,6 +115,8 @@ An object of class `"net_mpt"` with:
 For a `netobject_group` the result is a `"net_mpt_group"`: a named list
 holding one `net_mpt` per group.
 
+In `print.net_mpt()`: `x`, invisibly.
+
 In `print.net_mpt_group()`: `x` invisibly.
 
 In `summary.net_mpt()`: `summary.net_mpt` returns an object of class
@@ -125,6 +128,8 @@ method shows the table.
 
 In `plot.net_mpt()`: `plot.net_mpt` returns a ggplot object: a
 from-by-to heatmap of the mean first passage time matrix.
+
+In `print.summary.net_mpt()`: `x`, invisibly.
 
 ## Details
 

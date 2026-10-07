@@ -94,8 +94,9 @@ plot(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
-  In `print.net_markov_order_group()`: Forwarded to
+  In `plot.net_markov_order()`, `print.net_markov_order()` and
+  `summary.net_markov_order()`: Ignored. In
+  `print.net_markov_order_group()`: Forwarded to
   `print.net_markov_order` for each element.
 
 - object:
@@ -192,6 +193,19 @@ In `plot.net_markov_order()`: A ggplot (single panel); for
 `panel = "both"`, either a `gridExtra` gtable (when gridExtra is
 installed) or a named list of two ggplots (`ic`, `permutation`) drawn
 side-by-side and returned invisibly.
+
+## Plot panels
+
+Two-panel professional visualization:
+
+- Panel A: log-likelihood, AIC, BIC across tested orders with the
+  selected order highlighted (both the permutation-selected order and
+  the BIC-minimizing order are marked).
+
+- Panel B: permutation null density per order with the observed \\G^2\\
+  as a vertical marker; colored by rejection at `alpha`.
+
+Uses the Okabe-Ito colorblind-safe palette.
 
 ## Examples
 

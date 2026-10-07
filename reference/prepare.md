@@ -101,7 +101,7 @@ print(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.nestimate_data()`: Additional arguments (ignored).
 
 ## Value
 

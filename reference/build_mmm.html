@@ -11,7 +11,7 @@ matrix. Sequences are probabilistically assigned to components."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -173,7 +173,7 @@ tests (no logit). See <code><a href="build_clusters.html">build_clusters</a></co
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>plot.net_mmm()</code>, <code>plot.net_mmm_clustering()</code>, <code>print.net_mmm()</code>, <code>print.net_mmm_clustering()</code> and <code>summary.net_mmm()</code>: Unsupported. Supplying unused arguments raises an error.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
@@ -282,6 +282,14 @@ EM treats as an uninformative initial distribution), or left-trim the
 leading missings so each sequence's first column carries an observed
 state.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_mmm_clustering()</code>: Plot routines for the MMM clustering metadata attached to the <code>netobject_group</code> that <code><a href="build_network.html">build_network</a></code> materializes from a <code><a href="cluster_mmm.html">cluster_mmm</a></code> fit (or that <code><a href="cluster_network.html">cluster_network</a></code> returns directly with <code>cluster_by = "mmm"</code>). Mirrors the type-driven surface of <code><a href="build_clusters.html">plot.net_clustering</a></code> but covers only the metrics the EM fit produces – there is no distance matrix on an MMM clustering, so <code>"silhouette"</code> / <code>"mds"</code> / <code>"heatmap"</code> aren't defined here and the dispatcher raises a clear error if you ask for one of those on an MMM result.</p></li>
+<li><p><code>print.net_mmm()</code>: Compact summary of a Mixed Markov Model fit. Header carries dimensions and information criteria; cluster table carries N, mixing share, and per-cluster average posterior probability (AvePP). Layout matches <code><a href="build_clusters.html">print.net_clustering</a></code> so distance- and model-based clusterings can be compared at a glance.</p></li>
+<li><p><code>print.net_mmm_clustering()</code>: Prints the clustering metadata attached to the <code>netobject_group</code> that <code><a href="build_network.html">build_network</a></code> materializes from a <code><a href="cluster_mmm.html">cluster_mmm</a></code> fit (<code>attr(grp, "clustering")</code>). Layout mirrors <code><a href="build_clusters.html">print.net_clustering</a></code>: a one-line dimension header, a quality line with AvePP / entropy / classification error, information criteria, and a per-cluster table.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="compare_mmm.html">compare_mmm</a></code>, <code><a href="build_network.html">build_network</a></code></p></div>

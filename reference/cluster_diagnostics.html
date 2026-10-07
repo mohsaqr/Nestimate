@@ -17,7 +17,7 @@ netobject_group."><meta property="og:image" content="https://pak.dynasite.org/Ne
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,7 +87,7 @@ or <code>build_network(net_mmm)</code>), or <code>net_mmm_clustering</code>. For
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Unsupported. Supplying unused arguments raises an error. For the S3 methods: further arguments passed to or from other methods. In <code>plot.net_cluster_diagnostics()</code>: Forwarded to the underlying plot method.</p></dd>
+<dd><p>Unsupported. Supplying unused arguments raises an error. In <code>as.data.frame.net_cluster_diagnostics()</code> and <code>print.net_cluster_diagnostics()</code>: Unsupported. Supplying unused arguments raises an error. In <code>plot.net_cluster_diagnostics()</code>: Forwarded to the underlying plot method.</p></dd>
 
 
 <dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
@@ -149,6 +149,13 @@ differ by family. Distance: <code>cluster</code>, <code>size</code>,
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.net_cluster_diagnostics()</code>: Delegates to the original clustering object's plot method (<code><a href="build_clusters.html">plot.net_clustering</a></code> for distance-based diagnostics, <code><a href="build_mmm.html">plot.net_mmm_clustering</a></code> or <code><a href="build_mmm.html">plot.net_mmm</a></code> for model-based). The diagnostics object itself stores no plot geometry – it just keeps a reference to the source so the existing visual layer is reused.</p></li>
+<li><p><code>print.net_cluster_diagnostics()</code>: Prints a uniform header, family-specific quality / IC line, and a per-cluster table. Layout matches <code><a href="build_clusters.html">print.net_clustering</a></code> and <code><a href="build_mmm.html">print.net_mmm</a></code>.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code>print.net_cluster_diagnostics</code>,

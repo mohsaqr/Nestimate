@@ -68,7 +68,9 @@ plot(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `as.data.frame.net_hypergraph_cluster()`,
+  `plot.net_hypergraph_cluster()`, `print.net_hypergraph_cluster()` and
+  `summary.net_hypergraph_cluster()`: Additional arguments (ignored).
 
 - object:
 
@@ -120,6 +122,17 @@ invisibly.
 
 k-means is stochastic: `nstart` restarts are used and a `seed` fixes the
 result. Report stability across seeds for consequential results.
+
+## Methods
+
+- `plot.net_hypergraph_cluster()`: Two diagnostic panels. `"spectrum"`:
+  scree plot of the Laplacian spectrum with the k used for clustering
+  marked - the eigengap after k supports (or questions) the choice of k.
+  `"embedding"`: the nodes in the first two spectral-embedding
+  dimensions, labelled, coloured and shaped by cluster, sized by
+  stationary probability - the geometry k-means actually clustered.
+  `"both"` (default) arranges the two side by side (via gridExtra when
+  available, base grid viewports otherwise).
 
 ## References
 

@@ -80,8 +80,8 @@ plot(
 
 - ...:
 
-  Ignored. For the S3 methods: further arguments passed to or from other
-  methods.
+  Ignored. In `plot.net_comparison()` and `print.net_comparison()`:
+  Ignored.
 
 - y:
 
@@ -188,6 +188,8 @@ A `net_comparison` object: a named list with `matrices`,
 `difference_matrix`, `edge_metrics`, `summary_metrics`, optionally
 `network_metrics`, `centrality_differences`, `centrality_correlations`.
 
+In `print.net_comparison()`: `x`, invisibly.
+
 In `plot.net_comparison()`: A `ggplot` object; for `type = "all"` with
 `combined = TRUE` a `gtable` arranged 2 by 2; for `type = "all"` with
 `combined = FALSE` a named list of four ggplots.
@@ -199,6 +201,21 @@ Mirrors
 numerically. Inputs are converted to weight matrices and scaled before
 comparison; the choice of scaling determines how weights from different
 estimators are placed on a common footing.
+
+## Methods
+
+- `compare_model.netobject_group()`: Selects two members of a
+  `netobject_group` (by index or name) and dispatches to
+  `compare_model.netobject()`. See also
+  [`compare_networks`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md),
+  the N-way successor with tidy tables and a
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) that draws
+  one view per call.
+
+- `plot.net_comparison()`: Visualises a `net_comparison` object.
+  Currently supports the edge-weight scatterplot (default), with the
+  diagonal reference (perfect agreement) and the OLS regression line
+  annotated by Pearson, Spearman, and Kendall correlations.
 
 ## Examples
 

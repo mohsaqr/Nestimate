@@ -17,7 +17,7 @@ Structure vector: highest simplex dimension per node
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +83,7 @@ are q-connected if they share a face of dimension \(\geq q\). Reports:</p><ul><l
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>plot.q_analysis()</code>: Ignored. In <code>print.q_analysis()</code>: Additional arguments (unused).</p></dd>
 
 
 <dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
@@ -97,6 +97,12 @@ are q-connected if they share a face of dimension \(\geq q\). Reports:</p><ul><l
 <p>In <code>print.q_analysis()</code>: The input object, invisibly.</p>
 <p>In <code>plot.q_analysis()</code>: A grid grob (invisibly) when <code>combined = TRUE</code>; a named list of two ggplots when <code>combined = FALSE</code>.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.q_analysis()</code>: Two panels: Q-vector (components at each connectivity level) and structure vector (max simplex dimension per node).</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Atkin, R. H. (1974). <em>Mathematical Structure in Human Affairs</em>.</p>

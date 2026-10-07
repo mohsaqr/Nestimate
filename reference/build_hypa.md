@@ -87,7 +87,8 @@ summary(
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `print.net_hypa()` and `summary.net_hypa()`: Additional arguments
+  (ignored).
 
 - object:
 

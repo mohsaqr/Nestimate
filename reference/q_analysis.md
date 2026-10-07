@@ -33,7 +33,8 @@ plot(x, combined = TRUE, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.q_analysis()`: Ignored. In `print.q_analysis()`: Additional
+  arguments (unused).
 
 - combined:
 
@@ -51,6 +52,12 @@ In `print.q_analysis()`: The input object, invisibly.
 
 In `plot.q_analysis()`: A grid grob (invisibly) when `combined = TRUE`;
 a named list of two ggplots when `combined = FALSE`.
+
+## Methods
+
+- `plot.q_analysis()`: Two panels: Q-vector (components at each
+  connectivity level) and structure vector (max simplex dimension per
+  node).
 
 ## References
 

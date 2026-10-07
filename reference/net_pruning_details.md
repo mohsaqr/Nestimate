@@ -29,15 +29,12 @@ print(x, ...)
 - x:
 
   A pruned `netobject` or `netobject_group`. For the
-  `net_pruning_details()` and
-  [`print()`](https://rdrr.io/r/base/print.html) methods: an object of
-  class `netobject`, `netobject_group`, `default` or
-  `net_pruning_details`.
+  [`print()`](https://rdrr.io/r/base/print.html) method: an object of
+  class `net_pruning_details`.
 
 - ...:
 
-  Ignored. For the S3 methods: further arguments passed to or from other
-  methods.
+  Ignored. In `print.net_pruning_details()`: Ignored.
 
 ## Value
 

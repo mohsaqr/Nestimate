@@ -51,7 +51,7 @@ to high. Use max_scale to cap the filtration diameter.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -162,7 +162,7 @@ uses <code>max(d)</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the S3 methods: further arguments passed to or from other methods.</p></dd>
+<dd><p>In <code>plot.persistent_homology()</code>: Ignored. In <code>print.persistent_homology()</code>: Additional arguments (unused).</p></dd>
 
 
 <dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
@@ -194,6 +194,12 @@ display only).</p></dd>
 </dl><p>In <code>print.persistent_homology()</code>: The input object, invisibly.</p>
 <p>In <code>plot.persistent_homology()</code>: A grid grob (invisibly) when <code>combined = TRUE</code>; a named list of two ggplots when <code>combined = FALSE</code>.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code>plot.persistent_homology()</code>: Two panels: Betti curve (threshold vs Betti number) and persistence diagram (birth vs death). Persistence pairs come from full boundary- matrix reduction; essential classes are shown at the filtration boundary (<code>death = 0</code> in clique mode; in VR mode their stored <code>death = Inf</code> is capped for display at the largest finite value in the diagram or on the threshold grid, so they still render).</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Edelsbrunner, H., Letscher, D., &amp; Zomorodian, A. (2000). Topological

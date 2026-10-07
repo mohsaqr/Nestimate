@@ -98,7 +98,8 @@ plot(x, ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_outcome_model()` and `summary.net_outcome_model()`:
+  Ignored. In `print.net_outcome_model()`: Unused.
 
 - object:
 

@@ -57,7 +57,10 @@ plot(x, type = c("ic", "likelihood"), ...)
 
 - ...:
 
-  For the S3 methods: further arguments passed to or from other methods.
+  In `plot.net_mogen()`: Additional arguments passed to
+  [`plot`](https://rdrr.io/r/graphics/plot.default.html). In
+  `print.net_mogen()` and `summary.net_mogen()`: Additional arguments
+  (ignored).
 
 - object:
 
