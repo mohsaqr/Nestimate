@@ -625,7 +625,7 @@ state_frequencies <- function(data) {
 
 #' @rdname build_mogen
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_mogen}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_mogen()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_mogen()} and \code{summary.net_mogen()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_mogen}.
 #' @param type Character. Plot type: \code{"ic"} (default) or \code{"likelihood"}.
 #' @return In \code{print.net_mogen()} and \code{plot.net_mogen()}: The input object, invisibly.

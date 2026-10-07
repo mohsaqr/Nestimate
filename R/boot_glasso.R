@@ -808,7 +808,7 @@ boot_glasso <- function(x,
 # ---- S3 Methods ----
 
 #' @rdname boot_glasso
-#' @param ... For the S3 methods: further arguments passed to or from other methods. In \code{plot.boot_glasso()}: Additional arguments passed to plotting functions. For \code{type = "edge_diff"} and \code{type = "centrality_diff"}, accepts \code{order}: \code{"sample"} (default, sorted by value) or \code{"id"} (alphabetical).
+#' @param ... In \code{plot.boot_glasso()}: Additional arguments passed to plotting functions. For \code{type = "edge_diff"} and \code{type = "centrality_diff"}, accepts \code{order}: \code{"sample"} (default, sorted by value) or \code{"id"} (alphabetical). In \code{print.boot_glasso()} and \code{summary.boot_glasso()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{boot_glasso}.
 #' @param type In \code{summary.boot_glasso()}: Character. Summary type: \code{"edges"} (default), \code{"centrality"}, \code{"cs"}, \code{"predictability"}, or \code{"all"}. In \code{plot.boot_glasso()}: Character. Plot type: \code{"edges"} (default), \code{"stability"}, \code{"edge_diff"}, \code{"centrality_diff"}, or \code{"inclusion"}.
 #' @param measure Character. Centrality measure for \code{type = "centrality_diff"} (default: first available measure).
@@ -891,6 +891,8 @@ summary.boot_glasso <- function(object, type = "edges", ...) {
 
 
 #' @rdname boot_glasso
+#' @section Methods:
+#' * \code{plot.boot_glasso()}: Plots bootstrap results for GLASSO networks.
 #' @export
 plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {
   type <- match.arg(type, c("edges", "stability", "edge_diff",

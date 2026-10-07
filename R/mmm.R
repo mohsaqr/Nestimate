@@ -834,7 +834,7 @@ build_mmm <- function(data,
 #'   keeps the historical lightweight return shape -- only the comparison
 #'   table is allocated.
 #' @param ... Arguments passed to \code{\link{build_mmm}}.
-#' For the S3 methods: further arguments passed to or from other methods.
+#' In \code{plot.mmm_compare()}, \code{print.mmm_compare()} and \code{summary.mmm_compare()}: Unsupported. Supplying unused arguments raises an error.
 #' @return A \code{mmm_compare} data frame, one row per requested \code{k},
 #'   with columns \code{k}, \code{log_likelihood}, \code{AIC}, \code{BIC},
 #'   \code{ICL}, \code{AvePP}, \code{Entropy} and \code{converged}. When
@@ -904,7 +904,7 @@ compare_mmm <- function(data, k = 2:5, return_fits = FALSE, ...) {
 #' @rdname build_mmm
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_mmm} or \code{net_mmm_clustering}.
 #' @param digits In \code{print.net_mmm()}: Integer. Decimal places for floating-point statistics. Default \code{3}. Non-breaking: \code{print(x)} keeps the same alignment as before. In \code{print.net_mmm_clustering()}: Integer. Decimal places for floating-point statistics. Default \code{3}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_mmm()}, \code{plot.net_mmm_clustering()}, \code{print.net_mmm()}, \code{print.net_mmm_clustering()} and \code{summary.net_mmm()}: Unsupported. Supplying unused arguments raises an error.
 #' @param object For the \code{summary()} method: an object of class \code{net_mmm}.
 #' @param type In \code{plot.net_mmm()}: Character. Plot type: \code{"posterior"} (default) or \code{"covariates"}. In \code{plot.net_mmm_clustering()}: Character. One of \code{"posterior"} (default; histogram of max posterior probability per sequence, coloured by cluster), \code{"covariates"} or its alias \code{"predictors"} (covariate forest plot when \code{cluster_mmm()} was run with \code{covariates}).
 #' @param combined In \code{plot.net_mmm()}: Logical. For \code{type = "covariates"} only: when \code{TRUE} (default), covariate forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned. In \code{plot.net_mmm_clustering()}: Logical. For \code{type} in \code{"covariates"} or \code{"predictors"} only: when \code{TRUE} (default), forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned.
@@ -1304,6 +1304,10 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
 }
 
 #' @rdname build_mmm
+#' @section Methods:
+#' * \code{plot.net_mmm_clustering()}: Plot routines for the MMM clustering metadata attached to the \code{netobject_group} that \code{\link{build_network}} materializes from a \code{\link{cluster_mmm}} fit (or that \code{\link{cluster_network}} returns directly with \code{cluster_by = "mmm"}). Mirrors the type-driven surface of \code{\link{plot.net_clustering}} but covers only the metrics the EM fit produces -- there is no distance matrix on an MMM clustering, so \code{"silhouette"} / \code{"mds"} / \code{"heatmap"} aren't defined here and the dispatcher raises a clear error if you ask for one of those on an MMM result.
+#' * \code{print.net_mmm()}: Compact summary of a Mixed Markov Model fit. Header carries dimensions and information criteria; cluster table carries N, mixing share, and per-cluster average posterior probability (AvePP). Layout matches \code{\link{print.net_clustering}} so distance- and model-based clusterings can be compared at a glance.
+#' * \code{print.net_mmm_clustering()}: Prints the clustering metadata attached to the \code{netobject_group} that \code{\link{build_network}} materializes from a \code{\link{cluster_mmm}} fit (\code{attr(grp, "clustering")}). Layout mirrors \code{\link{print.net_clustering}}: a one-line dimension header, a quality line with AvePP / entropy / classification error, information criteria, and a per-cluster table.
 #' @export
 plot.net_mmm_clustering <- function(x, type = c("posterior", "covariates",
                                                  "predictors"),

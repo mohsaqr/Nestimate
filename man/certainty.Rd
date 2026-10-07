@@ -40,7 +40,7 @@ for stability inference (default \code{c(0.75, 1.25)}).}
 \code{inference = "threshold"}. If NULL, defaults to the 10th percentile of
 non-zero edge weights.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_certainty()}: Additional arguments (ignored).}
 }
 \value{
 For a \code{netobject}: an object of class

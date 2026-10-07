@@ -19,9 +19,9 @@ net_pruning_details(x, ...)
 \method{print}{net_pruning_details}(x, ...)
 }
 \arguments{
-\item{x}{A pruned \code{netobject} or \code{netobject_group}. For the \code{net_pruning_details()} and \code{print()} methods: an object of class \code{netobject}, \code{netobject_group}, \code{default} or \code{net_pruning_details}.}
+\item{x}{A pruned \code{netobject} or \code{netobject_group}. For the \code{print()} method: an object of class \code{net_pruning_details}.}
 
-\item{...}{Ignored. For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{Ignored. In \code{print.net_pruning_details()}: Ignored.}
 }
 \value{
 For a \code{netobject}: a \code{net_pruning_details} data frame

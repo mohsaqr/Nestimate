@@ -1187,7 +1187,7 @@ build_hon <- function(data, max_order = 5L, min_freq = 1L,
 
 #' @rdname build_hon
 #' @param x For the \code{print()} method: an object of class \code{net_hon}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.net_hon()} and \code{summary.net_hon()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_hon}.
 #' @return In \code{print.net_hon()}: The input object, invisibly.
 #' @return In \code{summary.net_hon()}: The \code{cograph_network} edge data.frame \code{object$edges}: one row per non-zero cell of the adjacency matrix, with integer \code{from}/\code{to} node indices and a numeric \code{weight}. Returned visibly; the summary text (counts, first-order states, order distribution) is printed as a side effect. The arrow-notation table with \code{path}/\code{count}/\code{probability} is \code{object$ho_edges}.

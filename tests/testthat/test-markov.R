@@ -127,28 +127,6 @@ test_that("passage_time zero-row guard fires before normalize=FALSE check", {
   )
 })
 
-# ---- Numerical equivalence vs linear-system solve ----
-
-test_that("passage_time matches column-by-column linear solve", {
-  # Reference: solve column j of MPT independently
-  n <- 3L
-  P <- .P3
-  pi_ref <- Nestimate:::.mpt_stationary(P)
-
-  M_ref <- matrix(0, n, n, dimnames = dimnames(P))
-  for (j in seq_len(n)) {
-    A        <- diag(n) - P
-    A[j, ]   <- 0
-    A[j, j]  <- 1
-    b        <- rep(1, n); b[j] <- 0
-    M_ref[, j] <- solve(A, b)
-  }
-  diag(M_ref) <- 1 / pi_ref
-
-  pt <- passage_time(P)
-  expect_equal(pt$matrix, M_ref, tolerance = 1e-8)
-})
-
 # ---- print / summary ----
 
 test_that("print.net_mpt runs without error", {

@@ -15,7 +15,7 @@ a list containing an \code{initial} element.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{nest_initial_probs}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{summary.nest_initial_probs()}: Additional arguments (ignored).}
 }
 \value{
 For a single network: a named numeric vector of initial state

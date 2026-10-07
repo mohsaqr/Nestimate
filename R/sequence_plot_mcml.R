@@ -347,7 +347,9 @@ utils::globalVariables(c("time", "y", "key", "prop"))
 }
 
 #' @rdname sequence_plot
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @section Methods:
+#' * \code{print.mcml_sequence_plot()}: Print method for the figure \code{\link{sequence_plot}} returns for an \code{mcml} with more than one channel: one panel per channel (the macro \code{Summary} and one per cluster), each with its own legend.
+#' @param ... In \code{print.mcml_sequence_plot()}: Ignored.
 #' @return In \code{print.mcml_sequence_plot()}: \code{x}, invisibly. Called for the side effect of drawing it on a new page of the current graphics device.
 #' @export
 print.mcml_sequence_plot <- function(x, ...) {

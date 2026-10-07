@@ -49,7 +49,7 @@ Default \code{FALSE} (set \code{TRUE} only on Unix-like systems).}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_order} or \code{net_markov_order_group}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods. In \code{print.net_markov_order_group()}: Forwarded to \code{print.net_markov_order} for each element.}
+\item{...}{In \code{plot.net_markov_order()}, \code{print.net_markov_order()} and \code{summary.net_markov_order()}: Ignored. In \code{print.net_markov_order_group()}: Forwarded to \code{print.net_markov_order} for each element.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_markov_order}.}
 
@@ -124,6 +124,20 @@ every test below it - rejected at level \code{alpha}, i.e. one below the
 first non-rejection; it is \code{0} when order 1 is already not
 rejected, and \code{max_order} when no test accepts.
 }
+\section{Plot panels}{
+
+Two-panel professional visualization:
+\itemize{
+\item Panel A: log-likelihood, AIC, BIC across tested orders with
+the selected order highlighted (both the permutation-selected
+order and the BIC-minimizing order are marked).
+\item Panel B: permutation null density per order with the observed
+\eqn{G^2} as a vertical marker; colored by rejection at
+\code{alpha}.
+}
+Uses the Okabe-Ito colorblind-safe palette.
+}
+
 \examples{
 # Is one previous state enough to predict the next one?
 res <- markov_order_test(as.data.frame(trajectories),

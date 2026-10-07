@@ -341,7 +341,7 @@ persistence_landscape <- function(ph, k_max = 5L, dimension = 1L,
 
 #' @rdname persistence_landscape
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{persistence_landscape}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.persistence_landscape()} and \code{print.persistence_landscape()}: Ignored.
 #' @return In \code{print.persistence_landscape()}: The input, invisibly.
 #' @return In \code{plot.persistence_landscape()}: A ggplot.
 #' @export

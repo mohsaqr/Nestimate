@@ -87,7 +87,7 @@ cannot be combined with \code{paired = TRUE}, which is the special case
 of one actor per pair. Default \code{NULL}: sequences are permuted
 individually.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_permutation()}, \code{print.net_permutation_group()}, \code{print.wtna_perm_mixed()}, \code{summary.net_permutation()}, \code{summary.net_permutation_group()} and \code{summary.wtna_perm_mixed()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.}
 }
@@ -260,6 +260,13 @@ objects. It then permutes the source networks, recomputes edge
 betweenness for each shuffle, and tests the edge-betweenness
 differences. Both objects must come from the same source method and use
 the same \code{invert} setting.
+}
+
+\section{Methods}{
+
+\itemize{
+\item \code{summary.net_permutation_group()}: Returns a combined summary data frame across all groups.
+}
 }
 
 \examples{

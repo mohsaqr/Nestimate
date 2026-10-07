@@ -44,7 +44,7 @@ independent of \code{tol} (so raising \code{tol} to ignore tiny transition
 probabilities never reclassifies a near-deterministic state as
 absorbing). Default \code{1e-10}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods. In \code{print.chain_structure_group()}: Forwarded to \code{print.chain_structure}. In \code{print.summary_chain_structure()}: Forwarded to \code{print.data.frame}.}
+\item{...}{In \code{plot.chain_structure()}, \code{print.chain_structure()}, \code{summary.chain_structure()} and \code{summary.chain_structure_group()}: Ignored. In \code{print.chain_structure_group()}: Forwarded to \code{print.chain_structure}. In \code{print.summary_chain_structure()}: Forwarded to \code{print.data.frame}.}
 
 \item{show_values}{Logical. If \code{TRUE} (default), prints the numeric probability inside each cell. Set \code{FALSE} for large state spaces (n > 10) where labels overlap.}
 
@@ -115,6 +115,18 @@ distribution is unique and meaningful. Use \code{is_regular} to check.
 The fundamental-matrix absorption math follows Kemeny & Snell (1976);
 the hitting-probability linear system follows Norris (1997).
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.chain_structure()}: Renders the hitting-probability matrix as a heatmap, with rows and columns ordered by communicating class so the block structure is visible at a glance. State labels along both axes are coloured by classification (absorbing / recurrent / transient). The subtitle summarises the chain-level properties (regular, reversible).
+\item \code{print.chain_structure()}: Prints a compact chain-level header. For the full per-state table, call \code{summary()} on the same object.
+\item \code{print.chain_structure_group()}: One header line per group, followed by each group's per-state table (via \code{summary.chain_structure}).
+\item \code{print.summary_chain_structure()}: Prints a one-line chain header followed by the tidy per-state table.
+\item \code{summary.chain_structure()}: Returns a single data.frame with one row per state, combining every per-state metric \code{chain_structure()} computes. Always includes \code{state}, \code{classification}, \code{period}, \code{persistence} (the diagonal of the transition matrix), \code{return_probability} (the diagonal of the hitting matrix) and \code{sojourn_steps} (\code{1 / (1 - persistence)}, which is \code{Inf} for an absorbing state). Adds the chain's \code{stationary_probability} when the chain is irreducible, and absorption columns when it has any absorbing states: \code{absorption_probability} for a single absorbing state or one \verb{absorbed_in_<state>} column per state when there are several, plus \code{mean_absorption_time}.
+\item \code{summary.chain_structure_group()}: Produces a single tidy data.frame with one row per (group, state) combination, combining classification, persistence, sojourn, and -- when applicable -- stationary or mean-absorption-time columns. Useful for side-by-side reporting of \code{chain_structure()} across the members of a \code{netobject_group}.
+}
+}
+
 \section{Plot colours}{
 
 Cell colour encodes \verb{P(ever reach j | start at i)}. The diagonal

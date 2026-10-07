@@ -476,7 +476,7 @@ centrality_stability <- function(x,
 # ---- S3 Methods ----
 
 #' @rdname centrality_stability
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_stability()}, \code{print.net_stability()}, \code{print.net_stability_group()}, \code{summary.net_stability()} and \code{summary.net_stability_group()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_stability_group} or \code{net_stability}.
 #' @return In \code{print.net_stability()}: The input object, invisibly.
 #' @return In \code{print.net_stability_group()}: The input `x` invisibly.
@@ -544,6 +544,10 @@ summary.net_stability <- function(object, ...) {
 
 
 #' @rdname centrality_stability
+#' @section Methods:
+#' * \code{plot.net_stability()}: Plots mean correlation vs drop proportion for each centrality measure. The CS-coefficient is marked where the curve crosses the threshold.
+#' * \code{summary.net_stability()}: Returns the mean correlation at each drop proportion for each measure.
+#' * \code{summary.net_stability_group()}: Per-network stability as a tidy data frame. Stacks \code{summary()} results for each network with a \code{group} column.
 #' @export
 plot.net_stability <- function(x, ...) {
   summ <- summary(x)

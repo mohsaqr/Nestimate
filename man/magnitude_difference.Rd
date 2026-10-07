@@ -46,7 +46,7 @@ raw weights.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{magnitude_difference}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.magnitude_difference()}: Ignored. In \code{print.magnitude_difference()}: Passed to plotting helpers (ignored by \code{print}).}
 
 \item{type}{Plot style, \code{"stacked"} (default) or \code{"circular"}.}
 

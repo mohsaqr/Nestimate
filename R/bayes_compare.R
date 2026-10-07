@@ -550,7 +550,7 @@ bayes_compare <- function(x, y = NULL,
 # ---- S3 Methods ----
 
 #' @rdname bayes_compare
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_bayes()}: Additional arguments passed to \code{cograph::splot()} when cograph is available. In \code{print.net_bayes()}, \code{print.net_bayes_group()}, \code{summary.net_bayes()} and \code{summary.net_bayes_group()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_bayes} or \code{net_bayes_group}.
 #' @param significant_only Logical. Show only credibly-different edges (default \code{TRUE}).
 #' @param title Optional plot title.
@@ -591,6 +591,8 @@ summary.net_bayes <- function(object, ...) {
 
 
 #' @rdname bayes_compare
+#' @section Methods:
+#' * \code{plot.net_bayes()}: Draws a differential transition network as a directed chord diagram. Edge colour encodes the signed posterior mean difference (\code{x} stronger vs \code{y} stronger) and edge width its magnitude.
 #' @export
 plot.net_bayes <- function(x, significant_only = TRUE, title = NULL, ...) {
   if (requireNamespace("cograph", quietly = TRUE)) {

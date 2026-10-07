@@ -35,7 +35,7 @@ to 1 are normalised automatically (with a warning).}
 
 \item{digits}{Integer. Digits to round numeric output. Default \code{3}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods. In \code{print.net_transition_entropy_group()}: Forwarded to \code{print.net_transition_entropy}.}
+\item{...}{In \code{plot.net_transition_entropy()}, \code{print.net_transition_entropy()}, \code{print.summary.net_transition_entropy()} and \code{summary.net_transition_entropy()}: Ignored. In \code{print.net_transition_entropy_group()}: Forwarded to \code{print.net_transition_entropy}.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_transition_entropy}.}
 
@@ -109,6 +109,14 @@ The relation \eqn{h(P) \leq H(\pi)} holds with equality iff successive
 states are independent. The deficit \eqn{H(\pi) - h(P)} is reported as
 \code{redundancy} - a measure of how much memory the chain has at order 1.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_transition_entropy()}: Bar chart of per-state row entropy with overlaid horizontal lines at the entropy rate \eqn{h(P)} (chain-level summary) and the maximum row entropy \eqn{\log_b n} (uniform branching). Bar widths are proportional to the stationary probability so the visual area sums to the entropy rate.
+\item \code{summary.net_transition_entropy()}: Returns a tidy per-state contribution table sorted by share of the chain-level entropy rate (largest first), so the dominant contributors to \eqn{h(P)} are visible at a glance. Each row contains the stationary mass, the raw and normalised row entropy, the additive contribution \eqn{\pi_i H(P_{i\cdot})}, and that contribution as a percentage of \eqn{h(P)}.
+}
+}
+
 \examples{
 net <- build_network(as.data.frame(trajectories), method = "relative")
 te  <- transition_entropy(net)

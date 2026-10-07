@@ -372,7 +372,7 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
 
 #' @rdname build_hypa
 #' @param x For the \code{print()} method: an object of class \code{net_hypa}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.net_hypa()} and \code{summary.net_hypa()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_hypa}.
 #' @param n Integer. Maximum number of paths to display per category (default: 10).
 #' @param type Character. Which anomalies to show: \code{"all"} (default), \code{"over"}, or \code{"under"}.

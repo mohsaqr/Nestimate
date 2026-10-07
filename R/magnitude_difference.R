@@ -186,7 +186,7 @@ magnitude_difference <- function(data, actor = "Actor", action = "Action",
 
 #' @rdname magnitude_difference
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{magnitude_difference}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.magnitude_difference()}: Ignored. In \code{print.magnitude_difference()}: Passed to plotting helpers (ignored by `print`).
 #' @param type Plot style, `"stacked"` (default) or `"circular"`.
 #' @param min_show For `type = "circular"`, drop edges whose magnitude is below this fraction of the maximum.
 #' @param title Plot title. `NULL` generates one from the metric and scale.

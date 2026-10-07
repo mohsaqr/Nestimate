@@ -51,7 +51,7 @@ in the filtration. \code{NULL} (default) uses \code{max(d)}.}
 
 \item{...}{Additional arguments passed to \code{build_hon()} when
 \code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.
-For the S3 methods: further arguments passed to or from other methods.}
+In \code{plot.simplicial_complex()}: Ignored. In \code{print.simplicial_complex()}: Additional arguments (unused).}
 
 \item{combined}{When \code{TRUE} (default), the four panels are stitched into a 2x2 gtable via \code{gridExtra::arrangeGrob} and drawn. When \code{FALSE}, returns a named list of the four ggplots (\code{f_vector}, \code{betti}, \code{degree}, \code{degree_heatmap}) so each can be printed, saved, or re-laid-out independently.}
 }
@@ -104,6 +104,13 @@ filtration diameter; edges with \code{d(i,j) > max_scale} are excluded.
 Filtration values are attached as \code{$filtration} on the returned
 object so \code{persistent_homology()} can read them directly.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.simplicial_complex()}: Produces a four-panel summary: f-vector, Betti numbers, simplicial degree ranking, and degree-by-dimension heatmap.
+}
+}
+
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")

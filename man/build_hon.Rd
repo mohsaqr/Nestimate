@@ -49,7 +49,7 @@ building).}
 
 \item{x}{For the \code{print()} method: an object of class \code{net_hon}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_hon()} and \code{summary.net_hon()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_hon}.}
 }

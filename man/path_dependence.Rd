@@ -36,7 +36,7 @@ Default 5. Very small samples produce noisy KL estimates.}
 
 \item{digits}{Integer. Digits to round numeric output. Default 3.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_path_dependence()}, \code{print.net_path_dependence()}, \code{print.summary.net_path_dependence()} and \code{summary.net_path_dependence()}: Ignored.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_path_dependence}.}
 
@@ -106,6 +106,13 @@ Pair this with \code{\link{markov_order_test}} (which decides whether
 order-k is needed \emph{globally}) to see the chain-level decision broken
 down per context.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_path_dependence()}: Lollipop chart of per-context KL divergence, sorted descending. Point size is proportional to context count; points where the modal next state flips between orders are marked with an X to highlight substantively meaningful order-2 effects.
+}
+}
+
 \examples{
 data(trajectories, package = "Nestimate")
 pd <- path_dependence(as.data.frame(trajectories), order = 2)

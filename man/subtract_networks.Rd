@@ -11,11 +11,12 @@ subtract_networks(x, y)
 }
 \arguments{
 \item{x, y}{A \code{netobject}, \code{cograph_network}, or numeric square
-matrix. Both must share the same nodes in the same order.}
+matrix. Both must share the same nodes in the same order. For the
+\code{print()} method, \code{x} is the \code{netdifference} object.}
 
 \item{max_print}{Integer. Rows to show in \code{print()}. Default \code{12}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.netdifference()}: Ignored.}
 }
 \value{
 A \code{netdifference} object: a \code{netobject} whose

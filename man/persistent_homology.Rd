@@ -39,7 +39,7 @@ or \code{"vr"} (Vietoris-Rips on distances).}
 with \code{d(i,j) > max_scale} are excluded. \code{NULL} (default)
 uses \code{max(d)}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.persistent_homology()}: Ignored. In \code{print.persistent_homology()}: Additional arguments (unused).}
 
 \item{combined}{When \code{TRUE} (default), the two panels are stitched side-by-side via \code{gridExtra::arrangeGrob}. When \code{FALSE}, returns a named list (\code{betti_curve}, \code{persistence}) of ggplots.}
 }
@@ -84,6 +84,13 @@ value is \eqn{\max_{(i,j) \in \sigma}\,d(i,j)}. Thresholds run low
 to high. Use \code{max_scale} to cap the filtration diameter.}
 }
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.persistent_homology()}: Two panels: Betti curve (threshold vs Betti number) and persistence diagram (birth vs death). Persistence pairs come from full boundary- matrix reduction; essential classes are shown at the filtration boundary (\code{death = 0} in clique mode; in VR mode their stored \code{death = Inf} is capped for display at the largest finite value in the diagram or on the threshold grid, so they still render).
+}
+}
+
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")

@@ -324,7 +324,7 @@ centrality <- function(x, ...) {
 #' @param centrality_fn Optional function. Custom centrality function that
 #'   takes a weight matrix and returns a named list of centrality vectors.
 #' @param ... Additional arguments (ignored).
-#' For the S3 methods: further arguments passed to or from other methods.
+#' In \code{plot.net_centrality()} and \code{plot.net_centrality_group()}: Additional arguments ignored.
 #' @return For a \code{netobject} or \code{cograph_network}: a
 #'   \code{net_centrality} data frame, one row per node, with a \code{state}
 #'   column and one further column per requested measure (node names are also
@@ -887,12 +887,12 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
 #' an asymmetric betweenness matrix; an undirected (symmetric) network
 #' yields a symmetric one.
 #'
-#' @param x A \code{netobject} or \code{netobject_group}. For the \code{net_edge_betweenness()} and \code{plot()} methods: an object of class \code{netobject}, \code{netobject_group}, \code{default} or \code{net_edge_betweenness}.
+#' @param x A \code{netobject} or \code{netobject_group}. For the \code{plot()} method: an object of class \code{net_edge_betweenness}.
 #' @param invert Logical. Invert weights to distances by \code{1/w} before
 #'   computing shortest paths? Default \code{TRUE} (correct for probability
 #'   and frequency networks).
 #' @param ... Additional arguments (ignored).
-#' For the S3 methods: further arguments passed to or from other methods.
+#' In \code{plot.net_edge_betweenness()}: Additional arguments (ignored).
 #' @return For a \code{netobject}: a new network of class
 #'   \code{c("net_edge_betweenness", "netobject", "cograph_network")} whose
 #'   \code{$weights} are the edge-betweenness scores, with
@@ -961,6 +961,8 @@ net_edge_betweenness.default <- function(x, invert = TRUE, ...) {
 }
 
 #' @rdname net_edge_betweenness
+#' @section Methods:
+#' * \code{plot.net_edge_betweenness()}: Draws the edges of a \code{\link{net_edge_betweenness}} network ranked by their betweenness, as a horizontal bar chart. This is the tidy, cograph-free companion to the node-link diagram: render the diagram with \code{cograph::splot(eb)} and the ranking with \code{plot(eb)}.
 #' @param style Plot style. \code{"bar"} (default) draws one horizontal bar per edge; \code{"forest"} draws a forest/lollipop chart (a stem from zero to a point) with a dashed reference line at the mean betweenness; \code{"delta"} draws each edge's deviation from the mean edge betweenness as a diverging bar (above the mean in blue, below in red).
 #' @param top_n Integer or \code{NULL}. Keep only the \code{top_n} highest edges. Default \code{NULL} (all edges with non-zero betweenness).
 #' @param labels Logical. Print the betweenness value beside each edge. Default \code{TRUE}.

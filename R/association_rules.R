@@ -520,7 +520,7 @@ association_rules <- function(x,
 # ---- S3 Methods ----
 
 #' @rdname association_rules
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_association_rules()}: Additional arguments passed to \code{ggplot2} functions. In \code{print.net_association_rules()} and \code{summary.net_association_rules()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_association_rules}.
 #' @return In \code{print.net_association_rules()}: The input object, invisibly.
 #' @return In \code{summary.net_association_rules()}: The tidy rules data frame: one row per rule, with columns \code{antecedent}, \code{consequent}, \code{support}, \code{confidence}, \code{lift}, \code{conviction}, \code{count} and \code{n_transactions}.
@@ -558,6 +558,8 @@ summary.net_association_rules <- function(object, ...) {
 
 
 #' @rdname association_rules
+#' @section Methods:
+#' * \code{plot.net_association_rules()}: Scatter plot of association rules: support vs confidence, with point size proportional to lift.
 #' @import ggplot2
 #' @export
 plot.net_association_rules <- function(x, ...) {

@@ -392,7 +392,7 @@ test_that("Ising: bootstrap_network runs without error", {
   expect_s3_class(boot, "net_bootstrap")
 })
 
-# ---- Equivalence with IsingFit ----
+# ---- Integration with permutation ----
 
 test_that("Ising: permutation runs without error", {
   skip_if_not_installed("glmnet")

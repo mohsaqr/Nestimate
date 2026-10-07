@@ -47,7 +47,7 @@ square numeric matrices, or one unnamed \code{list} of these. Name the
 arguments to name the networks (\code{compare_networks(early = a, late = b)}).
 For \code{plot()}: passed to \code{cograph::splot()} for the network views (e.g.
 \code{layout}, \code{node_size}, \code{minimum}); ignored by the other views and by
-\code{print()}. For the S3 methods: further arguments passed to or from other methods. In \code{plot.net_network_comparison()}: For \code{compare_networks()}: two or more networks, in any mix of: \code{netobject}, \code{netobject_group} (members are flattened and keep their names), \code{cograph_network} / \code{psychnet}, \code{mcml}, \code{tna}, \code{group_tna}, square numeric matrices, or one unnamed \code{list} of these. Name the arguments to name the networks (\code{compare_networks(early = a, late = b)}). For \code{plot()}: passed to \code{cograph::splot()} for the network views (e.g. \code{layout}, \code{node_size}, \code{minimum}); ignored by the other views and by \code{print()}.}
+\code{print()}.}
 
 \item{reference}{\code{NULL} (default) compares all pairs. A single network name
 or index compares every other network against that one; the reference is
@@ -69,7 +69,7 @@ Unknown names are dropped with a warning.}
 the networks (one per network after flattening groups); overrides
 argument names. For \code{plot()}: logical; print the signed difference on
 the edge and node views, default \code{TRUE} (the heatmap always shows its
-values). In \code{plot.net_network_comparison()}: For \code{compare_networks()}: optional character vector naming the networks (one per network after flattening groups); overrides argument names. For \code{plot()}: logical; print the signed difference on the edge and node views, default \code{TRUE} (the heatmap always shows its values).}
+values).}
 
 \item{test}{Character vector of inference backends, any of \code{"none"}
 (default), \code{"permutation"}, \code{"bayes"}, \code{"bootstrap"}. Several may be

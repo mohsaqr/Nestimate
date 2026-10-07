@@ -46,7 +46,7 @@ Default: \code{FALSE}.}
 If NULL, auto-computed as \code{0.9 / spectral_radius(A)}.
 Default: \code{NULL}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_link_prediction()} and \code{summary.net_link_prediction()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_link_prediction}.}
 }

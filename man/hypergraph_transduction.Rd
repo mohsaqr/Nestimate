@@ -46,7 +46,7 @@ initial labels.}
 
 \item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_transduction}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{as.data.frame.net_hypergraph_transduction()}, \code{plot.net_hypergraph_transduction()}, \code{print.net_hypergraph_transduction()} and \code{summary.net_hypergraph_transduction()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph_transduction}.}
 
@@ -85,6 +85,13 @@ ancestor of hypergraph-attention text classifiers: with documents as
 hyperedges over words (or vice versa) it classifies unlabeled nodes from
 a handful of labeled ones.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_hypergraph_transduction()}: Heatmap of the full node-by-class score matrix: rows are nodes (grouped by predicted class), columns are classes, tile shading and printed values are the spreading scores. Seed nodes (given labels) carry a black tile border, and each node's winning class is marked with a dot, so agreement between seeds, scores, and decisions is visible in one panel. Rows whose winning and runner-up scores are close (small \code{margin}) are the assignments to distrust.
+}
+}
+
 \examples{
 events <- data.frame(
   person = c("a", "b", "c", "a", "b", "c", "d", "e", "f",

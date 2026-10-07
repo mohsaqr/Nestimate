@@ -316,7 +316,7 @@ effects_table <- function(x, intercept = FALSE, significant = FALSE,
 
 #' @rdname outcome_model
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_outcome_model}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_outcome_model()} and \code{summary.net_outcome_model()}: Ignored. In \code{print.net_outcome_model()}: Unused.
 #' @param object For the \code{summary()} method: an object of class \code{net_outcome_model}.
 #' @return In \code{print.net_outcome_model()}: \code{print} returns its input invisibly.
 #' @return In \code{summary.net_outcome_model()}: \code{summary} returns the tidy effect table.

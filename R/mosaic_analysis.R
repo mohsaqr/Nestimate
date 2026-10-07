@@ -61,7 +61,7 @@
 #'   ColorBrewer RdBu ramp by default (override with \code{palette}). Column
 #'   labels auto-rotate to vertical when there are more than 6 columns; pass
 #'   \code{col_label_angle} to force an angle.
-#' For the S3 methods: further arguments passed to or from other methods. In \code{plot.mosaic_analysis()}: Styling overrides forwarded to the flat renderer.
+#' In \code{plot.mosaic_analysis()}: Styling overrides forwarded to the flat renderer. In \code{print.mosaic_analysis()} and \code{summary.mosaic_analysis()}: Ignored.
 #' @return An object of class \code{"mosaic_analysis"}: a list with
 #' \describe{
 #'   \item{plot}{The flat mosaic \code{ggplot} object.}
@@ -226,6 +226,8 @@ mosaic_analysis <- function(data, var1, var2, min_count = 10L,
 
 
 #' @rdname mosaic_analysis
+#' @section Methods:
+#' * \code{plot.mosaic_analysis()}: Re-renders the flat mosaic from the stored contingency table and residuals, so styling can be changed without re-running the test. Any flat-mosaic styling argument (\code{tile_label}, \code{pct_base}, \code{col_label_side}, \code{legend_size}, ...) may be overridden via \code{...}.
 #' @param x For the \code{plot()} and \code{print()} methods: an object of class \code{mosaic_analysis}.
 #' @param object For the \code{summary()} method: an object of class \code{mosaic_analysis}.
 #' @return In \code{plot.mosaic_analysis()}: The re-rendered flat mosaic \code{ggplot} object, invisibly; the plot is drawn on the active device as a side effect.

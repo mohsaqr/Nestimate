@@ -429,7 +429,7 @@ test_that("print shows generic label for unknown method", {
 })
 
 
-# ---- Cross-validation against tna::bootstrap ----
+# ---- Dispatch and grouped output ----
 
 test_that("bootstrap_network dispatches for wtna_mixed (L83-95)", {
   set.seed(1)

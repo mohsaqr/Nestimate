@@ -315,7 +315,7 @@ vertex_bootstrap <- function(x,
 
 #' @rdname vertex_bootstrap
 #' @param digits Number of digits to display (default 3).
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_vertex_bootstrap()}, \code{print.net_vertex_bootstrap()} and \code{summary.net_vertex_bootstrap()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_vertex_bootstrap}.
 #' @param bins Number of histogram bins (default 30).
 #' @return In \code{print.net_vertex_bootstrap()}: \code{x}, invisibly.
@@ -344,6 +344,8 @@ summary.net_vertex_bootstrap <- function(object, ...) {
 
 
 #' @rdname vertex_bootstrap
+#' @section Methods:
+#' * \code{plot.net_vertex_bootstrap()}: Histogram of the bootstrap distribution per statistic, with the observed value (solid line) and confidence bounds (dashed lines).
 #' @export
 plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
   long <- data.frame(
@@ -522,7 +524,7 @@ vertex_compare <- function(x, y,
 
 #' @rdname vertex_compare
 #' @param digits Number of digits to display (default 3).
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_vertex_comparison()}, \code{print.net_vertex_comparison()} and \code{summary.net_vertex_comparison()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_vertex_comparison}.
 #' @return In \code{print.net_vertex_comparison()}: \code{x}, invisibly.
 #' @return In \code{summary.net_vertex_comparison()}: The tidy summary data frame (one row per statistic).
@@ -554,6 +556,8 @@ summary.net_vertex_comparison <- function(object, ...) {
 
 
 #' @rdname vertex_compare
+#' @section Methods:
+#' * \code{plot.net_vertex_comparison()}: Forest plot of the statistic differences with normal-approximation confidence intervals; differences whose interval excludes zero are the statistically distinguishable ones.
 #' @export
 plot.net_vertex_comparison <- function(x, ...) {
   df <- x$summary

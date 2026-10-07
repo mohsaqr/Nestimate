@@ -58,7 +58,7 @@ trajectories (e.g. condition, achievement level).}
 
 \item{digits}{Integer. Digits to round numeric output. Default \code{3}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_entropy_trajectory()}, \code{print.net_entropy_trajectory()} and \code{summary.net_entropy_trajectory()}: Ignored.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_entropy_trajectory}.}
 
@@ -111,6 +111,13 @@ Windows shorter than \code{window} at the tail are dropped; if the whole
 stream is shorter than \code{window}, one window covering everything is
 returned with a warning.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_entropy_trajectory()}: Raw per-window entropy as faint lines with a loess-smoothed trend per group, Okabe-Ito coloured. Declining trend = routinization; level shifts = phase changes.
+}
+}
+
 \examples{
 tr <- entropy_trajectory(group_regulation_long,
                          action = "Action", actor = "Actor",

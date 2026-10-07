@@ -271,7 +271,7 @@ path_dependence <- function(x, order = 2L, min_count = 5L, base = 2) {
 #' @rdname path_dependence
 #' @param top In \code{print.net_path_dependence()}: Integer. Number of top contexts to show. Default 10. In \code{plot.net_path_dependence()}: Integer. Number of contexts to show (top by KL). Default 15.
 #' @param digits Integer. Digits to round numeric output. Default 3.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_path_dependence()}, \code{print.net_path_dependence()}, \code{print.summary.net_path_dependence()} and \code{summary.net_path_dependence()}: Ignored.
 #' @param object For the \code{summary()} method: an object of class \code{net_path_dependence}.
 #' @param title Character or `NULL`. Plot title. Default `NULL`, which builds "Path dependence: order k vs order 1" from the fitted order.
 #' @return In \code{print.net_path_dependence()} and \code{print.summary.net_path_dependence()}: `x` invisibly.
@@ -354,6 +354,8 @@ print.summary.net_path_dependence <- function(x, digits = 3L, ...) {
 
 
 #' @rdname path_dependence
+#' @section Methods:
+#' * \code{plot.net_path_dependence()}: Lollipop chart of per-context KL divergence, sorted descending. Point size is proportional to context count; points where the modal next state flips between orders are marked with an X to highlight substantively meaningful order-2 effects.
 #' @export
 plot.net_path_dependence <- function(x,
                                      top = 15L,

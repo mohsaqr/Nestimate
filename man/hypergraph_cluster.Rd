@@ -38,7 +38,7 @@ hypergraph_cluster(
 
 \item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_cluster}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{as.data.frame.net_hypergraph_cluster()}, \code{plot.net_hypergraph_cluster()}, \code{print.net_hypergraph_cluster()} and \code{summary.net_hypergraph_cluster()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph_cluster}.}
 
@@ -84,6 +84,13 @@ edge-independent weights the walk collapses to a graph random walk
 k-means is stochastic: \code{nstart} restarts are used and a \code{seed} fixes
 the result. Report stability across seeds for consequential results.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_hypergraph_cluster()}: Two diagnostic panels. \code{"spectrum"}: scree plot of the Laplacian spectrum with the k used for clustering marked - the eigengap after k supports (or questions) the choice of k. \code{"embedding"}: the nodes in the first two spectral-embedding dimensions, labelled, coloured and shaped by cluster, sized by stationary probability - the geometry k-means actually clustered. \code{"both"} (default) arranges the two side by side (via gridExtra when available, base grid viewports otherwise).
+}
+}
+
 \examples{
 events <- data.frame(
   person = c("a", "b", "c", "a", "b", "c", "d", "e", "f",

@@ -46,7 +46,7 @@ Default \code{TRUE}.}
 
 \item{x}{For the \code{print()} method: an object of class \code{net_nct}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_nct()} and \code{summary.net_nct()}: Ignored.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_nct}.}
 }
@@ -90,6 +90,13 @@ Fortran one NCT wraps, so results agree to independent-solver precision
 (of the order of \code{1e-4} on the test statistics) rather than
 bit-for-bit, even under the same seed.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{summary.net_nct()}: Returns a tidy data frame with one row per edge test. The global M (strength) and S (structure) statistics are attached as attributes.
+}
+}
+
 \examples{
 set.seed(1)
 x1 <- matrix(rnorm(100 * 4), 100, 4)

@@ -1880,7 +1880,9 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #' @param x A \code{netobject}, \code{netobject_group}, \code{mcml}, or
 #'   \code{htna} object. For the \code{print()}, \code{plot()} and
 #'   \code{as.data.frame()} methods: the \code{state_freq} object returned by
-#'   \code{plot_state_frequencies()}.
+#'   \code{plot_state_frequencies()}; for the \code{print()} methods of the
+#'   per-facet figure, an object of class \code{nestimate_facet_plot} or
+#'   \code{nestimate_facet_list}.
 #' @param style One of:
 #'   \itemize{
 #'     \item \code{"marimekko"} (default) -- per-group treemap panels with
@@ -1955,8 +1957,10 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #' @param ncol For \code{legend = "per_facet"} with \code{combine = TRUE}:
 #'   number of columns in the grid arrangement. \code{NULL} (default)
 #'   picks 1, 2, or 3 columns based on the number of panels.
-#' @param ... Reserved for future use. For the S3 methods: further arguments
-#'   passed to or from other methods.
+#' @param ... Reserved for future use. In \code{as.data.frame.state_freq()},
+#'   \code{plot.state_freq()}, \code{print.state_freq()},
+#'   \code{print.nestimate_facet_list()} and \code{print.nestimate_facet_plot()}:
+#'   ignored.
 #'
 #' @return A \code{state_freq} object: a list with the rendered \code{$plot}
 #'   (a \code{ggplot}; a \code{gtable} or a list of ggplots under
@@ -1980,6 +1984,7 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #'   plot(res)             # ggplot chart
 #'   head(as.data.frame(res))
 #' }
+#' @order 1
 #' @export
 plot_state_frequencies <- function(x, ...) {
   UseMethod("plot_state_frequencies")

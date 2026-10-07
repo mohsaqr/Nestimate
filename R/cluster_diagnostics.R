@@ -49,7 +49,7 @@
 #' @param x A \code{net_clustering}, \code{net_mmm}, \code{netobject_group}
 #'   (with \code{attr(, "clustering")} attached by \code{cluster_network()}
 #'   or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}. For the \code{print()}, \code{plot()} and \code{as.data.frame()} methods: an object of class \code{net_cluster_diagnostics}.
-#' @param ... Unsupported. Supplying unused arguments raises an error. For the S3 methods: further arguments passed to or from other methods. In \code{plot.net_cluster_diagnostics()}: Forwarded to the underlying plot method.
+#' @param ... Unsupported. Supplying unused arguments raises an error. In \code{as.data.frame.net_cluster_diagnostics()} and \code{print.net_cluster_diagnostics()}: Unsupported. Supplying unused arguments raises an error. In \code{plot.net_cluster_diagnostics()}: Forwarded to the underlying plot method.
 #' @return \code{cluster_diagnostics()} returns a
 #'   \code{net_cluster_diagnostics} object: a list carrying
 #'   \code{family}, \code{k}, \code{n}, \code{sizes}, the
@@ -375,6 +375,9 @@ print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname cluster_diagnostics
+#' @section Methods:
+#' * \code{plot.net_cluster_diagnostics()}: Delegates to the original clustering object's plot method (\code{\link{plot.net_clustering}} for distance-based diagnostics, \code{\link{plot.net_mmm_clustering}} or \code{\link{plot.net_mmm}} for model-based). The diagnostics object itself stores no plot geometry -- it just keeps a reference to the source so the existing visual layer is reused.
+#' * \code{print.net_cluster_diagnostics()}: Prints a uniform header, family-specific quality / IC line, and a per-cluster table. Layout matches \code{\link{print.net_clustering}} and \code{\link{print.net_mmm}}.
 #' @export
 plot.net_cluster_diagnostics <- function(x, type = NULL, ...) {
   if (is.null(type)) {

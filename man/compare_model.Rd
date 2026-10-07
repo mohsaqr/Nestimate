@@ -64,7 +64,7 @@ compare_model(x, ...)
 \code{print()} and \code{plot()} methods: an object of class
 \code{net_comparison}.}
 
-\item{...}{Ignored. For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{Ignored. In \code{plot.net_comparison()} and \code{print.net_comparison()}: Ignored.}
 
 \item{y}{A \code{netobject}, \code{cograph_network}, or numeric square matrix.}
 
@@ -116,6 +116,8 @@ A \code{net_comparison} object: a named list with \code{matrices},
 \code{difference_matrix}, \code{edge_metrics}, \code{summary_metrics}, optionally
 \code{network_metrics}, \code{centrality_differences}, \code{centrality_correlations}.
 
+In \code{print.net_comparison()}: \code{x}, invisibly.
+
 In \code{plot.net_comparison()}: A \code{ggplot} object; for \code{type = "all"} with \code{combined = TRUE} a \code{gtable} arranged 2 by 2; for \code{type = "all"} with \code{combined = FALSE} a named list of four ggplots.
 }
 \description{
@@ -134,6 +136,14 @@ Mirrors \code{tna::compare()} numerically. Inputs are converted to weight
 matrices and scaled before comparison; the choice of scaling determines
 how weights from different estimators are placed on a common footing.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{compare_model.netobject_group()}: Selects two members of a \code{netobject_group} (by index or name) and dispatches to \code{compare_model.netobject()}. See also \code{\link{compare_networks}}, the N-way successor with tidy tables and a \code{plot()} that draws one view per call.
+\item \code{plot.net_comparison()}: Visualises a \code{net_comparison} object. Currently supports the edge-weight scatterplot (default), with the diagonal reference (perfect agreement) and the OLS regression line annotated by Pearson, Spearman, and Kendall correlations.
+}
+}
+
 \examples{
 nets <- build_network(group_regulation_long, method = "relative",
                       actor = "Actor", action = "Action", time = "Time",

@@ -19,14 +19,14 @@ net_edge_betweenness(x, invert = TRUE, ...)
 \method{plot}{net_edge_betweenness}(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} or \code{netobject_group}. For the \code{net_edge_betweenness()} and \code{plot()} methods: an object of class \code{netobject}, \code{netobject_group}, \code{default} or \code{net_edge_betweenness}.}
+\item{x}{A \code{netobject} or \code{netobject_group}. For the \code{plot()} method: an object of class \code{net_edge_betweenness}.}
 
 \item{invert}{Logical. Invert weights to distances by \code{1/w} before
 computing shortest paths? Default \code{TRUE} (correct for probability
 and frequency networks).}
 
 \item{...}{Additional arguments (ignored).
-For the S3 methods: further arguments passed to or from other methods.}
+In \code{plot.net_edge_betweenness()}: Additional arguments (ignored).}
 
 \item{style}{Plot style. \code{"bar"} (default) draws one horizontal bar per edge; \code{"forest"} draws a forest/lollipop chart (a stem from zero to a point) with a dashed reference line at the mean betweenness; \code{"delta"} draws each edge's deviation from the mean edge betweenness as a diverging bar (above the mean in blue, below in red).}
 
@@ -67,6 +67,13 @@ Directedness is taken from the network itself. A directed network yields
 an asymmetric betweenness matrix; an undirected (symmetric) network
 yields a symmetric one.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_edge_betweenness()}: Draws the edges of a \code{\link{net_edge_betweenness}} network ranked by their betweenness, as a horizontal bar chart. This is the tidy, cograph-free companion to the node-link diagram: render the diagram with \code{cograph::splot(eb)} and the ranking with \code{plot(eb)}.
+}
+}
+
 \examples{
 seqs <- data.frame(
   V1 = c("A","B","A","C"), V2 = c("B","C","B","A"),

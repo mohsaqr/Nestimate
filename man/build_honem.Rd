@@ -28,7 +28,7 @@ returned \code{dim} component.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_honem}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_honem()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_honem()} and \code{summary.net_honem()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_honem}.}
 

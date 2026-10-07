@@ -52,7 +52,7 @@ at least 1\% of process entropy).}
 
 \item{digits}{Integer. Digits to round numeric output. Default \code{3}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_entropy_bayes()}, \code{print.net_entropy_bayes()}, \code{print.net_entropy_bayes_group()} and \code{summary.net_entropy_bayes()}: Ignored.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_entropy_bayes}.}
 
@@ -119,6 +119,13 @@ The posterior mean entropy rate is typically slightly below the plug-in
 estimate on sparse data (Dirichlet smoothing pulls rows toward uniform
 but averages over uncertainty); the difference vanishes as counts grow.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_entropy_bayes()}: Forest plot of the per-edge entropy contributions: posterior mean and credible interval, credible edges in Okabe-Ito blue, unstable (non-credible) edges in grey. The dashed line marks \code{min_share} of the posterior-mean entropy rate - the stability criterion.
+}
+}
+
 \examples{
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time")

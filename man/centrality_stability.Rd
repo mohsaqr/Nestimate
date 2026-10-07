@@ -95,7 +95,7 @@ when \code{normalize = FALSE}. Default: \code{TRUE}.}
 
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_stability()}, \code{print.net_stability()}, \code{print.net_stability_group()}, \code{summary.net_stability()} and \code{summary.net_stability_group()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_stability_group} or \code{net_stability}.}
 }
@@ -151,6 +151,15 @@ For transition methods, uses pre-computed per-sequence count matrices
 for fast resampling. Strength centralities (InStrength, OutStrength)
 are computed directly from the matrix without igraph.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_stability()}: Plots mean correlation vs drop proportion for each centrality measure. The CS-coefficient is marked where the curve crosses the threshold.
+\item \code{summary.net_stability()}: Returns the mean correlation at each drop proportion for each measure.
+\item \code{summary.net_stability_group()}: Per-network stability as a tidy data frame. Stacks \code{summary()} results for each network with a \code{group} column.
+}
+}
+
 \examples{
 seqs <- data.frame(
   T1 = c("plan", "code", "debug", "plan", "test", "code"),

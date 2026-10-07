@@ -62,7 +62,7 @@
 #'   with a warning.
 #' @param network Logical. Include side-by-side network metrics from
 #'   `summary()`? Default `TRUE`.
-#' @param ... Ignored. For the S3 methods: further arguments passed to or from other methods.
+#' @param ... Ignored. In \code{plot.net_comparison()} and \code{print.net_comparison()}: Ignored.
 #' @return A `net_comparison` object: a named list with `matrices`,
 #'   `difference_matrix`, `edge_metrics`, `summary_metrics`, optionally
 #'   `network_metrics`, `centrality_differences`, `centrality_correlations`.
@@ -97,6 +97,9 @@ compare_model.matrix <- function(x, y, scaling = "none", measures = character(0)
 }
 
 #' @rdname compare_model
+#' @section Methods:
+#' * \code{compare_model.netobject_group()}: Selects two members of a `netobject_group` (by index or name) and dispatches to `compare_model.netobject()`. See also \code{\link{compare_networks}}, the N-way successor with tidy tables and a \code{plot()} that draws one view per call.
+#' * \code{plot.net_comparison()}: Visualises a `net_comparison` object. Currently supports the edge-weight scatterplot (default), with the diagonal reference (perfect agreement) and the OLS regression line annotated by Pearson, Spearman, and Kendall correlations.
 #' @param i,j For a `netobject_group`: index or name of the two member
 #'   networks to compare. Defaults `1L` and `2L`.
 #' @export
@@ -475,6 +478,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 # ---- print method ----
 
 #' @rdname compare_model
+#' @return In \code{print.net_comparison()}: \code{x}, invisibly.
 #' @param type Character. One of `"scatter"` (default - edge-weight scatter with OLS fit and correlation overlay), `"heatmap"` (n by n grid of x - y differences using the diverging palette), `"diff_hist"` (histogram of |x - y| absolute differences with rug + density), `"weight_dist"` (overlaid distributions of |x| and |y| edge weights), or `"all"` (2 by 2 grid of all four panels; requires the gridExtra package).
 #' @param combined When `type = "all"` and `combined = TRUE` (default), the four panels are stitched into a 2x2 gtable. When `FALSE`, returns a named list of the four ggplots so each can be printed, saved, or re-laid-out independently. Ignored for other `type` values.
 #' @return In \code{plot.net_comparison()}: A `ggplot` object; for `type = "all"` with `combined = TRUE` a `gtable` arranged 2 by 2; for `type = "all"` with `combined = FALSE` a named list of four ggplots.

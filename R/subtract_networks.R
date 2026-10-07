@@ -8,7 +8,8 @@
 #' node palette.
 #'
 #' @param x,y A \code{netobject}, \code{cograph_network}, or numeric square
-#'   matrix. Both must share the same nodes in the same order.
+#'   matrix. Both must share the same nodes in the same order. For the
+#'   \code{print()} method, \code{x} is the \code{netdifference} object.
 #'
 #' @return A \code{netdifference} object: a \code{netobject} whose
 #'   \code{$weights} and \code{$difference_matrix} are \code{x - y}, carrying
@@ -114,7 +115,7 @@ as_netdifference.default <- function(x, ...) {
 
 #' @rdname subtract_networks
 #' @param max_print Integer. Rows to show in \code{print()}. Default \code{12}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.netdifference()}: Ignored.
 #' @export
 print.netdifference <- function(x, max_print = 12L, ...) {
   d <- x$weights

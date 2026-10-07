@@ -361,8 +361,8 @@ net_reprune.default <- function(x, ...) {
 #' one-row-per-edge data frame, with the method, cut-off, and retained/removed
 #' counts attached as attributes and shown by its print method.
 #'
-#' @param x A pruned \code{netobject} or \code{netobject_group}. For the \code{net_pruning_details()} and \code{print()} methods: an object of class \code{netobject}, \code{netobject_group}, \code{default} or \code{net_pruning_details}.
-#' @param ... Ignored. For the S3 methods: further arguments passed to or from other methods.
+#' @param x A pruned \code{netobject} or \code{netobject_group}. For the \code{print()} method: an object of class \code{net_pruning_details}.
+#' @param ... Ignored. In \code{print.net_pruning_details()}: Ignored.
 #' @return For a \code{netobject}: a \code{net_pruning_details} data frame
 #'   (columns \code{from}, \code{to}, \code{weight}) of removed edges. For a
 #'   \code{netobject_group}: a named list of such data frames.

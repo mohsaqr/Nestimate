@@ -79,7 +79,7 @@ return a named list (e.g., \code{list(my_metric = ...)}).}
 
 \item{seed}{Integer or NULL. RNG seed for reproducibility.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods. In \code{plot.boot_glasso()}: Additional arguments passed to plotting functions. For \code{type = "edge_diff"} and \code{type = "centrality_diff"}, accepts \code{order}: \code{"sample"} (default, sorted by value) or \code{"id"} (alphabetical).}
+\item{...}{In \code{plot.boot_glasso()}: Additional arguments passed to plotting functions. For \code{type = "edge_diff"} and \code{type = "centrality_diff"}, accepts \code{order}: \code{"sample"} (default, sorted by value) or \code{"id"} (alphabetical). In \code{print.boot_glasso()} and \code{summary.boot_glasso()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{boot_glasso}.}
 
@@ -147,6 +147,13 @@ analysis, edge/centrality difference tests, predictability CIs, and
 thresholded network into one function. Designed as a faster alternative
 to bootnet with richer output.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.boot_glasso()}: Plots bootstrap results for GLASSO networks.
+}
+}
+
 \examples{
 set.seed(1)
 dat <- as.data.frame(matrix(rnorm(60), ncol = 3))

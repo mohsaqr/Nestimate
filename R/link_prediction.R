@@ -503,7 +503,7 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 # ---- S3 Methods ----
 
 #' @rdname predict_links
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.net_link_prediction()} and \code{summary.net_link_prediction()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_link_prediction}.
 #' @return In \code{print.net_link_prediction()}: The input object, invisibly.
 #' @return In \code{summary.net_link_prediction()}: A data frame, one row per method, with columns \code{method}, \code{n_predictions}, \code{score_mean}, \code{score_sd}, \code{score_max} and \code{score_min}. A method with no predictions (every possible link already exists) has \code{n_predictions = 0} and \code{NA} scores.

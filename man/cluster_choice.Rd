@@ -50,7 +50,7 @@ cluster_choice(
 \code{estimator}).
 Note: \code{weighted = TRUE} only works with
 \code{dissimilarity = "hamming"} and is rejected up-front when
-sweeping mixed dissimilarities. For the S3 methods: further arguments passed to or from other methods.}
+sweeping mixed dissimilarities. In \code{plot.cluster_choice()}, \code{print.cluster_choice()} and \code{summary.cluster_choice()}: Unsupported. Supplying unused arguments raises an error.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{cluster_choice}.}
 
@@ -92,6 +92,13 @@ frame with one row per swept configuration, a \code{best} marker on
 the silhouette-max row in the print method, and a \code{plot()} that
 adapts to the swept axes.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.cluster_choice()}: Six explicit chart types plus a smart \code{"auto"} default. The user picks the shape; the function does not editorialise (no "best" annotation, no interpretive subtitles, no inferred recommendation).
+}
+}
+
 \section{Plot types}{
 
 Type cheat-sheet:

@@ -321,7 +321,7 @@ casedrop_reliability <- function(x,
 
 #' @rdname casedrop_reliability
 #' @param digits Digits to display. Default `3`.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_casedrop_reliability()}, \code{plot.net_casedrop_reliability_group()}, \code{print.net_casedrop_reliability()}, \code{print.summary.net_casedrop_reliability_group()}, \code{summary.net_casedrop_reliability()} and \code{summary.net_casedrop_reliability_group()}: Additional arguments (ignored). In \code{print.net_casedrop_reliability_group()}: Ignored.
 #' @param object For the \code{summary()} method: an object of class \code{net_casedrop_reliability} or \code{net_casedrop_reliability_group}.
 #' @param combined When `TRUE` (default), all four metrics are shown in one ggplot via `facet_wrap(~ metric)`. When `FALSE`, returns a named list of four single-panel ggplots, one per metric.
 #' @param metric Which metric to plot. One of `"correlation"` (default), `"mean_abs_dev"`, `"median_abs_dev"`, `"max_abs_dev"`.
@@ -434,6 +434,9 @@ print.summary.net_casedrop_reliability_group <- function(x, ...) {
 }
 
 #' @rdname casedrop_reliability
+#' @section Methods:
+#' * \code{plot.net_casedrop_reliability()}: Plots the four model-level reliability metrics across drop proportions: `correlation`, `mean_abs_dev`, `median_abs_dev`, `max_abs_dev`. Each panel shows the per-iteration mean with a ribbon at mean +/- sd. The `correlation` panel includes a dashed horizontal line at the user's `threshold` (default 0.7).
+#' * \code{plot.net_casedrop_reliability_group()}: Overlay of per-cluster correlation curves across drop proportions. One colour per sub-network; ribbons show mean +/- sd across iterations. Dashed horizontal line marks the stability threshold (default 0.7).
 #' @export
 plot.net_casedrop_reliability <- function(x, combined = TRUE, ...) {
   stopifnot(is.logical(combined), length(combined) == 1L)

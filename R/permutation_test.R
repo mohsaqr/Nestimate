@@ -1348,7 +1348,7 @@ permutation <- function(x, y = NULL,
 # ---- S3 Methods ----
 
 #' @rdname permutation
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.net_permutation()}, \code{print.net_permutation_group()}, \code{print.wtna_perm_mixed()}, \code{summary.net_permutation()}, \code{summary.net_permutation_group()} and \code{summary.wtna_perm_mixed()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.
 #' @return In \code{print.net_permutation()} and \code{print.wtna_perm_mixed()}: The input object, invisibly.
 #' @return In \code{summary.net_permutation()}: The \code{$summary} data frame: one row per edge present in either network, with columns \code{from}, \code{to}, \code{weight_x}, \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value}, \code{sig}.
@@ -1438,6 +1438,8 @@ print.net_permutation_group <- function(x, ...) {
 }
 
 #' @rdname permutation
+#' @section Methods:
+#' * \code{summary.net_permutation_group()}: Returns a combined summary data frame across all groups.
 #' @export
 summary.net_permutation_group <- function(object, ...) {
   do.call(rbind, lapply(names(object), function(nm) {

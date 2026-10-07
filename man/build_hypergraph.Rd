@@ -51,7 +51,7 @@ an edge).}
 
 \item{x}{For the \code{print()} method: an object of class \code{net_hypergraph}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_hypergraph()}: Additional arguments (ignored). In \code{summary.net_hypergraph()}: Ignored.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph}.}
 }

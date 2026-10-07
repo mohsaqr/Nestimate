@@ -866,7 +866,7 @@ bootstrap_network <- function(x,
 # ---- S3 Methods ----
 
 #' @rdname bootstrap_network
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.net_bootstrap()}, \code{print.wtna_boot_mixed()}, \code{summary.net_bootstrap()} and \code{summary.wtna_boot_mixed()}: Additional arguments (ignored). In \code{print.net_bootstrap_group()} and \code{summary.net_bootstrap_group()}: Ignored.
 #' @param object For the \code{summary()} method: an object of class \code{net_bootstrap}, \code{net_bootstrap_group} or \code{wtna_boot_mixed}.
 #' @return In \code{print.net_bootstrap()} and \code{print.wtna_boot_mixed()}: The input object, invisibly.
 #' @return In \code{summary.net_bootstrap()}: The \code{$summary} data frame: one row per non-zero original edge, with columns \code{from}, \code{to}, \code{weight}, \code{mean}, \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower}, \code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when the bootstrap used \code{inference = "stability"}.

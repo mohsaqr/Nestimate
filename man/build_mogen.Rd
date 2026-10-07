@@ -40,7 +40,7 @@ message.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_mogen}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_mogen()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_mogen()} and \code{summary.net_mogen()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_mogen}.}
 

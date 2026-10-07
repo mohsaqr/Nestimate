@@ -614,7 +614,7 @@
 #'   (chi-square + Cramer's V + standardized adjusted residuals for
 #'   factors; Kruskal-Wallis + eta-squared for numerics).
 #' @param ... Unsupported. Supplying unused arguments raises an error.
-#' For the S3 methods: further arguments passed to or from other methods.
+#' In \code{plot.net_clustering()}, \code{print.net_clustering()} and \code{summary.net_clustering()}: Unsupported. Supplying unused arguments raises an error. In \code{print.tidy_covariates()}: Ignored.
 #' @return An object of class \code{"net_clustering"} containing:
 #' \describe{
 #'   \item{data}{The original input data.}
@@ -905,6 +905,9 @@ cluster_data <- function(...) {
 }
 
 #' @rdname build_clusters
+#' @section Methods:
+#' * \code{print.net_clustering()}: Compact, fixed-width summary of a sequence-clustering result. The header carries the clustering method and dissimilarity; the per-cluster table carries cluster size (count and percentage) and mean within-cluster distance when available. Optional medoid and covariate lines surface only when those fields are populated.
+#' * \code{print.tidy_covariates()}: Prints a one-line header naming the estimator, then the data.frame. The full human-readable view (per-cluster stats, profiles, OR/test tables) was already printed by `summary()` when this object was produced, so this method intentionally stays minimal to avoid duplication. Auto-prints when the user types the variable at the REPL.
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_clustering} or \code{tidy_covariates}.
 #' @param digits Integer. Decimal places used for floating-point statistics in the printout. Default \code{3}. Non-breaking: existing \code{print(x)} calls keep their previous formatting.
 #' @param object For the \code{summary()} method: an object of class \code{net_clustering}.

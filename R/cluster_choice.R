@@ -39,7 +39,7 @@
 #'   \code{estimator}).
 #'   Note: \code{weighted = TRUE} only works with
 #'   \code{dissimilarity = "hamming"} and is rejected up-front when
-#'   sweeping mixed dissimilarities. For the S3 methods: further arguments passed to or from other methods.
+#'   sweeping mixed dissimilarities. In \code{plot.cluster_choice()}, \code{print.cluster_choice()} and \code{summary.cluster_choice()}: Unsupported. Supplying unused arguments raises an error.
 #' @return A \code{cluster_choice} object (a data.frame subclass) with
 #'   one row per (k, dissimilarity, method) combination and columns:
 #'   \describe{
@@ -271,6 +271,8 @@ summary.cluster_choice <- function(object, ...) {
 }
 
 #' @rdname cluster_choice
+#' @section Methods:
+#' * \code{plot.cluster_choice()}: Six explicit chart types plus a smart \code{"auto"} default. The user picks the shape; the function does not editorialise (no "best" annotation, no interpretive subtitles, no inferred recommendation).
 #' @section Plot types:
 #' Type cheat-sheet:
 #' \describe{

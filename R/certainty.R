@@ -221,7 +221,7 @@ certainty <- function(x,
 
 
 #' @rdname certainty
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.net_certainty()}: Additional arguments (ignored).
 #' @return In \code{print.net_certainty()}: The input object, invisibly.
 #' @export
 print.net_certainty <- function(x, ...) {

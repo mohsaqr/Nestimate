@@ -438,7 +438,7 @@ hypergraph_transduction <- function(hg, labels, xi = 0.99,
 
 #' @rdname hypergraph_cluster
 #' @param x For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_cluster}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{as.data.frame.net_hypergraph_cluster()}, \code{plot.net_hypergraph_cluster()}, \code{print.net_hypergraph_cluster()} and \code{summary.net_hypergraph_cluster()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_hypergraph_cluster}.
 #' @param what Character. `"both"` (default), `"spectrum"`, or `"embedding"`.
 #' @param n_values Integer. How many smallest eigenvalues to show in the spectrum panel (default: `min(3 * k, n_nodes)`).
@@ -475,6 +475,8 @@ as.data.frame.net_hypergraph_cluster <- function(x, ...) {
 }
 
 #' @rdname hypergraph_cluster
+#' @section Methods:
+#' * \code{plot.net_hypergraph_cluster()}: Two diagnostic panels. `"spectrum"`: scree plot of the Laplacian spectrum with the k used for clustering marked - the eigengap after k supports (or questions) the choice of k. `"embedding"`: the nodes in the first two spectral-embedding dimensions, labelled, coloured and shaped by cluster, sized by stationary probability - the geometry k-means actually clustered. `"both"` (default) arranges the two side by side (via gridExtra when available, base grid viewports otherwise).
 #' @export
 plot.net_hypergraph_cluster <- function(x,
                                         what = c("both", "spectrum",
@@ -556,7 +558,7 @@ plot.net_hypergraph_cluster <- function(x,
 
 #' @rdname hypergraph_transduction
 #' @param x For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_transduction}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{as.data.frame.net_hypergraph_transduction()}, \code{plot.net_hypergraph_transduction()}, \code{print.net_hypergraph_transduction()} and \code{summary.net_hypergraph_transduction()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_hypergraph_transduction}.
 #' @param row.names `NULL` (default) or a character vector of row names for the returned data frame.
 #' @param optional Ignored; present so the method matches the signature of the [as.data.frame()] generic.
@@ -617,6 +619,8 @@ as.data.frame.net_hypergraph_transduction <- function(
 }
 
 #' @rdname hypergraph_transduction
+#' @section Methods:
+#' * \code{plot.net_hypergraph_transduction()}: Heatmap of the full node-by-class score matrix: rows are nodes (grouped by predicted class), columns are classes, tile shading and printed values are the spreading scores. Seed nodes (given labels) carry a black tile border, and each node's winning class is marked with a dot, so agreement between seeds, scores, and decisions is visible in one panel. Rows whose winning and runner-up scores are close (small `margin`) are the assignments to distrust.
 #' @export
 plot.net_hypergraph_transduction <- function(x, ...) {
   sc <- as.data.frame(x, what = "scores")

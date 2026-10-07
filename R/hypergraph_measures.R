@@ -213,7 +213,7 @@ hypergraph_measures <- function(hg) {
 
 #' @rdname hypergraph_measures
 #' @param x For the \code{print()} method: an object of class \code{hypergraph_measures}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.hypergraph_measures()}: Additional arguments (ignored).
 #' @return In \code{print.hypergraph_measures()}: The input `x` invisibly.
 #' @export
 print.hypergraph_measures <- function(x, ...) {

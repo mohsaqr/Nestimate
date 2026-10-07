@@ -47,7 +47,11 @@
   }
   ruleReg <- match.arg(ruleReg, c("AND", "OR"))
   threshold <- match.arg(threshold, c("LW", "none"))
-  stopifnot("`scale = FALSE` is not supported by the mgm estimator" = isTRUE(scale))
+  if (!isTRUE(scale)) {
+    stop(errorCondition(paste0("`scale = FALSE` is not supported by the mgm estimator: ",
+                               "continuous columns are always standardized."),
+                        class = "nestimate_mgm_unscaled", call = NULL))
+  }
   data <- as.data.frame(data)
   p <- ncol(data)
 
@@ -92,9 +96,11 @@
   # Categorical columns go to the fit as factors, as mgm::mgm() treats them.
   fit_data <- data
   fit_data[type == "c"] <- lapply(fit_data[type == "c"], as.factor)
+  # Missing values: each nodewise regression uses the rows complete for its
+  # variables (pairwise). The pre-0.9.23 in-package code failed on any NA.
   fit <- psychnets::mgm_fit(fit_data, gamma = lambdaGam, types = unname(type),
                             threshold = threshold, rule = ruleReg,
-                            native = FALSE)
+                            na_method = "pairwise", native = FALSE)
   wadj <- fit$weights
   dimnames(wadj) <- list(colnames(data), colnames(data))
 

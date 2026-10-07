@@ -556,55 +556,10 @@ test_that("print.wtna_mixed shows both components (L544-551)", {
 })
 
 
-# ---- Vectorization equivalence tests ----
 # Prove colSums+tcrossprod matches naive nested loops exactly.
 
 # Reference (naive) implementations for comparison
-.ref_transitions <- function(X, window_size, mode) {
-  n <- nrow(X); k <- ncol(X)
-  if (n < 2L) return(matrix(0, k, k))
-  if (window_size <= 1L) return(crossprod(X[-n, , drop = FALSE], X[-1, , drop = FALSE]))
-  weights <- matrix(0, k, k)
-  if (mode == "non-overlapping") {
-    divides <- n %% window_size == 0L
-    q <- n %/% window_size - 1L * divides
-    for (i in seq_len(q)) {
-      j_idx <- seq((i - 1L) * window_size + 1L, i * window_size)
-      k_idx <- seq(i * window_size + 1L, min(n, (i + 1L) * window_size))
-      for (j in j_idx) for (ki in k_idx) weights <- weights + tcrossprod(X[j, ], X[ki, ])
-    }
-  } else {
-    n_windows <- n - window_size + 1L
-    if (n_windows < 2L) return(weights)
-    for (i in seq_len(n_windows - 1L)) {
-      j_idx <- seq(i, i + window_size - 1L)
-      k_idx <- seq(i + 1L, i + window_size)
-      for (j in j_idx) for (ki in k_idx) weights <- weights + tcrossprod(X[j, ], X[ki, ])
-    }
-  }
-  weights
-}
 
-.ref_cooccurrence <- function(X, window_size, mode) {
-  n <- nrow(X); k <- ncol(X)
-  if (window_size <= 1L) return(crossprod(X))
-  weights <- matrix(0, k, k)
-  if (mode == "non-overlapping") {
-    n_windows <- ceiling(n / window_size)
-    for (i in seq_len(n_windows)) {
-      idx <- seq((i - 1L) * window_size + 1L, min(n, i * window_size))
-      for (j in idx) for (ki in idx) weights <- weights + tcrossprod(X[j, ], X[ki, ])
-    }
-  } else {
-    n_windows <- n - window_size + 1L
-    if (n_windows < 1L) return(weights)
-    for (i in seq_len(n_windows)) {
-      idx <- seq(i, i + window_size - 1L)
-      for (j in idx) for (ki in idx) weights <- weights + tcrossprod(X[j, ], X[ki, ])
-    }
-  }
-  weights
-}
 
 # ---- Branch-matrix coverage (task #17) ----
 # Crosses method x type x mode x window_size x (actor|NULL). Each combination

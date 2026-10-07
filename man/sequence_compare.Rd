@@ -54,7 +54,7 @@ threshold in \emph{every} group. Default: 5.}
 \item{adjust}{Character. P-value correction method (see
 \code{\link[stats]{p.adjust}}). Default: \code{"fdr"}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_sequence_comparison()}, \code{print.net_sequence_comparison()} and \code{summary.net_sequence_comparison()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_sequence_comparison}.}
 
@@ -125,6 +125,23 @@ P-values are adjusted once across all patterns (not per-pattern) using
 any method supported by \code{\link[stats]{p.adjust}}. The default is
 \code{"fdr"} (Benjamini-Hochberg).
 }
+\section{Plot styles}{
+
+Visualizes pattern-level standardized residuals across groups. Two styles
+are available, and \code{style = "auto"} (the default) picks between them
+by the number of groups:
+\describe{
+\item{\code{"pyramid"}}{Back-to-back bars of pattern proportions, shaded
+by each side's standardized residual. Requires exactly 2 groups; an
+explicit \code{style = "pyramid"} on any other number is an error.}
+\item{\code{"heatmap"}}{One tile per (pattern, group) cell, colored by
+standardized residual. Works for any number of groups.}
+}
+Residuals are read directly from the \code{resid_<group>} columns in
+\code{$patterns}, which are always populated regardless of the inference
+method chosen in \code{sequence_compare}.
+}
+
 \examples{
 set.seed(1)
 seqs <- data.frame(

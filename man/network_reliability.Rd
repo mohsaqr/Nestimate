@@ -27,7 +27,7 @@ If unnamed, each model is auto-named from its \code{$method}; duplicate
 names are made unique with \code{make.unique()}. A
 \code{netobject_group} is flattened into its constituent models (named
 by group), and an \code{mcml} or \code{cograph_network} is converted
-first. For the S3 methods: further arguments passed to or from other methods.}
+first. In \code{plot.net_reliability()} and \code{print.net_reliability()}: Additional arguments (ignored). In \code{summary.net_reliability()}: Ignored.}
 
 \item{iter}{Integer. Number of split-half iterations (default: 1000).}
 
@@ -82,6 +82,13 @@ For transition methods (\code{"relative"}, \code{"frequency"},
 for fast resampling (same infrastructure as
 \code{\link{bootstrap_network}}).
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_reliability()}: Density plots of split-half metrics faceted by metric type. Multi-model comparisons show overlaid densities colored by model.
+}
+}
+
 \examples{
 net <- build_network(data.frame(V1 = c("A","B","C","A"),
   V2 = c("B","C","A","B")), method = "relative")

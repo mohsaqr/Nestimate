@@ -48,7 +48,7 @@ computation. If NULL, treats all rows as one group. Default: NULL.}
 
 \item{x}{For the \code{print()} method: an object of class \code{wtna_mixed}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.wtna_mixed()}: Additional arguments (ignored).}
 }
 \value{
 For \code{method = "transition"} or \code{"cooccurrence"}: a

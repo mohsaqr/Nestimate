@@ -83,7 +83,7 @@ the network's \code{$metadata} or wide sequence data. When supplied,
 whole actors are resampled; see the section \emph{Nested data and
 actor}. Default \code{NULL}: sequences are resampled individually.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_bootstrap()}, \code{print.wtna_boot_mixed()}, \code{summary.net_bootstrap()} and \code{summary.wtna_boot_mixed()}: Additional arguments (ignored). In \code{print.net_bootstrap_group()} and \code{summary.net_bootstrap_group()}: Ignored.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_bootstrap}, \code{net_bootstrap_group} or \code{wtna_boot_mixed}.}
 }

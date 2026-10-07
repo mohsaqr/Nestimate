@@ -193,7 +193,7 @@ build_honem <- function(hon, dim = 32L, max_power = 10L) {
 
 #' @rdname build_honem
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_honem}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_honem()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_honem()} and \code{summary.net_honem()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_honem}.
 #' @param dims Integer vector of length 2. Dimensions to plot (default: \code{c(1, 2)}).
 #' @return In \code{print.net_honem()} and \code{plot.net_honem()}: The input object, invisibly.

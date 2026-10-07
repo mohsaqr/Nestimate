@@ -1041,7 +1041,7 @@ test_that(".bg_centrality_diff_test returns correct dimensions", {
 
 
 # ========================================================================
-# bootnet equivalence
+# Input validation: glasso netobject without $data
 # ========================================================================
 
 test_that("boot_glasso errors on glasso netobject without $data", {
@@ -1256,24 +1256,6 @@ test_that("edge_diff plot handles diff_max == 0 gracefully (L1080)", {
 })
 
 
-# ---- Vectorized diff test equivalence ----
 
 # Reference (naive) implementation: double nested loop
-.ref_diff_test <- function(bm) {
-  n_edges <- ncol(bm)
-  p_mat <- matrix(1, n_edges, n_edges,
-                  dimnames = list(colnames(bm), colnames(bm)))
-  for (i in seq_len(n_edges - 1L)) {
-    for (j in seq(i + 1L, n_edges)) {
-      diff_ij <- bm[, i] - bm[, j]
-      p_greater <- mean(diff_ij > 0)
-      p_less <- mean(diff_ij < 0)
-      p_val <- 2 * min(p_greater, p_less)
-      p_mat[i, j] <- p_val
-      p_mat[j, i] <- p_val
-    }
-  }
-  diag(p_mat) <- 0
-  p_mat
-}
 

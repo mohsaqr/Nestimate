@@ -129,7 +129,7 @@
 #'   are auto-detected as state via the values-in-nodes rule. Cannot overlap
 #'   with \code{state_cols}. Default: \code{NULL}.
 #' @param ... Additional arguments passed to the estimator function.
-#' For the S3 methods: further arguments passed to or from other methods.
+#' In \code{print.netobject()}, \code{print.netobject_group()} and \code{print.netobject_ml()}: Additional arguments (ignored). In \code{print.summary.netobject()}, \code{print.summary.netobject_group()}, \code{summary.netobject()} and \code{summary.netobject_group()}: Ignored.
 #' @return An object of class \code{c("netobject", "cograph_network")} containing:
 #' \describe{
 #'   \item{data}{The state columns of the cleaned input data, as a data frame.}
@@ -1150,6 +1150,10 @@ print.netobject <- function(x, ...) {
 
 
 #' @rdname build_network
+#' @section Methods:
+#' * \code{print.netobject_group()}: Compact summary of a \code{netobject_group}. Header surfaces the source (a clustering attached by \code{\link{cluster_network}} or \code{\link{cluster_mmm}}, or a plain split by \code{group_col}). The per-group table carries node and edge counts, weight range, and -- when a clustering attribute is present -- N and percentage of sequences per cluster (matching the layout used by \code{\link{print.net_clustering}} and \code{\link{print.net_mmm}}).
+#' * \code{summary.netobject()}: Computes node count, edge count, density, mean shortest-path distance, mean and SD of in/out strength, mean and SD of in/out degree, in/out degree centralization (Freeman), and reciprocity. Mirrors the metric set returned by `tna::summary.tna()` so a Nestimate netobject and the equivalent tna model report numerically identical descriptive metrics.
+#' * \code{summary.netobject_group()}: Returns one summary per constituent network. With `combined = TRUE` (default) the per-group tables are joined into a single wide `data.frame` with one column per group; with `combined = FALSE` returns a named list.
 #' @export
 print.netobject_group <- function(x, digits = 3L, ...) {
   digits <- as.integer(digits)

@@ -182,7 +182,7 @@ nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
 
 #' @rdname nct
 #' @param x For the \code{print()} method: an object of class \code{net_nct}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.net_nct()} and \code{summary.net_nct()}: Ignored.
 #' @param object For the \code{summary()} method: an object of class \code{net_nct}.
 #' @return In \code{print.net_nct()}: The input object, invisibly.
 #' @return In \code{summary.net_nct()}: A data frame with columns \code{from}, \code{to}, \code{diff_observed}, \code{p_value}, \code{significant}. Attributes \code{m_stat} and \code{s_stat} each hold a one-row data frame with \code{observed} and \code{p_value}.
@@ -207,6 +207,8 @@ print.net_nct <- function(x, ...) {
 
 
 #' @rdname nct
+#' @section Methods:
+#' * \code{summary.net_nct()}: Returns a tidy data frame with one row per edge test. The global M (strength) and S (structure) statistics are attached as attributes.
 #' @export
 summary.net_nct <- function(object, ...) {
   ed <- object$E$edge_names

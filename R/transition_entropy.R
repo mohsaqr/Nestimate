@@ -622,7 +622,7 @@ entropy_trajectory <- function(data, action, actor = NULL, time = NULL,
 #' @rdname entropy_trajectory
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_entropy_trajectory}.
 #' @param digits Integer. Digits to round numeric output. Default `3`.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_entropy_trajectory()}, \code{print.net_entropy_trajectory()} and \code{summary.net_entropy_trajectory()}: Ignored.
 #' @param object For the \code{summary()} method: an object of class \code{net_entropy_trajectory}.
 #' @param normalized Logical. Plot `entropy_norm` instead of raw bits (default `FALSE`).
 #' @param span Numeric. Loess span (default `0.4`).
@@ -670,6 +670,8 @@ summary.net_entropy_trajectory <- function(object, ...) {
 }
 
 #' @rdname entropy_trajectory
+#' @section Methods:
+#' * \code{plot.net_entropy_trajectory()}: Raw per-window entropy as faint lines with a loess-smoothed trend per group, Okabe-Ito coloured. Declining trend = routinization; level shifts = phase changes.
 #' @export
 plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
                                         title = "Transition entropy over time",
@@ -969,7 +971,7 @@ entropy_bayes <- function(x, prior = 0.5, draws = 4000, ci = 0.95,
 
 #' @rdname entropy_bayes
 #' @param digits Integer. Digits to round numeric output. Default `3`.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.net_entropy_bayes()}, \code{print.net_entropy_bayes()}, \code{print.net_entropy_bayes_group()} and \code{summary.net_entropy_bayes()}: Ignored.
 #' @param object For the \code{summary()} method: an object of class \code{net_entropy_bayes}.
 #' @param top Integer. Show at most this many edges, by posterior mean contribution (default `25`).
 #' @param title Character. Plot title.
@@ -1030,6 +1032,8 @@ summary.net_entropy_bayes <- function(object, ...) {
 }
 
 #' @rdname entropy_bayes
+#' @section Methods:
+#' * \code{plot.net_entropy_bayes()}: Forest plot of the per-edge entropy contributions: posterior mean and credible interval, credible edges in Okabe-Ito blue, unstable (non-credible) edges in grey. The dashed line marks \code{min_share} of the posterior-mean entropy rate - the stability criterion.
 #' @export
 plot.net_entropy_bayes <- function(x, top = 25,
                                    title = "Bayesian edge entropy contributions",
@@ -1077,7 +1081,7 @@ plot.net_entropy_bayes <- function(x, top = 25,
 
 #' @rdname transition_entropy
 #' @param digits Integer. Digits to round numeric output. Default `3`.
-#' @param ... For the S3 methods: further arguments passed to or from other methods. In \code{print.net_transition_entropy_group()}: Forwarded to `print.net_transition_entropy`.
+#' @param ... In \code{plot.net_transition_entropy()}, \code{print.net_transition_entropy()}, \code{print.summary.net_transition_entropy()} and \code{summary.net_transition_entropy()}: Ignored. In \code{print.net_transition_entropy_group()}: Forwarded to `print.net_transition_entropy`.
 #' @param object For the \code{summary()} method: an object of class \code{net_transition_entropy}.
 #' @param title Character. Plot title.
 #' @param fill Character. Bar fill colour. Default Okabe-Ito blue.
@@ -1205,6 +1209,9 @@ print.summary.net_transition_entropy <- function(x, digits = 3, ...) {
 }
 
 #' @rdname transition_entropy
+#' @section Methods:
+#' * \code{plot.net_transition_entropy()}: Bar chart of per-state row entropy with overlaid horizontal lines at the entropy rate \eqn{h(P)} (chain-level summary) and the maximum row entropy \eqn{\log_b n} (uniform branching). Bar widths are proportional to the stationary probability so the visual area sums to the entropy rate.
+#' * \code{summary.net_transition_entropy()}: Returns a tidy per-state contribution table sorted by share of the chain-level entropy rate (largest first), so the dominant contributors to \eqn{h(P)} are visible at a glance. Each row contains the stationary mass, the raw and normalised row entropy, the additive contribution \eqn{\pi_i H(P_{i\cdot})}, and that contribution as a percentage of \eqn{h(P)}.
 #' @export
 plot.net_transition_entropy <- function(x,
                                         title = "Transition Entropy",

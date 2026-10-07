@@ -174,7 +174,7 @@ divergence indicates Heywood-prone or non-unidimensional clusters.}
 internally (\code{model}, \code{data}, \code{covmat},
 \code{n.obs}, \code{factors}) are ignored with a warning - the
 model is always the one-factor model per cluster, because the
-composite needs exactly one weight per item. For the S3 methods: further arguments passed to or from other methods.}
+composite needs exactly one weight per item. In \code{plot.mcml_pc()}, \code{print.mcml_pc()} and \code{summary.mcml_pc()}: Additional arguments (ignored).}
 
 \item{digits}{In \code{print.mcml_pc()}: Number of digits to display (default 3). In \code{plot.mcml_pc()}: Number of digits for tile labels (default 2).}
 
@@ -316,6 +316,13 @@ All constituent networks are undirected
 directedness (e.g. \code{cograph::plot_mcml()}) draw the result
 without arrowheads.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.mcml_pc()}: Heatmap of the macro (cluster-level) weights with the package's diverging palette. For the two-layer network rendering use \code{cograph::plot_mcml()}, which accepts \code{mcml_pc} objects and draws them undirected.
+}
+}
+
 \examples{
 set.seed(1)
 n <- 200

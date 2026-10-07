@@ -368,7 +368,7 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
 
 #' @rdname markov_order_test
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_order} or \code{net_markov_order_group}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods. In \code{print.net_markov_order_group()}: Forwarded to `print.net_markov_order` for each element.
+#' @param ... In \code{plot.net_markov_order()}, \code{print.net_markov_order()} and \code{summary.net_markov_order()}: Ignored. In \code{print.net_markov_order_group()}: Forwarded to `print.net_markov_order` for each element.
 #' @param object For the \code{summary()} method: an object of class \code{net_markov_order}.
 #' @param panel Which panel(s) to render: \code{"both"}, \code{"ic"}, or \code{"permutation"}. Default \code{"both"}.
 #' @param combined When \code{panel = "both"} and \code{combined = TRUE} (default), the two panels are drawn side-by-side. If \pkg{gridExtra} is installed they are arranged into a single drawable/saveable gtable (returned); otherwise base \code{grid} viewports draw both panels and a named list of the two ggplots is returned invisibly. When \code{FALSE}, returns that named list (\code{ic}, \code{permutation}) without drawing. Ignored when \code{panel != "both"}.
@@ -421,6 +421,17 @@ summary.net_markov_order <- function(object, ...) {
 
 
 #' @rdname markov_order_test
+#' @section Plot panels:
+#' Two-panel professional visualization:
+#' \itemize{
+#'   \item Panel A: log-likelihood, AIC, BIC across tested orders with
+#'     the selected order highlighted (both the permutation-selected
+#'     order and the BIC-minimizing order are marked).
+#'   \item Panel B: permutation null density per order with the observed
+#'     \eqn{G^2} as a vertical marker; colored by rejection at
+#'     \code{alpha}.
+#' }
+#' Uses the Okabe-Ito colorblind-safe palette.
 #' @export
 plot.net_markov_order <- function(x,
                                    panel = c("both", "ic", "permutation"),

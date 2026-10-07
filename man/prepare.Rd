@@ -70,7 +70,7 @@ Default: \code{"UTC"}.}
 
 \item{x}{For the \code{print()} method: an object of class \code{nestimate_data}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.nestimate_data()}: Additional arguments (ignored).}
 }
 \value{
 A list with class \code{"nestimate_data"} containing:

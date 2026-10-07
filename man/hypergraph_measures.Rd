@@ -15,7 +15,7 @@ hypergraph_measures(hg)
 
 \item{x}{For the \code{print()} method: an object of class \code{hypergraph_measures}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.hypergraph_measures()}: Additional arguments (ignored).}
 }
 \value{
 An object of class \code{hypergraph_measures} (a named list) with

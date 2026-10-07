@@ -67,7 +67,7 @@ p-values are adjusted separately (two-sided testing).}
 
 \item{x}{For the \code{print()} method: an object of class \code{net_hypa}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_hypa()} and \code{summary.net_hypa()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_hypa}.}
 

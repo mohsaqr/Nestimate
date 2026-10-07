@@ -41,7 +41,7 @@ columns = items).}
 
 \item{max_length}{Integer. Maximum itemset size. Default: 5.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_association_rules()}: Additional arguments passed to \code{ggplot2} functions. In \code{print.net_association_rules()} and \code{summary.net_association_rules()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_association_rules}.}
 }
@@ -101,6 +101,13 @@ from independence. Higher = stronger implication.}
 }
 }
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_association_rules()}: Scatter plot of association rules: support vs confidence, with point size proportional to lift.
+}
+}
+
 \examples{
 # From a list of transactions
 trans <- list(

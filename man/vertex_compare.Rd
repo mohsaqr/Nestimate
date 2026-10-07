@@ -60,7 +60,7 @@ output (default \code{c("x", "y")}).}
 
 \item{digits}{Number of digits to display (default 3).}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_vertex_comparison()}, \code{print.net_vertex_comparison()} and \code{summary.net_vertex_comparison()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_vertex_comparison}.}
 }
@@ -93,6 +93,13 @@ bootstrap was originally proposed for: deciding whether two observed
 networks differ in density, centralization, reciprocity, or any other
 whole-network descriptive.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_vertex_comparison()}: Forest plot of the statistic differences with normal-approximation confidence intervals; differences whose interval excludes zero are the statistically distinguishable ones.
+}
+}
+
 \examples{
 states <- c("plan", "code", "debug", "test")
 s1 <- data.frame(

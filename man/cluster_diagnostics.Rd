@@ -20,7 +20,7 @@ cluster_diagnostics(x, ...)
 (with \code{attr(, "clustering")} attached by \code{cluster_network()}
 or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}. For the \code{print()}, \code{plot()} and \code{as.data.frame()} methods: an object of class \code{net_cluster_diagnostics}.}
 
-\item{...}{Unsupported. Supplying unused arguments raises an error. For the S3 methods: further arguments passed to or from other methods. In \code{plot.net_cluster_diagnostics()}: Forwarded to the underlying plot method.}
+\item{...}{Unsupported. Supplying unused arguments raises an error. In \code{as.data.frame.net_cluster_diagnostics()} and \code{print.net_cluster_diagnostics()}: Unsupported. Supplying unused arguments raises an error. In \code{plot.net_cluster_diagnostics()}: Forwarded to the underlying plot method.}
 
 \item{digits}{Integer. Decimal places for floating-point statistics. Default \code{3L}.}
 
@@ -71,6 +71,14 @@ differ by family. Distance: \code{cluster}, \code{size},
 \code{plot()} can delegate without recomputing anything.}
 }
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_cluster_diagnostics()}: Delegates to the original clustering object's plot method (\code{\link{plot.net_clustering}} for distance-based diagnostics, \code{\link{plot.net_mmm_clustering}} or \code{\link{plot.net_mmm}} for model-based). The diagnostics object itself stores no plot geometry -- it just keeps a reference to the source so the existing visual layer is reused.
+\item \code{print.net_cluster_diagnostics()}: Prints a uniform header, family-specific quality / IC line, and a per-cluster table. Layout matches \code{\link{print.net_clustering}} and \code{\link{print.net_mmm}}.
+}
+}
+
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))

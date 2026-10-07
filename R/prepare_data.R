@@ -287,7 +287,7 @@ prepare <- function(data,
 
 #' @rdname prepare
 #' @param x For the \code{print()} method: an object of class \code{nestimate_data}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.nestimate_data()}: Additional arguments (ignored).
 #' @return In \code{print.nestimate_data()}: The input object, invisibly.
 #' @export
 print.nestimate_data <- function(x, ...) {

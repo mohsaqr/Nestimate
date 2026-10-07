@@ -363,7 +363,7 @@ chain_structure <- function(x, normalize = TRUE, tol = 1e-10) {
 # ---------------------------------------------------------------------------
 
 #' @rdname chain_structure
-#' @param ... For the S3 methods: further arguments passed to or from other methods. In \code{print.chain_structure_group()}: Forwarded to `print.chain_structure`. In \code{print.summary_chain_structure()}: Forwarded to `print.data.frame`.
+#' @param ... In \code{plot.chain_structure()}, \code{print.chain_structure()}, \code{summary.chain_structure()} and \code{summary.chain_structure_group()}: Ignored. In \code{print.chain_structure_group()}: Forwarded to `print.chain_structure`. In \code{print.summary_chain_structure()}: Forwarded to `print.data.frame`.
 #' @param show_values Logical. If `TRUE` (default), prints the numeric probability inside each cell. Set `FALSE` for large state spaces (n > 10) where labels overlap.
 #' @param digits Integer. Decimal places for in-cell labels.
 #' @param object For the \code{summary()} method: an object of class \code{chain_structure} or \code{chain_structure_group}.
@@ -391,6 +391,13 @@ print.chain_structure <- function(x, ...) {
 }
 
 #' @rdname chain_structure
+#' @section Methods:
+#' * \code{plot.chain_structure()}: Renders the hitting-probability matrix as a heatmap, with rows and columns ordered by communicating class so the block structure is visible at a glance. State labels along both axes are coloured by classification (absorbing / recurrent / transient). The subtitle summarises the chain-level properties (regular, reversible).
+#' * \code{print.chain_structure()}: Prints a compact chain-level header. For the full per-state table, call `summary()` on the same object.
+#' * \code{print.chain_structure_group()}: One header line per group, followed by each group's per-state table (via `summary.chain_structure`).
+#' * \code{print.summary_chain_structure()}: Prints a one-line chain header followed by the tidy per-state table.
+#' * \code{summary.chain_structure()}: Returns a single data.frame with one row per state, combining every per-state metric `chain_structure()` computes. Always includes `state`, `classification`, `period`, `persistence` (the diagonal of the transition matrix), `return_probability` (the diagonal of the hitting matrix) and `sojourn_steps` (`1 / (1 - persistence)`, which is `Inf` for an absorbing state). Adds the chain's `stationary_probability` when the chain is irreducible, and absorption columns when it has any absorbing states: `absorption_probability` for a single absorbing state or one `absorbed_in_<state>` column per state when there are several, plus `mean_absorption_time`.
+#' * \code{summary.chain_structure_group()}: Produces a single tidy data.frame with one row per (group, state) combination, combining classification, persistence, sojourn, and -- when applicable -- stationary or mean-absorption-time columns. Useful for side-by-side reporting of `chain_structure()` across the members of a `netobject_group`.
 #' @section Plot colours:
 #' Cell colour encodes `P(ever reach j | start at i)`. The diagonal
 #' uses the return-time convention (`P(return to j in >= 1 steps)`),

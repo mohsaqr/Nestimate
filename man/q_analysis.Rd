@@ -17,7 +17,7 @@ q_analysis(sc)
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{q_analysis}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.q_analysis()}: Ignored. In \code{print.q_analysis()}: Additional arguments (unused).}
 
 \item{combined}{When \code{TRUE} (default), the two panels are stitched side-by-side via \code{gridExtra::arrangeGrob}. When \code{FALSE}, returns a named list (\code{q_vector}, \code{structure_vector}) of ggplots.}
 }
@@ -37,6 +37,13 @@ are q-connected if they share a face of dimension \eqn{\geq q}. Reports:
 \item \strong{Structure vector}: highest simplex dimension per node
 }
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.q_analysis()}: Two panels: Q-vector (components at each connectivity level) and structure vector (max simplex dimension per node).
+}
+}
+
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")

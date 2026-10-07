@@ -201,7 +201,7 @@ vector \code{c(name = "label")}, or a named list. Rewrites
 through unchanged.}
 
 \item{...}{Additional arguments passed to the estimator function.
-For the S3 methods: further arguments passed to or from other methods.}
+In \code{print.netobject()}, \code{print.netobject_group()} and \code{print.netobject_ml()}: Additional arguments (ignored). In \code{print.summary.netobject()}, \code{print.summary.netobject_group()}, \code{summary.netobject()} and \code{summary.netobject_group()}: Ignored.}
 
 \item{x}{For the \code{print()} method: an object of class \code{netobject}, \code{netobject_group} or \code{netobject_ml} (or its \code{summary()}).}
 
@@ -260,6 +260,10 @@ In \code{print.netobject()}, \code{print.netobject_group()} and \code{print.neto
 In \code{summary.netobject()}: A \code{data.frame} with columns \code{metric} and \code{value}, of class \code{c("summary.netobject", "data.frame")}.
 
 In \code{summary.netobject_group()}: Either a \code{data.frame} (one column per group) or a named list of \code{summary.netobject} objects, of class \code{c("summary.netobject_group", ...)}.
+
+In \code{print.summary.netobject()}: \code{x}, invisibly.
+
+In \code{print.summary.netobject_group()}: \code{x}, invisibly.
 }
 \description{
 Universal network estimation function that supports both transition
@@ -286,6 +290,15 @@ order. The function warns because a one-sequence transition network is not
 recommended and cannot be validated by bootstrap or other confirmatory
 tests.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{print.netobject_group()}: Compact summary of a \code{netobject_group}. Header surfaces the source (a clustering attached by \code{\link{cluster_network}} or \code{\link{cluster_mmm}}, or a plain split by \code{group_col}). The per-group table carries node and edge counts, weight range, and -- when a clustering attribute is present -- N and percentage of sequences per cluster (matching the layout used by \code{\link{print.net_clustering}} and \code{\link{print.net_mmm}}).
+\item \code{summary.netobject()}: Computes node count, edge count, density, mean shortest-path distance, mean and SD of in/out strength, mean and SD of in/out degree, in/out degree centralization (Freeman), and reciprocity. Mirrors the metric set returned by \code{tna::summary.tna()} so a Nestimate netobject and the equivalent tna model report numerically identical descriptive metrics.
+\item \code{summary.netobject_group()}: Returns one summary per constituent network. With \code{combined = TRUE} (default) the per-group tables are joined into a single wide \code{data.frame} with one column per group; with \code{combined = FALSE} returns a named list.
+}
+}
+
 \examples{
 seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
 net <- build_network(seqs, method = "relative")

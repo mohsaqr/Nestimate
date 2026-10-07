@@ -7,12 +7,9 @@ testthat::skip_on_cran()
 #   2. Constituent netobjects (fit$temporal, fit$contemporaneous, fit$between
 #      are each c("netobject","cograph_network"))
 #   3. Input validation
-#   4. Numerical equivalence against `mlVAR::mlVAR()` on simulated data
 #
-# Equivalence target: bit-identical temporal B, contemporaneous <2e-15,
-# between <1e-10 across 20 simulated configurations (seeds 201-220).
-# Full real-ESM validation (25 datasets) lives in tmp/mlvar_equivalence_real20.R
-# and is not run under R CMD check because it depends on external data.
+# Numerical equivalence against `mlVAR::mlVAR()` is not shipped; it lives in
+# the local suite (local_testing_and_equivalence/).
 #
 # Plotting is cograph's responsibility. Nestimate never calls cograph and
 # does not define a plot method for net_mlvar; each constituent is a
@@ -142,7 +139,7 @@ test_that("summary.net_mlvar reports B, Theta, and between blocks", {
   expect_match(joined, "Between-Subjects Network")
 })
 
-# ---- Numerical equivalence against mlVAR --------------------------------
+# ---- Fit diagnostics ----
 
 test_that("build_mlvar warns on singular fit", {
   # Create data that will produce a singular random-effects fit:

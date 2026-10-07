@@ -25,7 +25,7 @@ re-estimation makes this heavier than a plain bootstrap).}
 
 \item{digits}{Number of digits to display (default 3).}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.pc_loading_stability()} and \code{print.pc_loading_stability()}: Additional arguments (ignored).}
 }
 \value{
 An object of class \code{"pc_loading_stability"}: a list with
@@ -48,6 +48,13 @@ connectivity-based composite weights are recomputed. Wide intervals
 mean the weighting (and therefore the \code{"loadings"} macro
 network) should not be over-interpreted.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.pc_loading_stability()}: Signed composite weights with bootstrap percentile intervals, faceted by cluster.
+}
+}
+
 \examples{
 set.seed(1)
 f <- stats::rnorm(100)

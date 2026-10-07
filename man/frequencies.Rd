@@ -37,7 +37,7 @@ format). If NULL, all non-ID columns are used. Default: NULL.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{nest_transition_counts}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{summary.nest_transition_counts()}: Additional arguments (ignored).}
 }
 \value{
 A square integer matrix of transition frequencies, of class

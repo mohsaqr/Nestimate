@@ -59,7 +59,7 @@ but negligibly small.}
 
 \item{seed}{Integer or NULL. RNG seed for reproducible credible intervals.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_bayes()}: Additional arguments passed to \code{cograph::splot()} when cograph is available. In \code{print.net_bayes()}, \code{print.net_bayes_group()}, \code{summary.net_bayes()} and \code{summary.net_bayes_group()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_bayes} or \code{net_bayes_group}.}
 
@@ -145,6 +145,13 @@ posterior mean betweenness matrices, and \code{observed_diff} the plug-in
 difference of the two input networks. Both inputs must use the same
 \code{invert} setting.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_bayes()}: Draws a differential transition network as a directed chord diagram. Edge colour encodes the signed posterior mean difference (\code{x} stronger vs \code{y} stronger) and edge width its magnitude.
+}
+}
+
 \examples{
 s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))

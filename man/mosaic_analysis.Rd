@@ -56,7 +56,7 @@ and the \code{pct} column: \code{"total"} (default), \code{"row"}
 ColorBrewer RdBu ramp by default (override with \code{palette}). Column
 labels auto-rotate to vertical when there are more than 6 columns; pass
 \code{col_label_angle} to force an angle.
-For the S3 methods: further arguments passed to or from other methods. In \code{plot.mosaic_analysis()}: Styling overrides forwarded to the flat renderer.}
+In \code{plot.mosaic_analysis()}: Styling overrides forwarded to the flat renderer. In \code{print.mosaic_analysis()} and \code{summary.mosaic_analysis()}: Ignored.}
 
 \item{x}{For the \code{plot()} and \code{print()} methods: an object of class \code{mosaic_analysis}.}
 
@@ -99,6 +99,13 @@ ggplot2 mosaic whose tile area encodes counts and whose fill encodes the
 standardized Pearson residual (Nestimate diverging palette). All tabular
 output is a tidy one-row-per-cell \code{data.frame}.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.mosaic_analysis()}: Re-renders the flat mosaic from the stored contingency table and residuals, so styling can be changed without re-running the test. Any flat-mosaic styling argument (\code{tile_label}, \code{pct_base}, \code{col_label_side}, \code{legend_size}, ...) may be overridden via \code{...}.
+}
+}
+
 \examples{
 data(group_regulation_long, package = "Nestimate")
 res <- mosaic_analysis(group_regulation_long, "Course", "Action",

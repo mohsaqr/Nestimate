@@ -42,7 +42,7 @@ which numerical equivalence has been validated.}
 
 \item{x}{For the \code{print()} method: an object of class \code{net_mlvar}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{print.net_mlvar()} and \code{summary.net_mlvar()}: Unused; present for S3 consistency.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_mlvar}.}
 }
@@ -137,6 +137,13 @@ data-reading verbs do \strong{not} work on the fitted object or its parts:
 \code{\link[=centrality_stability]{centrality_stability()}} and \code{centrality()} all need the source panel.
 Extract a constituent and rebuild it through \code{\link[=build_network]{build_network()}} if you
 need those. Use \code{\link[=coefs]{coefs()}} for the tidy model output.
+}
+
+\section{Methods}{
+
+\itemize{
+\item \code{summary.net_mlvar()}: Prints the three weight matrices and the significant temporal edges, then returns the tidy coefficient table.
+}
 }
 
 \examples{

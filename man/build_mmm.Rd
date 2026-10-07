@@ -93,7 +93,7 @@ tests (no logit). See \code{\link{build_clusters}} for full details.}
 
 \item{digits}{In \code{print.net_mmm()}: Integer. Decimal places for floating-point statistics. Default \code{3}. Non-breaking: \code{print(x)} keeps the same alignment as before. In \code{print.net_mmm_clustering()}: Integer. Decimal places for floating-point statistics. Default \code{3}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_mmm()}, \code{plot.net_mmm_clustering()}, \code{print.net_mmm()}, \code{print.net_mmm_clustering()} and \code{summary.net_mmm()}: Unsupported. Supplying unused arguments raises an error.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_mmm}.}
 
@@ -167,6 +167,15 @@ be treated as missing, recode them to \code{NA} before calling
 EM treats as an uninformative initial distribution), or left-trim the
 leading missings so each sequence's first column carries an observed
 state.
+}
+
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_mmm_clustering()}: Plot routines for the MMM clustering metadata attached to the \code{netobject_group} that \code{\link{build_network}} materializes from a \code{\link{cluster_mmm}} fit (or that \code{\link{cluster_network}} returns directly with \code{cluster_by = "mmm"}). Mirrors the type-driven surface of \code{\link{plot.net_clustering}} but covers only the metrics the EM fit produces -- there is no distance matrix on an MMM clustering, so \code{"silhouette"} / \code{"mds"} / \code{"heatmap"} aren't defined here and the dispatcher raises a clear error if you ask for one of those on an MMM result.
+\item \code{print.net_mmm()}: Compact summary of a Mixed Markov Model fit. Header carries dimensions and information criteria; cluster table carries N, mixing share, and per-cluster average posterior probability (AvePP). Layout matches \code{\link{print.net_clustering}} so distance- and model-based clusterings can be compared at a glance.
+\item \code{print.net_mmm_clustering()}: Prints the clustering metadata attached to the \code{netobject_group} that \code{\link{build_network}} materializes from a \code{\link{cluster_mmm}} fit (\code{attr(grp, "clustering")}). Layout mirrors \code{\link{print.net_clustering}}: a one-line dimension header, a quality line with AvePP / entropy / classification error, information criteria, and a per-cluster table.
+}
 }
 
 \examples{

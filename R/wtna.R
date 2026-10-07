@@ -548,7 +548,7 @@ wtna <- function(data,
 
 #' @rdname wtna
 #' @param x For the \code{print()} method: an object of class \code{wtna_mixed}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{print.wtna_mixed()}: Additional arguments (ignored).
 #' @return In \code{print.wtna_mixed()}: The input object, invisibly.
 #' @export
 print.wtna_mixed <- function(x, ...) {

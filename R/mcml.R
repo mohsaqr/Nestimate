@@ -46,7 +46,9 @@
 
 
 #' @rdname build_mcml
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @section Methods:
+#' * \code{print.mcml_layer()}: Compact view of one mcml layer (the macro layer or a single within-cluster network): a header line with the node and non-zero edge counts and the weight range, the rounded weight matrix, the initial probabilities as a bar chart, and the dimensions of any attached data -- rather than the raw list contents.
+#' @param ... In \code{print.mcml()}, \code{print.mcml_layer()} and \code{summary.mcml()}: Unsupported. Supplying unused arguments raises an error.
 #' @param object For the \code{summary()} method: an object of class \code{mcml}.
 #' @return In \code{print.mcml_layer()}: The input \code{mcml_layer}, invisibly.
 #' @return In \code{print.mcml()}: The input object, invisibly.
@@ -886,6 +888,7 @@ cluster_summary <- function(x,
 #'   \code{summary()}, \code{\link{as_tna}}, \code{\link{as_htna}} and
 #'   \code{\link{macro_network}}.
 #'
+#' @order 1
 #' @export
 #' @seealso \code{\link{cluster_summary}} for matrix-based aggregation,
 #'   \code{\link{as_tna}} to promote the layers to netobjects,

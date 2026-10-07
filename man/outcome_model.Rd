@@ -66,7 +66,7 @@ reproducible. The RNG state is restored on exit.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_outcome_model}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_outcome_model()} and \code{summary.net_outcome_model()}: Ignored. In \code{print.net_outcome_model()}: Unused.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_outcome_model}.}
 }

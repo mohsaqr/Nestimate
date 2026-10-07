@@ -29,7 +29,7 @@ keeps the historical lightweight return shape -- only the comparison
 table is allocated.}
 
 \item{...}{Arguments passed to \code{\link{build_mmm}}.
-For the S3 methods: further arguments passed to or from other methods.}
+In \code{plot.mmm_compare()}, \code{print.mmm_compare()} and \code{summary.mmm_compare()}: Unsupported. Supplying unused arguments raises an error.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{mmm_compare}.}
 

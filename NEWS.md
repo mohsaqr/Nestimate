@@ -1,3 +1,35 @@
+# Nestimate 0.9.24
+
+## Documentation
+
+* Fixes to the 0.9.23 help-page merge, found in review:
+  * Pages are named after their function again: `build_mcml` and
+    `plot_state_frequencies` had been named after a `print()` method, and
+    their usage now lists the function before its methods.
+  * The descriptions of 51 methods (what a plot draws, what a print shows)
+    are restored, as a "Methods" section on each function's page.
+  * Each page's `...` entry states what each method does with extra
+    arguments: methods that reject them say so, `plot.net_bayes()` names
+    `cograph::splot()`, and the rest say they are ignored.
+  * `compare_networks`: the `...` and `labels` entries no longer repeat;
+    `net_edge_betweenness` and `net_pruning_details` no longer list a
+    non-existent class.
+  * Every S3 method has a documented return value.
+
+## Behaviour notes
+
+* The `mgm` estimator rejects `scale = FALSE` with a classed error
+  (`nestimate_mgm_unscaled`); this started in 0.9.23 and was not listed
+  there. Missing values are handled pairwise, now passed explicitly.
+
+## Tests
+
+* Two more reference-implementation tests (a hand-written linear solve for
+  `passage_time()`, a manual `multinom` re-computation) and unused reference
+  helpers moved to the local suite; section headers that claimed
+  equivalence tests are renamed. New tests: mgm on data with missing values,
+  and the `scale = FALSE` error.
+
 # Nestimate 0.9.23
 
 ## Internal changes

@@ -32,7 +32,7 @@ row-stochastic numeric transition matrix, or a wide sequence data.frame
 \item{normalize}{Logical. Normalize rows to sum to 1? Default \code{TRUE}.}
 
 \item{...}{Ignored.
-For the S3 methods: further arguments passed to or from other methods. In \code{print.net_markov_stability_group()}: Forwarded to \code{print.net_markov_stability} for each element.}
+In \code{plot.net_markov_stability()}, \code{print.net_markov_stability()} and \code{summary.net_markov_stability()}: Ignored. In \code{print.net_markov_stability_group()}: Forwarded to \code{print.net_markov_stability} for each element.}
 
 \item{object}{For the \code{summary()} method: an object of class
 \code{net_markov_stability}.}
@@ -57,9 +57,13 @@ For a \code{netobject_group} the result is a
 \code{"net_markov_stability_group"}: a named list holding one such
 object per group.
 
+In \code{print.net_markov_stability()}: \code{x}, invisibly.
+
 In \code{print.net_markov_stability_group()}: \code{x} invisibly.
 
 In \code{plot.net_markov_stability()}: \code{plot.net_markov_stability} returns a faceted ggplot object when \code{combined = TRUE}, and (invisibly) a named list of single-metric ggplots, one per entry of \code{metrics}, when \code{combined = FALSE}.
+
+In \code{summary.net_markov_stability()}: the per-state stability table (the \code{$stability} data frame: one row per state with \code{state}, \code{persistence}, \code{stationary_prob}, \code{return_time}, \code{sojourn_time}, \code{avg_time_to_others}, \code{avg_time_from_others}), after printing the attractor and the most persistent state.
 }
 \description{
 Computes per-state stability metrics from a transition network:

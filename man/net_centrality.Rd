@@ -71,7 +71,7 @@ when \code{normalize = FALSE}. Default: \code{TRUE}.}
 takes a weight matrix and returns a named list of centrality vectors.}
 
 \item{...}{Additional arguments (ignored).
-For the S3 methods: further arguments passed to or from other methods.}
+In \code{plot.net_centrality()} and \code{plot.net_centrality_group()}: Additional arguments ignored.}
 
 \item{reorder}{In \code{plot.net_centrality()}: Logical. Reorder states within each centrality panel by centrality value. Default: \code{TRUE}. In \code{plot.net_centrality_group()}: Logical. Reorder states by their mean value within each centrality panel. Default: \code{TRUE}.}
 

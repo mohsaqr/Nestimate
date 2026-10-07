@@ -502,7 +502,7 @@ test_that("print.net_permutation shows generic label for unknown method", {
 })
 
 
-# ---- Cross-validation against tna::permutation_test ----
+# ---- Grouped dispatch and output ----
 
 test_that("permutation single netobject_group runs all-pairs (L85-104)", {
   set.seed(1)

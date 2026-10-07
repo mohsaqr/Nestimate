@@ -232,7 +232,7 @@
 #'   internally (\code{model}, \code{data}, \code{covmat},
 #'   \code{n.obs}, \code{factors}) are ignored with a warning - the
 #'   model is always the one-factor model per cluster, because the
-#'   composite needs exactly one weight per item. For the S3 methods: further arguments passed to or from other methods.
+#'   composite needs exactly one weight per item. In \code{plot.mcml_pc()}, \code{print.mcml_pc()} and \code{summary.mcml_pc()}: Additional arguments (ignored).
 #' @param id_col Character vector or NULL. Identifier column(s) to drop
 #'   from data.frame input before analysis (e.g., the \code{rid}/actor
 #'   columns produced by
@@ -918,7 +918,7 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
 
 #' @rdname loading_stability
 #' @param digits Number of digits to display (default 3).
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.pc_loading_stability()} and \code{print.pc_loading_stability()}: Additional arguments (ignored).
 #' @return In \code{print.pc_loading_stability()}: \code{x}, invisibly.
 #' @return In \code{plot.pc_loading_stability()}: A ggplot object.
 #' @export
@@ -935,6 +935,8 @@ print.pc_loading_stability <- function(x, digits = 3, ...) {
 
 
 #' @rdname loading_stability
+#' @section Methods:
+#' * \code{plot.pc_loading_stability()}: Signed composite weights with bootstrap percentile intervals, faceted by cluster.
 #' @export
 plot.pc_loading_stability <- function(x, ...) {
   df <- x$summary
@@ -1006,6 +1008,8 @@ summary.mcml_pc <- function(object, ...) {
 
 
 #' @rdname build_mcml_pc
+#' @section Methods:
+#' * \code{plot.mcml_pc()}: Heatmap of the macro (cluster-level) weights with the package's diverging palette. For the two-layer network rendering use \code{cograph::plot_mcml()}, which accepts \code{mcml_pc} objects and draws them undirected.
 #' @export
 plot.mcml_pc <- function(x, digits = 2, ...) {
   W <- x$macro$weights

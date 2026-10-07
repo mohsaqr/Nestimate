@@ -44,7 +44,7 @@ to 1 are normalized automatically (with a warning).}
 \item{digits}{Integer. Decimal places displayed in cells. Default \code{1}.}
 
 \item{...}{Ignored.
-For the S3 methods: further arguments passed to or from other methods. In \code{print.net_mpt_group()}: Forwarded to \code{print.net_mpt} for each element.}
+In \code{plot.net_mpt()}, \code{print.net_mpt()}, \code{print.summary.net_mpt()} and \code{summary.net_mpt()}: Ignored. In \code{print.net_mpt_group()}: Forwarded to \code{print.net_mpt} for each element.}
 
 \item{object}{A \code{net_mpt} object (for \code{summary}).}
 
@@ -69,11 +69,15 @@ Diagonal = mean recurrence time \eqn{1/\pi_i}.}
 For a \code{netobject_group} the result is a \code{"net_mpt_group"}: a
 named list holding one \code{net_mpt} per group.
 
+In \code{print.net_mpt()}: \code{x}, invisibly.
+
 In \code{print.net_mpt_group()}: \code{x} invisibly.
 
 In \code{summary.net_mpt()}: \code{summary.net_mpt} returns an object of class \code{"summary.net_mpt"}: a list whose \code{table} is a data frame with one row per state and columns \code{state}, \code{return_time}, \code{stationary}, \code{mean_out} (mean steps to other states) and \code{mean_in} (mean steps from other states), and whose \code{object} is the \code{net_mpt} it summarises. Its print method shows the table.
 
 In \code{plot.net_mpt()}: \code{plot.net_mpt} returns a ggplot object: a from-by-to heatmap of the mean first passage time matrix.
+
+In \code{print.summary.net_mpt()}: \code{x}, invisibly.
 }
 \description{
 Computes the full matrix of mean first passage times (MFPT) for a Markov

@@ -52,7 +52,7 @@ back to matrix symmetry.}
 
 \item{digits}{Number of digits to display (default 3).}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_vertex_bootstrap()}, \code{print.net_vertex_bootstrap()} and \code{summary.net_vertex_bootstrap()}: Additional arguments (ignored).}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_vertex_bootstrap}.}
 
@@ -119,6 +119,13 @@ off-diagonal cells: the proportion of total weight that is
 reciprocated.}
 }
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_vertex_bootstrap()}: Histogram of the bootstrap distribution per statistic, with the observed value (solid line) and confidence bounds (dashed lines).
+}
+}
+
 \examples{
 seqs <- data.frame(
   T1 = c("plan", "code", "debug", "plan", "test", "code"),

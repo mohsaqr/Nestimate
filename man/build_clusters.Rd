@@ -131,7 +131,7 @@ astronomical ORs with degenerate CIs (silent failure).
 factors; Kruskal-Wallis + eta-squared for numerics).}
 
 \item{...}{Unsupported. Supplying unused arguments raises an error.
-For the S3 methods: further arguments passed to or from other methods.}
+In \code{plot.net_clustering()}, \code{print.net_clustering()} and \code{summary.net_clustering()}: Unsupported. Supplying unused arguments raises an error. In \code{print.tidy_covariates()}: Ignored.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_clustering} or \code{tidy_covariates}.}
 
@@ -186,6 +186,14 @@ Supports 9 distance metrics including temporal weighting for Hamming
 distance. When the \pkg{stringdist} package is available, uses C-level
 distance computation for 100-1000x speedup on edit distances.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{print.net_clustering()}: Compact, fixed-width summary of a sequence-clustering result. The header carries the clustering method and dissimilarity; the per-cluster table carries cluster size (count and percentage) and mean within-cluster distance when available. Optional medoid and covariate lines surface only when those fields are populated.
+\item \code{print.tidy_covariates()}: Prints a one-line header naming the estimator, then the data.frame. The full human-readable view (per-cluster stats, profiles, OR/test tables) was already printed by \code{summary()} when this object was produced, so this method intentionally stays minimal to avoid duplication. Auto-prints when the user types the variable at the REPL.
+}
+}
+
 \examples{
 seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
                    V3 = c("C","A","B","C","B"))

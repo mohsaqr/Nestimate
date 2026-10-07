@@ -86,7 +86,7 @@ frequencies <- function(data,
 
 #' @rdname frequencies
 #' @param object For the \code{summary()} method: an object of class \code{nest_transition_counts}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{summary.nest_transition_counts()}: Additional arguments (ignored).
 #' @return In \code{summary.nest_transition_counts()}: A tidy data frame with columns \code{from}, \code{to}, \code{count}, with one row per non-zero transition.
 #' @export
 summary.nest_transition_counts <- function(object, ...) {

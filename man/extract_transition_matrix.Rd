@@ -22,7 +22,7 @@ Default: "raw".}
 
 \item{object}{For the \code{summary()} method: an object of class \code{nest_transition_matrix}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{summary.nest_transition_matrix()}: Additional arguments (ignored).}
 }
 \value{
 For a single network: a square numeric matrix with row and column

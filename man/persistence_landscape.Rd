@@ -27,7 +27,7 @@ uses an even grid of 200 points covering the union of pair intervals.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{persistence_landscape}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.persistence_landscape()} and \code{print.persistence_landscape()}: Ignored.}
 }
 \value{
 A \code{persistence_landscape} object with:

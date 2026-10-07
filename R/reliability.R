@@ -19,7 +19,7 @@
 #'   names are made unique with \code{make.unique()}. A
 #'   \code{netobject_group} is flattened into its constituent models (named
 #'   by group), and an \code{mcml} or \code{cograph_network} is converted
-#'   first. For the S3 methods: further arguments passed to or from other methods.
+#'   first. In \code{plot.net_reliability()} and \code{print.net_reliability()}: Additional arguments (ignored). In \code{summary.net_reliability()}: Ignored.
 #' @param iter Integer. Number of split-half iterations (default: 1000).
 #' @param split Numeric. Fraction of sequences assigned to the first half
 #'   (default: 0.5).
@@ -399,6 +399,8 @@ summary.net_reliability <- function(object, ...) {
 
 
 #' @rdname network_reliability
+#' @section Methods:
+#' * \code{plot.net_reliability()}: Density plots of split-half metrics faceted by metric type. Multi-model comparisons show overlaid densities colored by model.
 #' @export
 plot.net_reliability <- function(x, bins = 60L, combined = TRUE, ...) {
   stopifnot(is.logical(combined), length(combined) == 1L)

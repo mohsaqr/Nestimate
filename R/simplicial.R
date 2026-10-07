@@ -55,7 +55,7 @@
 #'   in the filtration. \code{NULL} (default) uses \code{max(d)}.
 #' @param ... Additional arguments passed to \code{build_hon()} when
 #'   \code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.
-#' For the S3 methods: further arguments passed to or from other methods.
+#' In \code{plot.simplicial_complex()}: Ignored. In \code{print.simplicial_complex()}: Additional arguments (unused).
 #' @return A \code{simplicial_complex} object - a list with:
 #' \describe{
 #'   \item{simplices}{List of integer vectors, one per simplex, each holding
@@ -1210,7 +1210,7 @@ print.simplicial_complex <- function(x, ...) {
 }
 
 #' @rdname persistent_homology
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.persistent_homology()}: Ignored. In \code{print.persistent_homology()}: Additional arguments (unused).
 #' @param combined When `TRUE` (default), the two panels are stitched side-by-side via `gridExtra::arrangeGrob`. When `FALSE`, returns a named list (`betti_curve`, `persistence`) of ggplots.
 #' @return In \code{print.persistent_homology()}: The input object, invisibly.
 #' @return In \code{plot.persistent_homology()}: A grid grob (invisibly) when `combined = TRUE`; a named list of two ggplots when `combined = FALSE`.
@@ -1246,7 +1246,7 @@ print.persistent_homology <- function(x, ...) {
 
 #' @rdname q_analysis
 #' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{q_analysis}.
-#' @param ... For the S3 methods: further arguments passed to or from other methods.
+#' @param ... In \code{plot.q_analysis()}: Ignored. In \code{print.q_analysis()}: Additional arguments (unused).
 #' @param combined When `TRUE` (default), the two panels are stitched side-by-side via `gridExtra::arrangeGrob`. When `FALSE`, returns a named list (`q_vector`, `structure_vector`) of ggplots.
 #' @return In \code{print.q_analysis()}: The input object, invisibly.
 #' @return In \code{plot.q_analysis()}: A grid grob (invisibly) when `combined = TRUE`; a named list of two ggplots when `combined = FALSE`.
@@ -1296,6 +1296,8 @@ print.q_analysis <- function(x, ...) {
 }
 
 #' @rdname build_simplicial
+#' @section Methods:
+#' * \code{plot.simplicial_complex()}: Produces a four-panel summary: f-vector, Betti numbers, simplicial degree ranking, and degree-by-dimension heatmap.
 #' @export
 plot.simplicial_complex <- function(x, combined = TRUE, ...) {
   stopifnot(is.logical(combined), length(combined) == 1L)
@@ -1377,6 +1379,8 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
 }
 
 #' @rdname persistent_homology
+#' @section Methods:
+#' * \code{plot.persistent_homology()}: Two panels: Betti curve (threshold vs Betti number) and persistence diagram (birth vs death). Persistence pairs come from full boundary- matrix reduction; essential classes are shown at the filtration boundary (\code{death = 0} in clique mode; in VR mode their stored \code{death = Inf} is capped for display at the largest finite value in the diagram or on the threshold grid, so they still render).
 #' @export
 plot.persistent_homology <- function(x, combined = TRUE, ...) {
   stopifnot(is.logical(combined), length(combined) == 1L)
@@ -1451,6 +1455,8 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
 }
 
 #' @rdname q_analysis
+#' @section Methods:
+#' * \code{plot.q_analysis()}: Two panels: Q-vector (components at each connectivity level) and structure vector (max simplex dimension per node).
 #' @export
 plot.q_analysis <- function(x, combined = TRUE, ...) {
   stopifnot(is.logical(combined), length(combined) == 1L)

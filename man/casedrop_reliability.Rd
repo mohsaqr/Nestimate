@@ -69,7 +69,7 @@ edge vector. Default \code{FALSE}.}
 
 \item{digits}{Digits to display. Default \code{3}.}
 
-\item{...}{For the S3 methods: further arguments passed to or from other methods.}
+\item{...}{In \code{plot.net_casedrop_reliability()}, \code{plot.net_casedrop_reliability_group()}, \code{print.net_casedrop_reliability()}, \code{print.summary.net_casedrop_reliability_group()}, \code{summary.net_casedrop_reliability()} and \code{summary.net_casedrop_reliability_group()}: Additional arguments (ignored). In \code{print.net_casedrop_reliability_group()}: Ignored.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_casedrop_reliability} or \code{net_casedrop_reliability_group}.}
 
@@ -143,6 +143,14 @@ appropriate robustness check for \strong{edgelist-derived} networks (where
 rows of \verb{$data} lack actor grouping), since dropping rows at random is
 a well-posed operation regardless of within-actor correlation.
 }
+\section{Methods}{
+
+\itemize{
+\item \code{plot.net_casedrop_reliability()}: Plots the four model-level reliability metrics across drop proportions: \code{correlation}, \code{mean_abs_dev}, \code{median_abs_dev}, \code{max_abs_dev}. Each panel shows the per-iteration mean with a ribbon at mean +/- sd. The \code{correlation} panel includes a dashed horizontal line at the user's \code{threshold} (default 0.7).
+\item \code{plot.net_casedrop_reliability_group()}: Overlay of per-cluster correlation curves across drop proportions. One colour per sub-network; ribbons show mean +/- sd across iterations. Dashed horizontal line marks the stability threshold (default 0.7).
+}
+}
+
 \examples{
 set.seed(1)
 seqs <- data.frame(
