@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.24</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.25</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,7 +43,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.9.24" id="nestimate-0924">Nestimate 0.9.24<a class="anchor" aria-label="anchor" href="#nestimate-0924"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.9.24" id="nestimate-0924">Nestimate 0.9.24<a class="anchor" aria-label="anchor" href="#nestimate-0924"></a></h2><p class="text-muted">CRAN release: 2026-10-07</p>
 <div class="section level3">
 <h3 id="documentation-0-9-24">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-9-24"></a></h3>
 <ul><li>Fixes to the 0.9.23 help-page merge, found in review:
@@ -607,36 +607,36 @@
 <div class="section level4">
 <h4 id="bug-fixes-0-5-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-5-1"></a></h4>
 <ul><li>
-<code><a href="../reference/cluster_network.html">cluster_network()</a></code> now forwards distance-clustering arguments (<code>na_syms</code>, <code>weighted</code>, <code>lambda</code>, <code>seed</code>, <code>q</code>, <code>p</code>, <code>covariates</code>) to <code><a href="../reference/build_clusters.html">build_clusters()</a></code> instead of silently passing them to <code><a href="../reference/build_network.html">build_network()</a></code>. The split runs on caller <code>...</code> only — netobject <code>build_args</code> continue to flow only to the <code><a href="../reference/build_network.html">build_network()</a></code> step, protecting attention-method (<code>atna</code>) network history from being re-routed to weighted Hamming. (audit_clustering <a href="https://github.com/mohsaqr/Nestimate/issues/1" class="external-link">#1</a>)</li>
+<code><a href="../reference/cluster_network.html">cluster_network()</a></code> now forwards distance-clustering arguments (<code>na_syms</code>, <code>weighted</code>, <code>lambda</code>, <code>seed</code>, <code>q</code>, <code>p</code>, <code>covariates</code>) to <code><a href="../reference/build_clusters.html">build_clusters()</a></code> instead of silently passing them to <code><a href="../reference/build_network.html">build_network()</a></code>. The split runs on caller <code>...</code> only — netobject <code>build_args</code> continue to flow only to the <code><a href="../reference/build_network.html">build_network()</a></code> step, protecting attention-method (<code>atna</code>) network history from being re-routed to weighted Hamming. (audit_clustering item 1)</li>
 <li>
-<code>.auto_detect_clusters()</code> (used by <code><a href="../reference/build_mcml.html">build_mcml()</a></code> and <code><a href="../reference/cluster_summary.html">cluster_summary()</a></code>) now requires <code>node_groups</code> to carry a node identifier column when shaped as a data.frame, or be a named atomic vector keyed by node label. Previously, a bare <code>cluster</code>-only data.frame was read positionally — silently mis-assigning nodes whenever <code>node_groups</code> rows were in a different order than <code>x$nodes</code>. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/1" class="external-link">#1</a>)</li>
+<code>.auto_detect_clusters()</code> (used by <code><a href="../reference/build_mcml.html">build_mcml()</a></code> and <code><a href="../reference/cluster_summary.html">cluster_summary()</a></code>) now requires <code>node_groups</code> to carry a node identifier column when shaped as a data.frame, or be a named atomic vector keyed by node label. Previously, a bare <code>cluster</code>-only data.frame was read positionally — silently mis-assigning nodes whenever <code>node_groups</code> rows were in a different order than <code>x$nodes</code>. (audit_mcml item 1)</li>
 <li>
-<code><a href="../reference/build_clusters.html">build_clusters()</a></code> now rejects all-missing input early with a clear message instead of failing indirectly downstream in pam/hclust. (audit_clustering <a href="https://github.com/mohsaqr/Nestimate/issues/4" class="external-link">#4</a>)</li>
+<code><a href="../reference/build_clusters.html">build_clusters()</a></code> now rejects all-missing input early with a clear message instead of failing indirectly downstream in pam/hclust. (audit_clustering item 4)</li>
 </ul></div>
 <div class="section level4">
 <h4 id="new-parameters-0-5-1">New parameters<a class="anchor" aria-label="anchor" href="#new-parameters-0-5-1"></a></h4>
 <ul><li>
-<code>compare_mmm(return_fits = FALSE)</code> — when <code>TRUE</code>, the fitted <code>net_mmm</code> models are attached as <code>attr(result, "fits")</code> keyed by <code>k</code>, so users can pick the chosen model without re-running EM. Default behaviour unchanged. (audit_clustering <a href="https://github.com/mohsaqr/Nestimate/issues/6" class="external-link">#6</a>)</li>
+<code>compare_mmm(return_fits = FALSE)</code> — when <code>TRUE</code>, the fitted <code>net_mmm</code> models are attached as <code>attr(result, "fits")</code> keyed by <code>k</code>, so users can pick the chosen model without re-running EM. Default behaviour unchanged. (audit_clustering item 6)</li>
 </ul></div>
 <div class="section level4">
 <h4 id="improvements-0-5-1">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-5-1"></a></h4>
 <ul><li>
-<code><a href="../reference/build_clusters.html">build_clusters()</a></code> validation messages now name the offending argument (<code>"'k' must be at least 2 (got k = 1)"</code>) rather than dumping the failing predicate. Top-level type checks switched to named-condition <code><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot()</a></code> for the same reason. (audit_clustering <a href="https://github.com/mohsaqr/Nestimate/issues/2" class="external-link">#2</a>)</li>
+<code><a href="../reference/build_clusters.html">build_clusters()</a></code> validation messages now name the offending argument (<code>"'k' must be at least 2 (got k = 1)"</code>) rather than dumping the failing predicate. Top-level type checks switched to named-condition <code><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot()</a></code> for the same reason. (audit_clustering item 2)</li>
 </ul></div>
 <div class="section level4">
 <h4 id="documentation-0-5-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-5-1"></a></h4>
 <ul><li>
-<code><a href="../reference/build_mcml.html">summary.mcml()</a></code> roxygen corrected — was claiming a printing side effect that doesn’t exist. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/5" class="external-link">#5</a>)</li>
+<code><a href="../reference/build_mcml.html">summary.mcml()</a></code> roxygen corrected — was claiming a printing side effect that doesn’t exist. (audit_mcml item 5)</li>
 <li>
-<code><a href="../reference/build_mcml.html">build_mcml()</a></code> <code>clusters = "&lt;col&gt;"</code> mode now documents its narrow contract: assigns each row’s group label to both endpoints, so it only makes sense for within-group edge lists. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/2" class="external-link">#2</a>)</li>
+<code><a href="../reference/build_mcml.html">build_mcml()</a></code> <code>clusters = "&lt;col&gt;"</code> mode now documents its narrow contract: assigns each row’s group label to both endpoints, so it only makes sense for within-group edge lists. (audit_mcml item 2)</li>
 <li>
-<code><a href="../reference/build_mcml.html">build_mcml()</a></code> <code>method</code> parameter doc now steers raw sequence / event-log inputs to <code>"sum"</code>, since the function counts observed transitions. Other methods are for weighted edge lists or pre-existing matrices. (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/4" class="external-link">#4</a>)</li>
+<code><a href="../reference/build_mcml.html">build_mcml()</a></code> <code>method</code> parameter doc now steers raw sequence / event-log inputs to <code>"sum"</code>, since the function counts observed transitions. Other methods are for weighted edge lists or pre-existing matrices. (audit_mcml item 4)</li>
 <li>
-<code><a href="../reference/as_tna.html">as_tna.mcml()</a></code> “Excluded Clusters” section corrected — drop emits a <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code> (was claimed silent) and only fires for <code>relative</code> method (was claimed unconditional). (audit_mcml <a href="https://github.com/mohsaqr/Nestimate/issues/6" class="external-link">#6</a>)</li>
+<code><a href="../reference/as_tna.html">as_tna.mcml()</a></code> “Excluded Clusters” section corrected — drop emits a <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code> (was claimed silent) and only fires for <code>relative</code> method (was claimed unconditional). (audit_mcml item 6)</li>
 <li>
-<code><a href="../reference/build_clusters.html">build_clusters()</a></code> <code>na_syms</code> doc adds an explicit “Missing-value distance rule” subsection: NA becomes a comparable sentinel state, not pairwise deletion. (audit_clustering <a href="https://github.com/mohsaqr/Nestimate/issues/3" class="external-link">#3</a>)</li>
+<code><a href="../reference/build_clusters.html">build_clusters()</a></code> <code>na_syms</code> doc adds an explicit “Missing-value distance rule” subsection: NA becomes a comparable sentinel state, not pairwise deletion. (audit_clustering item 3)</li>
 <li>
-<code><a href="../reference/build_mmm.html">build_mmm()</a></code> adds an “Initial states” section explaining first-column-verbatim init and that build_mmm does NOT honor build_clusters-style <code>na_syms</code> — only actual <code>NA</code> cells become NA inits. (audit_clustering <a href="https://github.com/mohsaqr/Nestimate/issues/5" class="external-link">#5</a>, doc-only path)</li>
+<code><a href="../reference/build_mmm.html">build_mmm()</a></code> adds an “Initial states” section explaining first-column-verbatim init and that build_mmm does NOT honor build_clusters-style <code>na_syms</code> — only actual <code>NA</code> cells become NA inits. (audit_clustering item 5, doc-only path)</li>
 </ul></div>
 <div class="section level4">
 <h4 id="tests-0-5-1">Tests<a class="anchor" aria-label="anchor" href="#tests-0-5-1"></a></h4>

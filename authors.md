@@ -16,12 +16,12 @@ Source:
 
 Saqr M, López-Pernas S, Misiejuk K (2026). *Nestimate: Dynamic,
 Probabilistic, and Higher-Order Network Analysis*. R package version
-0.9.24, <https://github.com/mohsaqr/Nestimate>.
+0.9.25, <https://github.com/mohsaqr/Nestimate>.
 
     @Manual{,
       title = {Nestimate: Dynamic, Probabilistic, and Higher-Order Network Analysis},
       author = {Mohammed Saqr and Sonsoles López-Pernas and Kamila Misiejuk},
       year = {2026},
-      note = {R package version 0.9.24},
+      note = {R package version 0.9.25},
       url = {https://github.com/mohsaqr/Nestimate},
     }

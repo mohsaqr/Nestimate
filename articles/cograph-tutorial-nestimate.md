@@ -408,7 +408,7 @@ and it estimates a separate network per group level, returning a
 `netobject_group`.
 [`splot()`](https://sonsoles.me/cograph/reference/splot.html) dispatches
 to
-[`plot_netobject_group()`](https://sonsoles.me/cograph/reference/plot_netobject_group.html)
+[`plot_netobject_group()`](https://sonsoles.me/cograph/reference/plot-results.html)
 and renders all groups in an automatic grid.
 
 ``` r
@@ -780,7 +780,7 @@ sessionInfo()
     [1] stats     graphics  grDevices utils     datasets  methods   base
 
     other attached packages:
-    [1] cograph_2.7.3    Nestimate_0.9.24
+    [1] cograph_2.7.6    Nestimate_0.9.25
 
     loaded via a namespace (and not attached):
      [1] vctrs_0.7.3         cli_3.6.6           knitr_1.52
