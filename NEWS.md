@@ -1088,51 +1088,51 @@ addressed; two deferred pending design decisions on numeric semantics
   `build_network()`. The split runs on caller `...` only — netobject
   `build_args` continue to flow only to the `build_network()` step,
   protecting attention-method (`atna`) network history from being
-  re-routed to weighted Hamming. (audit_clustering #1)
+  re-routed to weighted Hamming. (audit_clustering item 1)
 * `.auto_detect_clusters()` (used by `build_mcml()` and
   `cluster_summary()`) now requires `node_groups` to carry a node
   identifier column when shaped as a data.frame, or be a named atomic
   vector keyed by node label. Previously, a bare `cluster`-only
   data.frame was read positionally — silently mis-assigning nodes
   whenever `node_groups` rows were in a different order than `x$nodes`.
-  (audit_mcml #1)
+  (audit_mcml item 1)
 * `build_clusters()` now rejects all-missing input early with a clear
   message instead of failing indirectly downstream in pam/hclust.
-  (audit_clustering #4)
+  (audit_clustering item 4)
 
 ### New parameters
 * `compare_mmm(return_fits = FALSE)` — when `TRUE`, the fitted
   `net_mmm` models are attached as `attr(result, "fits")` keyed by
   `k`, so users can pick the chosen model without re-running EM.
-  Default behaviour unchanged. (audit_clustering #6)
+  Default behaviour unchanged. (audit_clustering item 6)
 
 ### Improvements
 * `build_clusters()` validation messages now name the offending
   argument (`"'k' must be at least 2 (got k = 1)"`) rather than
   dumping the failing predicate. Top-level type checks switched to
   named-condition `stopifnot()` for the same reason.
-  (audit_clustering #2)
+  (audit_clustering item 2)
 
 ### Documentation
 * `summary.mcml()` roxygen corrected — was claiming a printing side
-  effect that doesn't exist. (audit_mcml #5)
+  effect that doesn't exist. (audit_mcml item 5)
 * `build_mcml()` `clusters = "<col>"` mode now documents its narrow
   contract: assigns each row's group label to both endpoints, so it
-  only makes sense for within-group edge lists. (audit_mcml #2)
+  only makes sense for within-group edge lists. (audit_mcml item 2)
 * `build_mcml()` `method` parameter doc now steers raw sequence /
   event-log inputs to `"sum"`, since the function counts observed
   transitions. Other methods are for weighted edge lists or
-  pre-existing matrices. (audit_mcml #4)
+  pre-existing matrices. (audit_mcml item 4)
 * `as_tna.mcml()` "Excluded Clusters" section corrected — drop emits
   a `warning()` (was claimed silent) and only fires for `relative`
-  method (was claimed unconditional). (audit_mcml #6)
+  method (was claimed unconditional). (audit_mcml item 6)
 * `build_clusters()` `na_syms` doc adds an explicit "Missing-value
   distance rule" subsection: NA becomes a comparable sentinel state,
-  not pairwise deletion. (audit_clustering #3)
+  not pairwise deletion. (audit_clustering item 3)
 * `build_mmm()` adds an "Initial states" section explaining
   first-column-verbatim init and that build_mmm does NOT honor
   build_clusters-style `na_syms` — only actual `NA` cells become NA
-  inits. (audit_clustering #5, doc-only path)
+  inits. (audit_clustering item 5, doc-only path)
 
 ### Tests
 * +12 new tests pinning the corrected contracts and the documented
