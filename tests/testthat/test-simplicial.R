@@ -565,6 +565,17 @@ test_that("verify_simplicial on random network passes", {
   expect_true(res$cliques_match)
 })
 
+test_that("verify_simplicial accepts a network object like its matrix", {
+  skip_if_not_installed("igraph")
+  net <- .make_sc_net()
+  out <- capture.output(
+    from_net <- verify_simplicial(net, threshold = 0.1),
+    from_mat <- verify_simplicial(net$weights, threshold = 0.1)
+  )
+  expect_identical(from_net, from_mat)
+  expect_true(from_net$cliques_match)
+})
+
 
 # =========================================================================
 # print methods
@@ -657,6 +668,19 @@ test_that("print.q_analysis works for fragmented graph", {
   expect_true(any(grepl("Q-Analysis", out)))
   # Should show fragmentation info since there are disconnected components
   expect_true(any(grepl("Fragments|Components", out)))
+})
+
+test_that("print.q_analysis reports the lowest fragmenting q", {
+  # Two 4-cliques sharing one edge: connected at q = 0, 1; split at q = 2
+  mat <- matrix(0, 6, 6, dimnames = list(LETTERS[1:6], LETTERS[1:6]))
+  mat[1:4, 1:4] <- 1
+  mat[3:6, 3:6] <- 1
+  diag(mat) <- 0
+  qa <- q_analysis(build_simplicial(mat))
+  expect_identical(unname(qa$q_vector[c("q_0", "q_1", "q_2", "q_3")]),
+                   c(1L, 1L, 2L, 2L))
+  out <- capture.output(print(qa))
+  expect_true(any(grepl("Fragments at q = 2 \\(1 → 2 components\\)", out)))
 })
 
 test_that("print.q_analysis returns invisibly", {

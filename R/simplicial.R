@@ -1102,7 +1102,9 @@ q_analysis <- function(sc) {
 #' Cross-validates clique finding and Betti numbers against igraph
 #' and known topological invariants. Useful for testing.
 #'
-#' @param mat A square adjacency matrix.
+#' @param mat A square adjacency matrix, or a network object that
+#'   [build_simplicial()] accepts (\code{netobject}, \code{tna},
+#'   \code{cograph_network}, \code{net_hon}); its weight matrix is used.
 #' @param threshold Edge weight threshold.
 #'
 #' @return Invisibly, a list with \code{cliques_match} (logical: do the
@@ -1120,6 +1122,7 @@ verify_simplicial <- function(mat, threshold = 0) {
     stop("igraph is required for verification.", call. = FALSE) # nocov
   }
 
+  mat <- .sc_extract_matrix(mat)
   sc <- build_simplicial(mat, threshold = threshold)
 
   # igraph clique count
@@ -1259,16 +1262,20 @@ print.q_analysis <- function(x, ...) {
   q_str <- paste(sprintf("q%d:%d", q_levels, x$q_vector), collapse = " ")
   cat(sprintf("  Components: %s\n", q_str))
 
-  # Fragmentation: first q where components > 1
-  frag_idx <- which(x$q_vector > 1L)[1]
+  # Fragmentation: lowest q where components > 1. q_vector is stored from
+  # the highest q down, so scan it in ascending q.
+  ascending <- order(q_levels)
+  asc_levels <- q_levels[ascending]
+  asc_counts <- x$q_vector[ascending]
+  frag_idx <- which(asc_counts > 1L)[1]
   if (!is.na(frag_idx)) {
     if (frag_idx > 1L) {
       cat(sprintf("  Fragments at q = %d (%d \u2192 %d components)\n",
-                  q_levels[frag_idx], x$q_vector[frag_idx - 1L],
-                  x$q_vector[frag_idx]))
+                  asc_levels[frag_idx], asc_counts[frag_idx - 1L],
+                  asc_counts[frag_idx]))
     } else {
       cat(sprintf("  Fragments at q = %d (%d components)\n",
-                  q_levels[frag_idx], x$q_vector[frag_idx]))
+                  asc_levels[frag_idx], asc_counts[frag_idx]))
     }
   } else {
     cat("  Fully connected at all q levels\n")

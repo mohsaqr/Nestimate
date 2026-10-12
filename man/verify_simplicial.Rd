@@ -7,7 +7,9 @@
 verify_simplicial(mat, threshold = 0)
 }
 \arguments{
-\item{mat}{A square adjacency matrix.}
+\item{mat}{A square adjacency matrix, or a network object that
+\code{\link[=build_simplicial]{build_simplicial()}} accepts (\code{netobject}, \code{tna},
+\code{cograph_network}, \code{net_hon}); its weight matrix is used.}
 
 \item{threshold}{Edge weight threshold.}
 }
