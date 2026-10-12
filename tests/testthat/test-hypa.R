@@ -5,19 +5,21 @@ testthat::skip_on_cran()
 # Section 1: Internal — .hypa_fit_xi
 # ===========================================================================
 
-test_that(".hypa_fit_xi gives N >> m", {
+test_that(".hypa_fit_xi gives N >> m and preserves node strengths", {
   adj <- matrix(c(0, 5, 3, 2, 0, 4, 1, 3, 0), 3, 3, byrow = TRUE,
                 dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
   xi <- .hypa_fit_xi(adj)
 
   # N = sum(Xi) should be >> m = sum(adj)
   expect_true(sum(xi) > sum(adj))
+  expect_true(attr(xi, "fit")$converged)
 
-  # Xi = outer(s_out, s_in) * mask
-  s_out <- rowSums(adj)
-  s_in <- colSums(adj)
-  expected <- outer(s_out, s_in) * (adj > 0)
-  expect_equal(xi, expected)
+  # The null preserves expected out- and in-strength (LaRock et al. 2020);
+  # the continuous fit reaches it to numerical precision.
+  e <- sum(adj) * xi / sum(xi)
+  expect_lt(max(abs(rowSums(e) - rowSums(adj))), 1e-8)
+  expect_lt(max(abs(colSums(e) - colSums(adj))), 1e-8)
+  expect_equal(sum(xi), sum(adj)^2)
 })
 
 test_that(".hypa_fit_xi respects edge structure", {
@@ -31,6 +33,50 @@ test_that(".hypa_fit_xi respects edge structure", {
   expect_equal(xi[2, 1], 0)
   expect_equal(xi[2, 2], 0)
   expect_equal(xi[3, 3], 0)
+})
+
+test_that("order-2 expected count equals the first-order Markov closed form", {
+  # Fitted De Bruijn null: E[a b c] = s_out(ab) * s_in(bc) / sum_x s_in(bx)
+  set.seed(11)
+  P <- matrix(c(.6, .3, .1, .2, .5, .3, .3, .3, .4), 3, byrow = TRUE,
+              dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
+  trajs <- lapply(sample(3:8, 200, replace = TRUE), function(L) Reduce(
+    function(s, i) c(s, sample(colnames(P), 1L, prob = P[s[length(s)], ])),
+    seq_len(L - 1L), init = sample(colnames(P), 1L)))
+  h <- build_hypa(trajs, order = 2L)
+  tri <- unlist(lapply(trajs, function(t) vapply(seq_len(length(t) - 2L),
+    function(i) paste(t[i:(i + 2L)], collapse = " "), "")))
+  p <- strsplit(tri, " ", fixed = TRUE)
+  src <- vapply(p, function(x) paste(x[1:2], collapse = " "), "")
+  tgt <- vapply(p, function(x) paste(x[2:3], collapse = " "), "")
+  mid <- vapply(p, `[`, "", 2L)
+  hand <- sum(src == "A B") * sum(tgt == "B C") / sum(mid == "B")
+  got <- h$scores$expected[h$scores$path == "A -> B -> C"]
+  expect_equal(got, hand, tolerance = 1e-10)
+  # Unobserved but possible paths are scored with observed = 0
+  expect_true(all(h$scores$observed >= 0))
+})
+
+test_that("build_hypa is calibrated on memoryless data", {
+  set.seed(12)
+  P <- matrix(c(.6, .3, .1, .2, .5, .3, .3, .3, .4), 3, byrow = TRUE,
+              dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
+  trajs <- lapply(sample(3:8, 400, replace = TRUE), function(L) Reduce(
+    function(s, i) c(s, sample(colnames(P), 1L, prob = P[s[length(s)], ])),
+    seq_len(L - 1L), init = sample(colnames(P), 1L)))
+  h <- build_hypa(trajs, order = 2:3, p_adjust = "BH")
+  expect_equal(h$n_anomalous, 0L)
+})
+
+test_that(".hypa_possible_edges keeps De Bruijn continuations only", {
+  trajs <- list(c("A", "B", "C"), c("B", "C", "A"), c("A", "B", "A"))
+  h <- build_hypa(trajs, order = 2L, min_count = 1L)
+  # A->B->C, B->C->A and A->B->A are observed; possible paths must continue
+  # an observed 2-gram with an observed first-order transition
+  parts <- strsplit(h$scores$path, " -> ", fixed = TRUE)
+  expect_true(all(vapply(parts, length, integer(1)) == 3L))
+  expect_true(all(c("A -> B -> C", "B -> C -> A", "A -> B -> A") %in%
+                    h$scores$path))
 })
 
 # ===========================================================================
@@ -57,7 +103,7 @@ test_that(".hypa_compute_scores returns correct format", {
   expect_true(all(scores$p_over <= 1))
 })
 
-test_that(".hypa_compute_scores uses inclusive over-representation tail", {
+test_that(".hypa_compute_scores uses the strict over tail of LaRock et al. (2020)", {
   adj <- matrix(c(0, 12, 5, 2,
                   3, 0, 8, 1,
                   6, 4, 0, 9,
@@ -73,9 +119,35 @@ test_that(".hypa_compute_scores uses inclusive over-representation tail", {
   expect_equal(edge$p_under,
                stats::phyper(edge$observed, K, N_total - K, n_draws))
   expect_equal(edge$p_over,
-               stats::phyper(edge$observed - 1, K, N_total - K, n_draws,
+               stats::phyper(edge$observed, K, N_total - K, n_draws,
                              lower.tail = FALSE))
-  expect_gt(edge$p_over, 1 - edge$p_under)
+  expect_equal(scores$p_over, 1 - scores$p_under)
+})
+
+test_that("an absent path with enough expected mass can be under-represented", {
+  # A -> B -> A never occurs, but A -> B and B -> A are both frequent, so the
+  # null expects it many times.
+  trajs <- c(rep(list(c("A", "B", "C")), 40), rep(list(c("C", "B", "A")), 40))
+  h <- build_hypa(trajs, order = 2L, min_count = 5L)
+  scores <- h$scores
+  absent <- scores[scores$path == "A -> B -> A", , drop = FALSE]
+  expect_equal(nrow(absent), 1L)
+  expect_equal(absent$observed, 0L)
+  expect_gte(absent$expected, 5)
+  expect_equal(absent$anomaly, "under")
+})
+
+test_that("min_count gates over on observed and under on expected", {
+  trajs <- c(rep(list(c("A", "B", "C")), 40), rep(list(c("C", "B", "A")), 40))
+  h <- build_hypa(trajs, order = 2L, min_count = 5L)
+  scores <- h$scores
+  over <- scores[scores$anomaly == "over", , drop = FALSE]
+  under <- scores[scores$anomaly == "under", , drop = FALSE]
+  expect_true(all(over$observed >= 5))
+  expect_true(all(under$expected >= 5))
+  # Raising min_count above every expected count removes all deficits.
+  h_hi <- build_hypa(trajs, order = 2L, min_count = 1000L)
+  expect_equal(h_hi$n_anomalous, 0L)
 })
 
 test_that(".hypa_compute_scores handles empty graph", {
@@ -131,7 +203,62 @@ test_that("build_hypa rejects invalid input", {
   # `k` is deprecated; the validator reports against the canonical `order`.
   expect_error(build_hypa(list(c("A", "B")), k = 0L), "integers >= 1")
   expect_error(build_hypa(list(c("A", "B")), alpha = 0.6),
-               "alpha.*must be in")
+               "alpha.*must be a single number in")
+})
+
+# Regression: defects found by the 2026-10-12 oracle audit.
+.audit_trajs <- list(c("C", "B", "C", "B"), c("B", "B", "A", "A"),
+                     c("C", "A", "C"))
+
+test_that("the fit preserves strengths where the rounded fit stalled", {
+  h <- build_hypa(.audit_trajs, order = 2L, min_count = 1L)
+  layer <- h$by_order[["2"]]
+  m <- sum(layer$adjacency)
+  expect_equal(sum(layer$xi), m^2)
+  expect_true(attr(layer$xi, "fit")$converged)
+  e <- h$scores
+  # B -> C -> B is the only continuation of its source and target blocks.
+  expect_equal(e$expected[e$path == "B -> C -> B"], 1, tolerance = 1e-10)
+  expect_equal(sum(e$expected), m, tolerance = 1e-10)
+})
+
+test_that("a fit that misses its tolerance warns and says so", {
+  set.seed(3)
+  adj <- matrix(stats::rpois(36, 3), 6, 6,
+                dimnames = list(LETTERS[1:6], LETTERS[1:6]))
+  adj[sample(36, 12)] <- 0
+  expect_warning(xi <- .hypa_fit_xi(adj, tol = 0, max_iter = 2L),
+                 class = "nestimate_hypa_no_converge")
+  expect_false(attr(xi, "fit")$converged)
+  expect_equal(attr(xi, "fit")$iterations, 2L)
+})
+
+test_that("min_count must be a single whole number", {
+  expect_error(build_hypa(.audit_trajs, min_count = 1.9), "whole number")
+  expect_error(build_hypa(.audit_trajs, min_count = Inf), "whole number")
+  expect_error(build_hypa(.audit_trajs, min_count = c(1, 100)), "whole number")
+})
+
+test_that("duplicate orders are rejected", {
+  expect_error(build_hypa(.audit_trajs, order = c(2, 2)), "duplicates")
+})
+
+test_that("missing states split trajectories instead of becoming a state", {
+  gap <- build_hypa(list(c("A", "B", NA, "A", "B", "C"), c("A", "B", "C")),
+                    order = 1L, min_count = 1L)$scores
+  expect_false(any(grepl("NA", gap$path)))
+  expect_equal(gap$observed[gap$path == "A -> B"], 3L)
+  expect_false("B -> A" %in% gap$path)
+  literal <- build_hypa(list(c("A", "NA", "B"), c("A", "NA", "B")),
+                        order = 1L, min_count = 1L)$scores
+  expect_true("A -> NA" %in% literal$path)
+})
+
+test_that("labels containing the internal separators are rejected", {
+  expect_error(build_hypa(list(c("A\001B", "C", "D")), min_count = 1L),
+               class = "nestimate_hypa_bad_label")
+  expect_error(build_hypa(list(c("A\002B", "C", "D")), min_count = 1L),
+               class = "nestimate_hypa_bad_label")
 })
 
 test_that("build_hypa alpha parameter affects classification", {
@@ -401,14 +528,15 @@ test_that("p_adjust='none' matches original behavior (no correction)", {
   expect_equal(h$scores$p_adjusted_over, h$scores$p_over)
 })
 
-test_that("default BH adjustment produces p_adjusted columns in scores", {
+test_that("BH adjustment produces p_adjusted columns in scores", {
   trajs <- c(
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(5, c("A", "B", "D"), simplify = FALSE),
     replicate(5, c("C", "B", "A"), simplify = FALSE),
     replicate(2, c("D", "B", "C"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+                  p_adjust = "BH")
 
   expect_equal(h$p_adjust, "BH")
   expect_true("p_adjusted_under" %in% names(h$scores))
@@ -540,7 +668,8 @@ test_that("two-sided correction adjusts under and over separately", {
     replicate(3, c("A", "C", "D"), simplify = FALSE),
     replicate(3, c("D", "C", "A"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+                  p_adjust = "BH")
 
   # Verify that p_adjusted_under and p_adjusted_over are adjusted separately
   # by checking they equal p.adjust applied to the raw values
@@ -550,4 +679,11 @@ test_that("two-sided correction adjusts under and over separately", {
                stats::p.adjust(raw_p_under, method = "BH"))
   expect_equal(h$scores$p_adjusted_over,
                stats::p.adjust(raw_p_over, method = "BH"))
+})
+
+test_that("p_adjust defaults to none (LaRock et al. 2020 apply no correction)", {
+  trajs <- list(c("A", "B", "C"), c("A", "B", "C"), c("B", "C", "A"))
+  h <- build_hypa(trajs, order = 2L, min_count = 1L)
+  expect_equal(h$p_adjust, "none")
+  expect_equal(h$scores$p_adjusted_over, h$scores$p_over)
 })

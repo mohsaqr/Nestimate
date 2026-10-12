@@ -5,27 +5,117 @@
 # De Bruijn graphs to identify over/under-represented paths.
 
 # ---------------------------------------------------------------------------
-# Internal: Fit Xi matrix (iterative proportional fitting)
+# Internal: possible edges and Xi fitting (LaRock et al. 2020; tlarock/hypa)
 # ---------------------------------------------------------------------------
 
-#' Compute propensity matrix Xi from node strengths
+#' Possible edges of the order-k De Bruijn graph
 #'
-#' Xi_{vw} = s_out(v) * s_in(w) for edges present in the De Bruijn graph.
-#' The product of strengths gives N = sum(Xi) >> m = sum(adj), ensuring a
-#' non-degenerate hypergeometric null model. This follows the HYPA null
-#' model where edge propensity is proportional to the product of endpoint
-#' weighted degrees.
+#' An edge v -> w is possible when v has out-weight, w has in-weight, w
+#' continues v (the last k - 1 states of v are the first k - 1 states of w)
+#' and the step from the last state of v to the last state of w is an
+#' observed first-order transition. Follows \code{computeXiHigherOrder()} in
+#' tlarock/hypa. At order 1 the possible edges are the observed transitions.
+#'
+#' @param adj Square adjacency matrix of the order-k De Bruijn graph; node
+#'   names are k-grams joined by \code{.HON_SEP}.
+#' @param first_order Character vector of observed first-order transitions,
+#'   each \code{paste(from, to, sep = .HON_SEP)}.
+#' @param k Integer order.
+#' @return Logical matrix with the dimensions of \code{adj}.
+#' @noRd
+.hypa_possible_edges <- function(adj, first_order, k) {
+  if (k <= 1L) return(adj > 0)
+  nodes <- rownames(adj)
+  parts <- strsplit(nodes, .HON_SEP, fixed = TRUE)
+  src <- nodes[rowSums(adj) > 0]
+  tgt <- nodes[colSums(adj) > 0]
+  key_of <- function(x, drop_first) {
+    vapply(parts[match(x, nodes)], function(p) {
+      paste(if (drop_first) p[-1L] else p[-length(p)], collapse = .HON_SEP)
+    }, character(1L))
+  }
+  last_of <- function(x) {
+    vapply(parts[match(x, nodes)], function(p) p[length(p)], character(1L))
+  }
+  pairs <- merge(
+    data.frame(from = src, key = key_of(src, TRUE), from_last = last_of(src),
+               stringsAsFactors = FALSE),
+    data.frame(to = tgt, key = key_of(tgt, FALSE), to_last = last_of(tgt),
+               stringsAsFactors = FALSE),
+    by = "key"
+  )
+  pairs <- pairs[paste(pairs$from_last, pairs$to_last, sep = .HON_SEP) %in%
+                   first_order, , drop = FALSE]
+  mask <- matrix(FALSE, nrow(adj), ncol(adj), dimnames = dimnames(adj))
+  mask[cbind(match(pairs$from, nodes), match(pairs$to, nodes))] <- TRUE
+  stopifnot("every observed path must be a possible edge" = all(mask[adj > 0]))
+  mask
+}
+
+#' Fit the propensity matrix Xi
+#'
+#' Starts from \eqn{\Xi_{vw} = s_{out}(v) s_{in}(w)} on the possible edges
+#' and alternately rescales rows and columns (iterative proportional
+#' fitting, the continuous form of \code{fitXi()} / \code{xifix_row()} in
+#' tlarock/hypa) until the expected out- and in-strengths
+#' \eqn{m \sum_w \Xi_{vw} / \sum \Xi} match the observed strengths, so that
+#' the null model preserves every node's strength. The observed adjacency
+#' is itself a solution supported on the possible edges, so the fit always
+#' has a target. No rounding happens inside the loop; the fitted matrix is
+#' scaled to \eqn{\sum \Xi = m^2} at the end. The original Python code rounds
+#' Xi to integers inside every sweep, which shifts expected counts by up to
+#' about 0.002 on corpora of a few thousand paths.
 #'
 #' @param adj Square adjacency matrix of the De Bruijn graph.
-#' @return Matrix Xi with same dimensions as adj (sum(Xi) >> sum(adj)).
+#' @param mask Logical matrix of possible edges (default: observed edges).
+#' @param tol Relative tolerance: the fit has converged when the largest
+#'   absolute strength error is below \code{tol * m}.
+#' @param max_iter Maximum number of row/column sweeps.
+#' @return Matrix Xi with the dimensions of \code{adj}, summing to
+#'   \eqn{m^2}; attribute \code{"fit"} holds \code{max_error} (largest
+#'   absolute strength error of the expected counts), \code{iterations} and
+#'   \code{converged}. A classed warning \code{nestimate_hypa_no_converge}
+#'   is raised when the tolerance is not reached.
 #' @noRd
-.hypa_fit_xi <- function(adj) {
-  out_strength <- rowSums(adj)
-  in_strength <- colSums(adj)
-  mask <- adj > 0
-
-  # Xi_{vw} = s_out(v) * s_in(w) where edges exist in the De Bruijn graph
-  outer(out_strength, in_strength) * mask
+.hypa_fit_xi <- function(adj, mask = adj > 0, tol = 1e-10, max_iter = 10000L) {
+  s_out <- rowSums(adj)
+  s_in <- colSums(adj)
+  m <- sum(adj)
+  xi0 <- outer(s_out, s_in) * mask
+  if (m == 0 || sum(xi0) == 0) {
+    return(structure(xi0, fit = list(max_error = 0, iterations = 0L,
+                                     converged = TRUE)))
+  }
+  safe_ratio <- function(target, current) {
+    ifelse(current > 0, target / current, 0)
+  }
+  # Expected counts are the fitted matrix itself (it sums to m after each
+  # column step), so the error is read directly from its margins.
+  strength_error <- function(e) {
+    max(abs(rowSums(e) - s_out), abs(colSums(e) - s_in))
+  }
+  sweep_once <- function(e) {
+    e <- e * safe_ratio(s_out, rowSums(e))
+    t(t(e) * safe_ratio(s_in, colSums(e)))
+  }
+  start <- xi0 * m / sum(xi0)
+  fit <- Reduce(function(state, i) {
+    if (state$done) return(state)
+    e <- sweep_once(state$e)
+    err <- strength_error(e)
+    list(e = e, err = err, iter = state$iter + 1L, done = err < tol * m)
+  }, seq_len(max_iter),
+  list(e = start, err = strength_error(start), iter = 0L,
+       done = strength_error(start) < tol * m))
+  if (!fit$done) {
+    warning(warningCondition(
+      sprintf(paste0("HYPA Xi fit did not converge in %d sweeps ",
+                     "(largest strength error %.3g of %d paths)"),
+              max_iter, fit$err, as.integer(m)),
+      class = "nestimate_hypa_no_converge", call = NULL))
+  }
+  structure(fit$e * m, fit = list(max_error = fit$err, iterations = fit$iter,
+                                  converged = fit$done))
 }
 
 # ---------------------------------------------------------------------------
@@ -34,8 +124,9 @@
 
 #' Compute hypergeometric p-values for each edge
 #'
-#' For each edge (v,w) with observed weight f, computes:
-#'   \code{p_under = P(X <= f)} and \code{p_over = P(X >= f)}
+#' For each possible edge (v,w), i.e. each cell with Xi > 0, observed or
+#' not, with observed weight f (possibly 0), computes:
+#'   \code{p_under = P(X <= f)} and \code{p_over = P(X > f) = 1 - p_under}
 #'   where \code{X ~ Hypergeometric(N, K, n)},
 #'   \code{N = round(sum(Xi))}, \code{K = round(Xi[v,w])}, \code{n = sum(adj)}
 #'
@@ -49,11 +140,12 @@
   nodes <- rownames(adj)
 
   # Total pool
-  N_total <- round(sum(xi))
+  xi_total <- sum(xi)
+  N_total <- round(xi_total)
   n_draws <- sum(adj)
 
-  # Collect edges
-  edge_idx <- which(adj > 0, arr.ind = TRUE)
+  # Score every possible edge (Xi > 0), including unobserved paths
+  edge_idx <- which(xi > 0, arr.ind = TRUE)
   if (nrow(edge_idx) == 0L) {
     return(data.frame(path = character(0L), from = character(0L),
                       to = character(0L), observed = integer(0L),
@@ -74,13 +166,15 @@
     K <- max(K, 0L)
     n_clamp <- min(n_draws, N_total)
 
-    # Inclusive hypergeometric tails.
+    # LaRock et al. (2020): HYPA = P(X <= f); a path is over-represented when
+    # HYPA > 1 - alpha, i.e. when the strict upper tail P(X > f) < alpha.
     p_under <- stats::phyper(f_obs, K, N_total - K, n_clamp)
-    p_over <- stats::phyper(f_obs - 1, K, N_total - K, n_clamp,
+    p_over <- stats::phyper(f_obs, K, N_total - K, n_clamp,
                             lower.tail = FALSE)
 
-    # Expected value: n * K / N
-    expected <- if (N_total > 0) n_draws * K / N_total else 0
+    # Expected count from the continuous fit; the tails use the integer
+    # pool sizes the hypergeometric distribution requires.
+    expected <- if (xi_total > 0) n_draws * xi[i, j] / xi_total else 0
 
     # Reconstruct full path; from = context, to = next state
     from_parts <- strsplit(nodes[i], .HON_SEP, fixed = TRUE)[[1L]]
@@ -110,6 +204,23 @@
                            ifelse(result$p_over < 0.05, "over", "normal"))
 
   result
+}
+
+#' Split trajectories at internal missing states
+#'
+#' A path must not span a missing observation, so each run of non-missing
+#' states becomes its own trajectory; runs shorter than two states carry no
+#' transition and are dropped.
+#' @param trajectories List of character vectors.
+#' @return List of character vectors without \code{NA}, each of length >= 2.
+#' @noRd
+.hypa_split_gaps <- function(trajectories) {
+  pieces <- lapply(trajectories, function(tr) {
+    present <- !is.na(tr)
+    unname(split(tr[present], cumsum(!present)[present]))
+  })
+  pieces <- unlist(pieces, recursive = FALSE)
+  Filter(function(tr) length(tr) >= 2L, pieces)
 }
 
 # ---------------------------------------------------------------------------
@@ -148,7 +259,12 @@
   idx <- cbind(match(kg$edges$from, nodes), match(kg$edges$to, nodes))
   adj[idx] <- kg$edges$weight
 
-  xi <- .hypa_fit_xi(adj)
+  first_order <- unique(unlist(lapply(trajectories, function(tr) {
+    if (length(tr) < 2L) return(character(0L))
+    paste(tr[-length(tr)], tr[-1L], sep = .HON_SEP)
+  })))
+  mask <- .hypa_possible_edges(adj, first_order, ord)
+  xi <- .hypa_fit_xi(adj, mask)
   scores <- .hypa_compute_scores(adj, xi)
 
   if (p_adjust != "none" && nrow(scores) > 0L) {
@@ -159,11 +275,13 @@
     scores$p_adjusted_over  <- scores$p_over
   }
 
-  scores$anomaly <- ifelse(
-    scores$observed < min_count, "normal",
-    ifelse(scores$p_adjusted_under < alpha, "under",
-           ifelse(scores$p_adjusted_over < alpha, "over", "normal"))
-  )
+  # Over-representation needs at least min_count observations; a deficit needs
+  # at least min_count expected occurrences, so a path that never occurs can
+  # still be under-represented.
+  is_under <- scores$expected >= min_count & scores$p_adjusted_under < alpha
+  is_over  <- scores$observed >= min_count & scores$p_adjusted_over < alpha
+  scores$anomaly <- ifelse(is_under, "under",
+                           ifelse(is_over, "over", "normal"))
   scores$order <- ord
 
   anom_over  <- scores[scores$anomaly == "over",  , drop = FALSE]
@@ -191,13 +309,26 @@
 #' Paths occurring more or less often than expected under the null model are
 #' flagged as over- or under-represented.
 #'
+#' Internal missing states split a trajectory, so no path spans a gap;
+#' pieces shorter than two states are dropped. State labels must not
+#' contain the control characters \code{"\\x01"} or \code{"\\x02"}, which
+#' are used internally as separators (error class
+#' \code{nestimate_hypa_bad_label}). The propensity matrix is fitted by
+#' continuous iterative proportional fitting; when the fit does not reach
+#' its tolerance a warning of class \code{nestimate_hypa_no_converge} is
+#' raised. The original Python implementation rounds the propensities
+#' inside every sweep, so its expected counts can differ from these by a few
+#' thousandths.
+#'
 #' @param data A data.frame (rows = trajectories), list of character vectors,
 #'   \code{tna} object, or \code{netobject} with sequence data. For
 #'   \code{tna}/\code{netobject}, numeric state IDs are automatically
 #'   converted to label names.
 #' @param order Integer scalar or integer vector. Order(s) of the De Bruijn
-#'   graph (default \code{2L}). An order of \code{k} detects anomalies in
-#'   paths of length \code{k}. When a vector is supplied, one De Bruijn layer
+#'   graph (default \code{2L}). An order of \code{k} tests paths of
+#'   \code{k + 1} states (\code{k} transitions), each conditioned on the
+#'   \code{k}-state context that precedes its last state. Orders must be
+#'   unique. When a vector is supplied, one De Bruijn layer
 #'   is built per order and the per-order results are stored in
 #'   \code{$by_order} (named by order). The orders are sorted ascending
 #'   internally, so the \code{cograph_network} slots
@@ -213,15 +344,23 @@
 #'   \code{alpha}, \code{"over"} when its adjusted upper-tail p-value
 #'   \code{p_adjusted_over} is below \code{alpha}, and \code{"normal"}
 #'   otherwise (the under-representation test is applied first).
-#' @param min_count Integer. Minimum observed count for a path to be
-#'   classified as anomalous (default 5). Paths with fewer observations
-#'   are always classified as \code{"normal"} regardless of their
-#'   HYPA score, since rare occurrences are unreliable.
-#' @param p_adjust Character. Method for multiple testing correction of
-#'   p-values. Default \code{"BH"} (Benjamini-Hochberg FDR control).
-#'   Accepts any method from \code{\link[stats]{p.adjust.methods}} or
-#'   \code{"none"} to skip correction. Under- and over-representation
-#'   p-values are adjusted separately (two-sided testing).
+#' @param min_count Integer. Minimum count for a path to be classified as
+#'   anomalous (default 5). An over-represented path must be observed at
+#'   least \code{min_count} times; an under-represented path must be
+#'   expected at least \code{min_count} times under the null, so a path
+#'   that never occurs in the data can still be flagged as
+#'   under-represented. Other paths are classified as \code{"normal"}.
+#' @param p_adjust Character. Optional multiple testing correction of
+#'   p-values. Default \code{"none"}: paths are classified against the
+#'   threshold \code{alpha} directly, as in LaRock et al. (2020), which
+#'   applies no correction. Accepts any method from
+#'   \code{\link[stats]{p.adjust.methods}}, e.g. \code{"BH"} for
+#'   Benjamini-Hochberg FDR control. Under- and over-representation
+#'   p-values are adjusted separately, within each order, over every
+#'   possible path. With small counts the paper's upper-tail score
+#'   \code{P(X > f)} rejects more often than \code{alpha} under the null, so
+#'   neither the uncorrected nor the corrected classification carries an
+#'   exact type-I or FDR guarantee; \code{min_count} limits the problem.
 #' @param k Deprecated. Former name of \code{order}; if supplied it overrides
 #'   \code{order} and emits a deprecation message. Use \code{order} instead.
 #' @return An object of class \code{c("net_hypa", "cograph_network")} with
@@ -230,14 +369,23 @@
 #'     \item{scores}{Data frame with path, from, to, observed, expected,
 #'       ratio, p_value, p_under, p_over, p_adjusted_under,
 #'       p_adjusted_over, anomaly, order
-#'       columns (one block of rows per requested order). The \code{path}
+#'       columns (one block of rows per requested order). One row per
+#'       possible path of the De Bruijn graph: every observed path plus every
+#'       unobserved path that the lower-order transitions permit
+#'       (\code{observed = 0}). \code{expected} comes from a propensity
+#'       matrix fitted so that the expected counts preserve the observed in-
+#'       and out-strength of every De Bruijn node (LaRock et al. 2020); at
+#'       order 2 this equals the first-order Markov expectation
+#'       \eqn{n(a b \cdot) n(\cdot b c) / n(\cdot b \cdot)}. The \code{path}
 #'       column shows the full state sequence
 #'       (e.g., "A -> B -> C"); \code{from} is the context (conditioning
 #'       states); \code{to} is the next state; \code{ratio} is
 #'       observed / expected; \code{p_value} is retained as an alias for
 #'       \code{p_under}, the raw lower-tail hypergeometric CDF value;
-#'       \code{p_over} is the inclusive upper-tail probability
-#'       \code{P(X >= observed)}; \code{p_adjusted_under} and
+#'       \code{p_over} is the strict upper-tail probability
+#'       \code{P(X > observed) = 1 - p_under}, so that a path is
+#'       over-represented when its HYPA score exceeds \code{1 - alpha}
+#'       (LaRock et al., 2020); \code{p_adjusted_under} and
 #'       \code{p_adjusted_over} are the corrected p-values for under- and
 #'       over-representation tests respectively.}
 #'     \item{ho_edges}{Alias for \code{scores} (all orders, arrow notation).}
@@ -256,7 +404,7 @@
 #'     \item{n_anomalous}{Number of anomalous paths detected (all orders).}
 #'     \item{n_over}{Number of over-represented paths (all orders).}
 #'     \item{n_under}{Number of under-represented paths (all orders).}
-#'     \item{n_edges}{Total number of edges (all orders).}
+#'     \item{n_edges}{Total number of tested (possible) paths, all orders.}
 #'     \item{nodes}{data.frame (\code{id}, \code{label}, \code{name}) of the
 #'       lowest-order De Bruijn graph nodes (arrow notation).}
 #'     \item{directed}{Logical. Always \code{TRUE}.}
@@ -282,7 +430,7 @@
 #'
 #' @export
 build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
-                       p_adjust = "BH", k = NULL) {
+                       p_adjust = "none", k = NULL) {
   if (!is.null(k)) {
     .Deprecated(msg = "'k' is deprecated; use 'order' instead.")
     order <- k
@@ -299,10 +447,16 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
     "'data' must be a data.frame or list" =
       is.data.frame(data) || is.list(data),
     "'order' must contain only whole numbers" =
-      is.numeric(order) && all(order == round(order)),
+      is.numeric(order) && length(order) >= 1L && all(is.finite(order)) &&
+      all(order == round(order)),
     "'order' must contain only integers >= 1" = all(order >= 1L),
-    "'alpha' must be in (0, 0.5)" = alpha > 0 && alpha < 0.5,
-    "'min_count' must be >= 1" = min_count >= 1L
+    "'order' must not contain duplicates" = !anyDuplicated(order),
+    "'alpha' must be a single number in (0, 0.5)" =
+      is.numeric(alpha) && length(alpha) == 1L && is.finite(alpha) &&
+      alpha > 0 && alpha < 0.5,
+    "'min_count' must be a single whole number >= 1" =
+      is.numeric(min_count) && length(min_count) == 1L &&
+      is.finite(min_count) && min_count == round(min_count) && min_count >= 1
   )
   # Sort ascending so the primary cograph slot (built from per_order[[1L]])
   # is deterministically the lowest order that produces a layer, independent
@@ -310,7 +464,13 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
   order <- sort(as.integer(order))
   min_count <- as.integer(min_count)
 
-  trajectories <- .hon_parse_input(data, collapse_repeats = FALSE)
+  trajectories <- .hypa_split_gaps(.hon_parse_input(data, collapse_repeats = FALSE))
+  states <- unlist(trajectories, use.names = FALSE)
+  if (any(grepl("[\x01\x02]", states, useBytes = TRUE))) {
+    stop(errorCondition(
+      "state labels must not contain the control characters \\x01 or \\x02",
+      class = "nestimate_hypa_bad_label", call = NULL))
+  }
   if (length(trajectories) == 0L) {
     stop("No valid trajectories (each must have at least 2 states)")
   }
@@ -378,7 +538,7 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
 #' @param type Character. Which anomalies to show: \code{"all"} (default), \code{"over"}, or \code{"under"}.
 #' @param order_by Character. Ranking used within each anomaly direction: \code{"sig"} (default) ranks by the active tail probability, \code{"freq"} (or its alias \code{"frequency"}) by observed count, \code{"ratio"} by observed/expected ratio, and \code{"path"} alphabetically.
 #' @return In \code{print.net_hypa()}: The input object, invisibly.
-#' @return In \code{summary.net_hypa()}: A data frame of the reported anomalies, at most \code{n} rows per direction, with columns \code{order} (the De Bruijn order the path was found at), \code{path}, \code{observed}, \code{expected}, \code{ratio}, \code{p_tail} (the raw tail probability in the reported direction: \code{p_over} for over-represented paths, \code{p_under} for under-represented ones) and \code{direction} (\code{"over"}/\code{"under"}). Returned visibly; the summary text and the top-\code{n} tables are printed as a side effect. When no anomalies were detected, a zero-row data frame with the same columns except \code{order} is returned.
+#' @return In \code{summary.net_hypa()}: A data frame of the reported anomalies, at most \code{n} rows per direction, with columns \code{order} (the De Bruijn order the path was found at), \code{path}, \code{observed}, \code{expected}, \code{ratio}, \code{p_tail} (the raw tail probability in the reported direction: \code{p_over} for over-represented paths, \code{p_under} for under-represented ones) and \code{direction} (\code{"over"}/\code{"under"}). Returned invisibly; the summary text and the top-\code{n} tables are printed as a side effect. When no anomalies were detected, a zero-row data frame with the same columns except \code{order} is returned.
 #' @export
 print.net_hypa <- function(x, ...) {
   ord_str <- paste(x$order, collapse = ", ")
@@ -464,6 +624,10 @@ summary.net_hypa <- function(object, n = 10L,
 
   if (object$n_anomalous == 0L) {
     cat("  No anomalous paths detected.\n")
+  } else if (type == "over" && object$n_over == 0L) {
+    cat("  No over-represented paths.\n")
+  } else if (type == "under" && object$n_under == 0L) {
+    cat("  No under-represented paths.\n")
   }
 
   pick <- function(df, dir) {
@@ -500,5 +664,7 @@ summary.net_hypa <- function(object, n = 10L,
     }
     row.names(combined) <- NULL
   }
-  combined
+  # The tables above are already printed; return invisibly so they are not
+  # printed a second time at top level.
+  invisible(combined)
 }

@@ -11,7 +11,7 @@ build_hypa(
   order = 2L,
   alpha = 0.05,
   min_count = 5L,
-  p_adjust = "BH",
+  p_adjust = "none",
   k = NULL
 )
 
@@ -32,8 +32,10 @@ build_hypa(
 converted to label names.}
 
 \item{order}{Integer scalar or integer vector. Order(s) of the De Bruijn
-graph (default \code{2L}). An order of \code{k} detects anomalies in
-paths of length \code{k}. When a vector is supplied, one De Bruijn layer
+graph (default \code{2L}). An order of \code{k} tests paths of
+\code{k + 1} states (\code{k} transitions), each conditioned on the
+\code{k}-state context that precedes its last state. Orders must be
+unique. When a vector is supplied, one De Bruijn layer
 is built per order and the per-order results are stored in
 \code{$by_order} (named by order). The orders are sorted ascending
 internally, so the \code{cograph_network} slots
@@ -51,16 +53,24 @@ adjusted lower-tail p-value \code{p_adjusted_under} is below
 \code{p_adjusted_over} is below \code{alpha}, and \code{"normal"}
 otherwise (the under-representation test is applied first).}
 
-\item{min_count}{Integer. Minimum observed count for a path to be
-classified as anomalous (default 5). Paths with fewer observations
-are always classified as \code{"normal"} regardless of their
-HYPA score, since rare occurrences are unreliable.}
+\item{min_count}{Integer. Minimum count for a path to be classified as
+anomalous (default 5). An over-represented path must be observed at
+least \code{min_count} times; an under-represented path must be
+expected at least \code{min_count} times under the null, so a path
+that never occurs in the data can still be flagged as
+under-represented. Other paths are classified as \code{"normal"}.}
 
-\item{p_adjust}{Character. Method for multiple testing correction of
-p-values. Default \code{"BH"} (Benjamini-Hochberg FDR control).
-Accepts any method from \code{\link[stats]{p.adjust.methods}} or
-\code{"none"} to skip correction. Under- and over-representation
-p-values are adjusted separately (two-sided testing).}
+\item{p_adjust}{Character. Optional multiple testing correction of
+p-values. Default \code{"none"}: paths are classified against the
+threshold \code{alpha} directly, as in LaRock et al. (2020), which
+applies no correction. Accepts any method from
+\code{\link[stats]{p.adjust.methods}}, e.g. \code{"BH"} for
+Benjamini-Hochberg FDR control. Under- and over-representation
+p-values are adjusted separately, within each order, over every
+possible path. With small counts the paper's upper-tail score
+\code{P(X > f)} rejects more often than \code{alpha} under the null, so
+neither the uncorrected nor the corrected classification carries an
+exact type-I or FDR guarantee; \code{min_count} limits the problem.}
 
 \item{k}{Deprecated. Former name of \code{order}; if supplied it overrides
 \code{order} and emits a deprecation message. Use \code{order} instead.}
@@ -84,14 +94,23 @@ components:
 \item{scores}{Data frame with path, from, to, observed, expected,
 ratio, p_value, p_under, p_over, p_adjusted_under,
 p_adjusted_over, anomaly, order
-columns (one block of rows per requested order). The \code{path}
+columns (one block of rows per requested order). One row per
+possible path of the De Bruijn graph: every observed path plus every
+unobserved path that the lower-order transitions permit
+(\code{observed = 0}). \code{expected} comes from a propensity
+matrix fitted so that the expected counts preserve the observed in-
+and out-strength of every De Bruijn node (LaRock et al. 2020); at
+order 2 this equals the first-order Markov expectation
+\eqn{n(a b \cdot) n(\cdot b c) / n(\cdot b \cdot)}. The \code{path}
 column shows the full state sequence
 (e.g., "A -> B -> C"); \code{from} is the context (conditioning
 states); \code{to} is the next state; \code{ratio} is
 observed / expected; \code{p_value} is retained as an alias for
 \code{p_under}, the raw lower-tail hypergeometric CDF value;
-\code{p_over} is the inclusive upper-tail probability
-\code{P(X >= observed)}; \code{p_adjusted_under} and
+\code{p_over} is the strict upper-tail probability
+\code{P(X > observed) = 1 - p_under}, so that a path is
+over-represented when its HYPA score exceeds \code{1 - alpha}
+(LaRock et al., 2020); \code{p_adjusted_under} and
 \code{p_adjusted_over} are the corrected p-values for under- and
 over-representation tests respectively.}
 \item{ho_edges}{Alias for \code{scores} (all orders, arrow notation).}
@@ -110,7 +129,7 @@ Bruijn graph.}
 \item{n_anomalous}{Number of anomalous paths detected (all orders).}
 \item{n_over}{Number of over-represented paths (all orders).}
 \item{n_under}{Number of under-represented paths (all orders).}
-\item{n_edges}{Total number of edges (all orders).}
+\item{n_edges}{Total number of tested (possible) paths, all orders.}
 \item{nodes}{data.frame (\code{id}, \code{label}, \code{name}) of the
 lowest-order De Bruijn graph nodes (arrow notation).}
 \item{directed}{Logical. Always \code{TRUE}.}
@@ -120,13 +139,25 @@ lowest-order De Bruijn graph nodes (arrow notation).}
 
 In \code{print.net_hypa()}: The input object, invisibly.
 
-In \code{summary.net_hypa()}: A data frame of the reported anomalies, at most \code{n} rows per direction, with columns \code{order} (the De Bruijn order the path was found at), \code{path}, \code{observed}, \code{expected}, \code{ratio}, \code{p_tail} (the raw tail probability in the reported direction: \code{p_over} for over-represented paths, \code{p_under} for under-represented ones) and \code{direction} (\code{"over"}/\code{"under"}). Returned visibly; the summary text and the top-\code{n} tables are printed as a side effect. When no anomalies were detected, a zero-row data frame with the same columns except \code{order} is returned.
+In \code{summary.net_hypa()}: A data frame of the reported anomalies, at most \code{n} rows per direction, with columns \code{order} (the De Bruijn order the path was found at), \code{path}, \code{observed}, \code{expected}, \code{ratio}, \code{p_tail} (the raw tail probability in the reported direction: \code{p_over} for over-represented paths, \code{p_under} for under-represented ones) and \code{direction} (\code{"over"}/\code{"under"}). Returned invisibly; the summary text and the top-\code{n} tables are printed as a side effect. When no anomalies were detected, a zero-row data frame with the same columns except \code{order} is returned.
 }
 \description{
 Constructs a k-th order De Bruijn graph from sequential trajectory data and
 uses a hypergeometric null model to detect paths with anomalous frequencies.
 Paths occurring more or less often than expected under the null model are
 flagged as over- or under-represented.
+}
+\details{
+Internal missing states split a trajectory, so no path spans a gap;
+pieces shorter than two states are dropped. State labels must not
+contain the control characters \code{"\\x01"} or \code{"\\x02"}, which
+are used internally as separators (error class
+\code{nestimate_hypa_bad_label}). The propensity matrix is fitted by
+continuous iterative proportional fitting; when the fit does not reach
+its tolerance a warning of class \code{nestimate_hypa_no_converge} is
+raised. The original Python implementation rounds the propensities
+inside every sweep, so its expected counts can differ from these by a few
+thousandths.
 }
 \examples{
 seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))
