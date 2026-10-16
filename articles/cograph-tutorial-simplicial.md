@@ -463,10 +463,10 @@ hypa
 
     HYPA: Path Anomaly Detection
       Order(s):     2
-      Edges:        702
-      Anomalous:    177 (alpha=0.05, p_adjust=BH)
-        Over-repr:  133
-        Under-repr: 44
+      Edges:        729
+      Anomalous:    150 (alpha=0.05, p_adjust=none)
+        Over-repr:  100
+        Under-repr: 50
 
 ``` r
 
@@ -486,39 +486,20 @@ summary(hypa, type = "over", order_by = "ratio", n = 8)
 
     HYPA Summary
 
-      Order(s): 2 | Edges: 702
-      Alpha: 0.05 | p_adjust: BH
-      Anomalous: 177 (over: 133, under: 44) | order_by: ratio
+      Order(s): 2 | Edges: 729
+      Alpha: 0.05 | p_adjust: none
+      Anomalous: 150 (over: 100, under: 50) | order_by: ratio
 
       Over-represented (top 8 ):
-                                    path observed  expected     ratio       p_tail
-     Interrupt -> Interrupt -> Interrupt       29 2.7844871 10.414844 5.398941e-20
-          Verify -> Interrupt -> Request        5 0.6879572  7.267894 7.213367e-04
-        Frustrate -> Verify -> Frustrate       27 3.8139380  7.079297 1.082539e-14
-          Refine -> Interrupt -> Correct        6 0.8519593  7.042590 2.547426e-04
-             Verify -> Verify -> Inquire       10 1.4568505  6.864122 3.120114e-06
-             Refine -> Inquire -> Refine        8 1.2069424  6.628320 3.795876e-05
-     Interrupt -> Frustrate -> Interrupt       12 2.0454124  5.866788 1.679456e-06
-           Verify -> Frustrate -> Verify       22 3.9821999  5.524584 3.057447e-10
-
-      order                                path observed  expected     ratio
-    1     2 Interrupt -> Interrupt -> Interrupt       29 2.7844871 10.414844
-    2     2      Verify -> Interrupt -> Request        5 0.6879572  7.267894
-    3     2    Frustrate -> Verify -> Frustrate       27 3.8139380  7.079297
-    4     2      Refine -> Interrupt -> Correct        6 0.8519593  7.042590
-    5     2         Verify -> Verify -> Inquire       10 1.4568505  6.864122
-    6     2         Refine -> Inquire -> Refine        8 1.2069424  6.628320
-    7     2 Interrupt -> Frustrate -> Interrupt       12 2.0454124  5.866788
-    8     2       Verify -> Frustrate -> Verify       22 3.9821999  5.524584
-            p_tail direction
-    1 5.398941e-20      over
-    2 7.213367e-04      over
-    3 1.082539e-14      over
-    4 2.547426e-04      over
-    5 3.120114e-06      over
-    6 3.795876e-05      over
-    7 1.679456e-06      over
-    8 3.057447e-10      over
+                                    path observed expected    ratio       p_tail
+     Interrupt -> Interrupt -> Interrupt       29 5.402204 5.368180 1.880953e-13
+             Refine -> Inquire -> Refine        8 2.085890 3.835294 3.203331e-04
+     Interrupt -> Frustrate -> Interrupt       12 3.155531 3.802846 2.686702e-05
+          Verify -> Interrupt -> Request        5 1.334711 3.746130 2.533567e-03
+          Refine -> Interrupt -> Correct        6 1.652893 3.630000 1.600360e-03
+           Verify -> Frustrate -> Verify       22 6.143483 3.581030 1.487380e-07
+       Interrupt -> Command -> Interrupt       21 5.928419 3.542260 3.163379e-07
+         Frustrate -> Request -> Correct        6 1.811359 3.312430 2.654098e-03
 
 In this dataset the top-ratio over-represented paths are typically
 frustration cascades and inquiry-correction loops — composite routines
@@ -552,39 +533,20 @@ summary(hypa, type = "under", order_by = "ratio", n = 8)
 
     HYPA Summary
 
-      Order(s): 2 | Edges: 702
-      Alpha: 0.05 | p_adjust: BH
-      Anomalous: 177 (over: 133, under: 44) | order_by: ratio
+      Order(s): 2 | Edges: 729
+      Alpha: 0.05 | p_adjust: none
+      Anomalous: 150 (over: 100, under: 50) | order_by: ratio
 
       Under-represented (top 8 ):
                                   path observed  expected     ratio       p_tail
-       Inquire -> Specify -> Interrupt        5  27.55236 0.1814726 1.677120e-07
-       Frustrate -> Specify -> Command        6  30.26160 0.1982711 9.146340e-08
-       Specify -> Specify -> Interrupt       34 148.58597 0.2288238 4.453897e-30
-     Frustrate -> Specify -> Interrupt        9  36.40848 0.2471951 5.990496e-08
-       Specify -> Command -> Interrupt        8  31.60485 0.2531257 5.922403e-07
-       Frustrate -> Command -> Request        5  19.18825 0.2605761 1.313412e-04
-        Refine -> Specify -> Interrupt       31 112.17749 0.2763478 7.847657e-20
-           Refine -> Specify -> Verify        8  28.65139 0.2792185 5.388930e-06
-
-      order                              path observed  expected     ratio
-    1     2   Inquire -> Specify -> Interrupt        5  27.55236 0.1814726
-    2     2   Frustrate -> Specify -> Command        6  30.26160 0.1982711
-    3     2   Specify -> Specify -> Interrupt       34 148.58597 0.2288238
-    4     2 Frustrate -> Specify -> Interrupt        9  36.40848 0.2471951
-    5     2   Specify -> Command -> Interrupt        8  31.60485 0.2531257
-    6     2   Frustrate -> Command -> Request        5  19.18825 0.2605761
-    7     2    Refine -> Specify -> Interrupt       31 112.17749 0.2763478
-    8     2       Refine -> Specify -> Verify        8  28.65139 0.2792185
-            p_tail direction
-    1 1.677120e-07     under
-    2 9.146340e-08     under
-    3 4.453897e-30     under
-    4 5.990496e-08     under
-    5 5.922403e-07     under
-    6 1.313412e-04     under
-    7 7.847657e-20     under
-    8 5.388930e-06     under
+     Interrupt -> Interrupt -> Specify        0  5.913223 0.0000000 0.0026977702
+       Inquire -> Specify -> Frustrate        1  7.838150 0.1275811 0.0034761934
+          Inquire -> Specify -> Refine        1  7.109827 0.1406504 0.0066113673
+        Interrupt -> Specify -> Refine        1  6.940545 0.1440809 0.0076679054
+         Command -> Request -> Correct        1  5.646045 0.1771151 0.0234380601
+        Verify -> Inquire -> Interrupt        1  5.101840 0.1960077 0.0370937045
+       Command -> Request -> Frustrate        3 13.372211 0.2243458 0.0007777538
+       Correct -> Frustrate -> Inquire        2  7.745893 0.2582014 0.0167250998
 
 Notice paths like `Specify -> Specify -> Specify -> Specify` — a
 four-step run of pure specification — appear at a small fraction of
@@ -641,9 +603,9 @@ do.call(rbind, hypa_results)
 ```
 
               group total_edges anomalous over under pct_anomalous
-    1     Directive          27        22   11    11          81.5
-    2 Metacognitive           8         7    4     3          87.5
-    3    Evaluative          64        13    9     4          20.3
+    1     Directive          27        13    7     6          48.1
+    2 Metacognitive           8         0    0     0           0.0
+    3    Evaluative          64        18   11     7          28.1
 
 Groups with a higher percentage of anomalous pathways have more
 higher-order structure — their sequential dynamics are less predictable
@@ -693,8 +655,8 @@ comparison
 ```
 
                        dataset nodes total_paths anomalous over under
-    1          Human-AI Coding     9         702       177  133    44
-    2 Collaborative Regulation     9         574       229  174    55
+    1          Human-AI Coding     9         729       150  100    50
+    2 Collaborative Regulation     9         679        29   22     7
 
 ``` r
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.25</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.26</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,28 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.26" id="nestimate-0926">Nestimate 0.9.26<a class="anchor" aria-label="anchor" href="#nestimate-0926"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-9-26">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-9-26"></a></h3>
+<ul><li>
+<code><a href="../reference/build_hypa.html">build_hypa()</a></code> now defaults to <code>p_adjust = "none"</code>, following LaRock et al. (2020), who classify paths against the threshold <code>alpha</code> without multiple-testing correction. Pass <code>p_adjust = "BH"</code> for the previous behaviour.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-9-26">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-9-26"></a></h3>
+<ul><li><p><code><a href="../reference/build_hypa.html">build_hypa()</a></code> used a miscalibrated null model. The propensity matrix was <code>s_out * s_in</code> restricted to observed paths, normalised over the whole graph and never refitted, so expected counts did not preserve node strengths: high-strength contexts were systematically under-represented and rare contexts over-represented, and memoryless (first-order Markov) data produced dozens of anomalies. Xi is now built on every possible De Bruijn edge (an observed k-gram continued by an observed first-order transition) and refitted until expected in- and out-strengths match the observed ones, following LaRock et al. (2020) and the reference <code>tlarock/hypa</code> code.</p></li>
+<li><p><code><a href="../reference/build_hypa.html">build_hypa()</a></code> fits the propensity matrix by continuous iterative proportional fitting instead of a rounded, keep-best sweep. Expected counts now preserve every De Bruijn node’s in- and out-strength to numerical precision (order 2 equals the first-order Markov expectation exactly), and <code>converged</code> is reported only when the tolerance is met; otherwise a warning of class <code>nestimate_hypa_no_converge</code> is raised. Stalled fits were previously reported as converged. Expected counts can differ from the original Python implementation, which rounds inside every sweep, by a few thousandths.</p></li>
+<li><p><code><a href="../reference/build_hypa.html">build_hypa()</a></code> validates its input: <code>min_count</code> must be a single whole number, <code>alpha</code> a single number in (0, 0.5) and <code>order</code> free of duplicates (duplicates previously doubled every row and anomaly). Internal missing states now split a trajectory instead of becoming a state called “NA”, and labels containing the internal separators <code>\x01</code>/<code>\x02</code> raise an error of class <code>nestimate_hypa_bad_label</code>.</p></li>
+<li><p><code><a href="../reference/build_hypa.html">build_hypa()</a></code> now uses the over-representation rule of LaRock et al. (2020): a path is over-represented when its HYPA score <code>P(X &lt;= f)</code> exceeds <code>1 - alpha</code>, so <code>p_over</code> is the strict tail <code>P(X &gt; f) = 1 - p_under</code> (previously the inclusive <code>P(X &gt;= f)</code>).</p></li>
+<li><p><code><a href="../reference/build_hypa.html">build_hypa()</a></code> can now flag paths that never or rarely occur as under-represented. <code>min_count</code> gates over-representation on the observed count and under-representation on the expected count; previously a path observed fewer than <code>min_count</code> times could never be a deficit. Possible but unobserved paths are now scored (<code>observed = 0</code>), so <code>$scores</code> and <code>n_edges</code> contain more rows. At order 2 the expected count reduces to the first-order Markov expectation.</p></li>
+<li><p><code><a href="../reference/q_analysis.html">print.q_analysis()</a></code> reported the fragmentation point from the highest q down, because <code>q_vector</code> is stored from the highest q; it now reports the lowest q with more than one component (e.g. q = 2, not q = 4, for a clique complex whose maximal simplices meet only in triangles).</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-9-26">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-9-26"></a></h3>
+<ul><li>
+<code><a href="../reference/verify_simplicial.html">verify_simplicial()</a></code> accepts a network object (<code>netobject</code>, <code>tna</code>, <code>cograph_network</code>, <code>net_hon</code>) as well as a matrix, as <code><a href="../reference/build_simplicial.html">build_simplicial()</a></code> does.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.24" id="nestimate-0924">Nestimate 0.9.24<a class="anchor" aria-label="anchor" href="#nestimate-0924"></a></h2><p class="text-muted">CRAN release: 2026-10-07</p>
 <div class="section level3">

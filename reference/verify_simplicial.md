@@ -13,7 +13,10 @@ verify_simplicial(mat, threshold = 0)
 
 - mat:
 
-  A square adjacency matrix.
+  A square adjacency matrix, or a network object that
+  [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
+  accepts (`netobject`, `tna`, `cograph_network`, `net_hon`); its weight
+  matrix is used.
 
 - threshold:
 

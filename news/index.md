@@ -1,5 +1,77 @@
 # Changelog
 
+## Nestimate 0.9.26
+
+### Breaking changes
+
+- [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  now defaults to `p_adjust = "none"`, following LaRock et al. (2020),
+  who classify paths against the threshold `alpha` without
+  multiple-testing correction. Pass `p_adjust = "BH"` for the previous
+  behaviour.
+
+### Bug fixes
+
+- [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  used a miscalibrated null model. The propensity matrix was
+  `s_out * s_in` restricted to observed paths, normalised over the whole
+  graph and never refitted, so expected counts did not preserve node
+  strengths: high-strength contexts were systematically
+  under-represented and rare contexts over-represented, and memoryless
+  (first-order Markov) data produced dozens of anomalies. Xi is now
+  built on every possible De Bruijn edge (an observed k-gram continued
+  by an observed first-order transition) and refitted until expected in-
+  and out-strengths match the observed ones, following LaRock et
+  al. (2020) and the reference `tlarock/hypa` code.
+
+- [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  fits the propensity matrix by continuous iterative proportional
+  fitting instead of a rounded, keep-best sweep. Expected counts now
+  preserve every De Bruijn node’s in- and out-strength to numerical
+  precision (order 2 equals the first-order Markov expectation exactly),
+  and `converged` is reported only when the tolerance is met; otherwise
+  a warning of class `nestimate_hypa_no_converge` is raised. Stalled
+  fits were previously reported as converged. Expected counts can differ
+  from the original Python implementation, which rounds inside every
+  sweep, by a few thousandths.
+
+- [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  validates its input: `min_count` must be a single whole number,
+  `alpha` a single number in (0, 0.5) and `order` free of duplicates
+  (duplicates previously doubled every row and anomaly). Internal
+  missing states now split a trajectory instead of becoming a state
+  called “NA”, and labels containing the internal separators
+  `\x01`/`\x02` raise an error of class `nestimate_hypa_bad_label`.
+
+- [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  now uses the over-representation rule of LaRock et al. (2020): a path
+  is over-represented when its HYPA score `P(X <= f)` exceeds
+  `1 - alpha`, so `p_over` is the strict tail `P(X > f) = 1 - p_under`
+  (previously the inclusive `P(X >= f)`).
+
+- [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  can now flag paths that never or rarely occur as under-represented.
+  `min_count` gates over-representation on the observed count and
+  under-representation on the expected count; previously a path observed
+  fewer than `min_count` times could never be a deficit. Possible but
+  unobserved paths are now scored (`observed = 0`), so `$scores` and
+  `n_edges` contain more rows. At order 2 the expected count reduces to
+  the first-order Markov expectation.
+
+- [`print.q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
+  reported the fragmentation point from the highest q down, because
+  `q_vector` is stored from the highest q; it now reports the lowest q
+  with more than one component (e.g. q = 2, not q = 4, for a clique
+  complex whose maximal simplices meet only in triangles).
+
+### Improvements
+
+- [`verify_simplicial()`](https://pak.dynasite.org/Nestimate/reference/verify_simplicial.md)
+  accepts a network object (`netobject`, `tna`, `cograph_network`,
+  `net_hon`) as well as a matrix, as
+  [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
+  does.
+
 ## Nestimate 0.9.24
 
 CRAN release: 2026-10-07
