@@ -250,6 +250,8 @@ casedrop_reliability <- function(x,
   names(metrics) <- metric_names
 
   case_seq <- seq_len(n_cases)
+  n_failed <- 0L
+  n_tried <- 0L
   for (p_idx in seq_len(n_prop)) {
     n_drop <- floor(n_cases * drop_prop[p_idx])
     if (n_drop == 0L || n_drop >= n_cases) next
@@ -259,7 +261,11 @@ casedrop_reliability <- function(x,
     for (it in seq_len(iter)) {
       idx <- sample(case_seq, keep_n, replace = FALSE)
       mat <- build_matrix(idx)
-      if (is.null(mat)) next
+      n_tried <- n_tried + 1L
+      if (is.null(mat)) {
+        n_failed <- n_failed + 1L
+        next
+      }
       sub_edges <- as.vector(mat[idx_mask])
       sim <- .network_similarity(orig_edges, sub_edges,
                                  metrics = c("mean_abs_diff",
@@ -272,6 +278,8 @@ casedrop_reliability <- function(x,
       metrics$max_abs_dev   [it, p_idx] <- sim[["max_abs_diff"]]
     }
   }
+
+  .warn_failed_resamples(n_failed, n_tried, "casedrop_reliability()")
 
   # ---- Per-drop-proportion summary across iterations ----
   summary_rows <- lapply(metric_names, function(nm) {

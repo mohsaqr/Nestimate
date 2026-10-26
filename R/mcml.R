@@ -1096,7 +1096,9 @@ build_mcml <- function(x,
                                        directed, compute_within),
     "sequence" = .build_mcml_sequence(x, clusters, method, type,
                                        directed, compute_within),
-    "tna_data" = .build_mcml_sequence(x$data, clusters, method, type,
+    # tna stores sequences integer-coded; decode to state labels first.
+    "tna_data" = .build_mcml_sequence(.mmm_decode_int_data(x$data, x$labels),
+                                       clusters, method, type,
                                        directed, compute_within),
     "tna_matrix" = cluster_summary(x, clusters, method = method,
                                     directed = directed,
@@ -2583,15 +2585,18 @@ summary.mcml <- function(object, ...) {
 
   macro    <- as_mat(object$macro)
   cluster_mats <- lapply(object$clusters, as_mat)
-  cluster_names <- names(cluster_mats)
-  if (is.null(cluster_names))
-    cluster_names <- paste0("Cluster_", seq_along(cluster_mats))
+  # Clusters are named by the partition, which exists even when no
+  # within-cluster layers were computed (compute_within = FALSE).
+  cluster_names <- names(object$cluster_members) %||% rownames(macro) %||%
+    names(cluster_mats)
   sizes <- object$meta$cluster_sizes
   if (is.null(sizes)) sizes <- vapply(object$cluster_members, length, integer(1L))
 
-  within_total <- vapply(cluster_mats, function(mat) {
-    if (is.null(mat)) return(0)
-    sum(abs(mat[row(mat) != col(mat)]))
+  # Total within-cluster weight, self-transitions included (they are part of
+  # the macro diagonal); NA when the layers were not computed.
+  within_total <- vapply(cluster_names, function(nm) {
+    mat <- cluster_mats[[nm]]
+    if (is.null(mat)) NA_real_ else sum(abs(mat))
   }, numeric(1L))
 
   directed <- isTRUE(object$meta$directed)

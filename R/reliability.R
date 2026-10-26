@@ -299,6 +299,8 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
 
     .split_half_metrics(mat_a, mat_b) # nocov end
   }, numeric(4))
+  .warn_failed_resamples(sum(is.na(results[1, ])), iter,
+                         "network_reliability()")
 
   data.frame(
     mean_dev = results[1, ],

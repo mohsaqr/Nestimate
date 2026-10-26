@@ -38,6 +38,19 @@
 # Input parsing
 # ---------------------------------------------------------------------------
 
+#' Rows of a sequence data frame as character vectors
+#'
+#' Converts column by column, so factor columns keep their labels; a row
+#' taken with `unlist(data[i, ])` turns a factor into its integer codes when
+#' the columns mix factor and character.
+#' @noRd
+.sequence_rows <- function(data) {
+  m <- matrix(vapply(data, as.character, character(nrow(data))),
+              nrow = nrow(data))
+  unname(split(m, row(m)))
+}
+
+
 #' Parse and validate input for build_hon
 #'
 #' Converts data.frame or list input into a canonical list of character
@@ -55,8 +68,7 @@
   if (is.data.frame(data)) {
     stopifnot("data.frame must have at least one column" = ncol(data) >= 1L)
     stopifnot("data.frame must have at least one row" = nrow(data) >= 1L)
-    trajectories <- lapply(seq_len(nrow(data)), function(i) {
-      row_vals <- as.character(unlist(data[i, ], use.names = FALSE))
+    trajectories <- lapply(.sequence_rows(data), function(row_vals) {
       # Strip trailing NAs
       non_na <- which(!is.na(row_vals))
       if (length(non_na) == 0L) return(character(0L))

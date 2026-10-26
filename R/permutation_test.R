@@ -1165,7 +1165,21 @@ permutation <- function(x, y = NULL,
   # no zero-variance columns) - just pool directly
   n_x <- nrow(x$data)
   n_y <- nrow(y$data)
-  pooled_mat <- rbind(x$data, y$data)
+  # Pool by column name, not position: the same variables in a different
+  # column order would otherwise be mixed in the permutation null.
+  cols_x <- colnames(x$data)
+  cols_y <- colnames(y$data)
+  if (all(nodes %in% cols_x) && all(nodes %in% cols_y)) {
+    pooled_mat <- rbind(x$data[, nodes, drop = FALSE],
+                        y$data[, nodes, drop = FALSE])
+  } else if (identical(cols_x, cols_y)) {
+    pooled_mat <- rbind(x$data, y$data)
+  } else {
+    stop(errorCondition(paste0(
+      "The two networks' data columns differ and cannot be matched to the ",
+      "nodes; build both networks from the same variables."),
+      class = "nestimate_bad_input", call = NULL))
+  }
   n_total <- n_x + n_y
 
   # Extract params

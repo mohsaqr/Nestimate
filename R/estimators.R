@@ -1550,6 +1550,9 @@
 #'   }
 #' @noRd
 .prepare_ising_input <- function(data, id_col = NULL) {
+  # A fitted network stores its cleaned data as a numeric matrix; resamplers
+  # pass that back in, so accept it as well as a data frame.
+  if (is.matrix(data) && is.numeric(data)) data <- as.data.frame(data)
   stopifnot(is.data.frame(data))
 
   # Exclude id columns and "rid"

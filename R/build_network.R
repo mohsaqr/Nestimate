@@ -128,7 +128,11 @@
 #'   columns to force into the \code{$metadata} slot. The remaining columns
 #'   are auto-detected as state via the values-in-nodes rule. Cannot overlap
 #'   with \code{state_cols}. Default: \code{NULL}.
-#' @param ... Additional arguments passed to the estimator function.
+#' @param ... Additional arguments passed to the estimator function. For
+#'   long data, \code{prepare()}'s time options \code{unix_time_unit},
+#'   \code{is_unix_time} and \code{custom_format} are passed to
+#'   \code{\link{prepare}} instead (e.g. \code{unix_time_unit =
+#'   "milliseconds"} for millisecond timestamps).
 #' In \code{print.netobject()}, \code{print.netobject_group()} and \code{print.netobject_ml()}: Additional arguments (ignored). In \code{print.summary.netobject()}, \code{print.summary.netobject_group()}, \code{summary.netobject()} and \code{summary.netobject_group()}: Ignored.
 #' @return An object of class \code{c("netobject", "cograph_network")} containing:
 #' \describe{
@@ -251,6 +255,15 @@ build_network <- function(data,
   # matrices for downstream estimators that accept them.
   if (is.matrix(data) && !is.numeric(data)) {
     data <- as.data.frame(data, stringsAsFactors = FALSE)
+  }
+
+  # A compare_mmm() table is a data frame of fit statistics, not sequences;
+  # read as wide data its log-likelihoods and BICs became states.
+  if (inherits(data, "mmm_compare")) {
+    k_best <- data[["k"]][which.min(data[["BIC"]])]
+    stop(errorCondition(sprintf(
+      "Build from one fit: build_network(build_mmm(data, k = %d)).",
+      k_best), class = "nestimate_bad_input", call = NULL))
   }
 
   # --- Early dispatch for net_clustering objects ---
@@ -498,6 +511,12 @@ build_network <- function(data,
       grp_key <- interaction(data[, group, drop = FALSE], sep = "-",
                              drop = TRUE)
     }
+    if (anyNA(grp_key)) {
+      stop(errorCondition(sprintf(paste0(
+        "`group` has %d row(s) with a missing value. Remove them or give ",
+        "them a group label."), sum(is.na(grp_key))),
+        class = "nestimate_bad_input", call = NULL))
+    }
     grp_levels <- unique(grp_key)
     # Drop group column(s) from sub-data so they don't become state cols
     drop_cols <- intersect(group, names(data))
@@ -518,7 +537,7 @@ build_network <- function(data,
         level = level, time_threshold = time_threshold,
         timezone = timezone, predictability = predictability,
         state_cols = state_cols, metadata_cols = metadata_cols,
-        params = child_params, ...
+        labels = labels, params = child_params, ...
       )
     })
     names(nets) <- as.character(grp_levels)
@@ -566,6 +585,12 @@ build_network <- function(data,
     if (!is.null(order)) prep_args$order <- order # nocov end
     prep_args$time_threshold <- time_threshold
     prep_args$timezone <- timezone
+    # prepare()'s time-parsing options arrive through `...`; they belong to
+    # prepare(), not to the estimator (which would ignore them silently).
+    time_opts <- intersect(c("custom_format", "is_unix_time", "unix_time_unit"),
+                           names(params))
+    prep_args[time_opts] <- params[time_opts]
+    params[time_opts] <- NULL
 
     prepared <- do.call(prepare, prep_args)
     data <- prepared$sequence_data
@@ -619,23 +644,48 @@ build_network <- function(data,
                                .param_get(params, "id")))
       }
     }
+    # In character/factor sequence data a numeric column (age, score) is not
+    # a sequence position; without this its values became states.
+    seq_methods <- c("relative", "frequency", "co_occurrence", "attention",
+                     "ngram", "gap", "reverse")
+    if (is.data.frame(data) && is.null(params$cols) &&
+        method %in% seq_methods) {
+      candidates <- setdiff(names(data), c(actor, .param_get(params, "id")))
+      is_num <- vapply(data[candidates], is.numeric, logical(1))
+      is_cat <- vapply(data[candidates],
+                       function(x) is.character(x) || is.factor(x),
+                       logical(1))
+      if (any(is_num) && any(is_cat)) params$cols <- candidates[!is_num]
+    }
+  }
+
+  # Declared metadata columns are not variables of an association network
+  # (cor, pcor, glasso, ising, mgm); without this they entered as nodes.
+  # Dropped before the sequence check below, so a declared character
+  # covariate cannot turn numeric data into "sequences".
+  if (method %in% c("cor", "pcor", "glasso", "ising", "mgm") &&
+      is.data.frame(data) && !is.null(metadata_cols)) {
+    data <- data[, setdiff(names(data), metadata_cols), drop = FALSE]
   }
 
   # ---- Auto-convert sequences to frequencies for association methods ----
-  # Association methods (cor, pcor, glasso, ising) require numeric data.
-  # If the data is character/factor sequence data, convert to per-row state
-  # frequency counts automatically so users can pass sequences directly.
+  # Association methods (cor, pcor, glasso) need numeric data. Categorical
+  # columns are sequence positions when there are at least two of them and
+  # fewer than two numeric columns: they are converted to per-row state
+  # frequencies and a numeric covariate is left out. Numeric variables with
+  # a stray character column (gender) are not sequences: the estimator uses
+  # the numeric columns.
   assoc_methods <- c("cor", "pcor", "glasso")
   if (method %in% assoc_methods && is.data.frame(data)) {
     exclude <- intersect(c(actor, session), names(data))
     check_cols <- setdiff(names(data), exclude)
-    has_char <- length(check_cols) >= 2L && any(vapply(
-      data[, check_cols, drop = FALSE],
-      function(x) is.character(x) || is.factor(x), logical(1)
-    ))
-    if (has_char) {
+    is_cat <- vapply(data[check_cols],
+                     function(x) is.character(x) || is.factor(x), logical(1))
+    is_num <- vapply(data[check_cols], is.numeric, logical(1))
+    if (sum(is_cat) >= 2L && sum(is_num) < 2L) {
+      seq_data <- data[c(exclude, check_cols[is_cat])]
       freq_data <- convert_sequence_format(
-        data, id_col = if (length(exclude) == 0L) character(0) else exclude,
+        seq_data, id_col = if (length(exclude) == 0L) character(0) else exclude,
         format = "frequency"
       )
       # Drop rid and ID columns, keep only numeric frequency columns
@@ -645,11 +695,23 @@ build_network <- function(data,
     }
   }
 
-  # Declared metadata columns are not variables of an association network
-  # (cor, pcor, glasso, ising, mgm); without this they entered as nodes.
-  if (method %in% c("cor", "pcor", "glasso", "ising", "mgm") &&
-      is.data.frame(data) && !is.null(metadata_cols)) {
-    data <- data[, setdiff(names(data), metadata_cols), drop = FALSE]
+  # `actor` names the ID column in wide and association data as well as in
+  # long data: hand it to the estimator under the name it takes (`id` for
+  # sequence estimators, `id_col` for association estimators), otherwise the
+  # ID values become states or the ID column a variable.
+  estimator <- get_estimator(method)
+  # (All-binary association data is detected as one-hot above; that only
+  # matters to sequence estimators, so `id_col` is passed regardless.)
+  if (!is.null(actor) && is.null(prepared) && is.data.frame(data) &&
+      all(actor %in% names(data))) {
+    est_args <- names(formals(estimator$fn))
+    one_hot <- is_onehot || identical(format, "onehot")
+    if ("id_col" %in% est_args && is.null(.param_get(params, "id_col"))) {
+      params$id_col <- actor
+    } else if (!one_hot && "id" %in% est_args &&
+               is.null(.param_get(params, "id"))) {
+      params$id <- actor
+    }
   }
 
   # ---- Multilevel decomposition ----
@@ -679,9 +741,6 @@ build_network <- function(data,
     }
   }
 
-  # Get estimator from registry
-  estimator <- get_estimator(method)
-
   # Multilevel decomposition is only defined for undirected association
   # methods. For directed transition estimators the decomposition is a
   # numeric no-op, so accepting `level` silently produced a pooled network
@@ -700,14 +759,14 @@ build_network <- function(data,
   # level = "both": recursive dispatch
   if (identical(level, "both")) {
     between <- build_network(
-      data, method = method, params = params, scaling = scaling,
-      threshold = threshold, level = "between",
-      predictability = predictability
+      data, method = method, actor = actor, params = params,
+      scaling = scaling, threshold = threshold, level = "between",
+      predictability = predictability, labels = labels
     )
     within_net <- build_network(
-      data, method = method, params = params, scaling = scaling,
-      threshold = threshold, level = "within",
-      predictability = predictability
+      data, method = method, actor = actor, params = params,
+      scaling = scaling, threshold = threshold, level = "within",
+      predictability = predictability, labels = labels
     )
     result <- list(between = between, within = within_net, method = method)
     class(result) <- "netobject_ml"
@@ -1342,8 +1401,12 @@ predictability.netobject <- function(object, data = NULL, ...) {
   rmse <- rep(NA_real_, p)
 
   if (is.data.frame(data) || is.matrix(data)) {
-    X <- tryCatch(as.matrix(data[, labels, drop = FALSE]),
-                  error = function(e) NULL)
+    # Columns carry the node labels (relabelled $data) or, for data the
+    # caller passes, the original node names.
+    cols <- if (all(labels %in% colnames(data))) labels else object$nodes$name
+    X <- if (all(cols %in% colnames(data))) {
+      as.matrix(data[, cols, drop = FALSE])
+    } else NULL
     if (!is.null(X) && is.numeric(X)) {
       X  <- X[complete.cases(X), , drop = FALSE]
       mu <- colMeans(X)

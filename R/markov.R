@@ -1,13 +1,32 @@
 # ---- Markov Chain Analysis: Passage Times and Stability ----
 
 #' @noRd
+.mpt_not_a_chain <- function(what) {
+  stop(errorCondition(sprintf(paste0(
+    "%s is not a transition matrix. Markov-chain measures need ",
+    "non-negative transition weights (method \"relative\" or ",
+    "\"frequency\")."), what), class = "nestimate_not_markov", call = NULL))
+}
+
+#' @noRd
 .mpt_extract_P <- function(x) {
-  if (is.matrix(x) && is.numeric(x)) return(x)
+  if (is.matrix(x) && is.numeric(x)) {
+    if (any(x < 0, na.rm = TRUE)) .mpt_not_a_chain("A matrix with negative entries")
+    return(x)
+  }
   if (inherits(x, "netobject") || inherits(x, "cograph_network") ||
       inherits(x, "tna")) {
     P <- x$weights
     if (is.null(P) || !is.matrix(P) || !is.numeric(P))
       stop("Object has no numeric weight matrix.", call. = FALSE)
+    # Correlation-type networks (signed, or positive by chance) are not
+    # transition weights; row-normalising them makes a meaningless "chain".
+    # A co-occurrence network row-normalises to its random walk, a valid one.
+    assoc <- c("cor", "pcor", "glasso", "ising", "mgm")
+    if (isTRUE(x$method %in% assoc) || any(P < 0, na.rm = TRUE)) {
+      .mpt_not_a_chain(sprintf("A \"%s\" network",
+                               x$method %||% "undirected"))
+    }
     return(P)
   }
   if (is.matrix(x) && (is.character(x) || is.logical(x))) {

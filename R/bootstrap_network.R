@@ -591,7 +591,9 @@ bootstrap_network <- function(x,
     return(.precompute_per_sequence_onehot(data, method, params, states))
   }
   cols <- params$cols
-  .precompute_per_sequence_wide(data, method, cols, id_col, states)
+  .precompute_per_sequence_wide(data, method, cols, id_col, states,
+                                begin_state = .param_get(params, "begin_state"),
+                                end_state = .param_get(params, "end_state"))
 }
 
 
@@ -636,9 +638,15 @@ bootstrap_network <- function(x,
 #' Single function handling both consecutive-pair transitions
 #' (relative/frequency) and all-column-pair co-occurrences.
 #' @noRd
-.precompute_per_sequence_wide <- function(data, method, cols, id_col, states) {
-  state_cols <- .select_state_cols(data, id_col, cols)
-  mat <- as.matrix(data[, state_cols, drop = FALSE])
+.precompute_per_sequence_wide <- function(data, method, cols, id_col, states,
+                                          begin_state = NULL,
+                                          end_state = NULL) {
+  # The estimator's own sequence preparation, so start/end markers and void
+  # markers are placed exactly as in the network being resampled.
+  mat <- .prepare_sequence_wide(data, id = id_col, cols = cols,
+                                alphabet = states,
+                                begin_state = begin_state,
+                                end_state = end_state)$matrix
   nc <- ncol(mat)
   nr <- nrow(mat)
   n_states <- length(states)

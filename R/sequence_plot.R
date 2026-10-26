@@ -104,8 +104,12 @@
 #'     \code{\link{distribution_plot}}.
 #' }
 #'
-#' @param x Wide-format sequence data. Accepts:
+#' @param x Sequence data. Accepts:
 #'   \describe{
+#'     \item{long data.frame}{One row per action, with \code{action =}
+#'       naming the action column (and \code{actor}, \code{time},
+#'       \code{order} as needed). Converted with \code{\link{prepare}}: one
+#'       row per actor, or per actor-period with \code{periods}.}
 #'     \item{data.frame / matrix}{Rows = sequences, columns = time points.}
 #'     \item{netobject}{Extracts \code{$data}.}
 #'     \item{net_clustering}{From \code{\link{build_clusters}}. Uses
@@ -139,6 +143,38 @@
 #'   object to supply row ordering (heatmap only; overrides \code{sort}).
 #' @param group Optional grouping vector (length \code{nrow(x)}) producing
 #'   one facet per group. Index/distribution only. Ignored for heatmap.
+#' @param periods Name of the column that splits each actor's sequence into
+#'   periods (days, weeks, ...): a column of the long data, or of the
+#'   network's metadata. \code{x} must be a
+#'   long data frame with \code{actor =} and \code{action =}, or a
+#'   netobject built with \code{actor =} and \code{session = periods}, so
+#'   that each actor-period pair holds one sequence. The plot then has one
+#'   row per actor and the time axis is split into equal-width blocks, one
+#'   per period: factor levels give their order (an unused level is an
+#'   empty block), otherwise they are sorted. Ticks mark the period
+#'   boundaries and each label sits under its block; \code{tick} thins the
+#'   labels. Heatmap and index types only; not with \code{group} or
+#'   \code{trim}. Default \code{NULL} plots the sequences as they are.
+#' @param fill With \code{periods}: how an actor's steps fill a block.
+#'   \code{"stretch"} (default) spreads them over the whole block, so one
+#'   step fills it and three steps take a third each; the cell width differs
+#'   between actors. \code{"pad"} gives every block as many fixed slots as
+#'   the busiest actor-period and leaves unused slots as \code{NA}, so a
+#'   slot is the same step position for every actor (minor ticks mark the
+#'   slots when there are at most 60 in all). With \code{periods}, empty
+#'   space is white unless \code{na_color} is given, so it is never confused
+#'   with a state drawn in grey. Repeats of a state merge into one spell;
+#'   \code{cell_border = "white"} (TraMineR's \code{border}) outlines each
+#'   action so they show as separate, equal shares of the period.
+#' @param actor,action,time,order Long data only: column names, as in
+#'   \code{\link{build_network}}. Giving \code{action} marks \code{x} as
+#'   long data (one row per action); \code{actor} identifies who acted (one
+#'   row per actor in the plot), \code{time} and \code{order} put each
+#'   actor's actions in order (otherwise row order is used). Without
+#'   \code{periods}, a \code{time} column also splits an actor's actions
+#'   into sessions at gaps over 15 minutes, as \code{prepare()} does; with
+#'   \code{periods} it does not, so each actor-period is one sequence.
+#'   \code{group} cannot be combined with long data.
 #' @param scale,geom,na Passed to \code{\link{distribution_plot}} when
 #'   \code{type = "distribution"}.
 #'   For an \code{mcml} (\code{type = "distribution"}), \code{na = FALSE}
@@ -316,6 +352,11 @@
 #'     \item{\code{"index"}}{\code{codes}, \code{palette}, \code{levels},
 #'       \code{orders} (list of integer row orders, one per panel, indexing
 #'       the original rows) and \code{groups} (panel labels).}
+#'     \item{with \code{periods}}{\code{ord} (row order of the actors),
+#'       \code{codes} (integer matrix, one row per actor and one column per
+#'       period slot, in the \code{fill = "pad"} layout, named
+#'       \code{"<period>.<slot>"}), \code{palette}, \code{levels},
+#'       \code{periods} (period labels in plotted order) and \code{fill}.}
 #'     \item{\code{"distribution"}}{Whatever
 #'       \code{\link{distribution_plot}} returns: \code{counts},
 #'       \code{proportions}, \code{levels}, \code{palette}, \code{groups}.}
@@ -328,6 +369,25 @@
 #' \donttest{
 #' sequence_plot(trajectories, type = "index")
 #' sequence_plot(trajectories, type = "distribution")
+#'
+#' # One row per student, one block per day; each day's actions fill it.
+#' daily <- data.frame(
+#'   student = rep(c("s1", "s2", "s3"), times = c(5, 9, 6)),
+#'   day     = c("d1", "d2", "d2", "d3", "d3",
+#'               "d1", "d1", "d2", "d2", "d2", "d3", "d3", "d3", "d3",
+#'               "d1", "d1", "d1", "d2", "d3", "d3"),
+#'   action  = c("plan", "read", "write", "read", "plan",
+#'               "read", "read", "plan", "write", "write", "read", "plan",
+#'               "write", "read", "plan", "plan", "write", "read", "write",
+#'               "read"))
+#' sequence_plot(daily, actor = "student", action = "action", periods = "day")
+#' sequence_plot(daily, actor = "student", action = "action", periods = "day",
+#'               fill = "pad", type = "index")
+#'
+#' # The same from a network built with the period as its session.
+#' daily_net <- build_network(daily, method = "relative", actor = "student",
+#'                            action = "action", session = "day")
+#' sequence_plot(daily_net, periods = "day")
 #'
 #' # Multichannel MCML view: one channel per cluster + a macro Summary.
 #' fit <- build_mcml(
@@ -361,6 +421,12 @@ sequence_plot <- function(x,
                                                "jaccard", "jw"),
                           tree             = NULL,
                           group            = NULL,
+                          periods          = NULL,
+                          fill             = c("stretch", "pad"),
+                          actor            = NULL,
+                          action           = NULL,
+                          time             = NULL,
+                          order            = NULL,
                           scale            = c("proportion", "count"),
                           geom             = c("area", "bar"),
                           na               = TRUE,
@@ -420,6 +486,10 @@ sequence_plot <- function(x,
     stop("`combine`, `expand`, `rest` and `rest_label` apply to an mcml ",
          "(from build_mcml()); got '", class(x)[1L], "'.", call. = FALSE)
   }
+  if (inherits(x, "mcml") && !is.null(periods)) {
+    .period_bad_input(paste0("`periods` needs a netobject built with ",
+                             "`actor =` and `session =`, not an mcml."))
+  }
   if (inherits(x, "mcml")) {
     return(.sequence_plot_mcml(
       x, type = type, normalize = isTRUE(normalize),
@@ -427,6 +497,33 @@ sequence_plot <- function(x,
       main = main, time_label = time_label, trim = trim,
       panel = match.arg(panel), expand = expand, combine = combine,
       rest = match.arg(rest), na = na, rest_label = rest_label))
+  }
+
+  if (is.null(periods) && !missing(fill)) {
+    .period_bad_input("`fill` applies only with `periods`.")
+  }
+  if (!is.null(periods) &&
+      (type == "distribution" || !is.null(group) || !is.null(trim))) {
+    .period_bad_input(paste0("`periods` works with type = \"heatmap\" or ",
+                             "\"index\", without `group` or `trim`."))
+  }
+
+  # Long data (one row per action): `action =` names the action column and
+  # prepare() turns it into one sequence per actor (or actor-period).
+  long <- NULL
+  if (!is.null(action)) {
+    if (!is.null(group)) {
+      .period_bad_input(paste0("`group` is one value per sequence, so it ",
+                               "cannot be combined with long data ",
+                               "(`action =`)."))
+    }
+    long <- .seqplot_from_long(x, actor = actor, action = action,
+                               time = time, order = order, periods = periods)
+    if (is.null(periods)) x <- long$data
+  } else if (!is.null(actor) || !is.null(time) || !is.null(order)) {
+    .period_bad_input(paste0("`actor`, `time` and `order` describe long ",
+                             "data; name the action column with `action =` ",
+                             "too."))
   }
 
   # Open a new device when width/height supplied (interactive use). In
@@ -452,6 +549,23 @@ sequence_plot <- function(x,
       main = main, show_n = show_n,
       time_label = time_label, y_label = y_label, ylab = ylab,
       tick = tick, ncol = ncol, nrow = nrow, combined = combined,
+      legend = legend, legend_size = legend_size,
+      legend_title = legend_title, legend_ncol = legend_ncol,
+      legend_border = legend_border, legend_bty = legend_bty))
+  }
+
+  if (!is.null(periods)) {
+    if (missing(time_label) && is.null(xlab)) time_label <- periods
+    # Empty period space is white: the grey NA fill reads as a state when
+    # Okabe-Ito deals grey (#999999) to the eighth state.
+    if (missing(na_color)) na_color <- "white"
+    return(.sequence_plot_periods(
+      long %||% .seqplot_from_network(x, periods), periods = periods, fill = match.arg(fill), type = type, sort = sort,
+      tree = tree, dendrogram_width = dendrogram_width, k = k,
+      k_color = k_color, k_line_width = k_line_width, row_gap = row_gap,
+      state_colors = state_colors, na_color = na_color,
+      cell_border = cell_border, frame = frame, main = main,
+      show_n = show_n, time_label = time_label, tick = tick,
       legend = legend, legend_size = legend_size,
       legend_title = legend_title, legend_ncol = legend_ncol,
       legend_border = legend_border, legend_bty = legend_bty))
@@ -555,8 +669,11 @@ sequence_plot <- function(x,
   # Massively smaller output, crisper on hi-DPI displays, fine for our
   # uniform grid. Safe: image() itself decides not to raster if the
   # device can't handle it.
+  # breaks pin code k to palette[k]; without them image() rescales to the
+  # codes present, so a trimmed carpet missing some states is mis-coloured.
   graphics::image(x = seq_len(n_cols), y = seq_len(n_rows),
-                  z = z, col = palette, add = TRUE, useRaster = TRUE)
+                  z = z, col = palette, add = TRUE, useRaster = TRUE,
+                  breaks = seq_len(length(palette) + 1L) - 0.5)
   if (isTRUE(frame)) graphics::box()
   ticks <- .tick_positions(n_cols, tick, colnames(codes))
   graphics::axis(1, at = ticks$at, labels = ticks$labels,
@@ -750,6 +867,11 @@ sequence_plot <- function(x,
 # ---- internal: row ordering for a codes matrix ----------------------------
 .row_order <- function(codes, sort, tree, levels_all) {
   n_rows <- nrow(codes); n_cols <- ncol(codes)
+  # One sequence (a singleton cluster, a single actor) has nothing to order
+  # and nothing to cluster.
+  if (n_rows < 2L && is.null(tree)) {
+    return(structure(seq_len(n_rows), tree = NULL))
+  }
   if (!is.null(tree)) {
     if (!inherits(tree, "dendrogram")) tree <- stats::as.dendrogram(tree)
     return(structure(stats::order.dendrogram(tree), tree = tree))

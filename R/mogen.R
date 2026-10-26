@@ -553,9 +553,7 @@ path_counts <- function(data, k = 2L, top = NULL) {
 
   # Normalize input
   if (is.data.frame(data)) {
-    trajectories <- lapply(seq_len(nrow(data)), function(i) {
-      as.character(unlist(data[i, ], use.names = FALSE))
-    })
+    trajectories <- .sequence_rows(data)
   } else {
     trajectories <- lapply(data, as.character)
   }
@@ -605,7 +603,7 @@ path_counts <- function(data, k = 2L, top = NULL) {
 state_frequencies <- function(data) {
   data <- .coerce_sequence_input(data)
   if (is.data.frame(data)) {
-    all_states <- as.character(unlist(data, use.names = FALSE))
+    all_states <- unlist(lapply(data, as.character), use.names = FALSE)
   } else {
     all_states <- unlist(lapply(data, as.character))
   }

@@ -4,6 +4,12 @@
 # all-pairs shortest paths via Floyd-Warshall. For transition/frequency
 # networks, weights are inverted so higher weight = shorter distance.
 
+# Tolerance for "same path length": relative, so a tie that floating-point
+# addition breaks (1/10 + 1/15 vs 1/6) is still a tie. Shared by the path
+# counting and the on-path tests so both agree on what a tie is.
+.sp_tol <- function(d) 1e-10 * pmax(1, abs(d))
+
+
 #' All-pairs shortest paths via Floyd-Warshall (vectorized)
 #'
 #' @param W Square numeric weight matrix (zeros = no edge).
@@ -31,8 +37,10 @@
     # Standard Floyd-Warshall only relaxes (s, t) when both s and t differ
     # from k. With diag(D) = 0, new_d[k, j] would otherwise match D[k, j]
     # under the equal-path test and double-count sigma.
-    shorter        <- new_d < D & is.finite(new_d)
-    equal          <- (new_d == D) & is.finite(new_d) & new_d > 0
+    tol            <- .sp_tol(ifelse(is.finite(D), D, 0))
+    shorter        <- is.finite(new_d) & (!is.finite(D) | new_d < D - tol)
+    equal          <- is.finite(new_d) & is.finite(D) &
+                      abs(new_d - D) <= tol & new_d > 0
     shorter[k, ]   <- FALSE; shorter[, k] <- FALSE
     equal[k, ]     <- FALSE; equal[, k]   <- FALSE
     sigma[shorter] <- new_s[shorter]
@@ -72,7 +80,7 @@
     sg_st  <- sg[idx, idx]
     d_svt  <- outer(d_sv, d_vt, "+")
     on_path <- is.finite(d_st) & sg_st > 0L &
-               abs(d_svt - d_st) < 1e-10
+               abs(d_svt - d_st) <= .sp_tol(d_st)
     diag(on_path) <- FALSE
     num  <- outer(sg_sv, sg_vt, "*")
     sum((num / sg_st)[on_path], na.rm = TRUE)
@@ -118,7 +126,7 @@
     #   d(s, a) + len(a, b) + d(b, t) == d(s, t).
     # Such paths number sigma(s, a) * sigma(b, t); divide by sigma(s, t).
     through <- outer(D[, a], D[b, ], "+") + len[a, b]
-    on_path <- is.finite(D) & sg > 0L & abs(through - D) < 1e-9
+    on_path <- is.finite(D) & sg > 0L & abs(through - D) <= .sp_tol(D)
     diag(on_path) <- FALSE                       # exclude s == t
     sum((outer(sg[, a], sg[b, ]) / sg)[on_path])
   }, numeric(1))

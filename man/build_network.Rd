@@ -200,7 +200,11 @@ vector \code{c(name = "label")}, or a named list. Rewrites
 \code{$nodes$label} and \code{dimnames(weights)}. Unmapped names pass
 through unchanged.}
 
-\item{...}{Additional arguments passed to the estimator function.
+\item{...}{Additional arguments passed to the estimator function. For
+long data, \code{prepare()}'s time options \code{unix_time_unit},
+\code{is_unix_time} and \code{custom_format} are passed to
+\code{\link{prepare}} instead (e.g. \code{unix_time_unit =
+  "milliseconds"} for millisecond timestamps).
 In \code{print.netobject()}, \code{print.netobject_group()} and \code{print.netobject_ml()}: Additional arguments (ignored). In \code{print.summary.netobject()}, \code{print.summary.netobject_group()}, \code{summary.netobject()} and \code{summary.netobject_group()}: Ignored.}
 
 \item{x}{For the \code{print()} method: an object of class \code{netobject}, \code{netobject_group} or \code{netobject_ml} (or its \code{summary()}).}

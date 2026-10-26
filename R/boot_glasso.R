@@ -694,8 +694,9 @@ boot_glasso <- function(x,
 
 #' Pairwise edge difference p-values
 #'
-#' For each pair of edges (i, j), compute the proportion of bootstrap
-#' samples where edge_i > edge_j (and vice versa), return 2-sided p-value.
+#' For each pair of edges (i, j), the two-sided bootstrap p-value
+#' 2 * min(P(edge_i >= edge_j), P(edge_i <= edge_j)), capped at 1; ties count
+#' in both tails.
 #'
 #' @noRd
 .bg_edge_diff_test <- function(boot_edges) {
@@ -719,9 +720,11 @@ boot_glasso <- function(x,
   for (i in seq_len(n_edges - 1L)) {
     js <- seq(i + 1L, n_edges)
     diffs <- bm[, i] - bm[, js, drop = FALSE]
-    p_greater <- colMeans(diffs > 0)
-    p_less    <- colMeans(diffs < 0)
-    p_vals    <- 2 * pmin(p_greater, p_less)
+    # A tie (d == 0, e.g. both edges absent) is no evidence of a
+    # difference, so it counts in both tails.
+    p_greater <- colMeans(diffs >= 0)
+    p_less    <- colMeans(diffs <= 0)
+    p_vals    <- pmin(1, 2 * pmin(p_greater, p_less))
     p_mat[i, js] <- p_vals
     p_mat[js, i] <- p_vals
   }
@@ -749,9 +752,11 @@ boot_glasso <- function(x,
   for (i in seq_len(p_nodes - 1L)) {
     js <- seq(i + 1L, p_nodes)
     diffs <- bm[, i] - bm[, js, drop = FALSE]
-    p_greater <- colMeans(diffs > 0)
-    p_less    <- colMeans(diffs < 0)
-    p_vals    <- 2 * pmin(p_greater, p_less)
+    # A tie (d == 0, e.g. both edges absent) is no evidence of a
+    # difference, so it counts in both tails.
+    p_greater <- colMeans(diffs >= 0)
+    p_less    <- colMeans(diffs <= 0)
+    p_vals    <- pmin(1, 2 * pmin(p_greater, p_less))
     p_mat[i, js] <- p_vals
     p_mat[js, i] <- p_vals
   }

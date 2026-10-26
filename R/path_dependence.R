@@ -25,8 +25,8 @@
   ## Wide-format only. Vectorised k-gram extraction across columns,
   ## results pooled across rows. NAs in any of the k positions zero
   ## out the contribution.
-  m <- as.matrix(data)
-  storage.mode(m) <- "character"
+  m <- matrix(vapply(data, as.character, character(nrow(data))),
+              nrow = nrow(data))
   ncols <- ncol(m)
   if (ncols < k) {
     stop(sprintf("Sequences too short for order %d (need >=%d columns, got %d).",
@@ -36,8 +36,12 @@
     do.call(paste, c(lapply(seq_len(k), function(j) m[, t + j - 1L]),
                      list(sep = "\x01")))
   }, character(nrow(m)))
-  pooled <- as.vector(windows)
-  pooled <- pooled[!grepl("NA", pooled, fixed = TRUE)]
+  # Drop windows that touch a missing cell -- tested on the cells, not on
+  # the pasted text, where a state such as "FINAL" contains "NA".
+  touches_na <- vapply(seq_len(ncols - k + 1L), function(t) {
+    rowSums(is.na(m[, t:(t + k - 1L), drop = FALSE])) > 0L
+  }, logical(nrow(m)))
+  pooled <- as.vector(windows)[!as.vector(touches_na)]
   table(pooled)
 }
 

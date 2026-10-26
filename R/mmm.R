@@ -55,6 +55,8 @@
   ll_prev <- -Inf
   converged <- FALSE
   cov_beta <- NULL
+  cov_wts <- NULL
+  mstep_converged <- TRUE
 
   # Pre-compute design matrix for covariates (once)
   X_cov <- NULL
@@ -92,10 +94,11 @@
       pi_mix <- .colMeans(post, N, n_comp)
       log_pi <- log(pi_mix + 1e-300)
     } else {
-      sm <- .mmm_softmax_mstep_fast(post, X_cov, beta_prev = cov_beta,
-                                      n_steps = 3L)
+      sm <- .mmm_softmax_mstep(post, X_cov, wts = cov_wts)
       log_pi_mat <- sm$log_pi_mat
       cov_beta <- sm$beta
+      cov_wts <- sm$wts
+      mstep_converged <- sm$converged
       pi_mix <- .colMeans(exp(log_pi_mat), N, n_comp)
     }
 
@@ -108,7 +111,11 @@
     log_lik <- counts %*% log_P
     # Initial-state log-likelihood: each row i needs log_init[init_state[i], ].
     # init_ind %*% log_init reduces to indexed extraction.
-    log_lik <- log_lik + log_init[init_state_safe, , drop = FALSE]
+    # A sequence with no observed first state carries no initial-state term
+    # (uninformative), rather than being scored as starting in state 1.
+    init_term <- log_init[init_state_safe, , drop = FALSE]
+    init_term[!valid_init, ] <- 0
+    log_lik <- log_lik + init_term
     # Mixing
     if (is.null(cov_df)) {
       log_lik <- log_lik + rep(log_pi, each = N)
@@ -147,6 +154,8 @@
     }
     ll_prev <- ll
   }
+  # EM convergence also needs the last covariate M-step to have converged.
+  converged <- converged && mstep_converged
 
   list(
     P_all = P_all,
@@ -286,70 +295,31 @@
 # Covariate M-step helpers
 # ---------------------------------------------------------------------------
 
-#' Fast softmax regression M-step via Newton-Raphson
+#' Covariate M-step: multinomial logit of the posterior on the covariates
 #'
-#' Replaces nnet::multinom() inside the EM loop. Does a few Newton steps
-#' on the pre-computed design matrix. Much faster than calling multinom()
-#' at every EM iteration.
+#' The exact M-step for covariate-dependent mixing: `nnet::multinom()` fitted
+#' with the N x k posterior as soft class targets maximises
+#' sum(post * log(pi)) over the softmax coefficients (first class is the
+#' reference). Warm-started from the previous EM iteration's weights.
 #'
 #' @param post N x k posterior matrix
 #' @param X N x p design matrix (with intercept column)
-#' @param beta_prev (k-1) x p coefficient matrix from previous iteration (or NULL)
-#' @param n_steps Number of Newton-Raphson steps (default: 5)
-#' @return List with log_pi_mat (N x k) and beta ((k-1) x p)
+#' @param wts Network weights of the previous fit (`$wts`), or NULL
+#' @return List with log_pi_mat (N x k), beta ((k-1) x p, columns named by
+#'   `colnames(X)`), wts, and converged (FALSE when multinom hit `maxit`)
 #' @noRd
-.mmm_softmax_mstep_fast <- function(post, X, beta_prev = NULL, n_steps = 5L) {
-  N <- nrow(X)
-  p <- ncol(X)
-  k <- ncol(post)
-  km1 <- k - 1L
-
-  # Initialize beta
-  if (is.null(beta_prev)) {
-    beta <- matrix(0, km1, p)
+.mmm_softmax_mstep <- function(post, X, wts = NULL) {
+  # nnet treats a supplied `Wts = NULL` as a weight vector of length 0, so
+  # the warm start is passed only when there is one.
+  fit <- if (is.null(wts)) {
+    nnet::multinom(post ~ X - 1, maxit = 500L, trace = FALSE)
   } else {
-    beta <- beta_prev
+    nnet::multinom(post ~ X - 1, Wts = wts, maxit = 500L, trace = FALSE)
   }
-
-  for (step in seq_len(n_steps)) {
-    # Compute softmax probabilities: N x k
-    eta <- X %*% t(beta)  # N x (k-1)
-    eta_full <- cbind(0, eta)  # N x k (reference class = 0)
-    eta_max <- do.call(pmax, as.data.frame(eta_full))
-    exp_eta <- exp(eta_full - eta_max)
-    pi_mat <- exp_eta / rowSums(exp_eta)
-
-    # Gradient for each non-reference class
-    residual <- post[, -1L, drop = FALSE] - pi_mat[, -1L, drop = FALSE]  # N x (k-1)
-
-    if (km1 == 1L) {
-      # k=2: logistic regression Newton step
-      grad <- crossprod(X, residual)  # p x 1
-      W <- pi_mat[, 1L] * pi_mat[, 2L]  # N-length
-      H <- crossprod(X * W, X) + diag(1e-6, p)
-      H_inv <- tryCatch(solve(H), error = function(e) NULL)
-      if (is.null(H_inv)) break # nocov
-      beta <- beta + t(H_inv %*% grad)
-    } else {
-      # General k: block Newton step
-      beta_vec <- as.numeric(t(beta))
-      grad_vec <- as.numeric(t(crossprod(X, residual)))  # km1*p
-
-      delta <- numeric(km1 * p)
-      for (m in seq_len(km1)) {
-        W <- pi_mat[, m + 1L] * (1 - pi_mat[, m + 1L])
-        H <- crossprod(X * W, X) + diag(1e-6, p)
-        H_inv <- tryCatch(solve(H), error = function(e) NULL)
-        if (is.null(H_inv)) next # nocov
-        idx <- ((m - 1L) * p + 1L):(m * p)
-        delta[idx] <- H_inv %*% grad_vec[idx]
-      }
-      beta <- matrix(beta_vec + delta, km1, p, byrow = TRUE)
-    }
-  }
-
-  log_pi_mat <- log(pi_mat + 1e-300)
-  list(log_pi_mat = log_pi_mat, beta = beta)
+  beta <- stats::coef(fit)
+  colnames(beta) <- colnames(X)
+  list(log_pi_mat = log(stats::fitted(fit) + 1e-300), beta = beta,
+       wts = fit$wts, converged = fit$convergence == 0L)
 }
 
 
@@ -774,7 +744,10 @@ build_mmm <- function(data,
   # ---- Information criteria ----
   n_params <- k * n_states * (n_states - 1L) +
               k * (n_states - 1L) +
-              if (is.null(em_cov_df)) (k - 1L) else (k - 1L) * (ncol(em_cov_df) + 1L)
+              # mixing: one free logit per non-reference class and design
+              # column (a 4-level factor is 3 columns, not 1)
+              if (is.null(em_cov_df)) (k - 1L) else
+                (k - 1L) * ncol(stats::model.matrix(~ ., data = em_cov_df))
   BIC_val <- -2 * best$ll + n_params * log(N)
   AIC_val <- -2 * best$ll + 2 * n_params
   ICL_val <- BIC_val + 2 * quality$class_entropy

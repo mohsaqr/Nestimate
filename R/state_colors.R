@@ -83,7 +83,9 @@ set_state_colors.netobject_group <- function(x, colors) {
     .stamp_node_fill(net)
   })
   attributes(out) <- attributes(x)
-  out$state_colors <- pal
+  # An attribute, not an element: a netobject_group must stay a list of
+  # networks, or every verb that iterates over it meets a character vector.
+  attr(out, "state_colors") <- pal
   out
 }
 
@@ -190,9 +192,16 @@ state_colors.netobject_group <- function(x, ...) .state_colors_table(x)
 # The full palette an object draws with: the stored colours over an Okabe-Ito
 # base, named by key. This is the single resolution point - the table, the
 # cograph stamp and the plot fallback all read it.
+# The palette set with set_state_colors(): an attribute on a
+# netobject_group, a field on a single object.
+.palette_of <- function(x) {
+  if (inherits(x, "netobject_group")) attr(x, "state_colors") else
+    x$state_colors
+}
+
 .resolve_state_colors <- function(x) {
   keys <- .object_states(x)
-  stats::setNames(.fill_state_colors(keys, x$state_colors %||% character(0)),
+  stats::setNames(.fill_state_colors(keys, .palette_of(x) %||% character(0)),
                   keys)
 }
 
@@ -201,7 +210,7 @@ state_colors.netobject_group <- function(x, ...) .state_colors_table(x)
   pal  <- .resolve_state_colors(x)
   data.frame(state  = keys,
              color  = unname(pal[keys]),
-             source = ifelse(keys %in% names(x$state_colors %||% character(0)),
+             source = ifelse(keys %in% names(.palette_of(x) %||% character(0)),
                              "set", "default"),
              stringsAsFactors = FALSE)
 }
@@ -217,8 +226,6 @@ state_colors.netobject_group <- function(x, ...) .state_colors_table(x)
 # mattering. The `state_colors(x)` table is the same resolution, so the table
 # and the figures cannot disagree.
 .stored_state_colors <- function(x) {
-  if (!is.list(x) || is.null(x$state_colors) || !length(x$state_colors)) {
-    return(NULL)
-  }
+  if (!is.list(x) || !length(.palette_of(x))) return(NULL)
   .resolve_state_colors(x)
 }

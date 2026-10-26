@@ -77,33 +77,33 @@ NULL
     v
   }
 
-  if (inherits(x, "mcml")) {
-    # Apply the label remap to the values inside a cluster's $data so
-    # they line up with the relabeled $weights rownames. Without this,
-    # bootstrap_network() in its precomputed fast path silently
-    # produces all-zero matrices because match($data, states) returns
-    # NA for every cell. Values not in `map` (e.g. macro $data carries
-    # cluster names) are preserved.
-    remap_data <- function(d) {
-      if (is.null(d)) return(d)
-      if (is.data.frame(d)) {
-        for (j in seq_along(d)) {
-          col <- d[[j]]
-          if (is.factor(col)) {
-            levels(col) <- remap(levels(col))
-            d[[j]] <- col
-          } else if (is.character(col)) {
-            d[[j]] <- remap(col)
-          }
+  # Apply the label remap to the values inside a network's $data so
+  # they line up with the relabeled $weights rownames. Without this,
+  # bootstrap_network() in its precomputed fast path silently
+  # produces all-zero matrices because match($data, states) returns
+  # NA for every cell. Values not in `map` (e.g. macro $data carries
+  # cluster names) are preserved.
+  remap_data <- function(d) {
+    if (is.null(d)) return(d)
+    if (is.data.frame(d)) {
+      for (j in seq_along(d)) {
+        col <- d[[j]]
+        if (is.factor(col)) {
+          levels(col) <- remap(levels(col))
+          d[[j]] <- col
+        } else if (is.character(col)) {
+          d[[j]] <- remap(col)
         }
-        return(d)
       }
-      if (is.matrix(d) && is.character(d)) {
-        d[] <- remap(as.vector(d))
-        return(d)
-      }
-      d
+      return(d)
     }
+    if (is.matrix(d) && is.character(d)) {
+      d[] <- remap(as.vector(d))
+      return(d)
+    }
+    d
+  }
+  if (inherits(x, "mcml")) {
     relabel_one <- function(net) {
       if (is.null(net)) return(net)
       net$labels <- check_unique(remap(net$labels))
@@ -132,6 +132,19 @@ NULL
         mapped <- check_unique(remap(nm))
         dimnames(x$weights) <- list(mapped, mapped)
       }
+    }
+    # Everything keyed by node name follows the weights, or resamplers that
+    # match $data against rownames(weights) see no states at all.
+    x$data <- remap_data(x$data)
+    # Association data: the columns are the nodes (T1..Tn pass through).
+    if (!is.null(colnames(x$data))) colnames(x$data) <- remap(colnames(x$data))
+    if (!is.null(x$initial)) names(x$initial) <- remap(names(x$initial))
+    if (!is.null(x$frequency_matrix)) {
+      dimnames(x$frequency_matrix) <- lapply(dimnames(x$frequency_matrix),
+                                             function(d) if (is.null(d)) d else remap(d))
+    }
+    if (is.data.frame(x$node_groups) && "node" %in% names(x$node_groups)) {
+      x$node_groups$node <- remap(as.character(x$node_groups$node))
     }
     return(x)
   }
@@ -434,3 +447,22 @@ safe_sd <- function(x) {
     node_groups = NULL
   )
 }
+
+
+#' Report resamples whose network could not be estimated
+#'
+#' Resamplers catch estimator errors per draw so one degenerate draw does
+#' not abort the run; the count is reported here instead of being dropped
+#' silently.
+#' @noRd
+.warn_failed_resamples <- function(n_failed, n_total, fn) {
+  if (n_failed > 0L) {
+    warning(warningCondition(sprintf(paste0(
+      "%s: %d of %d resamples failed to estimate a network and are left ",
+      "out%s."), fn, n_failed, n_total,
+      if (n_failed == n_total) " (all of them: the results are NA)" else ""),
+      class = "nestimate_resample_failed", call = NULL))
+  }
+  invisible(n_failed)
+}
+

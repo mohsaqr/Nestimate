@@ -553,6 +553,16 @@ entropy_trajectory <- function(data, action, actor = NULL, time = NULL,
   to_i   <- ai[-1][keep]
   tr_t   <- tv[-1][keep]
   tr_g   <- g[-1][keep]
+  tr_a   <- act[-1][keep]
+
+  ## Transitions were built actor by actor; the trajectory runs through
+  ## time, so pool them in time order within each group (ties: actor, then
+  ## input order).
+  by_time <- order(tr_g, tr_t, tr_a, seq_along(tr_t))
+  from_i <- from_i[by_time]
+  to_i   <- to_i[by_time]
+  tr_t   <- tr_t[by_time]
+  tr_g   <- tr_g[by_time]
 
   if (length(from_i) < 2L) {
     stop("Fewer than two transitions; cannot build a trajectory.",

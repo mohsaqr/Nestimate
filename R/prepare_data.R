@@ -169,6 +169,17 @@ prepare <- function(data,
                           timezone = timezone)
     df$.parsed_time <- parsed
 
+    # Numeric times in the wrong unit parse "successfully" to dates millennia
+    # away and turn every event into its own session. Say so.
+    if (is.numeric(df[[time]]) && any(!is.na(parsed)) &&
+        max(parsed, na.rm = TRUE) > as.POSIXct("2500-01-01", tz = "UTC")) {
+      warning(warningCondition(sprintf(paste0(
+        "`%s` read as Unix %s gives dates after the year 2500 (latest %s). ",
+        "Set `unix_time_unit` (\"milliseconds\" or \"microseconds\")."),
+        time, unix_time_unit, format(max(parsed, na.rm = TRUE), "%Y")),
+        class = "nestimate_time_unit", call = NULL))
+    }
+
     # Sort by base_group + time + order
     df <- df[base::order(df$.base_group, df$.parsed_time, df[[order_col]]), ]
 

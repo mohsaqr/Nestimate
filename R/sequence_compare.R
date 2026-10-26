@@ -272,6 +272,19 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 
 # ---- Input parsing ----
 
+#' Numeric sequence cells as state labels
+#'
+#' tna stores states integer-coded (positions in `lbl`); a netobject stores
+#' the states themselves, which may be numbers (1, 3, 5). Decode by position
+#' only when the values are not already labels.
+#' @noRd
+.cs_decode_states <- function(m, lbl) {
+  if (is.null(lbl) || length(lbl) == 0L || !is.numeric(m)) return(m)
+  chr <- as.character(as.vector(m))
+  out <- if (all(chr[!is.na(chr)] %in% lbl)) chr else lbl[as.integer(m)]
+  matrix(out, nrow = nrow(m), dimnames = dimnames(m))
+}
+
 #' @noRd
 .cs_parse_input <- function(x, group) {
   # netobject_group: each element has $data
@@ -282,13 +295,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       if (is.null(d)) stop("netobject_group element has no $data.", call. = FALSE)
       m <- as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
       # Decode integer-encoded data
-      lbl <- rownames(x[[i]]$weights)
-      if (!is.null(lbl) && length(lbl) > 0L &&
-          (is.integer(m[, 1]) || is.numeric(m[, 1]))) {
-        storage.mode(m) <- "character"
-        m[] <- lbl[as.integer(m)]
-      }
-      m
+      .cs_decode_states(m, rownames(x[[i]]$weights))
     })
     # Align column count
     max_cols <- max(vapply(mats, ncol, integer(1)))
@@ -317,12 +324,8 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       lbl <- rownames(x$weights)
     }
     if (is.null(d)) stop("Object has no $data.", call. = FALSE)
-    seq_mat <- as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
-    if (!is.null(lbl) && length(lbl) > 0L &&
-        (is.integer(seq_mat[, 1]) || is.numeric(seq_mat[, 1]))) {
-      storage.mode(seq_mat) <- "character"
-      seq_mat[] <- lbl[as.integer(seq_mat)]
-    }
+    seq_mat <- .cs_decode_states(
+      as.matrix(as.data.frame(d, stringsAsFactors = FALSE)), lbl)
   } else if (is.data.frame(x) || is.matrix(x)) {
     seq_mat <- as.matrix(as.data.frame(x, stringsAsFactors = FALSE))
   } else {

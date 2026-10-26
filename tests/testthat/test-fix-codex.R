@@ -23,7 +23,8 @@ test_that("Codex P2 #2: mosaic uses the estimator's stored frequency_matrix", {
   d <- data.frame(id = rep(1:12, each = 6), t = rep(1:6, 12),
                   s = sample(c("A", "B", "C"), 72, TRUE),
                   stringsAsFactors = FALSE)
-  rn <- build_network(d, method = "relative", id = "id", time = "t")
+  rn <- build_network(d, method = "relative", actor = "id", action = "s",
+                      time = "t")
   mc <- .mosaic_count_or_stop(rn)
   # The stored count construction is preferred over a naive raw recount, so
   # the mosaic agrees with the network instead of disagreeing / erroring.

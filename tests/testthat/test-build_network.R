@@ -1941,9 +1941,11 @@ test_that("auto-convert: mixed char+numeric columns for glasso", {
     score = rnorm(50),
     stringsAsFactors = FALSE
   )
-  # Has character columns → should trigger auto-convert
+  # Two sequence columns and one numeric covariate: the sequences are
+  # converted to state frequencies, the covariate is not a state.
   net <- build_network(df, method = "glasso")
   expect_s3_class(net, "netobject")
+  expect_identical(rownames(net$weights), c("A", "B", "C"))
 })
 
 # ---- 20. Group parameter with auto-conversion ----

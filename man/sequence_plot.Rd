@@ -12,6 +12,12 @@ sequence_plot(
     "cosine", "jaccard", "jw"),
   tree = NULL,
   group = NULL,
+  periods = NULL,
+  fill = c("stretch", "pad"),
+  actor = NULL,
+  action = NULL,
+  time = NULL,
+  order = NULL,
   scale = c("proportion", "count"),
   geom = c("area", "bar"),
   na = TRUE,
@@ -55,8 +61,12 @@ sequence_plot(
 \method{print}{mcml_sequence_plot}(x, ...)
 }
 \arguments{
-\item{x}{Wide-format sequence data. Accepts:
+\item{x}{Sequence data. Accepts:
 \describe{
+\item{long data.frame}{One row per action, with \code{action =}
+naming the action column (and \code{actor}, \code{time},
+\code{order} as needed). Converted with \code{\link{prepare}}: one
+row per actor, or per actor-period with \code{periods}.}
 \item{data.frame / matrix}{Rows = sequences, columns = time points.}
 \item{netobject}{Extracts \code{$data}.}
 \item{net_clustering}{From \code{\link{build_clusters}}. Uses
@@ -94,6 +104,41 @@ object to supply row ordering (heatmap only; overrides \code{sort}).}
 
 \item{group}{Optional grouping vector (length \code{nrow(x)}) producing
 one facet per group. Index/distribution only. Ignored for heatmap.}
+
+\item{periods}{Name of the column that splits each actor's sequence into
+periods (days, weeks, ...): a column of the long data, or of the
+network's metadata. \code{x} must be a
+long data frame with \code{actor =} and \code{action =}, or a
+netobject built with \code{actor =} and \code{session = periods}, so
+that each actor-period pair holds one sequence. The plot then has one
+row per actor and the time axis is split into equal-width blocks, one
+per period: factor levels give their order (an unused level is an
+empty block), otherwise they are sorted. Ticks mark the period
+boundaries and each label sits under its block; \code{tick} thins the
+labels. Heatmap and index types only; not with \code{group} or
+\code{trim}. Default \code{NULL} plots the sequences as they are.}
+
+\item{fill}{With \code{periods}: how an actor's steps fill a block.
+\code{"stretch"} (default) spreads them over the whole block, so one
+step fills it and three steps take a third each; the cell width differs
+between actors. \code{"pad"} gives every block as many fixed slots as
+the busiest actor-period and leaves unused slots as \code{NA}, so a
+slot is the same step position for every actor (minor ticks mark the
+slots when there are at most 60 in all). With \code{periods}, empty
+space is white unless \code{na_color} is given, so it is never confused
+with a state drawn in grey. Repeats of a state merge into one spell;
+\code{cell_border = "white"} (TraMineR's \code{border}) outlines each
+action so they show as separate, equal shares of the period.}
+
+\item{actor, action, time, order}{Long data only: column names, as in
+\code{\link{build_network}}. Giving \code{action} marks \code{x} as
+long data (one row per action); \code{actor} identifies who acted (one
+row per actor in the plot), \code{time} and \code{order} put each
+actor's actions in order (otherwise row order is used). Without
+\code{periods}, a \code{time} column also splits an actor's actions
+into sessions at gaps over 15 minutes, as \code{prepare()} does; with
+\code{periods} it does not, so each actor-period is one sequence.
+\code{group} cannot be combined with long data.}
 
 \item{scale, geom, na}{Passed to \code{\link{distribution_plot}} when
 \code{type = "distribution"}.
@@ -272,6 +317,11 @@ used).}
 \item{\code{"index"}}{\code{codes}, \code{palette}, \code{levels},
 \code{orders} (list of integer row orders, one per panel, indexing
 the original rows) and \code{groups} (panel labels).}
+\item{with \code{periods}}{\code{ord} (row order of the actors),
+\code{codes} (integer matrix, one row per actor and one column per
+period slot, in the \code{fill = "pad"} layout, named
+\code{"<period>.<slot>"}), \code{palette}, \code{levels},
+\code{periods} (period labels in plotted order) and \code{fill}.}
 \item{\code{"distribution"}}{Whatever
 \code{\link{distribution_plot}} returns: \code{counts},
 \code{proportions}, \code{levels}, \code{palette}, \code{groups}.}
@@ -340,6 +390,25 @@ sequence_plot(trajectories)
 \donttest{
 sequence_plot(trajectories, type = "index")
 sequence_plot(trajectories, type = "distribution")
+
+# One row per student, one block per day; each day's actions fill it.
+daily <- data.frame(
+  student = rep(c("s1", "s2", "s3"), times = c(5, 9, 6)),
+  day     = c("d1", "d2", "d2", "d3", "d3",
+              "d1", "d1", "d2", "d2", "d2", "d3", "d3", "d3", "d3",
+              "d1", "d1", "d1", "d2", "d3", "d3"),
+  action  = c("plan", "read", "write", "read", "plan",
+              "read", "read", "plan", "write", "write", "read", "plan",
+              "write", "read", "plan", "plan", "write", "read", "write",
+              "read"))
+sequence_plot(daily, actor = "student", action = "action", periods = "day")
+sequence_plot(daily, actor = "student", action = "action", periods = "day",
+              fill = "pad", type = "index")
+
+# The same from a network built with the period as its session.
+daily_net <- build_network(daily, method = "relative", actor = "student",
+                           action = "action", session = "day")
+sequence_plot(daily_net, periods = "day")
 
 # Multichannel MCML view: one channel per cluster + a macro Summary.
 fit <- build_mcml(

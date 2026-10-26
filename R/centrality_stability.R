@@ -299,6 +299,9 @@ centrality_stability <- function(x,
   })
   names(corr_storage) <- measures
 
+  failed <- new.env(parent = emptyenv())
+  failed$n <- 0L
+  failed$total <- 0L
   for (p_idx in seq_len(n_prop)) {
     prop <- drop_prop[p_idx]
     n_keep <- n_seq - floor(n_seq * prop)
@@ -308,7 +311,11 @@ centrality_stability <- function(x,
     corr_mat <- vapply(seq_len(iter), function(i) {
       idx <- sample.int(n_seq, n_keep, replace = FALSE)
       mat <- build_matrix(idx)
-      if (is.null(mat)) return(rep(NA_real_, n_measures))
+      failed$total <- failed$total + 1L
+      if (is.null(mat)) {
+        failed$n <- failed$n + 1L
+        return(rep(NA_real_, n_measures))
+      }
 
       sub_cents <- .compute_centralities(
         mat, states, x$directed, measures,
@@ -336,6 +343,8 @@ centrality_stability <- function(x,
       }
     }
   }
+
+  .warn_failed_resamples(failed$n, failed$total, "centrality_stability()")
 
   # ---- Compute CS coefficients ----
   cs <- vapply(measures, function(m) {

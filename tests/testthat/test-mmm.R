@@ -640,10 +640,10 @@ test_that(".mmm_init_kmeans returns random post when kmeans fails", {
 })
 
 # ============================================
-# Coverage gap: build_mmm with k=2 covariates Newton step (L266, L270-282)
+# Covariate M-step (nnet::multinom on the posterior)
 # ============================================
 
-test_that("build_mmm with k=2 covariate Newton step runs without error", {
+test_that("build_mmm with k=2 covariates returns named mixing coefficients", {
   sim <- .make_mmm_cov_data(n = 80, seed = 11)
   mmm <- build_mmm(sim$data, k = 2, n_starts = 2, seed = 11,
                     covariates = "Age")
@@ -652,20 +652,61 @@ test_that("build_mmm with k=2 covariate Newton step runs without error", {
   expect_equal(ncol(mmm$covariates$beta), 2L)  # intercept + Age
 })
 
-# ============================================
-# Coverage gap: build_mmm with k=3 covariates general Newton step (L396-397)
-# ============================================
-
-test_that("build_mmm with k=3 runs general covariate Newton step", {
+test_that("build_mmm with k=3 covariates converges above the no-covariate fit", {
+  # The former hand-written Newton step diverged here (empty cluster,
+  # coefficients ~1e7, likelihood below the nested fit, converged = TRUE).
   sim <- .make_mmm_cov_data(n = 90, seed = 21)
-  expect_warning(
-    mmm <- build_mmm(sim$data, k = 3, n_starts = 2, seed = 21,
-                     covariates = "Age"),
-    "empty hard-assignment cluster"
-  )
+  mmm <- build_mmm(sim$data, k = 3, n_starts = 2, seed = 21,
+                   covariates = "Age")
+  no_cov <- build_mmm(sim$data[, setdiff(names(sim$data), "Age")], k = 3,
+                      n_starts = 2, seed = 21)
   expect_s3_class(mmm, "net_mmm")
-  expect_equal(mmm$k, 3L)
-  expect_true(!is.null(mmm$covariates))
+  expect_true(mmm$converged)
+  expect_true(all(tabulate(mmm$assignments, 3L) > 0L))
+  expect_true(all(is.finite(mmm$covariates$beta)))
+  expect_identical(colnames(mmm$covariates$beta), c("(Intercept)", "Age"))
+  # A model with covariate-dependent mixing nests the constant-mixing one.
+  expect_gte(mmm$log_likelihood, no_cov$log_likelihood)
+})
+
+test_that("covariate M-step maximises sum(post * log(pi)) over the softmax", {
+  set.seed(5)
+  n <- 120
+  X <- stats::model.matrix(~ x, data.frame(x = rnorm(n)))
+  post <- matrix(runif(n * 3), n)
+  post <- post / rowSums(post)
+  sm <- .mmm_softmax_mstep(post, X)
+  objective <- function(b) {
+    eta <- cbind(0, X %*% t(matrix(b, 2L, 2L)))
+    sum(post * (eta - log(rowSums(exp(eta)))))
+  }
+  best <- stats::optim(numeric(4), objective, method = "BFGS",
+                       control = list(fnscale = -1, reltol = 1e-12))
+  expect_true(sm$converged)
+  expect_equal(sum(post * sm$log_pi_mat), best$value, tolerance = 1e-6)
+  expect_equal(unname(sm$beta), matrix(best$par, 2L, 2L), tolerance = 1e-3)
+  # fitted mixing probabilities are a distribution per sequence
+  expect_equal(unname(rowSums(exp(sm$log_pi_mat))), rep(1, n), tolerance = 1e-12)
+})
+
+test_that("EM log-likelihood with covariates never decreases (k = 3)", {
+  set.seed(11)
+  seqs <- as.data.frame(matrix(sample(c("A", "B", "C"), 150 * 12, TRUE),
+                               150, 12))
+  cov <- data.frame(x = rnorm(150),
+                    z = factor(sample(c("a", "b", "c"), 150, TRUE)))
+  counts <- .precompute_per_sequence_wide(seqs, method = "relative",
+                                          cols = NULL, id_col = NULL,
+                                          states = c("A", "B", "C"))
+  init_state <- match(seqs[[1]], c("A", "B", "C"))
+  set.seed(3)
+  P0 <- matrix(runif(150 * 3), 150)
+  P0 <- P0 / rowSums(P0)
+  lls <- vapply(1:25, function(t) {
+    .mmm_em(counts, init_state, 3L, t, 1e-12, 0.01, 3L,
+            init_posterior = P0, cov_df = cov)$ll
+  }, numeric(1))
+  expect_true(all(diff(lls) > -1e-8))
 })
 
 # ============================================
