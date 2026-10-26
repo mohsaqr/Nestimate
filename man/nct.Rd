@@ -4,6 +4,7 @@
 \alias{nct}
 \alias{print.net_nct}
 \alias{summary.net_nct}
+\alias{as.data.frame.net_nct}
 \title{Network Comparison Test}
 \usage{
 nct(
@@ -14,25 +15,29 @@ nct(
   paired = FALSE,
   abs = TRUE,
   weighted = TRUE,
-  p_adjust = "none"
+  p_adjust = "none",
+  na_method = c("pairwise", "listwise")
 )
 
-\method{print}{net_nct}(x, ...)
+\method{print}{net_nct}(x, n = Inf, ...)
 
 \method{summary}{net_nct}(object, ...)
+
+\method{as.data.frame}{net_nct}(x, row.names = NULL, optional = FALSE, ...)
 }
 \arguments{
 \item{data1}{A numeric matrix or data.frame of observations from group 1.}
 
-\item{data2}{A numeric matrix or data.frame of observations from group 2.
-Same number of columns as \code{data1}.}
+\item{data2}{A numeric matrix or data.frame of observations from group 2,
+with the same variables as \code{data1}.}
 
 \item{iter}{Integer. Number of permutation iterations. Default 1000.}
 
 \item{gamma}{EBIC tuning parameter for glasso. Default 0.5.}
 
 \item{paired}{Logical. If \code{TRUE}, perform a paired permutation
-(within-subject swap). Default \code{FALSE}.}
+(within-subject swap; row \code{i} of both groups is the same unit).
+Default \code{FALSE}.}
 
 \item{abs}{Logical. If \code{TRUE}, compute global strength on absolute
 edge weights. Default \code{TRUE}.}
@@ -44,56 +49,111 @@ Default \code{TRUE}.}
 \item{p_adjust}{P-value adjustment method for the per-edge tests
 (any method in \code{stats::p.adjust.methods}). Default \code{"none"}.}
 
-\item{x}{For the \code{print()} method: an object of class \code{net_nct}.}
+\item{na_method}{\code{"pairwise"} (default) or \code{"listwise"} handling
+of missing values; see Details.}
 
-\item{...}{In \code{print.net_nct()} and \code{summary.net_nct()}: Ignored.}
+\item{x}{For the \code{print()} and \code{as.data.frame()} methods: an
+object of class \code{net_nct}.}
+
+\item{n}{For the \code{print()} method: number of edges to list, largest
+difference first. Default \code{Inf} (all).}
+
+\item{...}{In \code{print.net_nct()}, \code{summary.net_nct()} and
+\code{as.data.frame.net_nct()}: Ignored.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{net_nct}.}
+
+\item{row.names, optional}{For \code{as.data.frame()}: ignored (base
+generic compatibility).}
 }
 \value{
 A list of class \code{net_nct} with elements:
 \describe{
 \item{nw1, nw2}{Estimated weighted adjacency matrices.}
-\item{M}{List with \code{observed}, \code{perm}, \code{p_value} for
-the global strength test. P-values are permutation p-values,
+\item{structure}{The network-structure test (statistic M, the largest
+absolute edge difference): list with \code{observed}, \code{perm},
+\code{p_value}. P-values are permutation p-values,
 \code{(sum(perm >= observed) + 1) / (iter + 1)}.}
-\item{S}{Same structure for the maximum absolute edge difference.}
+\item{strength}{The global-strength test (statistic S): same structure,
+plus \code{by_group}, each network's global strength (NCT's
+\code{glstrinv.sep}).}
 \item{E}{Same structure for the per-edge tests (\code{observed} and
 \code{p_value} are one value per upper-triangle edge, \code{perm} an
-\code{iter} by edges matrix), plus \code{edge_names}, a two-column
-data frame of the node pairs (\code{NULL} when \code{data1} has no
-column names).}
+\code{iter} by edges matrix), plus \code{edge_names}, a data frame
+with columns \code{from} and \code{to} naming each node pair.}
 \item{n_iter}{Number of permutations.}
+\item{groups}{Display names of the two groups: the argument names when
+they are plain variables, otherwise "group 1" / "group 2".}
+\item{n}{Rows used in each group.}
 \item{paired}{Whether a paired test was used.}
 \item{params}{List of the settings used: \code{gamma}, \code{abs},
-\code{weighted}, \code{p_adjust}.}
+\code{weighted}, \code{p_adjust}, \code{na_method}.}
 }
+The letters follow van Borkulo et al. (2022) and
+\code{NetworkComparisonTest}. Before Nestimate 0.9.27 the fields
+\code{$M} and \code{$S} held the global-strength and network-structure
+tests the other way round; accessing them now raises a
+\code{nestimate_renamed} error.
+Errors of class \code{nestimate_bad_input} for malformed arguments or
+groups whose columns differ (in name or order); of class
+\code{nestimate_degenerate_sample} when (pairwise) a variable pair shares
+fewer than two observed rows in a group or a permuted split. A warning of
+class \code{nestimate_constant_variable} when a variable is constant in an
+observed group.
 
 In \code{print.net_nct()}: The input object, invisibly.
 
-In \code{summary.net_nct()}: A data frame with columns \code{from}, \code{to}, \code{diff_observed}, \code{p_value}, \code{significant}. Attributes \code{m_stat} and \code{s_stat} each hold a one-row data frame with \code{observed} and \code{p_value}.
+In \code{summary.net_nct()}: a data frame with one row per global
+test, columns \code{test} (\code{"network structure"};
+\code{"global strength"}, or \code{"global expected influence"} when
+\code{abs = FALSE}), \code{statistic} (\code{"M"}, \code{"S"}),
+\code{observed}, \code{p_value}, \code{significant} (\code{p_value < 0.05}).
+
+In \code{as.data.frame.net_nct()}: a data frame with one row per
+node pair, columns \code{from}, \code{to}, \code{weight_1},
+\code{weight_2} (the edge in each group's network), \code{difference}
+(statistic E), \code{p_value}, \code{significant}.
 }
 \description{
 Tests whether two networks estimated from independent samples differ at
-three levels: \strong{global strength} (M-statistic), \strong{network
-structure} (S-statistic, max absolute edge difference), and
-\strong{individual edges} (E-statistic per edge). Inference is via
-permutation of group labels.
+three levels (van Borkulo et al. 2022): \strong{network structure}
+(M-statistic, the largest absolute edge difference), \strong{global
+strength} (S-statistic, the difference in summed absolute edge weights;
+with \code{abs = FALSE}, summed signed weights, i.e. global expected
+influence), and \strong{individual edges} (E-statistic per edge).
+Inference is via permutation of group labels.
 }
 \details{
 Follows \code{NetworkComparisonTest::NCT()} with defaults
 \code{abs = TRUE}, \code{weighted = TRUE}, \code{paired = FALSE}. The
-network estimator is EBIC-selected glasso applied to a Pearson
-correlation matrix, with \code{Matrix::nearPD} symmetrization (matching
-NCT's \code{NCT_estimator_GGM} default). The glasso solver is not the
-Fortran one NCT wraps, so results agree to independent-solver precision
-(of the order of \code{1e-4} on the test statistics) rather than
-bit-for-bit, even under the same seed.
+network estimator is EBIC-selected glasso (\code{psychnets::ebic_glasso()})
+applied to a Pearson correlation matrix, with \code{Matrix::nearPD}
+symmetrization (matching NCT's \code{NCT_estimator_GGM} default). Under
+the same seed both functions permute the same rows, so permutation
+p-values agree; the glasso solver is not the Fortran one NCT wraps, so
+the test statistics agree to independent-solver precision (of the order
+of \code{1e-4}) rather than bit-for-bit.
+
+The two groups must hold the same variables in the same order
+(non-numeric columns such as an id or a group label are dropped first).
+
+Missing data follow \code{na_method}. \code{"pairwise"} (default) keeps
+every row, permutes rows as usual, and estimates each (sub)sample from its
+pairwise-complete correlation matrix, with the median pairwise
+co-observation count as the sample size. \code{"listwise"} drops
+incomplete rows first (in a paired design, a pair is dropped when either
+member is incomplete). Complete data are unaffected by the choice.
+
+A variable without variation in a group, or in a permuted split (a rare
+binary item can be constant in a split), enters that network as an
+isolated node. The statistic is then defined on every split, so the
+permutation test stays exact. A constant variable in an observed group
+raises a \code{nestimate_constant_variable} warning.
 }
 \section{Methods}{
 
 \itemize{
-\item \code{summary.net_nct()}: Returns a tidy data frame with one row per edge test. The global M (strength) and S (structure) statistics are attached as attributes.
+\item Printing the object shows every result. \code{summary.net_nct()} returns the M (network structure) and S (global strength) tests; \code{as.data.frame.net_nct()} returns one row per edge.
 }
 }
 
@@ -106,4 +166,10 @@ colnames(x1) <- colnames(x2) <- paste0("V", 1:4)
 res <- nct(x1, x2, iter = 20)
 res
 summary(res)
+}
+\references{
+van Borkulo, C. D., van Bork, R., Boschloo, L., Kossakowski,
+J. J., Tio, P., Schoevers, R. A., Borsboom, D., & Waldorp, L. J. (2022).
+Comparing network structures on three aspects: A permutation test.
+\emph{Psychological Methods}. \doi{10.1037/met0000476}
 }

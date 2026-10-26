@@ -1,3 +1,55 @@
+# Nestimate (development version)
+
+## Breaking changes
+
+* `nct()`: the M and S letters were the wrong way round. In van Borkulo et
+  al. (2022) and `NetworkComparisonTest`, M is the network-structure test
+  (largest absolute edge difference) and S the global-strength test; `nct()`
+  stored and printed them swapped. The tests are now `$structure` (M) and
+  `$strength` (S, with `by_group`, each network's global strength); reading
+  `$M` / `$S` raises a `nestimate_renamed` error naming the field to use.
+* `summary.net_nct()` now returns the M and S tests (columns `test`,
+  `statistic`, `observed`, `p_value`, `significant`) instead of the per-edge
+  table with `m_stat` / `s_stat` attributes (those attributes had the M/S swap
+  too). The per-edge table is `as.data.frame()`.
+
+## Bug fixes
+
+* `nct()` compared the two groups' variables by position: a second group whose
+  columns arrived in another order was tested against the wrong variables with
+  no error. Columns that differ in name or order now raise
+  `nestimate_bad_input`, as psychnets' `net_compare()` does.
+* `nct()` failed with the uninformative `nearPD` error "infinite or missing
+  values in 'x'" on any missing value, on a variable that is constant in a
+  group, and on a permuted split in which a rare binary variable becomes
+  constant. New `na_method = c("pairwise", "listwise")` (default
+  `"pairwise"`: pairwise correlations, median co-observation count as the
+  sample size; listwise drops incomplete rows, whole pairs when `paired =
+  TRUE`). A constant variable enters the network as an isolated node (the
+  psychnets convention), with a `nestimate_constant_variable` warning when it
+  is constant in an observed group; the statistic is then defined on every
+  permuted split, so the test stays exact. A pair sharing fewer than two
+  observed rows raises `nestimate_degenerate_sample`.
+* `nct()` drops non-numeric columns (an id or group label) instead of failing
+  in `cor()`, validates `iter` as a single whole number (2.7 was silently
+  truncated), and raises `nestimate_bad_input` for malformed arguments.
+* `summary.net_nct()` labelled every edge `edge_1`, `edge_2`, ... with `to =
+  NA` when the data had no column names; edges are now labelled `V1`, `V2`,
+  ... `$E$edge_names` is always a `from`/`to` data frame (it was an
+  `expand.grid()` result with `Var1`/`Var2`, or `NULL`).
+* Printing an `nct()` result shows everything: both groups by name, M and S
+  with each group's global strength, and every edge (largest difference
+  first) with both groups' weights (`print(x, n = 10)` shortens the list) --
+  the same layout as psychnets' `net_compare()`. New
+  `as.data.frame.net_nct()`: one row per edge (`from`, `to`, `weight_1`,
+  `weight_2`, `difference`, `p_value`, `significant`).
+* `nct()` treats a network weight of |w| <= 1e-10 as no edge. psychnets
+  before 0.6.0 can return an absent edge as a ~1e-17 residue, and two empty
+  networks then tested as different (M = 5.6e-17 and a p-value below 1; 10 of
+  40 random n = 60, p = 12 null datasets were affected with psychnets 0.5.2).
+* On complete data every `nct()` number is unchanged (frozen in
+  `tests/testthat/fixtures/nct-baseline.rds`).
+
 # Nestimate 0.9.26
 
 ## Breaking changes
