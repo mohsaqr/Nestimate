@@ -132,3 +132,27 @@ test_that("plots with a one-sequence panel draw", {
                                            a = c("x", "y", "x")),
                                 actor = "s", action = "a", periods = "d"))
 })
+
+test_that("plot_mosaic() hands a network to mosaic_plot()", {
+  g <- build_network(group_regulation_long, method = "relative",
+                     actor = "Actor", action = "Action", time = "Time",
+                     group = "Achiever")
+  expect_s3_class(plot_mosaic(g), "ggplot")
+  expect_error(plot_mosaic(g, x = "a"), class = "nestimate_bad_input")
+  df <- data.frame(group = rep(c("A", "B"), each = 2),
+                   state = rep(c("s1", "s2"), 2), count = c(3, 1, 2, 4))
+  expect_s3_class(plot_mosaic(df, x = "group", y = "state",
+                              weight = "count"), "ggplot")
+})
+
+test_that("cluster_network(cluster_by = 'mmm') passes covariate_effect on", {
+  set.seed(1)
+  d <- as.data.frame(matrix(sample(c("A", "B", "C"), 60 * 8, TRUE), 60, 8))
+  cv <- data.frame(g = rnorm(60))
+  nets <- cluster_network(d, k = 2, cluster_by = "mmm", covariates = cv,
+                          covariate_effect = "posthoc", n_starts = 2, seed = 1)
+  fit <- build_mmm(d, k = 2, covariates = cv, covariate_effect = "posthoc",
+                   n_starts = 2, seed = 1)
+  expect_identical(unname(vapply(nets, \(n) nrow(n$data), 1L)),
+                   as.integer(table(fit$assignments)))
+})

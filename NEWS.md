@@ -1,4 +1,4 @@
-# Nestimate (development version)
+# Nestimate 0.9.27
 
 ## New features
 
@@ -33,6 +33,14 @@
   too). The per-edge table is `as.data.frame()`.
 
 ## Bug fixes
+
+* `plot_mosaic()` given a network (netobject, group, mcml, htna) hands it
+  to `mosaic_plot()`; it failed with "is.data.frame(data) is not TRUE".
+  Data-frame calls are unchanged.
+
+* `cluster_network(cluster_by = "mmm")` passes `covariate_effect` (and any
+  other `build_mmm()` argument) to `build_mmm()`; it failed with "Unknown
+  argument(s) in cluster_network(): covariate_effect".
 
 * `build_mcml()` decodes a `tna` object's integer-coded sequences (it
   failed with "Unknown nodes in clusters").

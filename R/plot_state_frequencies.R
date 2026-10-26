@@ -170,7 +170,8 @@
 #' the same geometry by supplying a different fill column.
 #'
 #' @param data A data.frame in long form. Must contain the columns named
-#'   in \code{x}, \code{y}, and \code{weight}.
+#'   in \code{x}, \code{y}, and \code{weight}. A network (netobject,
+#'   netobject_group, mcml, htna) is passed on to \code{\link{mosaic_plot}}.
 #' @param x Column name for the X (column) variable.
 #' @param y Column name for the Y (segment) variable.
 #' @param weight Column name for the cell weight (e.g. count).
@@ -205,6 +206,17 @@ plot_mosaic <- function(data,
                         label_size  = 3.5,
                         x_label     = NULL,
                         y_label     = NULL) {
+  # A network (netobject, group, mcml, htna) belongs to mosaic_plot(); the
+  # two names are easily swapped, so hand it over rather than fail.
+  if (.is_data_bearing(data)) {
+    if (!missing(x) || !missing(y) || !missing(weight)) {
+      stop(errorCondition(paste0(
+        "`x`, `y` and `weight` name columns of a data frame; for a network ",
+        "call mosaic_plot(data)."),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    return(mosaic_plot(data))
+  }
   stopifnot(is.data.frame(data),
             is.character(x), length(x) == 1L,
             is.character(y), length(y) == 1L,

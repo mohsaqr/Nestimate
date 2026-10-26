@@ -1994,8 +1994,9 @@ cluster_network <- function(data, k, cluster_by = "pam",
     # so a single cluster_network() call controls both stages without a
     # silently-dropped `n_starts`/`max_iter`/`seed`. Anything else falls
     # through to build_network() unchanged.
-    mmm_arg_names  <- c("n_starts", "max_iter", "tol", "smooth",
-                        "seed", "covariates", "estimator")
+    # Taken from build_mmm()'s own formals so a new build_mmm() argument
+    # (covariate_effect was missed) is routed without editing this list.
+    mmm_arg_names  <- setdiff(names(formals(build_mmm)), c("data", "k"))
     mmm_args   <- caller_dots[intersect(names(caller_dots), mmm_arg_names)]
     build_dots <- caller_dots[setdiff(names(caller_dots), mmm_arg_names)]
     if (inherits(data, "netobject")) {

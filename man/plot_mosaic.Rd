@@ -19,7 +19,8 @@ plot_mosaic(
 }
 \arguments{
 \item{data}{A data.frame in long form. Must contain the columns named
-in \code{x}, \code{y}, and \code{weight}.}
+in \code{x}, \code{y}, and \code{weight}. A network (netobject,
+netobject_group, mcml, htna) is passed on to \code{\link{mosaic_plot}}.}
 
 \item{x}{Column name for the X (column) variable.}
 
