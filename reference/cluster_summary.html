@@ -11,7 +11,7 @@ within-cluster transitions (how nodes connect within each cluster)."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.26</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -291,9 +291,9 @@ cluster expanded back into its member states</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3 6.7692 5.8665 8.6995</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cs</span><span class="op">)</span>   <span class="co"># one row per cluster</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size within_total between_out between_in</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1    3     2.984822    11.28182   11.20801</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2    3     3.153709    11.12004   11.46957</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       3    4     6.980503    12.63571   12.35999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1    3     4.078562    11.28182   11.20801</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2    3     3.969112    11.12004   11.46957</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       3    4     8.699460    12.63571   12.35999</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># -----------------------------------------------------</span></span></span>
 <span class="r-in"><span><span class="co"># Named list clusters (more readable)</span></span></span>
@@ -348,19 +348,19 @@ cluster expanded back into its member states</p></div>
 <span class="r-in"><span><span class="co"># -----------------------------------------------------</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">cluster_summary</span><span class="op">(</span><span class="va">mat</span>, <span class="va">clusters</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span><span class="op">)</span>   <span class="co"># total flow</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size within_total between_out between_in</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Alpha    3     2.984822    11.28182   11.20801</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Beta    3     3.153709    11.12004   11.46957</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Gamma    4     6.980503    12.63571   12.35999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Alpha    3     4.078562    11.28182   11.20801</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Beta    3     3.969112    11.12004   11.46957</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Gamma    4     8.699460    12.63571   12.35999</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">cluster_summary</span><span class="op">(</span><span class="va">mat</span>, <span class="va">clusters</span>, method <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span><span class="op">)</span>  <span class="co"># average</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size within_total between_out between_in</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Alpha    3     2.984822    1.095792   1.057301</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Beta    3     3.153709    1.049971   1.111438</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Gamma    4     6.980503    1.052976   1.029999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Alpha    3     4.078562    1.095792   1.057301</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Beta    3     3.969112    1.049971   1.111438</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Gamma    4     8.699460    1.052976   1.029999</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">cluster_summary</span><span class="op">(</span><span class="va">mat</span>, <span class="va">clusters</span>, method <span class="op">=</span> <span class="st">"max"</span><span class="op">)</span><span class="op">)</span>   <span class="co"># strongest</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size within_total between_out between_in</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Alpha    3     2.984822    1.774085   1.900114</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Beta    3     3.153709    1.800406   1.655449</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Gamma    4     6.980503    1.786146   1.805074</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Alpha    3     4.078562    1.774085   1.900114</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Beta    3     3.969112    1.800406   1.655449</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Gamma    4     8.699460    1.786146   1.805074</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># -----------------------------------------------------</span></span></span>
 <span class="r-in"><span><span class="co"># Skip within-cluster computation for speed</span></span></span>

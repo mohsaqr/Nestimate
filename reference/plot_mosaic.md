@@ -27,7 +27,9 @@ plot_mosaic(
 - data:
 
   A data.frame in long form. Must contain the columns named in `x`, `y`,
-  and `weight`.
+  and `weight`. A network (netobject, netobject_group, mcml, htna) is
+  passed on to
+  [`mosaic_plot`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md).
 
 - x:
 

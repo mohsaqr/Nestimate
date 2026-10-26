@@ -1,5 +1,282 @@
 # Changelog
 
+## Nestimate 0.9.27
+
+### New features
+
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  gains `periods =` and `fill =`. For a network built with `actor =` and
+  `session = "day"` (or any period column),
+  `sequence_plot(net, periods = "day")` draws one row per actor and
+  splits the time axis into equal-width blocks, one per period, with
+  ticks at the period boundaries and each label under its block. The
+  number of steps may differ by actor and by period: `fill = "stretch"`
+  (default) spreads an actor’s steps over the whole block (one step
+  fills it, three take a third each); `fill = "pad"` gives every block
+  as many fixed slots as the busiest actor-period and leaves the rest
+  empty, so a slot is the same step position for everyone. Factor levels
+  set the period order and an unused level shows as an empty block.
+  Works for `type = "heatmap"` and `"index"`.
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  accepts long data directly: `actor =`, `action =`, `time =` and
+  `order =` name the columns, as in
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  e.g.
+  `sequence_plot(log, actor = "student", action = "action", periods = "day")`.
+  With `periods`, each actor-period is one sequence whatever the time
+  gaps.
+
+### Breaking changes
+
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md): the M
+  and S letters were the wrong way round. In van Borkulo et al. (2022)
+  and `NetworkComparisonTest`, M is the network-structure test (largest
+  absolute edge difference) and S the global-strength test;
+  [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) stored
+  and printed them swapped. The tests are now `$structure` (M) and
+  `$strength` (S, with `by_group`, each network’s global strength);
+  reading `$M` / `$S` raises a `nestimate_renamed` error naming the
+  field to use.
+- [`summary.net_nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)
+  now returns the M and S tests (columns `test`, `statistic`,
+  `observed`, `p_value`, `significant`) instead of the per-edge table
+  with `m_stat` / `s_stat` attributes (those attributes had the M/S swap
+  too). The per-edge table is
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html).
+
+### Bug fixes
+
+- [`plot_mosaic()`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
+  given a network (netobject, group, mcml, htna) hands it to
+  [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md);
+  it failed with “is.data.frame(data) is not TRUE”. Data-frame calls are
+  unchanged.
+
+- `cluster_network(cluster_by = "mmm")` passes `covariate_effect` (and
+  any other
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  argument) to
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md);
+  it failed with “Unknown argument(s) in cluster_network():
+  covariate_effect”.
+
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  decodes a `tna` object’s integer-coded sequences (it failed with
+  “Unknown nodes in clusters”).
+
+- [`summary.mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  works without within-cluster layers (`compute_within = FALSE`, where
+  it crashed), and `within_total` includes self-transitions, so it
+  equals the macro diagonal.
+
+- [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
+  windows run through time. Transitions were pooled actor by actor, so a
+  window could start in one actor’s late events and end in another’s
+  early ones.
+
+- Markov-chain measures
+  ([`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md),
+  [`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md),
+  [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md),
+  [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md),
+  [`chain_structure()`](https://pak.dynasite.org/Nestimate/reference/chain_structure.md))
+  refuse correlation-type networks and negative weights
+  (`nestimate_not_markov`) instead of row-normalising them into a
+  meaningless chain. Co-occurrence networks (a random walk) are still
+  accepted.
+
+- [`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
+  no longer drops states whose names contain “NA” (e.g. “FINAL”,
+  “ANALYSIS”); missing cells are tested directly.
+
+- [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
+  on a network whose states are numbers (1, 3, 5) reads them as states;
+  they were decoded as positions, relabelling one state and dropping
+  another.
+
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md):
+  BIC/AIC/ICL count covariate-dependent mixing by design column (a
+  4-level factor is 3 columns); and a sequence whose first state is
+  missing adds no initial-state term instead of being scored as starting
+  in the first state.
+
+- [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
+  on a `netobject_group` stores the palette as an attribute; it was
+  added as a list element, after which every plot, print and summary of
+  the group failed.
+
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  heatmaps pin each state to its colour; when the drawn part held only
+  some states (e.g. after `trim`), cells were coloured as other states.
+  Panels with a single sequence (one row, a singleton cluster, one actor
+  with `periods`) draw instead of erroring.
+
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  refuses a
+  [`compare_mmm()`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
+  table with a classed error (`nestimate_bad_input`) giving the call to
+  run, with the lowest-BIC k: `build_network(build_mmm(data, k = 2))`.
+  The table is a data frame, so it used to be read as sequence data and
+  “built” into a network whose states were its log-likelihoods and BICs.
+
+- [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  on cor, pcor and glasso networks pools the two datasets by column
+  name. It pooled them by position, so the same variables in a different
+  column order were mixed in the permutation null (one edge’s p-value
+  moved from 0.47 to 0.71 on identical data).
+
+- [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
+  edge and centrality difference tests count a tie (both values equal,
+  e.g. two absent edges) in both tails: p = 2 \* min(P(d \>= 0), P(d \<=
+  0)), capped at 1. Ties used to count as evidence of a difference; with
+  one edge present, 29 of 45 edge pairs were “significantly different”
+  (now 9, the present edge against each absent one).
+
+- Betweenness, edge betweenness and the shortest-path counts behind them
+  use one relative tolerance for “same length”. A tie that
+  floating-point addition breaks (1/10 + 1/15 vs 1/6) was counted as one
+  path but credited as a full path, so node b got 1 where igraph gives
+  0.5.
+
+- Ising networks can be resampled:
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+  [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md),
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
+  and
+  [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  returned NaN or CS = 0 for every Ising network, because the estimator
+  rejected the stored data matrix and every draw failed silently. The
+  resamplers now also warn (`nestimate_resample_failed`) with the number
+  of draws whose network could not be estimated, instead of dropping
+  them without a word.
+
+- [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md),
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md),
+  [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md)
+  and
+  [`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md)
+  read data frames column by column, so a factor column next to
+  character columns keeps its labels instead of becoming states “1”,
+  “2”, …
+
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  input handling:
+
+  - `actor =` now names the ID column in wide and association data, as
+    it already did in long data. Before, the ID values became nodes
+    (wide sequences) or the ID column a variable (cor, pcor, glasso,
+    Ising, which errored on a non-binary ID).
+  - A numeric column in character sequence data (age, score) goes to
+    `$metadata` instead of becoming states.
+  - cor, pcor and glasso convert data to state frequencies only when it
+    has at least two categorical columns and fewer than two numeric ones
+    (sequences, possibly with one numeric covariate, which is left out).
+    One character column among numeric variables (e.g. gender) used to
+    turn the whole network into a network of that column’s values; the
+    numeric variables are now the nodes. Declared `metadata_cols` are
+    dropped before this check.
+  - `labels =` now also relabels `$data`, `$initial`,
+    `$frequency_matrix` and `$node_groups`, so
+    [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+    and the other resamplers no longer return all-zero matrices for a
+    relabelled network, and
+    [`predictability()`](https://pak.dynasite.org/Nestimate/reference/predictability.md)
+    no longer reports `NA` RMSE.
+  - [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)’s
+    `unix_time_unit`, `is_unix_time` and `custom_format` passed to
+    [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+    reach
+    [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+    (they were silently ignored), and
+    [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+    warns (`nestimate_time_unit`) when numeric times read in the given
+    unit fall after the year 2500, the sign of millisecond timestamps
+    read as seconds.
+  - `level = "both"` keeps `actor` and `labels`; a grouped call keeps
+    `labels`; an `NA` in the `group` column is an error
+    (`nestimate_bad_input`) instead of a hidden all-`NA` group.
+
+- Start/end markers (`start = TRUE`, `end = TRUE`) are now honoured by
+  the precomputed resampling path behind
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md),
+  [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
+  and
+  [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md).
+  Before, the Start row and End column were zero in every replicate
+  (bootstrap mean, SD and CI of 0; every Start edge “significant” in a
+  permutation test).
+
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  /
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+  with `covariates` and `covariate_effect = "em"`: the
+  covariate-dependent mixing step is now an exact M-step,
+  [`nnet::multinom()`](https://rdrr.io/pkg/nnet/man/multinom.html)
+  fitted to the posterior probabilities. The former hand-written Newton
+  step had no step control; with `k >= 3` it diverged (coefficients
+  around 1e7 to 1e9, an empty cluster, a log-likelihood below the fit
+  without covariates) while reporting `converged = TRUE`. The likelihood
+  now rises at every EM iteration, and `converged` also requires the
+  last mixing step to have converged. Covariate fits change;
+  `$covariates$beta` columns are now named.
+
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)
+  compared the two groups’ variables by position: a second group whose
+  columns arrived in another order was tested against the wrong
+  variables with no error. Columns that differ in name or order now
+  raise `nestimate_bad_input`, as psychnets’ `net_compare()` does.
+
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) failed
+  with the uninformative `nearPD` error “infinite or missing values in
+  ‘x’” on any missing value, on a variable that is constant in a group,
+  and on a permuted split in which a rare binary variable becomes
+  constant. New `na_method = c("pairwise", "listwise")` (default
+  `"pairwise"`: pairwise correlations, median co-observation count as
+  the sample size; listwise drops incomplete rows, whole pairs when
+  `paired = TRUE`). A constant variable enters the network as an
+  isolated node (the psychnets convention), with a
+  `nestimate_constant_variable` warning when it is constant in an
+  observed group; the statistic is then defined on every permuted split,
+  so the test stays exact. A pair sharing fewer than two observed rows
+  raises `nestimate_degenerate_sample`.
+
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) drops
+  non-numeric columns (an id or group label) instead of failing in
+  [`cor()`](https://rdrr.io/r/stats/cor.html), validates `iter` as a
+  single whole number (2.7 was silently truncated), and raises
+  `nestimate_bad_input` for malformed arguments.
+
+- [`summary.net_nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)
+  labelled every edge `edge_1`, `edge_2`, … with `to = NA` when the data
+  had no column names; edges are now labelled `V1`, `V2`, …
+  `$E$edge_names` is always a `from`/`to` data frame (it was an
+  [`expand.grid()`](https://rdrr.io/r/base/expand.grid.html) result with
+  `Var1`/`Var2`, or `NULL`).
+
+- Printing an
+  [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) result
+  shows everything: both groups by name, M and S with each group’s
+  global strength, and every edge (largest difference first) with both
+  groups’ weights (`print(x, n = 10)` shortens the list) – the same
+  layout as psychnets’ `net_compare()`. New
+  [`as.data.frame.net_nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md):
+  one row per edge (`from`, `to`, `weight_1`, `weight_2`, `difference`,
+  `p_value`, `significant`).
+
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) treats
+  a network weight of \|w\| \<= 1e-10 as no edge. psychnets before 0.6.0
+  can return an absent edge as a ~1e-17 residue, and two empty networks
+  then tested as different (M = 5.6e-17 and a p-value below 1; 10 of 40
+  random n = 60, p = 12 null datasets were affected with psychnets
+  0.5.2).
+
+- On complete data every
+  [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) number
+  is unchanged (frozen in `tests/testthat/fixtures/nct-baseline.rds`).
+
 ## Nestimate 0.9.26
 
 ### Breaking changes

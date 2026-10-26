@@ -179,17 +179,17 @@ tr <- entropy_trajectory(group_regulation_long,
 tr
 #> Entropy Trajectory (9 states; window 500 transitions, step 100)
 #> 
-#>   High:        123 windows   mean 2.286   range [2.129, 2.408]
-#>    Low:         124 windows   mean 2.296   range [2.132, 2.434]
+#>   High:        123 windows   mean 2.286   range [2.175, 2.394]
+#>    Low:         124 windows   mean 2.294   range [2.143, 2.437]
 #> 
 #> Use plot() for the trajectory, $trajectory for the tidy table.
 summary(tr)
 #>   group windows     mean         sd      min      max    first     last
-#> 1  High     123 2.286338 0.04794534 2.128561 2.407602 2.241115 2.355472
-#> 2   Low     124 2.295566 0.05498775 2.132020 2.433906 2.244097 2.388426
-#>      change
-#> 1 0.1143576
-#> 2 0.1443291
+#> 1  High     123 2.285872 0.04313978 2.175275 2.394429 2.309764 2.301800
+#> 2   Low     124 2.294082 0.05803398 2.142537 2.436502 2.233659 2.347734
+#>         change
+#> 1 -0.007963838
+#> 2  0.114074796
 plot(tr)
 #> `geom_smooth()` using formula = 'y ~ x'
 

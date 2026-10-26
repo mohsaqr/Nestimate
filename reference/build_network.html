@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.26</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -307,7 +307,11 @@ through unchanged.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to the estimator function.
+<dd><p>Additional arguments passed to the estimator function. For
+long data, <code><a href="prepare.html">prepare()</a></code>'s time options <code>unix_time_unit</code>,
+<code>is_unix_time</code> and <code>custom_format</code> are passed to
+<code><a href="prepare.html">prepare</a></code> instead (e.g. <code>unix_time_unit =
+  "milliseconds"</code> for millisecond timestamps).
 In <code>print.netobject()</code>, <code>print.netobject_group()</code> and <code>print.netobject_ml()</code>: Additional arguments (ignored). In <code>print.summary.netobject()</code>, <code>print.summary.netobject_group()</code>, <code>summary.netobject()</code> and <code>summary.netobject_group()</code>: Ignored.</p></dd>
 
 

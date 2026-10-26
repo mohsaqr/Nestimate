@@ -241,8 +241,13 @@ print(x, ...)
 
 - ...:
 
-  Additional arguments passed to the estimator function. In
-  `print.netobject()`, `print.netobject_group()` and
+  Additional arguments passed to the estimator function. For long data,
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)'s
+  time options `unix_time_unit`, `is_unix_time` and `custom_format` are
+  passed to
+  [`prepare`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  instead (e.g. `unix_time_unit = "milliseconds"` for millisecond
+  timestamps). In `print.netobject()`, `print.netobject_group()` and
   `print.netobject_ml()`: Additional arguments (ignored). In
   `print.summary.netobject()`, `print.summary.netobject_group()`,
   `summary.netobject()` and `summary.netobject_group()`: Ignored.

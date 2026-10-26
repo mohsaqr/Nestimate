@@ -22,6 +22,12 @@ sequence_plot(
     "cosine", "jaccard", "jw"),
   tree = NULL,
   group = NULL,
+  periods = NULL,
+  fill = c("stretch", "pad"),
+  actor = NULL,
+  action = NULL,
+  time = NULL,
+  order = NULL,
   scale = c("proportion", "count"),
   geom = c("area", "bar"),
   na = TRUE,
@@ -70,7 +76,14 @@ print(x, ...)
 
 - x:
 
-  Wide-format sequence data. Accepts:
+  Sequence data. Accepts:
+
+  long data.frame
+
+  :   One row per action, with `action =` naming the action column (and
+      `actor`, `time`, `order` as needed). Converted with
+      [`prepare`](https://pak.dynasite.org/Nestimate/reference/prepare.md):
+      one row per actor, or per actor-period with `periods`.
 
   data.frame / matrix
 
@@ -144,6 +157,47 @@ print(x, ...)
 
   Optional grouping vector (length `nrow(x)`) producing one facet per
   group. Index/distribution only. Ignored for heatmap.
+
+- periods:
+
+  Name of the column that splits each actor's sequence into periods
+  (days, weeks, ...): a column of the long data, or of the network's
+  metadata. `x` must be a long data frame with `actor =` and `action =`,
+  or a netobject built with `actor =` and `session = periods`, so that
+  each actor-period pair holds one sequence. The plot then has one row
+  per actor and the time axis is split into equal-width blocks, one per
+  period: factor levels give their order (an unused level is an empty
+  block), otherwise they are sorted. Ticks mark the period boundaries
+  and each label sits under its block; `tick` thins the labels. Heatmap
+  and index types only; not with `group` or `trim`. Default `NULL` plots
+  the sequences as they are.
+
+- fill:
+
+  With `periods`: how an actor's steps fill a block. `"stretch"`
+  (default) spreads them over the whole block, so one step fills it and
+  three steps take a third each; the cell width differs between actors.
+  `"pad"` gives every block as many fixed slots as the busiest
+  actor-period and leaves unused slots as `NA`, so a slot is the same
+  step position for every actor (minor ticks mark the slots when there
+  are at most 60 in all). With `periods`, empty space is white unless
+  `na_color` is given, so it is never confused with a state drawn in
+  grey. Repeats of a state merge into one spell; `cell_border = "white"`
+  (TraMineR's `border`) outlines each action so they show as separate,
+  equal shares of the period.
+
+- actor, action, time, order:
+
+  Long data only: column names, as in
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+  Giving `action` marks `x` as long data (one row per action); `actor`
+  identifies who acted (one row per actor in the plot), `time` and
+  `order` put each actor's actions in order (otherwise row order is
+  used). Without `periods`, a `time` column also splits an actor's
+  actions into sessions at gaps over 15 minutes, as
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  does; with `periods` it does not, so each actor-period is one
+  sequence. `group` cannot be combined with long data.
 
 - scale, geom, na:
 
@@ -383,6 +437,13 @@ invisibly, a list whose shape depends on `type`:
   one per panel, indexing the original rows) and `groups` (panel
   labels).
 
+- with `periods`:
+
+  `ord` (row order of the actors), `codes` (integer matrix, one row per
+  actor and one column per period slot, in the `fill = "pad"` layout,
+  named `"<period>.<slot>"`), `palette`, `levels`, `periods` (period
+  labels in plotted order) and `fill`.
+
 - `"distribution"`:
 
   Whatever
@@ -456,6 +517,28 @@ sequence_plot(trajectories)
 sequence_plot(trajectories, type = "index")
 
 sequence_plot(trajectories, type = "distribution")
+
+
+# One row per student, one block per day; each day's actions fill it.
+daily <- data.frame(
+  student = rep(c("s1", "s2", "s3"), times = c(5, 9, 6)),
+  day     = c("d1", "d2", "d2", "d3", "d3",
+              "d1", "d1", "d2", "d2", "d2", "d3", "d3", "d3", "d3",
+              "d1", "d1", "d1", "d2", "d3", "d3"),
+  action  = c("plan", "read", "write", "read", "plan",
+              "read", "read", "plan", "write", "write", "read", "plan",
+              "write", "read", "plan", "plan", "write", "read", "write",
+              "read"))
+sequence_plot(daily, actor = "student", action = "action", periods = "day")
+
+sequence_plot(daily, actor = "student", action = "action", periods = "day",
+              fill = "pad", type = "index")
+
+
+# The same from a network built with the period as its session.
+daily_net <- build_network(daily, method = "relative", actor = "student",
+                           action = "action", session = "day")
+sequence_plot(daily_net, periods = "day")
 
 
 # Multichannel MCML view: one channel per cluster + a macro Summary.

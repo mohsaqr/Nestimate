@@ -251,6 +251,7 @@ Statistical inference for network estimation
 - [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)
   [`print(`*`<net_nct>`*`)`](https://pak.dynasite.org/Nestimate/reference/nct.md)
   [`summary(`*`<net_nct>`*`)`](https://pak.dynasite.org/Nestimate/reference/nct.md)
+  [`as.data.frame(`*`<net_nct>`*`)`](https://pak.dynasite.org/Nestimate/reference/nct.md)
   : Network Comparison Test
 
 - [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)

@@ -25,7 +25,7 @@ distribution_plot.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.26</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,6 +80,12 @@ thin gaps (no dendrogram). Supports grouping via <code>group</code> or a
 <span>    <span class="st">"cosine"</span>, <span class="st">"jaccard"</span>, <span class="st">"jw"</span><span class="op">)</span>,</span>
 <span>  tree <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  periods <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stretch"</span>, <span class="st">"pad"</span><span class="op">)</span>,</span>
+<span>  actor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  action <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  order <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"proportion"</span>, <span class="st">"count"</span><span class="op">)</span>,</span>
 <span>  geom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"area"</span>, <span class="st">"bar"</span><span class="op">)</span>,</span>
 <span>  na <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -129,7 +135,13 @@ thin gaps (no dendrogram). Supports grouping via <code>group</code> or a
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>Wide-format sequence data. Accepts:</p><dl><dt>data.frame / matrix</dt>
+<dd><p>Sequence data. Accepts:</p><dl><dt>long data.frame</dt>
+<dd><p>One row per action, with <code>action =</code>
+naming the action column (and <code>actor</code>, <code>time</code>,
+<code>order</code> as needed). Converted with <code><a href="prepare.html">prepare</a></code>: one
+row per actor, or per actor-period with <code>periods</code>.</p></dd>
+
+<dt>data.frame / matrix</dt>
 <dd><p>Rows = sequences, columns = time points.</p></dd>
 
 <dt>netobject</dt>
@@ -188,6 +200,47 @@ object to supply row ordering (heatmap only; overrides <code>sort</code>).</p></
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
 <dd><p>Optional grouping vector (length <code>nrow(x)</code>) producing
 one facet per group. Index/distribution only. Ignored for heatmap.</p></dd>
+
+
+<dt id="arg-periods">periods<a class="anchor" aria-label="anchor" href="#arg-periods"></a></dt>
+<dd><p>Name of the column that splits each actor's sequence into
+periods (days, weeks, ...): a column of the long data, or of the
+network's metadata. <code>x</code> must be a
+long data frame with <code>actor =</code> and <code>action =</code>, or a
+netobject built with <code>actor =</code> and <code>session = periods</code>, so
+that each actor-period pair holds one sequence. The plot then has one
+row per actor and the time axis is split into equal-width blocks, one
+per period: factor levels give their order (an unused level is an
+empty block), otherwise they are sorted. Ticks mark the period
+boundaries and each label sits under its block; <code>tick</code> thins the
+labels. Heatmap and index types only; not with <code>group</code> or
+<code>trim</code>. Default <code>NULL</code> plots the sequences as they are.</p></dd>
+
+
+<dt id="arg-fill">fill<a class="anchor" aria-label="anchor" href="#arg-fill"></a></dt>
+<dd><p>With <code>periods</code>: how an actor's steps fill a block.
+<code>"stretch"</code> (default) spreads them over the whole block, so one
+step fills it and three steps take a third each; the cell width differs
+between actors. <code>"pad"</code> gives every block as many fixed slots as
+the busiest actor-period and leaves unused slots as <code>NA</code>, so a
+slot is the same step position for every actor (minor ticks mark the
+slots when there are at most 60 in all). With <code>periods</code>, empty
+space is white unless <code>na_color</code> is given, so it is never confused
+with a state drawn in grey. Repeats of a state merge into one spell;
+<code>cell_border = "white"</code> (TraMineR's <code>border</code>) outlines each
+action so they show as separate, equal shares of the period.</p></dd>
+
+
+<dt id="arg-actor-action-time-order">actor, action, time, order<a class="anchor" aria-label="anchor" href="#arg-actor-action-time-order"></a></dt>
+<dd><p>Long data only: column names, as in
+<code><a href="build_network.html">build_network</a></code>. Giving <code>action</code> marks <code>x</code> as
+long data (one row per action); <code>actor</code> identifies who acted (one
+row per actor in the plot), <code>time</code> and <code>order</code> put each
+actor's actions in order (otherwise row order is used). Without
+<code>periods</code>, a <code>time</code> column also splits an actor's actions
+into sessions at gaps over 15 minutes, as <code><a href="prepare.html">prepare()</a></code> does; with
+<code>periods</code> it does not, so each actor-period is one sequence.
+<code>group</code> cannot be combined with long data.</p></dd>
 
 
 <dt id="arg-scale-geom-na">scale, geom, na<a class="anchor" aria-label="anchor" href="#arg-scale-geom-na"></a></dt>
@@ -435,6 +488,13 @@ used).</p></dd>
 <code>orders</code> (list of integer row orders, one per panel, indexing
 the original rows) and <code>groups</code> (panel labels).</p></dd>
 
+<dt>with <code>periods</code></dt>
+<dd><p><code>ord</code> (row order of the actors),
+<code>codes</code> (integer matrix, one row per actor and one column per
+period slot, in the <code>fill = "pad"</code> layout, named
+<code>"&lt;period&gt;.&lt;slot&gt;"</code>), <code>palette</code>, <code>levels</code>,
+<code>periods</code> (period labels in plotted order) and <code>fill</code>.</p></dd>
+
 <dt><code>"distribution"</code></dt>
 <dd><p>Whatever
 <code><a href="distribution_plot.html">distribution_plot</a></code> returns: <code>counts</code>,
@@ -502,6 +562,28 @@ cluster panel to its own states, which ignores <code>rest</code> and
 <span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"distribution"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="sequence_plot-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># One row per student, one block per day; each day's actions fill it.</span></span></span>
+<span class="r-in"><span><span class="va">daily</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  student <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"s1"</span>, <span class="st">"s2"</span>, <span class="st">"s3"</span><span class="op">)</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">9</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  day     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"d1"</span>, <span class="st">"d2"</span>, <span class="st">"d2"</span>, <span class="st">"d3"</span>, <span class="st">"d3"</span>,</span></span>
+<span class="r-in"><span>              <span class="st">"d1"</span>, <span class="st">"d1"</span>, <span class="st">"d2"</span>, <span class="st">"d2"</span>, <span class="st">"d2"</span>, <span class="st">"d3"</span>, <span class="st">"d3"</span>, <span class="st">"d3"</span>, <span class="st">"d3"</span>,</span></span>
+<span class="r-in"><span>              <span class="st">"d1"</span>, <span class="st">"d1"</span>, <span class="st">"d1"</span>, <span class="st">"d2"</span>, <span class="st">"d3"</span>, <span class="st">"d3"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  action  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"plan"</span>, <span class="st">"read"</span>, <span class="st">"write"</span>, <span class="st">"read"</span>, <span class="st">"plan"</span>,</span></span>
+<span class="r-in"><span>              <span class="st">"read"</span>, <span class="st">"read"</span>, <span class="st">"plan"</span>, <span class="st">"write"</span>, <span class="st">"write"</span>, <span class="st">"read"</span>, <span class="st">"plan"</span>,</span></span>
+<span class="r-in"><span>              <span class="st">"write"</span>, <span class="st">"read"</span>, <span class="st">"plan"</span>, <span class="st">"plan"</span>, <span class="st">"write"</span>, <span class="st">"read"</span>, <span class="st">"write"</span>,</span></span>
+<span class="r-in"><span>              <span class="st">"read"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">daily</span>, actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>, periods <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-4.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">daily</span>, actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>, periods <span class="op">=</span> <span class="st">"day"</span>,</span></span>
+<span class="r-in"><span>              fill <span class="op">=</span> <span class="st">"pad"</span>, type <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-5.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The same from a network built with the period as its session.</span></span></span>
+<span class="r-in"><span><span class="va">daily_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">daily</span>, method <span class="op">=</span> <span class="st">"relative"</span>, actor <span class="op">=</span> <span class="st">"student"</span>,</span></span>
+<span class="r-in"><span>                           action <span class="op">=</span> <span class="st">"action"</span>, session <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">daily_net</span>, periods <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="sequence_plot-6.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Multichannel MCML view: one channel per cluster + a macro Summary.</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_mcml.html">build_mcml</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">group_regulation_long</span>,</span></span>
@@ -510,13 +592,13 @@ cluster panel to its own states, which ignores <code>rest</code> and
 <span class="r-in"><span>                  Affective  <span class="op">=</span> <span class="st">"emotion"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>                                          <span class="co"># multichannel carpet</span></span></span>
-<span class="r-plt img"><img src="sequence_plot-4.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="sequence_plot-7.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Shape the multichannel view (see the section above).</span></span></span>
 <span class="r-in"><span><span class="fu">sequence_plot</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span>,</span></span>
 <span class="r-in"><span>              combine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Task <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Cognitive"</span>, <span class="st">"Regulation"</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>              expand <span class="op">=</span> <span class="st">"Task"</span><span class="op">)</span>                              <span class="co"># merge, then open</span></span></span>
-<span class="r-plt img"><img src="sequence_plot-5.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="sequence_plot-8.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Colour by name: one state, one cluster, one combined group. Everything</span></span></span>
 <span class="r-in"><span><span class="co"># not named keeps its default colour.</span></span></span>
@@ -524,7 +606,7 @@ cluster panel to its own states, which ignores <code>rest</code> and
 <span class="r-in"><span>              combine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Task <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Cognitive"</span>, <span class="st">"Regulation"</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>              state_colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Task <span class="op">=</span> <span class="st">"#0072B2"</span>, Affective <span class="op">=</span> <span class="st">"#D55E00"</span>,</span></span>
 <span class="r-in"><span>                               emotion <span class="op">=</span> <span class="st">"#CC79A7"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="sequence_plot-6.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="sequence_plot-9.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

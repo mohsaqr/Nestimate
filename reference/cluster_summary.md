@@ -270,9 +270,9 @@ cs            # cluster-level (macro) weights
 #> 3 6.7692 5.8665 8.6995
 summary(cs)   # one row per cluster
 #>   cluster size within_total between_out between_in
-#> 1       1    3     2.984822    11.28182   11.20801
-#> 2       2    3     3.153709    11.12004   11.46957
-#> 3       3    4     6.980503    12.63571   12.35999
+#> 1       1    3     4.078562    11.28182   11.20801
+#> 2       2    3     3.969112    11.12004   11.46957
+#> 3       3    4     8.699460    12.63571   12.35999
 
 # -----------------------------------------------------
 # Named list clusters (more readable)
@@ -327,19 +327,19 @@ cluster_summary(net, list(G1 = c("A", "B"), G2 = c("C", "D")))
 # -----------------------------------------------------
 summary(cluster_summary(mat, clusters, method = "sum"))   # total flow
 #>   cluster size within_total between_out between_in
-#> 1   Alpha    3     2.984822    11.28182   11.20801
-#> 2    Beta    3     3.153709    11.12004   11.46957
-#> 3   Gamma    4     6.980503    12.63571   12.35999
+#> 1   Alpha    3     4.078562    11.28182   11.20801
+#> 2    Beta    3     3.969112    11.12004   11.46957
+#> 3   Gamma    4     8.699460    12.63571   12.35999
 summary(cluster_summary(mat, clusters, method = "mean"))  # average
 #>   cluster size within_total between_out between_in
-#> 1   Alpha    3     2.984822    1.095792   1.057301
-#> 2    Beta    3     3.153709    1.049971   1.111438
-#> 3   Gamma    4     6.980503    1.052976   1.029999
+#> 1   Alpha    3     4.078562    1.095792   1.057301
+#> 2    Beta    3     3.969112    1.049971   1.111438
+#> 3   Gamma    4     8.699460    1.052976   1.029999
 summary(cluster_summary(mat, clusters, method = "max"))   # strongest
 #>   cluster size within_total between_out between_in
-#> 1   Alpha    3     2.984822    1.774085   1.900114
-#> 2    Beta    3     3.153709    1.800406   1.655449
-#> 3   Gamma    4     6.980503    1.786146   1.805074
+#> 1   Alpha    3     4.078562    1.774085   1.900114
+#> 2    Beta    3     3.969112    1.800406   1.655449
+#> 3   Gamma    4     8.699460    1.786146   1.805074
 
 # -----------------------------------------------------
 # Skip within-cluster computation for speed
