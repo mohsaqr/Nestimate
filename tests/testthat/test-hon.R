@@ -638,3 +638,23 @@ test_that("pathways.net_hon order parameter selects specific order", {
   pw2 <- pathways(hon, order = 2L)
   expect_true(is.character(pw2))
 })
+
+# min_freq filtering matches pyHON (2026-10-27 review) --------------------
+
+test_that("fully filtered sources are not extension candidates", {
+  distr <- new.env(hash = TRUE, parent = emptyenv())
+  distr[[.hon_encode("B")]] <- c(C = 1)
+  distr[[.hon_encode(c("A", "B"))]] <- c(C = 1)
+  distr[[.hon_encode(c("X", "B"))]] <- numeric(0L)  # every count < min_freq
+  cache <- .hon_build_source_cache(distr)
+  expect_identical(.hon_get_extensions(.hon_encode("B"), 2L, cache),
+                   .hon_encode(c("A", "B")))
+})
+
+test_that("a first-order source with no surviving transition gets no rule", {
+  # D -> A occurs once; with min_freq = 2 D keeps no distribution
+  trajs <- list(c("A", "B", "C", "A", "B", "C"), c("A", "B", "C", "D", "A"))
+  rules <- .hon_extract_rules(trajs, max_order = 2L, min_freq = 2L)$rules
+  expect_false(.hon_encode("D") %in% ls(rules))
+  expect_true(.hon_encode("A") %in% ls(rules))
+})

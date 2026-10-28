@@ -240,7 +240,10 @@
   for (source_key in ls(distr)) {
     source <- .hon_decode(source_key)
     src_len <- length(source)
-    if (src_len > 1L) {
+    # A source whose transitions were all removed by min_freq has no
+    # distribution, so pyHON never lists it as an extension candidate
+    # (its Distribution defaultdict only receives surviving entries).
+    if (src_len > 1L && length(distr[[source_key]]) > 0L) {
       new_order <- src_len
       order_key <- as.character(new_order)
       # For each suffix (starting positions 2, 3, ..., src_len)
@@ -719,9 +722,10 @@
   cache <- .hon_build_source_cache(distr)
   rules <- new.env(hash = TRUE, parent = emptyenv())
 
-  # Start from each first-order source
+  # Start from each first-order source that kept a distribution (pyHON
+  # iterates its Distribution, which holds no fully filtered source)
   for (source_key in ls(distr)) {
-    if (.hon_key_len(source_key) == 1L) {
+    if (.hon_key_len(source_key) == 1L && length(distr[[source_key]]) > 0L) {
       .hon_add_to_rules(source_key, distr, rules)
       .hon_extend_rule(source_key, source_key, 1L, max_order,
                        distr, count, cache, rules)

@@ -214,7 +214,7 @@ test_that("build_simplicial pathway from hypa works", {
     c("A", "B", "C"), c("A", "B", "C"), c("A", "B", "C"),
     c("A", "B", "D"), c("C", "B", "D"), c("C", "B", "A")
   )
-  h <- build_hypa(trajs, k = 2)
+  h <- build_hypa(trajs, order = 2)
   sc <- build_simplicial(h, type = "pathway")
   expect_s3_class(sc, "simplicial_complex")
   expect_equal(sc$type, "pathway")
@@ -514,6 +514,29 @@ test_that("q_analysis names q-vector levels in the computed order", {
 
   expect_equal(names(qa$q_vector), c("q_2", "q_1", "q_0"))
   expect_equal(as.integer(qa$q_vector), c(2L, 2L, 1L))
+})
+
+test_that("q_analysis counts only simplices of dimension >= q (Atkin)", {
+  # Tetrahedron ABCD plus edges DE and EF. At q = 2 and 3 only the
+  # tetrahedron exists; at q = 1 the tetrahedron and the two edges are
+  # three components (they share vertices, i.e. 0-faces, only).
+  mat <- matrix(0, 6, 6, dimnames = list(LETTERS[1:6], LETTERS[1:6]))
+  edges <- rbind(c(1, 2), c(1, 3), c(1, 4), c(2, 3), c(2, 4), c(3, 4),
+                 c(4, 5), c(5, 6))
+  mat[edges] <- 1
+  mat[edges[, 2:1]] <- 1
+  qa <- q_analysis(build_simplicial(mat, threshold = 0.5))
+  expect_equal(names(qa$q_vector), c("q_3", "q_2", "q_1", "q_0"))
+  expect_equal(as.integer(qa$q_vector), c(1L, 1L, 3L, 1L))
+})
+
+test_that("q_analysis on disjoint edges counts every edge at q = 1 and 0", {
+  mat <- matrix(0, 6, 6, dimnames = list(LETTERS[1:6], LETTERS[1:6]))
+  edges <- rbind(c(1, 2), c(3, 4), c(5, 6))
+  mat[edges] <- 1
+  mat[edges[, 2:1]] <- 1
+  qa <- q_analysis(build_simplicial(mat, threshold = 0.5))
+  expect_equal(as.integer(qa$q_vector), c(3L, 3L))
 })
 
 test_that("q_analysis rejects non-simplicial_complex", {
@@ -838,21 +861,18 @@ test_that("build_simplicial pathway HON with max_pathways truncates", {
 })
 
 test_that("build_simplicial pathway HYPA with max_pathways truncates", {
-  trajs <- list(
-    c("A", "B", "C"), c("A", "B", "C"), c("A", "B", "C"),
-    c("A", "B", "D"), c("C", "B", "D"), c("C", "B", "A"),
-    c("D", "A", "B"), c("D", "A", "B")
-  )
-  h <- build_hypa(trajs, k = 2)
-  n_anom <- sum(h$scores$anomaly != "normal")
-  if (n_anom > 1L) {
-    sc <- build_simplicial(h, type = "pathway", max_pathways = 1)
-    expect_s3_class(sc, "simplicial_complex")
-  } else {
-    # If only 0-1 anomalous paths, max_pathways won't truncate
-    sc <- build_simplicial(h, type = "pathway")
-    expect_s3_class(sc, "simplicial_complex")
-  }
+  # second-order memory: what follows B depends on where the path came from,
+  # so HYPA flags two over- and two under-represented pathways
+  trajs <- c(rep(list(c("A", "B", "C")), 30), rep(list(c("D", "B", "E")), 30))
+  h <- build_hypa(trajs, order = 2)
+  expect_identical(sum(h$scores$anomaly != "normal"), 4L)
+  full <- build_simplicial(h, type = "pathway")
+  one <- build_simplicial(h, type = "pathway", max_pathways = 1)
+  expect_lt(one$n_simplices, full$n_simplices)
+  # only the top pathway's simplex remains among the 2-simplices
+  tri <- Filter(function(s) length(s) == 3L, one$simplices)
+  expect_length(tri, 1L)
+  expect_setequal(one$nodes[tri[[1L]]], c("A", "B", "C"))
 })
 
 # =========================================================================
@@ -1018,4 +1038,61 @@ test_that("build_simplicial pathway error message includes net_mogen", {
     build_simplicial(list(a = 1), type = "pathway"),
     "net_mogen"
   )
+})
+
+# Persistent homology truncation (2026-10-27 review) ----------------------
+
+test_that("a filled triangle leaves no H1 bar at max_dim = 1", {
+  mat <- matrix(0.5, 3, 3, dimnames = list(LETTERS[1:3], LETTERS[1:3]))
+  diag(mat) <- 0
+  ph <- persistent_homology(mat, max_dim = 1L)
+  expect_identical(sum(ph$persistence$dimension == 1L), 0L)
+})
+
+test_that("the barcode up to max_dim equals the low part of the full barcode", {
+  set.seed(20261027)
+  invisible(lapply(seq_len(10), \(r) {
+    W <- matrix(stats::rexp(49), 7)
+    W <- W / rowSums(W)
+    diag(W) <- 0
+    dimnames(W) <- list(LETTERS[1:7], LETTERS[1:7])
+    full <- persistent_homology(W, max_dim = 6L)$persistence
+    invisible(lapply(1:4, \(d) {
+      part <- persistent_homology(W, max_dim = d)$persistence
+      low <- full[full$dimension <= d, , drop = FALSE]
+      key <- \(p) sort(sprintf("%d|%.12f|%.12f", p$dimension, p$birth, p$death))
+      expect_identical(key(part), key(low))
+    }))
+  }))
+})
+
+test_that("betti_numbers warns when max_dim truncated a larger clique", {
+  k5 <- matrix(1, 5, 5, dimnames = list(LETTERS[1:5], LETTERS[1:5]))
+  diag(k5) <- 0
+  expect_warning(betti_numbers(build_simplicial(k5, max_dim = 2L)),
+                 class = "nestimate_truncated_complex")
+  expect_no_warning(b <- betti_numbers(build_simplicial(k5, max_dim = 4L)))
+  expect_equal(as.integer(b), c(1L, 0L, 0L, 0L, 0L))
+})
+
+test_that("truncation detection reads the built simplices (no exact clique search)", {
+  set.seed(1)
+  A <- matrix(stats::runif(200 * 200) < 0.8, 200)
+  A <- A & t(A)
+  diag(A) <- FALSE
+  elapsed <- system.time(sc <- build_simplicial(A * 1, max_dim = 0L))[["elapsed"]]
+  expect_true(sc$truncated)
+  expect_lt(elapsed, 2)
+  # an empty graph cannot be truncated at max_dim = 0
+  expect_false(build_simplicial(matrix(0, 4, 4), max_dim = 0L)$truncated)
+})
+
+test_that("the PH truncation warning respects max_scale", {
+  d <- matrix(1, 3, 3)
+  diag(d) <- 0
+  sc <- build_simplicial(d, type = "vr", max_dim = 1L)
+  # within scale 0.5 there are no edges at all: nothing is truncated there
+  expect_no_warning(persistent_homology(sc, max_dim = 1L, max_scale = 0.5))
+  expect_warning(persistent_homology(sc, max_dim = 1L),
+                 class = "nestimate_truncated_complex")
 })

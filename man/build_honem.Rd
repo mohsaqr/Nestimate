@@ -23,8 +23,9 @@ square weighted adjacency matrix.}
 \code{n_nodes - 1}; the dimension actually used is reported in the
 returned \code{dim} component.}
 
-\item{max_power}{Integer. Maximum walk length for neighborhood computation
-(default 10). Higher values capture longer-range structure.}
+\item{max_power}{Integer. \eqn{L}, the highest matrix power in the
+decayed sum (default 10). Higher values capture longer-range
+structure.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_honem}.}
 
@@ -53,13 +54,28 @@ In \code{print.net_honem()} and \code{plot.net_honem()}: The input object, invis
 In \code{summary.net_honem()}: A data.frame with one row per node: column \code{node} (node label) followed by \code{dim1}, \code{dim2}, ..., \code{dim}\emph{d} embedding coordinates, returned visibly; the summary text is printed as a side effect.
 }
 \description{
-Constructs low-dimensional embeddings from a Higher-Order Network (HON)
-that preserve higher-order dependencies. Uses exponentially-decaying matrix
-powers of the HON transition matrix followed by truncated SVD.
+Constructs low-dimensional embeddings of the nodes of a Higher-Order
+Network (HON), after the HONEM approach of Saebi et al. (2020): no random
+walks or skip-gram, a decayed multi-step proximity matrix and its
+truncated SVD.
 }
 \details{
-HONEM is parameter-free and scalable - no random walks, skip-gram, or
-hyperparameter tuning required.
+What is computed: with \eqn{D} the row-normalised HON transition matrix
+over \emph{all HON nodes} (higher-order nodes such as \code{"A -> B"}
+included), \eqn{S = Z^{-1} \sum_{k=0}^{L} e^{-k} D^{k+1}} with
+\eqn{Z = \sum_{k=0}^{L} e^{-k}} and \eqn{L} = \code{max_power}, where
+\eqn{D^{k+1}} is a matrix power. Each HON node gets one embedding row,
+\eqn{U_d \sqrt{\Sigma_d}}.
+
+\strong{How this differs from the paper.} Saebi et al. write the same
+sum, but there \eqn{D^v} is a \emph{v-th-order neighbourhood matrix
+over first-order nodes} (the superscript is an order, not a power),
+filled from the HON edge weights of order-v dependencies, with \eqn{L}
+the highest order present, rule extraction changed to keep every lower
+order, and one embedding per first-order node. The paper gives no
+formula for \eqn{D^v}, and its worked example (Supplementary Table S.1)
+is internally inconsistent; no reference code is public. This function
+therefore does not claim to reproduce the paper's embeddings.
 }
 \examples{
 seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))

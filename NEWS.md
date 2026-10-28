@@ -1,3 +1,84 @@
+# Nestimate (development version)
+
+## Higher-order methods: corrections from a review against the source papers
+
+These change results. Each is tested against an independent value (a
+hand-derived oracle or a published example), and each new test fails on
+the previous code.
+
+* `hypergraph_centrality()` computes the clique-motif centrality (CEC)
+  directly as the Perron vector of each connected component. The power
+  iteration it replaces oscillated when the clique expansion was bipartite
+  (any triangle-free hypergraph), and returned a different wrong vector
+  depending on whether `max_iter` was odd or even, without a warning. A
+  star of pairs now gives the exact vector for every `max_iter`.
+* `hypergraph_centrality()` now defaults to `type = "clique"`. `"Z"` and
+  `"H"` are defined by Benson (2019) for uniform hypergraphs only: with
+  mixed hyperedge sizes the equation mixes polynomial degrees and its
+  solution depends on the normalisation inside the iteration. Requesting
+  them on a non-uniform hypergraph raises `nestimate_nonuniform_hypergraph`.
+  On uniform hypergraphs they are unchanged and reproduce Benson's Table 2.
+  An unconverged Z/H iteration warns with `nestimate_no_converge`.
+* `q_analysis()` counts, at each level q, only the maximal simplices of
+  dimension at least q (Atkin's Q-vector). It previously counted every
+  maximal simplex at every level, so lower-dimensional simplices appeared as
+  extra components at high q.
+* `persistent_homology()` builds the filtration one dimension above
+  `max_dim` (the Ripser convention), so classes of dimension `max_dim` can
+  die. Previously every top-dimension cycle was reported as essential; with
+  the default `max_dim = 3`, dense 7-state transition networks showed
+  spurious never-dying bars in every case tried.
+* `build_simplicial()` (clique and VR) records when `max_dim` cut a larger
+  clique. `betti_numbers()` then warns (`nestimate_truncated_complex`) that
+  the top Betti number is an upper bound, and `persistent_homology()` warns
+  the same way when given such a complex, whose top-dimension classes
+  cannot die.
+* `build_mogen()` and `markov_order_test()` gain `dof = c("paths",
+  "observed")`. The default `"paths"` counts each layer's parameters as
+  Scholtes (2017, Eq. 7) and pathpy do: every transition of the paths of
+  length k that the observed first-order topology allows. The previous rule,
+  now `dof = "observed"`, counted only observed transitions; it can fall as
+  the order rises and under-penalised high orders on sparse data, so AIC,
+  BIC and the likelihood-ratio test favoured higher orders. Selected orders
+  can change.
+* `build_mogen(criterion = "lrt")` selects the largest order whose test
+  rejects (Scholtes 2017) instead of stopping at the first non-rejection,
+  and returns every p-value as `lrt_p`.
+* `build_hon(method = "hon", min_freq >= 2)`: a source whose transitions
+  are all below `min_freq` is no longer an extension candidate nor a
+  starting rule, as in the reference pyHON. Such sources could previously
+  add HON nodes that pyHON does not create. `min_freq = 1` and HON+ are
+  unaffected.
+* The Z and H iterations of `hypergraph_centrality()` normalise the tensor
+  update before adding the stabilising shift, and count as converged only
+  when the eigen-equation residual is small. On large uniform hyperedges the
+  unnormalised shift swamped the update, so the iteration stopped at its
+  start and returned the uniform vector without a warning (a 3-petal
+  sunflower of 20-member hyperedges gave a hub/petal ratio of 1 instead of
+  Benson's sqrt(3)).
+* Path degrees of freedom are summed as non-negative per-state terms, so
+  they stay exact up to the double range; beyond it `build_mogen()` and
+  `markov_order_test()` stop with `nestimate_dof_overflow` instead of
+  carrying `Inf`/`NaN` into AIC and BIC.
+* Truncation detection reads the simplices already built (does a top
+  simplex extend by one vertex?) instead of an exact maximum-clique search,
+  which took seconds on dense graphs even at `max_dim = 0`; persistence on a
+  distance matrix no longer computes it at all. The persistence warning for
+  a truncated complex rechecks within `max_scale`.
+* `build_hypa()` classifies a path as over-represented when
+  `p_over <= alpha`, i.e. HYPA >= 1 - alpha as in LaRock et al. (2020); it
+  was `< alpha`. This only changes ties at exactly `alpha`.
+
+## Documentation
+
+* `build_mogen()` is documented as the multi-order model of Scholtes (2017),
+  pathpy's `MultiOrderModel`; it is not the multi-order generative model of
+  Gote et al. (2023), which adds start and end states.
+* `build_honem()` states what it computes (decayed matrix powers of the HON
+  transition matrix over all HON nodes) and how that differs from Saebi et
+  al. (2020), whose order-indexed matrices over first-order nodes are not
+  fully specified in the paper.
+
 # Nestimate 0.9.27
 
 ## New features

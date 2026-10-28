@@ -15,7 +15,8 @@ markov_order_test(
   alpha = 0.05,
   parallel = FALSE,
   n_cores = 2L,
-  seed = NULL
+  seed = NULL,
+  dof = c("paths", "observed")
 )
 
 \method{print}{net_markov_order}(x, ...)
@@ -47,6 +48,12 @@ Default \code{FALSE} (set \code{TRUE} only on Unix-like systems).}
 
 \item{seed}{Optional integer seed for reproducibility.}
 
+\item{dof}{Character. How the AIC / BIC columns count each layer's
+parameters: \code{"paths"} (default; every transition the observed
+first-order topology allows, as in Scholtes 2017 and pathpy) or
+\code{"observed"} (transitions seen in the data, the rule before
+Nestimate 0.9.28). The permutation test does not use it.}
+
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_order} or \code{net_markov_order_group}.}
 
 \item{...}{In \code{plot.net_markov_order()}, \code{print.net_markov_order()} and \code{summary.net_markov_order()}: Ignored. In \code{print.net_markov_order_group()}: Forwarded to \code{print.net_markov_order} for each element.}
@@ -77,9 +84,10 @@ to derive \code{aic_order}/\code{bic_order}; the order-0 row has
 one empirical null \eqn{G^2} distribution per order.}
 \item{logliks}{Named numeric vector of log-likelihoods per order
 (for AIC / BIC panel only, not used in the test).}
-\item{layer_dofs}{Named integer vector of model degrees of freedom per
+\item{layer_dofs}{Named numeric vector of model degrees of freedom per
 order (free parameters added at each layer), used to compute the
-AIC / BIC columns.}
+AIC / BIC columns; counted as set by \code{dof}.}
+\item{dof_method}{\code{"paths"} or \code{"observed"}.}
 \item{transition_matrices}{List of fitted transition matrices.}
 \item{states}{Character vector of observed state labels.}
 \item{n_sequences, n_observations}{Data summary.}

@@ -147,7 +147,7 @@ test_that("A10-F04: markov_order_test @return lists every real slot/column", {
                          max_order = 3, n_perm = 15, seed = 1)
   documented_slots <- c("optimal_order", "bic_order", "aic_order",
                         "test_table", "permutation_null", "logliks",
-                        "layer_dofs", "transition_matrices", "states",
+                        "layer_dofs", "dof_method", "transition_matrices", "states",
                         "n_sequences", "n_observations", "n_perm",
                         "alpha", "max_order")
   expect_setequal(names(r), documented_slots)

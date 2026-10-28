@@ -186,6 +186,65 @@
   as.integer(sum(pmax(row_nonzero - 1L, 0L)))
 }
 
+#' Order selected by sequential likelihood-ratio tests
+#'
+#' The largest order whose test against the order below rejects at
+#' \code{alpha} (Scholtes 2017), or 0 when none does.
+#'
+#' @param lrt_p p-values indexed by order 0..K (order 0 is \code{NA}).
+#' @param alpha Significance threshold.
+#' @return Integer order.
+#' @noRd
+.mogen_lrt_order <- function(lrt_p, alpha) {
+  rejected <- which(!is.na(lrt_p) & lrt_p < alpha)
+  if (length(rejected)) as.integer(max(rejected) - 1L) else 0L
+}
+
+#' Path-based degrees of freedom of each layer (Scholtes 2017, Eq. 7)
+#'
+#' The parameters of an order-k layer are the transitions of every path of
+#' length k that the first-order topology allows, observed or not:
+#' \eqn{\mathbf{1}^\top A^k \mathbf{1}}, less one per k-order node with a
+#' possible successor (rows sum to one):
+#' \eqn{\mathbf{1}^\top A^{k-1} d}, with \eqn{d_j = 1} when state j has an
+#' outgoing transition. \eqn{A} is the binary matrix of observed first-order
+#' transitions. Matches pathpy 2 \code{HigherOrderNetwork.dof_paths}.
+#'
+#' @param first_tm Order-1 transition matrix (states x states).
+#' @param max_order Highest layer.
+#' @return Numeric vector of length \code{max_order} (whole numbers, kept
+#'   double because \eqn{s^k} overflows integers for large state spaces).
+#' @noRd
+.mogen_path_dofs <- function(first_tm, max_order) {
+  A <- (first_tm > 0) * 1
+  # sum(A^k) - colSums(A^(k-1)) . d  =  sum_i r_(k-1)[i] * (outdeg_i - d_i),
+  # with r_k = 1' A^k (r_0 = 1'). Each state adds max(outdeg - 1, 0) per path
+  # ending there: non-negative terms, so no large difference cancels and no
+  # matrix power is stored (O(states) per layer).
+  extra <- pmax(rowSums(A) - 1, 0)
+  r0 <- rep(1, nrow(A))
+  # r_0..r_(K-1) as a list. Reduce() returns the bare init on empty input and
+  # unlists when every element has length one (a one-state model), so build
+  # the K = 1 case directly and keep simplify = FALSE.
+  r <- if (max_order > 1L) {
+    Reduce(function(v, i) as.numeric(v %*% A), seq_len(max_order - 1L),
+           accumulate = TRUE, init = r0, simplify = FALSE)
+  } else {
+    list(r0)
+  }
+  dofs <- vapply(r, function(v) sum(v * extra), numeric(1L))
+  bad <- which(!is.finite(dofs))
+  if (length(bad)) {
+    stop(errorCondition(
+      sprintf(paste0("path degrees of freedom exceed double precision at ",
+                     "order %d; lower `max_order` or use `dof = \"observed\"`"),
+              bad[1L]),
+      class = "nestimate_dof_overflow", call = NULL
+    ))
+  }
+  dofs
+}
+
 # ---------------------------------------------------------------------------
 # Main function: build_mogen
 # ---------------------------------------------------------------------------
@@ -194,6 +253,15 @@
 #'
 #' Constructs higher-order De Bruijn graphs from sequential trajectory data and
 #' selects the optimal Markov order using AIC, BIC, or likelihood ratio tests.
+#' This is the multi-order model of Scholtes (2017), the model pathpy 2 calls
+#' \code{MultiOrderModel}. It is not the multi-order generative model of
+#' Gote et al. (2023), which adds start and end states and selects by AIC
+#' only; the function name is kept for compatibility.
+#'
+#' With \code{criterion = "lrt"} the selected order is the largest
+#' \eqn{k} whose test against order \eqn{k-1} rejects at
+#' \code{lrt_alpha} (Scholtes 2017), or 0 when none does; all p-values are
+#' returned in \code{lrt_p}, so a non-monotone sequence is visible.
 #'
 #' At order k, nodes are k-tuples of states and edges represent transitions
 #' between overlapping k-tuples. The model tests increasingly complex Markov
@@ -212,6 +280,13 @@
 #' @param criterion Character. Model selection criterion: \code{"aic"}
 #'   (default), \code{"bic"}, or \code{"lrt"} (likelihood ratio test).
 #' @param lrt_alpha Numeric. Significance threshold for LRT (default 0.01).
+#' @param dof Character. How the parameters of each layer are counted.
+#'   \code{"paths"} (default) counts every transition of the paths of
+#'   length \eqn{k} that the observed first-order topology allows, as
+#'   Scholtes (2017, Eq. 7) and pathpy do. \code{"observed"} counts only the
+#'   transitions seen in the data (the rule before Nestimate 0.9.28); it
+#'   can fall as the order rises and under-penalises high orders on sparse
+#'   data.
 #' @return An object of class \code{c("net_mogen", "cograph_network")} with
 #'   components:
 #'   \describe{
@@ -222,8 +297,12 @@
 #'     \item{aic}{Named numeric vector of AIC values per order.}
 #'     \item{bic}{Named numeric vector of BIC values per order.}
 #'     \item{log_likelihood}{Named numeric vector of log-likelihoods.}
-#'     \item{dof}{Named integer vector of cumulative DOF per model.}
-#'     \item{layer_dof}{Named integer vector of per-layer DOF.}
+#'     \item{dof}{Named numeric vector of cumulative DOF per model.}
+#'     \item{layer_dof}{Named numeric vector of per-layer DOF.}
+#'     \item{dof_method}{\code{"paths"} or \code{"observed"}.}
+#'     \item{lrt_p}{Named numeric vector: the likelihood-ratio p-value of
+#'       order \eqn{k} against order \eqn{k-1} (\code{NA} for order 0 and
+#'       where the test is undefined).}
 #'     \item{transition_matrices}{List of row-stochastic transition matrices
 #'       (index 1 = order 0, held as the marginal named numeric vector).}
 #'     \item{count_matrices}{List of the matching raw count matrices, same
@@ -270,9 +349,10 @@
 #'
 #' @export
 build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt"),
-                        lrt_alpha = 0.01) {
+                        lrt_alpha = 0.01, dof = c("paths", "observed")) {
   data <- .coerce_sequence_input(data)
   criterion <- match.arg(criterion)
+  dof <- match.arg(dof)
   stopifnot(
     "'data' must be a data.frame or list" =
       is.data.frame(data) || is.list(data),
@@ -306,7 +386,7 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
   trans_mats[[1L]] <- marginal
   count_mats[[1L]] <- marginal * sum(vapply(trajectories, length, integer(1L)))
 
-  layer_dofs <- integer(max_order + 1L)
+  layer_dofs <- numeric(max_order + 1L)
   layer_dofs[1L] <- length(marginal) - 1L
 
   # --- Orders 1..max_order: De Bruijn graphs ---
@@ -327,12 +407,27 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
     NULL
   })
 
+  if (dof == "paths") {
+    layer_dofs[-1L] <- .mogen_path_dofs(trans_mats[[2L]], max_order)
+  }
+
   # --- Cumulative DOF and log-likelihoods ---
   cum_dofs <- cumsum(layer_dofs)
 
   logliks <- vapply(0L:max_order, function(k) {
     .mogen_log_likelihood(trajectories, k, trans_mats[seq_len(k + 1L)])
   }, numeric(1L))
+
+  # Likelihood-ratio test of each order against the one below
+  lrt_p <- c(NA_real_, vapply(seq_len(max_order), function(k) {
+    x <- -2 * (logliks[k] - logliks[k + 1L])
+    df_diff <- layer_dofs[k + 1L]
+    if (df_diff > 0 && x > 0) {
+      stats::pchisq(x, df = df_diff, lower.tail = FALSE)
+    } else {
+      NA_real_
+    }
+  }, numeric(1L)))
 
   # --- Information criteria ---
   aics <- 2 * cum_dofs - 2 * logliks
@@ -344,6 +439,7 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
   names(logliks) <- order_names
   names(cum_dofs) <- order_names
   names(layer_dofs) <- order_names
+  names(lrt_p) <- order_names
 
   # --- Select optimal order ---
   if (criterion == "aic") {
@@ -351,20 +447,7 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
   } else if (criterion == "bic") {
     optimal_order <- which.min(bics) - 1L
   } else {
-    # Likelihood ratio test: sequential testing
-    optimal_order <- 0L
-    for (k in seq_len(max_order)) {
-      x <- -2 * (logliks[k] - logliks[k + 1L])
-      df_diff <- layer_dofs[k + 1L]
-      if (df_diff > 0L && x > 0) {
-        p_val <- stats::pchisq(x, df = df_diff, lower.tail = FALSE)
-        if (p_val < lrt_alpha) {
-          optimal_order <- k
-        } else {
-          break
-        }
-      }
-    }
+    optimal_order <- .mogen_lrt_order(lrt_p, lrt_alpha)
   }
 
   # Extract optimal-order transition matrix for cograph compatibility
@@ -386,6 +469,8 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
     log_likelihood = logliks,
     dof = cum_dofs,
     layer_dof = layer_dofs,
+    dof_method = dof,
+    lrt_p = lrt_p,
     transition_matrices = trans_mats,
     count_matrices = count_mats,
     states = names(marginal),

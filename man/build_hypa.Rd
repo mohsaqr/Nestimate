@@ -109,8 +109,9 @@ observed / expected; \code{p_value} is retained as an alias for
 \code{p_under}, the raw lower-tail hypergeometric CDF value;
 \code{p_over} is the strict upper-tail probability
 \code{P(X > observed) = 1 - p_under}, so that a path is
-over-represented when its HYPA score exceeds \code{1 - alpha}
-(LaRock et al., 2020); \code{p_adjusted_under} and
+over-represented when its HYPA score is at least
+\code{1 - alpha}, i.e. \code{p_over <= alpha} (LaRock et al.,
+2020); under-represented when \code{p_under < alpha}; \code{p_adjusted_under} and
 \code{p_adjusted_over} are the corrected p-values for under- and
 over-representation tests respectively.}
 \item{ho_edges}{Alias for \code{scores} (all orders, arrow notation).}

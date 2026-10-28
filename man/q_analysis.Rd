@@ -31,10 +31,16 @@ In \code{plot.q_analysis()}: A grid grob (invisibly) when \code{combined = TRUE}
 }
 \description{
 Computes Q-connectivity structure (Atkin 1974). Two maximal simplices
-are q-connected if they share a face of dimension \eqn{\geq q}. Reports:
+are q-near if they share a face of dimension \eqn{\geq q}; q-connectivity
+is the transitive closure of q-nearness. Reports:
 \itemize{
-\item \strong{Q-vector}: number of connected components at each q-level
-\item \strong{Structure vector}: highest simplex dimension per node
+\item \strong{Q-vector}: \eqn{Q_q}, the number of q-connected
+components among the maximal simplices of dimension \eqn{\geq q}.
+Lower-dimensional simplices do not exist at level q and are not
+counted.
+\item \strong{Structure vector}: here the highest simplex dimension of
+each node. (Atkin uses "structure vector" for the Q-vector itself;
+the name is kept for compatibility.)
 }
 }
 \section{Methods}{

@@ -110,11 +110,13 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 
   if (type == "vr" || type == "rips") {
     d <- .sc_extract_matrix(x)
-    fc <- .filter_vr_complex(d, max_dim = max_dim, max_scale = max_scale)
+    fc <- .filter_vr_complex(d, max_dim = max_dim, max_scale = max_scale,
+                             detect_truncation = TRUE)
     sc <- .make_simplicial_complex(fc$simplices, fc$nodes, "vr")
     # Reorder filtration to match the simplex order in sc$simplices.
     sc$filtration <- .align_filtration(fc, sc)
     sc$max_scale <- fc$max_w
+    sc$truncated <- isTRUE(fc$truncated)
     return(sc)
   }
 
@@ -158,7 +160,49 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 
   simplices <- .find_all_cliques(adj, max_dim)
 
-  .make_simplicial_complex(simplices, nodes, "clique")
+  sc <- .make_simplicial_complex(simplices, nodes, "clique")
+  # max_dim cut a larger clique: the top-dimension cycles have no filling
+  # simplices in the complex, so betti_numbers() warns about them
+  sc$truncated <- .clique_exceeds(adj, simplices, max_dim)
+  sc
+}
+
+#' Does the graph hold a clique larger than max_dim + 1 vertices?
+#'
+#' True when some (max_dim + 1)-vertex clique already enumerated extends by
+#' one vertex adjacent to all of its members. Reads only the simplices that
+#' were built, so it costs (top simplices x vertices) rather than an exact
+#' maximum-clique search, which took seconds on dense graphs.
+#' @param adj Symmetric logical adjacency, zero diagonal.
+#' @param simplices Integer vertex sets of the complex.
+#' @param max_dim The construction's max_dim.
+#' @noRd
+.clique_exceeds <- function(adj, simplices, max_dim) {
+  tops <- Filter(function(s) length(s) == max_dim + 1L, simplices)
+  any(vapply(tops, function(s) {
+    # a member is never adjacent to itself, so only outsiders can reach |s|
+    any(colSums(adj[s, , drop = FALSE]) == length(s))
+  }, logical(1L)))
+}
+
+#' Is a filtered complex still truncated below a scale cap?
+#'
+#' A complex built at a larger scale may be truncated there but not within
+#' the cap persistent_homology() is asked to use: recheck with the edges and
+#' top simplices whose filtration value is at most \code{cap}.
+#' @noRd
+.sc_truncated_within <- function(x, cap) {
+  if (is.null(cap)) return(TRUE)
+  inside <- x$filtration <= cap
+  simp <- x$simplices[inside]
+  adj <- matrix(FALSE, x$n_nodes, x$n_nodes)
+  edges <- Filter(function(s) length(s) == 2L, simp)
+  if (length(edges)) {
+    ij <- do.call(rbind, edges)
+    adj[ij] <- TRUE
+    adj[ij[, 2:1, drop = FALSE]] <- TRUE
+  }
+  .clique_exceeds(adj, simp, x$dimension)
 }
 
 #' @noRd
@@ -430,6 +474,16 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #' @export
 betti_numbers <- function(sc) {
   stopifnot(inherits(sc, "simplicial_complex"))
+  if (isTRUE(sc$truncated)) {
+    warning(warningCondition(
+      sprintf(paste0(
+        "the complex was built with max_dim = %d below its largest clique; ",
+        "b%d counts cycles whose filling simplices were not built and is an ",
+        "upper bound. Rebuild with a larger `max_dim`."),
+        sc$dimension, sc$dimension),
+      class = "nestimate_truncated_complex", call = NULL
+    ))
+  }
   .compute_betti(sc)
 }
 
@@ -563,7 +617,8 @@ euler_characteristic <- function(sc) {
 }
 
 #' @noRd
-.filter_vr_complex <- function(d, max_dim = 3L, max_scale = NULL) {
+.filter_vr_complex <- function(d, max_dim = 3L, max_scale = NULL,
+                               detect_truncation = FALSE) {
   # Vietoris-Rips filtration on a non-negative distance matrix.
   # filt(sigma) = max pairwise distance in sigma; vertex = 0.
   stopifnot(is.matrix(d), nrow(d) == ncol(d))
@@ -590,8 +645,10 @@ euler_characteristic <- function(sc) {
   # off-diagonal edges and rely on diag(adj) <- FALSE to exclude self-loops.
   adj <- !is.na(finite_d) & finite_d >= 0 & finite_d <= cap
   diag(adj) <- FALSE
-
   all_simp <- .find_all_cliques(adj, max_dim)
+  # only build_simplicial() reports truncation; persistence does not need it
+  truncated <- isTRUE(detect_truncation) &&
+    .clique_exceeds(adj, all_simp, max_dim)
   dims <- vapply(all_simp, function(s) length(s) - 1L, integer(1))
   filt <- vapply(seq_along(all_simp), function(j) {
     s <- all_simp[[j]]
@@ -610,7 +667,7 @@ euler_characteristic <- function(sc) {
     simplices = simplices, dim = dims, filt_asc = filt,
     key = keys, nodes = nodes,
     max_filt = if (length(filt) > 0L) max(filt) else 0,
-    max_w = cap, mode = "vr"
+    max_w = cap, mode = "vr", truncated = truncated
   )
 }
 
@@ -811,7 +868,10 @@ euler_characteristic <- function(sc) {
 #' @param n_steps Number of grid points for the reported Betti curve
 #'   (default 20). The persistence diagram itself is exact - it does not
 #'   depend on \code{n_steps}.
-#' @param max_dim Maximum simplex dimension to track (default 3).
+#' @param max_dim Highest homology dimension reported (default 3). The
+#'   filtration holds simplices one dimension higher, so a class of
+#'   dimension \code{max_dim} can die (the Ripser convention). A
+#'   \code{simplicial_complex} input supplies only the simplices it holds.
 #' @param type Filtration: \code{"clique"} (default, similarity-weighted)
 #'   or \code{"vr"} (Vietoris-Rips on distances).
 #' @param max_scale For \code{type = "vr"} only: cap on edge length. Edges
@@ -860,11 +920,22 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
   # $filtration vector. Consume it directly instead of rebuilding from a
   # matrix - this is the workflow advertised by the build_simplicial docs.
   if (inherits(x, "simplicial_complex") && !is.null(x$filtration)) {
-    fc <- .fc_from_filtered_complex(x, max_dim = max_dim,
+    if (isTRUE(x$truncated) && x$dimension <= max_dim &&
+        .sc_truncated_within(x, max_scale)) {
+      warning(warningCondition(
+        sprintf(paste0(
+          "the complex was built with max_dim = %d below its largest clique, ",
+          "so its %d-dimensional classes cannot die and are reported as ",
+          "essential. Rebuild it with `max_dim = %d`."),
+          x$dimension, x$dimension, max_dim + 1L),
+        class = "nestimate_truncated_complex", call = NULL
+      ))
+    }
+    fc <- .fc_from_filtered_complex(x, max_dim = max_dim + 1L,
                                     max_scale = max_scale)
   } else if (type == "vr") {
     d <- if (is.matrix(x)) x else .sc_extract_matrix(x)
-    fc <- .filter_vr_complex(d, max_dim = max_dim, max_scale = max_scale)
+    fc <- .filter_vr_complex(d, max_dim = max_dim + 1L, max_scale = max_scale)
     if (fc$max_w == 0 && fc$max_filt == 0 &&
         all(fc$dim == 0L)) {
       stop("All distances are zero or excluded; cannot build filtration.",
@@ -878,9 +949,12 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
     if (max(mat) == 0) {
       stop("All weights are zero; cannot build filtration.", call. = FALSE)
     }
-    fc <- .filter_clique_complex(mat, max_dim = max_dim)
+    fc <- .filter_clique_complex(mat, max_dim = max_dim + 1L)
   }
 
+  # Every filtration above holds simplices up to max_dim + 1, so a
+  # max_dim-dimensional class can die (the Ripser convention); building only
+  # to max_dim left every top-dimension cycle unfilled and essential.
   red <- .persistence_pairs_z2(fc)
 
   # Translate to user-facing scale and assemble persistence table
@@ -918,7 +992,7 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
   persistence <- persistence[order(-persistence$persistence), , drop = FALSE]
   rownames(persistence) <- NULL
 
-  # Drop dimensions above max_dim (defensive)
+  # Report homology up to max_dim; the (max_dim + 1)-simplices only kill
   persistence <- persistence[persistence$dimension <= max_dim, , drop = FALSE]
 
   betti_curve <- .betti_curve_from_pairs(persistence, thresholds, max_dim,
@@ -989,10 +1063,16 @@ simplicial_degree <- function(sc, normalized = FALSE) {
 #'
 #' @description
 #' Computes Q-connectivity structure (Atkin 1974). Two maximal simplices
-#' are q-connected if they share a face of dimension \eqn{\geq q}. Reports:
+#' are q-near if they share a face of dimension \eqn{\geq q}; q-connectivity
+#' is the transitive closure of q-nearness. Reports:
 #' \itemize{
-#'   \item \strong{Q-vector}: number of connected components at each q-level
-#'   \item \strong{Structure vector}: highest simplex dimension per node
+#'   \item \strong{Q-vector}: \eqn{Q_q}, the number of q-connected
+#'     components among the maximal simplices of dimension \eqn{\geq q}.
+#'     Lower-dimensional simplices do not exist at level q and are not
+#'     counted.
+#'   \item \strong{Structure vector}: here the highest simplex dimension of
+#'     each node. (Atkin uses "structure vector" for the Q-vector itself;
+#'     the name is kept for compatibility.)
 #' }
 #'
 #' @param sc A \code{simplicial_complex} object.
@@ -1057,8 +1137,11 @@ q_analysis <- function(sc) {
     }
   }
 
+  # Q_q counts components among the maximal simplices of dimension >= q only
+  max_dims <- vapply(maximal, length, integer(1)) - 1L
   q_vec <- vapply(q_levels, function(q) {
-    adj_q <- shared_dim >= q
+    active <- max_dims >= q
+    adj_q <- shared_dim[active, active, drop = FALSE] >= q
     diag(adj_q) <- FALSE
     .count_components(adj_q)
   }, integer(1))

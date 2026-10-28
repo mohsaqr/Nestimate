@@ -121,11 +121,11 @@
 # ---------------------------------------------------------------------------
 
 #' @noRd
-.mot_fit_models <- function(trajectories, max_order) {
+.mot_fit_models <- function(trajectories, max_order, dof = "paths") {
   marginal <- .mogen_marginal(trajectories)
   trans_mats <- vector("list", max_order + 1L)
   trans_mats[[1L]] <- marginal
-  layer_dofs <- integer(max_order + 1L)
+  layer_dofs <- numeric(max_order + 1L)
   layer_dofs[1L] <- length(marginal) - 1L
 
   lapply(seq_len(max_order), function(k) {
@@ -135,6 +135,9 @@
     layer_dofs[k + 1L] <<- .mogen_layer_dof(tm)
     NULL
   })
+  if (dof == "paths") {
+    layer_dofs[-1L] <- .mogen_path_dofs(trans_mats[[2L]], max_order)
+  }
 
   logliks <- vapply(0L:max_order, function(k) {
     .mogen_log_likelihood(trajectories, k, trans_mats[seq_len(k + 1L)])
@@ -189,6 +192,11 @@
 #'   Default \code{FALSE} (set \code{TRUE} only on Unix-like systems).
 #' @param n_cores Integer. Cores for parallel execution. Default 2.
 #' @param seed Optional integer seed for reproducibility.
+#' @param dof Character. How the AIC / BIC columns count each layer's
+#'   parameters: \code{"paths"} (default; every transition the observed
+#'   first-order topology allows, as in Scholtes 2017 and pathpy) or
+#'   \code{"observed"} (transitions seen in the data, the rule before
+#'   Nestimate 0.9.28). The permutation test does not use it.
 #' @return An object of class \code{net_markov_order} with elements:
 #' \describe{
 #'   \item{optimal_order}{Integer. Selected order via sequential permutation test.}
@@ -208,9 +216,10 @@
 #'     one empirical null \eqn{G^2} distribution per order.}
 #'   \item{logliks}{Named numeric vector of log-likelihoods per order
 #'     (for AIC / BIC panel only, not used in the test).}
-#'   \item{layer_dofs}{Named integer vector of model degrees of freedom per
+#'   \item{layer_dofs}{Named numeric vector of model degrees of freedom per
 #'     order (free parameters added at each layer), used to compute the
-#'     AIC / BIC columns.}
+#'     AIC / BIC columns; counted as set by \code{dof}.}
+#'   \item{dof_method}{\code{"paths"} or \code{"observed"}.}
 #'   \item{transition_matrices}{List of fitted transition matrices.}
 #'   \item{states}{Character vector of observed state labels.}
 #'   \item{n_sequences, n_observations}{Data summary.}
@@ -231,7 +240,9 @@
 #' plot(res)
 #' @export
 markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
-                               parallel = FALSE, n_cores = 2L, seed = NULL) {
+                               parallel = FALSE, n_cores = 2L, seed = NULL,
+                               dof = c("paths", "observed")) {
+  dof <- match.arg(dof)
   if (inherits(data, "netobject_group")) {
     out <- lapply(data, function(net) {
       seq_data <- net$data
@@ -241,7 +252,7 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
       }
       markov_order_test(seq_data, max_order = max_order, n_perm = n_perm,
                         alpha = alpha, parallel = parallel,
-                        n_cores = n_cores, seed = seed)
+                        n_cores = n_cores, seed = seed, dof = dof)
     })
     class(out) <- c("net_markov_order_group", "list")
     return(out)
@@ -280,7 +291,7 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
                     max_order, longest))
   }
 
-  fits <- .mot_fit_models(trajectories, max_order)
+  fits <- .mot_fit_models(trajectories, max_order, dof = dof)
 
   # --- Per-order test ---
   per_order <- lapply(seq_len(max_order), function(k) {
@@ -349,6 +360,7 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
       permutation_null    = null_list,
       logliks             = fits$logliks,
       layer_dofs          = fits$layer_dofs,
+      dof_method          = dof,
       transition_matrices = fits$trans_mats,
       states              = names(fits$marginal),
       n_sequences         = n_seqs,

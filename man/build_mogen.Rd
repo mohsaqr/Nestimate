@@ -11,7 +11,8 @@ build_mogen(
   data,
   max_order = 5L,
   criterion = c("aic", "bic", "lrt"),
-  lrt_alpha = 0.01
+  lrt_alpha = 0.01,
+  dof = c("paths", "observed")
 )
 
 \method{print}{net_mogen}(x, ...)
@@ -38,6 +39,14 @@ message.}
 
 \item{lrt_alpha}{Numeric. Significance threshold for LRT (default 0.01).}
 
+\item{dof}{Character. How the parameters of each layer are counted.
+\code{"paths"} (default) counts every transition of the paths of
+length \eqn{k} that the observed first-order topology allows, as
+Scholtes (2017, Eq. 7) and pathpy do. \code{"observed"} counts only the
+transitions seen in the data (the rule before Nestimate 0.9.28); it
+can fall as the order rises and under-penalises high orders on sparse
+data.}
+
 \item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_mogen}.}
 
 \item{...}{In \code{plot.net_mogen()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_mogen()} and \code{summary.net_mogen()}: Additional arguments (ignored).}
@@ -57,8 +66,12 @@ any capping).}
 \item{aic}{Named numeric vector of AIC values per order.}
 \item{bic}{Named numeric vector of BIC values per order.}
 \item{log_likelihood}{Named numeric vector of log-likelihoods.}
-\item{dof}{Named integer vector of cumulative DOF per model.}
-\item{layer_dof}{Named integer vector of per-layer DOF.}
+\item{dof}{Named numeric vector of cumulative DOF per model.}
+\item{layer_dof}{Named numeric vector of per-layer DOF.}
+\item{dof_method}{\code{"paths"} or \code{"observed"}.}
+\item{lrt_p}{Named numeric vector: the likelihood-ratio p-value of
+order \eqn{k} against order \eqn{k-1} (\code{NA} for order 0 and
+where the test is undefined).}
 \item{transition_matrices}{List of row-stochastic transition matrices
 (index 1 = order 0, held as the marginal named numeric vector).}
 \item{count_matrices}{List of the matching raw count matrices, same
@@ -90,8 +103,17 @@ In \code{summary.net_mogen()}: A per-order model-selection data.frame with colum
 \description{
 Constructs higher-order De Bruijn graphs from sequential trajectory data and
 selects the optimal Markov order using AIC, BIC, or likelihood ratio tests.
+This is the multi-order model of Scholtes (2017), the model pathpy 2 calls
+\code{MultiOrderModel}. It is not the multi-order generative model of
+Gote et al. (2023), which adds start and end states and selects by AIC
+only; the function name is kept for compatibility.
 }
 \details{
+With \code{criterion = "lrt"} the selected order is the largest
+\eqn{k} whose test against order \eqn{k-1} rejects at
+\code{lrt_alpha} (Scholtes 2017), or 0 when none does; all p-values are
+returned in \code{lrt_p}, so a non-monotone sequence is visible.
+
 At order k, nodes are k-tuples of states and edges represent transitions
 between overlapping k-tuples. The model tests increasingly complex Markov
 orders and selects the one that best balances fit and parsimony.

@@ -307,10 +307,17 @@ test_that("persistent_homology accepts a build_simplicial VR complex", {
   # Path A: matrix → PH directly.
   ph_a <- persistent_homology(d, n_steps = 5L, max_dim = 2L,
                               type = "vr", max_scale = 2)
-  # Path B: matrix → build_simplicial(type = "vr") → PH.
-  sc <- build_simplicial(d, type = "vr", max_scale = 2, max_dim = 2L)
+  # Path B: matrix → build_simplicial(type = "vr") → PH. Path A builds the
+  # filtration to max_dim + 1 so top classes can die; the complex must hold
+  # those simplices too, so it is built with max_dim = 3.
+  sc <- build_simplicial(d, type = "vr", max_scale = 2, max_dim = 3L)
   ph_b <- persistent_homology(sc, n_steps = 5L, max_dim = 2L,
                               type = "vr")
+  # A complex truncated at max_dim = 2 (K4 here) cannot fill its 2-sphere:
+  # PH says so instead of reporting the bar as a real essential class.
+  sc2 <- build_simplicial(d, type = "vr", max_scale = 2, max_dim = 2L)
+  expect_warning(persistent_homology(sc2, n_steps = 5L, max_dim = 2L, type = "vr"),
+                 class = "nestimate_truncated_complex")
 
   # Persistence tables must match by row count and by (dimension, birth, death)
   # up to ordering — both should compute the same diagram.

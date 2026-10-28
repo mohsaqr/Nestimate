@@ -30,7 +30,10 @@ so \code{type} is taken from the complex rather than this argument. For the \cod
 (default 20). The persistence diagram itself is exact - it does not
 depend on \code{n_steps}.}
 
-\item{max_dim}{Maximum simplex dimension to track (default 3).}
+\item{max_dim}{Highest homology dimension reported (default 3). The
+filtration holds simplices one dimension higher, so a class of
+dimension \code{max_dim} can die (the Ripser convention). A
+\code{simplicial_complex} input supplies only the simplices it holds.}
 
 \item{type}{Filtration: \code{"clique"} (default, similarity-weighted)
 or \code{"vr"} (Vietoris-Rips on distances).}

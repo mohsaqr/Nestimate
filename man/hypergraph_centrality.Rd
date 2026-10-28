@@ -6,7 +6,7 @@
 \usage{
 hypergraph_centrality(
   hg,
-  type = c("clique", "Z", "H"),
+  type = "clique",
   max_iter = 1000L,
   tol = 1e-08,
   normalize = TRUE
@@ -17,13 +17,16 @@ hypergraph_centrality(
 \code{\link[=bipartite_groups]{bipartite_groups()}}).}
 
 \item{type}{Character vector, any subset of \code{c("clique", "Z", "H")}.
-Default computes all three.}
+Default \code{"clique"}. \code{"Z"} and \code{"H"} need a uniform hypergraph (every
+hyperedge with two or more members has the same size).}
 
-\item{max_iter}{Maximum number of power-iteration steps. Default
-\code{1000}.}
+\item{max_iter}{Maximum number of power-iteration steps of the \code{"Z"}
+and \code{"H"} iterations. Default \code{1000}. \code{"clique"} is solved directly.}
 
 \item{tol}{Convergence tolerance on the L1 change between successive
-iterates. Default \code{1e-8}.}
+iterates of \code{"Z"} and \code{"H"}. Default \code{1e-8}. An iteration that does not
+reach it within \code{max_iter} steps warns with class
+\code{nestimate_no_converge}.}
 
 \item{normalize}{Logical. If \code{TRUE} (default), each returned
 centrality vector is L2-normalized to unit norm (compatible with
@@ -34,7 +37,8 @@ centrality vector is L2-normalized to unit norm (compatible with
 A named list, one component per requested \code{type}, in the order
 given by \code{type}. Each component is a numeric vector of length
 \code{hg$n_nodes} named by \code{hg$nodes}. A hypergraph with no hyperedges
-yields all-zero vectors.
+yields all-zero vectors. Requesting \code{"Z"} or \code{"H"} on a non-uniform
+hypergraph raises an error of class \code{nestimate_nonuniform_hypergraph}.
 }
 \description{
 Computes one or more eigenvector-style centralities on a
@@ -49,21 +53,30 @@ higher-order groups directly.
 clique-expanded pairwise graph \eqn{W} where
 \eqn{W_{ij} = |\{e : i, j \in e\}|} and returns the leading
 eigenvector of \eqn{W}. Equivalent to running
-\code{igraph::eigen_centrality()} on \code{\link[=clique_expansion]{clique_expansion()}} output.
+\code{igraph::eigen_centrality()} on \code{\link[=clique_expansion]{clique_expansion()}} output. The vector
+is solved directly from a symmetric eigendecomposition of each connected
+component (Perron-Frobenius makes the leading eigenvalue of a connected
+component simple), not by power iteration, which oscillates when the
+clique expansion is bipartite (for example a star of pairs). When several
+components share the largest eigenvalue, the result is the projection of
+the uniform vector onto their joint leading eigenspace; components with a
+smaller leading eigenvalue score zero.
 
-\strong{Z-eigenvector centrality (ZEC)}: solves the linear
-eigen-equation on the hyperedge tensor,
+\strong{Z-eigenvector centrality (ZEC)}: solves the eigen-equation on the
+hyperedge tensor,
 \deqn{\lambda\, x_i \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j,}
-via power iteration. Works for hypergraphs with mixed edge sizes.
+by shifted power iteration.
 
-\strong{H-eigenvector centrality (HEC)}: solves the power-k-1
-eigen-equation,
+\strong{H-eigenvector centrality (HEC)}: solves
 \deqn{\lambda\, x_i^{k-1} \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j.}
-For uniform hypergraphs (all hyperedges of size \eqn{k}), this is
-equivalent to normalizing the ZEC update by the geometric-mean
-exponent \eqn{1/(k-1)}. For mixed sizes, the effective exponent is
-taken from the largest hyperedge; expect slightly different rankings
-from ZEC in the mixed case.
+
+\strong{Uniform hypergraphs only.} Benson (2019) defines ZEC and HEC for
+\eqn{k}-uniform hypergraphs. With mixed sizes the right-hand side mixes
+polynomial degrees, so the equation has no scale-free solution: the
+vector satisfies it only at the normalisation chosen inside the
+iteration. Hyperedges with one member contribute nothing and are ignored
+by the uniformity check. For mixed sizes use \code{"clique"}, or keep one
+size with \code{\link[=build_hypergraph]{build_hypergraph()}} (\code{include_pairwise = FALSE}).
 }
 \note{
 The \code{"clique"} (CEC) variant is validated against
@@ -79,9 +92,15 @@ df <- data.frame(
   session = c("S1", "S1", "S1", "S2", "S2", "S3", "S3", "S3", "S3")
 )
 hg <- bipartite_groups(df, "player", "session")
-cent <- hypergraph_centrality(hg)
-# Compare rankings across the three variants
-do.call(cbind, cent)
+hypergraph_centrality(hg)
+
+# Z and H need a uniform hypergraph: here every session has three players
+df3 <- data.frame(
+  player  = c("A", "B", "C", "A", "B", "D", "C", "D", "E"),
+  session = c("S1", "S1", "S1", "S2", "S2", "S2", "S3", "S3", "S3")
+)
+hypergraph_centrality(bipartite_groups(df3, "player", "session"),
+                      type = c("clique", "Z", "H"))
 
 }
 \references{

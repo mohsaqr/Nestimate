@@ -167,7 +167,7 @@
     n_clamp <- min(n_draws, N_total)
 
     # LaRock et al. (2020): HYPA = P(X <= f); a path is over-represented when
-    # HYPA > 1 - alpha, i.e. when the strict upper tail P(X > f) < alpha.
+    # HYPA >= 1 - alpha, i.e. when the strict upper tail P(X > f) <= alpha.
     p_under <- stats::phyper(f_obs, K, N_total - K, n_clamp)
     p_over <- stats::phyper(f_obs, K, N_total - K, n_clamp,
                             lower.tail = FALSE)
@@ -279,7 +279,8 @@
   # at least min_count expected occurrences, so a path that never occurs can
   # still be under-represented.
   is_under <- scores$expected >= min_count & scores$p_adjusted_under < alpha
-  is_over  <- scores$observed >= min_count & scores$p_adjusted_over < alpha
+  # HYPA >= 1 - alpha (LaRock et al. 2020, Sec. 3) <=> P(X > f) <= alpha
+  is_over  <- scores$observed >= min_count & scores$p_adjusted_over <= alpha
   scores$anomaly <- ifelse(is_under, "under",
                            ifelse(is_over, "over", "normal"))
   scores$order <- ord
@@ -384,8 +385,9 @@
 #'       \code{p_under}, the raw lower-tail hypergeometric CDF value;
 #'       \code{p_over} is the strict upper-tail probability
 #'       \code{P(X > observed) = 1 - p_under}, so that a path is
-#'       over-represented when its HYPA score exceeds \code{1 - alpha}
-#'       (LaRock et al., 2020); \code{p_adjusted_under} and
+#'       over-represented when its HYPA score is at least
+#'       \code{1 - alpha}, i.e. \code{p_over <= alpha} (LaRock et al.,
+#'       2020); under-represented when \code{p_under < alpha}; \code{p_adjusted_under} and
 #'       \code{p_adjusted_over} are the corrected p-values for under- and
 #'       over-representation tests respectively.}
 #'     \item{ho_edges}{Alias for \code{scores} (all orders, arrow notation).}

@@ -519,3 +519,63 @@ test_that("pathways.net_mogen min_prob filters by probability", {
   pw_filt <- pathways(m, min_prob = 0.99)
   expect_true(length(pw_all) >= length(pw_filt))
 })
+
+# Path-based DoF and LRT selection (2026-10-27 review) --------------------
+
+test_that("path DoF on a complete first-order topology is s^k (s - 1)", {
+  # every one of the 9 transitions among A, B, C occurs
+  m <- build_mogen(list(strsplit("AABBCCAACBCABAC", "")[[1]]), max_order = 3)
+  expect_equal(unname(m$layer_dof), c(2, 6, 18, 54))
+  expect_identical(m$dof_method, "paths")
+})
+
+test_that("path DoF of a deterministic cycle is zero at every order", {
+  m <- build_mogen(list(strsplit("ABCABCABC", "")[[1]]), max_order = 3)
+  expect_equal(unname(m$layer_dof), c(2, 0, 0, 0))
+})
+
+test_that("path DoF never falls below the observed count", {
+  set.seed(20261027)
+  invisible(lapply(seq_len(10), \(r) {
+    trajs <- replicate(30, sample(LETTERS[1:5], 8, replace = TRUE),
+                       simplify = FALSE)
+    p <- build_mogen(trajs, max_order = 3)$layer_dof
+    o <- build_mogen(trajs, max_order = 3, dof = "observed")$layer_dof
+    expect_true(all(p >= o))
+  }))
+})
+
+test_that("dof = 'observed' reproduces the counts used before 0.9.28", {
+  trajs <- list(c("A", "B", "C", "A", "B"), c("B", "C", "A", "C"),
+                c("A", "A", "B", "C", "C"), c("C", "B", "A", "B", "C"))
+  m <- build_mogen(trajs, max_order = 3, dof = "observed")
+  expect_equal(unname(m$layer_dof), c(2, 5, 2, 2))
+  expect_identical(m$optimal_order, 2L)
+})
+
+test_that("LRT selects the largest rejecting order, not the first non-rejection", {
+  # rejections at 1 and 3 with a non-rejection at 2: Scholtes picks 3
+  expect_identical(.mogen_lrt_order(c(NA, 0.001, 0.5, 0.001), 0.01), 3L)
+  expect_identical(.mogen_lrt_order(c(NA, 0.5, 0.5), 0.01), 0L)
+  expect_identical(.mogen_lrt_order(c(NA, NA, 0.001), 0.01), 2L)
+})
+
+test_that("lrt_p holds one p-value per order with NA at order 0", {
+  m <- build_mogen(list(strsplit("AABBCCAACBCABAC", "")[[1]]), max_order = 2,
+                   criterion = "lrt")
+  expect_named(m$lrt_p, c("order_0", "order_1", "order_2"))
+  expect_true(is.na(m$lrt_p[["order_0"]]))
+})
+
+test_that("path DoF stay exact up to the double range and fail loudly past it", {
+  expect_identical(.mogen_path_dofs(matrix(1, 2, 2), 1023)[1023], 2^1023)
+  expect_error(build_mogen(list(rep(c("A", "A", "B", "B"), 257)), max_order = 1024),
+               class = "nestimate_dof_overflow")
+})
+
+test_that("path DoF has one value per layer for max_order 1 and one-state models", {
+  expect_identical(.mogen_path_dofs(matrix(1, 3, 3), 1L), 6)
+  expect_identical(.mogen_path_dofs(matrix(1, 1, 1), 3L), c(0, 0, 0))
+  m <- build_mogen(list(c("A", "B")), max_order = 1L)
+  expect_length(m$layer_dof, 2L)
+})
