@@ -90,3 +90,13 @@ test_that("favourable states that never occur are refused by class", {
   expect_error(sequence_metrics(.sm_data(), favorable = "Z"),
                class = "nestimate_bad_input")
 })
+
+test_that("a return to the first state emerges above half the opening spell", {
+  # opening spell 5, return spell 3: 2 * 3 > 5, so A emerges (codyna's rule)
+  emerges <- as.data.frame(t(c(rep("A", 5), "B", rep("A", 3))))
+  expect_identical(sequence_metrics(emerges)$emergent_state, "A")
+  expect_identical(sequence_metrics(emerges)$emergent_state_persistence, 3)
+  # opening spell 7, return spell 3: 2 * 3 < 7, no emergent state
+  stays <- as.data.frame(t(c(rep("A", 7), "B", rep("A", 3))))
+  expect_true(is.na(sequence_metrics(stays)$emergent_state))
+})

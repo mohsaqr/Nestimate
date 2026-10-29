@@ -78,8 +78,9 @@ state, its share, and its longest spell.}
 \item{emergent_state, emergent_state_persistence,
 emergent_state_proportion}{A state that settles in later (a spell of
 at least 3 that outlasts the dominant spell, a dominant state that is
-not the first, or a return to the first state with a spell over twice
-the opening one), its spell and its share; \code{NA} when none.}
+not the first, or a return to the first state in a spell of at least 3
+and more than half the opening one), its spell and its share;
+\code{NA} when none.}
 \item{integrative_potential}{With \code{favorable}: position-weighted
 share of favourable states over the observed positions, weights
 \code{position^omega} (Brzinsky-Fay 2018).}

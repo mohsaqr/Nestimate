@@ -80,6 +80,11 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
       u
     }, parts, names(x)))
   } else if (inherits(x, c("netobject", "cograph_network", "tna"))) {
+    if (is.null(x$data)) {
+      stop(errorCondition(
+        "`x` holds no sequence data; build it from sequences, not a matrix.",
+        class = "nestimate_bad_input", call = NULL))
+    }
     states <- .coerce_sequence_input(x)
     if (!is.data.frame(states)) {
       stop(errorCondition("`x` holds no sequence data.",

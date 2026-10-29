@@ -260,12 +260,12 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
   sizes <- as.numeric(table(factor(labels, levels = levels)))
   present <- .sp_group_counts(found, tab$pattern, labels, levels)
 
-  support_by <- as.data.frame(
-    present / matrix(sizes, nrow(present), length(sizes), byrow = TRUE),
-    check.names = FALSE)
+  # rep(each =) rather than matrix(byrow =): no warning at zero patterns
+  size_mat <- matrix(rep(sizes, each = nrow(present)), nrow(present),
+                     length(sizes))
+  support_by <- as.data.frame(present / size_mat, check.names = FALSE)
   names(support_by) <- paste0("support_", levels)
   out <- cbind(tab, support_by)
-  if (nrow(out) == 0L) return(out)
 
   if (length(levels) == 2L) {
     tests <- lapply(seq_len(nrow(present)), \(i) {
@@ -275,7 +275,7 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
           sizes[2L] - present[i, 2L], sizes[1L] - present[i, 1L]), 2L))
       c(unname(ft$estimate), ft$conf.int, ft$p.value)
     })
-    tests <- do.call(rbind, tests)
+    tests <- do.call(rbind, c(list(matrix(numeric(0), 0L, 4L)), tests))
     # A pattern in every sequence has no contrast; fisher.test() would
     # report an odds ratio of 0 with an unbounded interval
     no_contrast <- out$n_sequences >= sum(sizes)
@@ -288,8 +288,7 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
     n_total <- sum(sizes)
     expected <- outer(out$n_sequences, sizes) / n_total
     absent_expected <- outer(n_total - out$n_sequences, sizes) / n_total
-    absent <- matrix(sizes, nrow(present), length(sizes), byrow = TRUE) -
-      present
+    absent <- size_mat - present
     # A pattern in every (or no) sequence has zero expected cells, whose
     # observed counts are zero too: they contribute nothing, not 0 / 0
     cell <- \(obs, exp) ifelse(exp > 0, (obs - exp)^2 / exp, 0)
@@ -311,7 +310,9 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
 #' @noRd
 .sp_parse_template <- function(template) {
   tokens <- strsplit(template, "->", fixed = TRUE)[[1L]]
-  if (length(tokens) == 0L || any(!nzchar(tokens))) {
+  # strsplit() drops a trailing empty token, so test the end explicitly
+  if (length(tokens) == 0L || any(!nzchar(tokens)) ||
+      endsWith(template, "->")) {
     stop(errorCondition(
       sprintf("`pattern` \"%s\" is not of the form \"A->*->B\".", template),
       class = "nestimate_bad_input", call = NULL))
@@ -381,13 +382,14 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
   m <- ncol(states)
   search <- if (is.null(template)) NULL else .sp_parse_template(template)
   gapped <- is.null(search) && identical(type, "gapped")
-  sizes <- if (!is.null(search)) {
+  # a repeated length or gap would count every occurrence twice
+  sizes <- unique(if (!is.null(search)) {
     search$span
   } else if (gapped) {
     as.integer(gap)
   } else {
     as.integer(len)
-  }
+  })
 
   # One window spec per (size, start position); each yields the occurrences
   # of every sequence at that position
@@ -405,7 +407,9 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
       w$start + seq_len(w$size) - 1L
     }
     block <- states[, idx, drop = FALSE]
-    valid <- rowSums(is.na(block)) == 0L
+    # the whole window must be observed, the gap positions included
+    window <- states[, w$start + seq_len(w$span) - 1L, drop = FALSE]
+    valid <- rowSums(is.na(window)) == 0L
     if (!is.null(search)) {
       fixed <- matrix(search$states, nrow(block), length(search$states),
                       byrow = TRUE)

@@ -123,3 +123,33 @@ test_that("a network keeps the outcome when the positions are named T1, T2", {
                          min_support = 0)
   expect_identical(res$pattern, "A->B")
 })
+
+test_that("covariate names never collide with the model's own terms", {
+  d <- expand.grid(hit = 0:1, score = 0:1, y = 0:1)
+  d <- d[rep(seq_len(8), c(9, 4, 3, 2, 2, 3, 7, 9)), ]
+  d$T1 <- ifelse(d$hit == 1, "A", "B")
+  d$T2 <- "B"
+  fit <- \(data, adjust) pattern_outcome(data, outcome = "y",
+                                         cols = c("T1", "T2"), len = 2, n = 1,
+                                         min_freq = 1, start = "A",
+                                         adjust = adjust)
+  ref <- fit(d, "score")
+  # same covariate under the name of an internal term, and with a space
+  renamed <- d
+  names(renamed)[names(renamed) == "score"] <- ".p1"
+  expect_equal(fit(renamed, ".p1"), ref)
+  names(renamed)[names(renamed) == ".p1"] <- "pre score"
+  expect_equal(fit(renamed, "pre score"), ref)
+  # the adjustment is in the model: it changes the pattern's estimate
+  expect_false(isTRUE(all.equal(fit(d, NULL)$estimate, ref$estimate)))
+})
+
+test_that("outcome defaults to the last observed state, as in codyna", {
+  d <- data.frame(T1 = rep(c("A", "B"), 20), T2 = rep(c("B", "A", "A", "B"), 10),
+                  T3 = rep(c("pass", "fail", "fail", "pass", "pass"), 8))
+  expect_identical(
+    suppressWarnings(pattern_outcome(d, len = 1:2, min_freq = 1,
+                                     min_support = 0)),
+    suppressWarnings(pattern_outcome(d, outcome = "last_obs", len = 1:2,
+                                     min_freq = 1, min_support = 0)))
+})

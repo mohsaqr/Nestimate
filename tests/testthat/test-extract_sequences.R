@@ -72,3 +72,10 @@ test_that("unsupported input is refused by class", {
   expect_error(extract_sequences(data.frame(T1 = c(NA, NA))),
                class = "nestimate_bad_input")
 })
+
+test_that("a model built from a matrix has no sequences: classed error", {
+  skip_if_not_installed("tna")
+  P <- matrix(c(0.9, 0.1, 0.2, 0.8), 2, byrow = TRUE)
+  expect_error(extract_sequences(tna::tna(P)), class = "nestimate_bad_input")
+  expect_error(sequence_metrics(tna::tna(P)), class = "nestimate_bad_input")
+})

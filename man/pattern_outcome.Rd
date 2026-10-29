@@ -6,7 +6,7 @@
 \usage{
 pattern_outcome(
   x,
-  outcome,
+  outcome = "last_obs",
   type = c("ngram", "gapped", "repeated"),
   len = 1:2,
   gap = 1,
@@ -40,8 +40,8 @@ long event log, or of a network's metadata), or a vector with one value
 per sequence. Use a vector for a model that stores no covariates, such
 as a \code{tna} model. \code{outcome = "last_obs"} uses each sequence's
 last observed state as the outcome and removes the states that end some
-sequence from all sequences (codyna's default; for data whose final
-state codes the outcome, such as an appended \code{"pass"} or
+sequence from all sequences (the default, as in codyna; for data whose
+final state codes the outcome, such as an appended \code{"pass"} or
 \code{"fail"}).}
 
 \item{type, len, gap, min_freq, min_support, start, end, contain}{Pattern

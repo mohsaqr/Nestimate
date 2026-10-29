@@ -99,3 +99,12 @@ test_that("one long sequence pivoted wide keeps every position", {
   expect_identical(sort(net$nodes$label), c("A", "B", "C", "D"))
   expect_lt(elapsed, 10)
 })
+
+test_that("an all-missing logical position stays in the run of positions", {
+  d <- data.frame(T1 = c("A", "B"), T2 = NA, outcome = c("pass", "fail"))
+  expect_true(is.logical(d$T2))
+  expect_identical(names(extract_sequences(d)), c("T1", "T2"))
+  net <- build_network(d, method = "relative")
+  expect_false(any(c("pass", "fail") %in% net$nodes$label))
+  expect_true("outcome" %in% names(net$metadata))
+})

@@ -38,8 +38,8 @@
 #'   per sequence. Use a vector for a model that stores no covariates, such
 #'   as a \code{tna} model. \code{outcome = "last_obs"} uses each sequence's
 #'   last observed state as the outcome and removes the states that end some
-#'   sequence from all sequences (codyna's default; for data whose final
-#'   state codes the outcome, such as an appended \code{"pass"} or
+#'   sequence from all sequences (the default, as in codyna; for data whose
+#'   final state codes the outcome, such as an appended \code{"pass"} or
 #'   \code{"fail"}).
 #' @param type,len,gap,min_freq,min_support,start,end,contain Pattern
 #'   definition and filters; see \code{\link{sequence_patterns}()}. The
@@ -100,7 +100,8 @@
 #'
 #' @seealso \code{\link{sequence_patterns}}
 #' @export
-pattern_outcome <- function(x, outcome, type = c("ngram", "gapped", "repeated"),
+pattern_outcome <- function(x, outcome = "last_obs",
+                            type = c("ngram", "gapped", "repeated"),
                             len = 1:2, gap = 1, min_freq = 5,
                             min_support = 0.01, start = NULL, end = NULL,
                             contain = NULL, n = 10, priority = "chisq",
@@ -208,8 +209,12 @@ pattern_outcome <- function(x, outcome, type = c("ngram", "gapped", "repeated"),
 
   # ---- One model with every selected pattern ----
   sel_ids <- match(tab$pattern, found$table$pattern)
+  # Internal names for every model column: a data column can then neither
+  # collide with a pattern term nor break the formula (spaces, symbols)
   terms <- sprintf(".p%d", seq_along(sel_ids))
+  adjust_terms <- sprintf(".a%d", seq_along(adjust))
   model_data <- units[c(adjust, group)]
+  names(model_data) <- c(adjust_terms, if (!is.null(group)) ".g")
   model_data$.y <- y$value
   if (adjust_length) model_data$.length <- rowSums(!is.na(states))
   model_data[terms] <- lapply(sel_ids, \(pid) {
@@ -218,8 +223,8 @@ pattern_outcome <- function(x, outcome, type = c("ngram", "gapped", "repeated"),
     value[occ$seq[rows]] <- if (occurrences) occ$times[rows] else 1L
     value
   })
-  rhs <- c(adjust, if (adjust_length) ".length", terms,
-           if (!is.null(group)) sprintf("(1 | %s)", group))
+  rhs <- c(adjust_terms, if (adjust_length) ".length", terms,
+           if (!is.null(group)) "(1 | .g)")
   form <- stats::reformulate(rhs, response = ".y")
   fit <- if (is.null(group)) {
     stats::glm(form, data = model_data, family = stats::binomial())

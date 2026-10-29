@@ -1541,7 +1541,10 @@ predictability.netobject_group <- function(object, ...) {
 #' @return Character vector of covariate column names (possibly empty).
 #' @noRd
 .categorical_covariates <- function(data) {
-  is_cat <- vapply(data, \(x) is.character(x) || is.factor(x), logical(1))
+  # an all-missing column (logical NA) is an unobserved position, not a
+  # covariate, so it must not break the run of position names
+  is_cat <- vapply(data, \(x) is.character(x) || is.factor(x) ||
+                     all(is.na(x)), logical(1))
   if (sum(is_cat) < 2L) return(character(0))
   nms <- names(data)
   numbered <- grepl("[0-9]+$", nms)

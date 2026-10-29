@@ -1,4 +1,37 @@
-# Nestimate (development version)
+# Nestimate 1.0.0
+
+## Bug fixes
+
+* `plot()` of a `passage_time()` result drew the matrix transposed: the
+  tile in row A, column B showed the passage time from B to A. Rows are now
+  the starting states and columns the targets, as documented, for a single
+  network and for each panel of a grouped one.
+* `pattern_outcome()`: an `adjust` column named like one of the model's own
+  terms (`.p1`, `.y`, ...) was replaced by that term, so the requested
+  adjustment was silently lost; an `adjust` name with a space failed to
+  parse. Every model column now has an internal name. `outcome` defaults to
+  `"last_obs"`, as in codyna and as the 0.9.29 notes stated.
+* `sequence_patterns()`: a gapped pattern (`A->*->B`) no longer spans a
+  missing position, matching the template search; a repeated `len` or
+  `gap` (`len = c(2, 2)`) no longer counts each occurrence twice; a grouped
+  search that finds no pattern returns zero rows with all its columns and
+  no warning; a template ending in `->` is refused.
+* `build_network()` and `extract_sequences()`: an all-missing position
+  column stored as logical `NA` no longer stops the numbered position names
+  from forming a run, which had turned a character covariate into states.
+* `plot()` of a grouped `markov_stability()` result handles more than nine
+  groups: colours cycle and shapes shift, so every group keeps its own
+  colour-shape pair.
+* `extract_sequences()` and the sequence verbs raise `nestimate_bad_input`
+  for a model built from a matrix, which holds no sequences.
+
+## Documentation
+
+* `sequence_metrics()`: the emergent-state rule for a return to the first
+  state is a spell of at least 3 that is more than half the opening spell
+  (codyna's rule); the help page said "over twice".
+
+# Nestimate 0.9.29
 
 ## Sequence patterns
 
@@ -52,7 +85,7 @@
   data column instead (a lone pattern of one length loses its name, and a
   data column named `V<k>` takes its place).
 
-## Validation tests aligned with tna 1.4.1
+## Validation tests aligned with the current tna release
 
 * `plot_mosaic()` is no longer exported: it masked `tna::plot_mosaic()`
   whenever both packages were attached, so tna code (and apps such as
@@ -85,6 +118,78 @@
   under the same seed). Its documentation no longer calls the
   within-context permutation exact: the windows of a sequence overlap, so
   the permutation distribution approximates the null (Besag & Mondal, 2013).
+
+## Bug fixes
+
+* `plot()` works on `passage_time()` and `markov_stability()` results for a
+  grouped network: one heatmap panel per group on a shared colour scale,
+  and a per-metric dot plot with one point per group. Both used to fall
+  through to `plot.default()` and fail. The single-network stability plot
+  uses one fill; its per-state palette left a ninth state without colour.
+* `build_mmm(covariate_effect = "posthoc")`: `print()` and `summary()`
+  labelled the covariates "integrated into EM -- influences cluster
+  membership" whatever the setting. The fit records `covariate_effect`,
+  and a post-hoc analysis is now labelled as one.
+* The `print()` methods of `entropy_trajectory()` and `entropy_bayes()` no
+  longer tell the user to reach into the object with `$`; they point to
+  `summary()` and `plot()`.
+* `build_network()` no longer reads a character covariate of wide sequence
+  data as states. An outcome or group label such as `High`/`Low` used to
+  become nodes of the network and vanish from `$metadata`. When the
+  position columns are named as a run (`T1`, `T2`, ...; `V1`, ...; `1`,
+  `2`, ...), every other character or factor column is now metadata, like
+  numeric columns already were, even when its values coincide with state
+  names. The network equals the one built with `metadata_cols`. Without
+  such a run, or with two runs of equal size, nothing changes.
+* Association `permutation()` refuses inference with
+  `nestimate_permutation_failed` when any permuted network cannot be
+  estimated or has non-finite weights, reporting the number of failed draws.
+  Failed draws no longer silently reduce p-values or invalidate null moments.
+* Transition resampling honors `weighted` and `concat`. Concatenated rows
+  are resampled as the merged sequences used by the estimator, including
+  their joining transitions. With `actor`, a merged sequence must stay
+  within one actor; paired tests require matching merged-sequence counts.
+* Relabelling numeric sequence states, start/end markers and onehot columns
+  keeps stored data, alphabets and column selectors consistent for resampling.
+  Wide sequence positions retain their column names; association measurements
+  retain their numeric values.
+* Higher-order builders and `sequence_compare()` preserve literal numeric
+  states in Nestimate models and decode positional codes only for tna input
+  or explicitly encoded converted data. Character digit alphabets such as
+  `"1"` through `"12"` are decoded correctly.
+* Grouped wide sequences use the same resolved state columns as their child
+  estimates. Numeric covariates do not enter the shared alphabet, and factor
+  columns keep their labels.
+* MGM's numeric `level` is validated after excluding group, actor and
+  metadata columns. MGM actor identifiers are excluded from estimation.
+* Custom variable estimators retain their numeric cleaned data when column
+  names identify the modeled nodes, allowing valid downstream resampling.
+* `nct()` rejects `Inf` and `-Inf` instead of silently isolating the affected
+  variable; its supported missing-data and constant-variable handling is
+  unchanged.
+* `plot_mosaic(network, x_label =, y_label =)` applies the labels. Explicit
+  primitive-only styling arguments raise a classed error directing the
+  caller to `mosaic_plot()`.
+* `association_rules()` reads a character matrix of states (such as
+  `trajectories`) as wide sequences, like a character data frame. It used to
+  treat every matrix as binary: with missing cells it failed with
+  "subscript out of bounds", and without them it silently mined the column
+  names. Binary input (matrix or data frame, 0/1 or logical) with a missing
+  cell or a value other than 0/1 now raises `nestimate_bad_input`; logical
+  data-frame columns are read as binary items instead of the strings
+  `"TRUE"`/`"FALSE"`.
+
+## Documentation
+
+* MGM's missing-data policy is mean/modal single imputation, as documented
+  by psychnets for its `"pairwise"` option; it is not pairwise deletion.
+* Permutation M/S labels describe this function's historical total/max edge
+  difference statistics and distinguish them from NCT's structure/strength
+  convention. Comparison tables no longer call total edge difference
+  "global strength". The NCT tutorial and local display checks use current
+  notation and capitalization.
+
+# Nestimate 0.9.28
 
 ## Higher-order methods: corrections from a review against the source papers
 
@@ -164,76 +269,6 @@ the previous code.
   transition matrix over all HON nodes) and how that differs from Saebi et
   al. (2020), whose order-indexed matrices over first-order nodes are not
   fully specified in the paper.
-
-## Bug fixes
-
-* `plot()` works on `passage_time()` and `markov_stability()` results for a
-  grouped network: one heatmap panel per group on a shared colour scale,
-  and a per-metric dot plot with one point per group. Both used to fall
-  through to `plot.default()` and fail. The single-network stability plot
-  uses one fill; its per-state palette left a ninth state without colour.
-* `build_mmm(covariate_effect = "posthoc")`: `print()` and `summary()`
-  labelled the covariates "integrated into EM -- influences cluster
-  membership" whatever the setting. The fit records `covariate_effect`,
-  and a post-hoc analysis is now labelled as one.
-* The `print()` methods of `entropy_trajectory()` and `entropy_bayes()` no
-  longer tell the user to reach into the object with `$`; they point to
-  `summary()` and `plot()`.
-* `build_network()` no longer reads a character covariate of wide sequence
-  data as states. An outcome or group label such as `High`/`Low` used to
-  become nodes of the network and vanish from `$metadata`. When the
-  position columns are named as a run (`T1`, `T2`, ...; `V1`, ...; `1`,
-  `2`, ...), every other character or factor column is now metadata, like
-  numeric columns already were, even when its values coincide with state
-  names. The network equals the one built with `metadata_cols`. Without
-  such a run, or with two runs of equal size, nothing changes.
-* Association `permutation()` refuses inference with
-  `nestimate_permutation_failed` when any permuted network cannot be
-  estimated or has non-finite weights, reporting the number of failed draws.
-  Failed draws no longer silently reduce p-values or invalidate null moments.
-* Transition resampling honors `weighted` and `concat`. Concatenated rows
-  are resampled as the merged sequences used by the estimator, including
-  their joining transitions. With `actor`, a merged sequence must stay
-  within one actor; paired tests require matching merged-sequence counts.
-* Relabelling numeric sequence states, start/end markers and onehot columns
-  keeps stored data, alphabets and column selectors consistent for resampling.
-  Wide sequence positions retain their column names; association measurements
-  retain their numeric values.
-* Higher-order builders and `sequence_compare()` preserve literal numeric
-  states in Nestimate models and decode positional codes only for tna input
-  or explicitly encoded converted data. Character digit alphabets such as
-  `"1"` through `"12"` are decoded correctly.
-* Grouped wide sequences use the same resolved state columns as their child
-  estimates. Numeric covariates do not enter the shared alphabet, and factor
-  columns keep their labels.
-* MGM's numeric `level` is validated after excluding group, actor and
-  metadata columns. MGM actor identifiers are excluded from estimation.
-* Custom variable estimators retain their numeric cleaned data when column
-  names identify the modeled nodes, allowing valid downstream resampling.
-* `nct()` rejects `Inf` and `-Inf` instead of silently isolating the affected
-  variable; its supported missing-data and constant-variable handling is
-  unchanged.
-* `plot_mosaic(network, x_label =, y_label =)` applies the labels. Explicit
-  primitive-only styling arguments raise a classed error directing the
-  caller to `mosaic_plot()`.
-* `association_rules()` reads a character matrix of states (such as
-  `trajectories`) as wide sequences, like a character data frame. It used to
-  treat every matrix as binary: with missing cells it failed with
-  "subscript out of bounds", and without them it silently mined the column
-  names. Binary input (matrix or data frame, 0/1 or logical) with a missing
-  cell or a value other than 0/1 now raises `nestimate_bad_input`; logical
-  data-frame columns are read as binary items instead of the strings
-  `"TRUE"`/`"FALSE"`.
-
-## Documentation
-
-* MGM's missing-data policy is mean/modal single imputation, as documented
-  by psychnets for its `"pairwise"` option; it is not pairwise deletion.
-* Permutation M/S labels describe this function's historical total/max edge
-  difference statistics and distinguish them from NCT's structure/strength
-  convention. Comparison tables no longer call total edge difference
-  "global strength". The NCT tutorial and local display checks use current
-  notation and capitalization.
 
 # Nestimate 0.9.27
 

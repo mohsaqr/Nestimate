@@ -39,8 +39,9 @@
 #'   \item{emergent_state, emergent_state_persistence,
 #'     emergent_state_proportion}{A state that settles in later (a spell of
 #'     at least 3 that outlasts the dominant spell, a dominant state that is
-#'     not the first, or a return to the first state with a spell over twice
-#'     the opening one), its spell and its share; \code{NA} when none.}
+#'     not the first, or a return to the first state in a spell of at least 3
+#'     and more than half the opening one), its spell and its share;
+#'     \code{NA} when none.}
 #'   \item{integrative_potential}{With \code{favorable}: position-weighted
 #'     share of favourable states over the observed positions, weights
 #'     \code{position^omega} (Brzinsky-Fay 2018).}
@@ -286,7 +287,8 @@ sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
 #' Candidates, in order: a spell of at least 3 that outlasts the dominant
 #' spell; the dominant state when it is not the first and has a spell of at
 #' least 3; the first state when it returns in a spell of at least 3 and
-#' over twice the opening spell. The candidate with the longest spell wins.
+#' more than half the opening spell (codyna's \code{2 * return > opening}).
+#' The candidate with the longest spell wins.
 #' @noRd
 .sm_emergent <- function(values, spells, dominant, dominant_spell, first,
                          prop) {

@@ -1,5 +1,8 @@
 # ---- Markov Chain Analysis: Passage Times and Stability ----
 
+# Columns of the passage-time tile table used in ggplot aesthetics
+utils::globalVariables(c("fill", "label", "txt_col"))
+
 #' @noRd
 .mpt_not_a_chain <- function(what) {
   stop(errorCondition(sprintf(paste0(
@@ -294,7 +297,8 @@ plot.net_mpt_group <- function(x,
 .mpt_tiles <- function(x, log_scale, digits) {
   states <- x$states
   n <- length(states)
-  vals <- as.vector(x$matrix)
+  # row-major, to match from = rep(each), to = rep(times): row = from
+  vals <- as.vector(t(x$matrix))
   data.frame(
     from  = factor(rep(states, each = n), levels = rev(states)),
     to    = factor(rep(states, times = n), levels = states),
@@ -568,14 +572,14 @@ plot.net_markov_stability_group <- function(x,
   d$state <- factor(d$state, levels = names(sort(mean_pi)))
   d$metric <- factor(d$metric, levels = labels[metrics])
   d$group <- factor(d$group, levels = names(x))
-  shapes <- c(16, 17, 15, 18, 3, 4, 8, 1, 2)
+  marks <- .group_marks(nlevels(d$group))
   ggplot2::ggplot(d, ggplot2::aes(x = value, y = state)) +
     ggplot2::geom_line(ggplot2::aes(group = state), colour = "grey75",
                        linewidth = 0.6) +
     ggplot2::geom_point(ggplot2::aes(colour = group, shape = group),
                         size = 2.6) +
-    ggplot2::scale_colour_manual(values = .okabe_ito, name = NULL) +
-    ggplot2::scale_shape_manual(values = shapes, name = NULL) +
+    ggplot2::scale_colour_manual(values = marks$colour, name = NULL) +
+    ggplot2::scale_shape_manual(values = marks$shape, name = NULL) +
     ggplot2::facet_wrap(~ metric, scales = "free_x", ncol = 2) +
     ggplot2::labs(x = NULL, y = NULL, title = "Markov Stability Metrics") +
     ggplot2::theme_minimal(base_size = 12) +
@@ -584,4 +588,26 @@ plot.net_markov_stability_group <- function(x,
       plot.title       = ggplot2::element_text(face = "bold"),
       legend.position  = "bottom"
     )
+}
+
+
+#' Colour and shape per group: a distinct pair for up to 81 groups
+#'
+#' Okabe-Ito colours cycle every 9 groups and the shape shifts by one at each
+#' cycle, so no two groups share both colour and shape and groups never
+#' differ by colour alone.
+#' @param k Number of groups.
+#' @return List with \code{colour} and \code{shape}, each of length \code{k}.
+#' @noRd
+.group_marks <- function(k) {
+  shapes <- c(16, 17, 15, 18, 3, 4, 8, 1, 2)
+  if (k > length(.okabe_ito) * length(shapes)) {
+    stop(errorCondition(
+      sprintf("%d groups cannot be told apart in one plot (at most %d).",
+              k, length(.okabe_ito) * length(shapes)),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  j <- seq_len(k) - 1L
+  list(colour = .okabe_ito[j %% 9L + 1L],
+       shape = shapes[(j + j %/% 9L) %% 9L + 1L])
 }

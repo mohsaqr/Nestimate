@@ -252,3 +252,42 @@ test_that("pattern_outcome takes the final state as the outcome", {
   expect_identical(names(res)[7:8], c("support_fail", "support_pass"))
   expect_false(any(grepl("pass|fail", res$pattern)))
 })
+
+test_that("a gapped window with a missing middle position is skipped", {
+  d <- data.frame(T1 = "A", T2 = NA_character_, T3 = "B")
+  expect_identical(nrow(sequence_patterns(d, type = "gapped", gap = 1,
+                                          min_freq = 1)), 0L)
+  expect_identical(nrow(sequence_patterns(d, pattern = "A->*->B",
+                                          min_freq = 1)), 0L)
+})
+
+test_that("a repeated length or gap counts each occurrence once", {
+  d <- data.frame(T1 = c("A", "A"), T2 = c("B", "B"), T3 = c("A", "B"))
+  expect_identical(sequence_patterns(d, len = c(2, 2), min_freq = 1),
+                   sequence_patterns(d, len = 2, min_freq = 1))
+  expect_identical(sequence_patterns(d, type = "gapped", gap = c(1, 1),
+                                     min_freq = 1),
+                   sequence_patterns(d, type = "gapped", gap = 1,
+                                     min_freq = 1))
+})
+
+test_that("no matching pattern keeps the grouped columns, silently", {
+  d <- data.frame(T1 = c("A", "B", "A"), T2 = c("B", "A", "A"))
+  two <- expect_silent(sequence_patterns(d[1:2, ], group = c("x", "y"),
+                                         len = 3, min_freq = 1))
+  expect_identical(nrow(two), 0L)
+  expect_true(all(c("support_x", "support_y", "odds_ratio", "or_lower",
+                    "or_upper", "p_value", "p_adj") %in% names(two)))
+  three <- expect_silent(sequence_patterns(d, group = c("x", "y", "z"),
+                                           len = 3, min_freq = 1))
+  expect_true(all(c("chisq", "cramers_v", "p_value", "p_adj") %in%
+                    names(three)))
+})
+
+test_that("a template with a trailing separator is refused", {
+  d <- data.frame(T1 = "A", T2 = "B")
+  expect_error(sequence_patterns(d, pattern = "A->", min_freq = 1),
+               class = "nestimate_bad_input")
+  expect_error(sequence_patterns(d, pattern = "->B", min_freq = 1),
+               class = "nestimate_bad_input")
+})
