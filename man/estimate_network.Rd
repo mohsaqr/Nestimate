@@ -48,10 +48,14 @@ Default: \code{NULL} (no scaling).}
 result matrix. Default: 0 (no thresholding).}
 
 \item{level}{Character or NULL. Multilevel decomposition for the undirected
-association methods (\code{cor}, \code{pcor}, \code{glasso}); a directed
+association methods (\code{cor}, \code{pcor}, \code{glasso}, \code{mgm}); a directed
 estimator errors. One of \code{NULL}, \code{"between"}, \code{"within"},
 \code{"both"}. Requires an id column, supplied either as \code{actor} or
-as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.}
+as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.
+For \code{method = "mgm"}, a numeric vector instead supplies one
+category count per modeled variable (\code{1} for continuous variables),
+after excluding group, actor and metadata columns. It is checked and
+retained for compatibility; the MGM fit infers category levels from data.}
 
 \item{...}{Additional arguments passed to \code{\link{build_network}}.}
 }

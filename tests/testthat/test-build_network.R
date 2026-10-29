@@ -2076,12 +2076,15 @@ test_that("predictability = FALSE is honoured in level = 'both'", {
   )
 }
 
-test_that("auto-detection misclassifies label-overlapping metadata (baseline)", {
+test_that("auto-detection keeps label-overlapping metadata out of the states", {
   df  <- .mk_label_overlap_df()
   net <- build_network(df, method = "relative")
-  # Without override, 'condition' looks like a state column — auto-detection
-  # puts it into $data (baseline bug this override exists to fix).
-  expect_true("condition" %in% names(net$data))
+  # 'condition' shares its values with the states, but the positions are
+  # named as a run (V1..V3), so the other character column is metadata.
+  # (Before 2026-10-28 it went into $data: the baseline bug that the
+  # state_cols / metadata_cols overrides below were added to fix.)
+  expect_false("condition" %in% names(net$data))
+  expect_true("condition" %in% names(net$metadata))
 })
 
 test_that("state_cols override forces correct classification", {

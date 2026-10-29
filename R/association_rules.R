@@ -16,10 +16,15 @@
 #'       a transaction of its unique states.}
 #'     \item{list}{Each element is a character vector of items (one transaction).}
 #'     \item{data.frame}{Wide format: each row is a transaction, character
-#'       columns are item occurrences. Or a binary matrix (0/1).}
-#'     \item{matrix}{Binary transaction matrix (rows = transactions,
-#'       columns = items).}
-#'   } For the \code{print()} and \code{plot()} methods: an object of class \code{net_association_rules}.
+#'       columns are item occurrences. Or binary (0/1 or logical) columns,
+#'       one per item.}
+#'     \item{matrix}{A character matrix is read as wide sequences, like a
+#'       character data frame (each row is the set of its distinct
+#'       non-missing states). A numeric or logical matrix is a binary
+#'       transaction matrix (rows = transactions, columns = items).}
+#'   } Binary input must hold only 0/1 or \code{TRUE}/\code{FALSE}: a
+#'   missing cell or any other value raises \code{nestimate_bad_input}.
+#'   For the \code{print()} and \code{plot()} methods: an object of class \code{net_association_rules}.
 #' @param min_support Numeric. Minimum support threshold. Default: 0.1.
 #' @param min_confidence Numeric. Minimum confidence threshold. Default: 0.5.
 #' @param min_lift Numeric. Minimum lift threshold. Default: 1.0.
@@ -312,23 +317,22 @@ association_rules <- function(x,
     return(.ar_transactions_to_matrix(x))
   }
 
-  # Matrix (assumed binary)
+  # Matrix: a character matrix holds states (wide sequences), so it takes the
+  # data-frame path; a numeric or logical matrix is a binary item matrix
   if (is.matrix(x)) {
-    items <- colnames(x) %||% paste0("I", seq_len(ncol(x)))
-    colnames(x) <- items
-    ord <- order(items)
-    return(list(matrix = (x > 0)[, ord, drop = FALSE], items = items[ord]))
+    if (is.character(x)) {
+      return(.ar_parse_input(as.data.frame(x, stringsAsFactors = FALSE)))
+    }
+    return(.ar_binary_input(x, colnames(x) %||% paste0("I", seq_len(ncol(x)))))
   }
 
   # Data frame
   if (is.data.frame(x)) {
-    # Check if binary (0/1 numeric)
-    all_numeric <- all(vapply(x, is.numeric, logical(1)))
-    if (all_numeric && all(unlist(x) %in% c(0, 1, NA))) {
-      items <- colnames(x)
-      ord <- order(items)
-      mat <- as.matrix(x) > 0
-      return(list(matrix = mat[, ord, drop = FALSE], items = items[ord]))
+    # Binary (0/1 numeric or logical) columns are items
+    all_binary_type <- all(vapply(x, \(col) is.numeric(col) || is.logical(col),
+                                  logical(1)))
+    if (all_binary_type && all(unlist(x) %in% c(0, 1, NA))) {
+      return(.ar_binary_input(as.matrix(x), colnames(x)))
     }
     # Wide character data: each row is a transaction
     transactions <- lapply(seq_len(nrow(x)), function(i) {
@@ -340,6 +344,33 @@ association_rules <- function(x,
   }
 
   stop("x must be a netobject, list, data.frame, or matrix.", call. = FALSE)
+}
+
+
+#' @noRd
+.ar_binary_input <- function(mat, items) {
+  # A missing cell is neither present nor absent; reading it as either would
+  # change every support count, so the caller must decide
+  n_missing <- sum(is.na(mat))
+  if (n_missing > 0L) {
+    stop(errorCondition(
+      sprintf(paste0("binary transaction input `x` has %d missing cell(s); ",
+                     "each cell must be 1/TRUE (item present) or 0/FALSE ",
+                     "(absent)."), n_missing),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (!all(mat %in% c(0, 1))) {
+    bad <- utils::head(setdiff(unique(as.vector(mat)), c(0, 1)), 3L)
+    stop(errorCondition(
+      sprintf(paste0("a numeric transaction matrix `x` must be binary (0/1); ",
+                     "found %s. Pass `x > 0` to read counts as presence, or a ",
+                     "character matrix of states."),
+              paste(bad, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  colnames(mat) <- items
+  ord <- order(items)
+  list(matrix = (mat > 0)[, ord, drop = FALSE], items = items[ord])
 }
 
 

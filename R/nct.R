@@ -39,6 +39,8 @@
   }
   d1 <- numeric_only(data1)
   d2 <- numeric_only(data2)
+  if (any(is.infinite(d1)) || any(is.infinite(d2)))
+    .nct_bad_input("`data1` and `data2` must not contain Inf or -Inf; use finite observations or NA for missing data.")
   if (ncol(d1) < 2L || ncol(d2) < 2L)
     .nct_bad_input("`data1` and `data2` each need at least 2 numeric variables.")
   n1 <- colnames(d1)
@@ -154,6 +156,8 @@
 #'
 #' The two groups must hold the same variables in the same order
 #' (non-numeric columns such as an id or a group label are dropped first).
+#' Infinite values are refused; use finite observations or \code{NA} for
+#' missing data.
 #'
 #' Missing data follow \code{na_method}. \code{"pairwise"} (default) keeps
 #' every row, permutes rows as usual, and estimates each (sub)sample from its

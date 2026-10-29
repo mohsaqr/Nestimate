@@ -42,7 +42,8 @@ utils::globalVariables(c(
 #' \code{"fdr"} (Benjamini-Hochberg).
 #'
 #' @param x A \code{netobject_group} (from grouped \code{build_network}),
-#'   a \code{netobject} (requires \code{group}), or a wide-format
+#'   a \code{netobject}, \code{tna} or \code{cograph_network} model
+#'   (requires \code{group}), or a wide-format
 #'   \code{data.frame} (requires \code{group}). For the \code{print()} and \code{plot()} methods: an object of class \code{net_sequence_comparison}.
 #' @param group Character or vector. Column name or vector of group labels.
 #'   Not needed for \code{netobject_group}.
@@ -272,30 +273,15 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 
 # ---- Input parsing ----
 
-#' Numeric sequence cells as state labels
-#'
-#' tna stores states integer-coded (positions in `lbl`); a netobject stores
-#' the states themselves, which may be numbers (1, 3, 5). Decode by position
-#' only when the values are not already labels.
-#' @noRd
-.cs_decode_states <- function(m, lbl) {
-  if (is.null(lbl) || length(lbl) == 0L || !is.numeric(m)) return(m)
-  chr <- as.character(as.vector(m))
-  out <- if (all(chr[!is.na(chr)] %in% lbl)) chr else lbl[as.integer(m)]
-  matrix(out, nrow = nrow(m), dimnames = dimnames(m))
-}
-
 #' @noRd
 .cs_parse_input <- function(x, group) {
   # netobject_group: each element has $data
   if (inherits(x, "netobject_group")) {
     group_names <- names(x)
     mats <- lapply(seq_along(x), function(i) {
-      d <- x[[i]]$data
+      d <- .coerce_sequence_input(x[[i]])
       if (is.null(d)) stop("netobject_group element has no $data.", call. = FALSE)
-      m <- as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
-      # Decode integer-encoded data
-      .cs_decode_states(m, rownames(x[[i]]$weights))
+      as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
     })
     # Align column count
     max_cols <- max(vapply(mats, ncol, integer(1)))
@@ -313,19 +299,9 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   # netobject or tna: extract $data
   if (inherits(x, "tna") || inherits(x, "netobject") ||
       inherits(x, "cograph_network")) {
-    if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
-      x <- .as_netobject(x)
-    }
-    if (inherits(x, "tna")) {
-      d <- x$data
-      lbl <- x$labels
-    } else {
-      d <- x$data
-      lbl <- rownames(x$weights)
-    }
+    d <- .coerce_sequence_input(x)
     if (is.null(d)) stop("Object has no $data.", call. = FALSE)
-    seq_mat <- .cs_decode_states(
-      as.matrix(as.data.frame(d, stringsAsFactors = FALSE)), lbl)
+    seq_mat <- as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
   } else if (is.data.frame(x) || is.matrix(x)) {
     seq_mat <- as.matrix(as.data.frame(x, stringsAsFactors = FALSE))
   } else {

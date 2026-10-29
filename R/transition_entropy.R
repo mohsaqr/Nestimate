@@ -652,7 +652,7 @@ print.net_entropy_trajectory <- function(x, digits = 3, ...) {
   cat(sprintf("  %-12s %3.0f windows   mean %.*f   range [%.*f, %.*f]\n",
               paste0(colnames(agg), ":"), agg[1, ],
               digits, agg[2, ], digits, agg[3, ], digits, agg[4, ]))
-  cat("\nUse plot() for the trajectory, $trajectory for the tidy table.\n")
+  cat("\nUse plot() for the trajectory, summary() for per-group statistics.\n")
   invisible(x)
 }
 
@@ -1007,8 +1007,7 @@ print.net_entropy_bayes <- function(x, digits = 3, ...) {
   cat(sprintf(
     "\nEdges: %d observed; %d credible (share of h(P) credibly > %g%%).\n",
     nrow(x$edges), n_cred, 100 * x$min_share))
-  cat("Use summary() for the edge table, plot() for the posterior, and\n")
-  cat("$model for the pruned stable entropy network.\n")
+  cat("Use summary() for the edge table and plot() for the posterior.\n")
   invisible(x)
 }
 

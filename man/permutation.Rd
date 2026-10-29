@@ -65,7 +65,9 @@ Default \code{NULL} (edges only). When supplied, the result gains a
 \code{tna::permutation_test(measures = )}: per state and measure it reports
 the observed difference, an effect size (difference / SD of the permutation
 null), and a permutation p-value, all using the same permuted networks as
-the edge test. Not supported for \code{net_edge_betweenness} inputs.}
+the edge test. \code{Diffusion} is compared after min-max scaling to
+0-1 in each network, as in \code{net_centrality()}. Not supported for
+\code{net_edge_betweenness} inputs.}
 
 \item{nlambda}{Integer. Number of lambda values for the EBIC-glasso
 regularisation path (only used when \code{method = "glasso"}).
@@ -105,7 +107,7 @@ either network (undirected networks keep one row per unordered
 pair), with columns \code{from}, \code{to}, \code{weight_x},
 \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value},
 \code{sig}.}
-\item{global}{Data frame of the two NCT-style global statistics, one
+\item{global}{Data frame of the two global difference statistics, one
 row each: \code{statistic} (\code{"M"}, the sum of absolute edge
 differences, and \code{"S"}, the largest absolute edge difference),
 \code{observed}, and \code{p_value} from the same permutation null
@@ -177,12 +179,15 @@ the SD of the shuffled differences) and a p-value
 many edges, some fall below \code{alpha} by chance; use \code{adjust}
 to correct for that.}
 \item{Global test}{One test for the whole network: do the two networks
-differ at all? Two statistics, as in the Network Comparison Test
-(van Borkulo et al., 2023): \strong{M}, the sum of the absolute edge
+differ at all? Two statistics: \strong{M}, the sum of the absolute edge
 differences (the total amount of difference), and \strong{S}, the
 largest absolute edge difference. Being a single test, it needs no
 multiplicity correction. It is shown by \code{print()}.}
 }
+The letters follow this function's historical convention. In
+\code{\link{nct}}, M is instead the largest absolute edge difference and
+S the difference in global strength. The sum of absolute edge differences
+here measures total edge difference, not a difference in global strength.
 The smallest attainable p-value is \code{1 / (iter + 1)}; with the
 default \code{iter = 1000} it is 0.000999, meaning no shuffle came close.
 }
@@ -254,6 +259,18 @@ For association methods the estimator is re-run on every shuffle. If a
 transition network rests on a single sequence, a warning (class
 \code{nestimate_single_sequence}) says it cannot be validated by
 resampling.
+
+Wide rows combined with \code{params = list(concat = k)} are shuffled
+as the merged sequences used by the estimator, keeping their internal
+joins. A merged sequence must lie within one actor when \code{actor}
+is supplied; paired tests need the same number of merged sequences.
+Both networks must use the same \code{weighted} setting.
+
+An association refit that fails or produces non-finite weights makes
+the permutation statistic undefined for that draw. In that case the
+test raises \code{nestimate_permutation_failed}, reporting the number
+of failed draws, and returns no p-values. Failed draws are neither
+counted as non-exceedances nor silently discarded from the null.
 
 \code{permutation()} also accepts two \code{\link{net_edge_betweenness}}
 objects. It then permutes the source networks, recomputes edge

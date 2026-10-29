@@ -14,6 +14,10 @@
 #' plus lightweight post-processing. Data must be in wide format for
 #' transition bootstrap; use \code{\link{convert_sequence_format}} to
 #' convert long-format data first.
+#' With \code{params = list(concat = k)}, the consecutive groups of up to
+#' \code{k} rows merged by the estimator are the sequences resampled;
+#' joins inside each merged sequence are retained. With \code{actor}, a
+#' merged sequence must belong entirely to one actor.
 #'
 #' For association methods (\code{"cor"}, \code{"pcor"}, \code{"glasso"},
 #' and custom estimators), the full estimator is called on resampled rows
@@ -502,6 +506,8 @@ bootstrap_network <- function(x,
   if (!is.data.frame(data)) {
     return(NA_integer_)
   }
+  concat <- .wide_resampling_concat(params)
+  if (concat > 1L) return(as.integer(ceiling(nrow(data) / concat)))
   actor <- .param_get(params, "actor") %||% .param_get(params, "id") %||%
     .param_get(params, "id_col")
   if (!is.null(actor) && all(actor %in% names(data))) {
@@ -512,6 +518,24 @@ bootstrap_network <- function(x,
                                      drop = TRUE))))
   }
   nrow(data)
+}
+
+
+#' Number of wide rows merged into one resampling sequence
+#'
+#' Onehot and long estimators do not use the wide-row concat option.
+#' @param params Stored estimator parameters.
+#' @return A positive integer.
+#' @noRd
+.wide_resampling_concat <- function(params) {
+  if (!is.null(.param_get(params, "codes")) ||
+      .param_get(params, "format", "auto") %in% c("onehot", "long")) {
+    return(1L)
+  }
+  concat <- as.integer(.param_get(params, "concat", 1L))
+  stopifnot("'concat' must be a positive integer." =
+              length(concat) == 1L && !is.na(concat) && concat >= 1L)
+  concat
 }
 
 
@@ -593,7 +617,9 @@ bootstrap_network <- function(x,
   cols <- params$cols
   .precompute_per_sequence_wide(data, method, cols, id_col, states,
                                 begin_state = .param_get(params, "begin_state"),
-                                end_state = .param_get(params, "end_state"))
+                                end_state = .param_get(params, "end_state"),
+                                weighted = .param_get(params, "weighted", FALSE),
+                                concat = .param_get(params, "concat", 1L))
 }
 
 
@@ -640,11 +666,13 @@ bootstrap_network <- function(x,
 #' @noRd
 .precompute_per_sequence_wide <- function(data, method, cols, id_col, states,
                                           begin_state = NULL,
-                                          end_state = NULL) {
+                                          end_state = NULL,
+                                          weighted = FALSE,
+                                          concat = 1L) {
   # The estimator's own sequence preparation, so start/end markers and void
   # markers are placed exactly as in the network being resampled.
   mat <- .prepare_sequence_wide(data, id = id_col, cols = cols,
-                                alphabet = states,
+                                alphabet = states, concat = concat,
                                 begin_state = begin_state,
                                 end_state = end_state)$matrix
   nc <- ncol(mat)
@@ -655,7 +683,7 @@ bootstrap_network <- function(x,
   # Integer-encode the entire matrix once
   int_mat <- matrix(match(mat, states), nrow = nr, ncol = nc)
 
-  if (method %in% c("relative", "frequency")) {
+  result <- if (method %in% c("relative", "frequency")) {
     # Consecutive column pairs: (col[i], col[i+1])
     from_mat <- int_mat[, -nc, drop = FALSE]
     to_mat <- int_mat[, -1L, drop = FALSE]
@@ -707,6 +735,15 @@ bootstrap_network <- function(x,
 
     result
   }
+
+  # Match the estimator's per-sequence weighting, including the length of
+  # concatenated sequences and any start/end markers. Empty sequences
+  # contribute zero rather than 0 / 0.
+  if (isTRUE(weighted)) {
+    seq_lengths <- rowSums(!is.na(mat))
+    result <- result / pmax(seq_lengths, 1L)
+  }
+  result
 }
 
 

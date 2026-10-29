@@ -155,68 +155,22 @@
 
 
 # ------------------------------------------------------------------------------
-# Mosaic primitive (exported)
+# Mosaic of a tidy data frame (internal; reached through mosaic_plot())
 # ------------------------------------------------------------------------------
 
-#' Draw a Marimekko / Mosaic Plot from a Tidy Data Frame
-#'
-#' Low-level rectangle-coordinate builder for marimekko (mosaic) plots.
-#' Column widths are proportional to the per-column total of \code{weight};
-#' within each column, segments stack to height 1 with sub-heights
-#' proportional to each row's share of that column's total.
-#'
-#' Used internally by \code{\link{plot_state_frequencies}}; exposed so that
-#' other plot methods (e.g. permutation-residual visualisations) can reuse
-#' the same geometry by supplying a different fill column.
-#'
-#' @param data A data.frame in long form. Must contain the columns named
-#'   in \code{x}, \code{y}, and \code{weight}. A network (netobject,
-#'   netobject_group, mcml, htna) is passed on to \code{\link{mosaic_plot}}.
-#' @param x Column name for the X (column) variable.
-#' @param y Column name for the Y (segment) variable.
-#' @param weight Column name for the cell weight (e.g. count).
-#' @param fill Either \code{"y"} (color by Y category, e.g. state -- default)
-#'   or the name of another column to map to fill (e.g. a residual column
-#'   for diverging color).
-#' @param colors Optional fill colors. Either an unnamed vector applied in
-#'   level order (when \code{fill = "y"}, length must be at least the number
-#'   of distinct y levels), or a named lookup (\code{c(plan = "#0072B2")})
-#'   overriding only the levels you name. Defaults to recycled Okabe-Ito.
-#' @param show_labels If \code{TRUE}, draw within-segment percentage labels.
-#' @param label_size Numeric size for segment labels.
-#' @param x_label,y_label Optional axis labels.
-#'
-#' @return A \code{ggplot} object.
-#' @import ggplot2
-#' @export
-#' @examples
-#' df <- data.frame(
-#'   group = rep(c("A", "B", "C"), each = 3),
-#'   state = rep(c("s1", "s2", "s3"), 3),
-#'   count = c(10, 5, 2,  7, 8, 3,  4, 6, 12)
-#' )
-#' plot_mosaic(df, x = "group", y = "state", weight = "count")
-plot_mosaic <- function(data,
-                        x,
-                        y,
-                        weight,
-                        fill        = "y",
-                        colors      = NULL,
-                        show_labels = TRUE,
-                        label_size  = 3.5,
-                        x_label     = NULL,
-                        y_label     = NULL) {
-  # A network (netobject, group, mcml, htna) belongs to mosaic_plot(); the
-  # two names are easily swapped, so hand it over rather than fail.
-  if (.is_data_bearing(data)) {
-    if (!missing(x) || !missing(y) || !missing(weight)) {
-      stop(errorCondition(paste0(
-        "`x`, `y` and `weight` name columns of a data frame; for a network ",
-        "call mosaic_plot(data)."),
-        class = "nestimate_bad_input", call = NULL))
-    }
-    return(mosaic_plot(data))
-  }
+# Marimekko geometry: column widths proportional to the per-column total of
+# `weight`; within each column, segments stack to height 1 in proportion to
+# each row's share of that column's total. Called by mosaic_plot.data.frame().
+.mosaic_df_plot <- function(data,
+                            x,
+                            y,
+                            weight,
+                            fill        = "y",
+                            colors      = NULL,
+                            show_labels = TRUE,
+                            label_size  = 3.5,
+                            x_label     = NULL,
+                            y_label     = NULL) {
   stopifnot(is.data.frame(data),
             is.character(x), length(x) == 1L,
             is.character(y), length(y) == 1L,
@@ -224,7 +178,7 @@ plot_mosaic <- function(data,
   needed <- c(x, y, weight)
   missing_cols <- setdiff(needed, names(data))
   if (length(missing_cols) > 0L) {
-    stop("plot_mosaic: missing columns: ",
+    stop("mosaic_plot: missing columns: ",
          paste(missing_cols, collapse = ", "), call. = FALSE)
   }
 
@@ -241,7 +195,7 @@ plot_mosaic <- function(data,
   col_totals <- rowSums(tab)
   total      <- sum(col_totals)
   if (total <= 0) {
-    stop("plot_mosaic: total weight is zero -- nothing to draw.", call. = FALSE)
+    stop("mosaic_plot: total weight is zero -- nothing to draw.", call. = FALSE)
   }
   widths_cum <- c(0, cumsum(col_totals)) / total
 
@@ -369,7 +323,22 @@ plot_mosaic <- function(data,
 #'   \code{level = "within"}), or
 #'   \code{htna} (single mosaic of \code{$weights}; htna inherits netobject
 #'   so the geometry matches). Also accepts a contingency \code{table} or
-#'   plain numeric \code{matrix} for ad-hoc plotting.
+#'   plain numeric \code{matrix} for ad-hoc plotting, and a tidy
+#'   \code{data.frame} in long form (see \code{x_var}, \code{y_var},
+#'   \code{weight}).
+#' @param x_var,y_var,weight For a \code{data.frame}: the names of the
+#'   column variable (one mosaic column per level, width proportional to its
+#'   total \code{weight}), the segment variable (stacked within each column in
+#'   proportion to its share), and the cell weight (e.g. a count).
+#' @param fill For a \code{data.frame}: \code{"y"} (default) colours the
+#'   segments by \code{y_var}; the name of another column (e.g. a residual)
+#'   maps that column to the fill instead.
+#' @param colors For a \code{data.frame}: optional fill colours, either an
+#'   unnamed vector in level order or a named lookup
+#'   (\code{c(plan = "#0072B2")}) overriding only the levels named. Defaults
+#'   to recycled Okabe-Ito.
+#' @param show_labels,label_size For a \code{data.frame}: draw percentage
+#'   labels inside the segments, and their size.
 #' @param level For \code{mcml} only. \code{"macro"} (default) draws a
 #'   single mosaic of \code{x$macro$weights} (the cluster-by-cluster
 #'   aggregate); \code{"clusters"} draws one mosaic per cluster from
@@ -430,7 +399,6 @@ plot_mosaic <- function(data,
 #'   residual. \code{mcml} with \code{level = "clusters"} returns a single
 #'   \code{facet_wrap}-ed \code{ggplot} (one panel per cluster, shared fill
 #'   scale); every other input returns a single-panel \code{ggplot}.
-#' @seealso \code{\link{plot_mosaic}} for the lower-level data.frame primitive.
 #' @export
 #' @examples
 #' data(group_regulation_long, package = "Nestimate")
@@ -438,6 +406,14 @@ plot_mosaic <- function(data,
 #'                      format = "long", actor = "Actor", action = "Action",
 #'                      order = "Time")
 #' mosaic_plot(net, seed = 1)
+#'
+#' # A tidy data frame: columns by group, segments by state
+#' df <- data.frame(
+#'   group = rep(c("A", "B", "C"), each = 3),
+#'   state = rep(c("s1", "s2", "s3"), 3),
+#'   count = c(10, 5, 2,  7, 8, 3,  4, 6, 12)
+#' )
+#' mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")
 mosaic_plot <- function(x, ...) UseMethod("mosaic_plot")
 
 #' @export
@@ -445,8 +421,8 @@ mosaic_plot <- function(x, ...) UseMethod("mosaic_plot")
 mosaic_plot.default <- function(x, ...) {
   stop("mosaic_plot: no method for class ",
        paste(class(x), collapse = "/"), ".\n",
-       "Supported: netobject, netobject_group, mcml, htna, table, matrix.\n",
-       "For a tidy data.frame, use plot_mosaic().",
+       "Supported: netobject, netobject_group, mcml, htna, table, matrix, ",
+       "data.frame.",
        call. = FALSE)
 }
 
@@ -590,6 +566,25 @@ mosaic_plot.table <- function(x,
 #' @rdname mosaic_plot
 mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
 
+#' @export
+#' @rdname mosaic_plot
+mosaic_plot.data.frame <- function(x,
+                                   x_var,
+                                   y_var,
+                                   weight,
+                                   fill = "y",
+                                   colors = NULL,
+                                   show_labels = TRUE,
+                                   label_size = 3.5,
+                                   xlab = NULL,
+                                   ylab = NULL,
+                                   ...) {
+  .mosaic_plot_check_unused_dots("mosaic_plot.data.frame", ...)
+  .mosaic_df_plot(x, x = x_var, y = y_var, weight = weight, fill = fill,
+                  colors = colors, show_labels = show_labels,
+                  label_size = label_size, x_label = xlab, y_label = ylab)
+}
+
 
 # ---- Shared worker for the 4 data-bearing classes ----------------------------
 #
@@ -607,6 +602,7 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
                               n_perm = 500L, seed = NULL,
                               ncol = 2L, values = FALSE,
                               style = c("classic", "flat"), ...) {
+  .mosaic_reject_df_args(...)
   style  <- match.arg(style)
   panels <- .mosaic_panels(x, source_class, level)
   xlab <- xlab %||% panels$xlab_default
@@ -1101,6 +1097,7 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
                              residuals = "permutation", n_perm = 500L,
                              seed = NULL, axis_groups = NULL,
                              values = FALSE, style = "classic", ...) {
+  .mosaic_reject_df_args(...)
   d <- .mosaic_rect_data(tab, residuals = residuals,
                          n_perm = n_perm, seed = seed)
   # "flat" routes to the ported Saqrmisc renderer: white gutters, theme_void,
@@ -1193,6 +1190,23 @@ mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
 # Validate flat-styling argument names against the renderer's formals, so an
 # unknown / mistyped arg (or a mosaic_plot-only arg like `values`) fails with a
 # clear, listed message instead of an opaque base-R "unused argument" error.
+# The arguments of mosaic_plot.data.frame() mean nothing for a network,
+# table or matrix; classic style would otherwise ignore them silently.
+.mosaic_reject_df_args <- function(...) {
+  df_args <- c("x_var", "y_var", "weight", "fill", "colors", "show_labels",
+               "label_size")
+  given <- intersect(names(list(...)), df_args)
+  if (length(given)) {
+    stop(errorCondition(paste0(
+      "`", paste(given, collapse = "`, `"), "` ",
+      if (length(given) == 1L) "applies" else "apply",
+      " to data-frame input only; a network, table or matrix is drawn ",
+      "from its own counts."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(TRUE)
+}
+
 .mosaic_flat_check_args <- function(nms) {
   nms  <- nms[nzchar(nms)]
   valid <- setdiff(names(formals(.mosaic_flat_draw)), c("res", "tab"))

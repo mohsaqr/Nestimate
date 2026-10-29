@@ -82,7 +82,8 @@ An object of class \code{net_casedrop_reliability} with:
 \describe{
 \item{\code{cs}}{Scalar CS-coefficient - the maximum drop proportion for
 which the edge-vector correlation remains >= \code{threshold} in at
-least \code{certainty} of iterations. Zero if no proportion qualifies.}
+least \code{certainty} of iterations. Zero if no proportion qualifies;
+\code{NA} when the original edge weights do not vary (CS undefined).}
 \item{\code{summary}}{Tidy data frame, one row per metric by drop
 proportion, with columns \code{metric} (\code{"mean_abs_dev"},
 \code{"median_abs_dev"}, \code{"correlation"}, \code{"max_abs_dev"}),
@@ -95,14 +96,15 @@ iteration correlations (the \code{correlation} entry of \code{metrics}).}
 \code{include_diag}}{Inputs.}
 \item{\code{n_cases}}{Number of cases resampled from (sequences for
 transition methods, rows of \verb{$data} otherwise).}
-\item{\code{n_edges}}{Length of the edge vector assessed.}
+\item{\code{n_edges}}{Length of the edge vector assessed: the edges present
+(non-zero) in the original network.}
 }
 A \code{netobject_group} or \code{mcml} input instead returns a
 \code{net_casedrop_reliability_group}: a named list of one result per
 constituent network.
 
 When the original edge vector has zero variance a warning is issued and
-the object is returned with \code{cs = 0}, an empty \code{summary}, and all-\code{NA}
+the object is returned with \code{cs = NA}, an empty \code{summary}, and all-\code{NA}
 metric matrices.
 
 In \code{print.net_casedrop_reliability()}: The input \code{x} invisibly.
@@ -131,17 +133,20 @@ of \verb{$data} is one transition, this is case-dropping of \strong{edges}.
 For each \code{drop_prop} p and each iteration, a size \code{n_cases * (1 - p)}
 subset of \verb{$data} rows is selected \strong{without replacement}, the network
 is re-estimated using the same method/scaling/threshold as the input,
-and the upper/lower-triangle (directed: all off-diagonal entries) of
-the new weight matrix is flattened and correlated with the
-corresponding vector of the original matrix. The correlation method
-defaults to Spearman for robustness to the wide dynamic range of
+and the edges present in the original network (its non-zero cells,
+off-diagonal unless \code{include_diag = TRUE}) are compared with the same
+cells of the new weight matrix. Cells that are zero in the original are
+left out: a subsample cannot contain a transition absent from the full
+data, so those cells agree in every draw, and including them would
+inflate the correlation and shrink the deviations. The correlation
+method defaults to Spearman for robustness to the wide dynamic range of
 transition probabilities.
 
-Unlike bootstrap CIs, case-dropping does not estimate sampling variance
-and so does not rely on the i.i.d. assumption. This makes it the
-appropriate robustness check for \strong{edgelist-derived} networks (where
-rows of \verb{$data} lack actor grouping), since dropping rows at random is
-a well-posed operation regardless of within-actor correlation.
+Case-dropping drops rows of \verb{$data} at random, so it treats the rows as
+independent units. When rows are nested in actors (several sessions per
+person), dropped rows of one actor are replaced by the remaining rows of
+the same actor, and the CS-coefficient overstates the stability; drop
+whole actors instead (for example with \code{tna::estimate_cs(actor = )}).
 }
 \section{Methods}{
 

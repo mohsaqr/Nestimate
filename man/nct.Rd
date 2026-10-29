@@ -136,6 +136,8 @@ of \code{1e-4}) rather than bit-for-bit.
 
 The two groups must hold the same variables in the same order
 (non-numeric columns such as an id or a group label are dropped first).
+Infinite values are refused; use finite observations or \code{NA} for
+missing data.
 
 Missing data follow \code{na_method}. \code{"pairwise"} (default) keeps
 every row, permutes rows as usual, and estimates each (sub)sample from its

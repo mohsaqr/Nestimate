@@ -67,9 +67,51 @@ test_that("include_diag controls whether self-loops enter the edge vector", {
                            include_diag = FALSE, seed = 1)
   es_yes <- casedrop_reliability(net, iter = 20, drop_prop = 0.2,
                            include_diag = TRUE, seed = 1)
-  n <- length(net$nodes$label)
-  expect_equal(es_no$n_edges, n * (n - 1L))
-  expect_equal(es_yes$n_edges, n * n)
+  # Only the edges present in the network enter the edge vector
+  present <- net$weights != 0
+  expect_equal(es_no$n_edges, sum(present & row(present) != col(present)))
+  expect_equal(es_yes$n_edges, sum(present))
+})
+
+test_that("only the edges present in the original network are compared", {
+  # Sparse chain: every step moves one or two states ahead (mod 8), so each
+  # state has two successors and most cells are empty
+  s <- paste0("s", 1:8)
+  seqs <- as.data.frame(t(vapply(
+    seq_len(60),
+    function(i) s[((i + cumsum(c(0, (i * 1:11) %% 2 + 1))) %% 8) + 1],
+    character(12)
+  )))
+  net <- build_network(seqs, method = "relative")
+  w <- net$weights
+  present <- w != 0 & row(w) != col(w)
+  expect_gt(sum(!present) - nrow(w), sum(present))
+  es <- casedrop_reliability(net, iter = 3, drop_prop = 0.7, seed = 4)
+  expect_equal(es$n_edges, sum(present))
+  # Same draw as casedrop_reliability(): one sample() per iteration
+  set.seed(4)
+  keep <- sample(seq_len(nrow(seqs)), nrow(seqs) - floor(nrow(seqs) * 0.7))
+  sub <- build_network(seqs[keep, ], method = "relative")$weights
+  sub <- sub[rownames(w), colnames(w)]
+  expect_equal(
+    unname(es$correlations[1L, 1L]),
+    stats::cor(sub[present], w[present], method = "spearman")
+  )
+  expect_gt(
+    stats::cor(sub[row(w) != col(w)], w[row(w) != col(w)],
+               method = "spearman"),
+    es$correlations[1L, 1L]
+  )
+})
+
+test_that("an undefined CS-coefficient is NA, not zero", {
+  seqs <- data.frame(V1 = c("A", "B"), V2 = c("B", "A"))
+  net <- build_network(seqs, method = "relative")
+  expect_warning(
+    es <- casedrop_reliability(net, iter = 5, drop_prop = 0.5, seed = 1),
+    "zero variance"
+  )
+  expect_true(is.na(es$cs))
 })
 
 # Reproducibility ----------------------------------------------------------

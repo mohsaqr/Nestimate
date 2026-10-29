@@ -6,6 +6,7 @@
 \alias{print.net_markov_stability_group}
 \alias{summary.net_markov_stability}
 \alias{plot.net_markov_stability}
+\alias{plot.net_markov_stability_group}
 \title{Markov Stability Analysis}
 \usage{
 markov_stability(x, normalize = TRUE)
@@ -21,6 +22,13 @@ markov_stability(x, normalize = TRUE)
   metrics = c("persistence", "stationary_prob", "return_time", "sojourn_time",
     "avg_time_to_others", "avg_time_from_others"),
   combined = TRUE,
+  ...
+)
+
+\method{plot}{net_markov_stability_group}(
+  x,
+  metrics = c("persistence", "stationary_prob", "return_time", "sojourn_time",
+    "avg_time_to_others", "avg_time_from_others"),
   ...
 )
 }
@@ -64,6 +72,10 @@ In \code{print.net_markov_stability_group()}: \code{x} invisibly.
 In \code{plot.net_markov_stability()}: \code{plot.net_markov_stability} returns a faceted ggplot object when \code{combined = TRUE}, and (invisibly) a named list of single-metric ggplots, one per entry of \code{metrics}, when \code{combined = FALSE}.
 
 In \code{summary.net_markov_stability()}: the per-state stability table (the \code{$stability} data frame: one row per state with \code{state}, \code{persistence}, \code{stationary_prob}, \code{return_time}, \code{sojourn_time}, \code{avg_time_to_others}, \code{avg_time_from_others}), after printing the attractor and the most persistent state.
+
+In \code{plot.net_markov_stability_group()}: a \code{ggplot}
+object: one panel per metric, one row per state, one point per group
+(colour and shape), joined by a line.
 }
 \description{
 Computes per-state stability metrics from a transition network:

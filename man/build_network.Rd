@@ -128,10 +128,14 @@ Default: \code{NULL} (no scaling).}
 result matrix. Default: 0 (no thresholding).}
 
 \item{level}{Character or NULL. Multilevel decomposition for the undirected
-association methods (\code{cor}, \code{pcor}, \code{glasso}); a directed
+association methods (\code{cor}, \code{pcor}, \code{glasso}, \code{mgm}); a directed
 estimator errors. One of \code{NULL}, \code{"between"}, \code{"within"},
 \code{"both"}. Requires an id column, supplied either as \code{actor} or
-as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.}
+as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.
+For \code{method = "mgm"}, a numeric vector instead supplies one
+category count per modeled variable (\code{1} for continuous variables),
+after excluding group, actor and metadata columns. It is checked and
+retained for compatibility; the MGM fit infers category levels from data.}
 
 \item{time_threshold}{Numeric or FALSE. Maximum time gap (seconds) for long
 format session splitting. Set to \code{FALSE} to switch session-interval
@@ -155,7 +159,13 @@ slot. When provided, all other columns of the cleaned input go to
 Use this when a metadata column happens to contain values that overlap
 with node names (e.g. condition labels \code{"A","B","C"} and nodes
 \code{"A","B","C"}) and auto-detection would misclassify it. Default:
-\code{NULL} (auto-detect).}
+\code{NULL} (auto-detect). For wide sequence data, auto-detection
+treats numeric columns of a mixed frame as covariates. When the
+position columns are named as a run (a shared prefix and a number:
+\code{T1}, \code{T2}, ...; or \code{1}, \code{2}, ...), every other
+character or factor column, such as an outcome or a course, is a
+covariate too. Without such a run, or with two runs of equal size,
+every character column is read as a position.}
 
 \item{metadata_cols}{Character vector or \code{NULL}. Explicit names of
 columns to force into the \code{$metadata} slot. The remaining columns
@@ -293,6 +303,11 @@ For long-format transition data, supplying \code{action} without
 order. The function warns because a one-sequence transition network is not
 recommended and cannot be validated by bootstrap or other confirmatory
 tests.
+
+For \code{method = "mgm"}, missing continuous values are filled with the
+observed column mean and missing categorical values with the modal level.
+This retains the rows and is \pkg{psychnets}' documented
+\code{na_method = "pairwise"} policy; it is not pairwise deletion.
 }
 \section{Methods}{
 

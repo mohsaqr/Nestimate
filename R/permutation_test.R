@@ -21,12 +21,15 @@
 #'     many edges, some fall below \code{alpha} by chance; use \code{adjust}
 #'     to correct for that.}
 #'   \item{Global test}{One test for the whole network: do the two networks
-#'     differ at all? Two statistics, as in the Network Comparison Test
-#'     (van Borkulo et al., 2023): \strong{M}, the sum of the absolute edge
+#'     differ at all? Two statistics: \strong{M}, the sum of the absolute edge
 #'     differences (the total amount of difference), and \strong{S}, the
 #'     largest absolute edge difference. Being a single test, it needs no
 #'     multiplicity correction. It is shown by \code{print()}.}
 #' }
+#' The letters follow this function's historical convention. In
+#' \code{\link{nct}}, M is instead the largest absolute edge difference and
+#' S the difference in global strength. The sum of absolute edge differences
+#' here measures total edge difference, not a difference in global strength.
 #' The smallest attainable p-value is \code{1 / (iter + 1)}; with the
 #' default \code{iter = 1000} it is 0.000999, meaning no shuffle came close.
 #'
@@ -91,6 +94,18 @@
 #' \code{nestimate_single_sequence}) says it cannot be validated by
 #' resampling.
 #'
+#' Wide rows combined with \code{params = list(concat = k)} are shuffled
+#' as the merged sequences used by the estimator, keeping their internal
+#' joins. A merged sequence must lie within one actor when \code{actor}
+#' is supplied; paired tests need the same number of merged sequences.
+#' Both networks must use the same \code{weighted} setting.
+#'
+#' An association refit that fails or produces non-finite weights makes
+#' the permutation statistic undefined for that draw. In that case the
+#' test raises \code{nestimate_permutation_failed}, reporting the number
+#' of failed draws, and returns no p-values. Failed draws are neither
+#' counted as non-exceedances nor silently discarded from the null.
+#'
 #' \code{permutation()} also accepts two \code{\link{net_edge_betweenness}}
 #' objects. It then permutes the source networks, recomputes edge
 #' betweenness for each shuffle, and tests the edge-betweenness
@@ -120,7 +135,9 @@
 #'   \code{tna::permutation_test(measures = )}: per state and measure it reports
 #'   the observed difference, an effect size (difference / SD of the permutation
 #'   null), and a permutation p-value, all using the same permuted networks as
-#'   the edge test. Not supported for \code{net_edge_betweenness} inputs.
+#'   the edge test. \code{Diffusion} is compared after min-max scaling to
+#'   0-1 in each network, as in \code{net_centrality()}. Not supported for
+#'   \code{net_edge_betweenness} inputs.
 #' @param nlambda Integer. Number of lambda values for the EBIC-glasso
 #'   regularisation path (only used when \code{method = "glasso"}).
 #'   Higher values give finer lambda resolution at the cost of speed.
@@ -152,7 +169,7 @@
 #'     pair), with columns \code{from}, \code{to}, \code{weight_x},
 #'     \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value},
 #'     \code{sig}.}
-#'   \item{global}{Data frame of the two NCT-style global statistics, one
+#'   \item{global}{Data frame of the two global difference statistics, one
 #'     row each: \code{statistic} (\code{"M"}, the sum of absolute edge
 #'     differences, and \code{"S"}, the largest absolute edge difference),
 #'     \code{observed}, and \code{p_value} from the same permutation null
@@ -383,7 +400,7 @@ permutation <- function(x, y = NULL,
   directed <- x$directed
   n_nodes <- length(nodes)
 
-  if (paired) {
+  if (paired && !method %in% c("relative", "frequency", "co_occurrence")) {
     if (nrow(x$data) != nrow(y$data)) {
       stop("Paired test requires equal number of observations in x and y.",
            call. = FALSE)
@@ -526,7 +543,7 @@ permutation <- function(x, y = NULL,
   result
 }
 
-# ---- Global (NCT-style) statistics ----
+# ---- Global difference statistics ----
 
 #' Global permutation statistics: M (sum |diff|) and S (max |diff|)
 #'
@@ -550,7 +567,8 @@ permutation <- function(x, y = NULL,
   res <- .compute_centralities(
     mat, nodes, directed, measures,
     loops = FALSE, normalize = FALSE, invert = TRUE,
-    normalize_diffusion = FALSE
+    # Diffusion is always compared on the 0-1 scale (as in tna >= 1.4.1)
+    normalize_diffusion = TRUE
   )
   vapply(measures, function(m) {
     v <- res[[.centrality_canonical_measure(m)]]
@@ -680,7 +698,8 @@ permutation <- function(x, y = NULL,
   directed <- x$directed
   n_nodes <- length(nodes)
 
-  if (paired && nrow(x$data) != nrow(y$data)) {
+  if (paired && !method %in% c("relative", "frequency", "co_occurrence") &&
+      nrow(x$data) != nrow(y$data)) {
     stop("Paired test requires equal number of observations in x and y.",
          call. = FALSE)
   }
@@ -821,6 +840,17 @@ permutation <- function(x, y = NULL,
 
   n_x <- nrow(trans_x)
   n_y <- nrow(trans_y)
+  if (paired && n_x != n_y) {
+    stop(errorCondition(
+      "Paired test requires equal numbers of resampling sequences after concatenation.",
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (!identical(isTRUE(.param_get(x$params, "weighted", FALSE)),
+                 isTRUE(.param_get(y$params, "weighted", FALSE)))) {
+    stop(errorCondition(
+      "Transition permutation requires the same `weighted` setting in both networks.",
+      class = "nestimate_bad_input", call = NULL))
+  }
 
   # Pool sequences
   pooled <- rbind(trans_x, trans_y)
@@ -856,7 +886,7 @@ permutation <- function(x, y = NULL,
   exceed_counts <- integer(nbins)
   sum_diffs <- numeric(nbins)
   sum_diffs_sq <- numeric(nbins)
-  # Global statistics (NCT-style): M = sum |diff|, S = max |diff|
+  # Historical letter convention: M = sum |diff|, S = max |diff|.
   m_obs <- sum(abs(obs_flat))
   s_obs <- max(abs(obs_flat))
   m_exceed <- 0L
@@ -999,18 +1029,32 @@ permutation <- function(x, y = NULL,
               block, label),
       class = "nestimate_actor_missing", call = NULL))
   }
+  if (anyNA(ids)) {
+    stop(errorCondition(
+      sprintf("`actor = \"%s\"` has %d missing values in %s.",
+              block, sum(is.na(ids)), label),
+      class = "nestimate_actor_missing", call = NULL))
+  }
+  concat <- .wide_resampling_concat(net$params)
+  if (concat > 1L && length(ids) != n_rows &&
+      ceiling(length(ids) / concat) == n_rows) {
+    merged <- split(as.character(ids), ceiling(seq_along(ids) / concat))
+    if (any(lengths(lapply(merged, unique)) != 1L)) {
+      stop(errorCondition(
+        sprintf(paste0("`concat` joins rows from different actors in %s; ",
+                       "each merged sequence must belong to one `%s`. ",
+                       "Merge sequences within actors before building the network."),
+                label, block),
+        class = "nestimate_actor_misaligned", call = NULL))
+    }
+    ids <- vapply(merged, function(x) x[[1L]], character(1L))
+  }
   if (length(ids) != n_rows) {
     stop(errorCondition(
       sprintf(paste0("`actor = \"%s\"` has %d values but %s has %d sequences; ",
                      "this needs one actor id per sequence."),
               block, length(ids), label, n_rows),
       class = "nestimate_actor_misaligned", call = NULL))
-  }
-  if (anyNA(ids)) {
-    stop(errorCondition(
-      sprintf("`actor = \"%s\"` has %d missing values in %s.",
-              block, sum(is.na(ids)), label),
-      class = "nestimate_actor_missing", call = NULL))
   }
   as.character(ids)
 }
@@ -1269,6 +1313,12 @@ permutation <- function(x, y = NULL,
   sum_diffs <- numeric(nbins)
   sum_diffs_sq <- numeric(nbins)
 
+  valid_fit <- function(mat) {
+    is.matrix(mat) && is.numeric(mat) &&
+      identical(dim(mat), c(n_nodes, n_nodes)) && all(is.finite(mat))
+  }
+  n_failed <- 0L
+
   for (i in seq_len(iter)) {
     if (paired) {
       swaps <- sample(c(TRUE, FALSE), n_x, replace = TRUE)
@@ -1279,10 +1329,15 @@ permutation <- function(x, y = NULL,
       idx_y <- seq_len(n_total)[-idx_x]
     }
 
-    mat_x <- estimate_from_rows(pooled_mat[idx_x, , drop = FALSE])
-    mat_y <- estimate_from_rows(pooled_mat[idx_y, , drop = FALSE])
+    mat_x <- tryCatch(estimate_from_rows(pooled_mat[idx_x, , drop = FALSE]),
+                       error = function(e) NULL)
+    mat_y <- tryCatch(estimate_from_rows(pooled_mat[idx_y, , drop = FALSE]),
+                       error = function(e) NULL)
 
-    if (is.null(mat_x) || is.null(mat_y)) next
+    if (!valid_fit(mat_x) || !valid_fit(mat_y)) {
+      n_failed <- n_failed + 1L
+      next
+    }
 
     # Apply scaling and threshold
     if (!is.null(scaling_x)) mat_x <- .apply_scaling(mat_x, scaling_x) # nocov
@@ -1292,6 +1347,10 @@ permutation <- function(x, y = NULL,
 
     mat_x <- transform(mat_x)
     mat_y <- transform(mat_y)
+    if (!valid_fit(mat_x) || !valid_fit(mat_y)) {
+      n_failed <- n_failed + 1L
+      next
+    }
     perm_diff <- as.vector(mat_x) - as.vector(mat_y)
 
     exceed_counts <- exceed_counts + (abs(perm_diff) >= abs(obs_flat))
@@ -1310,6 +1369,17 @@ permutation <- function(x, y = NULL,
     }
   }
 
+  if (n_failed > 0L) {
+    stop(errorCondition(
+      sprintf(paste0("Network estimation failed or produced non-finite weights ",
+                     "in %d of %d permutation draws (method '%s'). ",
+                     "No p-values were computed: the statistic must be defined ",
+                     "for every permitted split. Failed draws cannot be ",
+                     "discarded or counted as non-exceedances."),
+              n_failed, iter, method),
+      class = "nestimate_permutation_failed", call = NULL,
+      n_failed = n_failed, iter = iter, method = method))
+  }
   perm_mean <- sum_diffs / iter
   perm_sd <- sqrt(pmax(sum_diffs_sq / iter - perm_mean^2, 0))
 

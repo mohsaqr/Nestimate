@@ -19,13 +19,8 @@
 #' @param level Integer vector of category counts per column, or \code{NULL}
 #'   (default) to derive it from \code{type}. Kept only for
 #'   \code{mgm::mgm()} API parity -- it is length-validated and echoed back,
-#'   never used in the fit. \strong{Name
-#'   collision:} \code{build_network()} has its own \code{level} argument
-#'   for multilevel decomposition, so \code{level} passed through
-#'   \code{build_network()} does not reach this estimator. Call
-#'   \code{.estimator_mgm()} directly with explicit \code{type} and
-#'   \code{level}, or pre-coerce the categorical columns with
-#'   \code{as.factor()}, when the auto-detection is wrong.
+#'   never used in the fit. \code{build_network(method = "mgm")} routes
+#'   numeric \code{level} here after excluding identifier and metadata columns.
 #' @param lambdaGam EBIC gamma. Default 0.25.
 #' @param ruleReg Symmetrization rule, \code{"AND"} (default) or \code{"OR"}.
 #' @param threshold Thresholding rule, \code{"LW"} (default) or
@@ -96,8 +91,9 @@
   # Categorical columns go to the fit as factors, as mgm::mgm() treats them.
   fit_data <- data
   fit_data[type == "c"] <- lapply(fit_data[type == "c"], as.factor)
-  # Missing values: each nodewise regression uses the rows complete for its
-  # variables (pairwise). The pre-0.9.23 in-package code failed on any NA.
+  # psychnets calls its mean/modal single-imputation policy "pairwise":
+  # missing continuous values get the observed column mean and categorical
+  # values the modal level. It retains rows; this is not pairwise deletion.
   fit <- psychnets::mgm_fit(fit_data, gamma = lambdaGam, types = unname(type),
                             threshold = threshold, rule = ruleReg,
                             na_method = "pairwise", native = FALSE)

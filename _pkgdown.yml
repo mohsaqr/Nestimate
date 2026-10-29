@@ -180,7 +180,6 @@ reference:
       - distribution_plot
       - plot_state_frequencies
       - state_distribution
-      - plot_mosaic
       - mosaic_plot
       - mosaic_analysis
       - sequence_compare

@@ -7,6 +7,7 @@
 \alias{summary.net_mpt}
 \alias{print.summary.net_mpt}
 \alias{plot.net_mpt}
+\alias{plot.net_mpt_group}
 \title{Mean First Passage Times}
 \usage{
 passage_time(x, states = NULL, normalize = TRUE)
@@ -20,6 +21,16 @@ passage_time(x, states = NULL, normalize = TRUE)
 \method{print}{summary.net_mpt}(x, ...)
 
 \method{plot}{net_mpt}(
+  x,
+  log_scale = TRUE,
+  digits = 1,
+  title = "Mean First Passage Times",
+  low = "#004d00",
+  high = "#ccffcc",
+  ...
+)
+
+\method{plot}{net_mpt_group}(
   x,
   log_scale = TRUE,
   digits = 1,
@@ -78,6 +89,9 @@ In \code{summary.net_mpt()}: \code{summary.net_mpt} returns an object of class \
 In \code{plot.net_mpt()}: \code{plot.net_mpt} returns a ggplot object: a from-by-to heatmap of the mean first passage time matrix.
 
 In \code{print.summary.net_mpt()}: \code{x}, invisibly.
+
+In \code{plot.net_mpt_group()}: a \code{ggplot} object, one
+heatmap panel per group on a shared colour scale.
 }
 \description{
 Computes the full matrix of mean first passage times (MFPT) for a Markov

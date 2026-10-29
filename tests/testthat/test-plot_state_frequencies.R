@@ -1,7 +1,7 @@
 # Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
 testthat::skip_on_cran()
 
-# Tests for plot_state_frequencies() and plot_mosaic()
+# Tests for plot_state_frequencies() and mosaic_plot() of a data frame
 # Validates: ggplot return shape, layer count, palette correctness across
 # all four supported classes (netobject, netobject_group, mcml, htna)
 # and both styles (marimekko grouped/faceted, bars).
@@ -11,16 +11,16 @@ suppressMessages(library(ggplot2))
 
 
 # ---------------------------------------------------------------------------
-# plot_mosaic primitive
+# mosaic_plot() of a tidy data frame
 # ---------------------------------------------------------------------------
 
-test_that("plot_mosaic returns a ggplot with coherent rectangle geometry", {
+test_that("mosaic_plot of a data frame returns coherent rectangle geometry", {
   df <- data.frame(
     group = rep(c("A", "B", "C"), each = 3),
     state = rep(c("s1", "s2", "s3"), 3),
     count = c(10, 5, 2,  7, 8, 3,  4, 6, 12)
   )
-  p <- plot_mosaic(df, x = "group", y = "state", weight = "count")
+  p <- mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")
   expect_s3_class(p, "ggplot")
   expect_gte(length(p$layers), 1L)
 
@@ -33,15 +33,15 @@ test_that("plot_mosaic returns a ggplot with coherent rectangle geometry", {
   expect_true(all(abs(agg$x - 1) < 1e-12))
 })
 
-test_that("plot_mosaic errors on missing columns", {
+test_that("mosaic_plot of a data frame errors on missing columns", {
   df <- data.frame(a = 1:3, b = letters[1:3])
-  expect_error(plot_mosaic(df, x = "a", y = "missing", weight = "b"),
+  expect_error(mosaic_plot(df, x_var = "a", y_var = "missing", weight = "b"),
                "missing columns")
 })
 
-test_that("plot_mosaic errors when total weight is zero", {
+test_that("mosaic_plot of a data frame errors when total weight is zero", {
   df <- data.frame(g = c("A", "B"), s = c("x", "y"), w = c(0, 0))
-  expect_error(plot_mosaic(df, x = "g", y = "s", weight = "w"),
+  expect_error(mosaic_plot(df, x_var = "g", y_var = "s", weight = "w"),
                "total weight is zero")
 })
 

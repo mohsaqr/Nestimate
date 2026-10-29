@@ -33,7 +33,8 @@ sequence_compare(
 }
 \arguments{
 \item{x}{A \code{netobject_group} (from grouped \code{build_network}),
-a \code{netobject} (requires \code{group}), or a wide-format
+a \code{netobject}, \code{tna} or \code{cograph_network} model
+(requires \code{group}), or a wide-format
 \code{data.frame} (requires \code{group}). For the \code{print()} and \code{plot()} methods: an object of class \code{net_sequence_comparison}.}
 
 \item{group}{Character or vector. Column name or vector of group labels.

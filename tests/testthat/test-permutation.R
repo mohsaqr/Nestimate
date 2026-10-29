@@ -661,3 +661,23 @@ test_that("permutation(measures=) returns a tna-shaped centralities block", {
   expect_error(permutation(n1, n2, iter = 10, measures = "Nope"),
                "Unknown measures")
 })
+
+test_that("permutation(measures=) compares Diffusion on the 0-1 scale", {
+  set.seed(3)
+  s1 <- as.data.frame(matrix(sample(c("A","B","C","D"), 240, TRUE), ncol = 6))
+  s2 <- as.data.frame(matrix(sample(c("A","B","C","D"), 240, TRUE), ncol = 6))
+  n1 <- build_network(s1, method = "relative")
+  n2 <- build_network(s2, method = "relative")
+  p <- permutation(n1, n2, iter = 20, measures = "Diffusion", seed = 1)
+  c1 <- suppressMessages(net_centrality(n1, measures = "Diffusion"))
+  c2 <- suppressMessages(net_centrality(n2, measures = "Diffusion"))
+  expect_equal(p$centralities$diffs_true$Diffusion,
+               unname(c1$Diffusion - c2$Diffusion), tolerance = 1e-12)
+  expect_true(all(abs(p$centralities$diffs_true$Diffusion) <= 1))
+})
+
+test_that("range normalization does not stretch rounding error", {
+  nearly_constant <- c(5 + 4 * .Machine$double.eps, rep(5, 4))
+  expect_true(all(is.nan(.range01_tna(nearly_constant))))
+  expect_equal(.range01_tna(c(1, 2, 3)), c(0, 0.5, 1))
+})

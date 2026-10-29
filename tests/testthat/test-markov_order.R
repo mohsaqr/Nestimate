@@ -118,3 +118,22 @@ test_that("markov_order_test accepts a single netobject", {
   res <- markov_order_test(net, max_order = 2L, n_perm = 40L, seed = 1L)
   expect_s3_class(res, "net_markov_order")
 })
+
+test_that("sequences are split at missing values", {
+  with_gap <- data.frame(
+    T1 = c("A", "B", "C"), T2 = c("B", "C", "A"), T3 = c(NA, "A", "B"),
+    T4 = c("C", "B", "C"), T5 = c("A", "A", NA)
+  )
+  # The first sequence becomes two pieces: A B and C A
+  pieces <- list(c("A", "B"), c("C", "A"), c("B", "C", "A", "B", "A"),
+                 c("C", "A", "B", "C"))
+  a <- suppressMessages(
+    markov_order_test(with_gap, max_order = 2, n_perm = 10, seed = 5)
+  )
+  b <- suppressMessages(
+    markov_order_test(pieces, max_order = 2, n_perm = 10, seed = 5)
+  )
+  expect_equal(a$test_table, b$test_table)
+  expect_equal(a$n_sequences, 4L)
+  expect_equal(a$n_observations, 13L)
+})

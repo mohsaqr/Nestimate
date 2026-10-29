@@ -68,6 +68,7 @@ NULL
   if (is.null(map)) return(x)
 
   remap <- function(v) {
+    v <- as.character(v)
     out <- map[v]; out[is.na(out)] <- v[is.na(out)]; unname(out)
   }
   check_unique <- function(v) {
@@ -83,23 +84,35 @@ NULL
   # produces all-zero matrices because match($data, states) returns
   # NA for every cell. Values not in `map` (e.g. macro $data carries
   # cluster names) are preserved.
-  remap_data <- function(d) {
+  remap_data <- function(d, columns = colnames(d) %||% seq_len(NCOL(d))) {
     if (is.null(d)) return(d)
-    if (is.data.frame(d)) {
-      for (j in seq_along(d)) {
-        col <- d[[j]]
-        if (is.factor(col)) {
-          levels(col) <- remap(levels(col))
-          d[[j]] <- col
-        } else if (is.character(col)) {
-          d[[j]] <- remap(col)
-        }
+    remap_column <- function(col) {
+      if (is.factor(col)) {
+        levels(col) <- remap(levels(col))
+        return(col)
       }
+      # Numeric sequence states are literal labels, unlike association
+      # measurements and one-hot indicators (which never enter this path).
+      if (is.character(col) || any(as.character(col) %in% names(map))) {
+        return(remap(col))
+      }
+      col
+    }
+    if (is.data.frame(d)) {
+      columns <- intersect(columns, names(d))
+      d[columns] <- lapply(d[columns], remap_column)
       return(d)
     }
-    if (is.matrix(d) && is.character(d)) {
-      d[] <- remap(as.vector(d))
-      return(d)
+    if (is.matrix(d)) {
+      columns <- if (is.character(columns)) {
+        match(columns, colnames(d), nomatch = 0L)
+      } else columns
+      columns <- columns[columns > 0L & columns <= ncol(d)]
+      frame <- as.data.frame(d, stringsAsFactors = FALSE)
+      frame[columns] <- lapply(frame[columns], remap_column)
+      out <- as.matrix(frame)
+      dimnames(out) <- dimnames(d)
+      return(out)
     }
     d
   }
@@ -123,6 +136,7 @@ NULL
   }
 
   if (inherits(x, "netobject")) {
+    original_states <- rownames(x$weights) %||% colnames(x$weights)
     if (!is.null(x$nodes) && "name" %in% names(x$nodes)) {
       x$nodes$label <- check_unique(remap(as.character(x$nodes$name)))
     }
@@ -133,12 +147,54 @@ NULL
         dimnames(x$weights) <- list(mapped, mapped)
       }
     }
-    # Everything keyed by node name follows the weights, or resamplers that
-    # match $data against rownames(weights) see no states at all.
-    x$data <- remap_data(x$data)
-    # Association data: the columns are the nodes (T1..Tn pass through).
-    if (!is.null(colnames(x$data))) colnames(x$data) <- remap(colnames(x$data))
+    # A wide sequence stores nodes in its cells, while association and
+    # one-hot inputs store nodes in column names. Renaming positional wide
+    # columns would invalidate params$cols, and remapping numeric indicator
+    # or association values would change the observations themselves.
+    sequence_methods <- c("relative", "frequency", "co_occurrence",
+                          "attention", "ngram", "gap", "reverse")
+    column_nodes <- !x$method %in% sequence_methods ||
+      !is.null(.param_get(x$params, "codes")) ||
+      identical(.param_get(x$params, "format"), "onehot")
+    if (column_nodes) {
+      old_columns <- colnames(x$data)
+      if (!is.null(old_columns)) {
+        new_columns <- old_columns
+        is_node <- old_columns %in% original_states
+        new_columns[is_node] <- remap(old_columns[is_node])
+        colnames(x$data) <- check_unique(new_columns)
+        rename_columns <- function(v) {
+          if (is.null(v)) return(NULL)
+          idx <- match(v, old_columns)
+          matched <- !is.na(idx)
+          v[matched] <- new_columns[idx[matched]]
+          v
+        }
+        column_roles <- c("cols", "codes", "action", "id", "id_col",
+                          "actor", "time", "session", "order", "group")
+        update_roles <- function(args) {
+          roles <- intersect(column_roles, names(args))
+          args[roles] <- lapply(args[roles], rename_columns)
+          args
+        }
+        x$params <- update_roles(x$params)
+        if (!is.null(x$build_args)) x$build_args <- update_roles(x$build_args)
+      }
+    } else {
+      id_columns <- unique(c(.param_get(x$params, "id"),
+                             .param_get(x$params, "id_col"),
+                             .param_get(x$params, "actor")))
+      columns <- .param_get(x$params, "cols") %||%
+        setdiff(colnames(x$data), id_columns)
+      x$data <- remap_data(x$data, columns)
+      state_roles <- intersect(c("alphabet", "begin_state", "end_state"),
+                               names(x$params))
+      x$params[state_roles] <- lapply(x$params[state_roles], remap)
+    }
     if (!is.null(x$initial)) names(x$initial) <- remap(names(x$initial))
+    if (!is.null(x$predictability)) {
+      names(x$predictability) <- remap(names(x$predictability))
+    }
     if (!is.null(x$frequency_matrix)) {
       dimnames(x$frequency_matrix) <- lapply(dimnames(x$frequency_matrix),
                                              function(d) if (is.null(d)) d else remap(d))
@@ -287,7 +343,8 @@ safe_sd <- function(x) {
 #' Coerce tna or netobject to labeled sequence data.frame
 #'
 #' When \code{data} is a \code{tna} or \code{netobject}, extracts the
-#' sequence data and converts numeric state IDs to label names. This
+#' sequence data and decodes positional IDs only for \code{tna} input.
+#' A \code{netobject} stores literal states, including numeric states. This
 #' allows \code{build_hon()}, \code{build_hypa()}, and other pathway
 #' functions to accept model objects directly.
 #'
@@ -304,13 +361,17 @@ safe_sd <- function(x) {
     } # nocov end
     df <- as.data.frame(data$data, stringsAsFactors = FALSE) # nocov start
     lbl <- attr(data$data, "labels") %||% data$labels
-    if (!is.null(lbl) && length(lbl) > 0L &&
-        (is.integer(df[[1]]) || is.numeric(df[[1]]))) {
+    if (!is.null(lbl) && length(lbl) > 0L) {
       df[] <- lapply(df, function(col) {
+        if (!is.numeric(col)) return(col)
         idx <- as.integer(col)
-        ifelse(is.na(idx) | idx < 1L | idx > length(lbl),
-               NA_character_, lbl[idx])
+        valid <- !is.na(idx) & idx >= 1L & idx <= length(lbl)
+        out <- rep(NA_character_, length(idx))
+        out[valid] <- lbl[idx[valid]]
+        out
       })
+      attr(df, "labels") <- NULL
+      attr(df, "alphabet") <- NULL
     }
     return(df) # nocov end
   }
@@ -323,17 +384,7 @@ safe_sd <- function(x) {
            "Build the network from sequence data.",
            call. = FALSE) # nocov end
     }
-    df <- as.data.frame(data$data, stringsAsFactors = FALSE)
-    lbl <- rownames(data$weights)
-    if (!is.null(lbl) && length(lbl) > 0L &&
-        (is.integer(df[[1]]) || is.numeric(df[[1]]))) {
-      df[] <- lapply(df, function(col) { # nocov start
-        idx <- as.integer(col)
-        ifelse(is.na(idx) | idx < 1L | idx > length(lbl),
-               NA_character_, lbl[idx])
-      }) # nocov end
-    }
-    return(df)
+    return(as.data.frame(data$data, stringsAsFactors = FALSE))
   }
   ## Bare sequence matrix (character / logical) -> wide data.frame.
   if (is.matrix(data) && !is.numeric(data)) {
@@ -383,17 +434,26 @@ safe_sd <- function(x) {
     "relative", "frequency", "co_occurrence", "attention"
   )
 
-  # Decode integer-encoded tna data -> character labels
-  # Only for sequence methods; association methods keep numeric data as-is
+  # Numeric cells alone do not identify encoded states: generic networks
+  # may store literal numeric labels. A converted tna model retains its
+  # data class/alphabet or its explicit source metadata.
   if (!is.null(raw_data)) {
+    encoded_labels <- attr(raw_data, "labels") %||% attr(raw_data, "alphabet")
+    encoded <- inherits(raw_data, "tna_seq_data") ||
+      !is.null(encoded_labels) || identical(x$meta$source, "tna")
     raw_data <- as.data.frame(raw_data, stringsAsFactors = FALSE)
-    if (is_sequence_method &&
-        (is.integer(raw_data[[1]]) || is.numeric(raw_data[[1]]))) {
+    if (is_sequence_method && encoded) {
+      labels <- encoded_labels %||% states
       raw_data[] <- lapply(raw_data, function(col) {
+        if (!is.numeric(col)) return(col)
         idx <- as.integer(col)
-        ifelse(is.na(idx) | idx < 1L | idx > length(states),
-               NA_character_, states[idx])
+        valid <- !is.na(idx) & idx >= 1L & idx <= length(labels)
+        out <- rep(NA_character_, length(idx))
+        out[valid] <- labels[idx[valid]]
+        out
       })
+      attr(raw_data, "labels") <- NULL
+      attr(raw_data, "alphabet") <- NULL
     }
   }
 

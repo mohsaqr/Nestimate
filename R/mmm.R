@@ -784,6 +784,7 @@ build_mmm <- function(data,
     states = states,
     n_sequences = N,
     covariates = cov_result,
+    covariate_effect = if (is.null(cov_result)) NULL else covariate_effect,
     network_method = network_method,
     build_args     = build_args,
     metadata       = metadata,
@@ -925,11 +926,19 @@ print.net_mmm <- function(x, digits = 3L, ...) {
     cov_names <- setdiff(
       unique(x$covariates$coefficients$variable), "(Intercept)"
     )
-    cat(sprintf("\n  Covariates: %s (integrated, %d predictors)\n",
-                paste(cov_names, collapse = ", "), length(cov_names)))
+    cat(sprintf("\n  Covariates: %s (%s, %d predictors)\n",
+                paste(cov_names, collapse = ", "),
+                .mmm_covariate_label(x$covariate_effect), length(cov_names)))
   }
 
   invisible(x)
+}
+
+# Label for how covariates entered the fit. Objects saved before
+# covariate_effect was stored carry NULL; they were fitted with the EM default.
+#' @noRd
+.mmm_covariate_label <- function(effect) {
+  if (identical(effect, "posthoc")) "post-hoc" else "integrated"
 }
 
 #' @rdname build_mmm
@@ -950,7 +959,11 @@ summary.net_mmm <- function(object, ...) {
   if (!is.null(object$covariates)) {
     cov <- object$covariates
     .print_covariate_profiles(
-      cov, "Covariate Analysis (integrated into EM -- influences cluster membership)"
+      cov, if (identical(object$covariate_effect, "posthoc")) {
+        "Covariate Analysis (post-hoc -- does not influence cluster membership)"
+      } else {
+        "Covariate Analysis (integrated into EM -- influences cluster membership)"
+      }
     )
   }
 
@@ -1269,8 +1282,9 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
     cov_names <- setdiff(
       unique(x$covariates$coefficients$variable), "(Intercept)"
     )
-    cat(sprintf("\n  Covariates: %s (integrated, %d predictors)\n",
-                paste(cov_names, collapse = ", "), length(cov_names)))
+    cat(sprintf("\n  Covariates: %s (%s, %d predictors)\n",
+                paste(cov_names, collapse = ", "),
+                .mmm_covariate_label(x$covariate_effect), length(cov_names)))
   }
 
   invisible(x)

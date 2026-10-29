@@ -133,16 +133,21 @@ test_that("plots with a one-sequence panel draw", {
                                 actor = "s", action = "a", periods = "d"))
 })
 
-test_that("plot_mosaic() hands a network to mosaic_plot()", {
+test_that("mosaic_plot() draws networks and tidy data frames; plot_mosaic is gone", {
   g <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
-  expect_s3_class(plot_mosaic(g), "ggplot")
-  expect_error(plot_mosaic(g, x = "a"), class = "nestimate_bad_input")
+  expect_s3_class(mosaic_plot(g, seed = 1), "ggplot")
+  expect_error(mosaic_plot(g, x_var = "a"), class = "nestimate_bad_input")
   df <- data.frame(group = rep(c("A", "B"), each = 2),
                    state = rep(c("s1", "s2"), 2), count = c(3, 1, 2, 4))
-  expect_s3_class(plot_mosaic(df, x = "group", y = "state",
+  expect_s3_class(mosaic_plot(df, x_var = "group", y_var = "state",
                               weight = "count"), "ggplot")
+  expect_error(mosaic_plot(df, x_var = "group", y_var = "state",
+                           weight = "count", bogus = 1),
+               "unsupported argument")
+  # No longer exported: it masked tna::plot_mosaic() when both were attached
+  expect_false("plot_mosaic" %in% getNamespaceExports("Nestimate"))
 })
 
 test_that("cluster_network(cluster_by = 'mmm') passes covariate_effect on", {

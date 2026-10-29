@@ -721,7 +721,7 @@ compare_networks <- function(...,
       data.frame(pair = pr$pair, network_a = pr$network_a,
                  network_b = pr$network_b,
                  category = "Global Test (permutation)",
-                 metric = c("M (global strength)", "S (max edge)"),
+                 metric = c("M (total absolute difference)", "S (max edge)"),
                  key = c("perm_M", "perm_S"),
                  value = g$observed, perm_p = g$p_value,
                  stringsAsFactors = FALSE)

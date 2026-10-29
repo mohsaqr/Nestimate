@@ -119,6 +119,7 @@ test_that(".as_netobject decodes integer-encoded data for sequence methods (L133
                          name = c("A", "B"), x = 1:2, y = 1:2,
                          stringsAsFactors = FALSE)
   int_data <- data.frame(V1 = c(1L, 2L), V2 = c(2L, 1L))
+  attr(int_data, "labels") <- c("A", "B")
   cg <- structure(list(
     weights = m, nodes = nodes_df, directed = TRUE,
     meta = list(source = "test", layout = NULL,

@@ -145,6 +145,10 @@ iteration only resamples sequences via \code{colSums} (C-level)
 plus lightweight post-processing. Data must be in wide format for
 transition bootstrap; use \code{\link{convert_sequence_format}} to
 convert long-format data first.
+With \code{params = list(concat = k)}, the consecutive groups of up to
+\code{k} rows merged by the estimator are the sequences resampled;
+joins inside each merged sequence are retained. With \code{actor}, a
+merged sequence must belong entirely to one actor.
 
 For association methods (\code{"cor"}, \code{"pcor"}, \code{"glasso"},
 and custom estimators), the full estimator is called on resampled rows

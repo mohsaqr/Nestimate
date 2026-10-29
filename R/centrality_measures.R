@@ -215,11 +215,18 @@
 }
 
 #' Range-normalize on the same scale as tna::centralities(normalize = TRUE)
+#'
+#' A numerically constant vector has no min-max normalization: it returns
+#' NaN, as tna's ranger() does, instead of stretching rounding error to 0-1.
 #' @noRd
 .range01_tna <- function(x, na.rm = FALSE) {
   mi <- min(x, na.rm = na.rm)
   ma <- max(x, na.rm = na.rm)
-  (x - mi) / (ma - mi)
+  span <- ma - mi
+  if (!isTRUE(span > 1e-10 * max(abs(c(mi, ma)), 1))) {
+    return(rep(NaN, length(x)))
+  }
+  (x - mi) / span
 }
 
 #' @noRd

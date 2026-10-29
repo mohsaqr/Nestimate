@@ -28,10 +28,15 @@ association_rules(
 a transaction of its unique states.}
 \item{list}{Each element is a character vector of items (one transaction).}
 \item{data.frame}{Wide format: each row is a transaction, character
-columns are item occurrences. Or a binary matrix (0/1).}
-\item{matrix}{Binary transaction matrix (rows = transactions,
-columns = items).}
-} For the \code{print()} and \code{plot()} methods: an object of class \code{net_association_rules}.}
+columns are item occurrences. Or binary (0/1 or logical) columns,
+one per item.}
+\item{matrix}{A character matrix is read as wide sequences, like a
+character data frame (each row is the set of its distinct
+non-missing states). A numeric or logical matrix is a binary
+transaction matrix (rows = transactions, columns = items).}
+} Binary input must hold only 0/1 or \code{TRUE}/\code{FALSE}: a
+missing cell or any other value raises \code{nestimate_bad_input}.
+For the \code{print()} and \code{plot()} methods: an object of class \code{net_association_rules}.}
 
 \item{min_support}{Numeric. Minimum support threshold. Default: 0.1.}
 

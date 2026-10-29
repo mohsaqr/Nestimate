@@ -267,25 +267,49 @@ plot.net_mpt <- function(x,
                           low       = "#004d00",
                           high      = "#ccffcc",
                           ...) {
+  .mpt_heatmap(.mpt_tiles(x, log_scale, digits), log_scale, title, low, high)
+}
+
+#' @rdname passage_time
+#' @return In \code{plot.net_mpt_group()}: a \code{ggplot} object, one
+#'   heatmap panel per group on a shared colour scale.
+#' @export
+plot.net_mpt_group <- function(x,
+                                log_scale = TRUE,
+                                digits    = 1,
+                                title     = "Mean First Passage Times",
+                                low       = "#004d00",
+                                high      = "#ccffcc",
+                                ...) {
+  tiles <- do.call(rbind, Map(\(g, m) {
+    cbind(group = g, .mpt_tiles(m, log_scale, digits))
+  }, names(x), x))
+  tiles$group <- factor(tiles$group, levels = names(x))
+  .mpt_heatmap(tiles, log_scale, title, low, high) +
+    ggplot2::facet_wrap(~ group)
+}
+
+#' Long tile table of one passage-time matrix
+#' @noRd
+.mpt_tiles <- function(x, log_scale, digits) {
   states <- x$states
-  M      <- x$matrix
-  n      <- length(states)
+  n <- length(states)
+  vals <- as.vector(x$matrix)
+  data.frame(
+    from  = factor(rep(states, each = n), levels = rev(states)),
+    to    = factor(rep(states, times = n), levels = states),
+    fill  = if (log_scale) log(pmax(vals, .Machine$double.eps)) else vals,
+    label = formatC(round(vals, digits), format = "f", digits = digits,
+                    flag = " "),
+    stringsAsFactors = FALSE
+  )
+}
 
-  from  <- factor(rep(states, each  = n), levels = rev(states))
-  to    <- factor(rep(states, times = n), levels = states)
-  vals  <- as.vector(M)
-  fill  <- if (log_scale) log(pmax(vals, .Machine$double.eps)) else vals
-  label <- formatC(round(vals, digits), format = "f", digits = digits,
-                   flag = " ")
-
-  rng <- range(fill, na.rm = TRUE)
-  mid <- mean(rng)
-  txt_col <- ifelse(fill <= mid, "white", "#003300")
-
-  df <- data.frame(from = from, to = to, fill = fill,
-                   label = label, txt_col = txt_col,
-                   stringsAsFactors = FALSE)
-
+#' Passage-time heatmap from a tile table (text colour from the shared range)
+#' @noRd
+.mpt_heatmap <- function(df, log_scale, title, low, high) {
+  mid <- mean(range(df$fill, na.rm = TRUE))
+  df$txt_col <- ifelse(df$fill <= mid, "white", "#003300")
   ggplot2::ggplot(df, ggplot2::aes(x = to, y = from, fill = fill)) +
     ggplot2::geom_tile(color = "white", linewidth = 0.5) +
     ggplot2::geom_text(ggplot2::aes(label = label, color = txt_col),
@@ -471,12 +495,7 @@ plot.net_markov_stability <- function(x,
   )
 
   st_ord <- factor(df$state, levels = df$state[order(df$stationary_prob)])
-  n_states <- nrow(df)
 
-  pal <- c("#009E73", "#E69F00", "#56B4E9", "#CC79A7",
-           "#D55E00", "#0072B2", "#F0E442", "#999999")
-  # Assign colors to states in their original row order, not sorted order
-  state_colors <- setNames(pal[seq_len(n_states)], df$state)
 
   plot_rows <- lapply(metrics, function(m) {
     data.frame(state  = st_ord,
@@ -489,16 +508,16 @@ plot.net_markov_stability <- function(x,
   plot_df$metric <- factor(plot_df$metric, levels = labels[metrics])
 
   base_plot <- function(d, ttl) {
-    ggplot2::ggplot(d, ggplot2::aes(x = state, y = value, fill = state)) +
-      ggplot2::geom_col(show.legend = TRUE) +
-      ggplot2::scale_fill_manual(values = state_colors, name = NULL) +
+    # One fill: the state is labelled on the axis, and a per-state palette
+    # runs out of colours beyond eight states
+    ggplot2::ggplot(d, ggplot2::aes(x = state, y = value)) +
+      ggplot2::geom_col(fill = "#0072B2") +
       ggplot2::coord_flip() +
       ggplot2::labs(x = NULL, y = NULL, title = ttl) +
       ggplot2::theme_minimal(base_size = 12) +
       ggplot2::theme(
         panel.grid.minor = ggplot2::element_blank(),
-        plot.title       = ggplot2::element_text(face = "bold"),
-        legend.position  = "bottom"
+        plot.title       = ggplot2::element_text(face = "bold")
       )
   }
   if (!combined) {
@@ -512,4 +531,57 @@ plot.net_markov_stability <- function(x,
   }
   base_plot(plot_df, "Markov Stability Metrics") +
     ggplot2::facet_wrap(~ metric, scales = "free_x", ncol = 2)
+}
+
+#' @rdname markov_stability
+#' @return In \code{plot.net_markov_stability_group()}: a \code{ggplot}
+#'   object: one panel per metric, one row per state, one point per group
+#'   (colour and shape), joined by a line.
+#' @export
+plot.net_markov_stability_group <- function(x,
+                                             metrics = c("persistence",
+                                                         "stationary_prob",
+                                                         "return_time",
+                                                         "sojourn_time",
+                                                         "avg_time_to_others",
+                                                         "avg_time_from_others"),
+                                             ...) {
+  metrics <- match.arg(metrics, several.ok = TRUE)
+  labels <- c(
+    persistence          = "Persistence",
+    stationary_prob      = "Stationary Prob.",
+    return_time          = "Return Time",
+    sojourn_time         = "Sojourn Time",
+    avg_time_to_others   = "Avg. Steps to Others",
+    avg_time_from_others = "Avg. Steps from Others"
+  )
+  d <- do.call(rbind, lapply(names(x), \(g) {
+    st <- x[[g]]$stability
+    do.call(rbind, lapply(metrics, \(m) {
+      data.frame(group = g, state = st$state, metric = labels[[m]],
+                 value = st[[m]], stringsAsFactors = FALSE)
+    }))
+  }))
+  # States ordered by their mean stationary probability across groups
+  stationary <- do.call(rbind, lapply(x, \(s) s$stability))
+  mean_pi <- tapply(stationary$stationary_prob, stationary$state, mean)
+  d$state <- factor(d$state, levels = names(sort(mean_pi)))
+  d$metric <- factor(d$metric, levels = labels[metrics])
+  d$group <- factor(d$group, levels = names(x))
+  shapes <- c(16, 17, 15, 18, 3, 4, 8, 1, 2)
+  ggplot2::ggplot(d, ggplot2::aes(x = value, y = state)) +
+    ggplot2::geom_line(ggplot2::aes(group = state), colour = "grey75",
+                       linewidth = 0.6) +
+    ggplot2::geom_point(ggplot2::aes(colour = group, shape = group),
+                        size = 2.6) +
+    ggplot2::scale_colour_manual(values = .okabe_ito, name = NULL) +
+    ggplot2::scale_shape_manual(values = shapes, name = NULL) +
+    ggplot2::facet_wrap(~ metric, scales = "free_x", ncol = 2) +
+    ggplot2::labs(x = NULL, y = NULL, title = "Markov Stability Metrics") +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(
+      panel.grid.minor = ggplot2::element_blank(),
+      plot.title       = ggplot2::element_text(face = "bold"),
+      legend.position  = "bottom"
+    )
 }

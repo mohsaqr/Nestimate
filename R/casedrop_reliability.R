@@ -40,7 +40,8 @@
 #' \describe{
 #'   \item{`cs`}{Scalar CS-coefficient - the maximum drop proportion for
 #'     which the edge-vector correlation remains >= `threshold` in at
-#'     least `certainty` of iterations. Zero if no proportion qualifies.}
+#'     least `certainty` of iterations. Zero if no proportion qualifies;
+#'     `NA` when the original edge weights do not vary (CS undefined).}
 #'   \item{`summary`}{Tidy data frame, one row per metric by drop
 #'     proportion, with columns `metric` (`"mean_abs_dev"`,
 #'     `"median_abs_dev"`, `"correlation"`, `"max_abs_dev"`),
@@ -53,31 +54,35 @@
 #'     `include_diag`}{Inputs.}
 #'   \item{`n_cases`}{Number of cases resampled from (sequences for
 #'     transition methods, rows of `$data` otherwise).}
-#'   \item{`n_edges`}{Length of the edge vector assessed.}
+#'   \item{`n_edges`}{Length of the edge vector assessed: the edges present
+#'     (non-zero) in the original network.}
 #' }
 #' A `netobject_group` or `mcml` input instead returns a
 #' `net_casedrop_reliability_group`: a named list of one result per
 #' constituent network.
 #'
 #' When the original edge vector has zero variance a warning is issued and
-#' the object is returned with `cs = 0`, an empty `summary`, and all-`NA`
+#' the object is returned with `cs = NA`, an empty `summary`, and all-`NA`
 #' metric matrices.
 #'
 #' @details
 #' For each `drop_prop` p and each iteration, a size `n_cases * (1 - p)`
 #' subset of `$data` rows is selected **without replacement**, the network
 #' is re-estimated using the same method/scaling/threshold as the input,
-#' and the upper/lower-triangle (directed: all off-diagonal entries) of
-#' the new weight matrix is flattened and correlated with the
-#' corresponding vector of the original matrix. The correlation method
-#' defaults to Spearman for robustness to the wide dynamic range of
+#' and the edges present in the original network (its non-zero cells,
+#' off-diagonal unless `include_diag = TRUE`) are compared with the same
+#' cells of the new weight matrix. Cells that are zero in the original are
+#' left out: a subsample cannot contain a transition absent from the full
+#' data, so those cells agree in every draw, and including them would
+#' inflate the correlation and shrink the deviations. The correlation
+#' method defaults to Spearman for robustness to the wide dynamic range of
 #' transition probabilities.
 #'
-#' Unlike bootstrap CIs, case-dropping does not estimate sampling variance
-#' and so does not rely on the i.i.d. assumption. This makes it the
-#' appropriate robustness check for **edgelist-derived** networks (where
-#' rows of `$data` lack actor grouping), since dropping rows at random is
-#' a well-posed operation regardless of within-actor correlation.
+#' Case-dropping drops rows of `$data` at random, so it treats the rows as
+#' independent units. When rows are nested in actors (several sessions per
+#' person), dropped rows of one actor are replaced by the remaining rows of
+#' the same actor, and the CS-coefficient overstates the stability; drop
+#' whole actors instead (for example with `tna::estimate_cs(actor = )`).
 #'
 #' @seealso [centrality_stability()], [bootstrap_network()].
 #'
@@ -167,13 +172,16 @@ casedrop_reliability <- function(x,
     diag(diag_mask) <- FALSE
     diag_mask
   }
+  # A subsample cannot create a transition that is absent from the full
+  # data, so only the edges present in the original network are compared
+  idx_mask <- idx_mask & !is.na(x$weights) & x$weights != 0
   orig_edges <- as.vector(x$weights[idx_mask])
-  if (stats::sd(orig_edges, na.rm = TRUE) == 0) {
+  if (!isTRUE(stats::sd(orig_edges) > 0)) {
     warning("Original edge vector has zero variance; CS undefined.",
             call. = FALSE)
     empty <- matrix(NA_real_, iter, length(drop_prop))
     result <- list(
-      cs            = 0,
+      cs            = NA_real_,
       summary       = data.frame(),
       metrics       = list(mean_abs_dev = empty, median_abs_dev = empty,
                            correlation = empty,  max_abs_dev = empty),

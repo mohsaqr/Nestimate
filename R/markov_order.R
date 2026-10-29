@@ -1,4 +1,4 @@
-# ---- Markov Order Test (Exact within-context permutation) ----
+# ---- Markov Order Test (within-context permutation) ----
 #
 # Principled test of Markov order for categorical sequence data.
 #
@@ -15,9 +15,10 @@
 # with E(x,w,s) = N(x,w,.) * N(.,w,s) / N(.,w,.),
 # df = sum_w (r_w - 1)(c_w - 1).
 #
-# Null distribution: EXACT within-w permutation. For each context w,
+# Null distribution: within-w (conditional) permutation. For each context w,
 # the successor labels are exchangeable under H0; shuffling s within
-# each w-group gives an exact reference distribution. No plug-in MLE
+# each w-group approximates the reference distribution (the windows of a
+# sequence overlap, so it is not exact; Besag & Mondal 2013). No plug-in MLE
 # bias (which inflated the parametric-bootstrap null on sparse k+1-gram
 # tables). No refitting per replicate.
 
@@ -51,6 +52,20 @@
     data.frame(x = character(0L), w = character(0L), s = character(0L),
                stringsAsFactors = FALSE)
   } else out
+}
+
+
+# ---------------------------------------------------------------------------
+# Internal: Split trajectories at missing values
+# ---------------------------------------------------------------------------
+
+#' @noRd
+.mot_split_na <- function(trajectories) {
+  pieces <- unlist(lapply(trajectories, function(traj) {
+    observed <- !is.na(traj)
+    unname(split(traj[observed], cumsum(!observed)[observed]))
+  }), recursive = FALSE)
+  pieces[vapply(pieces, length, integer(1L)) >= 2L]
 }
 
 
@@ -96,11 +111,14 @@
   x <- tuples$x
 
   one_perm <- function(.) {
+    # Shuffle the successors within each context, in the order of by_w
     s <- s_orig
-    shuffled <- lapply(by_w, function(idx) {
-      if (length(idx) > 1L) s[idx] <<- sample(s[idx])
-      NULL
-    })
+    s[unlist(by_w, use.names = FALSE)] <- unlist(
+      lapply(by_w, function(idx) {
+        if (length(idx) > 1L) sample(s_orig[idx]) else s_orig[idx]
+      }),
+      use.names = FALSE
+    )
     # Recompute G^2 directly on shuffled s (x, w unchanged)
     parts <- vapply(by_w, function(idx) {
       .mot_g2_one_w(x[idx], s[idx])
@@ -165,10 +183,13 @@
 #' \eqn{H_0} (order-\eqn{(k-1)} is correct), \eqn{s} is independent of
 #' \eqn{x} given \eqn{w}.
 #'
-#' The null distribution is obtained by an \strong{exact within-\eqn{w}
-#' permutation test}: for each context \eqn{w} the successor labels are
-#' exchangeable under \eqn{H_0}, so shuffling \eqn{s} within each
-#' \eqn{w}-group yields an exact reference distribution for \eqn{G^2}.
+#' The null distribution is obtained by a \strong{within-\eqn{w}
+#' (conditional) permutation test}: for each context \eqn{w} the successor
+#' labels are exchangeable under \eqn{H_0}, so shuffling \eqn{s} within each
+#' \eqn{w}-group keeps every count the null hypothesis conditions on. The
+#' windows of a sequence overlap, so this approximates the reference
+#' distribution of \eqn{G^2} rather than giving it exactly (an exact test
+#' would sample whole sequences with the same counts; Besag & Mondal, 2013).
 #' No plug-in MLE bias and no refitting per replicate. An asymptotic
 #' \eqn{\chi^2} p-value is reported alongside for reference.
 #'
@@ -183,7 +204,8 @@
 #'   of character vectors (one per trajectory), a \code{netobject} or
 #'   \code{netobject_group} carrying its \code{$data}, or a
 #'   \code{\link{prepare}} result (its \code{sequence_data} is used).
-#'   NAs are treated as end of sequence.
+#'   Sequences are split at missing values: no window spans an \code{NA},
+#'   and pieces with fewer than two states are dropped.
 #' @param max_order Integer. Highest Markov order to test. Default 3.
 #' @param n_perm Integer. Number of within-\eqn{w} permutations per order.
 #'   Default 500.
@@ -279,7 +301,9 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
     data <- data$sequence_data
   }
 
-  trajectories <- .hon_parse_input(data, collapse_repeats = FALSE)
+  trajectories <- .mot_split_na(
+    .hon_parse_input(data, collapse_repeats = FALSE)
+  )
   n_seqs <- length(trajectories)
   stopifnot("need >= 1 sequence after parsing" = n_seqs >= 1L)
   seq_lens <- vapply(trajectories, length, integer(1L))
@@ -316,13 +340,8 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
   p_asy_vec  <- vapply(per_order, `[[`, numeric(1L), "p_asymp")
 
   sig_vec <- !is.na(p_perm_vec) & p_perm_vec < alpha
-  optimal_order <- 0L
-  cont <- TRUE
-  lapply(seq_len(max_order), function(k) {
-    if (cont && sig_vec[k]) optimal_order <<- k
-    else cont <<- FALSE
-    NULL
-  })
+  # The order is raised while the test rejects
+  optimal_order <- if (all(sig_vec)) max_order else which(!sig_vec)[1L] - 1L
 
   orders_all <- 0L:max_order
   cum_dof    <- cumsum(fits$layer_dofs)

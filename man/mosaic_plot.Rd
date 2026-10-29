@@ -9,6 +9,7 @@
 \alias{mosaic_plot.netobject_group}
 \alias{mosaic_plot.table}
 \alias{mosaic_plot.matrix}
+\alias{mosaic_plot.data.frame}
 \title{Mosaic Plot of a Network's Transition or Co-occurrence Counts}
 \usage{
 mosaic_plot(x, ...)
@@ -94,6 +95,20 @@ mosaic_plot(x, ...)
 )
 
 \method{mosaic_plot}{matrix}(x, ...)
+
+\method{mosaic_plot}{data.frame}(
+  x,
+  x_var,
+  y_var,
+  weight,
+  fill = "y",
+  colors = NULL,
+  show_labels = TRUE,
+  label_size = 3.5,
+  xlab = NULL,
+  ylab = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{One of the four data-bearing Nestimate classes:
@@ -103,7 +118,9 @@ mosaic_plot(x, ...)
 \code{level = "within"}), or
 \code{htna} (single mosaic of \code{$weights}; htna inherits netobject
 so the geometry matches). Also accepts a contingency \code{table} or
-plain numeric \code{matrix} for ad-hoc plotting.}
+plain numeric \code{matrix} for ad-hoc plotting, and a tidy
+\code{data.frame} in long form (see \code{x_var}, \code{y_var},
+\code{weight}).}
 
 \item{...}{Flat styling overrides forwarded to the flat renderer when
 \code{style = "flat"} (otherwise ignored).}
@@ -169,6 +186,23 @@ Effective only for \code{mcml} with \code{level = "clusters"}, the one
 multi-panel case; \code{netobject_group} is drawn as a single
 (group x state) mosaic, so \code{ncol} is accepted but has no effect
 there.}
+
+\item{x_var, y_var, weight}{For a \code{data.frame}: the names of the
+column variable (one mosaic column per level, width proportional to its
+total \code{weight}), the segment variable (stacked within each column in
+proportion to its share), and the cell weight (e.g. a count).}
+
+\item{fill}{For a \code{data.frame}: \code{"y"} (default) colours the
+segments by \code{y_var}; the name of another column (e.g. a residual)
+maps that column to the fill instead.}
+
+\item{colors}{For a \code{data.frame}: optional fill colours, either an
+unnamed vector in level order or a named lookup
+(\code{c(plan = "#0072B2")}) overriding only the levels named. Defaults
+to recycled Okabe-Ito.}
+
+\item{show_labels, label_size}{For a \code{data.frame}: draw percentage
+labels inside the segments, and their size.}
 }
 \value{
 A \code{ggplot} object: one \code{geom_rect} layer with one
@@ -205,7 +239,12 @@ net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
                      order = "Time")
 mosaic_plot(net, seed = 1)
-}
-\seealso{
-\code{\link{plot_mosaic}} for the lower-level data.frame primitive.
+
+# A tidy data frame: columns by group, segments by state
+df <- data.frame(
+  group = rep(c("A", "B", "C"), each = 3),
+  state = rep(c("s1", "s2", "s3"), 3),
+  count = c(10, 5, 2,  7, 8, 3,  4, 6, 12)
+)
+mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")
 }

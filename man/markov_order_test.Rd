@@ -32,7 +32,8 @@ markov_order_test(
 of character vectors (one per trajectory), a \code{netobject} or
 \code{netobject_group} carrying its \code{$data}, or a
 \code{\link{prepare}} result (its \code{sequence_data} is used).
-NAs are treated as end of sequence.}
+Sequences are split at missing values: no window spans an \code{NA},
+and pieces with fewer than two states are dropped.}
 
 \item{max_order}{Integer. Highest Markov order to test. Default 3.}
 
@@ -118,10 +119,13 @@ added at order \eqn{k}, and \eqn{s} is the next state. Under
 \eqn{H_0} (order-\eqn{(k-1)} is correct), \eqn{s} is independent of
 \eqn{x} given \eqn{w}.
 
-The null distribution is obtained by an \strong{exact within-\eqn{w}
-permutation test}: for each context \eqn{w} the successor labels are
-exchangeable under \eqn{H_0}, so shuffling \eqn{s} within each
-\eqn{w}-group yields an exact reference distribution for \eqn{G^2}.
+The null distribution is obtained by a \strong{within-\eqn{w}
+(conditional) permutation test}: for each context \eqn{w} the successor
+labels are exchangeable under \eqn{H_0}, so shuffling \eqn{s} within each
+\eqn{w}-group keeps every count the null hypothesis conditions on. The
+windows of a sequence overlap, so this approximates the reference
+distribution of \eqn{G^2} rather than giving it exactly (an exact test
+would sample whole sequences with the same counts; Besag & Mondal, 2013).
 No plug-in MLE bias and no refitting per replicate. An asymptotic
 \eqn{\chi^2} p-value is reported alongside for reference.
 

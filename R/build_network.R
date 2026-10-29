@@ -79,10 +79,14 @@
 #' @param threshold Numeric. Absolute values below this are set to zero in the
 #'   result matrix. Default: 0 (no thresholding).
 #' @param level Character or NULL. Multilevel decomposition for the undirected
-#'   association methods (\code{cor}, \code{pcor}, \code{glasso}); a directed
+#'   association methods (\code{cor}, \code{pcor}, \code{glasso}, \code{mgm}); a directed
 #'   estimator errors. One of \code{NULL}, \code{"between"}, \code{"within"},
 #'   \code{"both"}. Requires an id column, supplied either as \code{actor} or
 #'   as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.
+#'   For \code{method = "mgm"}, a numeric vector instead supplies one
+#'   category count per modeled variable (\code{1} for continuous variables),
+#'   after excluding group, actor and metadata columns. It is checked and
+#'   retained for compatibility; the MGM fit infers category levels from data.
 #' @param actor Character. Name of the actor/person ID column for sequence
 #'   grouping. Default: \code{NULL}.
 #' @param action Character. Name of the action/state column (long format).
@@ -123,7 +127,13 @@
 #'   Use this when a metadata column happens to contain values that overlap
 #'   with node names (e.g. condition labels \code{"A","B","C"} and nodes
 #'   \code{"A","B","C"}) and auto-detection would misclassify it. Default:
-#'   \code{NULL} (auto-detect).
+#'   \code{NULL} (auto-detect). For wide sequence data, auto-detection
+#'   treats numeric columns of a mixed frame as covariates. When the
+#'   position columns are named as a run (a shared prefix and a number:
+#'   \code{T1}, \code{T2}, ...; or \code{1}, \code{2}, ...), every other
+#'   character or factor column, such as an outcome or a course, is a
+#'   covariate too. Without such a run, or with two runs of equal size,
+#'   every character column is read as a position.
 #' @param metadata_cols Character vector or \code{NULL}. Explicit names of
 #'   columns to force into the \code{$metadata} slot. The remaining columns
 #'   are auto-detected as state via the values-in-nodes rule. Cannot overlap
@@ -195,6 +205,11 @@
 #' order. The function warns because a one-sequence transition network is not
 #' recommended and cannot be validated by bootstrap or other confirmatory
 #' tests.
+#'
+#' For \code{method = "mgm"}, missing continuous values are filled with the
+#' observed column mean and missing categorical values with the modal level.
+#' This retains the rows and is \pkg{psychnets}' documented
+#' \code{na_method = "pairwise"} policy; it is not pairwise deletion.
 #'
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
@@ -345,31 +360,9 @@ build_network <- function(data,
       }
     }
     if (!is.null(level) && is.numeric(level)) {
-      # mgm `level` is one entry per MODELED variable. When `group=` is set
-      # the grouping column(s) are dropped before estimation (the group
-      # dispatch below recurses on data minus `group`), so validate against
-      # the modeled-variable count -- not raw ncol -- otherwise a correct
-      # `level` is rejected here, or a group-padded one is forwarded too
-      # long to .estimator_mgm() in the per-group call.
-      df0 <- as.data.frame(data)
-      group_cols <- if (is.null(group)) character(0) else
-        intersect(group, names(df0))
-      n_modeled <- ncol(df0) - length(group_cols)
-      if (length(level) == n_modeled) {
-        if (is.null(.param_get(params, "level"))) {
-          params$level <- level
-        }
-        level <- NULL
-      } else {
-        stop(
-          "For method = \"mgm\", numeric `level` must be an integer vector ",
-          "of length ", n_modeled, " (one level per modeled variable, 1 ",
-          "for continuous; any `group` column is excluded). To trigger ",
-          "build_network's between-/within-person decomposition instead, ",
-          "pass level = \"between\"/\"within\"/\"both\".",
-          call. = FALSE
-        )
-      }
+      # Route now; validate only once the final modeled columns are known.
+      if (is.null(.param_get(params, "level"))) params$level <- level
+      level <- NULL
     }
   }
 
@@ -482,22 +475,33 @@ build_network <- function(data,
   }
 
   # ---- Group dispatch: per-group networks ----
+  # Resolve wide sequence roles before collecting a shared group alphabet.
+  # Child estimation and metadata extraction must use the same columns.
+  transition_methods <- c("relative", "frequency", "co_occurrence", "attention",
+                          "ngram", "gap", "reverse")
+  if (method %in% transition_methods && is.data.frame(data) &&
+      is.null(action) && is.null(codes) && !identical(format, "onehot")) {
+    params$cols <- .build_sequence_cols(data, params$cols, state_cols,
+                                        metadata_cols,
+                                        exclude = c(group, actor, session,
+                                          .param_get(params, "id"),
+                                          .param_get(params, "id_col")))
+  }
   if (!is.null(group)) {
     stopifnot(is.character(group))
-    transition_methods <- c("relative", "frequency", "co_occurrence", "attention",
-                            "ngram", "gap", "reverse")
     if (method %in% transition_methods && is.data.frame(data) &&
         is.null(.param_get(params, "alphabet"))) {
       if (!is.null(action) && action %in% names(data)) {
         vals <- .clean_states(as.character(data[[action]]))
       } else {
         exclude <- c(group, actor, session, metadata_cols)
-        state_names <- if (!is.null(state_cols)) {
-          intersect(state_cols, names(data))
+        state_names <- if (!is.null(params$cols)) {
+          intersect(params$cols, names(data))
         } else {
           setdiff(names(data), exclude)
         }
-        vals <- .clean_states(as.character(unlist(data[, state_names, drop = FALSE])))
+        vals <- .clean_states(unlist(lapply(data[state_names], as.character),
+                                     use.names = FALSE))
       }
       params$alphabet <- sort(unique(c(
         vals[!is.na(vals)],
@@ -635,27 +639,16 @@ build_network <- function(data,
     # Explicit column roles decide what the estimator reads. Without this a
     # declared metadata column was counted as a sequence position (its values
     # became states) and was only moved to $metadata after estimation.
-    if (is.data.frame(data) && is.null(params$cols) &&
-        (!is.null(state_cols) || !is.null(metadata_cols))) {
-      params$cols <- if (!is.null(state_cols)) {
-        state_cols
-      } else {
-        setdiff(names(data), c(metadata_cols, actor,
-                               .param_get(params, "id")))
-      }
-    }
-    # In character/factor sequence data a numeric column (age, score) is not
-    # a sequence position; without this its values became states.
-    seq_methods <- c("relative", "frequency", "co_occurrence", "attention",
-                     "ngram", "gap", "reverse")
-    if (is.data.frame(data) && is.null(params$cols) &&
-        method %in% seq_methods) {
-      candidates <- setdiff(names(data), c(actor, .param_get(params, "id")))
-      is_num <- vapply(data[candidates], is.numeric, logical(1))
-      is_cat <- vapply(data[candidates],
-                       function(x) is.character(x) || is.factor(x),
-                       logical(1))
-      if (any(is_num) && any(is_cat)) params$cols <- candidates[!is_num]
+    if (is.data.frame(data) &&
+        (method %in% transition_methods || !is.null(state_cols) ||
+         !is.null(metadata_cols))) {
+      params$cols <- .build_sequence_cols(data, params$cols, state_cols,
+                                          metadata_cols,
+                                          exclude = c(actor, session,
+                                            .param_get(params, "id"),
+                                            .param_get(params, "id_col")),
+                                          infer_numeric_metadata =
+                                            method %in% transition_methods)
     }
   }
 
@@ -667,7 +660,6 @@ build_network <- function(data,
       is.data.frame(data) && !is.null(metadata_cols)) {
     data <- data[, setdiff(names(data), metadata_cols), drop = FALSE]
   }
-
   # ---- Auto-convert sequences to frequencies for association methods ----
   # Association methods (cor, pcor, glasso) need numeric data. Categorical
   # columns are sequence positions when there are at least two of them and
@@ -749,7 +741,7 @@ build_network <- function(data,
   if (!is.null(level) && isTRUE(estimator$directed)) {
     stop(
       "'level' (multilevel decomposition) is only supported for undirected ",
-      "association methods (cor, pcor, glasso). Method '", method,
+      "association methods (cor, pcor, glasso, mgm). Method '", method,
       "' is a directed estimator and has no between-/within-person ",
       "decomposition.",
       call. = FALSE
@@ -776,6 +768,21 @@ build_network <- function(data,
   # Multilevel decomposition for association methods
   if (!is.null(level) && !estimator$directed) {
     data <- .decompose_multilevel(data, id_col = id_col, level = level)
+  }
+
+  if (identical(method, "mgm") && is.data.frame(data)) {
+    # Keep identifiers until any requested multilevel decomposition has
+    # used them. MGM itself has no id_col formal and must not model them.
+    identifiers <- c(actor, .param_get(params, "id"), .param_get(params, "id_col"))
+    data <- data[, setdiff(names(data), identifiers), drop = FALSE]
+    mgm_level <- .param_get(params, "level")
+    if (!is.null(mgm_level) &&
+        (!is.numeric(mgm_level) || length(mgm_level) != ncol(data))) {
+      stop("For method = \"mgm\", numeric `level` must be an integer vector ",
+           "of length ", ncol(data), " (one level per modeled variable, 1 ",
+           "for continuous; group, actor and metadata columns are excluded).",
+           call. = FALSE)
+    }
   }
 
   # Call estimator
@@ -831,8 +838,28 @@ build_network <- function(data,
     } else {
       character(0)
     }
+    auto_wide_state <- if (is.null(state_cols) &&
+                           method %in% transition_methods &&
+                           !identical(format, "onehot")) {
+      intersect(params$cols, names(raw_data))
+    } else {
+      character(0)
+    }
+    auto_variable_state <- if (is.null(state_cols) &&
+                               !method %in% transition_methods &&
+                               all(nodes %in% names(raw_data)) &&
+                               any(vapply(raw_data[intersect(nodes, names(raw_data))],
+                                 function(col) {
+                                   vals <- .clean_states(as.character(col))
+                                   any(!is.na(vals) & !vals %in% nodes)
+                                 }, logical(1)))) {
+      intersect(nodes, names(raw_data))
+    } else {
+      character(0)
+    }
     user_state <- union(intersect(state_cols, names(raw_data)),
-                        auto_onehot_state)
+                        union(auto_variable_state,
+                              union(auto_onehot_state, auto_wide_state)))
     user_meta  <- intersect(metadata_cols, names(raw_data))
 
     if (length(user_state) > 0L) {
@@ -1460,4 +1487,70 @@ predictability.netobject_ml <- function(object, ...) {
 #' @export
 predictability.netobject_group <- function(object, ...) {
   lapply(object, predictability)
+}
+
+#' Resolve the wide sequence columns before estimation and group dispatch
+#'
+#' @param data A wide data frame.
+#' @param cols,state_cols Explicit estimator or public sequence selectors.
+#' @param metadata_cols Columns declared to be metadata.
+#' @param exclude Identifier and grouping columns.
+#' @param infer_numeric_metadata Whether to infer covariates: numeric columns
+#'   of mixed categorical/numeric input, and categorical columns whose values
+#'   lie outside the shared state alphabet (see
+#'   \code{.categorical_covariates()}).
+#' @return A character selector, or NULL for the estimator's default.
+#' @noRd
+.build_sequence_cols <- function(data, cols = NULL, state_cols = NULL,
+                                  metadata_cols = NULL, exclude = NULL,
+                                  infer_numeric_metadata = TRUE) {
+  stopifnot(is.data.frame(data))
+  if (!is.null(cols)) return(cols)
+  if (!is.null(state_cols)) return(state_cols)
+  candidates <- setdiff(names(data), c(metadata_cols, exclude))
+  if (!is.null(metadata_cols)) return(candidates)
+  if (isTRUE(infer_numeric_metadata)) {
+    is_num <- vapply(data[candidates], is.numeric, logical(1))
+    is_cat <- vapply(data[candidates],
+                     function(x) is.character(x) || is.factor(x), logical(1))
+    inferred <- if (any(is_num) && any(is_cat)) candidates[!is_num] else
+      candidates
+    covariates <- .categorical_covariates(data[inferred])
+    if (length(covariates) > 0L || !identical(inferred, candidates)) {
+      return(setdiff(inferred, covariates))
+    }
+  }
+  # Returning NULL would let the estimator include the excluded columns
+  # again when its own default selector does not know the session/group role.
+  if (any(exclude %in% names(data))) return(candidates)
+  NULL
+}
+
+#' Categorical columns that are covariates, not sequence positions
+#'
+#' Wide sequence positions are named as a run: a shared prefix followed by a
+#' number (T1, T2, ...; V1, V2, ...; 1, 2, ...). When the categorical
+#' columns contain one such run that is larger than any other, its columns
+#' are the positions and every other categorical column (an outcome, a
+#' course, a group label) is a covariate. Nothing is reassigned when no run
+#' of at least two columns exists or when two runs tie. Names, not values,
+#' decide: a position whose states occur nowhere else (a constant first
+#' state, a terminal state) looks exactly like a covariate by its values.
+#'
+#' @param data Candidate state columns of a wide data frame.
+#' @return Character vector of covariate column names (possibly empty).
+#' @noRd
+.categorical_covariates <- function(data) {
+  is_cat <- vapply(data, \(x) is.character(x) || is.factor(x), logical(1))
+  if (sum(is_cat) < 2L) return(character(0))
+  nms <- names(data)
+  numbered <- grepl("[0-9]+$", nms)
+  prefix <- sub("[0-9]+$", "", nms)
+  runs <- table(prefix[is_cat & numbered])
+  if (length(runs) == 0L || max(runs) < 2L ||
+      sum(runs == max(runs)) > 1L) {
+    return(character(0))
+  }
+  positions <- is_cat & numbered & prefix == names(runs)[which.max(runs)]
+  nms[is_cat & !positions]
 }

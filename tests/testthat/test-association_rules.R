@@ -186,6 +186,64 @@ test_that("association_rules works on binary matrix", {
 })
 
 
+# ---- 12b. Character matrix and the binary-input contract ----
+
+test_that("a character matrix is read as states, not as column items", {
+  # Rows are {A, B}, {A, B, C}, {A}; NA is padding, not a state
+  mat <- matrix(c("A", "B", NA,
+                  "B", "C", "A",
+                  "A", NA,  NA), nrow = 3, byrow = TRUE)
+  rules <- association_rules(mat, min_support = 0.1,
+                             min_confidence = 0, min_lift = 0)
+  expect_equal(rules$items, c("A", "B", "C"))
+  expect_equal(rules$n_transactions, 3L)
+  expect_equal(rules$frequent$support[rules$frequent$itemset == "A"], 1)
+  expect_equal(rules$frequent$support[rules$frequent$itemset == "A, B"], 2 / 3)
+  expect_equal(rules$frequent$support[rules$frequent$itemset == "A, B, C"],
+               1 / 3)
+
+  binary <- matrix(c(1, 1, 0, 1, 1, 1, 1, 0, 0), nrow = 3, byrow = TRUE,
+                   dimnames = list(NULL, c("A", "B", "C")))
+  from_binary <- association_rules(binary, min_support = 0.1,
+                                   min_confidence = 0, min_lift = 0)
+  expect_identical(rules$rules, from_binary$rules)
+})
+
+test_that("a character matrix with drop-out NAs matches its data frame", {
+  from_matrix <- association_rules(trajectories, min_support = 0.2)
+  from_df <- association_rules(
+    as.data.frame(trajectories, stringsAsFactors = FALSE), min_support = 0.2)
+  expect_equal(from_matrix$items, c("Active", "Average", "Disengaged"))
+  expect_identical(from_matrix$rules, from_df$rules)
+  expect_identical(from_matrix$frequent, from_df$frequent)
+})
+
+test_that("logical binary input equals its 0/1 version", {
+  binary <- matrix(c(1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1), nrow = 4,
+                   byrow = TRUE, dimnames = list(NULL, c("X", "Y", "Z")))
+  reference <- association_rules(binary, min_support = 0.3,
+                                 min_confidence = 0, min_lift = 0)
+  from_logical <- association_rules(binary > 0, min_support = 0.3,
+                                    min_confidence = 0, min_lift = 0)
+  from_logical_df <- association_rules(as.data.frame(binary > 0),
+                                       min_support = 0.3,
+                                       min_confidence = 0, min_lift = 0)
+  expect_identical(from_logical$rules, reference$rules)
+  expect_identical(from_logical_df$rules, reference$rules)
+})
+
+test_that("missing or non-binary cells in binary input are refused", {
+  binary <- matrix(c(1, NA, 0, 1), nrow = 2,
+                   dimnames = list(NULL, c("X", "Y")))
+  expect_error(association_rules(binary), class = "nestimate_bad_input")
+  expect_error(association_rules(as.data.frame(binary)),
+               class = "nestimate_bad_input")
+  counts <- matrix(c(2, 0, 1, 3), nrow = 2,
+                   dimnames = list(NULL, c("X", "Y")))
+  expect_error(association_rules(counts), class = "nestimate_bad_input")
+})
+
+
 # ---- 13. Empty result ----
 
 test_that("no rules found returns empty result gracefully", {
