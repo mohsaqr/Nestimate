@@ -582,7 +582,10 @@
 #' @param p Numeric. Winkler prefix penalty for Jaro-Winkler distance.
 #'   Must be between 0 and 0.25. Default: \code{0.1}.
 #' @param covariates Optional. Post-hoc covariate analysis of cluster
-#'   membership. Accepts:
+#'   membership. Named covariate columns present in raw sequence data are
+#'   excluded from the sequence distances before clustering. Columns matching
+#'   a separately supplied covariate frame by both name and values are also
+#'   excluded; unrelated sequence columns remain unchanged. Accepts:
 #'   \describe{
 #'     \item{string}{Single column name, e.g. \code{"Age"}. Resolved
 #'       against \code{x$metadata} (and \code{x$data}) for
@@ -678,6 +681,31 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
   # --- Extract sequence data from supported objects ---
   raw_data <- data
   data <- .extract_sequence_data(data)
+  # Resolve post-hoc covariates before constructing distances: named columns
+  # in the sequence frame must not become additional sequence positions.
+  cov_resolved <- .resolve_covariates(covariates, raw_data, nrow(data))
+  if (!is.null(cov_resolved)) {
+    cov_cols <- names(cov_resolved$cov_df)
+    if (is.data.frame(covariates)) {
+      # A supplied frame may be a subset of the raw input. Exclude those
+      # columns too, but preserve unrelated positions sharing only a name.
+      overlap <- intersect(cov_cols, names(data))
+      cov_cols <- overlap[vapply(overlap, function(nm) {
+        identical(as.character(data[[nm]]), as.character(covariates[[nm]]))
+      }, logical(1L))]
+    }
+    # Metadata takes precedence in .resolve_covariates(); a same-named state
+    # column remains a position when the requested covariate came from there.
+    if (!is.data.frame(covariates) &&
+        inherits(raw_data, c("netobject", "cograph_network"))) {
+      cov_cols <- setdiff(cov_cols, names(raw_data$metadata))
+    }
+    data <- data[, setdiff(names(data), cov_cols), drop = FALSE]
+    if (ncol(data) == 0L) {
+      stop("No sequence columns remain after excluding post-hoc covariates.",
+           call. = FALSE)
+    }
+  }
 
   # --- Input validation ---
   # Use named-condition stopifnot for type checks so the failure message
@@ -776,7 +804,6 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
 
   # --- Post-hoc covariate analysis ---
   cov_result <- NULL
-  cov_resolved <- .resolve_covariates(covariates, raw_data, n)
   if (!is.null(cov_resolved)) {
     cov_result <- .run_covariate_analysis(
       assignments, cov_resolved$cov_df, cov_resolved$rhs, k,

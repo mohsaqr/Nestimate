@@ -1,0 +1,31 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+Could not detect number of cores, defaulting to 1.
+[1] 1 1 1 1 2 2 2 2
+  cluster    variable  estimate std_error odds_ratio    ci_lower    ci_upper
+1       2 (Intercept) -2.197225  1.666667  0.1111111 0.004237036    2.913753
+2       2    outcomeL  4.394449  2.357023 81.0000000 0.798264607 8219.079168
+          z          p sig
+1 -1.318335 0.18739161    
+2  1.864407 0.06226459   .
+         term     estimate std_error    statistic  ci_lower ci_upper    p_value
+1 (Intercept) 3.212547e-16 0.9309493 3.450829e-16 -1.824627 1.824627 1.00000000
+2           x 6.000000e-01 0.2390457 2.509980e+00  0.131479 1.068521 0.06605877
+       p_adj
+1         NA
+2 0.06605877
+                  2.5 %   97.5 %
+(Intercept) -2.58472973 2.584730
+x           -0.06369732 1.263697
+centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+  state InStrength
+A     A      3e-12
+B     B      1e-12
+C     C      2e-12
+centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+  state InStrength
+A     A        NaN
+B     B        NaN
+C     C        NaN

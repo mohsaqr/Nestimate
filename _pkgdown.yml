@@ -145,6 +145,7 @@ reference:
     desc: Convert and prepare data for network estimation
     contents:
       - prepare
+      - long-data
       - prepare_for_tna
       - action_to_onehot
       - prepare_onehot
@@ -185,6 +186,9 @@ reference:
       - state_distribution
       - mosaic_plot
       - mosaic_analysis
+      - extract_sequences
+      - sequence_patterns
+      - sequence_metrics
       - sequence_compare
       - extract_pathways
       - association_rules
@@ -198,6 +202,7 @@ reference:
   - title: Outcome Modelling
     desc: Relate network and sequence features to an outcome
     contents:
+      - pattern_outcome
       - outcome_model
       - effects_table
 

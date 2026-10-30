@@ -97,7 +97,10 @@ and \code{"jaccard"} distances. Default: \code{2L}.}
 Must be between 0 and 0.25. Default: \code{0.1}.}
 
 \item{covariates}{Optional. Post-hoc covariate analysis of cluster
-membership. Accepts:
+membership. Named covariate columns present in raw sequence data are
+excluded from the sequence distances before clustering. Columns matching
+a separately supplied covariate frame by both name and values are also
+excluded; unrelated sequence columns remain unchanged. Accepts:
 \describe{
 \item{string}{Single column name, e.g. \code{"Age"}. Resolved
 against \code{x$metadata} (and \code{x$data}) for

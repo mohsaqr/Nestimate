@@ -19,7 +19,8 @@ casedrop_reliability(
   certainty = 0.95,
   method = c("spearman", "pearson", "kendall"),
   include_diag = FALSE,
-  seed = NULL
+  seed = NULL,
+  target = c("auto", "existing", "all")
 )
 
 \method{print}{net_casedrop_reliability}(x, digits = 3, ...)
@@ -67,6 +68,12 @@ edge vector. Default \code{FALSE}.}
 
 \item{seed}{Optional integer for reproducibility.}
 
+\item{target}{Cells to assess: \code{"auto"} (default) uses \code{"existing"}
+for unscaled, unthresholded transition methods and \code{"all"} otherwise.
+\code{"existing"} assesses only nonzero original cells; \code{"all"} includes
+original zeros so edges appearing after case removal are assessed.
+\code{include_diag} applies to either target.}
+
 \item{digits}{Digits to display. Default \code{3}.}
 
 \item{...}{In \code{plot.net_casedrop_reliability()}, \code{plot.net_casedrop_reliability_group()}, \code{print.net_casedrop_reliability()}, \code{print.summary.net_casedrop_reliability_group()}, \code{summary.net_casedrop_reliability()} and \code{summary.net_casedrop_reliability_group()}: Additional arguments (ignored). In \code{print.net_casedrop_reliability_group()}: Ignored.}
@@ -96,9 +103,11 @@ iteration correlations (the \code{correlation} entry of \code{metrics}).}
 \code{include_diag}}{Inputs.}
 \item{\code{n_cases}}{Number of cases resampled from (sequences for
 transition methods, rows of \verb{$data} otherwise).}
-\item{\code{n_edges}}{Length of the edge vector assessed: the edges present
-(non-zero) in the original network.}
+\item{\code{n_edges}}{Number of cells assessed, determined by \code{target}
+and \code{include_diag}.}
 }
+The resolved target is retained as \code{attr(result, "target")}, preserving
+the existing list fields for downstream consumers.
 A \code{netobject_group} or \code{mcml} input instead returns a
 \code{net_casedrop_reliability_group}: a named list of one result per
 constituent network.
@@ -133,14 +142,14 @@ of \verb{$data} is one transition, this is case-dropping of \strong{edges}.
 For each \code{drop_prop} p and each iteration, a size \code{n_cases * (1 - p)}
 subset of \verb{$data} rows is selected \strong{without replacement}, the network
 is re-estimated using the same method/scaling/threshold as the input,
-and the edges present in the original network (its non-zero cells,
-off-diagonal unless \code{include_diag = TRUE}) are compared with the same
-cells of the new weight matrix. Cells that are zero in the original are
-left out: a subsample cannot contain a transition absent from the full
-data, so those cells agree in every draw, and including them would
-inflate the correlation and shrink the deviations. The correlation
-method defaults to Spearman for robustness to the wide dynamic range of
-transition probabilities.
+and the selected cells are compared with the same cells of the new
+weight matrix. With \code{target = "auto"}, unscaled and unthresholded
+transition methods assess only existing edges: absent transitions cannot
+appear in a subsample, and including these fixed zeros inflates the
+correlation. Association methods and scaled or thresholded networks assess
+all cells, because a zero original weight can become nonzero after case
+removal. Use \code{target = "existing"} explicitly to assess only the original
+edges in these networks. The correlation method defaults to Spearman.
 
 Case-dropping drops rows of \verb{$data} at random, so it treats the rows as
 independent units. When rows are nested in actors (several sessions per

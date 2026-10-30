@@ -1538,7 +1538,8 @@ predictability.netobject_group <- function(object, ...) {
 #' Same naming rule as .categorical_covariates(): a shared prefix followed
 #' by a number. Returns the run's column names when the run has at least two
 #' columns, is larger than any other run, and every column in it is
-#' numeric; otherwise character(0).
+#' numeric or entirely missing, with at least one numeric column; otherwise
+#' character(0).
 #' @noRd
 .numeric_position_run <- function(data) {
   nms <- names(data)
@@ -1548,7 +1549,9 @@ predictability.netobject_group <- function(object, ...) {
   runs <- table(prefix[numbered])
   if (max(runs) < 2L || sum(runs == max(runs)) > 1L) return(character(0))
   run <- nms[numbered & prefix == names(runs)[which.max(runs)]]
-  if (all(vapply(data[run], is.numeric, logical(1)))) run else character(0)
+  numeric <- vapply(data[run], is.numeric, logical(1))
+  missing <- vapply(data[run], function(x) all(is.na(x)), logical(1))
+  if (any(numeric) && all(numeric | missing)) run else character(0)
 }
 
 #' Categorical columns that are covariates, not sequence positions

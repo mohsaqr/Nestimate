@@ -37,7 +37,8 @@ Default: alphabetical.}
 number of sequences).}
 
 \item{n_grid}{Integer. Slices between the 5th and 95th percentile of the
-measure. Default 25.}
+measure. If these percentiles coincide for a nonconstant measure,
+its full range is used. Default 25.}
 
 \item{object}{A \code{net_landscape_surface} object (for
 \code{summary()}).}
@@ -90,6 +91,15 @@ their weighted pooled transitions. Moving along the axis goes from the
 most stable to the most volatile sequences.
 }
 \details{
+Network input replays per-sequence weighting, concatenation and boundary
+markers. Concatenated sequences are the resampling units. With a covariate,
+its value must be constant within each concatenated unit. Scaled,
+thresholded or otherwise modified networks whose weights do not match
+their stored sequences are refused; pass the original sequences to
+estimate a new landscape. Observed shares count prepared positions without
+sequence weighting. Phase windows retain the full sequence's weight.
+
+
 The measures are computed from the same sequences as the depths, so the
 cups of the most stable sequences are deep by construction (self-loop
 tendency in particular is closely tied to the stay probabilities). What

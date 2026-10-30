@@ -1,0 +1,857 @@
+expression(utils::globalVariables(c("u", "y", "ymin", "ymax", 
+    "label", "state", "group", "value", "depth", "h", "label_y")), 
+    .ls_bad <- function(msg, class = "nestimate_bad_input") {
+        stop(errorCondition(msg, class = class, call = NULL))
+    }, .ls_counts <- function(states, alphabet, sequence_weights = NULL) {
+        k <- length(alphabet)
+        codes <- matrix(match(states, alphabet) - 1L, nrow = nrow(states))
+        if (ncol(codes) < 2L) 
+            return(matrix(0L, nrow(codes), k * k))
+        cell <- codes[, -ncol(codes), drop = FALSE] * k + codes[, 
+            -1L, drop = FALSE] + 1L
+        counts <- t(apply(cell, 1L, function(v) tabulate(v[!is.na(v)], 
+            nbins = k * k)))
+        if (is.null(sequence_weights)) 
+            counts
+        else counts * sequence_weights
+    }, .ls_depth <- function(n) {
+        out_n <- rowSums(n)
+        stay <- ifelse(out_n > 0, diag(n)/out_n, NA_real_)
+        -log1p(-stay)
+    }, .ls_irreducible <- function(P) {
+        reach <- Reduce(function(r, i) (r %*% r) > 0, seq_len(ceiling(log2(nrow(P))) + 
+            1L), (P > 0) | diag(nrow(P)) > 0)
+        all(reach)
+    }, .ls_current <- function(n) {
+        out_n <- rowSums(n)
+        if (any(out_n == 0)) 
+            return(NA_real_)
+        P <- n/out_n
+        if (!.ls_irreducible(P)) 
+            return(NA_real_)
+        pi <- .mpt_stationary(P)
+        pi[1L] * P[1L, 2L] - pi[2L] * P[2L, 1L]
+    }, .ls_sequences <- function(x) {
+        if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
+            x <- .as_netobject(x)
+        }
+        if (inherits(x, "netobject") && !isTRUE(x$method %in% 
+            c("relative", "frequency"))) {
+            .mpt_not_a_chain(sprintf("A \"%s\" network", x$method %||% 
+                "unknown"))
+        }
+        seqs <- .as_sequences(x)
+        seqs$sequence_weights <- rep(1, nrow(seqs$states))
+        if (!inherits(x, "netobject")) 
+            return(seqs)
+        if ((!is.null(x$scaling) && !identical(x$scaling, "none")) || 
+            isTRUE(x$threshold > 0)) {
+            .ls_bad("Landscapes require an unscaled, unthresholded transition network.")
+        }
+        params <- x$params %||% list()
+        concat <- .param_get(params, "concat", 1L)
+        prepared <- .prepare_sequence_wide(as.data.frame(seqs$states), 
+            concat = concat, begin_state = .param_get(params, 
+                "begin_state"), end_state = .param_get(params, 
+                "end_state"))
+        if (concat > 1L) {
+            groups <- split(seq_len(nrow(seqs$states)), ceiling(seq_len(nrow(seqs$states))/concat))
+            ambiguous <- vapply(seqs$units, function(v) any(vapply(groups, 
+                function(idx) length(unique(v[idx])) > 1L, logical(1))), 
+                logical(1))
+            seqs$ambiguous_covariates <- names(seqs$units)[ambiguous]
+            seqs$units <- seqs$units[vapply(groups, function(idx) idx[1L], 
+                integer(1)), !ambiguous, drop = FALSE]
+            rownames(seqs$units) <- NULL
+        }
+        seqs$states <- prepared$matrix
+        seqs$alphabet <- sort(unique(c(prepared$states, x$nodes$label)))
+        seqs$sequence_weights <- if (isTRUE(.param_get(params, 
+            "weighted", FALSE))) {
+            1/pmax(rowSums(!is.na(seqs$states)), 1L)
+        }
+        else rep(1, nrow(seqs$states))
+        counts <- matrix(colSums(.ls_counts(seqs$states, seqs$alphabet, 
+            seqs$sequence_weights)), length(seqs$alphabet), byrow = TRUE)
+        reconstructed <- if (x$method == "relative") {
+            counts/pmax(rowSums(counts), .Machine$double.xmin)
+        }
+        else counts
+        original <- x$weights[seqs$alphabet, seqs$alphabet, drop = FALSE]
+        if (!isTRUE(all.equal(unname(original), reconstructed, 
+            check.attributes = FALSE, tolerance = 1e-10))) {
+            .ls_bad(paste("The network weights cannot be reconstructed from its", 
+                "stored sequences and estimation settings."))
+        }
+        seqs
+    }, .ls_states <- function(states, alphabet) {
+        if (is.null(states)) 
+            return(alphabet)
+        if (!is.character(states) || anyDuplicated(states) || 
+            !setequal(states, alphabet)) {
+            .ls_bad(sprintf("`states` must name every state exactly once: %s.", 
+                paste(alphabet, collapse = ", ")))
+        }
+        states
+    }, .ls_interval <- function(v, ci_level) {
+        v <- v[!is.na(v)]
+        if (length(v) < 2L) 
+            return(c(NA_real_, NA_real_))
+        alpha <- (1 - ci_level)/2
+        stats::quantile(v, c(alpha, 1 - alpha), names = FALSE, 
+            type = if (any(is.infinite(v))) 
+                1L
+            else 7L)
+    }, .ls_fit <- function(states_mat, states, iter, ci_level, 
+        name, sequence_weights = NULL) {
+        k <- length(states)
+        counts <- .ls_counts(states_mat, states, sequence_weights)
+        as_matrix <- function(v) matrix(v, k, k, byrow = TRUE, 
+            dimnames = list(states, states))
+        pooled <- as_matrix(colSums(counts))
+        if (sum(pooled) == 0) {
+            .ls_bad(sprintf(paste("'%s': no transition is observed (no sequence has two adjacent", 
+                "observed states), so there is no landscape."), 
+                name), class = "nestimate_landscape_unestimable")
+        }
+        depth <- .ls_depth(pooled)
+        absorbing <- states[is.infinite(depth)]
+        if (length(absorbing)) {
+            .ls_bad(sprintf(paste("'%s': %s is never left, so its expected stay (and cup depth) is", 
+                "infinite."), name, paste(absorbing, collapse = ", ")), 
+                class = "nestimate_landscape_unestimable")
+        }
+        boot <- lapply(seq_len(iter), function(b) as_matrix(colSums(counts[sample.int(nrow(counts), 
+            replace = TRUE), , drop = FALSE])))
+        boot_depth <- if (iter > 0L) 
+            vapply(boot, .ls_depth, numeric(k))
+        else matrix(NA_real_, k, 0L)
+        boot_depth <- matrix(boot_depth, nrow = k)
+        ci <- t(apply(boot_depth, 1L, .ls_interval, ci_level = ci_level))
+        occupancy <- tabulate(match(states_mat, states), nbins = k)
+        out_n <- rowSums(pooled)
+        cups <- data.frame(state = states, depth = depth, ci_lower = ci[, 
+            1], ci_upper = ci[, 2], dwell = exp(depth), stay = diag(pooled)/ifelse(out_n > 
+            0, out_n, NA), share = occupancy/sum(occupancy), 
+            n_from = out_n, resamples = rowSums(!is.na(boot_depth)), 
+            row.names = NULL)
+        off <- which(row(pooled) != col(pooled), arr.ind = TRUE)
+        off <- off[order(off[, 1], off[, 2]), , drop = FALSE]
+        exits <- data.frame(from = states[off[, 1]], to = states[off[, 
+            2]], probability = pooled[off]/ifelse(out_n[off[, 
+            1]] > 0, out_n[off[, 1]], NA), count = pooled[off], 
+            row.names = NULL)
+        circulation <- NULL
+        if (k == 3L) {
+            cur <- .ls_current(pooled)
+            bc <- if (iter > 0L) 
+                vapply(boot, .ls_current, numeric(1))
+            else numeric(0)
+            cv <- .ls_interval(bc, ci_level)
+            flip <- isTRUE(cur < 0)
+            cyc <- if (flip) 
+                rev(states)
+            else states
+            circulation <- data.frame(cycle = paste(c(cyc, cyc[1]), 
+                collapse = " -> "), current = abs(cur), ci_lower = if (flip) 
+                -cv[2]
+            else cv[1], ci_upper = if (flip) 
+                -cv[1]
+            else cv[2], resamples = sum(!is.na(bc)))
+        }
+        list(cups = cups, exits = exits, circulation = circulation, 
+            n_sequences = nrow(states_mat), n_transitions = sum(pooled))
+    }, stability_landscape <- function(x, states = NULL, iter = 1000L, 
+        ci_level = 0.95, seed = NULL) {
+        stopifnot(`\`iter\` must be a single non-negative integer` = length(iter) == 
+            1L && is.numeric(iter) && is.finite(iter) && iter >= 
+            0, `\`ci_level\` must be a single number in (0, 1)` = length(ci_level) == 
+            1L && is.numeric(ci_level) && ci_level > 0 && ci_level < 
+            1)
+        parts <- if (inherits(x, "netobject_group")) 
+            as.list(x)
+        else list(network = x)
+        seqs <- lapply(parts, .ls_sequences)
+        alphabet <- sort(unique(unlist(lapply(seqs, function(s) s$alphabet))))
+        if (length(alphabet) < 2L) 
+            .ls_bad("A landscape needs at least two states.")
+        states <- .ls_states(states, alphabet)
+        if (!is.null(seed)) {
+            if (exists(".Random.seed", envir = globalenv())) {
+                old <- get(".Random.seed", envir = globalenv())
+                on.exit(assign(".Random.seed", old, envir = globalenv()), 
+                  add = TRUE)
+            }
+            else {
+                on.exit(rm(".Random.seed", envir = globalenv()), 
+                  add = TRUE)
+            }
+            set.seed(seed)
+        }
+        fits <- Map(function(s, nm) .ls_fit(s$states, states, 
+            as.integer(iter), ci_level, nm, s$sequence_weights), 
+            seqs, names(parts))
+        structure(list(fits = fits, states = states, iter = as.integer(iter), 
+            ci_level = ci_level), class = "net_landscape")
+    }, summary.net_landscape <- function(object, table = c("cups", 
+        "exits", "circulation"), ...) {
+        table <- match.arg(table)
+        parts <- Map(function(f, g) {
+            tab <- f[[table]]
+            if (is.null(tab)) 
+                return(NULL)
+            cbind(group = g, tab)
+        }, object$fits, names(object$fits))
+        parts <- Filter(Negate(is.null), parts)
+        if (length(parts) == 0L) {
+            .ls_bad("The net circulation is defined for three states only.")
+        }
+        do.call(rbind, c(parts, make.row.names = FALSE))
+    }, print.net_landscape <- function(x, digits = 2, ...) {
+        n_net <- length(x$fits)
+        cat(sprintf("Stability landscape: %d states, %d network%s, %d resamples\n\n", 
+            length(x$states), n_net, if (n_net == 1L) 
+                ""
+            else "s", x$iter))
+        cups <- summary(x)
+        cups <- cups[, c("group", "state", "depth", "ci_lower", 
+            "ci_upper", "dwell", "stay", "share")]
+        num <- vapply(cups, is.numeric, logical(1))
+        cups[num] <- lapply(cups[num], round, digits = digits)
+        if (n_net == 1L) 
+            cups$group <- NULL
+        cat("Cups (depth = log of the expected stay; deeper = more stable):\n")
+        print(cups, row.names = FALSE)
+        circ <- Filter(Negate(is.null), lapply(x$fits, function(f) f$circulation))
+        if (length(circ)) {
+            cat("\nNet circulation (per step):\n")
+            invisible(Map(function(cc, g) cat(sprintf("  %s%s: %s [%s, %s]%s\n", 
+                if (n_net > 1L) paste0(g, ", ") else "", cc$cycle, 
+                format(round(cc$current, digits + 2L)), format(round(cc$ci_lower, 
+                  digits + 2L)), format(round(cc$ci_upper, digits + 
+                  2L)), if (cc$resamples < x$iter) sprintf(" (%d of %d resamples have a stationary distribution)", 
+                  cc$resamples, x$iter) else "")), circ, names(circ)))
+        }
+        cat("\nExit probabilities: summary(x, table = \"exits\")\n")
+        invisible(x)
+    }, .ls_cup_profile <- function(depth, n = 60L) {
+        s <- seq(0, 1, length.out = n)
+        d <- ifelse(is.na(depth), 0, depth)
+        out <- do.call(rbind, lapply(seq_along(d), function(i) data.frame(x = i - 
+            1.5 + s, u = -d[i] * (1 - cos(2 * pi * s))/2)))
+        out[!duplicated(out$x), ]
+    }, plot.net_landscape <- function(x, ...) {
+        states <- x$states
+        k <- length(states)
+        short <- function(s) substr(s, 1L, 3L)
+        cups <- summary(x)
+        cups$group <- factor(cups$group, levels = names(x$fits))
+        exits <- summary(x, table = "exits")
+        cups$exit_text <- vapply(seq_len(nrow(cups)), function(i) {
+            e <- exits[exits$group == cups$group[i] & exits$from == 
+                cups$state[i], ]
+            paste(sprintf("to %s %.2f", short(e$to), e$probability), 
+                collapse = ", ")
+        }, character(1))
+        cups$x <- match(cups$state, states) - 1
+        cups$y <- -ifelse(is.na(cups$depth), 0, cups$depth)
+        cups$ymin <- -cups$ci_upper
+        cups$ymax <- -cups$ci_lower
+        curve <- do.call(rbind, lapply(names(x$fits), function(g) transform(.ls_cup_profile(cups$depth[cups$group == 
+            g]), group = g)))
+        curve$group <- factor(curve$group, levels = names(x$fits))
+        deepest <- max(c(cups$depth, cups$ci_upper[is.finite(cups$ci_upper)]), 
+            na.rm = TRUE)
+        span <- max(deepest, 0.5)
+        cups$label <- sprintf("dwell %.1f, share %.2f\n%s", cups$dwell, 
+            cups$share, cups$exit_text)
+        cups$label_y <- pmin(cups$y, -ifelse(is.finite(cups$ci_upper), 
+            cups$ci_upper, deepest), na.rm = TRUE) - 0.08 * span
+        cups$state <- factor(cups$state, levels = states)
+        circ <- do.call(rbind, Map(function(f, g) if (is.null(f$circulation)) 
+            NULL
+        else transform(f$circulation, group = g), x$fits, names(x$fits)))
+        p <- ggplot2::ggplot(curve, ggplot2::aes(x, u)) + ggplot2::geom_hline(yintercept = 0, 
+            colour = "#999999", linewidth = 0.3) + ggplot2::geom_line(linewidth = 1, 
+            colour = "#000000") + ggplot2::geom_errorbar(data = cups, 
+            ggplot2::aes(x = x, ymin = ymin, ymax = ymax), inherit.aes = FALSE, 
+            width = 0.07, colour = "#999999", na.rm = TRUE) + 
+            ggplot2::geom_point(data = cups, ggplot2::aes(x = x, 
+                y = y + 0.05 * span, fill = state, shape = state), 
+                size = 7, stroke = 0.6, colour = "#000000") + 
+            ggplot2::geom_text(data = cups, ggplot2::aes(x = x, 
+                y = label_y, label = label), size = 3.1, vjust = 1, 
+                lineheight = 0.95) + ggplot2::scale_fill_manual(values = rep_len(.okabe_ito, 
+            k)) + ggplot2::scale_shape_manual(values = rep_len(c(21, 
+            22, 24, 23, 25), k)) + ggplot2::scale_x_continuous(breaks = seq(0, 
+            k - 1), labels = states, expand = ggplot2::expansion(add = 0.05)) + 
+            ggplot2::scale_y_continuous(name = "Cup depth, log of the expected stay", 
+                labels = function(b) format(-b), expand = ggplot2::expansion(mult = c(0.45, 
+                  0.2)), sec.axis = ggplot2::sec_axis(~exp(-.), 
+                  name = "Expected stay (steps)", breaks = c(1, 
+                    1.5, 2, 3, 5, 10, 20, 50, 100))) + ggplot2::labs(x = NULL, 
+            fill = NULL, shape = NULL, caption = sprintf(paste("Bars: %d%% interval, %d resamples of sequences. Under each cup:", 
+                "expected stay, share of time steps, exit probabilities."), 
+                round(100 * x$ci_level), x$iter)) + ggplot2::theme_minimal(base_size = 12) + 
+            ggplot2::theme(legend.position = "bottom", panel.grid.minor = ggplot2::element_blank(), 
+                panel.grid.major.x = ggplot2::element_blank())
+        if (!is.null(circ)) {
+            circ$group <- factor(circ$group, levels = names(x$fits))
+            circ$label <- sprintf("net circulation %s: %.3f [%.3f, %.3f] per step", 
+                circ$cycle, circ$current, circ$ci_lower, circ$ci_upper)
+            p <- p + ggplot2::geom_text(data = circ, ggplot2::aes(x = (k - 
+                1)/2, y = Inf, label = label), inherit.aes = FALSE, 
+                vjust = 1.5, size = 3.4)
+        }
+        if (length(x$fits) > 1L) 
+            p <- p + ggplot2::facet_wrap(~group, ncol = 1L)
+        p
+    }, .ls_measure_labels <- c(self_loop_tendency = "Self-loop tendency (higher = more stable)", 
+        transition_rate = "Transition rate (higher = less stable)", 
+        longitudinal_entropy = "Longitudinal entropy (higher = less stable)", 
+        simpson_diversity = "Simpson diversity (higher = less stable)", 
+        complexity_index = "Complexity index (higher = less stable)", 
+        mean_spell_duration = "Mean spell, steps (higher = more stable)", 
+        max_spell_duration = "Longest spell, steps (higher = more stable)", 
+        cyclic_feedback_strength = "Recurrence (higher = more returns)", 
+        initial_state_persistence = "Initial-state persistence (higher = more inertia)", 
+        dominant_proportion = "Dominant-state share (higher = more stable)"), 
+    .ls_higher_is_stable <- c("self_loop_tendency", "mean_spell_duration", 
+        "max_spell_duration", "initial_state_persistence", "dominant_proportion"), 
+    .ls_higher_is_unstable <- c("transition_rate", "longitudinal_entropy", 
+        "simpson_diversity", "complexity_index"), .ls_surface_one <- function(states_mat, 
+        states, measure, k, n_grid, name, sequence_weights = NULL) {
+        met <- sequence_metrics(states_mat)
+        keep <- which(met$valid_n >= 2L & !is.na(met[[measure]]))
+        if (length(keep) < 5L) {
+            .ls_bad(sprintf("'%s': fewer than 5 sequences with two or more observed states.", 
+                name), class = "nestimate_landscape_unestimable")
+        }
+        m <- met[[measure]][keep]
+        counts <- .ls_counts(states_mat[keep, , drop = FALSE], 
+            states, sequence_weights[keep])
+        kk <- length(states)
+        k_eff <- min(k, length(keep))
+        if (diff(range(m)) == 0) {
+            .ls_bad(sprintf("'%s': %s is the same for every sequence, so there is no axis to trace.", 
+                name, sQuote(measure, FALSE)))
+        }
+        endpoints <- stats::quantile(m, c(0.05, 0.95), names = FALSE)
+        if (diff(endpoints) == 0) 
+            endpoints <- range(m)
+        grid <- seq(endpoints[1L], endpoints[2L], length.out = n_grid)
+        floor_h <- diff(range(m))/50
+        rows <- lapply(grid, function(y) {
+            d <- abs(m - y)
+            h <- max(sort(d)[k_eff], floor_h) * 1.01
+            w <- ifelse(d < h, (1 - (d/h)^3)^3, 0)
+            n <- matrix(colSums(counts * w), kk, kk, byrow = TRUE)
+            depth <- .ls_depth(n)
+            data.frame(group = name, measure = measure, value = y, 
+                state = states, depth = depth, dwell = exp(depth), 
+                effective_n = sum(w)^2/sum(w^2))
+        })
+        do.call(rbind, rows)
+    }, landscape_surface <- function(x, measure = "longitudinal_entropy", 
+        states = NULL, k = 30L, n_grid = 25L) {
+        stopifnot(`\`k\` must be a single integer >= 5` = length(k) == 
+            1L && is.numeric(k) && k >= 5, `\`n_grid\` must be a single integer >= 2` = length(n_grid) == 
+            1L && is.numeric(n_grid) && n_grid >= 2)
+        if (!is.character(measure) || length(measure) == 0L) {
+            .ls_bad("`measure` must name one or more sequence_metrics() columns.")
+        }
+        parts <- if (inherits(x, "netobject_group")) 
+            as.list(x)
+        else list(network = x)
+        seqs <- lapply(parts, .ls_sequences)
+        alphabet <- sort(unique(unlist(lapply(seqs, function(s) s$alphabet))))
+        states <- .ls_states(states, alphabet)
+        probe <- sequence_metrics(seqs[[1]]$states)
+        numeric_cols <- names(probe)[vapply(probe, is.numeric, 
+            logical(1))]
+        bad <- setdiff(measure, numeric_cols)
+        if (length(bad)) {
+            .ls_bad(sprintf("`measure` must be numeric sequence_metrics() columns; not: %s.", 
+                paste(bad, collapse = ", ")))
+        }
+        slices <- do.call(rbind, unlist(lapply(names(parts), 
+            function(g) lapply(measure, function(m) .ls_surface_one(seqs[[g]]$states, 
+                states, m, as.integer(k), as.integer(n_grid), 
+                g, seqs[[g]]$sequence_weights))), recursive = FALSE))
+        rownames(slices) <- NULL
+        thin <- slices$effective_n < 5
+        if (any(thin)) {
+            warning(warningCondition(sprintf(paste("%d of %d slices rest on fewer than 5 effective sequences (minimum", 
+                "%.1f), often because many sequences share one value of the measure;", 
+                "their depths are unstable."), sum(thin)%/%length(states), 
+                nrow(slices)%/%length(states), min(slices$effective_n)), 
+                class = "nestimate_thin_slice"))
+        }
+        structure(list(slices = slices, states = states, measure = measure, 
+            groups = names(parts), k = as.integer(k)), class = "net_landscape_surface")
+    }, summary.net_landscape_surface <- function(object, ends = TRUE, 
+        ...) {
+        s <- object$slices
+        if (!isTRUE(ends)) 
+            return(s)
+        keys <- unique(s[, c("group", "measure", "state")])
+        out <- do.call(rbind, lapply(seq_len(nrow(keys)), function(i) {
+            r <- s[s$group == keys$group[i] & s$measure == keys$measure[i] & 
+                s$state == keys$state[i], ]
+            lo <- which.min(r$value)
+            hi <- which.max(r$value)
+            data.frame(keys[i, ], low_value = r$value[lo], depth_at_low = r$depth[lo], 
+                high_value = r$value[hi], depth_at_high = r$depth[hi], 
+                row.names = NULL)
+        }))
+        rownames(out) <- NULL
+        out
+    }, print.net_landscape_surface <- function(x, digits = 2, 
+        ...) {
+        cat(sprintf(paste0("Landscape surface: %d states, %d network%s x %d measure%s,", 
+            " %d nearest sequences per slice\n\n"), length(x$states), 
+            length(x$groups), if (length(x$groups) == 1L) 
+                ""
+            else "s", length(x$measure), if (length(x$measure) == 
+                1L) 
+                ""
+            else "s", x$k))
+        tab <- summary(x)
+        num <- vapply(tab, is.numeric, logical(1))
+        tab[num] <- lapply(tab[num], round, digits = digits)
+        names(tab) <- c("group", "measure", "state", "low", "depth_at_low", 
+            "high", "depth_at_high")
+        if (length(x$groups) == 1L) 
+            tab$group <- NULL
+        cat("Cup depth (log of the expected stay) at the low and the high end", 
+            "of each measure:\n")
+        print(tab, row.names = FALSE)
+        eff <- vapply(x$groups, function(g) {
+            e <- x$slices$effective_n[x$slices$group == g]
+            sprintf("%s %.1f-%.1f", g, min(e), max(e))
+        }, character(1))
+        cat(sprintf("\nEffective sequences per slice: %s\n", 
+            paste(eff, collapse = ", ")))
+        invisible(x)
+    }, plot.net_landscape_surface <- function(x, max_stay = 50, 
+        theta = 10, phi = 30, ncol = NULL, ...) {
+        stopifnot(`\`max_stay\` must be a single number > 1` = length(max_stay) == 
+            1L && is.numeric(max_stay) && max_stay > 1)
+        states <- x$states
+        kk <- length(states)
+        floor_depth <- log(max_stay)
+        panels <- unique(x$slices[, c("group", "measure")])
+        surf_of <- function(g, m) {
+            s <- x$slices[x$slices$group == g & x$slices$measure == 
+                m, ]
+            values <- sort(unique(s$value))
+            if (m %in% .ls_higher_is_stable) 
+                values <- rev(values)
+            profs <- lapply(values, function(v) {
+                d <- s$depth[s$value == v]
+                d <- ifelse(is.finite(d) | is.na(d), pmin(d, 
+                  floor_depth), floor_depth)
+                p <- .ls_cup_profile(d, n = 16L)
+                p$u[is.na(d[pmin(floor(p$x + 0.5) + 1, kk)])] <- NA_real_
+                p
+            })
+            list(x = profs[[1]]$x, y = seq_along(values), values = values, 
+                z = vapply(profs, function(p) p$u, numeric(nrow(profs[[1]]))))
+        }
+        surfs <- Map(surf_of, panels$group, panels$measure)
+        zlim <- range(c(0, unlist(lapply(surfs, function(s) s$z))), 
+            finite = TRUE)
+        if (diff(zlim) == 0) 
+            zlim <- zlim + c(-0.5, 0.5)
+        depth_ticks <- seq(0, floor(-zlim[1]))
+        ramp <- (grDevices::colorRampPalette(c("#009E73", "#F0E442", 
+            "#E69F00")))(100L)
+        ncol <- ncol %||% length(x$measure)
+        old_par <- graphics::par(mfrow = c(ceiling(nrow(panels)/ncol), 
+            ncol), mar = c(1, 2, 3, 6), oma = c(1.5, 0, 0, 0), 
+            xpd = NA)
+        on.exit(graphics::par(old_par), add = TRUE)
+        invisible(Map(function(s, g, m) {
+            z <- s$z
+            zf <- (z[-1, -1] + z[-1, -ncol(z)] + z[-nrow(z), 
+                -1] + z[-nrow(z), -ncol(z)])/4
+            col <- ramp[cut(zf, breaks = seq(zlim[1], zlim[2], 
+                length.out = 101L), include.lowest = TRUE)]
+            label <- unname(.ls_measure_labels[m])
+            if (is.na(label)) label <- m
+            main_title <- if (length(x$groups) > 1L) paste0(g, 
+                ": ", label) else label
+            pm <- graphics::persp(s$x, s$y, z, zlim = zlim, theta = theta, 
+                phi = phi, col = col, border = "grey25", lwd = 0.3, 
+                shade = 0.35, box = FALSE, expand = 0.7, main = main_title, 
+                cex.main = 0.9)
+            front <- min(s$y)
+            back <- max(s$y)
+            left <- min(s$x)
+            right <- max(s$x)
+            graphics::text(grDevices::trans3d(seq(0, kk - 1), 
+                front, zlim[1], pm), labels = states, cex = 0.75, 
+                font = 2, adj = c(0.5, 1.6))
+            graphics::segments(grDevices::trans3d(left, front, 
+                0, pm)$x, grDevices::trans3d(left, front, 0, 
+                pm)$y, grDevices::trans3d(left, front, zlim[1], 
+                pm)$x, grDevices::trans3d(left, front, zlim[1], 
+                pm)$y, col = "grey40")
+            graphics::text(grDevices::trans3d(left, front, -depth_ticks, 
+                pm), labels = depth_ticks, cex = 0.65, pos = 2)
+            graphics::text(grDevices::trans3d(left, front, zlim[1]/2, 
+                pm), labels = "depth", cex = 0.7, pos = 2, offset = 1.6)
+            graphics::text(grDevices::trans3d(right, c(front, 
+                back), 0, pm), labels = sprintf("%s: %s", if (m %in% 
+                c(.ls_higher_is_stable, .ls_higher_is_unstable)) c("most stable", 
+                "least stable") else c("low", "high"), format(round(c(s$values[1], 
+                s$values[length(s$values)]), 2))), cex = 0.65, 
+                pos = 4)
+        }, surfs, panels$group, panels$measure))
+        graphics::mtext(sprintf(paste("Front: the most stable end of each measure. Cup depth = log expected", 
+            "stay; stays above %g steps drawn at log(%g)."), 
+            max_stay, max_stay), side = 1, outer = TRUE, line = 0.3, 
+            cex = 0.7)
+        invisible(x)
+    }, .ls_pool <- function(counts, w, k) {
+        matrix(colSums(counts * w), k, k, byrow = TRUE)
+    }, .ls_n_ridges <- function(k) if (k == 2L) 1L else k, .ls_occupancy <- function(n) {
+        k <- nrow(n)
+        out_n <- rowSums(n)
+        n_out <- k + .ls_n_ridges(k)
+        if (any(out_n == 0)) 
+            return(rep(NA_real_, n_out))
+        P <- n/out_n
+        if (!.ls_irreducible(P)) 
+            return(rep(NA_real_, n_out))
+        pi <- .mpt_stationary(P)
+        nxt <- c(seq_len(k)[-1L], 1L)
+        sym <- (pi * P[cbind(seq_len(k), nxt)] + pi[nxt] * P[cbind(nxt, 
+            seq_len(k))])/2
+        sym <- sym[seq_len(.ls_n_ridges(k))]
+        c(-log(pi), ifelse(sym > 0, -log(sym), NA_real_))
+    }, .ls_profile <- function(ext_x, ext_u, n = 8L) {
+        s <- seq(0, 1, length.out = n)
+        out <- do.call(rbind, lapply(seq_len(length(ext_x) - 
+            1L), function(i) data.frame(x = ext_x[i] + s * (ext_x[i + 
+            1L] - ext_x[i]), u = ext_u[i] + (ext_u[i + 1L] - 
+            ext_u[i]) * (1 - cos(pi * s))/2)))
+        out[!duplicated(out$x), ]
+    }, .ls_trend_slices <- function(states_mat, covariate, states, 
+        along, window, k, n_grid, sequence_weights = NULL) {
+        kk <- length(states)
+        if (identical(along, "phase")) {
+            n_pos <- ncol(states_mat)
+            if (window > n_pos) {
+                .ls_bad(sprintf("`window` (%d) is longer than the sequences (%d).", 
+                  window, n_pos))
+            }
+            starts <- seq_len(n_pos - window + 1L)
+            counts <- lapply(starts, function(t) .ls_counts(states_mat[, 
+                t:(t + window - 1L), drop = FALSE], states, sequence_weights))
+            return(list(value = starts + (window - 1)/2, label = sprintf("%d-%d", 
+                starts, starts + window - 1L), pooled_of = function(idx) lapply(counts, 
+                function(cn) .ls_pool(cn[idx, , drop = FALSE], 
+                  1, kk)), n_used = nrow(states_mat)))
+        }
+        keep <- which(!is.na(covariate) & rowSums(!is.na(states_mat)) >= 
+            2L)
+        if (length(keep) < 5L) {
+            .ls_bad("Fewer than 5 sequences with the covariate and two or more observed states.", 
+                class = "nestimate_landscape_unestimable")
+        }
+        m <- covariate[keep]
+        counts <- .ls_counts(states_mat[keep, , drop = FALSE], 
+            states, sequence_weights[keep])
+        if (diff(range(m)) == 0) {
+            .ls_bad(sprintf("`%s` is the same for every sequence, so there is no axis to trace.", 
+                along))
+        }
+        endpoints <- stats::quantile(m, c(0.05, 0.95), names = FALSE)
+        if (diff(endpoints) == 0) 
+            endpoints <- range(m)
+        grid <- seq(endpoints[1L], endpoints[2L], length.out = n_grid)
+        floor_h <- diff(range(m))/50
+        weights_at <- function(mm, y) {
+            d <- abs(mm - y)
+            h <- max(sort(d)[min(k, length(d))], floor_h) * 1.01
+            ifelse(d < h, (1 - (d/h)^3)^3, 0)
+        }
+        list(value = grid, label = format(round(grid, 2)), pooled_of = function(idx) lapply(grid, 
+            function(y) .ls_pool(counts[idx, , drop = FALSE], 
+                weights_at(m[idx], y), kk)), n_used = length(keep))
+    }, landscape_trend <- function(x, along = "phase", depth = c("stay", 
+        "occupancy"), states = NULL, window = 5L, k = 30L, n_grid = 20L, 
+        iter = 500L, ci_level = 0.95, seed = NULL) {
+        depth <- match.arg(depth)
+        stopifnot(`\`along\` must be a single string` = is.character(along) && 
+            length(along) == 1L, `\`window\` must be a single integer >= 2` = length(window) == 
+            1L && is.numeric(window) && window >= 2, `\`k\` must be a single integer >= 5` = length(k) == 
+            1L && is.numeric(k) && k >= 5, `\`n_grid\` must be a single integer >= 2` = length(n_grid) == 
+            1L && is.numeric(n_grid) && n_grid >= 2, `\`iter\` must be a single non-negative integer` = length(iter) == 
+            1L && is.numeric(iter) && iter >= 0, `\`ci_level\` must be a single number in (0, 1)` = length(ci_level) == 
+            1L && ci_level > 0 && ci_level < 1)
+        parts <- if (inherits(x, "netobject_group")) 
+            as.list(x)
+        else list(network = x)
+        seqs <- lapply(parts, .ls_sequences)
+        alphabet <- sort(unique(unlist(lapply(seqs, function(s) s$alphabet))))
+        states <- .ls_states(states, alphabet)
+        covariates <- lapply(seqs, function(s) {
+            if (identical(along, "phase")) 
+                return(NULL)
+            if (along %in% s$ambiguous_covariates) {
+                .ls_bad(sprintf("`%s` must be constant within each concatenated sequence.", 
+                  along))
+            }
+            v <- s$units[[along]]
+            if (is.null(v) || !is.numeric(v)) {
+                .ls_bad(sprintf(paste("`along` must be \"phase\" or a numeric covariate of the sequences;", 
+                  "found: %s."), paste(c(names(s$units), "phase"), 
+                  collapse = ", ")))
+            }
+            v
+        })
+        if (!is.null(seed)) {
+            if (exists(".Random.seed", envir = globalenv())) {
+                old <- get(".Random.seed", envir = globalenv())
+                on.exit(assign(".Random.seed", old, envir = globalenv()), 
+                  add = TRUE)
+            }
+            else {
+                on.exit(rm(".Random.seed", envir = globalenv()), 
+                  add = TRUE)
+            }
+            set.seed(seed)
+        }
+        kk <- length(states)
+        nxt <- c(seq_len(kk)[-1L], 1L)
+        metric <- if (depth == "stay") 
+            .ls_depth
+        else .ls_occupancy
+        n_metric <- if (depth == "stay") 
+            kk
+        else kk + .ls_n_ridges(kk)
+        tabs <- Map(function(s, cv, g) {
+            sl <- .ls_trend_slices(s$states, cv, states, along, 
+                as.integer(window), as.integer(k), as.integer(n_grid), 
+                s$sequence_weights)
+            pooled <- sl$pooled_of(seq_len(sl$n_used))
+            est <- vapply(pooled, metric, numeric(n_metric))
+            boot <- lapply(seq_len(iter), function(b) vapply(sl$pooled_of(sample.int(sl$n_used, 
+                replace = TRUE)), metric, numeric(n_metric)))
+            n_pos <- length(sl$value)
+            ci <- vapply(seq_len(n_metric * n_pos), function(cell) .ls_interval(vapply(boot, 
+                function(bm) bm[cell], numeric(1)), ci_level), 
+                numeric(2))
+            n_from <- vapply(pooled, rowSums, numeric(kk))
+            out <- data.frame(group = g, along = along, value = rep(sl$value, 
+                each = n_metric), label = rep(sl$label, each = n_metric), 
+                feature = rep(c(rep("well", kk), rep("ridge", 
+                  n_metric - kk)), times = n_pos), state = rep(c(states, 
+                  if (n_metric > kk) paste(states, states[nxt], 
+                    sep = " | ")[seq_len(n_metric - kk)]), times = n_pos), 
+                height = as.vector(est), ci_lower = ci[1, ], 
+                ci_upper = ci[2, ], n_from = as.vector(rbind(n_from, 
+                  matrix(NA_real_, n_metric - kk, n_pos))))
+            if (depth == "stay") {
+                out$dwell <- exp(out$height)
+                names(out)[names(out) == "height"] <- "depth"
+            }
+            else {
+                names(out)[names(out) == "height"] <- "potential"
+            }
+            out
+        }, seqs, covariates, names(parts))
+        structure(list(table = do.call(rbind, c(tabs, make.row.names = FALSE)), 
+            states = states, along = along, depth = depth, window = as.integer(window), 
+            k = as.integer(k), iter = as.integer(iter), ci_level = ci_level, 
+            groups = names(parts)), class = "net_landscape_trend")
+    }, .ls_height_col <- function(x) if (x$depth == "stay") "depth" else "potential", 
+    summary.net_landscape_trend <- function(object, ...) object$table, 
+    print.net_landscape_trend <- function(x, digits = 2, ...) {
+        axis <- if (identical(x$along, "phase")) 
+            sprintf("program phase (%d-step windows)", x$window)
+        else sprintf("%s (%d nearest sequences per slice)", x$along, 
+            x$k)
+        cat(sprintf("Stability landscape along %s: %d states, %d network%s, %d resamples\n\n", 
+            axis, length(x$states), length(x$groups), if (length(x$groups) == 
+                1L) 
+                ""
+            else "s", x$iter))
+        hc <- .ls_height_col(x)
+        tab <- x$table[x$table$feature == "well", ]
+        ends <- do.call(rbind, lapply(split(tab, list(tab$group, 
+            tab$state), drop = TRUE), function(r) {
+            r <- r[order(r$value), ]
+            h <- r[[hc]]
+            fin <- h[is.finite(h)]
+            data.frame(group = r$group[1], state = r$state[1], 
+                first = r$label[1], at_first = h[1], last = r$label[nrow(r)], 
+                at_last = h[nrow(r)], min = if (length(fin)) 
+                  min(fin)
+                else NA_real_, max = if (length(fin)) 
+                  max(fin)
+                else NA_real_)
+        }))
+        ends <- ends[order(match(ends$group, x$groups), match(ends$state, 
+            x$states)), ]
+        num <- vapply(ends, is.numeric, logical(1))
+        ends[num] <- lapply(ends[num], round, digits = digits)
+        if (length(x$groups) == 1L) 
+            ends$group <- NULL
+        cat(if (x$depth == "stay") 
+            "Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:\n"
+        else "Cup potential (-log pi; lower = more time in the state) at the two ends and its range:\n")
+        print(ends, row.names = FALSE)
+        bad <- sum(!is.finite(x$table[[hc]]))
+        if (bad > 0L) {
+            cat(sprintf("\n%d value%s not estimable (state never left, absent, or no stationary distribution).\n", 
+                bad, if (bad == 1L) 
+                  ""
+                else "s"))
+        }
+        invisible(x)
+    }, plot.net_landscape_trend <- function(x, type = c("lines", 
+        "surface"), theta = 10, phi = 30, ...) {
+        type <- match.arg(type)
+        if (type == "surface") 
+            return(.ls_trend_surface(x, theta, phi))
+        hc <- .ls_height_col(x)
+        tab <- x$table[x$table$feature == "well", ]
+        tab$h <- tab[[hc]]
+        bad <- sum(!is.finite(tab$h))
+        tab <- tab[is.finite(tab$h), ]
+        tab$ci_upper[!is.finite(tab$ci_upper)] <- NA_real_
+        tab$state <- factor(tab$state, levels = x$states)
+        tab$group <- factor(tab$group, levels = x$groups)
+        kk <- length(x$states)
+        lims <- range(tab$h)
+        lims <- lims + c(-0.15, 0.15) * max(diff(lims), 0.5)
+        if (x$depth == "stay") 
+            lims[1] <- max(lims[1], 0)
+        last <- do.call(rbind, lapply(split(tab, list(tab$group, 
+            tab$state), drop = TRUE), function(r) r[which.max(r$value), 
+            ]))
+        xlab <- if (identical(x$along, "phase")) 
+            sprintf("Program phase (centre of a %d-step window)", 
+                x$window)
+        else x$along
+        y_scale <- if (x$depth == "stay") {
+            ggplot2::scale_y_continuous(name = "Cup depth, log of the expected stay", 
+                sec.axis = ggplot2::sec_axis(~exp(.), name = "Expected stay (steps)", 
+                  breaks = c(1, 2, 5, 10, 20, 50)))
+        }
+        else {
+            ggplot2::scale_y_continuous(name = "Cup potential, -log pi (lower = more time in the state)")
+        }
+        p <- ggplot2::ggplot(tab, ggplot2::aes(value, h, colour = state, 
+            fill = state, shape = state, linetype = state)) + 
+            ggplot2::geom_ribbon(ggplot2::aes(ymin = ci_lower, 
+                ymax = ci_upper), alpha = 0.15, colour = NA, 
+                na.rm = TRUE) + ggplot2::geom_line(linewidth = 0.9) + 
+            ggplot2::geom_point(size = 2.2, fill = "white") + 
+            ggplot2::geom_text(data = last, ggplot2::aes(label = state), 
+                hjust = -0.15, size = 3.4, show.legend = FALSE) + 
+            ggplot2::scale_colour_manual(values = rep_len(.okabe_ito, 
+                kk)) + ggplot2::scale_fill_manual(values = rep_len(.okabe_ito, 
+            kk)) + ggplot2::scale_shape_manual(values = rep_len(c(21, 
+            22, 24, 23, 25), kk)) + ggplot2::scale_linetype_manual(values = rep_len(c("solid", 
+            "dashed", "dotdash", "longdash", "twodash"), kk)) + 
+            ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 
+                0.15))) + y_scale + ggplot2::coord_cartesian(ylim = lims) + 
+            ggplot2::labs(x = xlab, colour = NULL, fill = NULL, 
+                shape = NULL, linetype = NULL, caption = paste0(sprintf("Bands: %d%% interval, %d resamples of sequences, clipped at the panel edge.", 
+                  round(100 * x$ci_level), x$iter), if (bad > 
+                  0L) 
+                  sprintf(" %d point%s not estimable, not drawn.", 
+                    bad, if (bad == 1L) 
+                      ""
+                    else "s")
+                else "")) + ggplot2::theme_minimal(base_size = 12) + 
+            ggplot2::theme(legend.position = "bottom", panel.grid.minor = ggplot2::element_blank())
+        if (length(x$groups) > 1L) 
+            p <- p + ggplot2::facet_wrap(~group, ncol = 1L)
+        p
+    }, .ls_trend_surface <- function(x, theta, phi) {
+        hc <- .ls_height_col(x)
+        kk <- length(x$states)
+        surf_of <- function(g) {
+            s <- x$table[x$table$group == g, ]
+            values <- sort(unique(s$value))
+            profs <- lapply(values, function(v) {
+                r <- s[s$value == v, ]
+                well <- r[[hc]][r$feature == "well"]
+                if (x$depth == "stay") {
+                  d <- ifelse(is.finite(well), well, NA_real_)
+                  p <- .ls_cup_profile(d, n = 16L)
+                  p$u[is.na(d[pmin(floor(p$x + 0.5) + 1, kk)])] <- NA_real_
+                  return(p)
+                }
+                ridge <- rep_len(r[[hc]][r$feature == "ridge"], 
+                  kk)
+                .ls_profile(seq(-0.5, kk - 0.5, by = 0.5), c(ridge[kk], 
+                  c(rbind(well, ridge))))
+            })
+            list(x = profs[[1]]$x, y = values, z = vapply(profs, 
+                function(p) p$u, numeric(nrow(profs[[1]]))))
+        }
+        surfs <- lapply(x$groups, surf_of)
+        zlim <- range(unlist(lapply(surfs, function(s) s$z)), 
+            finite = TRUE)
+        if (x$depth == "stay") 
+            zlim[2] <- max(zlim[2], 0)
+        if (diff(zlim) == 0) 
+            zlim <- zlim + c(-0.5, 0.5)
+        ramp <- (grDevices::colorRampPalette(c("#009E73", "#F0E442", 
+            "#E69F00")))(100L)
+        old_par <- graphics::par(mfrow = c(1L, length(surfs)), 
+            mar = c(2, 3, 3, 3))
+        on.exit(graphics::par(old_par), add = TRUE)
+        ylab <- if (identical(x$along, "phase")) 
+            "Course (window centre)"
+        else x$along
+        zlab <- if (x$depth == "stay") 
+            "-depth (log stay)"
+        else "Potential"
+        invisible(Map(function(s, g) {
+            z <- s$z
+            zf <- (z[-1, -1] + z[-1, -ncol(z)] + z[-nrow(z), 
+                -1] + z[-nrow(z), -ncol(z)])/4
+            if (all(is.na(zf))) {
+                graphics::plot.new()
+                graphics::title(main = if (length(x$groups) > 
+                  1L) g else "")
+                graphics::text(0.5, 0.5, cex = 0.9, labels = sprintf("Not estimable:\nfewer than two neighbouring %s\nwith a value for every state.", 
+                  if (identical(x$along, "phase")) "windows" else "slices"))
+                return(invisible(NULL))
+            }
+            col <- ramp[cut(zf, breaks = seq(zlim[1], zlim[2], 
+                length.out = 101L), include.lowest = TRUE)]
+            pm <- graphics::persp(s$x, s$y, z, zlim = zlim, theta = theta, 
+                phi = phi, col = col, border = "grey25", lwd = 0.3, 
+                shade = 0.35, ticktype = "detailed", nticks = 4, 
+                expand = 0.7, xlab = "", ylab = ylab, zlab = zlab, 
+                main = if (length(x$groups) > 1L) g else "")
+            graphics::text(grDevices::trans3d(seq(0, kk - 1), 
+                min(s$y), zlim[1], pm), labels = x$states, cex = 0.8, 
+                font = 2, adj = c(0.5, 1.6))
+        }, surfs, x$groups))
+        invisible(x)
+    })
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+    group state     depth ci_lower ci_upper dwell      stay     share n_from
+1 network     A 1.0986123       NA       NA     3 0.6666667 0.6666667      3
+2 network     B 0.6931472       NA       NA     2 0.5000000 0.3333333      2
+  resamples
+1         0
+2         0
+List of 5
+ $ states              : chr [1, 1:6] "A" "A" "A" "B" ...
+ $ units               :'data.frame':	1 obs. of  0 variables
+ $ alphabet            : chr [1:2] "A" "B"
+ $ sequence_weights    : num 1
+ $ ambiguous_covariates: chr(0) 

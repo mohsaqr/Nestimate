@@ -1,0 +1,64 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-mcml_pc.R","mcml_pc","all three aggregations recover the planted block ordering",6,0,FALSE,FALSE,0,0.369,0.027,0.414,6
+"test-mcml_pc.R","mcml_pc","aggregation = 'composite' remains a scaled-score alias",3,0,FALSE,FALSE,0,0.056,0.004,0.0640000000000001,3
+"test-mcml_pc.R","mcml_pc","result structure is complete and undirected",8,0,FALSE,FALSE,0,0.0270000000000001,0.005,0.0390000000000001,8
+"test-mcml_pc.R","mcml_pc","netobject input reuses its data and method",1,0,FALSE,FALSE,0,0.166,0.00700000000000001,0.179,1
+"test-mcml_pc.R","mcml_pc","average mode works without raw data; re-estimation refuses",3,0,FALSE,FALSE,0,0.032,0.002,0.036,3
+"test-mcml_pc.R","mcml_pc","directed netobjects are rejected with guidance",1,0,FALSE,FALSE,0,0.0299999999999998,0.001,0.0309999999999997,1
+"test-mcml_pc.R","mcml_pc","loadings are tidy diagnostics with weights summing to 1",7,0,FALSE,FALSE,0,0.0299999999999998,0.006,0.0430000000000001,7
+"test-mcml_pc.R","mcml_pc","within = 'subnetwork' slices the node-level matrix",1,0,FALSE,FALSE,0,0.0129999999999999,0.002,0.0179999999999998,1
+"test-mcml_pc.R","mcml_pc","singleton clusters get NULL within networks",2,0,FALSE,FALSE,0,0.0189999999999997,0.00299999999999997,0.0249999999999999,2
+"test-mcml_pc.R","mcml_pc","membership vector input matches list input",1,0,FALSE,FALSE,0,0.0219999999999998,0.003,0.028,1
+"test-mcml_pc.R","mcml_pc","cluster validation errors are clear",4,0,FALSE,FALSE,0,0.0219999999999998,0.001,0.028,4
+"test-mcml_pc.R","mcml_pc","print, summary, and plot methods work",4,0,FALSE,FALSE,0,0.0699999999999998,0.005,0.0879999999999996,4
+"test-mcml_pc.R","mcml_pc","composite and loadings agree when loadings are uniform",1,0,FALSE,FALSE,0,0.0310000000000001,0.002,0.036,1
+"test-mcml_pc.R","mcml_pc","misassigned items are flagged as misfit with a warning",4,0,FALSE,FALSE,0,0.0300000000000002,0.003,0.036,4
+"test-mcml_pc.R","mcml_pc","reverse-keyed items are flipped and the macro recovers",5,0,FALSE,FALSE,0,0.0539999999999998,0.005,0.065,5
+"test-mcml_pc.R","mcml_pc","rv and canonical aggregations recover the planted ordering",10,0,FALSE,FALSE,0,0.0570000000000004,0.00699999999999998,0.077,10
+"test-mcml_pc.R","mcml_pc","canonical correlation upper-bounds the composite correlation",1,0,FALSE,FALSE,0,0.0339999999999998,0.002,0.0409999999999999,1
+"test-mcml_pc.R","mcml_pc","rv and canonical refuse weight-only input",1,0,FALSE,FALSE,0,0.00600000000000023,0.001,0.0089999999999999,1
+"test-mcml_pc.R","mcml_pc","composites tolerate missing data",3,0,FALSE,FALSE,0,0.0169999999999999,0.003,0.0209999999999999,3
+"test-mcml_pc.R","mcml_pc","polychoric estimation works on ordinal data",3,0,FALSE,FALSE,0,0.198,0.019,0.253,3
+"test-mcml_pc.R","mcml_pc","bootstrap machinery works on the composite macro network",3,0,FALSE,FALSE,0,0.0630000000000002,0.003,0.0700000000000003,3
+"test-mcml_pc.R","mcml_pc","loading_stability returns tidy CIs and is reproducible",8,0,FALSE,FALSE,0,0.241,0.00700000000000001,0.265,8
+"test-mcml_pc.R","mcml_pc","singleton clusters are not flagged misfit and carry weight 1",2,0,FALSE,FALSE,0,0.0150000000000001,0.002,0.0190000000000001,2
+"test-mcml_pc.R","mcml_pc","all five weightings recover the planted block ordering",10,0,FALSE,FALSE,0,0.0920000000000001,0.00699999999999995,0.109,10
+"test-mcml_pc.R","mcml_pc","aggregation = 'loadings' is composite with strength weighting",3,0,FALSE,FALSE,0,0.174,0.004,0.185,3
+"test-mcml_pc.R","mcml_pc","every weighting gives non-negative weights summing to 1",10,0,FALSE,FALSE,0,0.0699999999999998,0.00700000000000001,0.0860000000000003,10
+"test-mcml_pc.R","mcml_pc","data-driven weightings diverge from equal on a weak item",6,0,FALSE,FALSE,0,0.0499999999999998,0.006,0.0629999999999997,6
+"test-mcml_pc.R","mcml_pc","pca and factor weightings recover a reverse-keyed item",4,0,FALSE,FALSE,0,0.0550000000000002,0.003,0.0650000000000004,4
+"test-mcml_pc.R","mcml_pc","factor weighting on a 2-item cluster warns and falls back",4,0,FALSE,FALSE,0,0.0190000000000001,0.002,0.0250000000000004,4
+"test-mcml_pc.R","mcml_pc","factor weighting is deterministic across identical calls",1,0,FALSE,FALSE,0,0.0329999999999999,0.001,0.0359999999999996,1
+"test-mcml_pc.R","mcml_pc","id_col drops identifier columns from data.frame input",3,0,FALSE,FALSE,0,0.0420000000000003,0.003,0.0490000000000004,3
+"test-mcml_pc.R","mcml_pc","the five new weightings recover the planted block ordering",15,0,FALSE,FALSE,0,0.119,0.011,0.156,15
+"test-mcml_pc.R","mcml_pc","expected_influence equals strength without negative edges",1,0,FALSE,FALSE,0,0.0229999999999997,0.002,0.0279999999999996,1
+"test-mcml_pc.R","mcml_pc","specificity downweights a misassigned item to zero",1,0,FALSE,FALSE,0,0.0149999999999997,0.002,0.0200000000000005,1
+"test-mcml_pc.R","mcml_pc","betweenness falls back to equal weights with a warning",2,0,FALSE,FALSE,0,0.0179999999999998,0.001,0.0209999999999999,2
+"test-mcml_pc.R","mcml_pc","custom named weight vectors are honored and validated",4,0,FALSE,FALSE,0,0.0259999999999998,0.002,0.0330000000000004,4
+"test-mcml_pc.R","mcml_pc","custom weighting functions are honored and validated",4,0,FALSE,FALSE,0,0.0219999999999994,0.002,0.0259999999999998,4
+"test-mcml_pc.R","mcml_pc","item_total recovers a reverse-keyed item",2,0,FALSE,FALSE,0,0.0199999999999996,0.002,0.024,2
+"test-mcml_pc.R","mcml_pc","item_total recovers a reverse-keyed item even in a 3-item cluster",2,0,FALSE,FALSE,0,0.0250000000000004,0.002,0.0300000000000002,2
+"test-mcml_pc.R","mcml_pc","all fa_method extractors run and agree on clean 1-factor blocks",11,0,FALSE,FALSE,0,0.0619999999999994,0.006,0.0800000000000001,11
+"test-mcml_pc.R","mcml_pc","cfa extraction works and matches ml for continuous items",2,0,FALSE,FALSE,0,0.107,0.006,0.121,2
+"test-mcml_pc.R","mcml_pc","polychoric CFA (categorical factor model) runs on ordinal data",3,0,FALSE,FALSE,0,0.194,0.00900000000000001,0.211,3
+"test-mcml_pc.R","mcml_pc","fa_method is validated and recorded only for factor weighting",2,0,FALSE,FALSE,0,0.0170000000000003,0.002,0.0199999999999996,2
+"test-mcml_pc.R","mcml_pc","lavaan arguments pass through ... verbatim",6,0,FALSE,FALSE,2,0.476,0.018,0.516999999999999,4
+"test-mcml_pc.R","mcml_pc","protected fa_args are ignored with a warning",2,0,FALSE,FALSE,0,0.0419999999999998,0.002,0.0490000000000004,2
+"test-mcml_pc.R","mcml_pc","paf convergence controls pass through fa_args",2,0,FALSE,FALSE,0,0.04,0.003,0.0470000000000006,2
+"test-mcml_pc.R","mcml_pc","stray ... arguments error unless weighting = 'factor'",2,0,FALSE,FALSE,0,0.00499999999999989,0.001,0.00800000000000001,2
+"test-mcml_pc.R","mcml_pc","as_networks.mcml_pc returns a netobject_group of macro + clusters",3,0,FALSE,FALSE,0,0.0140000000000002,0.002,0.0179999999999998,3
+"test-mcml_pc.R","mcml_pc","as_networks preserves psychometric semantics (undirected, estimator, data)",7,0,FALSE,FALSE,0,0.0250000000000004,0.004,0.0359999999999996,7
+"test-mcml_pc.R","mcml_pc","as_networks output flows into downstream verbs (centrality)",2,0,FALSE,FALSE,0,0.016,0.002,0.0200000000000005,2
+"test-mcml_pc.R","mcml_pc","as_networks drops singleton clusters with a warning",3,0,FALSE,FALSE,0,0.0209999999999999,0.002,0.0259999999999998,3
+"test-mcml_pc.R","mcml_pc","as_networks.default passes through a group and errors otherwise",2,0,FALSE,FALSE,0,0.0170000000000003,0.002,0.0209999999999999,2
+"test-mcml_pc.R","mcml_pc","build_mcml_pc accepts clusters as a two-column data.frame",10,0,FALSE,FALSE,6,0.0469999999999997,0.002,0.0540000000000003,4
+"test-mcml_pc.R","mcml_pc","item_loadings() returns the tidy item table",3,0,FALSE,FALSE,0,0.0209999999999999,0.003,0.0310000000000006,3
+"test-mcml_pc.R","mcml_pc","item_loadings(misfit=) partitions the table without loss",4,0,FALSE,FALSE,0,0.0259999999999998,0.003,0.0350000000000001,4
+"test-mcml_pc.R","mcml_pc","item_loadings() rejects a non-logical misfit filter",1,0,FALSE,FALSE,0,0.0150000000000006,0.001,0.016,1
+"test-mcml_pc.R","mcml_pc","composites() returns one row per observation, one column per cluster",4,0,FALSE,FALSE,0,0.0169999999999995,0.002,0.0220000000000002,4
+"test-mcml_pc.R","mcml_pc","composites() reproduces the macro network it was fitted on",1,0,FALSE,FALSE,0,0.0170000000000003,0.001,0.0199999999999996,1
+"test-mcml_pc.R","mcml_pc","composites() errors by class on the descriptive aggregations",1,0,FALSE,FALSE,0,0.0119999999999996,0.001,0.0129999999999999,1
+"test-mcml_pc.R","mcml_pc","macro_network() returns the cluster-level netobject of an mcml_pc",3,0,FALSE,FALSE,0,0.0169999999999995,0.003,0.0270000000000001,3
+"test-mcml_pc.R","mcml_pc","macro_network() refuses expand= on a psychometric fit",1,0,FALSE,FALSE,0,0.032,0.001,0.0380000000000003,1
+"test-mcml_pc.R","mcml_pc","composites() keeps one row per input row, with NA and row names",5,0,FALSE,FALSE,0,0.016,0.003,0.0250000000000004,5
+"test-mcml_pc.R","mcml_pc","macro_network(mcml_pc) rejects method and ... instead of ignoring them",3,0,FALSE,FALSE,0,0.0129999999999999,0.001,0.016,3

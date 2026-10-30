@@ -223,7 +223,7 @@
   mi <- min(x, na.rm = na.rm)
   ma <- max(x, na.rm = na.rm)
   span <- ma - mi
-  if (!isTRUE(span > 1e-10 * max(abs(c(mi, ma)), 1))) {
+  if (!isTRUE(span > 1e-10 * max(abs(c(mi, ma))))) {
     return(rep(NaN, length(x)))
   }
   (x - mi) / span

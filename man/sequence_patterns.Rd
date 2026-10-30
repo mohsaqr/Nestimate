@@ -102,7 +102,8 @@ group); for two groups \code{odds_ratio}, \code{or_lower},
 (then \code{support}).
 
 Conditions: \code{nestimate_bad_input} for a state name containing
-\code{"->"}, a missing group column, a group vector of the wrong length,
+\code{"->"} or consisting only of asterisks (reserved for wildcards),
+a missing group column, a group vector of the wrong length,
 or a group with fewer than two values; warning
 \code{nestimate_missing_group} when sequences with a missing group are
 dropped.

@@ -12,13 +12,14 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 # column f * k + t + 1 counts from-state f to to-state t (0-based codes). A
 # pair counts when both positions are observed, as in build_network().
 #' @noRd
-.ls_counts <- function(states, alphabet) {
+.ls_counts <- function(states, alphabet, sequence_weights = NULL) {
   k <- length(alphabet)
   codes <- matrix(match(states, alphabet) - 1L, nrow = nrow(states))
   if (ncol(codes) < 2L) return(matrix(0L, nrow(codes), k * k))
   cell <- codes[, -ncol(codes), drop = FALSE] * k +
     codes[, -1L, drop = FALSE] + 1L
-  t(apply(cell, 1L, \(v) tabulate(v[!is.na(v)], nbins = k * k)))
+  counts <- t(apply(cell, 1L, \(v) tabulate(v[!is.na(v)], nbins = k * k)))
+  if (is.null(sequence_weights)) counts else counts * sequence_weights
 }
 
 # Cup depth of every state from a pooled count matrix: log of the expected
@@ -54,12 +55,58 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 }
 
 #' @noRd
+# Replay sequence preparation before counting or selecting bootstrap units.
 .ls_sequences <- function(x) {
-  if (inherits(x, c("netobject", "cograph_network")) &&
+  if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
+    x <- .as_netobject(x)
+  }
+  if (inherits(x, "netobject") &&
       !isTRUE(x$method %in% c("relative", "frequency"))) {
     .mpt_not_a_chain(sprintf("A \"%s\" network", x$method %||% "unknown"))
   }
-  .as_sequences(x)
+  seqs <- .as_sequences(x)
+  seqs$sequence_weights <- rep(1, nrow(seqs$states))
+  if (!inherits(x, "netobject")) return(seqs)
+  if ((!is.null(x$scaling) && !identical(x$scaling, "none")) ||
+      isTRUE(x$threshold > 0)) {
+    .ls_bad("Landscapes require an unscaled, unthresholded transition network.")
+  }
+  params <- x$params %||% list()
+  concat <- as.integer(.param_get(params, "concat", 1L))
+  prepared <- .prepare_sequence_wide(
+    as.data.frame(seqs$states), concat = concat,
+    begin_state = .param_get(params, "begin_state"),
+    end_state = .param_get(params, "end_state"))
+  if (concat > 1L) {
+    groups <- split(seq_len(nrow(seqs$states)),
+                    ceiling(seq_len(nrow(seqs$states)) / concat))
+    # A covariate belongs to a merged unit only if its value is constant.
+    ambiguous <- vapply(seqs$units, \(v) any(vapply(groups,
+      \(idx) length(unique(v[idx])) > 1L, logical(1))), logical(1))
+    seqs$ambiguous_covariates <- names(seqs$units)[ambiguous]
+    seqs$units <- seqs$units[vapply(groups, \(idx) idx[1L], integer(1)),
+                              !ambiguous, drop = FALSE]
+    rownames(seqs$units) <- NULL
+  }
+  seqs$states <- prepared$matrix
+  seqs$alphabet <- sort(unique(c(prepared$states, x$nodes$label)))
+  seqs$sequence_weights <- if (isTRUE(.param_get(params, "weighted", FALSE))) {
+    1 / pmax(rowSums(!is.na(seqs$states)), 1L)
+  } else rep(1, nrow(seqs$states))
+  # Pruned or otherwise modified weights do not describe the stored sequences.
+  counts <- matrix(colSums(.ls_counts(seqs$states, seqs$alphabet,
+                                      seqs$sequence_weights)),
+                   length(seqs$alphabet), byrow = TRUE)
+  reconstructed <- if (x$method == "relative") {
+    counts / pmax(rowSums(counts), .Machine$double.xmin)
+  } else counts
+  original <- x$weights[seqs$alphabet, seqs$alphabet, drop = FALSE]
+  if (!isTRUE(all.equal(unname(original), reconstructed,
+                       check.attributes = FALSE, tolerance = 1e-10))) {
+    .ls_bad(paste("The network weights cannot be reconstructed from its",
+                  "stored sequences and estimation settings."))
+  }
+  seqs
 }
 
 #' @noRd
@@ -86,9 +133,10 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 }
 
 #' @noRd
-.ls_fit <- function(states_mat, states, iter, ci_level, name) {
+.ls_fit <- function(states_mat, states, iter, ci_level, name,
+                    sequence_weights = NULL) {
   k <- length(states)
-  counts <- .ls_counts(states_mat, states)
+  counts <- .ls_counts(states_mat, states, sequence_weights)
   as_matrix <- \(v) matrix(v, k, k, byrow = TRUE,
                            dimnames = list(states, states))
   pooled <- as_matrix(colSums(counts))
@@ -177,6 +225,14 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #' @param ... Ignored.
 #'
 #' @details
+#' Network input replays per-sequence weighting, concatenation and boundary
+#' markers. Concatenated sequences are the resampling units. With a covariate,
+#' its value must be constant within each concatenated unit. Scaled,
+#' thresholded or otherwise modified networks whose weights do not match
+#' their stored sequences are refused; pass the original sequences to
+#' estimate a new landscape. Observed shares count prepared positions without
+#' sequence weighting. Phase windows retain the full sequence's weight.
+#'
 #' Depth is a property of the state alone; how often the process enters the
 #' state is its \code{share} of the observed time steps, reported beside the
 #' depth. Where the process goes when it leaves is in the exit probabilities
@@ -267,7 +323,7 @@ stability_landscape <- function(x, states = NULL, iter = 1000L,
     set.seed(seed)
   }
   fits <- Map(\(s, nm) .ls_fit(s$states, states, as.integer(iter), ci_level,
-                               nm), seqs, names(parts))
+                               nm, s$sequence_weights), seqs, names(parts))
   structure(list(fits = fits, states = states, iter = as.integer(iter),
                  ci_level = ci_level),
             class = "net_landscape")
@@ -432,8 +488,10 @@ plot.net_landscape <- function(x, ...) {
                             "simpson_diversity", "complexity_index")
 
 #' @noRd
-.ls_surface_one <- function(states_mat, states, measure, k, n_grid, name) {
-  met <- sequence_metrics(states_mat)
+.ls_surface_one <- function(states_mat, states, measure, k, n_grid, name,
+                            sequence_weights = NULL) {
+  # Every prepared column is a position, including boundary markers.
+  met <- sequence_metrics(unname(states_mat))
   keep <- which(met$valid_n >= 2L & !is.na(met[[measure]]))
   if (length(keep) < 5L) {
     .ls_bad(sprintf(
@@ -441,15 +499,17 @@ plot.net_landscape <- function(x, ...) {
       class = "nestimate_landscape_unestimable")
   }
   m <- met[[measure]][keep]
-  counts <- .ls_counts(states_mat[keep, , drop = FALSE], states)
+  counts <- .ls_counts(states_mat[keep, , drop = FALSE], states,
+                        sequence_weights[keep])
   kk <- length(states)
   k_eff <- min(k, length(keep))
-  grid <- seq(stats::quantile(m, 0.05, names = FALSE),
-              stats::quantile(m, 0.95, names = FALSE), length.out = n_grid)
   if (diff(range(m)) == 0) {
     .ls_bad(sprintf("'%s': %s is the same for every sequence, so there is no axis to trace.",
                     name, sQuote(measure, FALSE)))
   }
+  endpoints <- stats::quantile(m, c(0.05, 0.95), names = FALSE)
+  if (diff(endpoints) == 0) endpoints <- range(m)
+  grid <- seq(endpoints[1L], endpoints[2L], length.out = n_grid)
   floor_h <- diff(range(m)) / 50
   rows <- lapply(grid, \(y) {
     d <- abs(m - y)
@@ -490,7 +550,8 @@ plot.net_landscape <- function(x, ...) {
 #' @param k Integer. Nearest sequences per slice. Default 30 (capped at the
 #'   number of sequences).
 #' @param n_grid Integer. Slices between the 5th and 95th percentile of the
-#'   measure. Default 25.
+#'   measure. If these percentiles coincide for a nonconstant measure,
+#'   its full range is used. Default 25.
 #' @param ends Logical. In \code{summary()}: \code{TRUE} (default) compares
 #'   the low and the high end of each measure; \code{FALSE} returns every
 #'   slice.
@@ -506,6 +567,14 @@ plot.net_landscape <- function(x, ...) {
 #' @param ... Ignored.
 #'
 #' @details
+#' Network input replays per-sequence weighting, concatenation and boundary
+#' markers. Concatenated sequences are the resampling units. With a covariate,
+#' its value must be constant within each concatenated unit. Scaled,
+#' thresholded or otherwise modified networks whose weights do not match
+#' their stored sequences are refused; pass the original sequences to
+#' estimate a new landscape. Observed shares count prepared positions without
+#' sequence weighting. Phase windows retain the full sequence's weight.
+#'
 #' The measures are computed from the same sequences as the depths, so the
 #' cups of the most stable sequences are deep by construction (self-loop
 #' tendency in particular is closely tied to the stay probabilities). What
@@ -570,7 +639,7 @@ landscape_surface <- function(x, measure = "longitudinal_entropy",
   seqs <- lapply(parts, .ls_sequences)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   states <- .ls_states(states, alphabet)
-  probe <- sequence_metrics(seqs[[1]]$states)
+  probe <- sequence_metrics(unname(seqs[[1]]$states))
   numeric_cols <- names(probe)[vapply(probe, is.numeric, logical(1))]
   bad <- setdiff(measure, numeric_cols)
   if (length(bad)) {
@@ -581,7 +650,8 @@ landscape_surface <- function(x, measure = "longitudinal_entropy",
   slices <- do.call(rbind, unlist(lapply(names(parts), \(g)
     lapply(measure, \(m) .ls_surface_one(seqs[[g]]$states, states, m,
                                          as.integer(k), as.integer(n_grid),
-                                         g))), recursive = FALSE))
+                                         g, seqs[[g]]$sequence_weights))),
+    recursive = FALSE))
   rownames(slices) <- NULL
   # tied measure values can leave a slice resting on one or two sequences
   thin <- slices$effective_n < 5
@@ -773,7 +843,7 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 
 #' @noRd
 .ls_trend_slices <- function(states_mat, covariate, states, along, window, k,
-                             n_grid) {
+                             n_grid, sequence_weights = NULL) {
   kk <- length(states)
   if (identical(along, "phase")) {
     n_pos <- ncol(states_mat)
@@ -783,7 +853,8 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
     }
     starts <- seq_len(n_pos - window + 1L)
     counts <- lapply(starts, \(t) .ls_counts(
-      states_mat[, t:(t + window - 1L), drop = FALSE], states))
+      states_mat[, t:(t + window - 1L), drop = FALSE], states,
+      sequence_weights))
     return(list(
       value = starts + (window - 1) / 2,
       label = sprintf("%d-%d", starts, starts + window - 1L),
@@ -797,13 +868,15 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
             class = "nestimate_landscape_unestimable")
   }
   m <- covariate[keep]
-  counts <- .ls_counts(states_mat[keep, , drop = FALSE], states)
-  grid <- seq(stats::quantile(m, 0.05, names = FALSE),
-              stats::quantile(m, 0.95, names = FALSE), length.out = n_grid)
+  counts <- .ls_counts(states_mat[keep, , drop = FALSE], states,
+                        sequence_weights[keep])
   if (diff(range(m)) == 0) {
     .ls_bad(sprintf("`%s` is the same for every sequence, so there is no axis to trace.",
                     along))
   }
+  endpoints <- stats::quantile(m, c(0.05, 0.95), names = FALSE)
+  if (diff(endpoints) == 0) endpoints <- range(m)
+  grid <- seq(endpoints[1L], endpoints[2L], length.out = n_grid)
   floor_h <- diff(range(m)) / 50
   weights_at <- function(mm, y) {
     d <- abs(mm - y)
@@ -854,7 +927,7 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #' @param k Integer. With a covariate: nearest sequences per slice. Default
 #'   30 (capped at the number of sequences).
 #' @param n_grid Integer. With a covariate: slices between its 5th and 95th
-#'   percentile. Default 20.
+#'   percentile, with the full range used if these coincide. Default 20.
 #' @param iter Integer. Bootstrap resamples of sequences. Default 500.
 #' @param ci_level Numeric in (0, 1). Interval level. Default 0.95.
 #' @param seed Integer or \code{NULL}. Seed for the resampling, scoped to the
@@ -869,6 +942,14 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #' @param ... Ignored.
 #'
 #' @details
+#' Network input replays per-sequence weighting, concatenation and boundary
+#' markers. Concatenated sequences are the resampling units. With a covariate,
+#' its value must be constant within each concatenated unit. Scaled,
+#' thresholded or otherwise modified networks whose weights do not match
+#' their stored sequences are refused; pass the original sequences to
+#' estimate a new landscape. Observed shares count prepared positions without
+#' sequence weighting. Phase windows retain the full sequence's weight.
+#'
 #' With \code{depth = "stay"}, a window or slice in which a state is never
 #' left gives an infinite depth, and one in which it does not occur gives
 #' \code{NA}. With \code{depth = "occupancy"}, a window whose chain has no
@@ -951,6 +1032,10 @@ landscape_trend <- function(x, along = "phase",
   states <- .ls_states(states, alphabet)
   covariates <- lapply(seqs, \(s) {
     if (identical(along, "phase")) return(NULL)
+    if (along %in% s$ambiguous_covariates) {
+      .ls_bad(sprintf("`%s` must be constant within each concatenated sequence.",
+                      along))
+    }
     v <- s$units[[along]]
     if (is.null(v) || !is.numeric(v)) {
       .ls_bad(sprintf(paste(
@@ -974,7 +1059,8 @@ landscape_trend <- function(x, along = "phase",
   n_metric <- if (depth == "stay") kk else kk + .ls_n_ridges(kk)
   tabs <- Map(\(s, cv, g) {
     sl <- .ls_trend_slices(s$states, cv, states, along, as.integer(window),
-                           as.integer(k), as.integer(n_grid))
+                           as.integer(k), as.integer(n_grid),
+                           s$sequence_weights)
     pooled <- sl$pooled_of(seq_len(sl$n_used))
     est <- vapply(pooled, metric, numeric(n_metric))
     boot <- lapply(seq_len(iter), \(b) vapply(

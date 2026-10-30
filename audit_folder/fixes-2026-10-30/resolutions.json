@@ -1,0 +1,62 @@
+{
+  "R01": {
+    "resolution": "Numeric numbered positions now accept logical all-missing columns.",
+    "regression_test": "test-fix-review-sequences.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R02": {
+    "resolution": "Requested covariates are removed before distance calculation; external frames preserve unrelated same-name positions.",
+    "regression_test": "test-fix-review-models.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R03": {
+    "resolution": "Fits retain the weighting specification and bootstrap draws replay it, including custom schemes and factor options. Older custom fits without a specification request a rebuild.",
+    "regression_test": "test-fix-review-models.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R04": {
+    "resolution": "Generated responses are held separately from metadata, protecting .outcome adjustments and grouping columns.",
+    "regression_test": "test-fix-review-sequences.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R05": {
+    "resolution": "Named axes are validated and aligned; incompatible named sets are rejected. Unnamed inputs retain positional matching.",
+    "regression_test": "test-fix-review-models.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R06": {
+    "resolution": "Ordinary Gaussian intervals use residual-df Student t quantiles, matching their displayed tests.",
+    "regression_test": "test-fix-review-models.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R07": {
+    "resolution": "Tensor directions use log-space products and stable normalization, including 150/400-node and asymmetric analytic controls.",
+    "regression_test": "test-fix-review-higherorder.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R08": {
+    "resolution": "Landscapes replay weighting, concatenation and markers before counting; bootstrap units are merged sequences. Covariate conflicts and unrepresentable transformed chains produce informative errors. Surface stability measures retain every prepared position, including start markers.",
+    "regression_test": "test-fix-review-landscapes.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R09": {
+    "resolution": "Nonconstant measures and covariates with identical trimmed endpoints use their full range; both surface plots execute.",
+    "regression_test": "test-fix-review-landscapes.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R10": {
+    "resolution": "MOGen summary preserves numeric layer/cumulative DOFs above the integer limit.",
+    "regression_test": "test-fix-review-higherorder.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R11": {
+    "resolution": "Scale-sensitive constant-vector detection preserves normalization of small, nonconstant values.",
+    "regression_test": "test-fix-review-models.R",
+    "status": "fixed; final full-suite regression passed"
+  },
+  "R12": {
+    "resolution": "Stars-only literal states are explicitly reserved and rejected with documented nestimate_bad_input; ordinary embedded stars remain valid.",
+    "regression_test": "test-fix-review-sequences.R",
+    "status": "fixed; final full-suite regression passed"
+  }
+}

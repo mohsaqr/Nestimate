@@ -1,0 +1,15 @@
+pkgload::load_all('.', quiet=TRUE)
+d <- data.frame(T1=c('A','A','B'),T2=c('A','B','A'),T3=c('A',NA,'B'),T4=c('B',NA,'A'))
+n <- build_network(d,method='relative',params=list(weighted=TRUE))
+cat('WEIGHTED NETWORK\n'); print(n$weights); cat('LANDSCAPE\n');print(summary(stability_landscape(n,iter=0))[,c('state','stay')])
+nc <- build_network(d,method='relative',params=list(concat=3))
+cat('CONCAT NETWORK\n'); print(nc$weights);print(summary(stability_landscape(nc,iter=0))[,c('state','stay')])
+# Vary only the middle 1 of 21 sequences: 5th and 95th percentiles collapse
+s <- as.data.frame(matrix(rep(c('A','B','A','B'), each=21),nrow=21))
+s[21,] <- c('A','A','B','A')
+cat('SURFACE COLLAPSED GRID\n')
+a <- suppressWarnings(landscape_surface(s,k=5)); print(summary(a)); cat('unique slice values:',length(unique(a$slices$value)),'\n')
+pdf(tempfile(fileext='.pdf')); print(try(plot(a))); dev.off()
+# One phase window is valid, but persp requires two y values
+cat('ONE PHASE WINDOW\n')
+b <- landscape_trend(d,window=4,iter=0); print(summary(b)); pdf(tempfile(fileext='.pdf')); print(try(plot(b,type='surface'))); dev.off()

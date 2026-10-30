@@ -1,0 +1,37 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+  T1   T2 T3
+1  1 <NA>  2
+2  2 <NA>  1
+               category               metric value
+1     Weight Deviations      Mean Abs. Diff.     0
+2     Weight Deviations    Median Abs. Diff.     0
+3     Weight Deviations            RMS Diff.     0
+4     Weight Deviations       Max Abs. Diff.     0
+5     Weight Deviations Rel. Mean Abs. Diff.     0
+6     Weight Deviations             CV Ratio     1
+7          Correlations              Pearson     1
+8          Correlations             Spearman     1
+9          Correlations              Kendall     1
+10         Correlations             Distance     1
+11      Dissimilarities            Euclidean     0
+12      Dissimilarities            Manhattan     0
+13      Dissimilarities             Canberra     0
+14      Dissimilarities          Bray-Curtis     0
+15      Dissimilarities            Frobenius     0
+16         Similarities               Cosine     1
+17         Similarities              Jaccard     1
+18         Similarities                 Dice     1
+19         Similarities              Overlap     1
+20         Similarities                   RV     1
+21 Pattern Similarities       Rank Agreement     1
+22 Pattern Similarities       Sign Agreement     1
+    group state     depth ci_lower ci_upper dwell      stay     share n_from
+1 network     A 1.0986123       NA       NA     3 0.6666667 0.6666667      3
+2 network     B 0.6931472       NA       NA     2 0.5000000 0.3333333      2
+  resamples
+1         0
+2         0
+Independent public API controls passed

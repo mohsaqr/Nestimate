@@ -1,0 +1,122 @@
+[
+  {
+    "path": ".github/workflows/R-CMD-check.yaml",
+    "sha256": "022e37fb39a46abe1d1f0ab13f592901fe8ae45074a8c15c1fbe2730a43a0d08"
+  },
+  {
+    "path": "NEWS.md",
+    "sha256": "18a7ba4f557d94ad71ab5cddad269bd75d88f99fff83a282bdd3dfe411858062"
+  },
+  {
+    "path": "R/build_network.R",
+    "sha256": "e5c12f8fa4cb72eecd523efb15c6e6b6500d925ece47eb4a93f5ea4b10161edb"
+  },
+  {
+    "path": "R/casedrop_reliability.R",
+    "sha256": "b3ff4c0320f354bc1c26105a5255e030a50a3f161e37e3c0de5bac27d30b2ec1"
+  },
+  {
+    "path": "R/centrality_measures.R",
+    "sha256": "d1de76e8882b4b1a9a6ae57a0d8e809499466c1fc5116d88342a26b9b8e5f880"
+  },
+  {
+    "path": "R/cluster_data.R",
+    "sha256": "e40eed0119eeadd19f1f1c6684841c67b2de0990d26af55386cea46b5cf40c79"
+  },
+  {
+    "path": "R/compare_network.R",
+    "sha256": "e3a319bcfe6ee6f58ae3cd1ae2fc5221e74e287b1a4ea0c30f35fe980d640d9a"
+  },
+  {
+    "path": "R/hypergraph_centrality.R",
+    "sha256": "4a2c1860c15c2fbadefcf4005a02b7e9946ad3170376965f42b59fcd9d952304"
+  },
+  {
+    "path": "R/mcml_pc.R",
+    "sha256": "159af09897169c89e5126f54504e082c33db13bb41dc5a4916c2b074b9dc752c"
+  },
+  {
+    "path": "R/mogen.R",
+    "sha256": "20b399a33b3c38a9781c12dc52e3d03140cce9d0eba8e523b32055d35e760c00"
+  },
+  {
+    "path": "R/outcome_model.R",
+    "sha256": "751a89ba929c315964bd8a19325043eb6fc95d9602301c9f065d36ab40eca083"
+  },
+  {
+    "path": "R/pattern_outcome.R",
+    "sha256": "63013c4c461926106082d50ad8659c4bfe77011e0d71232c086c342dee126b59"
+  },
+  {
+    "path": "R/sequence_patterns.R",
+    "sha256": "a61488fcfe51d9515e3a9571a7109b75ae32223324fa01466a402c9320714139"
+  },
+  {
+    "path": "R/stability_landscape.R",
+    "sha256": "1777b273080ec971f83facfabe6567bddaffaf2edae2942d218eeb938852c726"
+  },
+  {
+    "path": "_pkgdown.yml",
+    "sha256": "ccd6cbf5d79a28dab58beea9c6b7893719fd24169fd1b7d69c0ad01100d082eb"
+  },
+  {
+    "path": "man/build_clusters.Rd",
+    "sha256": "40c8b873dd750bda1c2819d9f34f139576757e9123a008bf2e8aff1edbf2d3b6"
+  },
+  {
+    "path": "man/build_mcml_pc.Rd",
+    "sha256": "d88353cf0252fa86820a92770213a0bc9d664e15f1b79934b600f19903064131"
+  },
+  {
+    "path": "man/casedrop_reliability.Rd",
+    "sha256": "edbc4925e2986bedb1159fcc82f480ee06c8e3dbdb5920a9f09cdcecf0b0b4bb"
+  },
+  {
+    "path": "man/compare_model.Rd",
+    "sha256": "ead7d5d23827376e7e3f6e7a629f57f3516379d4af1826880f6221d34ed6ef5a"
+  },
+  {
+    "path": "man/hypergraph_centrality.Rd",
+    "sha256": "693d9af00ed83170b6c024b7cb0a4f6054ad2b9b206873a88388e3991ba56e98"
+  },
+  {
+    "path": "man/landscape_surface.Rd",
+    "sha256": "c1d1de4e2e17ac5a9aca71964c075567c70e93d3dec8ffae47b7e7cd5b8d7d84"
+  },
+  {
+    "path": "man/landscape_trend.Rd",
+    "sha256": "bcfc17a6c538a507694d90dd7cd3fa177746b47ce0f08d16f100f2070dd3fd8d"
+  },
+  {
+    "path": "man/loading_stability.Rd",
+    "sha256": "a777b1d8bc6c1dfe5704fb8a6620ebd9fc3352564ba47a43cc550fe5fe91898d"
+  },
+  {
+    "path": "man/outcome_model.Rd",
+    "sha256": "ec14de4d94257fb3b237b2d39422bc39fd01ca54abe09eff59d0bff023aadf55"
+  },
+  {
+    "path": "man/sequence_patterns.Rd",
+    "sha256": "4bc15733930dc54e2ef7d2cb7fa53589be5ec89f6da01f6e031aa307bd0be1d1"
+  },
+  {
+    "path": "man/stability_landscape.Rd",
+    "sha256": "15a58d23eb8d7dd7586c49edbf8534e79e4b342c36fe801b71fe91ae703f95e6"
+  },
+  {
+    "path": "tests/testthat/test-fix-review-higherorder.R",
+    "sha256": "76c4fc7e34b29424240a05dace5784d27d0b269d09c3eb391ca92719fb5e8e69"
+  },
+  {
+    "path": "tests/testthat/test-fix-review-landscapes.R",
+    "sha256": "4f13f79d4f0392c297db24a436908d736dfa89f1618ed96e85003d3a3acc9f73"
+  },
+  {
+    "path": "tests/testthat/test-fix-review-models.R",
+    "sha256": "cabaf238757c9c4830eeaa575340ba1c54c994775cd487ce70e75a044dd63fd3"
+  },
+  {
+    "path": "tests/testthat/test-fix-review-sequences.R",
+    "sha256": "bb55f9554e04c1180612f5fb63afeaa7affb2b631e1be2d9ee0aeaa6ffd4811e"
+  }
+]

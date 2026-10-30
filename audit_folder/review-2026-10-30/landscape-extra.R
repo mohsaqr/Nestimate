@@ -1,0 +1,6 @@
+pkgload::load_all('.',quiet=TRUE)
+d <- data.frame(T1=c('A','A','B'),T2=c('A','B','A'))
+n <- build_network(d,method='relative',params=list(concat=3))
+print(n$weights)
+cups <- summary(stability_landscape(n,iter=0));print(cups[,c('state','stay')])
+stopifnot(max(abs(diag(n$weights)-cups$stay))>.4)

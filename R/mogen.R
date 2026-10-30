@@ -765,8 +765,8 @@ summary.net_mogen <- function(object, ...) {
 
   res <- data.frame(
     order     = object$orders,
-    layer_dof = as.integer(object$layer_dof),
-    cum_dof   = as.integer(object$dof),
+    layer_dof = as.numeric(object$layer_dof),
+    cum_dof   = as.numeric(object$dof),
     loglik    = round(object$log_likelihood, 2),
     aic       = round(object$aic, 2),
     bic       = round(object$bic, 2),

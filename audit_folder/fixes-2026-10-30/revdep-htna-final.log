@@ -1,0 +1,88 @@
+
+== Nestimate working tree: /Users/mohammedsaqr/Documents/Github/Nestimate (1.0.1)
+
+== htna source:            /Users/mohammedsaqr/Documents/Github/htna (0.3.1)
+
+== Installing Nestimate from working tree into /var/folders/y4/__sfmk691xb88cllsy7y09fm0000gq/T//Rtmpyt2CAX/revdep-lib
+
+== Nestimate resolved for htna: 1.0.1
+
+== Building htna from source
+
+== Built htna_0.3.1.tar.gz
+
+== Running R CMD check on htna (codoc + tests + Rd + install)
+ [1] "* using log directory ‘/private/var/folders/y4/__sfmk691xb88cllsy7y09fm0000gq/T/Rtmpyt2CAX/revdep-check/htna.Rcheck’"
+ [2] "* using R version 4.5.2 (2025-10-31)"                                                                                
+ [3] "* using platform: aarch64-apple-darwin20"                                                                            
+ [4] "* R was compiled by"                                                                                                 
+ [5] "    Apple clang version 16.0.0 (clang-1600.0.26.6)"                                                                  
+ [6] "    GNU Fortran (GCC) 14.2.0"                                                                                        
+ [7] "* running under: macOS Tahoe 26.3.1"                                                                                 
+ [8] "* using session charset: UTF-8"                                                                                      
+ [9] "* using option ‘--no-manual’"                                                                                        
+[10] "* checking for file ‘htna/DESCRIPTION’ ... OK"                                                                       
+[11] "* this is package ‘htna’ version ‘0.3.1’"                                                                            
+[12] "* package encoding: UTF-8"                                                                                           
+[13] "* checking package namespace information ... OK"                                                                     
+[14] "* checking package dependencies ... OK"                                                                              
+[15] "* checking if this is a source package ... OK"                                                                       
+[16] "* checking if there is a namespace ... OK"                                                                           
+[17] "* checking for executable files ... OK"                                                                              
+[18] "* checking for hidden files and directories ... OK"                                                                  
+[19] "* checking for portable file names ... OK"                                                                           
+[20] "* checking for sufficient/correct file permissions ... OK"                                                           
+[21] "* checking whether package ‘htna’ can be installed ... OK"                                                           
+[22] "* checking installed package size ... INFO"                                                                          
+[23] "  installed size is  5.1Mb"                                                                                          
+[24] "  sub-directories of 1Mb or more:"                                                                                   
+[25] "    doc   4.0Mb"                                                                                                     
+[26] "* checking package directory ... OK"                                                                                 
+[27] "* checking ‘build’ directory ... OK"                                                                                 
+[28] "* checking DESCRIPTION meta-information ... OK"                                                                      
+[29] "* checking top-level files ... OK"                                                                                   
+[30] "* checking for left-over files ... OK"                                                                               
+[31] "* checking index information ... OK"                                                                                 
+[32] "* checking package subdirectories ... OK"                                                                            
+[33] "* checking code files for non-ASCII characters ... OK"                                                               
+[34] "* checking R files for syntax errors ... OK"                                                                         
+[35] "* checking whether the package can be loaded ... OK"                                                                 
+[36] "* checking whether the package can be loaded with stated dependencies ... OK"                                        
+[37] "* checking whether the package can be unloaded cleanly ... OK"                                                       
+[38] "* checking whether the namespace can be loaded with stated dependencies ... OK"                                      
+[39] "* checking whether the namespace can be unloaded cleanly ... OK"                                                     
+[40] "* checking dependencies in R code ... OK"                                                                            
+[41] "* checking S3 generic/method consistency ... OK"                                                                     
+[42] "* checking replacement functions ... OK"                                                                             
+[43] "* checking foreign function calls ... OK"                                                                            
+[44] "* checking R code for possible problems ... OK"                                                                      
+[45] "* checking Rd files ... OK"                                                                                          
+[46] "* checking Rd metadata ... OK"                                                                                       
+[47] "* checking Rd cross-references ... OK"                                                                               
+[48] "* checking for missing documentation entries ... OK"                                                                 
+[49] "* checking for code/documentation mismatches ... OK"                                                                 
+[50] "* checking Rd \\usage sections ... OK"                                                                               
+[51] "* checking Rd contents ... OK"                                                                                       
+[52] "* checking for unstated dependencies in examples ... OK"                                                             
+[53] "* checking contents of ‘data’ directory ... OK"                                                                      
+[54] "* checking data for non-ASCII characters ... OK"                                                                     
+[55] "* checking LazyData ... OK"                                                                                          
+[56] "* checking data for ASCII and uncompressed saves ... OK"                                                             
+[57] "* checking installed files from ‘inst/doc’ ... OK"                                                                   
+[58] "* checking files in ‘vignettes’ ... OK"                                                                              
+[59] "* checking examples ... OK"                                                                                          
+[60] "* checking for unstated dependencies in ‘tests’ ... OK"                                                              
+[61] "* checking tests ..."                                                                                                
+[62] "  Running ‘testthat.R’"                                                                                              
+[63] " OK"                                                                                                                 
+[64] "* checking for unstated dependencies in vignettes ... OK"                                                            
+[65] "* checking package vignettes ... OK"                                                                                 
+[66] "* checking re-building of vignette outputs ... OK"                                                                   
+[67] "* DONE"                                                                                                              
+[68] ""                                                                                                                    
+[69] "Status: OK"                                                                                                          
+[70] ""                                                                                                                    
+
+== htna check Status: OK
+
+htna R CMD check is clean against this Nestimate working tree.

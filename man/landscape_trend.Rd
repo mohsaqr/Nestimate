@@ -49,7 +49,7 @@ Default 5.}
 30 (capped at the number of sequences).}
 
 \item{n_grid}{Integer. With a covariate: slices between its 5th and 95th
-percentile. Default 20.}
+percentile, with the full range used if these coincide. Default 20.}
 
 \item{iter}{Integer. Bootstrap resamples of sequences. Default 500.}
 
@@ -109,6 +109,15 @@ of \code{stability_landscape()}, the log of each state's expected stay,
 time in, a high ridge a switch it rarely makes.
 }
 \details{
+Network input replays per-sequence weighting, concatenation and boundary
+markers. Concatenated sequences are the resampling units. With a covariate,
+its value must be constant within each concatenated unit. Scaled,
+thresholded or otherwise modified networks whose weights do not match
+their stored sequences are refused; pass the original sequences to
+estimate a new landscape. Observed shares count prepared positions without
+sequence weighting. Phase windows retain the full sequence's weight.
+
+
 With \code{depth = "stay"}, a window or slice in which a state is never
 left gives an infinite depth, and one in which it does not occur gives
 \code{NA}. With \code{depth = "occupancy"}, a window whose chain has no

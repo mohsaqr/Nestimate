@@ -1,0 +1,43 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+List of 4
+ $ data     :'data.frame':	3 obs. of  2 variables:
+  ..$ T1: chr [1:3] "A" "A" "B"
+  ..$ T2: chr [1:3] "A" "B" "A"
+ $ params   :List of 2
+  ..$ weighted: logi TRUE
+  ..$ format  : chr "wide"
+ $ scaling  : NULL
+ $ threshold: num 0
+    A   B
+A 0.5 0.5
+B 1.0 0.0
+List of 4
+ $ data     :'data.frame':	3 obs. of  2 variables:
+  ..$ T1: chr [1:3] "A" "A" "B"
+  ..$ T2: chr [1:3] "A" "B" "A"
+ $ params   :List of 2
+  ..$ concat: num 3
+  ..$ format: chr "wide"
+ $ scaling  : NULL
+ $ threshold: num 0
+          A         B
+A 0.6666667 0.3333333
+B 0.5000000 0.5000000
+List of 4
+ $ data     :'data.frame':	3 obs. of  2 variables:
+  ..$ T1: chr [1:3] "A" "A" "B"
+  ..$ T2: chr [1:3] "A" "B" "A"
+ $ params   :List of 3
+  ..$ begin_state: chr "Start"
+  ..$ end_state  : chr "End"
+  ..$ format     : chr "wide"
+ $ scaling  : NULL
+ $ threshold: num 0
+      Start         A         B End
+Start     0 0.6666667 0.3333333 0.0
+A         0 0.2500000 0.2500000 0.5
+B         0 0.5000000 0.0000000 0.5
+End       0 0.0000000 0.0000000 0.0

@@ -86,6 +86,8 @@ fit. The remaining elements are the fitted \code{$model} (a
 \code{$select}, \code{$correction}, \code{$ci_level}, \code{$mixed}
 and \code{$outcome}. Retrieve the table with
 \code{\link{effects_table}}.
+Ordinary Gaussian fits use Student t confidence limits with the model's
+residual degrees of freedom; binomial and mixed fits use normal Wald limits.
 
 In \code{print.net_outcome_model()}: \code{print} returns its input invisibly.
 

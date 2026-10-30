@@ -23,6 +23,8 @@
 #' Mirrors `tna::compare()` numerically. Inputs are converted to weight
 #' matrices and scaled before comparison; the choice of scaling determines
 #' how weights from different estimators are placed on a common footing.
+#' Named inputs are aligned by node names; different node sets or duplicate
+#' names raise an error. A fully unnamed matrix is matched by position.
 #'
 #' @param x A `netobject`, `cograph_network`, or numeric square matrix, or a
 #'   `netobject_group` whose members `i` and `j` are compared. For the
@@ -78,7 +80,8 @@ compare_model <- function(x, ...) UseMethod("compare_model")
 #' @export
 compare_model.netobject <- function(x, y, scaling = "none", measures = character(0),
                               network = TRUE, ...) {
-  .compare_impl(.weights_of(x), .weights_of(y), scaling, measures, network)
+  .compare_impl(.weights_of(x, label_unnamed = FALSE),
+                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
 }
 
 #' @rdname compare_model
@@ -86,14 +89,16 @@ compare_model.netobject <- function(x, y, scaling = "none", measures = character
 compare_model.cograph_network <- function(x, y, scaling = "none",
                                     measures = character(0), network = TRUE,
                                     ...) {
-  .compare_impl(.weights_of(x), .weights_of(y), scaling, measures, network)
+  .compare_impl(.weights_of(x, label_unnamed = FALSE),
+                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
 }
 
 #' @rdname compare_model
 #' @export
 compare_model.matrix <- function(x, y, scaling = "none", measures = character(0),
                            network = TRUE, ...) {
-  .compare_impl(.weights_of(x), .weights_of(y), scaling, measures, network)
+  .compare_impl(.weights_of(x, label_unnamed = FALSE),
+                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
 }
 
 #' @rdname compare_model
@@ -118,10 +123,10 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 
 # ---- Internal: extract weight matrix ----
 
-.weights_of <- function(z) {
+.weights_of <- function(z, label_unnamed = TRUE) {
   if (is.matrix(z)) {
     stopifnot(nrow(z) == ncol(z), is.numeric(z))
-    if (is.null(rownames(z)) || is.null(colnames(z))) {
+    if (label_unnamed && (is.null(rownames(z)) || is.null(colnames(z)))) {
       labs <- paste0("V", seq_len(nrow(z)))
       rownames(z) <- colnames(z) <- labs
     }
@@ -135,11 +140,56 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 }
 
 
+# Align independently labelled matrix axes before comparing their cells.
+# Fully unnamed matrices are matched by position to the other input.
+#' @noRd
+.compare_align_nodes <- function(x, y) {
+  normalize_names <- function(mat) {
+    rn <- rownames(mat)
+    cn <- colnames(mat)
+    if (is.null(rn) && is.null(cn)) return(mat)
+    labels <- list(rn, cn)
+    invalid <- vapply(labels, function(nms) {
+      !is.null(nms) && (anyNA(nms) || any(!nzchar(nms)) || anyDuplicated(nms) > 0L)
+    }, logical(1L))
+    if (any(invalid)) {
+      stop("Network node names must be non-missing, non-empty and unique.",
+           call. = FALSE)
+    }
+    rn <- rn %||% cn
+    cn <- cn %||% rn
+    if (!setequal(rn, cn)) {
+      stop("Each network's rows and columns must name the same nodes.",
+           call. = FALSE)
+    }
+    dimnames(mat) <- list(rn, cn)
+    mat[, rn, drop = FALSE]
+  }
+  x <- normalize_names(x)
+  y <- normalize_names(y)
+  xn <- rownames(x)
+  yn <- rownames(y)
+  if (!is.null(xn) && !is.null(yn)) {
+    if (!setequal(xn, yn)) {
+      stop("Compared networks must contain the same nodes.", call. = FALSE)
+    }
+    y <- y[xn, xn, drop = FALSE]
+  } else {
+    nodes <- xn %||% yn %||% paste0("V", seq_len(nrow(x)))
+    dimnames(x) <- dimnames(y) <- list(nodes, nodes)
+  }
+  list(x = x, y = y)
+}
+
+
 # ---- Internal: the comparison machinery ----
 
 .compare_impl <- function(x, y, scaling, measures, network) {
   stopifnot(identical(dim(x), dim(y)))
   stopifnot(!anyNA(x), !anyNA(y))
+  aligned <- .compare_align_nodes(x, y)
+  x <- aligned$x
+  y <- aligned$y
   n <- nrow(x)
 
   scaling <- match.arg(scaling, .compare_scaling_names())

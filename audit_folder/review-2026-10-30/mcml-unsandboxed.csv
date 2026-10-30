@@ -1,0 +1,142 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-mcml.R","mcml","net_aggregate_weights sum method",1,0,FALSE,FALSE,0,0.006,0.002,0.012,1
+"test-mcml.R","mcml","net_aggregate_weights mean method",1,0,FALSE,FALSE,0,0.016,0.001,0.0189999999999997,1
+"test-mcml.R","mcml","net_aggregate_weights median method",1,0,FALSE,FALSE,0,0.00299999999999989,0.002,0.00599999999999978,1
+"test-mcml.R","mcml","net_aggregate_weights max method",1,0,FALSE,FALSE,0,0.002,0.001,0.00499999999999989,1
+"test-mcml.R","mcml","net_aggregate_weights min method",1,0,FALSE,FALSE,0,0.00299999999999989,0.002,0.00499999999999989,1
+"test-mcml.R","mcml","net_aggregate_weights prod method",1,0,FALSE,FALSE,0,0.002,0.002,0.0100000000000002,1
+"test-mcml.R","mcml","net_aggregate_weights density with n_possible",1,0,FALSE,FALSE,0,0.004,0.002,0.00700000000000012,1
+"test-mcml.R","mcml","net_aggregate_weights density without n_possible",1,0,FALSE,FALSE,0,0.00299999999999989,0.002,0.00599999999999978,1
+"test-mcml.R","mcml","net_aggregate_weights geomean method",1,0,FALSE,FALSE,0,0.004,0.002,0.00700000000000012,1
+"test-mcml.R","mcml","net_aggregate_weights matches direct base calculations",9,0,FALSE,FALSE,0,0.0189999999999999,0.00800000000000001,0.048,9
+"test-mcml.R","mcml","net_aggregate_weights removes NA and zero",1,0,FALSE,FALSE,0,0.00299999999999989,0.002,0.0109999999999997,1
+"test-mcml.R","mcml","net_aggregate_weights returns 0 for empty/all-zero input",2,0,FALSE,FALSE,0,0.0069999999999999,0.003,0.0390000000000001,2
+"test-mcml.R","mcml","net_aggregate_weights errors on unknown method",1,0,FALSE,FALSE,0,0.00499999999999989,0.001,0.0129999999999999,1
+"test-mcml.R","mcml","net_aggregate_weights validates arguments strictly",6,0,FALSE,FALSE,0,0.0209999999999999,0.003,0.0270000000000001,6
+"test-mcml.R","mcml","net_aggregate_weights is a function",1,0,FALSE,FALSE,0,0.00499999999999989,0.002,0.0129999999999999,1
+"test-mcml.R","mcml",".mcml_layer validates layer structure strictly",8,0,FALSE,FALSE,0,0.0389999999999999,0.005,0.0489999999999999,8
+"test-mcml.R","mcml","print.mcml_layer rejects unsupported dots",1,0,FALSE,FALSE,0,0.004,0.001,0.00599999999999978,1
+"test-mcml.R","mcml","cluster_summary with vector clusters",5,0,FALSE,FALSE,0,0.016,0.00499999999999998,0.04,5
+"test-mcml.R","mcml","cluster_summary with named list clusters",4,0,FALSE,FALSE,0,0.0469999999999999,0.00700000000000001,0.0609999999999999,4
+"test-mcml.R","mcml","cluster_summary matrix path returns raw aggregated values (no normalization)",2,0,FALSE,FALSE,0,0.02,0.002,0.0260000000000002,2
+"test-mcml.R","mcml","cluster_summary compute_within=FALSE skips within",1,0,FALSE,FALSE,0,0.002,0.001,0.00700000000000012,1
+"test-mcml.R","mcml","cluster_summary inits sum to 1",1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00599999999999978,1
+"test-mcml.R","mcml","cluster_summary matrix aggregation matches direct block sums",3,0,FALSE,FALSE,0,0.0069999999999999,0.003,0.0129999999999999,3
+"test-mcml.R","mcml","cluster_summary rejects invalid logical controls",4,0,FALSE,FALSE,0,0.0109999999999999,0.001,0.0130000000000003,4
+"test-mcml.R","mcml","cluster_summary errors without clusters",1,0,FALSE,FALSE,0,0.00499999999999989,0,0.0089999999999999,1
+"test-mcml.R","mcml","cluster_summary errors on non-square matrix",1,0,FALSE,FALSE,0,0.00299999999999989,0.001,0.00800000000000001,1
+"test-mcml.R","mcml","cluster_summary validates matrix weights and dimnames strictly",5,0,FALSE,FALSE,0,0.0149999999999999,0.001,0.0210000000000004,5
+"test-mcml.R","mcml","cluster_summary print method works",1,0,FALSE,FALSE,0,0.00299999999999989,0.001,0.012,1
+"test-mcml.R","mcml","mcml print and summary reject unsupported dots",2,0,FALSE,FALSE,0,0.0169999999999999,0.001,0.02,2
+"test-mcml.R","mcml","cluster_summary is a function",1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00599999999999978,1
+"test-mcml.R","mcml","cluster_summary with different methods",2,0,FALSE,FALSE,0,0.00500000000000012,0.000999999999999973,0.0109999999999997,2
+"test-mcml.R","mcml","cluster_summary within-cluster has correct dimensions",3,0,FALSE,FALSE,0,0.00700000000000012,0.002,0.0110000000000001,3
+"test-mcml.R","mcml","build_mcml with sequence data",3,0,FALSE,FALSE,0,0.036,0.004,0.0430000000000001,3
+"test-mcml.R","mcml","build_mcml with edge list",2,0,FALSE,FALSE,0,0.11,0.004,0.121,2
+"test-mcml.R","mcml","build_mcml type=raw preserves counts",1,0,FALSE,FALSE,0,0.0139999999999998,0.001,0.0169999999999999,1
+"test-mcml.R","mcml","build_mcml raw sequence counts match direct cluster transitions",3,0,FALSE,FALSE,0,0.00800000000000001,0.003,0.016,3
+"test-mcml.R","mcml","build_mcml rejects invalid logical controls",4,0,FALSE,FALSE,0,0.00999999999999979,0.001,0.012,4
+"test-mcml.R","mcml","build_mcml rejects duplicate and incomplete cluster lists",2,0,FALSE,FALSE,0,0.0089999999999999,0.001,0.0110000000000001,2
+"test-mcml.R","mcml","build_mcml returns mcml if already mcml",1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00499999999999989,1
+"test-mcml.R","mcml","build_mcml tna type normalizes rows",1,0,FALSE,FALSE,0,0.004,0.001,0.00800000000000001,1
+"test-mcml.R","mcml","net_aggregate_weights geomean returns 0 when all non-positive",1,0,FALSE,FALSE,0,0.00200000000000022,0.001,0.00300000000000011,1
+"test-mcml.R","mcml","cluster_summary assigns sequential node names when matrix has no rownames (L313-315)",2,0,FALSE,FALSE,0,0.004,0.002,0.00800000000000001,2
+"test-mcml.R","mcml","cluster_summary between_inits fallback when zero matrix (L380)",1,0,FALSE,FALSE,0,0.00300000000000011,0.002,0.00599999999999978,1
+"test-mcml.R","mcml","cluster_summary within-cluster zero total produces uniform inits (L423)",1,0,FALSE,FALSE,0,0.004,0.002,0.00800000000000001,1
+"test-mcml.R","mcml","build_mcml accepts cograph_network input (L572)",1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00499999999999989,1
+"test-mcml.R","mcml","build_mcml handles netobject with sequence data (netobject_data branch, L586-599)",1,0,FALSE,FALSE,0,0.0550000000000002,0.001,0.065,1
+"test-mcml.R","mcml","build_mcml handles netobject with edge list data (netobject_data edgelist, L593-595)",1,0,FALSE,FALSE,0,0.244,0.003,0.266,1
+"test-mcml.R","mcml","build_mcml handles netobject without data (netobject_matrix branch, L601-607)",1,0,FALSE,FALSE,0,0.00099999999999989,0,0.004,1
+"test-mcml.R","mcml","build_mcml handles plain numeric matrix (matrix branch, L608-610)",1,0,FALSE,FALSE,0,0.00299999999999967,0.001,0.00500000000000034,1
+"test-mcml.R","mcml","build_mcml errors on unknown input class (L611-612)",1,0,FALSE,FALSE,0,0.00299999999999967,0.001,0.00499999999999989,1
+"test-mcml.R","mcml",".detect_mcml_input returns netobject_data for netobject with data (L625)",1,0,FALSE,FALSE,0,0.004,0.001,0.00700000000000012,1
+"test-mcml.R","mcml",".detect_mcml_input returns netobject_matrix for netobject without data (L626)",1,0,FALSE,FALSE,0,0.004,0.001,0.00700000000000012,1
+"test-mcml.R","mcml",".detect_mcml_input returns sequence for non-square numeric matrix (L641)",1,0,FALSE,FALSE,0,0.00200000000000022,0.001,0.004,1
+"test-mcml.R","mcml",".detect_mcml_input returns unknown for unrecognized class (L644)",1,0,FALSE,FALSE,0,0.00200000000000022,0.001,0.00499999999999989,1
+"test-mcml.R","mcml",".detect_mcml_input accepts igraph-style first-two-column edge lists",2,0,FALSE,FALSE,0,0.004,0.001,0.00800000000000001,2
+"test-mcml.R","mcml",".detect_mcml_input keeps named two-step sequence data as sequence",2,0,FALSE,FALSE,0,0.004,0.002,0.00800000000000001,2
+"test-mcml.R","mcml",".auto_detect_clusters finds cluster from nodes$cluster column (L650-656)",1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00600000000000023,1
+"test-mcml.R","mcml",".auto_detect_clusters falls back to node_groups (L660-664)",1,0,FALSE,FALSE,0,0.0180000000000002,0.001,0.0209999999999999,1
+"test-mcml.R","mcml",".auto_detect_clusters errors when no cluster info found (L667-671)",1,0,FALSE,FALSE,0,0.00499999999999989,0.001,0.00700000000000012,1
+"test-mcml.R","mcml",".auto_detect_clusters rejects missing and duplicate auto assignments",3,0,FALSE,FALSE,0,0.00800000000000001,0.001,0.00999999999999979,3
+"test-mcml.R","mcml",".build_cluster_lookup errors on unmapped nodes (L696-698)",1,0,FALSE,FALSE,0,0.00500000000000034,0.001,0.00699999999999967,1
+"test-mcml.R","mcml",".build_cluster_lookup rejects duplicate list membership",1,0,FALSE,FALSE,0,0.004,0.001,0.00599999999999978,1
+"test-mcml.R","mcml",".build_cluster_lookup works with character membership vector (L703-711)",2,0,FALSE,FALSE,0,0.004,0.002,0.00800000000000001,2
+"test-mcml.R","mcml",".build_cluster_lookup errors when char vector length mismatches (L705-708)",1,0,FALSE,FALSE,0,0.004,0,0.00599999999999978,1
+"test-mcml.R","mcml",".build_cluster_lookup works with numeric membership vector (L714-721)",2,0,FALSE,FALSE,0,0.00499999999999989,0.002,0.00999999999999979,2
+"test-mcml.R","mcml",".build_cluster_lookup errors when numeric vector length mismatches (L715-718)",1,0,FALSE,FALSE,0,0.004,0,0.00499999999999989,1
+"test-mcml.R","mcml",".build_cluster_lookup errors on invalid input type (L724-725)",1,0,FALSE,FALSE,0,0.004,0.001,0.00600000000000023,1
+"test-mcml.R","mcml","build_mcml with density method triggers n_possible computation (L761-764)",2,0,FALSE,FALSE,0,0.00499999999999989,0.001,0.00800000000000001,2
+"test-mcml.R","mcml","build_mcml zero transitions produce uniform between_inits (L784)",1,0,FALSE,FALSE,0,0.004,0.001,0.00599999999999978,1
+"test-mcml.R","mcml",".build_from_transitions validates transition vectors strictly",6,0,FALSE,FALSE,0,0.0210000000000004,0.002,0.0260000000000002,6
+"test-mcml.R","mcml",".build_from_transitions accepts zero-transition inputs",3,0,FALSE,FALSE,0,0.00499999999999989,0.001,0.012,3
+"test-mcml.R","mcml","build_mcml single-node cluster computes self-loop weight (L839-847)",3,0,FALSE,FALSE,0,0.0109999999999997,0.002,0.0169999999999999,3
+"test-mcml.R","mcml","build_mcml single-node cluster with no self-loops returns 0 weight (L843-844)",1,0,FALSE,FALSE,0,0.00599999999999978,0.002,0.00999999999999979,1
+"test-mcml.R","mcml",".build_mcml_edgelist accepts first two columns as endpoints",4,0,FALSE,FALSE,0,0.00900000000000034,0.004,0.016,4
+"test-mcml.R","mcml","build_mcml distinguishes two-step sequences from unnamed edge lists",4,0,FALSE,FALSE,0,0.012,0.003,0.0210000000000004,4
+"test-mcml.R","mcml","build_mcml edgelist validates endpoints and weights",4,0,FALSE,FALSE,0,0.0110000000000001,0.001,0.0140000000000002,4
+"test-mcml.R","mcml","build_mcml edgelist accepts cluster column name (L971-989)",2,0,FALSE,FALSE,0,0.00600000000000023,0.002,0.0100000000000002,2
+"test-mcml.R","mcml","build_mcml edgelist cluster column rejects conflicting node groups",1,0,FALSE,FALSE,0,0.004,0.001,0.00599999999999978,1
+"test-mcml.R","mcml","build_mcml edgelist errors when clusters=NULL (L992-993)",1,0,FALSE,FALSE,0,0.004,0.001,0.00699999999999967,1
+"test-mcml.R","mcml","build_mcml edgelist accepts membership vector clusters (L1000)",1,0,FALSE,FALSE,0,0.00699999999999967,0.001,0.0100000000000002,1
+"test-mcml.R","mcml","build_mcml sequence builder coerces matrix input (L1017)",1,0,FALSE,FALSE,0,0.004,0.001,0.00700000000000012,1
+"test-mcml.R","mcml",".build_mcml_sequence errors on single-column data (L1023-1024)",1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00499999999999989,1
+"test-mcml.R","mcml",".build_mcml_sequence errors when clusters=NULL (L1043-1044)",1,0,FALSE,FALSE,0,0.004,0.001,0.00600000000000023,1
+"test-mcml.R","mcml",".build_mcml_sequence calls .normalize_clusters for non-list clusters (L1050)",1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.004,1
+"test-mcml.R","mcml","build_mcml sequence requires clusters for all observed states",1,0,FALSE,FALSE,0,0.004,0.001,0.00700000000000012,1
+"test-mcml.R","mcml","build_mcml sequence keeps zero-transition observed states in metadata",5,0,FALSE,FALSE,0,0.0129999999999999,0.00499999999999995,0.0230000000000001,5
+"test-mcml.R","mcml",".process_weights returns symmetrized matrix for cooccurrence type (L1070)",2,0,FALSE,FALSE,0,0.00499999999999989,0.002,0.00999999999999979,2
+"test-mcml.R","mcml",".process_weights applies undirected symmetrisation before type processing",4,0,FALSE,FALSE,0,0.0089999999999999,0.003,0.0180000000000002,4
+"test-mcml.R","mcml",".process_weights validates arguments strictly",5,0,FALSE,FALSE,0,0.0170000000000003,0.002,0.0209999999999999,5
+"test-mcml.R","mcml","build_mcml sequence path honours directed = FALSE",6,0,FALSE,FALSE,0,0.0150000000000001,0.005,0.0270000000000001,6
+"test-mcml.R","mcml","as_tna dispatches correctly for mcml objects (L1226)",1,0,FALSE,FALSE,0,0.016,0.001,0.0190000000000001,1
+"test-mcml.R","mcml","as_tna.mcml on matrix path uses frequency method (matrix is aggregation-only)",2,0,FALSE,FALSE,0,0.012,0.001,0.016,2
+"test-mcml.R","mcml","as_tna.mcml preserves matrix-path macro weights and inits",3,0,FALSE,FALSE,0,0.012,0.003,0.0190000000000001,3
+"test-mcml.R","mcml","as_tna.mcml creates macro netobject (L1243-1244)",2,0,FALSE,FALSE,0,0.00699999999999967,0.002,0.0129999999999999,2
+"test-mcml.R","mcml","as_tna.mcml skips clusters with zero-row sums (L1247-1262)",2,0,FALSE,FALSE,0,0.00599999999999978,0.002,0.00999999999999979,2
+"test-mcml.R","mcml","as_tna.mcml with compute_within=FALSE returns empty cluster list (L1256-1258)",2,0,FALSE,FALSE,0,0.004,0.001,0.00599999999999978,2
+"test-mcml.R","mcml",".wrap_netobject produces valid dual-class object (L1270-1296)",6,0,FALSE,FALSE,0,0.0110000000000001,0.004,0.02,6
+"test-mcml.R","mcml",".wrap_netobject validates matrix and inits strictly",9,0,FALSE,FALSE,0,0.0230000000000001,0.004,0.0299999999999998,9
+"test-mcml.R","mcml","as_tna.default errors for non-tna objects (L1305-1306)",2,0,FALSE,FALSE,0,0.00700000000000012,0.001,0.0089999999999999,2
+"test-mcml.R","mcml",".normalize_clusters handles data.frame input (L1313-1318)",2,0,FALSE,FALSE,0,0.00499999999999989,0.002,0.0110000000000001,2
+"test-mcml.R","mcml",".normalize_clusters validates data.frame membership strictly",4,0,FALSE,FALSE,0,0.0110000000000001,0.001,0.0139999999999993,4
+"test-mcml.R","mcml",".normalize_clusters errors on unknown nodes in list (L1325-1327)",1,0,FALSE,FALSE,0,0.00299999999999967,0,0.00499999999999989,1
+"test-mcml.R","mcml",".normalize_clusters rejects duplicate and missing list mappings",2,0,FALSE,FALSE,0,0.00600000000000023,0.001,0.00800000000000001,2
+"test-mcml.R","mcml","cluster_summary rejects duplicate and incomplete cluster lists",2,0,FALSE,FALSE,0,0.00600000000000023,0,0.00699999999999967,2
+"test-mcml.R","mcml",".normalize_clusters errors on numeric vector wrong length (L1335-1337)",1,0,FALSE,FALSE,0,0.004,0,0.00499999999999989,1
+"test-mcml.R","mcml",".normalize_clusters handles factor cluster membership (L1348-1359)",3,0,FALSE,FALSE,0,0.00599999999999978,0.003,0.0119999999999996,3
+"test-mcml.R","mcml",".normalize_clusters handles character cluster membership (L1348-1359)",2,0,FALSE,FALSE,0,0.004,0.002,0.00800000000000001,2
+"test-mcml.R","mcml",".normalize_clusters aligns named membership vectors by node name",4,0,FALSE,FALSE,0,0.00699999999999967,0.004,0.0140000000000002,4
+"test-mcml.R","mcml",".normalize_clusters rejects malformed membership vectors",5,0,FALSE,FALSE,0,0.0129999999999999,0.002,0.016,5
+"test-mcml.R","mcml",".normalize_clusters errors on character vector wrong length (L1350-1351)",1,0,FALSE,FALSE,0,0.004,0,0.00500000000000078,1
+"test-mcml.R","mcml",".normalize_clusters errors on invalid input type (L1362)",1,0,FALSE,FALSE,0,0.00300000000000011,0,0.00499999999999989,1
+"test-mcml.R","mcml","print.mcml shows Transitions line when edges present (L1381-1384)",1,0,FALSE,FALSE,0,0.00499999999999989,0.001,0.00800000000000001,1
+"test-mcml.R","mcml","print.mcml without edges shows no Transitions line (L1385-1386)",1,0,FALSE,FALSE,0,0.00199999999999978,0.001,0.00399999999999956,1
+"test-mcml.R","mcml","summary.mcml returns a tidy per-cluster data.frame (no print side-effect)",3,0,FALSE,FALSE,0,0.0130000000000003,0.002,0.016,3
+"test-mcml.R","mcml","summary.mcml on build_mcml result returns the same shape",2,0,FALSE,FALSE,0,0.00599999999999978,0.002,0.00899999999999945,2
+"test-mcml.R","mcml","centrality_stability() works on mcml",5,0,FALSE,FALSE,0,0.184,0.00800000000000001,0.203,5
+"test-mcml.R","mcml","centrality_stability() mcml dispatch matches as_tna group shape",2,0,FALSE,FALSE,0,0.0580000000000003,0.004,0.0679999999999996,2
+"test-mcml.R","mcml","network_reliability() works on mcml",1,0,FALSE,FALSE,0,0.0659999999999998,0.002,0.0730000000000004,1
+"test-mcml.R","mcml","network_reliability() mcml dispatch matches as_tna labels",2,0,FALSE,FALSE,0,0.0470000000000002,0.002,0.0519999999999996,2
+"test-mcml.R","mcml","casedrop_reliability() mcml dispatch matches as_tna group shape",2,0,FALSE,FALSE,0,0.143,0.00700000000000001,0.157999999999999,2
+"test-mcml.R","mcml","extract_transition_matrix() works on mcml",6,0,FALSE,FALSE,0,0.0270000000000001,0.006,0.0410000000000004,6
+"test-mcml.R","mcml","extract_initial_probs() works on mcml",4,0,FALSE,FALSE,0,0.012,0.004,0.0190000000000001,4
+"test-mcml.R","mcml","extract_edges() works on mcml",4,0,FALSE,FALSE,0,0.024,0.004,0.0330000000000004,4
+"test-mcml.R","mcml","mcml extraction returns stored matrices, inits, and delegated edges",5,0,FALSE,FALSE,0,0.0270000000000001,0.005,0.0380000000000003,5
+"test-mcml.R","mcml","extract_edges rejects invalid controls on mcml",3,0,FALSE,FALSE,0,0.00999999999999979,0.001,0.0129999999999999,3
+"test-mcml.R","mcml","edgelist input yields macro/per-cluster $data usable by bootstrap",15,0,FALSE,FALSE,0,0.113,0.016,0.146,15
+"test-mcml.R","mcml","sequence input does NOT emit the edgelist bootstrap warning",2,0,FALSE,FALSE,0,0.00800000000000001,0.001,0.0120000000000005,2
+"test-mcml.R","mcml",".auto_detect_clusters aligns node_groups by label, not row order",1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00600000000000023,1
+"test-mcml.R","mcml",".auto_detect_clusters errors clearly when node_groups lacks node column",1,0,FALSE,FALSE,0,0.00500000000000034,0.001,0.00599999999999934,1
+"test-mcml.R","mcml","MCML labels propagate to state_distribution()",1,0,FALSE,FALSE,0,0.016,0.001,0.0190000000000001,1
+"test-mcml.R","mcml","MCML labels reject collisions and leave macro cluster labels untouched",8,0,FALSE,FALSE,0,0.0630000000000002,0.005,0.0739999999999998,8
+"test-mcml.R","mcml","edge-list clusters-by-column reflects documented narrow contract",2,0,FALSE,FALSE,0,0.004,0,0.00600000000000023,2
+"test-mcml.R","mcml","as_tna.mcml keeps clusters with zero-row-sum (sink) nodes, no warning",4,0,FALSE,FALSE,0,0.00800000000000001,0.002,0.0129999999999999,4
+"test-mcml.R","mcml","as_tna.mcml preserves relative macro weights and inits, keeps every cluster",5,0,FALSE,FALSE,0,0.0110000000000001,0.004,0.024,5
+"test-mcml.R","mcml","meta$directed records effective directedness, not the argument",6,0,FALSE,FALSE,0,0.0190000000000001,0.005,0.0289999999999999,6
+"test-mcml.R","mcml","exclude drops states before sequences are formed",2,0,FALSE,FALSE,0,0.0089999999999999,0.006,0.0209999999999999,2
+"test-mcml.R","mcml","end marks every sequence, end_by marks one per group",2,0,FALSE,FALSE,0,0.0699999999999998,0.00800000000000001,0.0840000000000005,2
+"test-mcml.R","mcml","end is applied after trim, so trimming cannot remove the marker",2,0,FALSE,FALSE,0,0.00700000000000012,0.004,0.0129999999999999,2
+"test-mcml.R","mcml","end_by keys on the group's last EVENT, not its last-sorted session",2,0,FALSE,FALSE,0,0.00700000000000012,0.004,0.0139999999999993,2
+"test-mcml.R","mcml","the sequence arguments are validated and refuse bad input",3,0,FALSE,FALSE,0,0.0089999999999999,0.003,0.0129999999999999,3
+"test-mcml.R","mcml","as_tna(expand =) changes the macro layer and nothing else",4,0,FALSE,FALSE,0,0.0109999999999997,0.003,0.0170000000000003,4

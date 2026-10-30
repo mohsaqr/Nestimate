@@ -35,6 +35,11 @@
 #' @param include_diag Logical. Include diagonal (self-loop) edges in the
 #'   edge vector. Default `FALSE`.
 #' @param seed Optional integer for reproducibility.
+#' @param target Cells to assess: `"auto"` (default) uses `"existing"`
+#'   for unscaled, unthresholded transition methods and `"all"` otherwise.
+#'   `"existing"` assesses only nonzero original cells; `"all"` includes
+#'   original zeros so edges appearing after case removal are assessed.
+#'   `include_diag` applies to either target.
 #'
 #' @return An object of class `net_casedrop_reliability` with:
 #' \describe{
@@ -54,9 +59,11 @@
 #'     `include_diag`}{Inputs.}
 #'   \item{`n_cases`}{Number of cases resampled from (sequences for
 #'     transition methods, rows of `$data` otherwise).}
-#'   \item{`n_edges`}{Length of the edge vector assessed: the edges present
-#'     (non-zero) in the original network.}
+#'   \item{`n_edges`}{Number of cells assessed, determined by `target`
+#'     and `include_diag`.}
 #' }
+#' The resolved target is retained as `attr(result, "target")`, preserving
+#' the existing list fields for downstream consumers.
 #' A `netobject_group` or `mcml` input instead returns a
 #' `net_casedrop_reliability_group`: a named list of one result per
 #' constituent network.
@@ -69,14 +76,14 @@
 #' For each `drop_prop` p and each iteration, a size `n_cases * (1 - p)`
 #' subset of `$data` rows is selected **without replacement**, the network
 #' is re-estimated using the same method/scaling/threshold as the input,
-#' and the edges present in the original network (its non-zero cells,
-#' off-diagonal unless `include_diag = TRUE`) are compared with the same
-#' cells of the new weight matrix. Cells that are zero in the original are
-#' left out: a subsample cannot contain a transition absent from the full
-#' data, so those cells agree in every draw, and including them would
-#' inflate the correlation and shrink the deviations. The correlation
-#' method defaults to Spearman for robustness to the wide dynamic range of
-#' transition probabilities.
+#' and the selected cells are compared with the same cells of the new
+#' weight matrix. With `target = "auto"`, unscaled and unthresholded
+#' transition methods assess only existing edges: absent transitions cannot
+#' appear in a subsample, and including these fixed zeros inflates the
+#' correlation. Association methods and scaled or thresholded networks assess
+#' all cells, because a zero original weight can become nonzero after case
+#' removal. Use `target = "existing"` explicitly to assess only the original
+#' edges in these networks. The correlation method defaults to Spearman.
 #'
 #' Case-dropping drops rows of `$data` at random, so it treats the rows as
 #' independent units. When rows are nested in actors (several sessions per
@@ -112,7 +119,9 @@ casedrop_reliability <- function(x,
                            certainty   = 0.95,
                            method      = c("spearman", "pearson", "kendall"),
                            include_diag = FALSE,
-                           seed        = NULL) {
+                           seed        = NULL,
+                           target      = c("auto", "existing", "all")) {
+  target <- match.arg(target)
 
   # ---- Dispatch for mcml / group inputs ----
   if (inherits(x, "mcml")) x <- as_tna(x)
@@ -121,7 +130,7 @@ casedrop_reliability <- function(x,
       casedrop_reliability(net, iter = iter, drop_prop = drop_prop,
                      threshold = threshold, certainty = certainty,
                      method = method, include_diag = include_diag,
-                     seed = seed)
+                     seed = seed, target = target)
     })
     class(out) <- c("net_casedrop_reliability_group", "list")
     return(out)
@@ -172,9 +181,15 @@ casedrop_reliability <- function(x,
     diag(diag_mask) <- FALSE
     diag_mask
   }
-  # A subsample cannot create a transition that is absent from the full
-  # data, so only the edges present in the original network are compared
-  idx_mask <- idx_mask & !is.na(x$weights) & x$weights != 0
+  if (target == "auto") {
+    target <- if (is_transition && is.null(scaling) && isTRUE(thresh == 0)) {
+      "existing"
+    } else {
+      "all"
+    }
+  }
+  idx_mask <- idx_mask & !is.na(x$weights)
+  if (target == "existing") idx_mask <- idx_mask & x$weights != 0
   orig_edges <- as.vector(x$weights[idx_mask])
   if (!isTRUE(stats::sd(orig_edges) > 0)) {
     warning("Original edge vector has zero variance; CS undefined.",
@@ -199,6 +214,7 @@ casedrop_reliability <- function(x,
       n_edges       = length(orig_edges)
     )
     class(result) <- "net_casedrop_reliability"
+    attr(result, "target") <- target
     return(result)
   }
 
@@ -317,7 +333,7 @@ casedrop_reliability <- function(x,
       n_cases       = n_cases,
       n_edges       = length(orig_edges)
     ),
-    class = "net_casedrop_reliability"
+    class = "net_casedrop_reliability", target = target
   )
 }
 

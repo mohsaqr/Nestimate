@@ -1,0 +1,73 @@
+---
+title: "Review fixes: landscape validation"
+output:
+  html_document:
+    self_contained: true
+---
+
+This preview checks the repaired tied-value surface and weighting/concatenation.
+The cup depths and bootstrap units now follow the supplied network settings.
+
+```{r setup, include=FALSE}
+pkgload::load_all('.',quiet=TRUE)
+knitr::opts_chunk$set(echo=TRUE,fig.width=9,fig.height=6)
+```
+
+## Weighted transition landscape
+
+```{r weighted}
+d <- data.frame(T1=c('A','A','B'),T2=c('A','B','A'),
+                T3=c('A',NA,'B'),T4=c('B',NA,'A'))
+n <- build_network(d,method='relative',params=list(weighted=TRUE))
+print(n$weights)
+land <- stability_landscape(n,iter=50,seed=1)
+summary(land)
+plot(land)
+```
+
+## Concatenated sequence landscape
+
+```{r concat}
+n <- build_network(d[c('T1','T2')],method='relative',params=list(concat=3))
+print(n$weights)
+land <- stability_landscape(n,iter=20,seed=1)
+summary(land)
+plot(land)
+```
+
+## Nonconstant entropy with equal trimmed percentiles
+
+This input previously returned a surface that failed to plot. The axis now
+uses the full range when the trimmed endpoints coincide. Thin slices retain
+the existing warning rather than concealing their limited support.
+
+```{r tied}
+s <- as.data.frame(matrix(rep(c('A','B','A','B'),each=21),nrow=21))
+s[21,] <- c('A','A','B','A')
+a <- landscape_surface(s,k=5)
+summary(a)
+plot(a)
+```
+
+## Tied numeric covariate
+
+```{r covariate}
+s$grade <- c(rep(10,20),20)
+t <- landscape_trend(s,along='grade',iter=20,seed=1)
+plot(t,type='surface')
+```
+
+## Boundary states are included in surface metrics
+
+Prepared start markers now count as sequence positions both when calculating
+stability measures and when estimating transitions.
+
+```{r boundary}
+d <- data.frame(T1=c('A','B','A','B','A','B'),
+                T2=c('B','A','A','B','B','A'),
+                T3=c('A','B','B','A','A','B'))
+n <- build_network(d,method='relative',params=list(begin_state='A'))
+surf <- landscape_surface(n,measure='self_loop_tendency',k=5,n_grid=3)
+summary(surf)
+plot(surf)
+```

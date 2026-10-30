@@ -1,0 +1,584 @@
+ℹ Testing Nestimate
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+as_htna: ................................................
+as_netobject: ....................
+association_rules_arules: ...................
+association_rules: ................................................................Metadata aggregated per session: ties resolved by first occurrence in 'code' (99 sessions)
+..............
+bayes_compare: .........................................................
+bipartite_groups: ..................................Hypergraph: 5 nodes, 3 hyperedges
+Size distribution:
+  size_2   : 1
+  size_3   : 2
+.Hypergraph summary
+  Nodes:         5
+  Hyperedges:    3
+  Mean size:     2.67
+  Max size:      3
+.......
+boot_glasso: ..................................................................................................................................................................................................................................................................
+bootstrap_network: ............................................................................................................................................................................
+bootstrap-block: ..........................
+build_clusters: ................................................................................................................................................................................................................................................................................................................................................................................................................................
+build_network-covariates: .......................
+build_network: .......................................................................................................................................................................................................................................Metadata aggregated per session: ties resolved by first occurrence in 'action' (2 sessions)
+..........................Multilevel Network (method: glasso)
+-- Between-person --
+  Nodes: 3  |  Edges: 0
+  Sample size: 20 (unique persons)
+-- Within-person --
+  Nodes: 3  |  Edges: 1
+  Sample size: 100 (observations)
+...............................................................................................................................................................................................
+casedrop_reliability: ..........................................WW..........Edge-weight Case-dropping Stability
+  Cases (rows of $data) : 80
+  Edges assessed        : 20 (diagonal excluded)
+  Iterations / prop     : 10
+  Correlation method    : spearman
+  CS-coefficient (r)    : 0.30  (threshold=0.70, certainty=0.95)
+
+Model-level reliability across iterations (mean +/- sd per drop):
+  drop_prop      p=0.3      
+  mean|diff|      0.033+- 0.007
+  MAD             0.029+- 0.009
+  cor             0.858+- 0.043
+  max|diff|       0.088+- 0.024
+.WWWEdge-weight Case-dropping Stability (3 networks, threshold = 0.70)
+      n_cases n_edges CS
+macro       4       0 NA
+A           2       2 NA
+B           2       2 NA
+.
+centrality_stability: ......centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+....centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+.centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+...centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+.centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+......centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+..centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+..................
+certainty: ................
+chain_structure: ...............................Chain structure -- 2 groups: g1, g2
+
+--- g1 ---
+Chain structure  [3 states, 1 communicating classes]
+  irreducible: TRUE   aperiodic: FALSE   regular: FALSE   reversible: FALSE
+  recurrent classes: 1   transient classes: 0
+
+Use summary(x) for the per-state table, plot(x) for the heatmap.
+
+--- g2 ---
+Chain structure  [3 states, 1 communicating classes]
+  irreducible: TRUE   aperiodic: FALSE   regular: FALSE   reversible: FALSE
+  recurrent classes: 1   transient classes: 0
+
+Use summary(x) for the per-state table, plot(x) for the heatmap.
+
+....
+clique_expansion: ........................................
+cluster-choice: ......................................................................
+cluster-diagnostics: ......................................................Cluster Diagnostics (distance) [ward.D2 / hamming]
+  Sequences: 50  |  Clusters: 2
+  Quality: silhouette = 0.434
+
+  Cluster  N           Mean within-dist  Silhouette
+  1        26 (52.0%)  3.674             0.422
+  2        24 (48.0%)  3.540             0.447
+.............
+cograph_network: Registered S3 method overwritten by 'tna':
+  method             from   
+  plot.tna_bootstrap cograph
+......................centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+..
+compare_networks-actor: ..........
+compare_networks: ................................................................................................................................................................................................................................................................................
+contract-htna: ...............................................................................................
+cooccurrence: ......................................................................................
+covariate-estimators: ..................
+data_conversion: ................................................................................
+distribution_plot: ...................
+edge-betweenness: ...........................................
+estimate_network: .....................................................................................................Dropping 2 single-observation rows (within-person centering).
+..
+estimator_attention: ........................................
+estimator_ising: ........................................................Dropping 3 rows with NA values.
+....
+estimator_registry: ....................................
+estimators-ngram-gap-reverse: .........................
+extract_pathways: .....................................
+extract_sequences: ....................
+extraction: .....................................................
+fix-build-inputs: ..............................
+fix-codex-mgm-group: ....
+fix-codex: .........
+fix-cran-review: .............................
+fix-FIX1: ...........................................................mlVAR result: 12 subjects, 324 observations, 4 variables (lag 1)
+  $temporal        4 x 4 directed    (8/16 edges significant at p<0.05)
+  $contemporaneous 4 x 4 undirected
+  $between         4 x 4 undirected
+Access: fit$temporal, fit$contemporaneous, fit$between (each a netobject); coefs(fit) for tidy coefs.
+..W..W....
+fix-FIX2: ...................................
+fix-FIX3: ...........................................
+fix-FIX4: .......Mixed Markov Model
+  Sequences: 30  |  Clusters: 2  |  States: 5
+  ICs: LL = -453.186  |  BIC = 1073.032  |  AIC = 1004.373  |  ICL = 1073.781
+  Quality: AvePP = 0.988  |  Entropy = 0.054  |  Class.Err = 0.0%
+  Status: did not converge in 20 iterations
+
+  Cluster  N           Mix%   AvePP
+  1        19 (63.3%)  62.8%  0.987
+  2        11 (36.7%)  37.2%  0.991
+
+--- Cluster 1 (62.8%, n=19) ---
+      A     B     C     D     E
+A 0.174 0.145 0.144 0.076 0.461
+B 0.198 0.156 0.384 0.163 0.100
+C 0.144 0.315 0.210 0.101 0.230
+D 0.119 0.000 0.301 0.347 0.234
+E 0.238 0.233 0.267 0.134 0.127
+
+--- Cluster 2 (37.2%, n=11) ---
+      A     B     C     D     E
+A 0.278 0.133 0.135 0.356 0.097
+B 0.180 0.197 0.076 0.366 0.180
+C 0.453 0.001 0.174 0.194 0.178
+D 0.151 0.344 0.047 0.154 0.304
+E 0.042 0.173 0.162 0.409 0.214
+
+.....Mixed Markov Model
+  Sequences: 30  |  Clusters: 2  |  States: 5
+  ICs: LL = -453.186  |  BIC = 1073.032  |  AIC = 1004.373  |  ICL = 1073.781
+  Quality: AvePP = 0.988  |  Entropy = 0.054  |  Class.Err = 0.0%
+  Status: did not converge in 20 iterations
+
+  Cluster  N           Mix%   AvePP
+  1        19 (63.3%)  62.8%  0.987
+  2        11 (36.7%)  37.2%  0.991
+
+--- Cluster 1 (62.8%, n=19) ---
+      A     B     C     D     E
+A 0.174 0.145 0.144 0.076 0.461
+B 0.198 0.156 0.384 0.163 0.100
+C 0.144 0.315 0.210 0.101 0.230
+D 0.119 0.000 0.301 0.347 0.234
+E 0.238 0.233 0.267 0.134 0.127
+
+--- Cluster 2 (37.2%, n=11) ---
+      A     B     C     D     E
+A 0.278 0.133 0.135 0.356 0.097
+B 0.180 0.197 0.076 0.366 0.180
+C 0.453 0.001 0.174 0.194 0.178
+D 0.151 0.344 0.047 0.154 0.304
+E 0.042 0.173 0.162 0.409 0.214
+
+.......
+fix-FIX5: ....................................Higher-Order Network (HON) Summary
+  Nodes: 18 | Edges: 59 | Trajectories: 40
+  First-order states: Ask, Delegate, Execute, Explain, Investigate, Plan, Repair, Report
+  Max order observed: 2 (requested: 2)
+  Min frequency: 1
+  Node order distribution:
+    Order 1: 8 nodes
+    Order 2: 10 nodes
+...Multi-Order Generative Model (MOGen) Summary
+
+  States: Ask, Delegate, Execute, Explain, Investigate, Plan, Repair, Report
+  Paths: 40 | Observations: 429
+  Best by AIC: order 1  |  Best by BIC: order 0
+  Selected:    order 1 (by aic)
+
+...HONEM Summary
+
+  Nodes: 18 | Dimensions: 2
+  Variance explained: 69.6%
+  Top singular values: 1.853, 1.075
+  Embedding range: [-0.557, 0.570]
+.....................
+fix-FIX6: .....................................................
+fix-FIX7: ............A network with one long sequence is not recommended and can't be validated using bootstrap and other confirmatory testings.
+..............
+fix-FIX8: ..............................centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+..centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+..........
+fix-mgm-typewarn: .........
+fix-review-batch2: .....................
+fix-review-batch3: ..............................
+fix-review-higherorder: ............................
+fix-review-inference: ...........................................
+fix-review-inputs: ...............................................
+fix-review-landscapes: ....................
+fix-review-models: .................................................
+fix-review-sequences: ....................
+fix-review-states: ..........................................
+frequencies: ...............................................................................................................
+gimme: ....................................................
+glasso-pure: ................
+hon: ...............................................................................................................
+honem: .......................................................................................................
+hypa-oracles: .............................................................................
+hypa: ..................................W....W..W...W...................WW.W..W.W.W....W.W.W.W.W.W.W.W.W.....WSW.W..W...W..........WW.WW...WSW.W.W.WWW...W.W.W.W....
+hypergraph_centrality: .................................................................................
+hypergraph_laplacian: ............................................Hypergraph spectral clustering (zhou Laplacian)
+  Nodes: 6 | Hyperedges: 5 | k: 2
+  Cluster sizes: Cluster 1 = 3, Cluster 2 = 3
+  Eigengap after k: 0.6667
+.......Hypergraph transductive label spreading (zhou Laplacian, xi = 0.9)
+  Nodes: 6 (4 labeled) | Classes: x, y
+  Predicted: x = 3, y = 3
+................
+hypergraph_measures: ............................................Hypergraph measures: 4 nodes, 2 hyperedges
+  Density:                0.5000
+  Mean edge size:         3.00
+  Pairwise participation: 0.8333
+
+  Hyperdegree:    min=1  med=1.5  max=2
+  Node strength:  min=3.0  med=4.5  max=6.0
+  Edge sizes:     min=3  med=3.0  max=3
+
+Intersection profile (pair counts by overlap size):
+  overlap_2   : 1
+.Hypergraph measures: 2 nodes, 0 hyperedges
+  Density:                0.0000
+  Mean edge size:         NA
+  Pairwise participation: 0.0000
+
+  Hyperdegree:    min=0  med=0.0  max=0
+  Node strength:  min=0.0  med=0.0  max=0.0
+.
+hypergraph: .........................................Hypergraph: 6 nodes, 8 hyperedges
+Size distribution:
+  size_2   : 6
+  size_3   : 2
+Method: clique, p = 1.00, include_pairwise = TRUE, max_size = 3
+.Hypergraph summary
+  Nodes:         6
+  Hyperedges:    8
+  Mean size:     2.25
+  Max size:      3
+..Hypergraph: 3 nodes, 0 hyperedges
+Method: clique, p = 1.00, include_pairwise = FALSE, max_size = 3
+.Hypergraph summary
+  Nodes:         3
+  Hyperedges:    0
+.
+import_onehot: ...........................
+link_prediction: ............................................................................Metadata aggregated per session: ties resolved by first occurrence in 'code' (99 sessions)
+..................S.......
+macro_network: .......................
+magnitude-difference: .................magnitude_difference object
+  metric: abs_diff   scale: tna_range 
+  states (9):  adapt, cohesion, consensus, coregulate, discuss, emotion, monitor, plan, synthesis
+  edges: 81 
+  magnitude-difference summary (abs_diff):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.00000 0.01143 0.03002 0.06035 0.06894 0.42910 
+....
+markov_order: ....................Markov Order Test -- 2 groups: g1, g2
+
+--- g1 ---
+Markov Order Test  [within-w permutation, n_perm = 40, alpha = 0.050]
+  8 sequences / 144 observations / 4 states
+
+  Selected order  BIC: 1   AIC: 1   permutation-LRT: 1
+
+ order  loglik    AIC    BIC df    g2 p_permutation p_asymptotic significant
+     0 -164.72 335.44 344.35 NA    NA            NA           NA          NA
+     1 -137.39 298.78 334.42  9 54.21    0.02439024 1.719176e-08        TRUE
+     2 -125.66 333.32 455.09 20 23.31    0.19512195 2.736235e-01       FALSE
+
+--- g2 ---
+Markov Order Test  [within-w permutation, n_perm = 40, alpha = 0.050]
+  8 sequences / 144 observations / 4 states
+
+  Selected order  BIC: 0   AIC: 1   permutation-LRT: 1
+
+ order  loglik    AIC    BIC df    g2 p_permutation p_asymptotic significant
+     0 -196.50 399.01 407.91 NA    NA            NA           NA          NA
+     1 -176.15 380.31 421.89  9 40.59    0.02439024 5.945574e-06        TRUE
+     2 -156.20 424.40 590.71 31 39.22    0.43902439 1.476290e-01       FALSE
+
+.....
+markov-group-plots: ................
+markov: ..............................................................Mean First Passage Times -- 2 groups: g1, g2
+
+--- g1 ---
+Mean First Passage Times (3 states)
+
+  A B C
+A 3 1 2
+B 2 3 1
+C 1 2 3
+
+Stationary distribution:
+     A      B      C 
+0.3333 0.3333 0.3333 
+
+--- g2 ---
+Mean First Passage Times (3 states)
+
+  A B C
+A 3 1 2
+B 2 3 1
+C 1 2 3
+
+Stationary distribution:
+     A      B      C 
+0.3333 0.3333 0.3333 
+
+......Markov Stability -- 2 groups: g1, g2
+
+--- g1 ---
+Markov Stability Analysis
+
+ state persistence stationary_prob return_time sojourn_time avg_time_to_others
+     A           0          0.3333           3            1                1.5
+     B           0          0.3333           3            1                1.5
+     C           0          0.3333           3            1                1.5
+ avg_time_from_others
+                  1.5
+                  1.5
+                  1.5
+
+--- g2 ---
+Markov Stability Analysis
+
+ state persistence stationary_prob return_time sojourn_time avg_time_to_others
+     A           0          0.3333           3            1                1.5
+     B           0          0.3333           3            1                1.5
+     C           0          0.3333           3            1                1.5
+ avg_time_from_others
+                  1.5
+                  1.5
+                  1.5
+
+.
+mcml_pc: ..............................................................................................................................................................................WW..................centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+.......WWWW..WW....................Dropping 2 rows with NA values.
+Dropping 1 rows with NA values.
+Dropping 1 rows with NA values.
+Dropping 1 rows with NA values.
+....Dropping 1 rows with NA values.
+....
+mcml_repartition: ...............................
+mcml: .......................................................................................................................................................................................................................................................................................................................................................
+metadata-cols: .........
+mlvar: .......................................................W.
+mmm-covariate-label: ....
+mmm: ......................................................................................................................................................................SS........
+mogen: ...........................................................................................................
+mosaic_analysis: .............................
+mosaic_plot: A network with one long sequence is not recommended and can't be validated using bootstrap and other confirmatory testings.
+.A network with one long sequence is not recommended and can't be validated using bootstrap and other confirmatory testings.
+..A network with one long sequence is not recommended and can't be validated using bootstrap and other confirmatory testings.
+..A network with one long sequence is not recommended and can't be validated using bootstrap and other confirmatory testings.
+....A network with one long sequence is not recommended and can't be validated using bootstrap and other confirmatory testings.
+................
+nct: ................................................................
+network_reliability: .............
+outcome_model: ...........................
+path_dependence: ........................
+pathways: .........W..W.W.......W.......
+pattern_outcome: ...............................
+permutation_diagnostics: .................................
+permutation-block: ...................................................
+permutation: .....................................................................................................centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+.......
+persistent_homology: .................................
+plot_state_frequencies: .......................................................
+plot-family-class: ................
+prepare_onehot-grouping: .............
+prepare-grouping: .........................................................................................................................................................................................................................................................
+prepare-timezone: ................
+prepare: Metadata aggregated per session: ties resolved by first occurrence in 'timestamp' (2 sessions)
+........Metadata aggregated per session: ties resolved by first occurrence in 'timestamp' (2 sessions)
+..............................................................................
+print-cluster: .............Sequence Clustering [ward.D2]
+  Sequences: 40  |  Clusters: 2
+  Dissimilarity: hamming
+  Quality: silhouette = 0.404
+
+  Cluster  N           Mean within-dist
+  1        20 (50.0%)  3.884
+  2        20 (50.0%)  3.963
+................Mixed Markov Model
+  Sequences: 40  |  Clusters: 2  |  States: 3
+  ICs: LL = -287.190  |  BIC = 637.090  |  AIC = 608.379  |  ICL = 637.128
+  Quality: AvePP = 1.000  |  Entropy = 0.005  |  Class.Err = 0.0%
+
+  Cluster  N           Mix%   AvePP
+  1        20 (50.0%)  50.0%  1.000
+  2        20 (50.0%)  50.0%  0.999
+...............................Group Networks (2 clusters via ward.D2 / hamming)
+
+  Group      Nodes  Edges  Weights         N
+  Cluster 1  3      9      [0.083, 0.735]  20 (50.0%)
+  Cluster 2  3      8      [0.087, 0.684]  20 (50.0%)
+.............................
+prune: ...............................
+sequence_metrics: ...................................
+sequence_patterns: ........................................................................
+sequence_plot_mcml: .............................................................................................................................................................
+sequence_plot_periods: .............................A network with one long sequence is not recommended and can't be validated using bootstrap and other confirmatory testings.
+...............
+sequence_plot: ..................................................................................................................
+sequence_terminal: .............................................
+session_ids: ..............................
+simplicial_features: ...................
+simplicial: ...................................................................................................................................SSS.......................................................................................
+stability_landscape: .....................................................
+state_colors: ...............................
+subtract_networks: .................
+transition_entropy: ...........................................................................................................................................................
+utils: ......................................
+vertex_bootstrap: ......................................................
+windowed-fixes: ...........
+wtna: ......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+
+══ Skipped ═════════════════════════════════════════════════════════════════════
+1. build_hypa pre-sorts scores: anomalous first ('test-hypa.R:470:1') - Reason: empty test
+
+2. $over and $under data frames have p_adjusted columns ('test-hypa.R:603:1') - Reason: empty test
+
+3. pathways with evidence includes common neighbors ('test-link_prediction.R:432:1') - Reason: empty test
+
+4. plot.mmm_compare errors without ggplot2 ('test-mmm.R:770:3') - Reason: ggplot2 installed; skipping test
+
+5. .plot_mmm_posterior errors without ggplot2 ('test-mmm.R:782:3') - Reason: ggplot2 installed; skipping test
+
+6. plot.simplicial_complex errors without gridExtra ('test-simplicial.R:764:3') - Reason: gridExtra is installed; can't test missing
+
+7. plot.persistent_homology errors without gridExtra ('test-simplicial.R:772:3') - Reason: gridExtra is installed; can't test missing
+
+8. plot.q_analysis errors without gridExtra ('test-simplicial.R:780:3') - Reason: gridExtra is installed; can't test missing
+
+══ Warnings ════════════════════════════════════════════════════════════════════
+1. mcml input dispatches: one CS per sub-network ('test-casedrop_reliability.R:192:3') - Original edge vector has zero variance; CS undefined.
+
+2. mcml input dispatches: one CS per sub-network ('test-casedrop_reliability.R:192:3') - Original edge vector has zero variance; CS undefined.
+
+3. print methods run without error ('test-casedrop_reliability.R:232:3') - Original edge vector has zero variance; CS undefined.
+
+4. print methods run without error ('test-casedrop_reliability.R:232:3') - Original edge vector has zero variance; CS undefined.
+
+5. print methods run without error ('test-casedrop_reliability.R:232:3') - Original edge vector has zero variance; CS undefined.
+
+6. A07-F06: .estimator_mgm auto-detect no longer crashes on NA && short-circuit ('test-fix-FIX1.R:268:3') - mgm: numeric column(s) auto-detected as CATEGORICAL (integer with <=10 distinct values): K. If these are continuous, pass explicit `type=`/`level=`.
+
+7. A07-F06: .estimator_mgm auto-detect no longer crashes on NA && short-circuit ('test-fix-FIX1.R:277:3') - mgm: numeric column(s) auto-detected as CATEGORICAL (integer with <=10 distinct values): G. If these are continuous, pass explicit `type=`/`level=`.
+
+8. build_hypa returns net_hypa class ('test-hypa.R:167:3') - 'k' is deprecated; use 'order' instead.
+
+9. build_hypa detects anomalies in biased data ('test-hypa.R:184:3') - 'k' is deprecated; use 'order' instead.
+
+10. build_hypa handles k=1 (first-order) ('test-hypa.R:195:3') - 'k' is deprecated; use 'order' instead.
+
+11. build_hypa rejects invalid input ('test-hypa.R:204:3') - 'k' is deprecated; use 'order' instead.
+
+12. build_hypa alpha parameter affects classification ('test-hypa.R:268:3') - 'k' is deprecated; use 'order' instead.
+
+13. build_hypa alpha parameter affects classification ('test-hypa.R:269:3') - 'k' is deprecated; use 'order' instead.
+
+14. HYPA scores are in [0, 1] ('test-hypa.R:284:3') - 'k' is deprecated; use 'order' instead.
+
+15. HYPA expected values are positive ('test-hypa.R:293:3') - 'k' is deprecated; use 'order' instead.
+
+16. print.net_hypa works ('test-hypa.R:304:3') - 'k' is deprecated; use 'order' instead.
+
+17. summary.net_hypa works ('test-hypa.R:311:3') - 'k' is deprecated; use 'order' instead.
+
+18. build_hypa handles data.frame input ('test-hypa.R:362:3') - 'k' is deprecated; use 'order' instead.
+
+19. build_hypa stops when no valid trajectories ('test-hypa.R:374:3') - 'k' is deprecated; use 'order' instead.
+
+20. build_hypa stops when no edges at requested order k ('test-hypa.R:382:3') - 'k' is deprecated; use 'order' instead.
+
+21. summary.net_hypa displays anomalous paths when present ('test-hypa.R:392:3') - 'k' is deprecated; use 'order' instead.
+
+22. pathways.net_hypa returns character vector ('test-hypa.R:409:3') - 'k' is deprecated; use 'order' instead.
+
+23. pathways.net_hypa type='over' returns over-represented paths ('test-hypa.R:419:3') - 'k' is deprecated; use 'order' instead.
+
+24. pathways.net_hypa type='under' returns under-represented paths ('test-hypa.R:430:3') - 'k' is deprecated; use 'order' instead.
+
+25. pathways.net_hypa returns empty when no anomalies ('test-hypa.R:437:3') - 'k' is deprecated; use 'order' instead.
+
+26. build_hypa stores $over and $under data frames ('test-hypa.R:452:3') - 'k' is deprecated; use 'order' instead.
+
+27. build_hypa pre-sorts scores: anomalous first ('test-hypa.R:475:3') - 'k' is deprecated; use 'order' instead.
+
+28. summary.net_hypa respects n parameter ('test-hypa.R:492:3') - 'k' is deprecated; use 'order' instead.
+
+29. summary.net_hypa shows over/under counts ('test-hypa.R:502:3') - 'k' is deprecated; use 'order' instead.
+
+30. p_adjust='none' matches original behavior (no correction) ('test-hypa.R:521:3') - 'k' is deprecated; use 'order' instead.
+
+31. BH adjustment produces p_adjusted columns in scores ('test-hypa.R:538:3') - 'k' is deprecated; use 'order' instead.
+
+32. BH adjustment can differ from no correction on biased data ('test-hypa.R:566:3') - 'k' is deprecated; use 'order' instead.
+
+33. BH adjustment can differ from no correction on biased data ('test-hypa.R:568:3') - 'k' is deprecated; use 'order' instead.
+
+34. bonferroni is more conservative than BH ('test-hypa.R:586:3') - 'k' is deprecated; use 'order' instead.
+
+35. bonferroni is more conservative than BH ('test-hypa.R:588:3') - 'k' is deprecated; use 'order' instead.
+
+36. $over and $under data frames have p_adjusted columns ('test-hypa.R:608:3') - 'k' is deprecated; use 'order' instead.
+
+37. invalid p_adjust method errors ('test-hypa.R:623:3') - 'k' is deprecated; use 'order' instead.
+
+38. invalid p_adjust method errors ('test-hypa.R:625:3') - 'k' is deprecated; use 'order' instead.
+
+39. invalid p_adjust method errors ('test-hypa.R:627:3') - 'k' is deprecated; use 'order' instead.
+
+40. p_adjust stored in result object ('test-hypa.R:633:3') - 'k' is deprecated; use 'order' instead.
+
+41. p_adjust stored in result object ('test-hypa.R:634:3') - 'k' is deprecated; use 'order' instead.
+
+42. p_adjust stored in result object ('test-hypa.R:635:3') - 'k' is deprecated; use 'order' instead.
+
+43. print.net_hypa shows p_adjust ('test-hypa.R:644:3') - 'k' is deprecated; use 'order' instead.
+
+44. print.net_hypa shows p_adjust ('test-hypa.R:648:3') - 'k' is deprecated; use 'order' instead.
+
+45. summary.net_hypa shows p_adjust ('test-hypa.R:655:3') - 'k' is deprecated; use 'order' instead.
+
+46. two-sided correction adjusts under and over separately ('test-hypa.R:671:3') - 'k' is deprecated; use 'order' instead.
+
+47. lavaan arguments pass through ... verbatim ('test-mcml_pc.R:723:3') - Factor extraction (cfa) failed for cluster 'B' (lavaan->lav_options_checkvalues():  
+   invalid value in estimator option: "NOT_AN_ESTIMATOR".); falling back to "pca".
+
+48. lavaan arguments pass through ... verbatim ('test-mcml_pc.R:723:3') - Factor extraction (cfa) failed for cluster 'C' (lavaan->lav_options_checkvalues():  
+   invalid value in estimator option: "NOT_AN_ESTIMATOR".); falling back to "pca".
+
+49. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:844:3') - Item(s) more strongly connected to another cluster than their own (possible misassignment): v1, v2, v3, v4, v6. See item_loadings(fit, misfit = TRUE).
+
+50. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:844:3') - Reverse-keyed item(s) flipped in composites: v3, v6. See item_loadings() (column sign).
+
+51. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:845:3') - Item(s) more strongly connected to another cluster than their own (possible misassignment): v1, v2, v3, v4, v6. See item_loadings(fit, misfit = TRUE).
+
+52. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:845:3') - Reverse-keyed item(s) flipped in composites: v3, v6. See item_loadings() (column sign).
+
+53. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:853:3') - Item(s) more strongly connected to another cluster than their own (possible misassignment): v1, v2, v3, v4, v6. See item_loadings(fit, misfit = TRUE).
+
+54. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:853:3') - Reverse-keyed item(s) flipped in composites: v3, v6. See item_loadings() (column sign).
+
+55. build_mlvar warns on singular fit ('test-mlvar.R:157:3') - Between-subjects network not estimable: a random-intercept SD is 0 (no between-person variance). Returning a zero matrix by convention (mlVAR returns NA here).
+
+56. pathways.net_hypa returns anomalous paths ('test-pathways.R:81:3') - 'k' is deprecated; use 'order' instead.
+
+57. pathways.net_hypa type parameter filters ('test-pathways.R:93:3') - 'k' is deprecated; use 'order' instead.
+
+58. pathways.net_hypa returns empty when no anomalies ('test-pathways.R:109:3') - 'k' is deprecated; use 'order' instead.
+
+59. HYPA $edges is set and matches $scores ('test-pathways.R:168:3') - 'k' is deprecated; use 'order' instead.
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+ passed  failed   error warning skipped 
+   8564       0       0      59       8 

@@ -257,6 +257,7 @@
 #'     \code{NULL}.}
 #'   \item{meta}{List: \code{aggregation} (the name as the caller spelled
 #'     it), \code{method}, \code{within}, \code{weighting},
+#'     \code{weighting_spec} (the actual scheme, custom vector or function),
 #'     \code{fa_method}, \code{fa_args}, \code{scale}, \code{cor_method},
 #'     \code{signed}, \code{n_nodes}, \code{n_clusters},
 #'     \code{cluster_sizes}, \code{n_misfit}, \code{n_flipped},
@@ -538,6 +539,9 @@ build_mcml_pc <- function(x,
         else if (is.function(weighting)) "custom (function)"
         else if (is.numeric(weighting)) "custom (vector)"
         else weighting,
+      # Retain custom vectors/functions as well as the printable scheme name
+      # so case-resampling can replay the fitted weighting exactly.
+      weighting_spec = if (aggregation == "composite") weighting else "strength",
       fa_method = if (identical(weighting, "factor")) fa_method
         else NA_character_,
       fa_args = if (identical(weighting, "factor") && length(fa_args) > 0)
@@ -812,9 +816,11 @@ build_mcml_pc <- function(x,
 #' \strong{Experimental.} Bootstraps the item weights of a
 #' \code{\link{build_mcml_pc}} fit: rows of the raw data are resampled,
 #' the node-level network is re-estimated each time, and the
-#' connectivity-based composite weights are recomputed. Wide intervals
-#' mean the weighting (and therefore the \code{"loadings"} macro
-#' network) should not be over-interpreted.
+#' fitted weighting scheme is reapplied, including data-dependent and custom
+#' weights and the factor-analysis options. Fixed equal or supplied numeric
+#' weights retain their magnitudes across resamples; item signs may vary.
+#' Older saved custom-weight fits must be rebuilt to retain their specification.
+#' Wide intervals mean the weighting should not be over-interpreted.
 #'
 #' @param x An \code{mcml_pc} object that carries raw data. For the \code{print()} and \code{plot()} methods: an object of class \code{pc_loading_stability}.
 #' @param iter Integer. Bootstrap replicates (default 200; node-level
@@ -876,14 +882,31 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
   signed <- x$meta$signed
   node_order <- x$loadings$node
   n_rows <- nrow(data)
+  weighting <- x$meta$weighting_spec %||% x$meta$weighting
+  # Older descriptive fits stored NA, and their diagnostics used strength.
+  if (is.null(weighting) ||
+      (is.character(weighting) && length(weighting) == 1L && is.na(weighting))) {
+    weighting <- "strength"
+  }
+  if (is.character(weighting) && any(grepl("^custom", weighting))) {
+    stop("This saved fit does not retain its custom weighting. Rebuild it ",
+         "with build_mcml_pc() before calling loading_stability().", call. = FALSE)
+  }
 
   boot <- vapply(seq_len(iter), function(b) {
     rows <- sample.int(n_rows, n_rows, replace = TRUE)
-    net_b <- .pc_estimate(data[rows, , drop = FALSE], estimator,
-                          cor_method)
+    data_b <- data[rows, , drop = FALSE]
+    net_b <- .pc_estimate(data_b, estimator, cor_method)
     ld_b <- suppressWarnings(
       .pc_network_loadings(net_b$weights, members, signed = signed)
     )
+    if (!identical(weighting, "strength")) {
+      ld_b <- .pc_apply_weighting(ld_b, net_b$weights, data_b, members,
+                                  weighting, signed,
+                                  fa_method = x$meta$fa_method %||% "ml",
+                                  cor_method = cor_method,
+                                  fa_args = x$meta$fa_args %||% list())
+    }
     idx <- match(node_order, ld_b$node)
     ld_b$weight[idx] * ld_b$sign[idx]
   }, numeric(length(node_order)))

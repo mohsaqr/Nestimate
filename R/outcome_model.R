@@ -73,6 +73,8 @@ utils::globalVariables(c("term", "estimate", "ci_lower", "ci_upper"))
 #'   \code{$select}, \code{$correction}, \code{$ci_level}, \code{$mixed}
 #'   and \code{$outcome}. Retrieve the table with
 #'   \code{\link{effects_table}}.
+#' Ordinary Gaussian fits use Student t confidence limits with the model's
+#' residual degrees of freedom; binomial and mixed fits use normal Wald limits.
 #' @seealso \code{\link{simplicial_features}}, \code{\link{effects_table}}
 #' @examples
 #' set.seed(1)
@@ -246,7 +248,11 @@ outcome_model <- function(data, outcome, predictors, group = NULL,
   } else {
     2 * stats::pnorm(abs(stat), lower.tail = FALSE)   # lmer gives no p column
   }
-  z <- stats::qnorm(1 - (1 - ci_level) / 2)
+  z <- if (!mixed && identical(fam, "gaussian")) {
+    stats::qt(1 - (1 - ci_level) / 2, df = stats::df.residual(model))
+  } else {
+    stats::qnorm(1 - (1 - ci_level) / 2)
+  }
 
   out <- data.frame(
     term      = rownames(cf),

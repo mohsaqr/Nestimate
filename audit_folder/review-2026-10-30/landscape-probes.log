@@ -1,0 +1,51 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+WEIGHTED NETWORK
+          A         B
+A 0.3333333 0.6666667
+B 1.0000000 0.0000000
+LANDSCAPE
+  state stay
+1     A  0.4
+2     B  0.0
+CONCAT NETWORK
+    A   B
+A 0.4 0.6
+B 1.0 0.0
+  state stay
+1     A  0.4
+2     B  0.0
+SURFACE COLLAPSED GRID
+    group              measure state low_value depth_at_low high_value
+1 network longitudinal_entropy     A         1            0          1
+2 network longitudinal_entropy     B         1            0          1
+  depth_at_high
+1             0
+2             0
+unique slice values: 1 
+Error in persp.default(s$x, s$y, z, zlim = zlim, theta = theta, phi = phi,  : 
+  invalid 'y' argument
+[1] "Error in persp.default(s$x, s$y, z, zlim = zlim, theta = theta, phi = phi,  : \n  invalid 'y' argument\n"
+attr(,"class")
+[1] "try-error"
+attr(,"condition")
+<simpleError in persp.default(s$x, s$y, z, zlim = zlim, theta = theta, phi = phi,     col = col, border = "grey25", lwd = 0.3, shade = 0.35, box = FALSE,     expand = 0.7, main = main_title, cex.main = 0.9): invalid 'y' argument>
+null device 
+          1 
+ONE PHASE WINDOW
+    group along value label feature state     depth ci_lower ci_upper n_from
+1 network phase   2.5   1-4    well     A 0.5108256       NA       NA      5
+2 network phase   2.5   1-4    well     B 0.0000000       NA       NA      2
+     dwell
+1 1.666667
+2 1.000000
+Stability landscape along program phase (4-step windows): 2 states, 1 network, 0 resamples
+
+Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:
+ state first at_first last at_last  min  max
+     A   1-4     0.51  1-4    0.51 0.51 0.51
+     B   1-4     0.00  1-4    0.00 0.00 0.00
+null device 
+          1 

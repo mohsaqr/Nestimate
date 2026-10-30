@@ -107,7 +107,8 @@
 #'   (then \code{support}).
 #'
 #'   Conditions: \code{nestimate_bad_input} for a state name containing
-#'   \code{"->"}, a missing group column, a group vector of the wrong length,
+#'   \code{"->"} or consisting only of asterisks (reserved for wildcards),
+#'   a missing group column, a group vector of the wrong length,
 #'   or a group with fewer than two values; warning
 #'   \code{nestimate_missing_group} when sequences with a missing group are
 #'   dropped.
@@ -378,6 +379,11 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
   if (any(grepl("->", alphabet, fixed = TRUE))) {
     stop(errorCondition(
       "state names must not contain \"->\", the pattern separator.",
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (any(grepl("^\\*+$", alphabet))) {
+    stop(errorCondition(
+      "state names must not consist only of asterisks, which mark wildcards.",
       class = "nestimate_bad_input", call = NULL))
   }
   n <- nrow(states)

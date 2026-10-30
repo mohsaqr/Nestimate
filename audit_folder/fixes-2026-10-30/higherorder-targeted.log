@@ -1,0 +1,69 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+
+FILE: test-fix-review-higherorder.R 
+fix-review-higherorder: ............................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+FAILED 0 ERROR 0 PASS 28 WARN 0 SKIP 0 
+
+FILE: test-hypergraph_centrality.R 
+hypergraph_centrality: .................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+FAILED 0 ERROR 0 PASS 81 WARN 0 SKIP 0 
+
+FILE: test-mogen.R 
+mogen: ...........................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+FAILED 0 ERROR 0 PASS 107 WARN 0 SKIP 0 
+
+FILE: test-casedrop_reliability.R 
+casedrop_reliability: ..........................................WW..........Edge-weight Case-dropping Stability
+  Cases (rows of $data) : 80
+  Edges assessed        : 20 (diagonal excluded)
+  Iterations / prop     : 10
+  Correlation method    : spearman
+  CS-coefficient (r)    : 0.30  (threshold=0.70, certainty=0.95)
+
+Model-level reliability across iterations (mean +/- sd per drop):
+  drop_prop      p=0.3      
+  mean|diff|      0.033+- 0.007
+  MAD             0.029+- 0.009
+  cor             0.858+- 0.043
+  max|diff|       0.088+- 0.024
+.WWWEdge-weight Case-dropping Stability (3 networks, threshold = 0.70)
+      n_cases n_edges CS
+macro       4       0 NA
+A           2       2 NA
+B           2       2 NA
+.
+
+══ Warnings ════════════════════════════════════════════════════════════════════
+1. mcml input dispatches: one CS per sub-network ('test-casedrop_reliability.R:192:3') - Original edge vector has zero variance; CS undefined.
+
+2. mcml input dispatches: one CS per sub-network ('test-casedrop_reliability.R:192:3') - Original edge vector has zero variance; CS undefined.
+
+3. print methods run without error ('test-casedrop_reliability.R:232:3') - Original edge vector has zero variance; CS undefined.
+
+4. print methods run without error ('test-casedrop_reliability.R:232:3') - Original edge vector has zero variance; CS undefined.
+
+5. print methods run without error ('test-casedrop_reliability.R:232:3') - Original edge vector has zero variance; CS undefined.
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+FAILED 0 ERROR 0 PASS 54 WARN 5 SKIP 0 
+[[1]]
+NULL
+
+[[2]]
+NULL
+
+[[3]]
+NULL
+
+[[4]]
+NULL
+

@@ -1,0 +1,24 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+  id   T2
+1 s1 <NA>
+2 s2 <NA>
+  id label name
+1  1    s1   s1
+2  2    s2   s2
+    original      renamed 
+9.285199e-01 8.919790e-12 
+Error in vapply(table$states, function(s) s[length(s)], character(1)) : 
+  values must be length 1,
+ but FUN(X[[1]]) result is length 0
+[1] "Error in vapply(table$states, function(s) s[length(s)], character(1)) : \n  values must be length 1,\n but FUN(X[[1]]) result is length 0\n"
+attr(,"class")
+[1] "try-error"
+attr(,"condition")
+<simpleError in vapply(table$states, function(s) s[length(s)], character(1)): values must be length 1,
+ but FUN(X[[1]]) result is length 0>
+  pattern length occurrences proportion n_sequences support lift
+1   **->B      2           1        0.5           1     0.5  0.5
+2    A->B      2           1        0.5           1     0.5  1.0

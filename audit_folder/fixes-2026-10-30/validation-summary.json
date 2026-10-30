@@ -1,0 +1,13 @@
+{
+  "passed": 8567,
+  "failed": 0,
+  "error": 0,
+  "warning": 59,
+  "skipped": 8,
+  "files": 121,
+  "test_blocks": 2496,
+  "new_passed": 120,
+  "package_check": "Status: OK; 0 errors, warnings or notes",
+  "htna_check": "Status: OK; 0 errors, warnings or notes",
+  "visual_review": "No visual approval is claimed."
+}

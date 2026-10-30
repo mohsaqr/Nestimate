@@ -1,0 +1,9 @@
+ℹ Testing Nestimate
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+fix-review-landscapes: ....................
+stability_landscape: .....................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════

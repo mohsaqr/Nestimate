@@ -65,7 +65,9 @@ smaller leading eigenvalue score zero.
 \strong{Z-eigenvector centrality (ZEC)}: solves the eigen-equation on the
 hyperedge tensor,
 \deqn{\lambda\, x_i \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j,}
-by shifted power iteration.
+by shifted power iteration. Tensor products and normalization are
+evaluated in log space to retain finite, normalized centralities for
+large hyperedges.
 
 \strong{H-eigenvector centrality (HEC)}: solves
 \deqn{\lambda\, x_i^{k-1} \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j.}

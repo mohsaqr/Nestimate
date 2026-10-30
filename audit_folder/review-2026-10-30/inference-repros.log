@@ -1,0 +1,18 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+Z range: 7.606786e-163 7.606786e-163 
+Expected: 0.08164966 
+L2 norm: 0 
+Warnings: 0 
+Warning messages:
+1: In data.frame(order = object$orders, layer_dof = as.integer(object$layer_dof),  :
+  NAs introduced by coercion to integer range
+2: In data.frame(order = object$orders, layer_dof = as.integer(object$layer_dof),  :
+  NAs introduced by coercion to integer range
+Stored layer DOF: 9e+09 9e+10 
+Summary layer DOF: NA NA 
+New nonzero directed cells: 4 
+Reported max deviation: 0.2854884 
+Whole-network max deviation: 0.3029003 

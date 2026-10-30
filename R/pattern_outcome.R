@@ -147,8 +147,7 @@ pattern_outcome <- function(x, outcome = "last_obs",
   if (last_obs) {
     split <- .sp_last_obs(seqs$states)
     seqs$states <- split$states
-    units$.outcome <- split$labels
-    outcome <- ".outcome"
+    outcome_values <- split$labels
   } else if (!outcome_is_column) {
     if (length(outcome) != nrow(seqs$states)) {
       stop(errorCondition(
@@ -156,12 +155,17 @@ pattern_outcome <- function(x, outcome = "last_obs",
                 length(outcome), nrow(seqs$states)),
         class = "nestimate_bad_input", call = NULL))
     }
-    units$.outcome <- outcome
-    outcome <- ".outcome"
+    outcome_values <- outcome
   }
-  needed <- c(outcome, adjust, group)
+  needed <- c(if (outcome_is_column) outcome, adjust, group)
   .po_check_columns(x, setdiff(needed, names(units)), names(units))
-  complete <- stats::complete.cases(units[needed])
+  if (outcome_is_column) outcome_values <- units[[outcome]]
+  # Keep a generated outcome separate from the user's covariates: even a
+  # column named .outcome can be an adjustment or random-intercept group.
+  complete <- stats::complete.cases(outcome_values)
+  if (length(needed) > 0L) {
+    complete <- complete & stats::complete.cases(units[needed])
+  }
   if (!all(complete)) {
     warning(warningCondition(
       sprintf(paste("%d of %d sequences have a missing outcome, covariate",
@@ -171,7 +175,7 @@ pattern_outcome <- function(x, outcome = "last_obs",
   }
   states <- seqs$states[complete, , drop = FALSE]
   units <- units[complete, , drop = FALSE]
-  y <- .po_outcome(units[[outcome]], reference)
+  y <- .po_outcome(outcome_values[complete], reference)
 
   # ---- Discover, filter, rank and select (codyna's order of operations) ----
   found <- .sp_find(states, type = type, len = len, gap = gap)

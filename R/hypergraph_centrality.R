@@ -58,7 +58,9 @@
 #' **Z-eigenvector centrality (ZEC)**: solves the eigen-equation on the
 #' hyperedge tensor,
 #' \deqn{\lambda\, x_i \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j,}
-#' by shifted power iteration.
+#' by shifted power iteration. Tensor products and normalization are
+#' evaluated in log space to retain finite, normalized centralities for
+#' large hyperedges.
 #'
 #' **H-eigenvector centrality (HEC)**: solves
 #' \deqn{\lambda\, x_i^{k-1} \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j.}
@@ -227,6 +229,38 @@ hypergraph_centrality <- function(hg,
   y
 }
 
+# Unit-L2 direction of the tensor map, evaluated in log space. A common
+# scale cancels in normalization (also after the H root), so neither tiny
+# products nor their squared norm need be represented in floating point.
+#' @noRd
+.hg_tensor_direction <- function(hyperedges, edge_sizes, x, n, exponent) {
+  contributions <- Map(function(e, size) {
+    if (size < 2L) return(rep(-Inf, size))
+    values <- x[e]
+    positive <- values > 0
+    if (all(positive)) {
+      logs <- log(values)
+      return(sum(logs) - logs)
+    }
+    out <- rep(-Inf, size)
+    if (sum(positive) == size - 1L) out[!positive] <- sum(log(values[positive]))
+    out
+  }, hyperedges, edge_sizes)
+  log_values <- unlist(contributions, use.names = FALSE)
+  finite <- is.finite(log_values)
+  if (!any(finite)) return(numeric(n))
+  node_indices <- unlist(hyperedges, use.names = FALSE)[finite]
+  groups <- split(log_values[finite], node_indices)
+  log_totals <- vapply(groups, function(v) {
+    largest <- max(v)
+    largest + log(sum(exp(v - largest)))
+  }, numeric(1L))
+  y <- numeric(n)
+  y[as.integer(names(log_totals))] <-
+    exp((log_totals - max(log_totals)) / exponent)
+  y / sqrt(sum(y^2))
+}
+
 # Shared tensor-power-iteration kernel (Kolda & Mayo 2011 SS-HOPM shift):
 # x_{t+1} ~ f(x_t) / ||f(x_t)|| + shift * x_t. Its fixed points are exactly
 # the eigenvectors f(x) = c x. The update is normalised before the shift is
@@ -248,7 +282,7 @@ hypergraph_centrality <- function(hg,
   step_converged <- FALSE
   # A loop, not a vectorised map: every step needs the previous iterate.
   for (iter in seq_len(max_iter)) {
-    fx <- .hg_tensor_apply(hyperedges, edge_sizes, x, n, exponent)
+    fx <- .hg_tensor_direction(hyperedges, edge_sizes, x, n, exponent)
     nf <- sqrt(sum(fx^2))
     if (nf == 0) {
       # no tensor entry touches the support of x: nothing to iterate
@@ -269,7 +303,7 @@ hypergraph_centrality <- function(hg,
   # Eigen-equation residual ||f(x) - (x'f(x)) x|| / ||f(x)|| at the result
   residual_ok <- TRUE
   if (any(x != 0)) {
-    fx <- .hg_tensor_apply(hyperedges, edge_sizes, x, n, exponent)
+    fx <- .hg_tensor_direction(hyperedges, edge_sizes, x, n, exponent)
     nf <- sqrt(sum(fx^2))
     if (nf > 0) {
       residual <- sqrt(sum((fx - sum(x * fx) * x)^2)) / nf

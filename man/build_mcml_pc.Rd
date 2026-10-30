@@ -198,6 +198,7 @@ based on (kept for diagnostics and \code{loading_stability}).}
 \code{NULL}.}
 \item{meta}{List: \code{aggregation} (the name as the caller spelled
 it), \code{method}, \code{within}, \code{weighting},
+\code{weighting_spec} (the actual scheme, custom vector or function),
 \code{fa_method}, \code{fa_args}, \code{scale}, \code{cor_method},
 \code{signed}, \code{n_nodes}, \code{n_clusters},
 \code{cluster_sizes}, \code{n_misfit}, \code{n_flipped},

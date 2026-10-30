@@ -1,0 +1,1176 @@
+diff --git a/NEWS.md b/NEWS.md
+index 49067163..3964cbc0 100644
+--- a/NEWS.md
++++ b/NEWS.md
+@@ -35,6 +35,37 @@
+ 
+ ## Bug fixes
+ 
++* Numeric sequence positions containing an all-missing logical column stay
++  sequence positions rather than turning a text ID into states.
++* `build_clusters()` excludes requested post-hoc covariates from sequence
++  distances, preventing the covariate from determining its own clusters.
++* `loading_stability()` replays the composite weighting scheme and its
++  factor-analysis options. New fits retain custom weights/functions; older
++  custom fits that lack them request a rebuild.
++* `pattern_outcome()` keeps generated outcomes separate from user metadata,
++  including an adjustment or grouping column named `.outcome`.
++* `compare_model()` aligns named nodes before comparing matrices and rejects
++  incompatible node sets. Unnamed inputs retain positional matching.
++* Ordinary Gaussian `outcome_model()` intervals now use residual-df Student
++  t limits, consistent with their coefficient tests.
++* Z/H hypergraph centralities evaluate tensor directions in log space,
++  preventing numerical underflow for large hyperedges.
++* Landscapes replay weighting, concatenation and boundary markers; merged
++  sequences are bootstrap units. Covariates must be constant within merged
++  units. Transformed or modified networks that cannot represent the stored
++  sequence chain are refused explicitly.
++* Landscape surface/trend grids use the full range when the 5th and 95th
++  percentiles coincide for a nonconstant measure or covariate.
++* MOGen summaries preserve numeric parameter counts above the integer limit.
++* Min-max centrality normalization preserves small, nonconstant strengths.
++* Pattern discovery explicitly refuses stars-only state labels (`**`, ...),
++  which conflict with wildcard syntax, with `nestimate_bad_input`.
++* `casedrop_reliability(target = "auto")` assesses all cells for association,
++  scaled and thresholded networks, including edges that appear after case
++  removal. Raw transition graphs retain existing-edge assessment. Explicit
++  `target = "existing"` and `"all"` select either interpretation.
++
++
+ * `build_network()`: wide data with number-coded states and a text column
+   (an id) built the network from the text column alone, an all-zero network
+   with no warning. A numbered run of numeric position columns is now the
+@@ -96,6 +127,8 @@
+ 
+ ## Documentation
+ 
++* The pkgdown reference lists the new sequence-analysis and long-data topics.
++
+ * `sequence_metrics()`: the emergent-state rule for a return to the first
+   state is a spell of at least 3 that is more than half the opening spell
+   (codyna's rule); the help page said "over twice".
+diff --git a/R/build_network.R b/R/build_network.R
+index 4fd07f39..0c224428 100644
+--- a/R/build_network.R
++++ b/R/build_network.R
+@@ -1538,7 +1538,8 @@ predictability.netobject_group <- function(object, ...) {
+ #' Same naming rule as .categorical_covariates(): a shared prefix followed
+ #' by a number. Returns the run's column names when the run has at least two
+ #' columns, is larger than any other run, and every column in it is
+-#' numeric; otherwise character(0).
++#' numeric or entirely missing, with at least one numeric column; otherwise
++#' character(0).
+ #' @noRd
+ .numeric_position_run <- function(data) {
+   nms <- names(data)
+@@ -1548,7 +1549,9 @@ predictability.netobject_group <- function(object, ...) {
+   runs <- table(prefix[numbered])
+   if (max(runs) < 2L || sum(runs == max(runs)) > 1L) return(character(0))
+   run <- nms[numbered & prefix == names(runs)[which.max(runs)]]
+-  if (all(vapply(data[run], is.numeric, logical(1)))) run else character(0)
++  numeric <- vapply(data[run], is.numeric, logical(1))
++  missing <- vapply(data[run], function(x) all(is.na(x)), logical(1))
++  if (any(numeric) && all(numeric | missing)) run else character(0)
+ }
+ 
+ #' Categorical columns that are covariates, not sequence positions
+diff --git a/R/casedrop_reliability.R b/R/casedrop_reliability.R
+index 7a9dccdc..9e642a6f 100644
+--- a/R/casedrop_reliability.R
++++ b/R/casedrop_reliability.R
+@@ -35,6 +35,11 @@
+ #' @param include_diag Logical. Include diagonal (self-loop) edges in the
+ #'   edge vector. Default `FALSE`.
+ #' @param seed Optional integer for reproducibility.
++#' @param target Cells to assess: `"auto"` (default) uses `"existing"`
++#'   for unscaled, unthresholded transition methods and `"all"` otherwise.
++#'   `"existing"` assesses only nonzero original cells; `"all"` includes
++#'   original zeros so edges appearing after case removal are assessed.
++#'   `include_diag` applies to either target.
+ #'
+ #' @return An object of class `net_casedrop_reliability` with:
+ #' \describe{
+@@ -54,9 +59,11 @@
+ #'     `include_diag`}{Inputs.}
+ #'   \item{`n_cases`}{Number of cases resampled from (sequences for
+ #'     transition methods, rows of `$data` otherwise).}
+-#'   \item{`n_edges`}{Length of the edge vector assessed: the edges present
+-#'     (non-zero) in the original network.}
++#'   \item{`n_edges`}{Number of cells assessed, determined by `target`
++#'     and `include_diag`.}
+ #' }
++#' The resolved target is retained as `attr(result, "target")`, preserving
++#' the existing list fields for downstream consumers.
+ #' A `netobject_group` or `mcml` input instead returns a
+ #' `net_casedrop_reliability_group`: a named list of one result per
+ #' constituent network.
+@@ -69,14 +76,14 @@
+ #' For each `drop_prop` p and each iteration, a size `n_cases * (1 - p)`
+ #' subset of `$data` rows is selected **without replacement**, the network
+ #' is re-estimated using the same method/scaling/threshold as the input,
+-#' and the edges present in the original network (its non-zero cells,
+-#' off-diagonal unless `include_diag = TRUE`) are compared with the same
+-#' cells of the new weight matrix. Cells that are zero in the original are
+-#' left out: a subsample cannot contain a transition absent from the full
+-#' data, so those cells agree in every draw, and including them would
+-#' inflate the correlation and shrink the deviations. The correlation
+-#' method defaults to Spearman for robustness to the wide dynamic range of
+-#' transition probabilities.
++#' and the selected cells are compared with the same cells of the new
++#' weight matrix. With `target = "auto"`, unscaled and unthresholded
++#' transition methods assess only existing edges: absent transitions cannot
++#' appear in a subsample, and including these fixed zeros inflates the
++#' correlation. Association methods and scaled or thresholded networks assess
++#' all cells, because a zero original weight can become nonzero after case
++#' removal. Use `target = "existing"` explicitly to assess only the original
++#' edges in these networks. The correlation method defaults to Spearman.
+ #'
+ #' Case-dropping drops rows of `$data` at random, so it treats the rows as
+ #' independent units. When rows are nested in actors (several sessions per
+@@ -112,7 +119,9 @@ casedrop_reliability <- function(x,
+                            certainty   = 0.95,
+                            method      = c("spearman", "pearson", "kendall"),
+                            include_diag = FALSE,
+-                           seed        = NULL) {
++                           seed        = NULL,
++                           target      = c("auto", "existing", "all")) {
++  target <- match.arg(target)
+ 
+   # ---- Dispatch for mcml / group inputs ----
+   if (inherits(x, "mcml")) x <- as_tna(x)
+@@ -121,7 +130,7 @@ casedrop_reliability <- function(x,
+       casedrop_reliability(net, iter = iter, drop_prop = drop_prop,
+                      threshold = threshold, certainty = certainty,
+                      method = method, include_diag = include_diag,
+-                     seed = seed)
++                     seed = seed, target = target)
+     })
+     class(out) <- c("net_casedrop_reliability_group", "list")
+     return(out)
+@@ -172,9 +181,15 @@ casedrop_reliability <- function(x,
+     diag(diag_mask) <- FALSE
+     diag_mask
+   }
+-  # A subsample cannot create a transition that is absent from the full
+-  # data, so only the edges present in the original network are compared
+-  idx_mask <- idx_mask & !is.na(x$weights) & x$weights != 0
++  if (target == "auto") {
++    target <- if (is_transition && is.null(scaling) && isTRUE(thresh == 0)) {
++      "existing"
++    } else {
++      "all"
++    }
++  }
++  idx_mask <- idx_mask & !is.na(x$weights)
++  if (target == "existing") idx_mask <- idx_mask & x$weights != 0
+   orig_edges <- as.vector(x$weights[idx_mask])
+   if (!isTRUE(stats::sd(orig_edges) > 0)) {
+     warning("Original edge vector has zero variance; CS undefined.",
+@@ -199,6 +214,7 @@ casedrop_reliability <- function(x,
+       n_edges       = length(orig_edges)
+     )
+     class(result) <- "net_casedrop_reliability"
++    attr(result, "target") <- target
+     return(result)
+   }
+ 
+@@ -317,7 +333,7 @@ casedrop_reliability <- function(x,
+       n_cases       = n_cases,
+       n_edges       = length(orig_edges)
+     ),
+-    class = "net_casedrop_reliability"
++    class = "net_casedrop_reliability", target = target
+   )
+ }
+ 
+diff --git a/R/centrality_measures.R b/R/centrality_measures.R
+index 1754caa1..e1cafa69 100644
+--- a/R/centrality_measures.R
++++ b/R/centrality_measures.R
+@@ -223,7 +223,7 @@
+   mi <- min(x, na.rm = na.rm)
+   ma <- max(x, na.rm = na.rm)
+   span <- ma - mi
+-  if (!isTRUE(span > 1e-10 * max(abs(c(mi, ma)), 1))) {
++  if (!isTRUE(span > 1e-10 * max(abs(c(mi, ma))))) {
+     return(rep(NaN, length(x)))
+   }
+   (x - mi) / span
+diff --git a/R/cluster_data.R b/R/cluster_data.R
+index 6e5b9017..96c9d81a 100644
+--- a/R/cluster_data.R
++++ b/R/cluster_data.R
+@@ -582,7 +582,10 @@
+ #' @param p Numeric. Winkler prefix penalty for Jaro-Winkler distance.
+ #'   Must be between 0 and 0.25. Default: \code{0.1}.
+ #' @param covariates Optional. Post-hoc covariate analysis of cluster
+-#'   membership. Accepts:
++#'   membership. Named covariate columns present in raw sequence data are
++#'   excluded from the sequence distances before clustering. Columns matching
++#'   a separately supplied covariate frame by both name and values are also
++#'   excluded; unrelated sequence columns remain unchanged. Accepts:
+ #'   \describe{
+ #'     \item{string}{Single column name, e.g. \code{"Age"}. Resolved
+ #'       against \code{x$metadata} (and \code{x$data}) for
+@@ -678,6 +681,31 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
+   # --- Extract sequence data from supported objects ---
+   raw_data <- data
+   data <- .extract_sequence_data(data)
++  # Resolve post-hoc covariates before constructing distances: named columns
++  # in the sequence frame must not become additional sequence positions.
++  cov_resolved <- .resolve_covariates(covariates, raw_data, nrow(data))
++  if (!is.null(cov_resolved)) {
++    cov_cols <- names(cov_resolved$cov_df)
++    if (is.data.frame(covariates)) {
++      # A supplied frame may be a subset of the raw input. Exclude those
++      # columns too, but preserve unrelated positions sharing only a name.
++      overlap <- intersect(cov_cols, names(data))
++      cov_cols <- overlap[vapply(overlap, function(nm) {
++        identical(as.character(data[[nm]]), as.character(covariates[[nm]]))
++      }, logical(1L))]
++    }
++    # Metadata takes precedence in .resolve_covariates(); a same-named state
++    # column remains a position when the requested covariate came from there.
++    if (!is.data.frame(covariates) &&
++        inherits(raw_data, c("netobject", "cograph_network"))) {
++      cov_cols <- setdiff(cov_cols, names(raw_data$metadata))
++    }
++    data <- data[, setdiff(names(data), cov_cols), drop = FALSE]
++    if (ncol(data) == 0L) {
++      stop("No sequence columns remain after excluding post-hoc covariates.",
++           call. = FALSE)
++    }
++  }
+ 
+   # --- Input validation ---
+   # Use named-condition stopifnot for type checks so the failure message
+@@ -776,7 +804,6 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
+ 
+   # --- Post-hoc covariate analysis ---
+   cov_result <- NULL
+-  cov_resolved <- .resolve_covariates(covariates, raw_data, n)
+   if (!is.null(cov_resolved)) {
+     cov_result <- .run_covariate_analysis(
+       assignments, cov_resolved$cov_df, cov_resolved$rhs, k,
+diff --git a/R/compare_network.R b/R/compare_network.R
+index a88203ec..1287796e 100644
+--- a/R/compare_network.R
++++ b/R/compare_network.R
+@@ -23,6 +23,8 @@
+ #' Mirrors `tna::compare()` numerically. Inputs are converted to weight
+ #' matrices and scaled before comparison; the choice of scaling determines
+ #' how weights from different estimators are placed on a common footing.
++#' Named inputs are aligned by node names; different node sets or duplicate
++#' names raise an error. A fully unnamed matrix is matched by position.
+ #'
+ #' @param x A `netobject`, `cograph_network`, or numeric square matrix, or a
+ #'   `netobject_group` whose members `i` and `j` are compared. For the
+@@ -78,7 +80,8 @@ compare_model <- function(x, ...) UseMethod("compare_model")
+ #' @export
+ compare_model.netobject <- function(x, y, scaling = "none", measures = character(0),
+                               network = TRUE, ...) {
+-  .compare_impl(.weights_of(x), .weights_of(y), scaling, measures, network)
++  .compare_impl(.weights_of(x, label_unnamed = FALSE),
++                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
+ }
+ 
+ #' @rdname compare_model
+@@ -86,14 +89,16 @@ compare_model.netobject <- function(x, y, scaling = "none", measures = character
+ compare_model.cograph_network <- function(x, y, scaling = "none",
+                                     measures = character(0), network = TRUE,
+                                     ...) {
+-  .compare_impl(.weights_of(x), .weights_of(y), scaling, measures, network)
++  .compare_impl(.weights_of(x, label_unnamed = FALSE),
++                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
+ }
+ 
+ #' @rdname compare_model
+ #' @export
+ compare_model.matrix <- function(x, y, scaling = "none", measures = character(0),
+                            network = TRUE, ...) {
+-  .compare_impl(.weights_of(x), .weights_of(y), scaling, measures, network)
++  .compare_impl(.weights_of(x, label_unnamed = FALSE),
++                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
+ }
+ 
+ #' @rdname compare_model
+@@ -118,10 +123,10 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
+ 
+ # ---- Internal: extract weight matrix ----
+ 
+-.weights_of <- function(z) {
++.weights_of <- function(z, label_unnamed = TRUE) {
+   if (is.matrix(z)) {
+     stopifnot(nrow(z) == ncol(z), is.numeric(z))
+-    if (is.null(rownames(z)) || is.null(colnames(z))) {
++    if (label_unnamed && (is.null(rownames(z)) || is.null(colnames(z)))) {
+       labs <- paste0("V", seq_len(nrow(z)))
+       rownames(z) <- colnames(z) <- labs
+     }
+@@ -135,11 +140,56 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
+ }
+ 
+ 
++# Align independently labelled matrix axes before comparing their cells.
++# Fully unnamed matrices are matched by position to the other input.
++#' @noRd
++.compare_align_nodes <- function(x, y) {
++  normalize_names <- function(mat) {
++    rn <- rownames(mat)
++    cn <- colnames(mat)
++    if (is.null(rn) && is.null(cn)) return(mat)
++    labels <- list(rn, cn)
++    invalid <- vapply(labels, function(nms) {
++      !is.null(nms) && (anyNA(nms) || any(!nzchar(nms)) || anyDuplicated(nms) > 0L)
++    }, logical(1L))
++    if (any(invalid)) {
++      stop("Network node names must be non-missing, non-empty and unique.",
++           call. = FALSE)
++    }
++    rn <- rn %||% cn
++    cn <- cn %||% rn
++    if (!setequal(rn, cn)) {
++      stop("Each network's rows and columns must name the same nodes.",
++           call. = FALSE)
++    }
++    dimnames(mat) <- list(rn, cn)
++    mat[, rn, drop = FALSE]
++  }
++  x <- normalize_names(x)
++  y <- normalize_names(y)
++  xn <- rownames(x)
++  yn <- rownames(y)
++  if (!is.null(xn) && !is.null(yn)) {
++    if (!setequal(xn, yn)) {
++      stop("Compared networks must contain the same nodes.", call. = FALSE)
++    }
++    y <- y[xn, xn, drop = FALSE]
++  } else {
++    nodes <- xn %||% yn %||% paste0("V", seq_len(nrow(x)))
++    dimnames(x) <- dimnames(y) <- list(nodes, nodes)
++  }
++  list(x = x, y = y)
++}
++
++
+ # ---- Internal: the comparison machinery ----
+ 
+ .compare_impl <- function(x, y, scaling, measures, network) {
+   stopifnot(identical(dim(x), dim(y)))
+   stopifnot(!anyNA(x), !anyNA(y))
++  aligned <- .compare_align_nodes(x, y)
++  x <- aligned$x
++  y <- aligned$y
+   n <- nrow(x)
+ 
+   scaling <- match.arg(scaling, .compare_scaling_names())
+diff --git a/R/hypergraph_centrality.R b/R/hypergraph_centrality.R
+index 710c0ae2..ccc3addb 100644
+--- a/R/hypergraph_centrality.R
++++ b/R/hypergraph_centrality.R
+@@ -58,7 +58,9 @@
+ #' **Z-eigenvector centrality (ZEC)**: solves the eigen-equation on the
+ #' hyperedge tensor,
+ #' \deqn{\lambda\, x_i \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j,}
+-#' by shifted power iteration.
++#' by shifted power iteration. Tensor products and normalization are
++#' evaluated in log space to retain finite, normalized centralities for
++#' large hyperedges.
+ #'
+ #' **H-eigenvector centrality (HEC)**: solves
+ #' \deqn{\lambda\, x_i^{k-1} \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j.}
+@@ -227,6 +229,38 @@ hypergraph_centrality <- function(hg,
+   y
+ }
+ 
++# Unit-L2 direction of the tensor map, evaluated in log space. A common
++# scale cancels in normalization (also after the H root), so neither tiny
++# products nor their squared norm need be represented in floating point.
++#' @noRd
++.hg_tensor_direction <- function(hyperedges, edge_sizes, x, n, exponent) {
++  contributions <- Map(function(e, size) {
++    if (size < 2L) return(rep(-Inf, size))
++    values <- x[e]
++    positive <- values > 0
++    if (all(positive)) {
++      logs <- log(values)
++      return(sum(logs) - logs)
++    }
++    out <- rep(-Inf, size)
++    if (sum(positive) == size - 1L) out[!positive] <- sum(log(values[positive]))
++    out
++  }, hyperedges, edge_sizes)
++  log_values <- unlist(contributions, use.names = FALSE)
++  finite <- is.finite(log_values)
++  if (!any(finite)) return(numeric(n))
++  node_indices <- unlist(hyperedges, use.names = FALSE)[finite]
++  groups <- split(log_values[finite], node_indices)
++  log_totals <- vapply(groups, function(v) {
++    largest <- max(v)
++    largest + log(sum(exp(v - largest)))
++  }, numeric(1L))
++  y <- numeric(n)
++  y[as.integer(names(log_totals))] <-
++    exp((log_totals - max(log_totals)) / exponent)
++  y / sqrt(sum(y^2))
++}
++
+ # Shared tensor-power-iteration kernel (Kolda & Mayo 2011 SS-HOPM shift):
+ # x_{t+1} ~ f(x_t) / ||f(x_t)|| + shift * x_t. Its fixed points are exactly
+ # the eigenvectors f(x) = c x. The update is normalised before the shift is
+@@ -248,7 +282,7 @@ hypergraph_centrality <- function(hg,
+   step_converged <- FALSE
+   # A loop, not a vectorised map: every step needs the previous iterate.
+   for (iter in seq_len(max_iter)) {
+-    fx <- .hg_tensor_apply(hyperedges, edge_sizes, x, n, exponent)
++    fx <- .hg_tensor_direction(hyperedges, edge_sizes, x, n, exponent)
+     nf <- sqrt(sum(fx^2))
+     if (nf == 0) {
+       # no tensor entry touches the support of x: nothing to iterate
+@@ -269,7 +303,7 @@ hypergraph_centrality <- function(hg,
+   # Eigen-equation residual ||f(x) - (x'f(x)) x|| / ||f(x)|| at the result
+   residual_ok <- TRUE
+   if (any(x != 0)) {
+-    fx <- .hg_tensor_apply(hyperedges, edge_sizes, x, n, exponent)
++    fx <- .hg_tensor_direction(hyperedges, edge_sizes, x, n, exponent)
+     nf <- sqrt(sum(fx^2))
+     if (nf > 0) {
+       residual <- sqrt(sum((fx - sum(x * fx) * x)^2)) / nf
+diff --git a/R/mcml_pc.R b/R/mcml_pc.R
+index 426db810..da1e0c70 100644
+--- a/R/mcml_pc.R
++++ b/R/mcml_pc.R
+@@ -257,6 +257,7 @@
+ #'     \code{NULL}.}
+ #'   \item{meta}{List: \code{aggregation} (the name as the caller spelled
+ #'     it), \code{method}, \code{within}, \code{weighting},
++#'     \code{weighting_spec} (the actual scheme, custom vector or function),
+ #'     \code{fa_method}, \code{fa_args}, \code{scale}, \code{cor_method},
+ #'     \code{signed}, \code{n_nodes}, \code{n_clusters},
+ #'     \code{cluster_sizes}, \code{n_misfit}, \code{n_flipped},
+@@ -538,6 +539,9 @@ build_mcml_pc <- function(x,
+         else if (is.function(weighting)) "custom (function)"
+         else if (is.numeric(weighting)) "custom (vector)"
+         else weighting,
++      # Retain custom vectors/functions as well as the printable scheme name
++      # so case-resampling can replay the fitted weighting exactly.
++      weighting_spec = if (aggregation == "composite") weighting else "strength",
+       fa_method = if (identical(weighting, "factor")) fa_method
+         else NA_character_,
+       fa_args = if (identical(weighting, "factor") && length(fa_args) > 0)
+@@ -812,9 +816,11 @@ build_mcml_pc <- function(x,
+ #' \strong{Experimental.} Bootstraps the item weights of a
+ #' \code{\link{build_mcml_pc}} fit: rows of the raw data are resampled,
+ #' the node-level network is re-estimated each time, and the
+-#' connectivity-based composite weights are recomputed. Wide intervals
+-#' mean the weighting (and therefore the \code{"loadings"} macro
+-#' network) should not be over-interpreted.
++#' fitted weighting scheme is reapplied, including data-dependent and custom
++#' weights and the factor-analysis options. Fixed equal or supplied numeric
++#' weights retain their magnitudes across resamples; item signs may vary.
++#' Older saved custom-weight fits must be rebuilt to retain their specification.
++#' Wide intervals mean the weighting should not be over-interpreted.
+ #'
+ #' @param x An \code{mcml_pc} object that carries raw data. For the \code{print()} and \code{plot()} methods: an object of class \code{pc_loading_stability}.
+ #' @param iter Integer. Bootstrap replicates (default 200; node-level
+@@ -876,14 +882,31 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
+   signed <- x$meta$signed
+   node_order <- x$loadings$node
+   n_rows <- nrow(data)
++  weighting <- x$meta$weighting_spec %||% x$meta$weighting
++  # Older descriptive fits stored NA, and their diagnostics used strength.
++  if (is.null(weighting) ||
++      (is.character(weighting) && length(weighting) == 1L && is.na(weighting))) {
++    weighting <- "strength"
++  }
++  if (is.character(weighting) && any(grepl("^custom", weighting))) {
++    stop("This saved fit does not retain its custom weighting. Rebuild it ",
++         "with build_mcml_pc() before calling loading_stability().", call. = FALSE)
++  }
+ 
+   boot <- vapply(seq_len(iter), function(b) {
+     rows <- sample.int(n_rows, n_rows, replace = TRUE)
+-    net_b <- .pc_estimate(data[rows, , drop = FALSE], estimator,
+-                          cor_method)
++    data_b <- data[rows, , drop = FALSE]
++    net_b <- .pc_estimate(data_b, estimator, cor_method)
+     ld_b <- suppressWarnings(
+       .pc_network_loadings(net_b$weights, members, signed = signed)
+     )
++    if (!identical(weighting, "strength")) {
++      ld_b <- .pc_apply_weighting(ld_b, net_b$weights, data_b, members,
++                                  weighting, signed,
++                                  fa_method = x$meta$fa_method %||% "ml",
++                                  cor_method = cor_method,
++                                  fa_args = x$meta$fa_args %||% list())
++    }
+     idx <- match(node_order, ld_b$node)
+     ld_b$weight[idx] * ld_b$sign[idx]
+   }, numeric(length(node_order)))
+diff --git a/R/mogen.R b/R/mogen.R
+index ef3b3e9a..fec34c9b 100644
+--- a/R/mogen.R
++++ b/R/mogen.R
+@@ -765,8 +765,8 @@ summary.net_mogen <- function(object, ...) {
+ 
+   res <- data.frame(
+     order     = object$orders,
+-    layer_dof = as.integer(object$layer_dof),
+-    cum_dof   = as.integer(object$dof),
++    layer_dof = as.numeric(object$layer_dof),
++    cum_dof   = as.numeric(object$dof),
+     loglik    = round(object$log_likelihood, 2),
+     aic       = round(object$aic, 2),
+     bic       = round(object$bic, 2),
+diff --git a/R/outcome_model.R b/R/outcome_model.R
+index cecb8821..98b9c6ce 100644
+--- a/R/outcome_model.R
++++ b/R/outcome_model.R
+@@ -73,6 +73,8 @@ utils::globalVariables(c("term", "estimate", "ci_lower", "ci_upper"))
+ #'   \code{$select}, \code{$correction}, \code{$ci_level}, \code{$mixed}
+ #'   and \code{$outcome}. Retrieve the table with
+ #'   \code{\link{effects_table}}.
++#' Ordinary Gaussian fits use Student t confidence limits with the model's
++#' residual degrees of freedom; binomial and mixed fits use normal Wald limits.
+ #' @seealso \code{\link{simplicial_features}}, \code{\link{effects_table}}
+ #' @examples
+ #' set.seed(1)
+@@ -246,7 +248,11 @@ outcome_model <- function(data, outcome, predictors, group = NULL,
+   } else {
+     2 * stats::pnorm(abs(stat), lower.tail = FALSE)   # lmer gives no p column
+   }
+-  z <- stats::qnorm(1 - (1 - ci_level) / 2)
++  z <- if (!mixed && identical(fam, "gaussian")) {
++    stats::qt(1 - (1 - ci_level) / 2, df = stats::df.residual(model))
++  } else {
++    stats::qnorm(1 - (1 - ci_level) / 2)
++  }
+ 
+   out <- data.frame(
+     term      = rownames(cf),
+diff --git a/R/pattern_outcome.R b/R/pattern_outcome.R
+index 07562b1c..b73f6f4b 100644
+--- a/R/pattern_outcome.R
++++ b/R/pattern_outcome.R
+@@ -147,8 +147,7 @@ pattern_outcome <- function(x, outcome = "last_obs",
+   if (last_obs) {
+     split <- .sp_last_obs(seqs$states)
+     seqs$states <- split$states
+-    units$.outcome <- split$labels
+-    outcome <- ".outcome"
++    outcome_values <- split$labels
+   } else if (!outcome_is_column) {
+     if (length(outcome) != nrow(seqs$states)) {
+       stop(errorCondition(
+@@ -156,12 +155,17 @@ pattern_outcome <- function(x, outcome = "last_obs",
+                 length(outcome), nrow(seqs$states)),
+         class = "nestimate_bad_input", call = NULL))
+     }
+-    units$.outcome <- outcome
+-    outcome <- ".outcome"
++    outcome_values <- outcome
+   }
+-  needed <- c(outcome, adjust, group)
++  needed <- c(if (outcome_is_column) outcome, adjust, group)
+   .po_check_columns(x, setdiff(needed, names(units)), names(units))
+-  complete <- stats::complete.cases(units[needed])
++  if (outcome_is_column) outcome_values <- units[[outcome]]
++  # Keep a generated outcome separate from the user's covariates: even a
++  # column named .outcome can be an adjustment or random-intercept group.
++  complete <- stats::complete.cases(outcome_values)
++  if (length(needed) > 0L) {
++    complete <- complete & stats::complete.cases(units[needed])
++  }
+   if (!all(complete)) {
+     warning(warningCondition(
+       sprintf(paste("%d of %d sequences have a missing outcome, covariate",
+@@ -171,7 +175,7 @@ pattern_outcome <- function(x, outcome = "last_obs",
+   }
+   states <- seqs$states[complete, , drop = FALSE]
+   units <- units[complete, , drop = FALSE]
+-  y <- .po_outcome(units[[outcome]], reference)
++  y <- .po_outcome(outcome_values[complete], reference)
+ 
+   # ---- Discover, filter, rank and select (codyna's order of operations) ----
+   found <- .sp_find(states, type = type, len = len, gap = gap)
+diff --git a/R/sequence_patterns.R b/R/sequence_patterns.R
+index ce52857b..c82b33b3 100644
+--- a/R/sequence_patterns.R
++++ b/R/sequence_patterns.R
+@@ -107,7 +107,8 @@
+ #'   (then \code{support}).
+ #'
+ #'   Conditions: \code{nestimate_bad_input} for a state name containing
+-#'   \code{"->"}, a missing group column, a group vector of the wrong length,
++#'   \code{"->"} or consisting only of asterisks (reserved for wildcards),
++#'   a missing group column, a group vector of the wrong length,
+ #'   or a group with fewer than two values; warning
+ #'   \code{nestimate_missing_group} when sequences with a missing group are
+ #'   dropped.
+@@ -380,6 +381,11 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
+       "state names must not contain \"->\", the pattern separator.",
+       class = "nestimate_bad_input", call = NULL))
+   }
++  if (any(grepl("^\\*+$", alphabet))) {
++    stop(errorCondition(
++      "state names must not consist only of asterisks, which mark wildcards.",
++      class = "nestimate_bad_input", call = NULL))
++  }
+   n <- nrow(states)
+   m <- ncol(states)
+   search <- if (is.null(template)) NULL else .sp_parse_template(template)
+diff --git a/R/stability_landscape.R b/R/stability_landscape.R
+index ea77246d..6afbb02e 100644
+--- a/R/stability_landscape.R
++++ b/R/stability_landscape.R
+@@ -12,13 +12,14 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
+ # column f * k + t + 1 counts from-state f to to-state t (0-based codes). A
+ # pair counts when both positions are observed, as in build_network().
+ #' @noRd
+-.ls_counts <- function(states, alphabet) {
++.ls_counts <- function(states, alphabet, sequence_weights = NULL) {
+   k <- length(alphabet)
+   codes <- matrix(match(states, alphabet) - 1L, nrow = nrow(states))
+   if (ncol(codes) < 2L) return(matrix(0L, nrow(codes), k * k))
+   cell <- codes[, -ncol(codes), drop = FALSE] * k +
+     codes[, -1L, drop = FALSE] + 1L
+-  t(apply(cell, 1L, \(v) tabulate(v[!is.na(v)], nbins = k * k)))
++  counts <- t(apply(cell, 1L, \(v) tabulate(v[!is.na(v)], nbins = k * k)))
++  if (is.null(sequence_weights)) counts else counts * sequence_weights
+ }
+ 
+ # Cup depth of every state from a pooled count matrix: log of the expected
+@@ -54,12 +55,58 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
+ }
+ 
+ #' @noRd
++# Replay sequence preparation before counting or selecting bootstrap units.
+ .ls_sequences <- function(x) {
+-  if (inherits(x, c("netobject", "cograph_network")) &&
++  if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
++    x <- .as_netobject(x)
++  }
++  if (inherits(x, "netobject") &&
+       !isTRUE(x$method %in% c("relative", "frequency"))) {
+     .mpt_not_a_chain(sprintf("A \"%s\" network", x$method %||% "unknown"))
+   }
+-  .as_sequences(x)
++  seqs <- .as_sequences(x)
++  seqs$sequence_weights <- rep(1, nrow(seqs$states))
++  if (!inherits(x, "netobject")) return(seqs)
++  if ((!is.null(x$scaling) && !identical(x$scaling, "none")) ||
++      isTRUE(x$threshold > 0)) {
++    .ls_bad("Landscapes require an unscaled, unthresholded transition network.")
++  }
++  params <- x$params %||% list()
++  concat <- as.integer(.param_get(params, "concat", 1L))
++  prepared <- .prepare_sequence_wide(
++    as.data.frame(seqs$states), concat = concat,
++    begin_state = .param_get(params, "begin_state"),
++    end_state = .param_get(params, "end_state"))
++  if (concat > 1L) {
++    groups <- split(seq_len(nrow(seqs$states)),
++                    ceiling(seq_len(nrow(seqs$states)) / concat))
++    # A covariate belongs to a merged unit only if its value is constant.
++    ambiguous <- vapply(seqs$units, \(v) any(vapply(groups,
++      \(idx) length(unique(v[idx])) > 1L, logical(1))), logical(1))
++    seqs$ambiguous_covariates <- names(seqs$units)[ambiguous]
++    seqs$units <- seqs$units[vapply(groups, \(idx) idx[1L], integer(1)),
++                              !ambiguous, drop = FALSE]
++    rownames(seqs$units) <- NULL
++  }
++  seqs$states <- prepared$matrix
++  seqs$alphabet <- sort(unique(c(prepared$states, x$nodes$label)))
++  seqs$sequence_weights <- if (isTRUE(.param_get(params, "weighted", FALSE))) {
++    1 / pmax(rowSums(!is.na(seqs$states)), 1L)
++  } else rep(1, nrow(seqs$states))
++  # Pruned or otherwise modified weights do not describe the stored sequences.
++  counts <- matrix(colSums(.ls_counts(seqs$states, seqs$alphabet,
++                                      seqs$sequence_weights)),
++                   length(seqs$alphabet), byrow = TRUE)
++  reconstructed <- if (x$method == "relative") {
++    counts / pmax(rowSums(counts), .Machine$double.xmin)
++  } else counts
++  original <- x$weights[seqs$alphabet, seqs$alphabet, drop = FALSE]
++  if (!isTRUE(all.equal(unname(original), reconstructed,
++                       check.attributes = FALSE, tolerance = 1e-10))) {
++    .ls_bad(paste("The network weights cannot be reconstructed from its",
++                  "stored sequences and estimation settings."))
++  }
++  seqs
+ }
+ 
+ #' @noRd
+@@ -86,9 +133,10 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
+ }
+ 
+ #' @noRd
+-.ls_fit <- function(states_mat, states, iter, ci_level, name) {
++.ls_fit <- function(states_mat, states, iter, ci_level, name,
++                    sequence_weights = NULL) {
+   k <- length(states)
+-  counts <- .ls_counts(states_mat, states)
++  counts <- .ls_counts(states_mat, states, sequence_weights)
+   as_matrix <- \(v) matrix(v, k, k, byrow = TRUE,
+                            dimnames = list(states, states))
+   pooled <- as_matrix(colSums(counts))
+@@ -177,6 +225,14 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
+ #' @param ... Ignored.
+ #'
+ #' @details
++#' Network input replays per-sequence weighting, concatenation and boundary
++#' markers. Concatenated sequences are the resampling units. With a covariate,
++#' its value must be constant within each concatenated unit. Scaled,
++#' thresholded or otherwise modified networks whose weights do not match
++#' their stored sequences are refused; pass the original sequences to
++#' estimate a new landscape. Observed shares count prepared positions without
++#' sequence weighting. Phase windows retain the full sequence's weight.
++#'
+ #' Depth is a property of the state alone; how often the process enters the
+ #' state is its \code{share} of the observed time steps, reported beside the
+ #' depth. Where the process goes when it leaves is in the exit probabilities
+@@ -267,7 +323,7 @@ stability_landscape <- function(x, states = NULL, iter = 1000L,
+     set.seed(seed)
+   }
+   fits <- Map(\(s, nm) .ls_fit(s$states, states, as.integer(iter), ci_level,
+-                               nm), seqs, names(parts))
++                               nm, s$sequence_weights), seqs, names(parts))
+   structure(list(fits = fits, states = states, iter = as.integer(iter),
+                  ci_level = ci_level),
+             class = "net_landscape")
+@@ -432,8 +488,10 @@ plot.net_landscape <- function(x, ...) {
+                             "simpson_diversity", "complexity_index")
+ 
+ #' @noRd
+-.ls_surface_one <- function(states_mat, states, measure, k, n_grid, name) {
+-  met <- sequence_metrics(states_mat)
++.ls_surface_one <- function(states_mat, states, measure, k, n_grid, name,
++                            sequence_weights = NULL) {
++  # Every prepared column is a position, including boundary markers.
++  met <- sequence_metrics(unname(states_mat))
+   keep <- which(met$valid_n >= 2L & !is.na(met[[measure]]))
+   if (length(keep) < 5L) {
+     .ls_bad(sprintf(
+@@ -441,15 +499,17 @@ plot.net_landscape <- function(x, ...) {
+       class = "nestimate_landscape_unestimable")
+   }
+   m <- met[[measure]][keep]
+-  counts <- .ls_counts(states_mat[keep, , drop = FALSE], states)
++  counts <- .ls_counts(states_mat[keep, , drop = FALSE], states,
++                        sequence_weights[keep])
+   kk <- length(states)
+   k_eff <- min(k, length(keep))
+-  grid <- seq(stats::quantile(m, 0.05, names = FALSE),
+-              stats::quantile(m, 0.95, names = FALSE), length.out = n_grid)
+   if (diff(range(m)) == 0) {
+     .ls_bad(sprintf("'%s': %s is the same for every sequence, so there is no axis to trace.",
+                     name, sQuote(measure, FALSE)))
+   }
++  endpoints <- stats::quantile(m, c(0.05, 0.95), names = FALSE)
++  if (diff(endpoints) == 0) endpoints <- range(m)
++  grid <- seq(endpoints[1L], endpoints[2L], length.out = n_grid)
+   floor_h <- diff(range(m)) / 50
+   rows <- lapply(grid, \(y) {
+     d <- abs(m - y)
+@@ -490,7 +550,8 @@ plot.net_landscape <- function(x, ...) {
+ #' @param k Integer. Nearest sequences per slice. Default 30 (capped at the
+ #'   number of sequences).
+ #' @param n_grid Integer. Slices between the 5th and 95th percentile of the
+-#'   measure. Default 25.
++#'   measure. If these percentiles coincide for a nonconstant measure,
++#'   its full range is used. Default 25.
+ #' @param ends Logical. In \code{summary()}: \code{TRUE} (default) compares
+ #'   the low and the high end of each measure; \code{FALSE} returns every
+ #'   slice.
+@@ -506,6 +567,14 @@ plot.net_landscape <- function(x, ...) {
+ #' @param ... Ignored.
+ #'
+ #' @details
++#' Network input replays per-sequence weighting, concatenation and boundary
++#' markers. Concatenated sequences are the resampling units. With a covariate,
++#' its value must be constant within each concatenated unit. Scaled,
++#' thresholded or otherwise modified networks whose weights do not match
++#' their stored sequences are refused; pass the original sequences to
++#' estimate a new landscape. Observed shares count prepared positions without
++#' sequence weighting. Phase windows retain the full sequence's weight.
++#'
+ #' The measures are computed from the same sequences as the depths, so the
+ #' cups of the most stable sequences are deep by construction (self-loop
+ #' tendency in particular is closely tied to the stay probabilities). What
+@@ -570,7 +639,7 @@ landscape_surface <- function(x, measure = "longitudinal_entropy",
+   seqs <- lapply(parts, .ls_sequences)
+   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
+   states <- .ls_states(states, alphabet)
+-  probe <- sequence_metrics(seqs[[1]]$states)
++  probe <- sequence_metrics(unname(seqs[[1]]$states))
+   numeric_cols <- names(probe)[vapply(probe, is.numeric, logical(1))]
+   bad <- setdiff(measure, numeric_cols)
+   if (length(bad)) {
+@@ -581,7 +650,8 @@ landscape_surface <- function(x, measure = "longitudinal_entropy",
+   slices <- do.call(rbind, unlist(lapply(names(parts), \(g)
+     lapply(measure, \(m) .ls_surface_one(seqs[[g]]$states, states, m,
+                                          as.integer(k), as.integer(n_grid),
+-                                         g))), recursive = FALSE))
++                                         g, seqs[[g]]$sequence_weights))),
++    recursive = FALSE))
+   rownames(slices) <- NULL
+   # tied measure values can leave a slice resting on one or two sequences
+   thin <- slices$effective_n < 5
+@@ -773,7 +843,7 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
+ 
+ #' @noRd
+ .ls_trend_slices <- function(states_mat, covariate, states, along, window, k,
+-                             n_grid) {
++                             n_grid, sequence_weights = NULL) {
+   kk <- length(states)
+   if (identical(along, "phase")) {
+     n_pos <- ncol(states_mat)
+@@ -783,7 +853,8 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
+     }
+     starts <- seq_len(n_pos - window + 1L)
+     counts <- lapply(starts, \(t) .ls_counts(
+-      states_mat[, t:(t + window - 1L), drop = FALSE], states))
++      states_mat[, t:(t + window - 1L), drop = FALSE], states,
++      sequence_weights))
+     return(list(
+       value = starts + (window - 1) / 2,
+       label = sprintf("%d-%d", starts, starts + window - 1L),
+@@ -797,13 +868,15 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
+             class = "nestimate_landscape_unestimable")
+   }
+   m <- covariate[keep]
+-  counts <- .ls_counts(states_mat[keep, , drop = FALSE], states)
+-  grid <- seq(stats::quantile(m, 0.05, names = FALSE),
+-              stats::quantile(m, 0.95, names = FALSE), length.out = n_grid)
++  counts <- .ls_counts(states_mat[keep, , drop = FALSE], states,
++                        sequence_weights[keep])
+   if (diff(range(m)) == 0) {
+     .ls_bad(sprintf("`%s` is the same for every sequence, so there is no axis to trace.",
+                     along))
+   }
++  endpoints <- stats::quantile(m, c(0.05, 0.95), names = FALSE)
++  if (diff(endpoints) == 0) endpoints <- range(m)
++  grid <- seq(endpoints[1L], endpoints[2L], length.out = n_grid)
+   floor_h <- diff(range(m)) / 50
+   weights_at <- function(mm, y) {
+     d <- abs(mm - y)
+@@ -854,7 +927,7 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
+ #' @param k Integer. With a covariate: nearest sequences per slice. Default
+ #'   30 (capped at the number of sequences).
+ #' @param n_grid Integer. With a covariate: slices between its 5th and 95th
+-#'   percentile. Default 20.
++#'   percentile, with the full range used if these coincide. Default 20.
+ #' @param iter Integer. Bootstrap resamples of sequences. Default 500.
+ #' @param ci_level Numeric in (0, 1). Interval level. Default 0.95.
+ #' @param seed Integer or \code{NULL}. Seed for the resampling, scoped to the
+@@ -869,6 +942,14 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
+ #' @param ... Ignored.
+ #'
+ #' @details
++#' Network input replays per-sequence weighting, concatenation and boundary
++#' markers. Concatenated sequences are the resampling units. With a covariate,
++#' its value must be constant within each concatenated unit. Scaled,
++#' thresholded or otherwise modified networks whose weights do not match
++#' their stored sequences are refused; pass the original sequences to
++#' estimate a new landscape. Observed shares count prepared positions without
++#' sequence weighting. Phase windows retain the full sequence's weight.
++#'
+ #' With \code{depth = "stay"}, a window or slice in which a state is never
+ #' left gives an infinite depth, and one in which it does not occur gives
+ #' \code{NA}. With \code{depth = "occupancy"}, a window whose chain has no
+@@ -951,6 +1032,10 @@ landscape_trend <- function(x, along = "phase",
+   states <- .ls_states(states, alphabet)
+   covariates <- lapply(seqs, \(s) {
+     if (identical(along, "phase")) return(NULL)
++    if (along %in% s$ambiguous_covariates) {
++      .ls_bad(sprintf("`%s` must be constant within each concatenated sequence.",
++                      along))
++    }
+     v <- s$units[[along]]
+     if (is.null(v) || !is.numeric(v)) {
+       .ls_bad(sprintf(paste(
+@@ -974,7 +1059,8 @@ landscape_trend <- function(x, along = "phase",
+   n_metric <- if (depth == "stay") kk else kk + .ls_n_ridges(kk)
+   tabs <- Map(\(s, cv, g) {
+     sl <- .ls_trend_slices(s$states, cv, states, along, as.integer(window),
+-                           as.integer(k), as.integer(n_grid))
++                           as.integer(k), as.integer(n_grid),
++                           s$sequence_weights)
+     pooled <- sl$pooled_of(seq_len(sl$n_used))
+     est <- vapply(pooled, metric, numeric(n_metric))
+     boot <- lapply(seq_len(iter), \(b) vapply(
+diff --git a/_pkgdown.yml b/_pkgdown.yml
+index 4695c0be..8cd2cb17 100644
+--- a/_pkgdown.yml
++++ b/_pkgdown.yml
+@@ -145,6 +145,7 @@ reference:
+     desc: Convert and prepare data for network estimation
+     contents:
+       - prepare
++      - long-data
+       - prepare_for_tna
+       - action_to_onehot
+       - prepare_onehot
+@@ -185,6 +186,9 @@ reference:
+       - state_distribution
+       - mosaic_plot
+       - mosaic_analysis
++      - extract_sequences
++      - sequence_patterns
++      - sequence_metrics
+       - sequence_compare
+       - extract_pathways
+       - association_rules
+@@ -198,6 +202,7 @@ reference:
+   - title: Outcome Modelling
+     desc: Relate network and sequence features to an outcome
+     contents:
++      - pattern_outcome
+       - outcome_model
+       - effects_table
+ 
+diff --git a/man/build_clusters.Rd b/man/build_clusters.Rd
+index ba0ba487..5551deb9 100644
+--- a/man/build_clusters.Rd
++++ b/man/build_clusters.Rd
+@@ -97,7 +97,10 @@ and \code{"jaccard"} distances. Default: \code{2L}.}
+ Must be between 0 and 0.25. Default: \code{0.1}.}
+ 
+ \item{covariates}{Optional. Post-hoc covariate analysis of cluster
+-membership. Accepts:
++membership. Named covariate columns present in raw sequence data are
++excluded from the sequence distances before clustering. Columns matching
++a separately supplied covariate frame by both name and values are also
++excluded; unrelated sequence columns remain unchanged. Accepts:
+ \describe{
+ \item{string}{Single column name, e.g. \code{"Age"}. Resolved
+ against \code{x$metadata} (and \code{x$data}) for
+diff --git a/man/build_mcml_pc.Rd b/man/build_mcml_pc.Rd
+index 91b040dc..e7878dc4 100644
+--- a/man/build_mcml_pc.Rd
++++ b/man/build_mcml_pc.Rd
+@@ -198,6 +198,7 @@ based on (kept for diagnostics and \code{loading_stability}).}
+ \code{NULL}.}
+ \item{meta}{List: \code{aggregation} (the name as the caller spelled
+ it), \code{method}, \code{within}, \code{weighting},
++\code{weighting_spec} (the actual scheme, custom vector or function),
+ \code{fa_method}, \code{fa_args}, \code{scale}, \code{cor_method},
+ \code{signed}, \code{n_nodes}, \code{n_clusters},
+ \code{cluster_sizes}, \code{n_misfit}, \code{n_flipped},
+diff --git a/man/casedrop_reliability.Rd b/man/casedrop_reliability.Rd
+index a6efcde5..b1579fe5 100644
+--- a/man/casedrop_reliability.Rd
++++ b/man/casedrop_reliability.Rd
+@@ -19,7 +19,8 @@ casedrop_reliability(
+   certainty = 0.95,
+   method = c("spearman", "pearson", "kendall"),
+   include_diag = FALSE,
+-  seed = NULL
++  seed = NULL,
++  target = c("auto", "existing", "all")
+ )
+ 
+ \method{print}{net_casedrop_reliability}(x, digits = 3, ...)
+@@ -67,6 +68,12 @@ edge vector. Default \code{FALSE}.}
+ 
+ \item{seed}{Optional integer for reproducibility.}
+ 
++\item{target}{Cells to assess: \code{"auto"} (default) uses \code{"existing"}
++for unscaled, unthresholded transition methods and \code{"all"} otherwise.
++\code{"existing"} assesses only nonzero original cells; \code{"all"} includes
++original zeros so edges appearing after case removal are assessed.
++\code{include_diag} applies to either target.}
++
+ \item{digits}{Digits to display. Default \code{3}.}
+ 
+ \item{...}{In \code{plot.net_casedrop_reliability()}, \code{plot.net_casedrop_reliability_group()}, \code{print.net_casedrop_reliability()}, \code{print.summary.net_casedrop_reliability_group()}, \code{summary.net_casedrop_reliability()} and \code{summary.net_casedrop_reliability_group()}: Additional arguments (ignored). In \code{print.net_casedrop_reliability_group()}: Ignored.}
+@@ -96,9 +103,11 @@ iteration correlations (the \code{correlation} entry of \code{metrics}).}
+ \code{include_diag}}{Inputs.}
+ \item{\code{n_cases}}{Number of cases resampled from (sequences for
+ transition methods, rows of \verb{$data} otherwise).}
+-\item{\code{n_edges}}{Length of the edge vector assessed: the edges present
+-(non-zero) in the original network.}
++\item{\code{n_edges}}{Number of cells assessed, determined by \code{target}
++and \code{include_diag}.}
+ }
++The resolved target is retained as \code{attr(result, "target")}, preserving
++the existing list fields for downstream consumers.
+ A \code{netobject_group} or \code{mcml} input instead returns a
+ \code{net_casedrop_reliability_group}: a named list of one result per
+ constituent network.
+@@ -133,14 +142,14 @@ of \verb{$data} is one transition, this is case-dropping of \strong{edges}.
+ For each \code{drop_prop} p and each iteration, a size \code{n_cases * (1 - p)}
+ subset of \verb{$data} rows is selected \strong{without replacement}, the network
+ is re-estimated using the same method/scaling/threshold as the input,
+-and the edges present in the original network (its non-zero cells,
+-off-diagonal unless \code{include_diag = TRUE}) are compared with the same
+-cells of the new weight matrix. Cells that are zero in the original are
+-left out: a subsample cannot contain a transition absent from the full
+-data, so those cells agree in every draw, and including them would
+-inflate the correlation and shrink the deviations. The correlation
+-method defaults to Spearman for robustness to the wide dynamic range of
+-transition probabilities.
++and the selected cells are compared with the same cells of the new
++weight matrix. With \code{target = "auto"}, unscaled and unthresholded
++transition methods assess only existing edges: absent transitions cannot
++appear in a subsample, and including these fixed zeros inflates the
++correlation. Association methods and scaled or thresholded networks assess
++all cells, because a zero original weight can become nonzero after case
++removal. Use \code{target = "existing"} explicitly to assess only the original
++edges in these networks. The correlation method defaults to Spearman.
+ 
+ Case-dropping drops rows of \verb{$data} at random, so it treats the rows as
+ independent units. When rows are nested in actors (several sessions per
+diff --git a/man/compare_model.Rd b/man/compare_model.Rd
+index 041b3289..3cc44a5f 100644
+--- a/man/compare_model.Rd
++++ b/man/compare_model.Rd
+@@ -135,6 +135,8 @@ correlations.
+ Mirrors \code{tna::compare()} numerically. Inputs are converted to weight
+ matrices and scaled before comparison; the choice of scaling determines
+ how weights from different estimators are placed on a common footing.
++Named inputs are aligned by node names; different node sets or duplicate
++names raise an error. A fully unnamed matrix is matched by position.
+ }
+ \section{Methods}{
+ 
+diff --git a/man/hypergraph_centrality.Rd b/man/hypergraph_centrality.Rd
+index 690e4e6c..d9384f54 100644
+--- a/man/hypergraph_centrality.Rd
++++ b/man/hypergraph_centrality.Rd
+@@ -65,7 +65,9 @@ smaller leading eigenvalue score zero.
+ \strong{Z-eigenvector centrality (ZEC)}: solves the eigen-equation on the
+ hyperedge tensor,
+ \deqn{\lambda\, x_i \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j,}
+-by shifted power iteration.
++by shifted power iteration. Tensor products and normalization are
++evaluated in log space to retain finite, normalized centralities for
++large hyperedges.
+ 
+ \strong{H-eigenvector centrality (HEC)}: solves
+ \deqn{\lambda\, x_i^{k-1} \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j.}
+diff --git a/man/landscape_surface.Rd b/man/landscape_surface.Rd
+index 3b3a2915..019d4aec 100644
+--- a/man/landscape_surface.Rd
++++ b/man/landscape_surface.Rd
+@@ -37,7 +37,8 @@ Default: alphabetical.}
+ number of sequences).}
+ 
+ \item{n_grid}{Integer. Slices between the 5th and 95th percentile of the
+-measure. Default 25.}
++measure. If these percentiles coincide for a nonconstant measure,
++its full range is used. Default 25.}
+ 
+ \item{object}{A \code{net_landscape_surface} object (for
+ \code{summary()}).}
+@@ -90,6 +91,15 @@ their weighted pooled transitions. Moving along the axis goes from the
+ most stable to the most volatile sequences.
+ }
+ \details{
++Network input replays per-sequence weighting, concatenation and boundary
++markers. Concatenated sequences are the resampling units. With a covariate,
++its value must be constant within each concatenated unit. Scaled,
++thresholded or otherwise modified networks whose weights do not match
++their stored sequences are refused; pass the original sequences to
++estimate a new landscape. Observed shares count prepared positions without
++sequence weighting. Phase windows retain the full sequence's weight.
++
++
+ The measures are computed from the same sequences as the depths, so the
+ cups of the most stable sequences are deep by construction (self-loop
+ tendency in particular is closely tied to the stay probabilities). What
+diff --git a/man/landscape_trend.Rd b/man/landscape_trend.Rd
+index e5e6eea3..73a0fb99 100644
+--- a/man/landscape_trend.Rd
++++ b/man/landscape_trend.Rd
+@@ -49,7 +49,7 @@ Default 5.}
+ 30 (capped at the number of sequences).}
+ 
+ \item{n_grid}{Integer. With a covariate: slices between its 5th and 95th
+-percentile. Default 20.}
++percentile, with the full range used if these coincide. Default 20.}
+ 
+ \item{iter}{Integer. Bootstrap resamples of sequences. Default 500.}
+ 
+@@ -109,6 +109,15 @@ of \code{stability_landscape()}, the log of each state's expected stay,
+ time in, a high ridge a switch it rarely makes.
+ }
+ \details{
++Network input replays per-sequence weighting, concatenation and boundary
++markers. Concatenated sequences are the resampling units. With a covariate,
++its value must be constant within each concatenated unit. Scaled,
++thresholded or otherwise modified networks whose weights do not match
++their stored sequences are refused; pass the original sequences to
++estimate a new landscape. Observed shares count prepared positions without
++sequence weighting. Phase windows retain the full sequence's weight.
++
++
+ With \code{depth = "stay"}, a window or slice in which a state is never
+ left gives an infinite depth, and one in which it does not occur gives
+ \code{NA}. With \code{depth = "occupancy"}, a window whose chain has no
+diff --git a/man/loading_stability.Rd b/man/loading_stability.Rd
+index 65206721..f8f0ee9e 100644
+--- a/man/loading_stability.Rd
++++ b/man/loading_stability.Rd
+@@ -44,9 +44,11 @@ In \code{plot.pc_loading_stability()}: A ggplot object.
+ \strong{Experimental.} Bootstraps the item weights of a
+ \code{\link{build_mcml_pc}} fit: rows of the raw data are resampled,
+ the node-level network is re-estimated each time, and the
+-connectivity-based composite weights are recomputed. Wide intervals
+-mean the weighting (and therefore the \code{"loadings"} macro
+-network) should not be over-interpreted.
++fitted weighting scheme is reapplied, including data-dependent and custom
++weights and the factor-analysis options. Fixed equal or supplied numeric
++weights retain their magnitudes across resamples; item signs may vary.
++Older saved custom-weight fits must be rebuilt to retain their specification.
++Wide intervals mean the weighting should not be over-interpreted.
+ }
+ \section{Methods}{
+ 
+diff --git a/man/outcome_model.Rd b/man/outcome_model.Rd
+index dae5de72..6ac1561e 100644
+--- a/man/outcome_model.Rd
++++ b/man/outcome_model.Rd
+@@ -86,6 +86,8 @@ fit. The remaining elements are the fitted \code{$model} (a
+ \code{$select}, \code{$correction}, \code{$ci_level}, \code{$mixed}
+ and \code{$outcome}. Retrieve the table with
+ \code{\link{effects_table}}.
++Ordinary Gaussian fits use Student t confidence limits with the model's
++residual degrees of freedom; binomial and mixed fits use normal Wald limits.
+ 
+ In \code{print.net_outcome_model()}: \code{print} returns its input invisibly.
+ 
+diff --git a/man/sequence_patterns.Rd b/man/sequence_patterns.Rd
+index c81ef017..4c1fadc6 100644
+--- a/man/sequence_patterns.Rd
++++ b/man/sequence_patterns.Rd
+@@ -102,7 +102,8 @@ group); for two groups \code{odds_ratio}, \code{or_lower},
+ (then \code{support}).
+ 
+ Conditions: \code{nestimate_bad_input} for a state name containing
+-\code{"->"}, a missing group column, a group vector of the wrong length,
++\code{"->"} or consisting only of asterisks (reserved for wildcards),
++a missing group column, a group vector of the wrong length,
+ or a group with fewer than two values; warning
+ \code{nestimate_missing_group} when sequences with a missing group are
+ dropped.
+diff --git a/man/stability_landscape.Rd b/man/stability_landscape.Rd
+index c302461c..400cdf81 100644
+--- a/man/stability_landscape.Rd
++++ b/man/stability_landscape.Rd
+@@ -83,6 +83,15 @@ that is left at once has depth 0, no cup at all. Intervals come from
+ resampling whole sequences.
+ }
+ \details{
++Network input replays per-sequence weighting, concatenation and boundary
++markers. Concatenated sequences are the resampling units. With a covariate,
++its value must be constant within each concatenated unit. Scaled,
++thresholded or otherwise modified networks whose weights do not match
++their stored sequences are refused; pass the original sequences to
++estimate a new landscape. Observed shares count prepared positions without
++sequence weighting. Phase windows retain the full sequence's weight.
++
++
+ Depth is a property of the state alone; how often the process enters the
+ state is its \code{share} of the observed time steps, reported beside the
+ depth. Where the process goes when it leaves is in the exit probabilities

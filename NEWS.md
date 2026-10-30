@@ -35,6 +35,37 @@
 
 ## Bug fixes
 
+* Numeric sequence positions containing an all-missing logical column stay
+  sequence positions rather than turning a text ID into states.
+* `build_clusters()` excludes requested post-hoc covariates from sequence
+  distances, preventing the covariate from determining its own clusters.
+* `loading_stability()` replays the composite weighting scheme and its
+  factor-analysis options. New fits retain custom weights/functions; older
+  custom fits that lack them request a rebuild.
+* `pattern_outcome()` keeps generated outcomes separate from user metadata,
+  including an adjustment or grouping column named `.outcome`.
+* `compare_model()` aligns named nodes before comparing matrices and rejects
+  incompatible node sets. Unnamed inputs retain positional matching.
+* Ordinary Gaussian `outcome_model()` intervals now use residual-df Student
+  t limits, consistent with their coefficient tests.
+* Z/H hypergraph centralities evaluate tensor directions in log space,
+  preventing numerical underflow for large hyperedges.
+* Landscapes replay weighting, concatenation and boundary markers; merged
+  sequences are bootstrap units. Covariates must be constant within merged
+  units. Transformed or modified networks that cannot represent the stored
+  sequence chain are refused explicitly.
+* Landscape surface/trend grids use the full range when the 5th and 95th
+  percentiles coincide for a nonconstant measure or covariate.
+* MOGen summaries preserve numeric parameter counts above the integer limit.
+* Min-max centrality normalization preserves small, nonconstant strengths.
+* Pattern discovery explicitly refuses stars-only state labels (`**`, ...),
+  which conflict with wildcard syntax, with `nestimate_bad_input`.
+* `casedrop_reliability(target = "auto")` assesses all cells for association,
+  scaled and thresholded networks, including edges that appear after case
+  removal. Raw transition graphs retain existing-edge assessment. Explicit
+  `target = "existing"` and `"all"` select either interpretation.
+
+
 * `build_network()`: wide data with number-coded states and a text column
   (an id) built the network from the text column alone, an all-zero network
   with no warning. A numbered run of numeric position columns is now the
@@ -95,6 +126,8 @@
   for a model built from a matrix, which holds no sequences.
 
 ## Documentation
+
+* The pkgdown reference lists the new sequence-analysis and long-data topics.
 
 * `sequence_metrics()`: the emergent-state rule for a return to the first
   state is a spell of at least 3 that is more than half the opening spell

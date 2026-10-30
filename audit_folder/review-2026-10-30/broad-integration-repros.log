@@ -1,0 +1,17 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+           category          metric     value
+1 Weight Deviations Mean Abs. Diff. 1.7777778
+7      Correlations         Pearson 0.3809524
+  cluster size within_total between_out between_in
+1      g1    2           NA           6         11
+2      g2    1           NA          11          6
+  node cluster    weight boot_mean     boot_sd  ci_lower  ci_upper sign_flips
+1    a     one 0.3333333 0.4027929 0.002980115 0.3981555 0.4076910          0
+2    b     one 0.3333333 0.4021376 0.003063772 0.3962758 0.4071871          0
+3    c     one 0.3333333 0.1950695 0.005985779 0.1851957 0.2055687          0
+4    d     two 0.3333333 0.3998066 0.002469184 0.3955180 0.4040631          0
+5    e     two 0.3333333 0.3984899 0.002330054 0.3944307 0.4025247          0
+6    f     two 0.3333333 0.2017035 0.004612550 0.1930427 0.2095612          0

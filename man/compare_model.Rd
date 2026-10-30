@@ -135,6 +135,8 @@ correlations.
 Mirrors \code{tna::compare()} numerically. Inputs are converted to weight
 matrices and scaled before comparison; the choice of scaling determines
 how weights from different estimators are placed on a common footing.
+Named inputs are aligned by node names; different node sets or duplicate
+names raise an error. A fully unnamed matrix is matched by position.
 }
 \section{Methods}{
 

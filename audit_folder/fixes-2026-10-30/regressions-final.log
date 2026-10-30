@@ -1,0 +1,13 @@
+ℹ Testing Nestimate
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+fix-review-higherorder: .............................
+fix-review-landscapes: ....................
+fix-review-models: .................................................
+fix-review-sequences: ....................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+ passed  failed   error warning skipped 
+    118       0       0       0       0 

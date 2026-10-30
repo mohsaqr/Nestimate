@@ -1,0 +1,1 @@
+Source archive matches all 28 changed files included in the package. Site and CI configuration are excluded by .Rbuildignore.

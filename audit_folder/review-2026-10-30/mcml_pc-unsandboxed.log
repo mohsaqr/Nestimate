@@ -1,0 +1,33 @@
+ℹ Testing Nestimate
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+mcml_pc: ..............................................................................................................................................................................WW..................centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+.......WWWW..WW....................Dropping 2 rows with NA values.
+Dropping 1 rows with NA values.
+Dropping 1 rows with NA values.
+Dropping 1 rows with NA values.
+....Dropping 1 rows with NA values.
+....
+
+══ Warnings ════════════════════════════════════════════════════════════════════
+1. lavaan arguments pass through ... verbatim ('test-mcml_pc.R:723:3') - Factor extraction (cfa) failed for cluster 'B' (lavaan->lav_options_checkvalues():  
+   invalid value in estimator option: "NOT_AN_ESTIMATOR".); falling back to "pca".
+
+2. lavaan arguments pass through ... verbatim ('test-mcml_pc.R:723:3') - Factor extraction (cfa) failed for cluster 'C' (lavaan->lav_options_checkvalues():  
+   invalid value in estimator option: "NOT_AN_ESTIMATOR".); falling back to "pca".
+
+3. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:844:3') - Item(s) more strongly connected to another cluster than their own (possible misassignment): v1, v2, v3, v4, v6. See item_loadings(fit, misfit = TRUE).
+
+4. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:844:3') - Reverse-keyed item(s) flipped in composites: v3, v6. See item_loadings() (column sign).
+
+5. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:845:3') - Item(s) more strongly connected to another cluster than their own (possible misassignment): v1, v2, v3, v4, v6. See item_loadings(fit, misfit = TRUE).
+
+6. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:845:3') - Reverse-keyed item(s) flipped in composites: v3, v6. See item_loadings() (column sign).
+
+7. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:853:3') - Item(s) more strongly connected to another cluster than their own (possible misassignment): v1, v2, v3, v4, v6. See item_loadings(fit, misfit = TRUE).
+
+8. build_mcml_pc accepts clusters as a two-column data.frame ('test-mcml_pc.R:853:3') - Reverse-keyed item(s) flipped in composites: v3, v6. See item_loadings() (column sign).
+
+══ DONE ════════════════════════════════════════════════════════════════════════
