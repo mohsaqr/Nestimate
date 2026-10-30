@@ -13,7 +13,7 @@ avoid an export clash when both packages are attached."><meta property="og:image
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -147,7 +147,22 @@ avoid an export clash when both packages are attached.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'matrix'</span></span>
-<span><span class="fu">mosaic_plot</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">mosaic_plot</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'data.frame'</span></span>
+<span><span class="fu">mosaic_plot</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">x_var</span>,</span>
+<span>  <span class="va">y_var</span>,</span>
+<span>  <span class="va">weight</span>,</span>
+<span>  fill <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  colors <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  show_labels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  label_size <span class="op">=</span> <span class="fl">3.5</span>,</span>
+<span>  xlab <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ylab <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -162,7 +177,9 @@ avoid an export clash when both packages are attached.</p>
 <code>level = "within"</code>), or
 <code>htna</code> (single mosaic of <code>$weights</code>; htna inherits netobject
 so the geometry matches). Also accepts a contingency <code>table</code> or
-plain numeric <code>matrix</code> for ad-hoc plotting.</p></dd>
+plain numeric <code>matrix</code> for ad-hoc plotting, and a tidy
+<code>data.frame</code> in long form (see <code>x_var</code>, <code>y_var</code>,
+<code>weight</code>).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -251,6 +268,31 @@ multi-panel case; <code>netobject_group</code> is drawn as a single
 (group x state) mosaic, so <code>ncol</code> is accepted but has no effect
 there.</p></dd>
 
+
+<dt id="arg-x-var-y-var-weight">x_var, y_var, weight<a class="anchor" aria-label="anchor" href="#arg-x-var-y-var-weight"></a></dt>
+<dd><p>For a <code>data.frame</code>: the names of the
+column variable (one mosaic column per level, width proportional to its
+total <code>weight</code>), the segment variable (stacked within each column in
+proportion to its share), and the cell weight (e.g. a count).</p></dd>
+
+
+<dt id="arg-fill">fill<a class="anchor" aria-label="anchor" href="#arg-fill"></a></dt>
+<dd><p>For a <code>data.frame</code>: <code>"y"</code> (default) colours the
+segments by <code>y_var</code>; the name of another column (e.g. a residual)
+maps that column to the fill instead.</p></dd>
+
+
+<dt id="arg-colors">colors<a class="anchor" aria-label="anchor" href="#arg-colors"></a></dt>
+<dd><p>For a <code>data.frame</code>: optional fill colours, either an
+unnamed vector in level order or a named lookup
+(<code>c(plan = "#0072B2")</code>) overriding only the levels named. Defaults
+to recycled Okabe-Ito.</p></dd>
+
+
+<dt id="arg-show-labels-label-size">show_labels, label_size<a class="anchor" aria-label="anchor" href="#arg-show-labels-label-size"></a></dt>
+<dd><p>For a <code>data.frame</code>: draw percentage
+labels inside the segments, and their size.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -277,10 +319,6 @@ cor, ...) order-1 transition counts are recounted from the raw <code>$data</code
 sequences. The function errors only when neither integer weights nor
 <code>$data</code> are available.</p>
     </div>
-    <div class="section level2">
-    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="plot_mosaic.html">plot_mosaic</a></code> for the lower-level data.frame primitive.</p></div>
-    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -290,6 +328,15 @@ sequences. The function errors only when neither integer weights nor
 <span class="r-in"><span>                     order <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">mosaic_plot</span><span class="op">(</span><span class="va">net</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="mosaic_plot-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A tidy data frame: columns by group, segments by state</span></span></span>
+<span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  state <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"s1"</span>, <span class="st">"s2"</span>, <span class="st">"s3"</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">5</span>, <span class="fl">2</span>,  <span class="fl">7</span>, <span class="fl">8</span>, <span class="fl">3</span>,  <span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">12</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">mosaic_plot</span><span class="op">(</span><span class="va">df</span>, x_var <span class="op">=</span> <span class="st">"group"</span>, y_var <span class="op">=</span> <span class="st">"state"</span>, weight <span class="op">=</span> <span class="st">"count"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="mosaic_plot-2.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

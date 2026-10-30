@@ -1,11 +1,16 @@
 # Q-Analysis
 
 Computes Q-connectivity structure (Atkin 1974). Two maximal simplices
-are q-connected if they share a face of dimension \\\geq q\\. Reports:
+are q-near if they share a face of dimension \\\geq q\\; q-connectivity
+is the transitive closure of q-nearness. Reports:
 
-- **Q-vector**: number of connected components at each q-level
+- **Q-vector**: \\Q_q\\, the number of q-connected components among the
+  maximal simplices of dimension \\\geq q\\. Lower-dimensional simplices
+  do not exist at level q and are not counted.
 
-- **Structure vector**: highest simplex dimension per node
+- **Structure vector**: here the highest simplex dimension of each node.
+  (Atkin uses "structure vector" for the Q-vector itself; the name is
+  kept for compatibility.)
 
 ## Usage
 

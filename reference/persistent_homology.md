@@ -63,7 +63,10 @@ plot(x, combined = TRUE, ...)
 
 - max_dim:
 
-  Maximum simplex dimension to track (default 3).
+  Highest homology dimension reported (default 3). The filtration holds
+  simplices one dimension higher, so a class of dimension `max_dim` can
+  die (the Ripser convention). A `simplicial_complex` input supplies
+  only the simplices it holds.
 
 - type:
 

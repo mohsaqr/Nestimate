@@ -47,13 +47,18 @@ plot(x, ...)
   data.frame
 
   :   Wide format: each row is a transaction, character columns are item
-      occurrences. Or a binary matrix (0/1).
+      occurrences. Or binary (0/1 or logical) columns, one per item.
 
   matrix
 
-  :   Binary transaction matrix (rows = transactions, columns = items).
+  :   A character matrix is read as wide sequences, like a character
+      data frame (each row is the set of its distinct non-missing
+      states). A numeric or logical matrix is a binary transaction
+      matrix (rows = transactions, columns = items).
 
-  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  Binary input must hold only 0/1 or `TRUE`/`FALSE`: a missing cell or
+  any other value raises `nestimate_bad_input`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
   object of class `net_association_rules`.
 

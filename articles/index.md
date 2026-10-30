@@ -37,3 +37,10 @@ Full tutorials
 
 - [Comparing two networks with
   compare_networks()](https://pak.dynasite.org/Nestimate/articles/compare-networks.md):
+
+### Experimental
+
+New methods whose interface may still change
+
+- [Stability landscapes of engagement
+  (experimental)](https://pak.dynasite.org/Nestimate/articles/stability-landscapes.md):

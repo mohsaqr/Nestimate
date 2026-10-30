@@ -144,7 +144,8 @@ An object of class `c("net_hypa", "cograph_network")` with components:
   alias for `p_under`, the raw lower-tail hypergeometric CDF value;
   `p_over` is the strict upper-tail probability
   `P(X > observed) = 1 - p_under`, so that a path is over-represented
-  when its HYPA score exceeds `1 - alpha` (LaRock et al., 2020);
+  when its HYPA score is at least `1 - alpha`, i.e. `p_over <= alpha`
+  (LaRock et al., 2020); under-represented when `p_under < alpha`;
   `p_adjusted_under` and `p_adjusted_over` are the corrected p-values
   for under- and over-representation tests respectively.
 

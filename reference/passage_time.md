@@ -32,6 +32,17 @@ plot(
   high = "#ccffcc",
   ...
 )
+
+# S3 method for class 'net_mpt_group'
+plot(
+  x,
+  log_scale = TRUE,
+  digits = 1,
+  title = "Mean First Passage Times",
+  low = "#004d00",
+  high = "#ccffcc",
+  ...
+)
 ```
 
 ## Arguments
@@ -130,6 +141,9 @@ In `plot.net_mpt()`: `plot.net_mpt` returns a ggplot object: a
 from-by-to heatmap of the mean first passage time matrix.
 
 In `print.summary.net_mpt()`: `x`, invisibly.
+
+In `plot.net_mpt_group()`: a `ggplot` object, one heatmap panel per
+group on a shared colour scale.
 
 ## Details
 

@@ -100,6 +100,21 @@ mosaic_plot(
 
 # S3 method for class 'matrix'
 mosaic_plot(x, ...)
+
+# S3 method for class 'data.frame'
+mosaic_plot(
+  x,
+  x_var,
+  y_var,
+  weight,
+  fill = "y",
+  colors = NULL,
+  show_labels = TRUE,
+  label_size = 3.5,
+  xlab = NULL,
+  ylab = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -111,7 +126,8 @@ mosaic_plot(x, ...)
   (between-cluster mosaic by default; per-cluster panels with
   `level = "within"`), or `htna` (single mosaic of `$weights`; htna
   inherits netobject so the geometry matches). Also accepts a
-  contingency `table` or plain numeric `matrix` for ad-hoc plotting.
+  contingency `table` or plain numeric `matrix` for ad-hoc plotting, and
+  a tidy `data.frame` in long form (see `x_var`, `y_var`, `weight`).
 
 - ...:
 
@@ -194,6 +210,30 @@ mosaic_plot(x, ...)
   `netobject_group` is drawn as a single (group x state) mosaic, so
   `ncol` is accepted but has no effect there.
 
+- x_var, y_var, weight:
+
+  For a `data.frame`: the names of the column variable (one mosaic
+  column per level, width proportional to its total `weight`), the
+  segment variable (stacked within each column in proportion to its
+  share), and the cell weight (e.g. a count).
+
+- fill:
+
+  For a `data.frame`: `"y"` (default) colours the segments by `y_var`;
+  the name of another column (e.g. a residual) maps that column to the
+  fill instead.
+
+- colors:
+
+  For a `data.frame`: optional fill colours, either an unnamed vector in
+  level order or a named lookup (`c(plan = "#0072B2")`) overriding only
+  the levels named. Defaults to recycled Okabe-Ito.
+
+- show_labels, label_size:
+
+  For a `data.frame`: draw percentage labels inside the segments, and
+  their size.
+
 ## Value
 
 A `ggplot` object: one `geom_rect` layer with one rectangle per
@@ -220,11 +260,6 @@ cor, ...) order-1 transition counts are recounted from the raw `$data`
 sequences. The function errors only when neither integer weights nor
 `$data` are available.
 
-## See also
-
-[`plot_mosaic`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
-for the lower-level data.frame primitive.
-
 ## Examples
 
 ``` r
@@ -233,4 +268,13 @@ net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
                      order = "Time")
 mosaic_plot(net, seed = 1)
+
+
+# A tidy data frame: columns by group, segments by state
+df <- data.frame(
+  group = rep(c("A", "B", "C"), each = 3),
+  state = rep(c("s1", "s2", "s3"), 3),
+  count = c(10, 5, 2,  7, 8, 3,  4, 6, 12)
+)
+mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")
 ```

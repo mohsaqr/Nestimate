@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,6 +43,158 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.1" id="nestimate-101">Nestimate 1.0.1<a class="anchor" aria-label="anchor" href="#nestimate-101"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-since-cran-1-0-1">Breaking changes since CRAN 0.9.24<a class="anchor" aria-label="anchor" href="#breaking-changes-since-cran-1-0-1"></a></h3>
+<ul><li>
+<code>plot_mosaic()</code> is no longer exported (it masked <code><a href="https://sonsoles.me/tna/reference/plot_mosaic.html" class="external-link">tna::plot_mosaic()</a></code>); use <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code>, whose data-frame method takes <code>x_var</code>, <code>y_var</code> and <code>weight</code> (see the 0.9.29 notes).</li>
+<li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> gained <code>periods</code>, <code>fill</code>, <code>actor</code>, <code>action</code>, <code>time</code> and <code>order</code> after <code>group</code>, so arguments after <code>group</code> must be passed by name.</li>
+<li>
+<code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code> returns only the clique centrality by default; <code>$Z</code> and <code>$H</code> are computed only when requested and only for uniform hypergraphs.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-1-0-1">New features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1"></a></h3>
+<ul><li>
+<code><a href="../reference/stability_landscape.html">stability_landscape()</a></code> draws a transition network as a ball-in-cup landscape in which each state’s cup depth is the log of its expected stay, <code>-log(1 - P_ii)</code> (stay = e^depth), with intervals from resampling whole sequences, the share of time in each state, its exit probabilities and, for three states, the net circulation. It takes a network, a grouped network (for example <code><a href="../reference/build_network.html">build_network()</a></code> of <code><a href="../reference/build_clusters.html">build_clusters()</a></code>) or a sequence data frame or matrix; <code>states =</code> sets the order of the cups. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> (<code>table = "cups"</code>, <code>"exits"</code>, <code>"circulation"</code>) and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>.</li>
+<li>
+<code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> draws the cup depths as a 3D surface over a per-sequence stability measure from <code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> (self-loop tendency, entropy, complexity, …), estimated from the nearest sequences at each value of the measure, with the most stable end in front. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> compares the two ends of each measure; <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws one <code><a href="https://rdrr.io/r/graphics/persp.html" class="external-link">persp()</a></code> surface per network and measure.</li>
+<li>
+<code><a href="../reference/landscape_trend.html">landscape_trend()</a></code> traces the cup depths along the program phase (sliding windows of time steps) or along a numeric per-sequence covariate such as a grade (nearest-sequence slices), one line per state with intervals from resampling sequences.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-1-0-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-0-1"></a></h3>
+<ul><li><p>Numeric sequence positions containing an all-missing logical column stay sequence positions rather than turning a text ID into states.</p></li>
+<li><p><code><a href="../reference/build_clusters.html">build_clusters()</a></code> excludes requested post-hoc covariates from sequence distances, preventing the covariate from determining its own clusters.</p></li>
+<li><p><code><a href="../reference/loading_stability.html">loading_stability()</a></code> replays the composite weighting scheme and its factor-analysis options. New fits retain custom weights/functions; older custom fits that lack them request a rebuild.</p></li>
+<li><p><code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code> keeps generated outcomes separate from user metadata, including an adjustment or grouping column named <code>.outcome</code>.</p></li>
+<li><p><code><a href="../reference/compare_model.html">compare_model()</a></code> aligns named nodes before comparing matrices and rejects incompatible node sets. Unnamed inputs retain positional matching.</p></li>
+<li><p>Ordinary Gaussian <code><a href="../reference/outcome_model.html">outcome_model()</a></code> intervals now use residual-df Student t limits, consistent with their coefficient tests.</p></li>
+<li><p>Z/H hypergraph centralities evaluate tensor directions in log space, preventing numerical underflow for large hyperedges.</p></li>
+<li><p>Landscapes replay weighting, concatenation and boundary markers; merged sequences are bootstrap units. Covariates must be constant within merged units. Transformed or modified networks that cannot represent the stored sequence chain are refused explicitly.</p></li>
+<li><p>Landscape surface/trend grids use the full range when the 5th and 95th percentiles coincide for a nonconstant measure or covariate.</p></li>
+<li><p>MOGen summaries preserve numeric parameter counts above the integer limit.</p></li>
+<li><p>Min-max centrality normalization preserves small, nonconstant strengths.</p></li>
+<li><p>Pattern discovery explicitly refuses stars-only state labels (<code>**</code>, …), which conflict with wildcard syntax, with <code>nestimate_bad_input</code>.</p></li>
+<li><p><code>casedrop_reliability(target = "auto")</code> assesses all cells for association, scaled and thresholded networks, including edges that appear after case removal. Raw transition graphs retain existing-edge assessment. Explicit <code>target = "existing"</code> and <code>"all"</code> select either interpretation.</p></li>
+<li><p><code><a href="../reference/build_network.html">build_network()</a></code>: wide data with number-coded states and a text column (an id) built the network from the text column alone, an all-zero network with no warning. A numbered run of numeric position columns is now the sequence, and the other columns are metadata.</p></li>
+<li><p>The sequence verbs (<code><a href="../reference/extract_sequences.html">extract_sequences()</a></code>, <code><a href="../reference/sequence_patterns.html">sequence_patterns()</a></code>, <code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code>, <code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code>) read the data of a correlation, glasso, Ising, MGM or window network as states; they now raise <code>nestimate_bad_input</code>. A network grouped by two columns (<code>group = c("Achiever", "Course")</code>) no longer fails; its groups are labelled in one column, <code>Achiever-Course</code>.</p></li>
+<li><p><code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code>: a row with no observed state has <code>NA</code>, not 0, for <code>valid_proportion</code> and <code>cyclic_feedback_strength</code>.</p></li>
+<li><p><code>sequence_patterns(pattern =)</code> accepts the spaced notation <code>"A -&gt; * -&gt; B"</code>.</p></li>
+<li><p><code><a href="../reference/nct.html">nct()</a></code>: an unnamed matrix compared with a named one is matched by position again, as documented.</p></li>
+<li><p><code><a href="../reference/build_hon.html">build_hon()</a></code>, <code><a href="../reference/build_mogen.html">build_mogen()</a></code> and <code><a href="../reference/path_counts.html">path_counts()</a></code>: a missing value inside a sequence ends a run of observed states. <code><a href="../reference/build_hon.html">build_hon()</a></code> stopped with an error, <code><a href="../reference/build_mogen.html">build_mogen()</a></code> counted <code>NA</code> as a state, and <code><a href="../reference/path_counts.html">path_counts()</a></code> joined the two sides of the gap.</p></li>
+<li><p><code><a href="../reference/association_rules.html">association_rules()</a></code> reads factor columns of a wide data frame by their labels, not their integer codes.</p></li>
+<li><p><code>build_simplicial(type = "pathway")</code> leaves out HYPA paths that never occur: since 0.9.26 HYPA scores every possible path, and an unobserved one flagged “under” became a simplex of states never seen together.</p></li>
+<li><p><code><a href="../reference/persistent_homology.html">persistent_homology()</a></code>: the rows of <code>$persistence</code> are numbered without gaps.</p></li>
+<li><p><code>labels =</code> on number-coded states: every state column is relabelled together, so <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> no longer drops the cells of columns that held no relabelled state.</p></li>
+<li><p><code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> and <code>plot(landscape_trend(), type = "surface")</code> draw a flat surface instead of failing; a constant measure or covariate raises <code>nestimate_bad_input</code>; slices resting on fewer than five effective sequences warn (<code>nestimate_thin_slice</code>); input with no observed transition raises <code>nestimate_landscape_unestimable</code>; a two-state occupancy landscape reports its single ridge once.</p></li>
+<li><p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of a <code><a href="../reference/passage_time.html">passage_time()</a></code> result drew the matrix transposed: the tile in row A, column B showed the passage time from B to A. Rows are now the starting states and columns the targets, as documented, for a single network and for each panel of a grouped one.</p></li>
+<li><p><code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code>: an <code>adjust</code> column named like one of the model’s own terms (<code>.p1</code>, <code>.y</code>, …) was replaced by that term, so the requested adjustment was silently lost; an <code>adjust</code> name with a space failed to parse. Every model column now has an internal name. <code>outcome</code> defaults to <code>"last_obs"</code>, as in codyna and as the 0.9.29 notes stated.</p></li>
+<li><p><code><a href="../reference/sequence_patterns.html">sequence_patterns()</a></code>: a gapped pattern (<code>A-&gt;*-&gt;B</code>) no longer spans a missing position, matching the template search; a repeated <code>len</code> or <code>gap</code> (<code>len = c(2, 2)</code>) no longer counts each occurrence twice; a grouped search that finds no pattern returns zero rows with all its columns and no warning; a template ending in <code>-&gt;</code> is refused.</p></li>
+<li><p><code><a href="../reference/build_network.html">build_network()</a></code> and <code><a href="../reference/extract_sequences.html">extract_sequences()</a></code>: an all-missing position column stored as logical <code>NA</code> no longer stops the numbered position names from forming a run, which had turned a character covariate into states.</p></li>
+<li><p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of a grouped <code><a href="../reference/markov_stability.html">markov_stability()</a></code> result handles more than nine groups: colours cycle and shapes shift, so every group keeps its own colour-shape pair.</p></li>
+<li><p><code><a href="../reference/extract_sequences.html">extract_sequences()</a></code> and the sequence verbs raise <code>nestimate_bad_input</code> for a model built from a matrix, which holds no sequences.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-1-0-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-0-1"></a></h3>
+<ul><li><p>The pkgdown reference lists the new sequence-analysis and long-data topics.</p></li>
+<li><p><code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code>: the emergent-state rule for a return to the first state is a spell of at least 3 that is more than half the opening spell (codyna’s rule); the help page said “over twice”.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.29" id="nestimate-0929">Nestimate 0.9.29<a class="anchor" aria-label="anchor" href="#nestimate-0929"></a></h2>
+<div class="section level3">
+<h3 id="sequence-patterns-0-9-29">Sequence patterns<a class="anchor" aria-label="anchor" href="#sequence-patterns-0-9-29"></a></h3>
+<ul><li>
+<code><a href="../reference/extract_sequences.html">extract_sequences()</a></code> returns the sequences behind any input as a wide data frame, one row per sequence: prepared data, a long event log (<code>actor</code>/<code>action</code>/<code>time</code>), a wide data frame or character matrix, a <code>netobject</code>, a grouped <code>netobject_group</code> (the group column is added) or a <code>tna</code> model. <code>meta = TRUE</code> adds each sequence’s covariates.</li>
+<li>
+<code><a href="../reference/sequence_patterns.html">sequence_patterns()</a></code> discovers ordered patterns: contiguous n-grams, gapped patterns (<code>A-&gt;*-&gt;B</code>) and repeated runs. For each it reports the occurrences, the share of patterns of that length, the number and share of sequences that contain it (support), and its lift. The counts, support and lift agree with <code>codyna::discover_patterns()</code>. With <code>group</code> (a column, a vector, or the grouping of a <code>netobject_group</code>) each pattern also gets its support per group and a test of presence by group: for two groups the odds ratio, 95% CI and p-value of Fisher’s exact test, for more the chi-square and Cramer’s V; p-values are BH-adjusted. <code>top</code> returns the first rows.</li>
+<li>
+<code>sequence_patterns(pattern =)</code> searches for a template such as <code>"discuss-&gt;*-&gt;consensus"</code> (each <code>*</code> is one position of any state) and returns every concrete instance; <code>group = "last_obs"</code> groups sequences by their final state. Both agree with <code>codyna::discover_patterns()</code>.</li>
+<li>
+<code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> computes 23 per-sequence indices (validity, spells, entropy, Simpson diversity, transitions, initial-state persistence and decay, dominant and emergent states, cyclic feedback, integrative potential, complexity), one row per sequence. They agree with <code>codyna::sequence_indices()</code> on 20 indices; three are corrected: <code>dominant_max_spell</code> is per sequence (codyna repeats the last sequence’s value), <code>longitudinal_entropy</code> is normalised by the number of states (codyna counts <code>NA</code> as a state), and <code>complexity_index</code> uses that entropy once (codyna normalises it twice) and is 0 for a sequence of one spell, as in <code>TraMineR::seqici()</code> (codyna: <code>NA</code>). Empty sequences give <code>NA</code>. A missing position is not an observation: the opening spell starts at the first observed state, transitions are pairs of adjacent observed states (<code>self_loop_tendency + transition_rate = 1</code>), and <code>integrative_potential</code> weights observed positions only, as <code>TraMineR::seqintegr()</code> does. The indices shared with TraMineR agree with it on sequences without internal gaps.</li>
+<li>
+<code><a href="../reference/extract_sequences.html">extract_sequences()</a></code> and the sequence verbs read TraMineR’s void (<code>%</code>) and missing (<code>*</code>) markers as <code>NA</code>, as <code><a href="../reference/build_network.html">build_network()</a></code> does; an <code>stslist</code> such as tna’s <code>engagement</code> no longer gains a <code>%</code> state.</li>
+<li>
+<code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code> reproduces <code>codyna::analyze_outcome()</code>, including its default <code>outcome = "last_obs"</code>: the <code>n</code> patterns ranked highest by <code>priority</code> (default: codyna’s chi-square) enter one logistic regression of a two-valued outcome on their presence, with an optional random intercept (<code>group</code>). Coefficients agree with codyna’s fit. It returns a tidy table, one row per pattern, with support per outcome value, the selection statistic, estimate, Wald CI, p-value and odds ratio. It fits the selected pattern even where codyna 1.0.0 fits a data column instead (a lone pattern of one length loses its name, and a data column named <code>V&lt;k&gt;</code> takes its place).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="validation-tests-aligned-with-the-current-tna-release-0-9-29">Validation tests aligned with the current tna release<a class="anchor" aria-label="anchor" href="#validation-tests-aligned-with-the-current-tna-release-0-9-29"></a></h3>
+<ul><li>
+<code>plot_mosaic()</code> is no longer exported: it masked <code><a href="https://sonsoles.me/tna/reference/plot_mosaic.html" class="external-link">tna::plot_mosaic()</a></code> whenever both packages were attached, so tna code (and apps such as Dynalytics) calling <code>plot_mosaic(model)</code> failed with <code>argument "data" is missing</code>. Its data-frame mosaic is now a method of <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code>: <code>plot_mosaic(df, x = "group", y = "state", weight = "count")</code> becomes <code>mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")</code> (<code>x_label</code>/<code>y_label</code> become <code>xlab</code>/<code>ylab</code>, as in the other methods). A network, table or matrix given a data-frame-only argument (<code>x_var</code>, <code>y_var</code>, <code>weight</code>, <code>fill</code>, <code>colors</code>, <code>show_labels</code>, and <code>label_size</code> except with <code>style = "flat"</code>, which uses it for its tile labels) raises <code>nestimate_bad_input</code> instead of ignoring it, and so does an unknown argument of the data-frame method.</li>
+<li>
+<code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code> compares only the edges present in the original network. A subsample cannot contain a transition that is absent from the full data, so the empty cells agreed in every draw and inflated the correlation: on a sparse 8-state chain the CS-coefficient was 0.9 (the top of the grid) with a mean correlation of 0.993 after dropping 90% of the sequences. <code>n_edges</code> now counts the present edges, and an undefined CS-coefficient (edge weights that do not vary) is <code>NA</code> instead of 0. Such a result now has the usual summary columns with <code>NA</code> statistics, so <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> (including the grouped summary) and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> work: the plot states that the CS-coefficient is undefined, and the grouped plot names the networks it leaves out. This case is common now, for example a fixed cycle, where every present edge has probability 1. The documentation no longer claims that case-dropping is valid regardless of within-actor correlation.</li>
+<li>
+<code>permutation(measures = "Diffusion")</code> (and the node table of <code><a href="../reference/compare_networks.html">compare_networks()</a></code>) compares Diffusion after min-max scaling to 0-1, as <code><a href="../reference/net_centrality.html">net_centrality()</a></code> reports it and as tna does from 1.4.1.</li>
+<li>The range normalization behind <code>normalize = TRUE</code> and Diffusion returns <code>NaN</code> for a numerically constant vector instead of stretching rounding error to 0-1, as tna’s does.</li>
+<li>
+<code><a href="../reference/markov_order_test.html">markov_order_test()</a></code> splits sequences at missing values, so no window spans an <code>NA</code>; an internal <code>NA</code> previously became a context named “NA”. Results on data without internal missing values are unchanged (identical under the same seed). Its documentation no longer calls the within-context permutation exact: the windows of a sequence overlap, so the permutation distribution approximates the null (Besag &amp; Mondal, 2013).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-9-29">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-9-29"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> works on <code><a href="../reference/passage_time.html">passage_time()</a></code> and <code><a href="../reference/markov_stability.html">markov_stability()</a></code> results for a grouped network: one heatmap panel per group on a shared colour scale, and a per-metric dot plot with one point per group. Both used to fall through to <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot.default()</a></code> and fail. The single-network stability plot uses one fill; its per-state palette left a ninth state without colour.</li>
+<li>
+<code>build_mmm(covariate_effect = "posthoc")</code>: <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> labelled the covariates “integrated into EM – influences cluster membership” whatever the setting. The fit records <code>covariate_effect</code>, and a post-hoc analysis is now labelled as one.</li>
+<li>The <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> methods of <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> and <code><a href="../reference/entropy_bayes.html">entropy_bayes()</a></code> no longer tell the user to reach into the object with <code>$</code>; they point to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>.</li>
+<li>
+<code><a href="../reference/build_network.html">build_network()</a></code> no longer reads a character covariate of wide sequence data as states. An outcome or group label such as <code>High</code>/<code>Low</code> used to become nodes of the network and vanish from <code>$metadata</code>. When the position columns are named as a run (<code>T1</code>, <code>T2</code>, …; <code>V1</code>, …; <code>1</code>, <code>2</code>, …), every other character or factor column is now metadata, like numeric columns already were, even when its values coincide with state names. The network equals the one built with <code>metadata_cols</code>. Without such a run, or with two runs of equal size, nothing changes.</li>
+<li>Association <code><a href="../reference/permutation.html">permutation()</a></code> refuses inference with <code>nestimate_permutation_failed</code> when any permuted network cannot be estimated or has non-finite weights, reporting the number of failed draws. Failed draws no longer silently reduce p-values or invalidate null moments.</li>
+<li>Transition resampling honors <code>weighted</code> and <code>concat</code>. Concatenated rows are resampled as the merged sequences used by the estimator, including their joining transitions. With <code>actor</code>, a merged sequence must stay within one actor; paired tests require matching merged-sequence counts.</li>
+<li>Relabelling numeric sequence states, start/end markers and onehot columns keeps stored data, alphabets and column selectors consistent for resampling. Wide sequence positions retain their column names; association measurements retain their numeric values.</li>
+<li>Higher-order builders and <code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> preserve literal numeric states in Nestimate models and decode positional codes only for tna input or explicitly encoded converted data. Character digit alphabets such as <code>"1"</code> through <code>"12"</code> are decoded correctly.</li>
+<li>Grouped wide sequences use the same resolved state columns as their child estimates. Numeric covariates do not enter the shared alphabet, and factor columns keep their labels.</li>
+<li>MGM’s numeric <code>level</code> is validated after excluding group, actor and metadata columns. MGM actor identifiers are excluded from estimation.</li>
+<li>Custom variable estimators retain their numeric cleaned data when column names identify the modeled nodes, allowing valid downstream resampling.</li>
+<li>
+<code><a href="../reference/nct.html">nct()</a></code> rejects <code>Inf</code> and <code>-Inf</code> instead of silently isolating the affected variable; its supported missing-data and constant-variable handling is unchanged.</li>
+<li>
+<code>plot_mosaic(network, x_label =, y_label =)</code> applies the labels. Explicit primitive-only styling arguments raise a classed error directing the caller to <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code>.</li>
+<li>
+<code><a href="../reference/association_rules.html">association_rules()</a></code> reads a character matrix of states (such as <code>trajectories</code>) as wide sequences, like a character data frame. It used to treat every matrix as binary: with missing cells it failed with “subscript out of bounds”, and without them it silently mined the column names. Binary input (matrix or data frame, 0/1 or logical) with a missing cell or a value other than 0/1 now raises <code>nestimate_bad_input</code>; logical data-frame columns are read as binary items instead of the strings <code>"TRUE"</code>/<code>"FALSE"</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-9-29">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-9-29"></a></h3>
+<ul><li>MGM’s missing-data policy is mean/modal single imputation, as documented by psychnets for its <code>"pairwise"</code> option; it is not pairwise deletion.</li>
+<li>Permutation M/S labels describe this function’s historical total/max edge difference statistics and distinguish them from NCT’s structure/strength convention. Comparison tables no longer call total edge difference “global strength”. The NCT tutorial and local display checks use current notation and capitalization.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.28" id="nestimate-0928">Nestimate 0.9.28<a class="anchor" aria-label="anchor" href="#nestimate-0928"></a></h2>
+<div class="section level3">
+<h3 id="higher-order-methods-corrections-from-a-review-against-the-source-papers-0-9-28">Higher-order methods: corrections from a review against the source papers<a class="anchor" aria-label="anchor" href="#higher-order-methods-corrections-from-a-review-against-the-source-papers-0-9-28"></a></h3>
+<p>These change results. Each is tested against an independent value (a hand-derived oracle or a published example), and each new test fails on the previous code.</p>
+<ul><li>
+<code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code> computes the clique-motif centrality (CEC) directly as the Perron vector of each connected component. The power iteration it replaces oscillated when the clique expansion was bipartite (any triangle-free hypergraph), and returned a different wrong vector depending on whether <code>max_iter</code> was odd or even, without a warning. A star of pairs now gives the exact vector for every <code>max_iter</code>.</li>
+<li>
+<code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code> now defaults to <code>type = "clique"</code>. <code>"Z"</code> and <code>"H"</code> are defined by Benson (2019) for uniform hypergraphs only: with mixed hyperedge sizes the equation mixes polynomial degrees and its solution depends on the normalisation inside the iteration. Requesting them on a non-uniform hypergraph raises <code>nestimate_nonuniform_hypergraph</code>. On uniform hypergraphs they are unchanged and reproduce Benson’s Table 2. An unconverged Z/H iteration warns with <code>nestimate_no_converge</code>.</li>
+<li>
+<code><a href="../reference/q_analysis.html">q_analysis()</a></code> counts, at each level q, only the maximal simplices of dimension at least q (Atkin’s Q-vector). It previously counted every maximal simplex at every level, so lower-dimensional simplices appeared as extra components at high q.</li>
+<li>
+<code><a href="../reference/persistent_homology.html">persistent_homology()</a></code> builds the filtration one dimension above <code>max_dim</code> (the Ripser convention), so classes of dimension <code>max_dim</code> can die. Previously every top-dimension cycle was reported as essential; with the default <code>max_dim = 3</code>, dense 7-state transition networks showed spurious never-dying bars in every case tried.</li>
+<li>
+<code><a href="../reference/build_simplicial.html">build_simplicial()</a></code> (clique and VR) records when <code>max_dim</code> cut a larger clique. <code><a href="../reference/betti_numbers.html">betti_numbers()</a></code> then warns (<code>nestimate_truncated_complex</code>) that the top Betti number is an upper bound, and <code><a href="../reference/persistent_homology.html">persistent_homology()</a></code> warns the same way when given such a complex, whose top-dimension classes cannot die.</li>
+<li>
+<code><a href="../reference/build_mogen.html">build_mogen()</a></code> and <code><a href="../reference/markov_order_test.html">markov_order_test()</a></code> gain <code>dof = c("paths", "observed")</code>. The default <code>"paths"</code> counts each layer’s parameters as Scholtes (2017, Eq. 7) and pathpy do: every transition of the paths of length k that the observed first-order topology allows. The previous rule, now <code>dof = "observed"</code>, counted only observed transitions; it can fall as the order rises and under-penalised high orders on sparse data, so AIC, BIC and the likelihood-ratio test favoured higher orders. Selected orders can change.</li>
+<li>
+<code>build_mogen(criterion = "lrt")</code> selects the largest order whose test rejects (Scholtes 2017) instead of stopping at the first non-rejection, and returns every p-value as <code>lrt_p</code>.</li>
+<li>
+<code>build_hon(method = "hon", min_freq &gt;= 2)</code>: a source whose transitions are all below <code>min_freq</code> is no longer an extension candidate nor a starting rule, as in the reference pyHON. Such sources could previously add HON nodes that pyHON does not create. <code>min_freq = 1</code> and HON+ are unaffected.</li>
+<li>The Z and H iterations of <code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code> normalise the tensor update before adding the stabilising shift, and count as converged only when the eigen-equation residual is small. On large uniform hyperedges the unnormalised shift swamped the update, so the iteration stopped at its start and returned the uniform vector without a warning (a 3-petal sunflower of 20-member hyperedges gave a hub/petal ratio of 1 instead of Benson’s sqrt(3)).</li>
+<li>Path degrees of freedom are summed as non-negative per-state terms, so they stay exact up to the double range; beyond it <code><a href="../reference/build_mogen.html">build_mogen()</a></code> and <code><a href="../reference/markov_order_test.html">markov_order_test()</a></code> stop with <code>nestimate_dof_overflow</code> instead of carrying <code>Inf</code>/<code>NaN</code> into AIC and BIC.</li>
+<li>Truncation detection reads the simplices already built (does a top simplex extend by one vertex?) instead of an exact maximum-clique search, which took seconds on dense graphs even at <code>max_dim = 0</code>; persistence on a distance matrix no longer computes it at all. The persistence warning for a truncated complex rechecks within <code>max_scale</code>.</li>
+<li>
+<code><a href="../reference/build_hypa.html">build_hypa()</a></code> classifies a path as over-represented when <code>p_over &lt;= alpha</code>, i.e. HYPA &gt;= 1 - alpha as in LaRock et al. (2020); it was <code>&lt; alpha</code>. This only changes ties at exactly <code>alpha</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-9-28">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-9-28"></a></h3>
+<ul><li>
+<code><a href="../reference/build_mogen.html">build_mogen()</a></code> is documented as the multi-order model of Scholtes (2017), pathpy’s <code>MultiOrderModel</code>; it is not the multi-order generative model of Gote et al. (2023), which adds start and end states.</li>
+<li>
+<code><a href="../reference/build_honem.html">build_honem()</a></code> states what it computes (decayed matrix powers of the HON transition matrix over all HON nodes) and how that differs from Saebi et al. (2020), whose order-indexed matrices over first-order nodes are not fully specified in the paper.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.27" id="nestimate-0927">Nestimate 0.9.27<a class="anchor" aria-label="anchor" href="#nestimate-0927"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-9-27">New features<a class="anchor" aria-label="anchor" href="#new-features-0-9-27"></a></h3>
@@ -60,10 +212,10 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-9-27">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-9-27"></a></h3>
-<ul><li><p><code><a href="../reference/plot_mosaic.html">plot_mosaic()</a></code> given a network (netobject, group, mcml, htna) hands it to <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code>; it failed with “is.data.frame(data) is not TRUE”. Data-frame calls are unchanged.</p></li>
+<ul><li><p><code>plot_mosaic()</code> given a network (netobject, group, mcml, htna) hands it to <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code>; it failed with “is.data.frame(data) is not TRUE”. Data-frame calls are unchanged.</p></li>
 <li><p><code>cluster_network(cluster_by = "mmm")</code> passes <code>covariate_effect</code> (and any other <code><a href="../reference/build_mmm.html">build_mmm()</a></code> argument) to <code><a href="../reference/build_mmm.html">build_mmm()</a></code>; it failed with “Unknown argument(s) in cluster_network(): covariate_effect”.</p></li>
 <li><p><code><a href="../reference/build_mcml.html">build_mcml()</a></code> decodes a <code>tna</code> object’s integer-coded sequences (it failed with “Unknown nodes in clusters”).</p></li>
-<li><p><code><a href="../reference/build_mcml.html">summary.mcml()</a></code> works without within-cluster layers (<code>compute_within = FALSE</code>, where it crashed), and <code>within_total</code> includes self-transitions, so it equals the macro diagonal.</p></li>
+<li><p><code><a href="../reference/build_mcml.html">summary.mcml()</a></code> works without within-cluster layers (<code>compute_within = FALSE</code>, where it crashed), and <code>within_total</code> includes self-transitions. For raw counts it equals the macro diagonal; separately normalized micro and macro layers can have different totals.</p></li>
 <li><p><code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> windows run through time. Transitions were pooled actor by actor, so a window could start in one actor’s late events and end in another’s early ones.</p></li>
 <li><p>Markov-chain measures (<code><a href="../reference/transition_entropy.html">transition_entropy()</a></code>, <code><a href="../reference/entropy_network.html">entropy_network()</a></code>, <code><a href="../reference/passage_time.html">passage_time()</a></code>, <code><a href="../reference/markov_stability.html">markov_stability()</a></code>, <code><a href="../reference/chain_structure.html">chain_structure()</a></code>) refuse correlation-type networks and negative weights (<code>nestimate_not_markov</code>) instead of row-normalising them into a meaningless chain. Co-occurrence networks (a random walk) are still accepted.</p></li>
 <li><p><code><a href="../reference/path_dependence.html">path_dependence()</a></code> no longer drops states whose names contain “NA” (e.g. “FINAL”, “ANALYSIS”); missing cells are tested directly.</p></li>
@@ -138,7 +290,7 @@
 </ul></div>
 <div class="section level3">
 <h3 id="behaviour-notes-0-9-24">Behaviour notes<a class="anchor" aria-label="anchor" href="#behaviour-notes-0-9-24"></a></h3>
-<ul><li>The <code>mgm</code> estimator rejects <code>scale = FALSE</code> with a classed error (<code>nestimate_mgm_unscaled</code>); this started in 0.9.23 and was not listed there. Missing values are handled pairwise, now passed explicitly.</li>
+<ul><li>The <code>mgm</code> estimator rejects <code>scale = FALSE</code> with a classed error (<code>nestimate_mgm_unscaled</code>); this started in 0.9.23 and was not listed there. Missing values use mean/modal single imputation under psychnets’ named <code>"pairwise"</code> policy, now passed explicitly.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="tests-0-9-24">Tests<a class="anchor" aria-label="anchor" href="#tests-0-9-24"></a></h3>
@@ -737,7 +889,7 @@
 <ul><li>
 <code><a href="../reference/plot_state_frequencies.html">plot_state_frequencies()</a></code> — native S3 generic for state-frequency plots across <code>netobject</code>, <code>netobject_group</code>, <code>mcml</code>, and <code>htna</code>. Defaults to a marimekko (mosaic) layout where column widths reflect per-group totals and segment heights reflect within-group state proportions; also supports a colored-bars style and a per-group faceted marimekko. Uses the package Okabe-Ito palette throughout.</li>
 <li>
-<code><a href="../reference/plot_mosaic.html">plot_mosaic()</a></code> — exported low-level marimekko primitive built on <code>geom_rect()</code> with cumulative-width / cumulative-height geometry. Reusable for any tidy <code>data.frame(group, state, weight)</code> input.</li>
+<code>plot_mosaic()</code> — exported low-level marimekko primitive built on <code>geom_rect()</code> with cumulative-width / cumulative-height geometry. Reusable for any tidy <code>data.frame(group, state, weight)</code> input.</li>
 </ul></div>
 </div>
     <div class="section level2">

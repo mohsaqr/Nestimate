@@ -8,10 +8,13 @@ independence \(s \perp x \mid w\), where \(w\) is the
 added at order \(k\), and \(s\) is the next state. Under
 \(H_0\) (order-\((k-1)\) is correct), \(s\) is independent of
 \(x\) given \(w\).
-The null distribution is obtained by an exact within-\(w\)
-permutation test: for each context \(w\) the successor labels are
-exchangeable under \(H_0\), so shuffling \(s\) within each
-\(w\)-group yields an exact reference distribution for \(G^2\).
+The null distribution is obtained by a within-\(w\)
+(conditional) permutation test: for each context \(w\) the successor
+labels are exchangeable under \(H_0\), so shuffling \(s\) within each
+\(w\)-group keeps every count the null hypothesis conditions on. The
+windows of a sequence overlap, so this approximates the reference
+distribution of \(G^2\) rather than giving it exactly (an exact test
+would sample whole sequences with the same counts; Besag &amp;amp; Mondal, 2013).
 No plug-in MLE bias and no refitting per replicate. An asymptotic
 \(\chi^2\) p-value is reported alongside for reference.
 Order selection is sequential: the order is raised while the test
@@ -28,10 +31,13 @@ independence \(s \perp x \mid w\), where \(w\) is the
 added at order \(k\), and \(s\) is the next state. Under
 \(H_0\) (order-\((k-1)\) is correct), \(s\) is independent of
 \(x\) given \(w\).
-The null distribution is obtained by an exact within-\(w\)
-permutation test: for each context \(w\) the successor labels are
-exchangeable under \(H_0\), so shuffling \(s\) within each
-\(w\)-group yields an exact reference distribution for \(G^2\).
+The null distribution is obtained by a within-\(w\)
+(conditional) permutation test: for each context \(w\) the successor
+labels are exchangeable under \(H_0\), so shuffling \(s\) within each
+\(w\)-group keeps every count the null hypothesis conditions on. The
+windows of a sequence overlap, so this approximates the reference
+distribution of \(G^2\) rather than giving it exactly (an exact test
+would sample whole sequences with the same counts; Besag &amp;amp; Mondal, 2013).
 No plug-in MLE bias and no refitting per replicate. An asymptotic
 \(\chi^2\) p-value is reported alongside for reference.
 Order selection is sequential: the order is raised while the test
@@ -47,7 +53,7 @@ rejected, and max_order when no test accepts."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,10 +99,13 @@ independence \(s \perp x \mid w\), where \(w\) is the
 added at order \(k\), and \(s\) is the next state. Under
 \(H_0\) (order-\((k-1)\) is correct), \(s\) is independent of
 \(x\) given \(w\).</p>
-<p>The null distribution is obtained by an <strong>exact within-\(w\)
-permutation test</strong>: for each context \(w\) the successor labels are
-exchangeable under \(H_0\), so shuffling \(s\) within each
-\(w\)-group yields an exact reference distribution for \(G^2\).
+<p>The null distribution is obtained by a <strong>within-\(w\)
+(conditional) permutation test</strong>: for each context \(w\) the successor
+labels are exchangeable under \(H_0\), so shuffling \(s\) within each
+\(w\)-group keeps every count the null hypothesis conditions on. The
+windows of a sequence overlap, so this approximates the reference
+distribution of \(G^2\) rather than giving it exactly (an exact test
+would sample whole sequences with the same counts; Besag &amp; Mondal, 2013).
 No plug-in MLE bias and no refitting per replicate. An asymptotic
 \(\chi^2\) p-value is reported alongside for reference.</p>
 <p>Order selection is sequential: the order is raised while the test
@@ -116,7 +125,8 @@ rejected, and <code>max_order</code> when no test accepts.</p>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fl">2L</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  dof <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"paths"</span>, <span class="st">"observed"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_markov_order'</span></span>
@@ -141,7 +151,8 @@ rejected, and <code>max_order</code> when no test accepts.</p>
 of character vectors (one per trajectory), a <code>netobject</code> or
 <code>netobject_group</code> carrying its <code>$data</code>, or a
 <code><a href="prepare.html">prepare</a></code> result (its <code>sequence_data</code> is used).
-NAs are treated as end of sequence.</p></dd>
+Sequences are split at missing values: no window spans an <code>NA</code>,
+and pieces with fewer than two states are dropped.</p></dd>
 
 
 <dt id="arg-max-order">max_order<a class="anchor" aria-label="anchor" href="#arg-max-order"></a></dt>
@@ -168,6 +179,14 @@ Default <code>FALSE</code> (set <code>TRUE</code> only on Unix-like systems).</p
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional integer seed for reproducibility.</p></dd>
+
+
+<dt id="arg-dof">dof<a class="anchor" aria-label="anchor" href="#arg-dof"></a></dt>
+<dd><p>Character. How the AIC / BIC columns count each layer's
+parameters: <code>"paths"</code> (default; every transition the observed
+first-order topology allows, as in Scholtes 2017 and pathpy) or
+<code>"observed"</code> (transitions seen in the data, the rule before
+Nestimate 0.9.28). The permutation test does not use it.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
@@ -222,9 +241,12 @@ one empirical null \(G^2\) distribution per order.</p></dd>
 (for AIC / BIC panel only, not used in the test).</p></dd>
 
 <dt>layer_dofs</dt>
-<dd><p>Named integer vector of model degrees of freedom per
+<dd><p>Named numeric vector of model degrees of freedom per
 order (free parameters added at each layer), used to compute the
-AIC / BIC columns.</p></dd>
+AIC / BIC columns; counted as set by <code>dof</code>.</p></dd>
+
+<dt>dof_method</dt>
+<dd><p><code>"paths"</code> or <code>"observed"</code>.</p></dd>
 
 <dt>transition_matrices</dt>
 <dd><p>List of fitted transition matrices.</p></dd>

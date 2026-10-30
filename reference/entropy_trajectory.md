@@ -182,7 +182,7 @@ tr
 #>   High:        123 windows   mean 2.286   range [2.175, 2.394]
 #>    Low:         124 windows   mean 2.294   range [2.143, 2.437]
 #> 
-#> Use plot() for the trajectory, $trajectory for the tidy table.
+#> Use plot() for the trajectory, summary() for per-group statistics.
 summary(tr)
 #>   group windows     mean         sd      min      max    first     last
 #> 1  High     123 2.285872 0.04313978 2.175275 2.394429 2.309764 2.301800

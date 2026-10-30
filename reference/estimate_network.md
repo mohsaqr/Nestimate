@@ -61,10 +61,14 @@ estimate_network(
 - level:
 
   Character or NULL. Multilevel decomposition for the undirected
-  association methods (`cor`, `pcor`, `glasso`); a directed estimator
-  errors. One of `NULL`, `"between"`, `"within"`, `"both"`. Requires an
-  id column, supplied either as `actor` or as `params$id` /
-  `params$id_col`. Default: `NULL`.
+  association methods (`cor`, `pcor`, `glasso`, `mgm`); a directed
+  estimator errors. One of `NULL`, `"between"`, `"within"`, `"both"`.
+  Requires an id column, supplied either as `actor` or as `params$id` /
+  `params$id_col`. Default: `NULL`. For `method = "mgm"`, a numeric
+  vector instead supplies one category count per modeled variable (`1`
+  for continuous variables), after excluding group, actor and metadata
+  columns. It is checked and retained for compatibility; the MGM fit
+  infers category levels from data.
 
 - ...:
 

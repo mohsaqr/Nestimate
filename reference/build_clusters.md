@@ -131,7 +131,11 @@ print(x, ...)
 
 - covariates:
 
-  Optional. Post-hoc covariate analysis of cluster membership. Accepts:
+  Optional. Post-hoc covariate analysis of cluster membership. Named
+  covariate columns present in raw sequence data are excluded from the
+  sequence distances before clustering. Columns matching a separately
+  supplied covariate frame by both name and values are also excluded;
+  unrelated sequence columns remain unchanged. Accepts:
 
   string
 

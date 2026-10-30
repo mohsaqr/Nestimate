@@ -9,6 +9,10 @@ iteration only resamples sequences via colSums (C-level)
 plus lightweight post-processing. Data must be in wide format for
 transition bootstrap; use convert_sequence_format to
 convert long-format data first.
+With params = list(concat = k), the consecutive groups of up to
+k rows merged by the estimator are the sequences resampled;
+joins inside each merged sequence are retained. With actor, a
+merged sequence must belong entirely to one actor.
 For association methods ("cor", "pcor", "glasso",
 and custom estimators), the full estimator is called on resampled rows
 each iteration.
@@ -24,6 +28,10 @@ iteration only resamples sequences via colSums (C-level)
 plus lightweight post-processing. Data must be in wide format for
 transition bootstrap; use convert_sequence_format to
 convert long-format data first.
+With params = list(concat = k), the consecutive groups of up to
+k rows merged by the estimator are the sequences resampled;
+joins inside each merged sequence are retained. With actor, a
+merged sequence must belong entirely to one actor.
 For association methods ("cor", "pcor", "glasso",
 and custom estimators), the full estimator is called on resampled rows
 each iteration.
@@ -37,7 +45,7 @@ testing.'><meta property="og:image" content="https://pak.dynasite.org/Nestimate/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +91,11 @@ per-sequence count matrices are computed once, and each bootstrap
 iteration only resamples sequences via <code>colSums</code> (C-level)
 plus lightweight post-processing. Data must be in wide format for
 transition bootstrap; use <code><a href="convert_sequence_format.html">convert_sequence_format</a></code> to
-convert long-format data first.</p>
+convert long-format data first.
+With <code>params = list(concat = k)</code>, the consecutive groups of up to
+<code>k</code> rows merged by the estimator are the sequences resampled;
+joins inside each merged sequence are retained. With <code>actor</code>, a
+merged sequence must belong entirely to one actor.</p>
 <p>For association methods (<code>"cor"</code>, <code>"pcor"</code>, <code>"glasso"</code>,
 and custom estimators), the full estimator is called on resampled rows
 each iteration.</p>

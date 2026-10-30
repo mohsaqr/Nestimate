@@ -41,7 +41,7 @@ object so persistent_homology() can read them directly.'><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -152,7 +152,9 @@ pathways to include, ranked by count (HON) or ratio (HYPA).
 <dd><p>For HYPA pathway complexes, which anomaly direction to
 include: <code>"all"</code> (default), <code>"over"</code>, or <code>"under"</code>.
 Under-represented HYPA paths are ranked by smallest observed/expected
-ratio; over-represented paths are ranked by largest ratio.</p></dd>
+ratio; over-represented paths are ranked by largest ratio. Possible
+paths that never occur are left out: a pathway simplex is a set of
+states observed together on a path.</p></dd>
 
 
 <dt id="arg-max-scale">max_scale<a class="anchor" aria-label="anchor" href="#arg-max-scale"></a></dt>

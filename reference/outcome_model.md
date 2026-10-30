@@ -120,6 +120,9 @@ added), `$family`, `$n` (rows the reported model was fitted on),
 predictors), `$adjust`, `$select`, `$correction`, `$ci_level`, `$mixed`
 and `$outcome`. Retrieve the table with
 [`effects_table`](https://pak.dynasite.org/Nestimate/reference/effects_table.md).
+Ordinary Gaussian fits use Student t confidence limits with the model's
+residual degrees of freedom; binomial and mixed fits use normal Wald
+limits.
 
 In `print.net_outcome_model()`: `print` returns its input invisibly.
 

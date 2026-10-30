@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@
       <img src="../logo.svg" class="logo" alt=""><h1>Higher-Order Network Analysis with Simplicial Complexes</h1>
       <p class="subtitle">From Transition Networks to Topological Analysis</p>
       <p class="author">Mohammed SaqrSonsoles López-PernasKamila Misiejuk</p>
-      <p class="date">2026-10-26</p>
+      <p class="date">2026-10-30</p>
 
       <small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/vignettes/articles/cograph-tutorial-simplicial.qmd" class="external-link"><code>vignettes/articles/cograph-tutorial-simplicial.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
@@ -196,16 +196,16 @@
 
   States: Command, Correct, Frustrate, Inquire, Interrupt, Refine, Request, Specify, Verify
   Paths: 508 | Observations: 10778
-  Best by AIC: order 4  |  Best by BIC: order 1
-  Selected:    order 4 (by aic)</code></pre>
+  Best by AIC: order 2  |  Best by BIC: order 1
+  Selected:    order 2 (by aic)</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>        order layer_dof cum_dof    loglik      aic      bic best selected
-order_0     0         8       8 -22001.20 44018.40 44076.68
-order_1     1        72      80 -20805.61 41771.23 42354.05  BIC
-order_2     2       621     701 -19819.55 41041.10 46148.07
-order_3     3      2445    3146 -17152.10 40596.20 63515.63
-order_4     4      2990    6136 -11469.73 35211.46 79913.83  AIC      &lt;--</code></pre>
+<pre><code>        order layer_dof cum_dof    loglik       aic       bic best selected
+order_0     0         8       8 -22001.20  44018.40  44076.68
+order_1     1        72      80 -20805.61  41771.23  42354.05  BIC
+order_2     2       648     728 -19819.55  41095.10  46398.77  AIC      &lt;--
+order_3     3      5832    6560 -17152.10  47424.20  95215.52
+order_4     4     52488   59048 -11469.73 141035.46 571215.63              </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -293,13 +293,13 @@ order_4     4      2990    6136 -11469.73 35211.46 79913.83  AIC      &lt;--</co
 <pre><code>Markov Order Test  [within-w permutation, n_perm = 200, alpha = 0.050]
   508 sequences / 10778 observations / 9 states
 
-  Selected order  BIC: 1   AIC: 3   permutation-LRT: 3
+  Selected order  BIC: 1   AIC: 2   permutation-LRT: 3
 
  order    loglik      AIC      BIC   df      g2 p_permutation  p_asymptotic
      0 -22001.20 44018.40 44076.68   NA      NA            NA            NA
      1 -20805.61 41771.23 42354.05   64 2365.38   0.004975124  0.000000e+00
-     2 -19819.55 41041.10 46148.07  576 1817.12   0.004975124 1.702866e-128
-     3 -17152.10 40596.20 63515.63 4706 5163.79   0.004975124  2.317583e-06
+     2 -19819.55 41095.10 46398.77  576 1817.12   0.004975124 1.702866e-128
+     3 -17152.10 47424.20 95215.52 4706 5163.79   0.004975124  2.317583e-06
  significant
           NA
         TRUE
@@ -708,7 +708,7 @@ Normalised: h(P) and H(pi) are raw / log_2(n_states) (0 = deterministic, 1 = uni
 <div class="cell-output cell-output-stdout">
 <pre><code>Persistent Homology
   25 filtration steps [0.6197 → 0.0062]
-  Features: b0: 8 (1 persistent)  |  b1: 3 (0 persistent)  |  b3: 70 (70 persistent)
+  Features: b0: 8 (1 persistent)  |  b1: 3 (0 persistent)
   Longest-lived:
     b0: 0.6197 → 0.0000 (life: 0.6197)
     b0: 0.6197 → 0.1707 (life: 0.4491)

@@ -15,7 +15,7 @@ and logical matrix indexing for k-itemsets."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,14 +93,19 @@ a transaction of its unique states.</p></dd>
 
 <dt>data.frame</dt>
 <dd><p>Wide format: each row is a transaction, character
-columns are item occurrences. Or a binary matrix (0/1).</p></dd>
+columns are item occurrences. Or binary (0/1 or logical) columns,
+one per item.</p></dd>
 
 <dt>matrix</dt>
-<dd><p>Binary transaction matrix (rows = transactions,
-columns = items).</p></dd>
+<dd><p>A character matrix is read as wide sequences, like a
+character data frame (each row is the set of its distinct
+non-missing states). A numeric or logical matrix is a binary
+transaction matrix (rows = transactions, columns = items).</p></dd>
 
 
-</dl><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_association_rules</code>.</p></dd>
+</dl><p>Binary input must hold only 0/1 or <code>TRUE</code>/<code>FALSE</code>: a
+missing cell or any other value raises <code>nestimate_bad_input</code>.
+For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: an object of class <code>net_association_rules</code>.</p></dd>
 
 
 <dt id="arg-min-support">min_support<a class="anchor" aria-label="anchor" href="#arg-min-support"></a></dt>

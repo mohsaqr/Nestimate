@@ -15,7 +15,7 @@ multiplicity-corrected p-values."><meta property="og:image" content="https://pak
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,9 @@ fit. The remaining elements are the fitted <code>$model</code> (a
 <code>$dropped</code> (zero-variance predictors), <code>$adjust</code>,
 <code>$select</code>, <code>$correction</code>, <code>$ci_level</code>, <code>$mixed</code>
 and <code>$outcome</code>. Retrieve the table with
-<code><a href="effects_table.html">effects_table</a></code>.</p>
+<code><a href="effects_table.html">effects_table</a></code>.
+Ordinary Gaussian fits use Student t confidence limits with the model's
+residual degrees of freedom; binomial and mixed fits use normal Wald limits.</p>
 <p>In <code>print.net_outcome_model()</code>: <code>print</code> returns its input invisibly.</p>
 <p>In <code>summary.net_outcome_model()</code>: <code>summary</code> returns the tidy effect table.</p>
 <p>In <code>plot.net_outcome_model()</code>: <code>plot</code> returns a <code>ggplot</code> forest of the effects.</p>

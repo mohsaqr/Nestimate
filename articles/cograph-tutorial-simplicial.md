@@ -157,15 +157,15 @@ summary(mg)
 
       States: Command, Correct, Frustrate, Inquire, Interrupt, Refine, Request, Specify, Verify
       Paths: 508 | Observations: 10778
-      Best by AIC: order 4  |  Best by BIC: order 1
-      Selected:    order 4 (by aic)
+      Best by AIC: order 2  |  Best by BIC: order 1
+      Selected:    order 2 (by aic)
 
-            order layer_dof cum_dof    loglik      aic      bic best selected
-    order_0     0         8       8 -22001.20 44018.40 44076.68
-    order_1     1        72      80 -20805.61 41771.23 42354.05  BIC
-    order_2     2       621     701 -19819.55 41041.10 46148.07
-    order_3     3      2445    3146 -17152.10 40596.20 63515.63
-    order_4     4      2990    6136 -11469.73 35211.46 79913.83  AIC      <--
+            order layer_dof cum_dof    loglik       aic       bic best selected
+    order_0     0         8       8 -22001.20  44018.40  44076.68
+    order_1     1        72      80 -20805.61  41771.23  42354.05  BIC
+    order_2     2       648     728 -19819.55  41095.10  46398.77  AIC      <--
+    order_3     3      5832    6560 -17152.10  47424.20  95215.52
+    order_4     4     52488   59048 -11469.73 141035.46 571215.63              
 
 ``` r
 
@@ -285,13 +285,13 @@ mot
     Markov Order Test  [within-w permutation, n_perm = 200, alpha = 0.050]
       508 sequences / 10778 observations / 9 states
 
-      Selected order  BIC: 1   AIC: 3   permutation-LRT: 3
+      Selected order  BIC: 1   AIC: 2   permutation-LRT: 3
 
      order    loglik      AIC      BIC   df      g2 p_permutation  p_asymptotic
          0 -22001.20 44018.40 44076.68   NA      NA            NA            NA
          1 -20805.61 41771.23 42354.05   64 2365.38   0.004975124  0.000000e+00
-         2 -19819.55 41041.10 46148.07  576 1817.12   0.004975124 1.702866e-128
-         3 -17152.10 40596.20 63515.63 4706 5163.79   0.004975124  2.317583e-06
+         2 -19819.55 41095.10 46398.77  576 1817.12   0.004975124 1.702866e-128
+         3 -17152.10 47424.20 95215.52 4706 5163.79   0.004975124  2.317583e-06
      significant
               NA
             TRUE
@@ -787,7 +787,7 @@ ph
 
     Persistent Homology
       25 filtration steps [0.6197 → 0.0062]
-      Features: b0: 8 (1 persistent)  |  b1: 3 (0 persistent)  |  b3: 70 (70 persistent)
+      Features: b0: 8 (1 persistent)  |  b1: 3 (0 persistent)
       Longest-lived:
         b0: 0.6197 → 0.0000 (life: 0.6197)
         b0: 0.6197 → 0.1707 (life: 0.4491)

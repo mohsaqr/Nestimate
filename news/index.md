@@ -1,5 +1,520 @@
 # Changelog
 
+## Nestimate 1.0.1
+
+### Breaking changes since CRAN 0.9.24
+
+- `plot_mosaic()` is no longer exported (it masked
+  [`tna::plot_mosaic()`](https://sonsoles.me/tna/reference/plot_mosaic.html));
+  use
+  [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md),
+  whose data-frame method takes `x_var`, `y_var` and `weight` (see the
+  0.9.29 notes).
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  gained `periods`, `fill`, `actor`, `action`, `time` and `order` after
+  `group`, so arguments after `group` must be passed by name.
+- [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
+  returns only the clique centrality by default; `$Z` and `$H` are
+  computed only when requested and only for uniform hypergraphs.
+
+### New features
+
+- [`stability_landscape()`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
+  draws a transition network as a ball-in-cup landscape in which each
+  state’s cup depth is the log of its expected stay, `-log(1 - P_ii)`
+  (stay = e^depth), with intervals from resampling whole sequences, the
+  share of time in each state, its exit probabilities and, for three
+  states, the net circulation. It takes a network, a grouped network
+  (for example
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  of
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md))
+  or a sequence data frame or matrix; `states =` sets the order of the
+  cups. [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) (`table = "cups"`,
+  `"exits"`, `"circulation"`) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html).
+- [`landscape_surface()`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
+  draws the cup depths as a 3D surface over a per-sequence stability
+  measure from
+  [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md)
+  (self-loop tendency, entropy, complexity, …), estimated from the
+  nearest sequences at each value of the measure, with the most stable
+  end in front. [`summary()`](https://rdrr.io/r/base/summary.html)
+  compares the two ends of each measure;
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws one
+  [`persp()`](https://rdrr.io/r/graphics/persp.html) surface per network
+  and measure.
+- [`landscape_trend()`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
+  traces the cup depths along the program phase (sliding windows of time
+  steps) or along a numeric per-sequence covariate such as a grade
+  (nearest-sequence slices), one line per state with intervals from
+  resampling sequences.
+
+### Bug fixes
+
+- Numeric sequence positions containing an all-missing logical column
+  stay sequence positions rather than turning a text ID into states.
+
+- [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  excludes requested post-hoc covariates from sequence distances,
+  preventing the covariate from determining its own clusters.
+
+- [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
+  replays the composite weighting scheme and its factor-analysis
+  options. New fits retain custom weights/functions; older custom fits
+  that lack them request a rebuild.
+
+- [`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md)
+  keeps generated outcomes separate from user metadata, including an
+  adjustment or grouping column named `.outcome`.
+
+- [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
+  aligns named nodes before comparing matrices and rejects incompatible
+  node sets. Unnamed inputs retain positional matching.
+
+- Ordinary Gaussian
+  [`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+  intervals now use residual-df Student t limits, consistent with their
+  coefficient tests.
+
+- Z/H hypergraph centralities evaluate tensor directions in log space,
+  preventing numerical underflow for large hyperedges.
+
+- Landscapes replay weighting, concatenation and boundary markers;
+  merged sequences are bootstrap units. Covariates must be constant
+  within merged units. Transformed or modified networks that cannot
+  represent the stored sequence chain are refused explicitly.
+
+- Landscape surface/trend grids use the full range when the 5th and 95th
+  percentiles coincide for a nonconstant measure or covariate.
+
+- MOGen summaries preserve numeric parameter counts above the integer
+  limit.
+
+- Min-max centrality normalization preserves small, nonconstant
+  strengths.
+
+- Pattern discovery explicitly refuses stars-only state labels (`**`,
+  …), which conflict with wildcard syntax, with `nestimate_bad_input`.
+
+- `casedrop_reliability(target = "auto")` assesses all cells for
+  association, scaled and thresholded networks, including edges that
+  appear after case removal. Raw transition graphs retain existing-edge
+  assessment. Explicit `target = "existing"` and `"all"` select either
+  interpretation.
+
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+  wide data with number-coded states and a text column (an id) built the
+  network from the text column alone, an all-zero network with no
+  warning. A numbered run of numeric position columns is now the
+  sequence, and the other columns are metadata.
+
+- The sequence verbs
+  ([`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
+  [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md),
+  [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md),
+  [`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md))
+  read the data of a correlation, glasso, Ising, MGM or window network
+  as states; they now raise `nestimate_bad_input`. A network grouped by
+  two columns (`group = c("Achiever", "Course")`) no longer fails; its
+  groups are labelled in one column, `Achiever-Course`.
+
+- [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md):
+  a row with no observed state has `NA`, not 0, for `valid_proportion`
+  and `cyclic_feedback_strength`.
+
+- `sequence_patterns(pattern =)` accepts the spaced notation
+  `"A -> * -> B"`.
+
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md): an
+  unnamed matrix compared with a named one is matched by position again,
+  as documented.
+
+- [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+  and
+  [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md):
+  a missing value inside a sequence ends a run of observed states.
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
+  stopped with an error,
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+  counted `NA` as a state, and
+  [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md)
+  joined the two sides of the gap.
+
+- [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
+  reads factor columns of a wide data frame by their labels, not their
+  integer codes.
+
+- `build_simplicial(type = "pathway")` leaves out HYPA paths that never
+  occur: since 0.9.26 HYPA scores every possible path, and an unobserved
+  one flagged “under” became a simplex of states never seen together.
+
+- [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md):
+  the rows of `$persistence` are numbered without gaps.
+
+- `labels =` on number-coded states: every state column is relabelled
+  together, so
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+  no longer drops the cells of columns that held no relabelled state.
+
+- [`landscape_surface()`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
+  and `plot(landscape_trend(), type = "surface")` draw a flat surface
+  instead of failing; a constant measure or covariate raises
+  `nestimate_bad_input`; slices resting on fewer than five effective
+  sequences warn (`nestimate_thin_slice`); input with no observed
+  transition raises `nestimate_landscape_unestimable`; a two-state
+  occupancy landscape reports its single ridge once.
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of a
+  [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
+  result drew the matrix transposed: the tile in row A, column B showed
+  the passage time from B to A. Rows are now the starting states and
+  columns the targets, as documented, for a single network and for each
+  panel of a grouped one.
+
+- [`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md):
+  an `adjust` column named like one of the model’s own terms (`.p1`,
+  `.y`, …) was replaced by that term, so the requested adjustment was
+  silently lost; an `adjust` name with a space failed to parse. Every
+  model column now has an internal name. `outcome` defaults to
+  `"last_obs"`, as in codyna and as the 0.9.29 notes stated.
+
+- [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md):
+  a gapped pattern (`A->*->B`) no longer spans a missing position,
+  matching the template search; a repeated `len` or `gap`
+  (`len = c(2, 2)`) no longer counts each occurrence twice; a grouped
+  search that finds no pattern returns zero rows with all its columns
+  and no warning; a template ending in `->` is refused.
+
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  and
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md):
+  an all-missing position column stored as logical `NA` no longer stops
+  the numbered position names from forming a run, which had turned a
+  character covariate into states.
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of a grouped
+  [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
+  result handles more than nine groups: colours cycle and shapes shift,
+  so every group keeps its own colour-shape pair.
+
+- [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  and the sequence verbs raise `nestimate_bad_input` for a model built
+  from a matrix, which holds no sequences.
+
+### Documentation
+
+- The pkgdown reference lists the new sequence-analysis and long-data
+  topics.
+
+- [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md):
+  the emergent-state rule for a return to the first state is a spell of
+  at least 3 that is more than half the opening spell (codyna’s rule);
+  the help page said “over twice”.
+
+## Nestimate 0.9.29
+
+### Sequence patterns
+
+- [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  returns the sequences behind any input as a wide data frame, one row
+  per sequence: prepared data, a long event log
+  (`actor`/`action`/`time`), a wide data frame or character matrix, a
+  `netobject`, a grouped `netobject_group` (the group column is added)
+  or a `tna` model. `meta = TRUE` adds each sequence’s covariates.
+- [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
+  discovers ordered patterns: contiguous n-grams, gapped patterns
+  (`A->*->B`) and repeated runs. For each it reports the occurrences,
+  the share of patterns of that length, the number and share of
+  sequences that contain it (support), and its lift. The counts, support
+  and lift agree with `codyna::discover_patterns()`. With `group` (a
+  column, a vector, or the grouping of a `netobject_group`) each pattern
+  also gets its support per group and a test of presence by group: for
+  two groups the odds ratio, 95% CI and p-value of Fisher’s exact test,
+  for more the chi-square and Cramer’s V; p-values are BH-adjusted.
+  `top` returns the first rows.
+- `sequence_patterns(pattern =)` searches for a template such as
+  `"discuss->*->consensus"` (each `*` is one position of any state) and
+  returns every concrete instance; `group = "last_obs"` groups sequences
+  by their final state. Both agree with `codyna::discover_patterns()`.
+- [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md)
+  computes 23 per-sequence indices (validity, spells, entropy, Simpson
+  diversity, transitions, initial-state persistence and decay, dominant
+  and emergent states, cyclic feedback, integrative potential,
+  complexity), one row per sequence. They agree with
+  `codyna::sequence_indices()` on 20 indices; three are corrected:
+  `dominant_max_spell` is per sequence (codyna repeats the last
+  sequence’s value), `longitudinal_entropy` is normalised by the number
+  of states (codyna counts `NA` as a state), and `complexity_index` uses
+  that entropy once (codyna normalises it twice) and is 0 for a sequence
+  of one spell, as in `TraMineR::seqici()` (codyna: `NA`). Empty
+  sequences give `NA`. A missing position is not an observation: the
+  opening spell starts at the first observed state, transitions are
+  pairs of adjacent observed states
+  (`self_loop_tendency + transition_rate = 1`), and
+  `integrative_potential` weights observed positions only, as
+  `TraMineR::seqintegr()` does. The indices shared with TraMineR agree
+  with it on sequences without internal gaps.
+- [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  and the sequence verbs read TraMineR’s void (`%`) and missing (`*`)
+  markers as `NA`, as
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  does; an `stslist` such as tna’s `engagement` no longer gains a `%`
+  state.
+- [`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md)
+  reproduces `codyna::analyze_outcome()`, including its default
+  `outcome = "last_obs"`: the `n` patterns ranked highest by `priority`
+  (default: codyna’s chi-square) enter one logistic regression of a
+  two-valued outcome on their presence, with an optional random
+  intercept (`group`). Coefficients agree with codyna’s fit. It returns
+  a tidy table, one row per pattern, with support per outcome value, the
+  selection statistic, estimate, Wald CI, p-value and odds ratio. It
+  fits the selected pattern even where codyna 1.0.0 fits a data column
+  instead (a lone pattern of one length loses its name, and a data
+  column named `V<k>` takes its place).
+
+### Validation tests aligned with the current tna release
+
+- `plot_mosaic()` is no longer exported: it masked
+  [`tna::plot_mosaic()`](https://sonsoles.me/tna/reference/plot_mosaic.html)
+  whenever both packages were attached, so tna code (and apps such as
+  Dynalytics) calling `plot_mosaic(model)` failed with
+  `argument "data" is missing`. Its data-frame mosaic is now a method of
+  [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md):
+  `plot_mosaic(df, x = "group", y = "state", weight = "count")` becomes
+  `mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")`
+  (`x_label`/`y_label` become `xlab`/`ylab`, as in the other methods). A
+  network, table or matrix given a data-frame-only argument (`x_var`,
+  `y_var`, `weight`, `fill`, `colors`, `show_labels`, and `label_size`
+  except with `style = "flat"`, which uses it for its tile labels)
+  raises `nestimate_bad_input` instead of ignoring it, and so does an
+  unknown argument of the data-frame method.
+- [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  compares only the edges present in the original network. A subsample
+  cannot contain a transition that is absent from the full data, so the
+  empty cells agreed in every draw and inflated the correlation: on a
+  sparse 8-state chain the CS-coefficient was 0.9 (the top of the grid)
+  with a mean correlation of 0.993 after dropping 90% of the sequences.
+  `n_edges` now counts the present edges, and an undefined
+  CS-coefficient (edge weights that do not vary) is `NA` instead of 0.
+  Such a result now has the usual summary columns with `NA` statistics,
+  so [`summary()`](https://rdrr.io/r/base/summary.html) (including the
+  grouped summary) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) work: the
+  plot states that the CS-coefficient is undefined, and the grouped plot
+  names the networks it leaves out. This case is common now, for example
+  a fixed cycle, where every present edge has probability 1. The
+  documentation no longer claims that case-dropping is valid regardless
+  of within-actor correlation.
+- `permutation(measures = "Diffusion")` (and the node table of
+  [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md))
+  compares Diffusion after min-max scaling to 0-1, as
+  [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  reports it and as tna does from 1.4.1.
+- The range normalization behind `normalize = TRUE` and Diffusion
+  returns `NaN` for a numerically constant vector instead of stretching
+  rounding error to 0-1, as tna’s does.
+- [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
+  splits sequences at missing values, so no window spans an `NA`; an
+  internal `NA` previously became a context named “NA”. Results on data
+  without internal missing values are unchanged (identical under the
+  same seed). Its documentation no longer calls the within-context
+  permutation exact: the windows of a sequence overlap, so the
+  permutation distribution approximates the null (Besag & Mondal, 2013).
+
+### Bug fixes
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) works on
+  [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
+  and
+  [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
+  results for a grouped network: one heatmap panel per group on a shared
+  colour scale, and a per-metric dot plot with one point per group. Both
+  used to fall through to
+  [`plot.default()`](https://rdrr.io/r/graphics/plot.default.html) and
+  fail. The single-network stability plot uses one fill; its per-state
+  palette left a ninth state without colour.
+- `build_mmm(covariate_effect = "posthoc")`:
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) labelled the
+  covariates “integrated into EM – influences cluster membership”
+  whatever the setting. The fit records `covariate_effect`, and a
+  post-hoc analysis is now labelled as one.
+- The [`print()`](https://rdrr.io/r/base/print.html) methods of
+  [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
+  and
+  [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
+  no longer tell the user to reach into the object with `$`; they point
+  to [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html).
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  no longer reads a character covariate of wide sequence data as states.
+  An outcome or group label such as `High`/`Low` used to become nodes of
+  the network and vanish from `$metadata`. When the position columns are
+  named as a run (`T1`, `T2`, …; `V1`, …; `1`, `2`, …), every other
+  character or factor column is now metadata, like numeric columns
+  already were, even when its values coincide with state names. The
+  network equals the one built with `metadata_cols`. Without such a run,
+  or with two runs of equal size, nothing changes.
+- Association
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  refuses inference with `nestimate_permutation_failed` when any
+  permuted network cannot be estimated or has non-finite weights,
+  reporting the number of failed draws. Failed draws no longer silently
+  reduce p-values or invalidate null moments.
+- Transition resampling honors `weighted` and `concat`. Concatenated
+  rows are resampled as the merged sequences used by the estimator,
+  including their joining transitions. With `actor`, a merged sequence
+  must stay within one actor; paired tests require matching
+  merged-sequence counts.
+- Relabelling numeric sequence states, start/end markers and onehot
+  columns keeps stored data, alphabets and column selectors consistent
+  for resampling. Wide sequence positions retain their column names;
+  association measurements retain their numeric values.
+- Higher-order builders and
+  [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
+  preserve literal numeric states in Nestimate models and decode
+  positional codes only for tna input or explicitly encoded converted
+  data. Character digit alphabets such as `"1"` through `"12"` are
+  decoded correctly.
+- Grouped wide sequences use the same resolved state columns as their
+  child estimates. Numeric covariates do not enter the shared alphabet,
+  and factor columns keep their labels.
+- MGM’s numeric `level` is validated after excluding group, actor and
+  metadata columns. MGM actor identifiers are excluded from estimation.
+- Custom variable estimators retain their numeric cleaned data when
+  column names identify the modeled nodes, allowing valid downstream
+  resampling.
+- [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) rejects
+  `Inf` and `-Inf` instead of silently isolating the affected variable;
+  its supported missing-data and constant-variable handling is
+  unchanged.
+- `plot_mosaic(network, x_label =, y_label =)` applies the labels.
+  Explicit primitive-only styling arguments raise a classed error
+  directing the caller to
+  [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md).
+- [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
+  reads a character matrix of states (such as `trajectories`) as wide
+  sequences, like a character data frame. It used to treat every matrix
+  as binary: with missing cells it failed with “subscript out of
+  bounds”, and without them it silently mined the column names. Binary
+  input (matrix or data frame, 0/1 or logical) with a missing cell or a
+  value other than 0/1 now raises `nestimate_bad_input`; logical
+  data-frame columns are read as binary items instead of the strings
+  `"TRUE"`/`"FALSE"`.
+
+### Documentation
+
+- MGM’s missing-data policy is mean/modal single imputation, as
+  documented by psychnets for its `"pairwise"` option; it is not
+  pairwise deletion.
+- Permutation M/S labels describe this function’s historical total/max
+  edge difference statistics and distinguish them from NCT’s
+  structure/strength convention. Comparison tables no longer call total
+  edge difference “global strength”. The NCT tutorial and local display
+  checks use current notation and capitalization.
+
+## Nestimate 0.9.28
+
+### Higher-order methods: corrections from a review against the source papers
+
+These change results. Each is tested against an independent value (a
+hand-derived oracle or a published example), and each new test fails on
+the previous code.
+
+- [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
+  computes the clique-motif centrality (CEC) directly as the Perron
+  vector of each connected component. The power iteration it replaces
+  oscillated when the clique expansion was bipartite (any triangle-free
+  hypergraph), and returned a different wrong vector depending on
+  whether `max_iter` was odd or even, without a warning. A star of pairs
+  now gives the exact vector for every `max_iter`.
+- [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
+  now defaults to `type = "clique"`. `"Z"` and `"H"` are defined by
+  Benson (2019) for uniform hypergraphs only: with mixed hyperedge sizes
+  the equation mixes polynomial degrees and its solution depends on the
+  normalisation inside the iteration. Requesting them on a non-uniform
+  hypergraph raises `nestimate_nonuniform_hypergraph`. On uniform
+  hypergraphs they are unchanged and reproduce Benson’s Table 2. An
+  unconverged Z/H iteration warns with `nestimate_no_converge`.
+- [`q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
+  counts, at each level q, only the maximal simplices of dimension at
+  least q (Atkin’s Q-vector). It previously counted every maximal
+  simplex at every level, so lower-dimensional simplices appeared as
+  extra components at high q.
+- [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
+  builds the filtration one dimension above `max_dim` (the Ripser
+  convention), so classes of dimension `max_dim` can die. Previously
+  every top-dimension cycle was reported as essential; with the default
+  `max_dim = 3`, dense 7-state transition networks showed spurious
+  never-dying bars in every case tried.
+- [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
+  (clique and VR) records when `max_dim` cut a larger clique.
+  [`betti_numbers()`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md)
+  then warns (`nestimate_truncated_complex`) that the top Betti number
+  is an upper bound, and
+  [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
+  warns the same way when given such a complex, whose top-dimension
+  classes cannot die.
+- [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+  and
+  [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
+  gain `dof = c("paths", "observed")`. The default `"paths"` counts each
+  layer’s parameters as Scholtes (2017, Eq. 7) and pathpy do: every
+  transition of the paths of length k that the observed first-order
+  topology allows. The previous rule, now `dof = "observed"`, counted
+  only observed transitions; it can fall as the order rises and
+  under-penalised high orders on sparse data, so AIC, BIC and the
+  likelihood-ratio test favoured higher orders. Selected orders can
+  change.
+- `build_mogen(criterion = "lrt")` selects the largest order whose test
+  rejects (Scholtes 2017) instead of stopping at the first
+  non-rejection, and returns every p-value as `lrt_p`.
+- `build_hon(method = "hon", min_freq >= 2)`: a source whose transitions
+  are all below `min_freq` is no longer an extension candidate nor a
+  starting rule, as in the reference pyHON. Such sources could
+  previously add HON nodes that pyHON does not create. `min_freq = 1`
+  and HON+ are unaffected.
+- The Z and H iterations of
+  [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
+  normalise the tensor update before adding the stabilising shift, and
+  count as converged only when the eigen-equation residual is small. On
+  large uniform hyperedges the unnormalised shift swamped the update, so
+  the iteration stopped at its start and returned the uniform vector
+  without a warning (a 3-petal sunflower of 20-member hyperedges gave a
+  hub/petal ratio of 1 instead of Benson’s sqrt(3)).
+- Path degrees of freedom are summed as non-negative per-state terms, so
+  they stay exact up to the double range; beyond it
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+  and
+  [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
+  stop with `nestimate_dof_overflow` instead of carrying `Inf`/`NaN`
+  into AIC and BIC.
+- Truncation detection reads the simplices already built (does a top
+  simplex extend by one vertex?) instead of an exact maximum-clique
+  search, which took seconds on dense graphs even at `max_dim = 0`;
+  persistence on a distance matrix no longer computes it at all. The
+  persistence warning for a truncated complex rechecks within
+  `max_scale`.
+- [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  classifies a path as over-represented when `p_over <= alpha`,
+  i.e. HYPA \>= 1 - alpha as in LaRock et al. (2020); it was `< alpha`.
+  This only changes ties at exactly `alpha`.
+
+### Documentation
+
+- [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+  is documented as the multi-order model of Scholtes (2017), pathpy’s
+  `MultiOrderModel`; it is not the multi-order generative model of Gote
+  et al. (2023), which adds start and end states.
+- [`build_honem()`](https://pak.dynasite.org/Nestimate/reference/build_honem.md)
+  states what it computes (decayed matrix powers of the HON transition
+  matrix over all HON nodes) and how that differs from Saebi et
+  al. (2020), whose order-indexed matrices over first-order nodes are
+  not fully specified in the paper.
+
 ## Nestimate 0.9.27
 
 ### New features
@@ -46,8 +561,8 @@
 
 ### Bug fixes
 
-- [`plot_mosaic()`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
-  given a network (netobject, group, mcml, htna) hands it to
+- `plot_mosaic()` given a network (netobject, group, mcml, htna) hands
+  it to
   [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md);
   it failed with “is.data.frame(data) is not TRUE”. Data-frame calls are
   unchanged.
@@ -66,8 +581,9 @@
 
 - [`summary.mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   works without within-cluster layers (`compute_within = FALSE`, where
-  it crashed), and `within_total` includes self-transitions, so it
-  equals the macro diagonal.
+  it crashed), and `within_total` includes self-transitions. For raw
+  counts it equals the macro diagonal; separately normalized micro and
+  macro layers can have different totals.
 
 - [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
   windows run through time. Transitions were pooled actor by actor, so a
@@ -377,7 +893,8 @@ CRAN release: 2026-10-07
 
 - The `mgm` estimator rejects `scale = FALSE` with a classed error
   (`nestimate_mgm_unscaled`); this started in 0.9.23 and was not listed
-  there. Missing values are handled pairwise, now passed explicitly.
+  there. Missing values use mean/modal single imputation under
+  psychnets’ named `"pairwise"` policy, now passed explicitly.
 
 ### Tests
 
@@ -1884,10 +2401,9 @@ addressed; two deferred pending design decisions on numeric semantics
   segment heights reflect within-group state proportions; also supports
   a colored-bars style and a per-group faceted marimekko. Uses the
   package Okabe-Ito palette throughout.
-- [`plot_mosaic()`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
-  — exported low-level marimekko primitive built on `geom_rect()` with
-  cumulative-width / cumulative-height geometry. Reusable for any tidy
-  `data.frame(group, state, weight)` input.
+- `plot_mosaic()` — exported low-level marimekko primitive built on
+  `geom_rect()` with cumulative-width / cumulative-height geometry.
+  Reusable for any tidy `data.frame(group, state, weight)` input.
 
 ## Nestimate 0.4.4
 

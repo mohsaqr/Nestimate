@@ -10,6 +10,7 @@
 <url><loc>https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/articles/sequence-plots.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/articles/transition-entropy.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/articles/transition-networks.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html</loc></url>
@@ -83,6 +84,7 @@
 <url><loc>https://pak.dynasite.org/Nestimate/reference/extract_edges.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/extract_pathways.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/extract_sequences.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/frequencies.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/get_estimator.html</loc></url>
@@ -94,6 +96,8 @@
 <url><loc>https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/index.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/item_loadings.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/landscape_surface.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/landscape_trend.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/learning_activities.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/list_estimators.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/loading_stability.html</loc></url>
@@ -122,11 +126,11 @@
 <url><loc>https://pak.dynasite.org/Nestimate/reference/path_counts.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/path_dependence.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/pathways.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/pattern_outcome.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/permutation.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/persistence_landscape.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/persistent_homology.html</loc></url>
-<url><loc>https://pak.dynasite.org/Nestimate/reference/plot_mosaic.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/predict_links.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/predictability.html</loc></url>
@@ -138,12 +142,15 @@
 <url><loc>https://pak.dynasite.org/Nestimate/reference/remove_estimator.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/rename_models.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/sequence_compare.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/sequence_metrics.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/sequence_patterns.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/sequence_plot.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/session_ids.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/set_state_colors.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/simplicial_degree.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/simplicial_features.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/srl_strategies.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/stability_landscape.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/state_colors.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/state_distribution.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/state_frequencies.html</loc></url>

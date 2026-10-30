@@ -93,8 +93,10 @@ summary(object, ...)
   block matching the layout of `tna::permutation_test(measures = )`: per
   state and measure it reports the observed difference, an effect size
   (difference / SD of the permutation null), and a permutation p-value,
-  all using the same permuted networks as the edge test. Not supported
-  for `net_edge_betweenness` inputs.
+  all using the same permuted networks as the edge test. `Diffusion` is
+  compared after min-max scaling to 0-1 in each network, as in
+  [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md).
+  Not supported for `net_edge_betweenness` inputs.
 
 - nlambda:
 
@@ -170,7 +172,7 @@ An object of class `"net_permutation"` containing:
 
 - global:
 
-  Data frame of the two NCT-style global statistics, one row each:
+  Data frame of the two global difference statistics, one row each:
   `statistic` (`"M"`, the sum of absolute edge differences, and `"S"`,
   the largest absolute edge difference), `observed`, and `p_value` from
   the same permutation null as the edge test. Absent on the
@@ -282,14 +284,18 @@ Two kinds of question are answered from the same shuffles.
 - Global test:
 
   One test for the whole network: do the two networks differ at all? Two
-  statistics, as in the Network Comparison Test (van Borkulo et al.,
-  2023): **M**, the sum of the absolute edge differences (the total
+  statistics: **M**, the sum of the absolute edge differences (the total
   amount of difference), and **S**, the largest absolute edge
   difference. Being a single test, it needs no multiplicity correction.
   It is shown by [`print()`](https://rdrr.io/r/base/print.html).
 
-The smallest attainable p-value is `1 / (iter + 1)`; with the default
-`iter = 1000` it is 0.000999, meaning no shuffle came close.
+The letters follow this function's historical convention. In
+[`nct`](https://pak.dynasite.org/Nestimate/reference/nct.md), M is
+instead the largest absolute edge difference and S the difference in
+global strength. The sum of absolute edge differences here measures
+total edge difference, not a difference in global strength. The smallest
+attainable p-value is `1 / (iter + 1)`; with the default `iter = 1000`
+it is 0.000999, meaning no shuffle came close.
 
 ## Nested data and `actor`
 
@@ -358,6 +364,18 @@ and each shuffle only re-sums them, which keeps large `iter` fast. For
 association methods the estimator is re-run on every shuffle. If a
 transition network rests on a single sequence, a warning (class
 `nestimate_single_sequence`) says it cannot be validated by resampling.
+
+Wide rows combined with `params = list(concat = k)` are shuffled as the
+merged sequences used by the estimator, keeping their internal joins. A
+merged sequence must lie within one actor when `actor` is supplied;
+paired tests need the same number of merged sequences. Both networks
+must use the same `weighted` setting.
+
+An association refit that fails or produces non-finite weights makes the
+permutation statistic undefined for that draw. In that case the test
+raises `nestimate_permutation_failed`, reporting the number of failed
+draws, and returns no p-values. Failed draws are neither counted as
+non-exceedances nor silently discarded from the null.
 
 `permutation()` also accepts two
 [`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)

@@ -27,6 +27,14 @@ plot(
   combined = TRUE,
   ...
 )
+
+# S3 method for class 'net_markov_stability_group'
+plot(
+  x,
+  metrics = c("persistence", "stationary_prob", "return_time", "sojourn_time",
+    "avg_time_to_others", "avg_time_from_others"),
+  ...
+)
 ```
 
 ## Arguments
@@ -103,6 +111,10 @@ In `summary.net_markov_stability()`: the per-state stability table (the
 `stationary_prob`, `return_time`, `sojourn_time`, `avg_time_to_others`,
 `avg_time_from_others`), after printing the attractor and the most
 persistent state.
+
+In `plot.net_markov_stability_group()`: a `ggplot` object: one panel per
+metric, one row per state, one point per group (colour and shape),
+joined by a line.
 
 ## Details
 

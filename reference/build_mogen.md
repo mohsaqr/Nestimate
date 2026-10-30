@@ -2,7 +2,10 @@
 
 Constructs higher-order De Bruijn graphs from sequential trajectory data
 and selects the optimal Markov order using AIC, BIC, or likelihood ratio
-tests.
+tests. This is the multi-order model of Scholtes (2017), the model
+pathpy 2 calls `MultiOrderModel`. It is not the multi-order generative
+model of Gote et al. (2023), which adds start and end states and selects
+by AIC only; the function name is kept for compatibility.
 
 ## Usage
 
@@ -11,7 +14,8 @@ build_mogen(
   data,
   max_order = 5L,
   criterion = c("aic", "bic", "lrt"),
-  lrt_alpha = 0.01
+  lrt_alpha = 0.01,
+  dof = c("paths", "observed")
 )
 
 # S3 method for class 'net_mogen'
@@ -48,6 +52,15 @@ plot(x, type = c("ic", "likelihood"), ...)
 - lrt_alpha:
 
   Numeric. Significance threshold for LRT (default 0.01).
+
+- dof:
+
+  Character. How the parameters of each layer are counted. `"paths"`
+  (default) counts every transition of the paths of length \\k\\ that
+  the observed first-order topology allows, as Scholtes (2017, Eq. 7)
+  and pathpy do. `"observed"` counts only the transitions seen in the
+  data (the rule before Nestimate 0.9.28); it can fall as the order
+  rises and under-penalises high orders on sparse data.
 
 - x:
 
@@ -101,11 +114,21 @@ An object of class `c("net_mogen", "cograph_network")` with components:
 
 - dof:
 
-  Named integer vector of cumulative DOF per model.
+  Named numeric vector of cumulative DOF per model.
 
 - layer_dof:
 
-  Named integer vector of per-layer DOF.
+  Named numeric vector of per-layer DOF.
+
+- dof_method:
+
+  `"paths"` or `"observed"`.
+
+- lrt_p:
+
+  Named numeric vector: the likelihood-ratio p-value of order \\k\\
+  against order \\k-1\\ (`NA` for order 0 and where the test is
+  undefined).
 
 - transition_matrices:
 
@@ -174,6 +197,11 @@ effect.
 
 ## Details
 
+With `criterion = "lrt"` the selected order is the largest \\k\\ whose
+test against order \\k-1\\ rejects at `lrt_alpha` (Scholtes 2017), or 0
+when none does; all p-values are returned in `lrt_p`, so a non-monotone
+sequence is visible.
+
 At order k, nodes are k-tuples of states and edges represent transitions
 between overlapping k-tuples. The model tests increasingly complex
 Markov orders and selects the one that best balances fit and parsimony.
@@ -199,13 +227,13 @@ trajs <- list(c("A","B","C","D"), c("A","B","D","C"),
 m <- build_mogen(trajs, max_order = 3)
 print(m)
 #> Multi-Order Generative Model (MOGen)
-#>   Optimal order:  2 (by aic)
+#>   Optimal order:  1 (by aic)
 #>   Orders tested:  0 to 3
 #>   States:         4
 #>   Paths:          4 (16 observations)
-#>   AIC:            50.4 | 28.7 | 26.7* | 26.7
-#>   BIC:            52.7 | 32.6 | 31.3* | 31.3
-#>   (* = minimum;  AIC and BIC agree on order 2)
+#>   AIC:            50.4 | 28.7* | 30.7 | 38.7
+#>   BIC:            52.7 | 32.6* | 36.9 | 47.9
+#>   (* = minimum;  AIC and BIC agree on order 1)
 plot(m)
 
 # }

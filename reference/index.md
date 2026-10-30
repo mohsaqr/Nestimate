@@ -156,6 +156,7 @@ Order, structure, entropy, and stability of Markov chains
   [`print(`*`<net_markov_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   [`summary(`*`<net_markov_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   [`plot(`*`<net_markov_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
+  [`plot(`*`<net_markov_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   : Markov Stability Analysis
 - [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   [`print(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
@@ -163,6 +164,7 @@ Order, structure, entropy, and stability of Markov chains
   [`summary(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   [`print(`*`<summary.net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   [`plot(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
+  [`plot(`*`<net_mpt_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   : Mean First Passage Times
 - [`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
   [`print(`*`<net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
@@ -190,6 +192,21 @@ Order, structure, entropy, and stability of Markov chains
   [`summary(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`plot(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   : Bayesian Transition Entropy
+- [`stability_landscape()`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
+  [`summary(`*`<net_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
+  [`print(`*`<net_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
+  [`plot(`*`<net_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
+  : Stability Landscape of a Transition Network
+- [`landscape_surface()`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
+  [`summary(`*`<net_landscape_surface>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
+  [`print(`*`<net_landscape_surface>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
+  [`plot(`*`<net_landscape_surface>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
+  : Stability Landscape Across a Stability Measure
+- [`landscape_trend()`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
+  [`summary(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
+  [`print(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
+  [`plot(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
+  : Stability Landscape Along the Program or a Covariate
 
 ## Network Pruning
 
@@ -411,6 +428,9 @@ Convert and prepare data for network estimation
 - [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
   [`print(`*`<nestimate_data>`*`)`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
   : Prepare Event Log Data for Network Estimation
+- [`human_long`](https://pak.dynasite.org/Nestimate/reference/long-data.md)
+  [`ai_long`](https://pak.dynasite.org/Nestimate/reference/long-data.md)
+  : Human-AI Vibe Coding Interaction Data (Long Format)
 - [`prepare_for_tna()`](https://pak.dynasite.org/Nestimate/reference/prepare_for_tna.md)
   : Prepare Data for TNA Analysis
 - [`action_to_onehot()`](https://pak.dynasite.org/Nestimate/reference/action_to_onehot.md)
@@ -494,8 +514,6 @@ Sequence visualization, pattern comparison, and association mining
   : Plot State Frequency Distributions
 - [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
   : Per-Class State Distribution as a Tidy Data Frame
-- [`plot_mosaic()`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.md)
-  : Draw a Marimekko / Mosaic Plot from a Tidy Data Frame
 - [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
   : Mosaic Plot of a Network's Transition or Co-occurrence Counts
 - [`mosaic_analysis()`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md)
@@ -503,6 +521,12 @@ Sequence visualization, pattern comparison, and association mining
   [`print(`*`<mosaic_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md)
   [`summary(`*`<mosaic_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md)
   : Two-variable mosaic analysis (chi-square test + flat mosaic)
+- [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  : Extract Sequences in Wide Format
+- [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
+  : Discover Sequential Patterns
+- [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md)
+  : Per-Sequence Indices
 - [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
   [`print(`*`<net_sequence_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
   [`summary(`*`<net_sequence_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
@@ -531,6 +555,8 @@ Predict and evaluate missing connections
 
 Relate network and sequence features to an outcome
 
+- [`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md)
+  : Model a Binary Outcome From Sequential Patterns
 - [`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
   [`print(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
   [`summary(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)

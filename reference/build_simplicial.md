@@ -78,7 +78,9 @@ plot(x, combined = TRUE, ...)
   For HYPA pathway complexes, which anomaly direction to include:
   `"all"` (default), `"over"`, or `"under"`. Under-represented HYPA
   paths are ranked by smallest observed/expected ratio; over-represented
-  paths are ranked by largest ratio.
+  paths are ranked by largest ratio. Possible paths that never occur are
+  left out: a pathway simplex is a set of states observed together on a
+  path.
 
 - max_scale:
 

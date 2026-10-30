@@ -15,7 +15,7 @@ distance computation for 100-1000x speedup on edit distances."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -185,7 +185,10 @@ Must be between 0 and 0.25. Default: <code>0.1</code>.</p></dd>
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
 <dd><p>Optional. Post-hoc covariate analysis of cluster
-membership. Accepts:</p><dl><dt>string</dt>
+membership. Named covariate columns present in raw sequence data are
+excluded from the sequence distances before clustering. Columns matching
+a separately supplied covariate frame by both name and values are also
+excluded; unrelated sequence columns remain unchanged. Accepts:</p><dl><dt>string</dt>
 <dd><p>Single column name, e.g. <code>"Age"</code>. Resolved
 against <code>x$metadata</code> (and <code>x$data</code>) for
 <code>netobject</code> or <code>cograph_network</code> input.</p></dd>

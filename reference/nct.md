@@ -190,6 +190,8 @@ statistics agree to independent-solver precision (of the order of
 
 The two groups must hold the same variables in the same order
 (non-numeric columns such as an id or a group label are dropped first).
+Infinite values are refused; use finite observations or `NA` for missing
+data.
 
 Missing data follow `na_method`. `"pairwise"` (default) keeps every row,
 permutes rows as usual, and estimates each (sub)sample from its

@@ -13,7 +13,7 @@ the mean recurrence time \(1/\pi_i\)."><meta property="og:image" content="https:
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,6 +73,17 @@ the mean recurrence time \(1/\pi_i\).</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_mpt'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  log_scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  digits <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  title <span class="op">=</span> <span class="st">"Mean First Passage Times"</span>,</span>
+<span>  low <span class="op">=</span> <span class="st">"#004d00"</span>,</span>
+<span>  high <span class="op">=</span> <span class="st">"#ccffcc"</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_mpt_group'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  log_scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -158,6 +169,8 @@ named list holding one <code>net_mpt</code> per group.</p>
 <p>In <code>summary.net_mpt()</code>: <code>summary.net_mpt</code> returns an object of class <code>"summary.net_mpt"</code>: a list whose <code>table</code> is a data frame with one row per state and columns <code>state</code>, <code>return_time</code>, <code>stationary</code>, <code>mean_out</code> (mean steps to other states) and <code>mean_in</code> (mean steps from other states), and whose <code>object</code> is the <code>net_mpt</code> it summarises. Its print method shows the table.</p>
 <p>In <code>plot.net_mpt()</code>: <code>plot.net_mpt</code> returns a ggplot object: a from-by-to heatmap of the mean first passage time matrix.</p>
 <p>In <code>print.summary.net_mpt()</code>: <code>x</code>, invisibly.</p>
+<p>In <code>plot.net_mpt_group()</code>: a <code>ggplot</code> object, one
+heatmap panel per group on a shared colour scale.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

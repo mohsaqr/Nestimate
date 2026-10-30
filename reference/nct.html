@@ -19,7 +19,7 @@ Inference is via permutation of group labels."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -235,7 +235,9 @@ p-values agree; the glasso solver is not the Fortran one NCT wraps, so
 the test statistics agree to independent-solver precision (of the order
 of <code>1e-4</code>) rather than bit-for-bit.</p>
 <p>The two groups must hold the same variables in the same order
-(non-numeric columns such as an id or a group label are dropped first).</p>
+(non-numeric columns such as an id or a group label are dropped first).
+Infinite values are refused; use finite observations or <code>NA</code> for
+missing data.</p>
 <p>Missing data follow <code>na_method</code>. <code>"pairwise"</code> (default) keeps
 every row, permutes rows as usual, and estimates each (sub)sample from its
 pairwise-complete correlation matrix, with the median pairwise

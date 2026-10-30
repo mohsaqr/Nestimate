@@ -11,7 +11,7 @@ recurrence time, sojourn time, and mean accessibility to/from other states."><me
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,6 +73,14 @@ recurrence time, sojourn time, and mean accessibility to/from other states.</p>
 <span>    <span class="st">"avg_time_to_others"</span>, <span class="st">"avg_time_from_others"</span><span class="op">)</span>,</span>
 <span>  combined <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_markov_stability_group'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"persistence"</span>, <span class="st">"stationary_prob"</span>, <span class="st">"return_time"</span>, <span class="st">"sojourn_time"</span>,</span>
+<span>    <span class="st">"avg_time_to_others"</span>, <span class="st">"avg_time_from_others"</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -130,6 +138,9 @@ object per group.</p>
 <p>In <code>print.net_markov_stability_group()</code>: <code>x</code> invisibly.</p>
 <p>In <code>plot.net_markov_stability()</code>: <code>plot.net_markov_stability</code> returns a faceted ggplot object when <code>combined = TRUE</code>, and (invisibly) a named list of single-metric ggplots, one per entry of <code>metrics</code>, when <code>combined = FALSE</code>.</p>
 <p>In <code>summary.net_markov_stability()</code>: the per-state stability table (the <code>$stability</code> data frame: one row per state with <code>state</code>, <code>persistence</code>, <code>stationary_prob</code>, <code>return_time</code>, <code>sojourn_time</code>, <code>avg_time_to_others</code>, <code>avg_time_from_others</code>), after printing the attractor and the most persistent state.</p>
+<p>In <code>plot.net_markov_stability_group()</code>: a <code>ggplot</code>
+object: one panel per metric, one row per state, one point per group
+(colour and shape), joined by a line.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

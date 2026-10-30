@@ -9,12 +9,15 @@ w\\, where \\w\\ is the \\(k-1)\\-gram context, \\x\\ is the extra
 Under \\H_0\\ (order-\\(k-1)\\ is correct), \\s\\ is independent of
 \\x\\ given \\w\\.
 
-The null distribution is obtained by an **exact within-\\w\\ permutation
-test**: for each context \\w\\ the successor labels are exchangeable
-under \\H_0\\, so shuffling \\s\\ within each \\w\\-group yields an
-exact reference distribution for \\G^2\\. No plug-in MLE bias and no
-refitting per replicate. An asymptotic \\\chi^2\\ p-value is reported
-alongside for reference.
+The null distribution is obtained by a **within-\\w\\ (conditional)
+permutation test**: for each context \\w\\ the successor labels are
+exchangeable under \\H_0\\, so shuffling \\s\\ within each \\w\\-group
+keeps every count the null hypothesis conditions on. The windows of a
+sequence overlap, so this approximates the reference distribution of
+\\G^2\\ rather than giving it exactly (an exact test would sample whole
+sequences with the same counts; Besag & Mondal, 2013). No plug-in MLE
+bias and no refitting per replicate. An asymptotic \\\chi^2\\ p-value is
+reported alongside for reference.
 
 Order selection is sequential: the order is raised while the test
 rejects, and stops at the first non-rejection. The reported
@@ -33,7 +36,8 @@ markov_order_test(
   alpha = 0.05,
   parallel = FALSE,
   n_cores = 2L,
-  seed = NULL
+  seed = NULL,
+  dof = c("paths", "observed")
 )
 
 # S3 method for class 'net_markov_order'
@@ -57,8 +61,9 @@ plot(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
   vectors (one per trajectory), a `netobject` or `netobject_group`
   carrying its `$data`, or a
   [`prepare`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
-  result (its `sequence_data` is used). NAs are treated as end of
-  sequence.
+  result (its `sequence_data` is used). Sequences are split at missing
+  values: no window spans an `NA`, and pieces with fewer than two states
+  are dropped.
 
 - max_order:
 
@@ -85,6 +90,14 @@ plot(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
 - seed:
 
   Optional integer seed for reproducibility.
+
+- dof:
+
+  Character. How the AIC / BIC columns count each layer's parameters:
+  `"paths"` (default; every transition the observed first-order topology
+  allows, as in Scholtes 2017 and pathpy) or `"observed"` (transitions
+  seen in the data, the rule before Nestimate 0.9.28). The permutation
+  test does not use it.
 
 - x:
 
@@ -157,9 +170,13 @@ An object of class `net_markov_order` with elements:
 
 - layer_dofs:
 
-  Named integer vector of model degrees of freedom per order (free
+  Named numeric vector of model degrees of freedom per order (free
   parameters added at each layer), used to compute the AIC / BIC
-  columns.
+  columns; counted as set by `dof`.
+
+- dof_method:
+
+  `"paths"` or `"observed"`.
 
 - transition_matrices:
 

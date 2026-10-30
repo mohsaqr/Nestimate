@@ -51,7 +51,7 @@ to high. Use max_scale to cap the filtration diameter.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -147,7 +147,10 @@ depend on <code>n_steps</code>.</p></dd>
 
 
 <dt id="arg-max-dim">max_dim<a class="anchor" aria-label="anchor" href="#arg-max-dim"></a></dt>
-<dd><p>Maximum simplex dimension to track (default 3).</p></dd>
+<dd><p>Highest homology dimension reported (default 3). The
+filtration holds simplices one dimension higher, so a class of
+dimension <code>max_dim</code> can die (the Ripser convention). A
+<code>simplicial_complex</code> input supplies only the simplices it holds.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>

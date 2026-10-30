@@ -11,7 +11,10 @@ computed once, and each bootstrap iteration only resamples sequences via
 `colSums` (C-level) plus lightweight post-processing. Data must be in
 wide format for transition bootstrap; use
 [`convert_sequence_format`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)
-to convert long-format data first.
+to convert long-format data first. With `params = list(concat = k)`, the
+consecutive groups of up to `k` rows merged by the estimator are the
+sequences resampled; joins inside each merged sequence are retained.
+With `actor`, a merged sequence must belong entirely to one actor.
 
 For association methods (`"cor"`, `"pcor"`, `"glasso"`, and custom
 estimators), the full estimator is called on resampled rows each

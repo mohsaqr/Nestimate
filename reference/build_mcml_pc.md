@@ -345,7 +345,8 @@ An object of class `"mcml_pc"` containing:
 - meta:
 
   List: `aggregation` (the name as the caller spelled it), `method`,
-  `within`, `weighting`, `fa_method`, `fa_args`, `scale`, `cor_method`,
+  `within`, `weighting`, `weighting_spec` (the actual scheme, custom
+  vector or function), `fa_method`, `fa_args`, `scale`, `cor_method`,
   `signed`, `n_nodes`, `n_clusters`, `cluster_sizes`, `n_misfit`,
   `n_flipped`, `directed = FALSE`, `source = "pc"`,
   `experimental = TRUE`. `method` and `weighting` are `NA` on the

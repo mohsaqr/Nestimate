@@ -249,8 +249,7 @@ eb
 #>    redundancy:         0.373 [0.361, 0.384]
 #> 
 #> Edges: 78 observed; 31 credible (share of h(P) credibly > 1%).
-#> Use summary() for the edge table, plot() for the posterior, and
-#> $model for the pruned stable entropy network.
+#> Use summary() for the edge table and plot() for the posterior.
 ```
 
 The posterior mean sits slightly below the plug-in estimate — the

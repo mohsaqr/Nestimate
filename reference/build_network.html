@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -215,10 +215,14 @@ result matrix. Default: 0 (no thresholding).</p></dd>
 
 <dt id="arg-level">level<a class="anchor" aria-label="anchor" href="#arg-level"></a></dt>
 <dd><p>Character or NULL. Multilevel decomposition for the undirected
-association methods (<code>cor</code>, <code>pcor</code>, <code>glasso</code>); a directed
+association methods (<code>cor</code>, <code>pcor</code>, <code>glasso</code>, <code>mgm</code>); a directed
 estimator errors. One of <code>NULL</code>, <code>"between"</code>, <code>"within"</code>,
 <code>"both"</code>. Requires an id column, supplied either as <code>actor</code> or
-as <code>params$id</code> / <code>params$id_col</code>. Default: <code>NULL</code>.</p></dd>
+as <code>params$id</code> / <code>params$id_col</code>. Default: <code>NULL</code>.
+For <code>method = "mgm"</code>, a numeric vector instead supplies one
+category count per modeled variable (<code>1</code> for continuous variables),
+after excluding group, actor and metadata columns. It is checked and
+retained for compatibility; the MGM fit infers category levels from data.</p></dd>
 
 
 <dt id="arg-time-threshold">time_threshold<a class="anchor" aria-label="anchor" href="#arg-time-threshold"></a></dt>
@@ -250,7 +254,13 @@ slot. When provided, all other columns of the cleaned input go to
 Use this when a metadata column happens to contain values that overlap
 with node names (e.g. condition labels <code>"A","B","C"</code> and nodes
 <code>"A","B","C"</code>) and auto-detection would misclassify it. Default:
-<code>NULL</code> (auto-detect).</p></dd>
+<code>NULL</code> (auto-detect). For wide sequence data, auto-detection
+treats numeric columns of a mixed frame as covariates. When the
+position columns are named as a run (a shared prefix and a number:
+<code>T1</code>, <code>T2</code>, ...; or <code>1</code>, <code>2</code>, ...), every other
+character or factor column, such as an outcome or a course, is a
+covariate too. Without such a run, or with two runs of equal size,
+every character column is read as a position.</p></dd>
 
 
 <dt id="arg-metadata-cols">metadata_cols<a class="anchor" aria-label="anchor" href="#arg-metadata-cols"></a></dt>
@@ -426,6 +436,10 @@ the data (between-person means or within-person centering).</p></li>
 order. The function warns because a one-sequence transition network is not
 recommended and cannot be validated by bootstrap or other confirmatory
 tests.</p>
+<p>For <code>method = "mgm"</code>, missing continuous values are filled with the
+observed column mean and missing categorical values with the modal level.
+This retains the rows and is <span class="pkg">psychnets</span>' documented
+<code>na_method = "pairwise"</code> policy; it is not pairwise deletion.</p>
     </div>
     <div class="section level2">
     <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>

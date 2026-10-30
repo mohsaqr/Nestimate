@@ -17,7 +17,7 @@ with registered custom estimators."><meta property="og:image" content="https://p
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -142,7 +142,9 @@ Default <code>NULL</code> (edges only). When supplied, the result gains a
 <code>tna::permutation_test(measures = )</code>: per state and measure it reports
 the observed difference, an effect size (difference / SD of the permutation
 null), and a permutation p-value, all using the same permuted networks as
-the edge test. Not supported for <code>net_edge_betweenness</code> inputs.</p></dd>
+the edge test. <code>Diffusion</code> is compared after min-max scaling to
+0-1 in each network, as in <code><a href="net_centrality.html">net_centrality()</a></code>. Not supported for
+<code>net_edge_betweenness</code> inputs.</p></dd>
 
 
 <dt id="arg-nlambda">nlambda<a class="anchor" aria-label="anchor" href="#arg-nlambda"></a></dt>
@@ -207,7 +209,7 @@ pair), with columns <code>from</code>, <code>to</code>, <code>weight_x</code>,
 <code>sig</code>.</p></dd>
 
 <dt>global</dt>
-<dd><p>Data frame of the two NCT-style global statistics, one
+<dd><p>Data frame of the two global difference statistics, one
 row each: <code>statistic</code> (<code>"M"</code>, the sum of absolute edge
 differences, and <code>"S"</code>, the largest absolute edge difference),
 <code>observed</code>, and <code>p_value</code> from the same permutation null
@@ -296,14 +298,17 @@ to correct for that.</p></dd>
 
 <dt>Global test</dt>
 <dd><p>One test for the whole network: do the two networks
-differ at all? Two statistics, as in the Network Comparison Test
-(van Borkulo et al., 2023): <strong>M</strong>, the sum of the absolute edge
+differ at all? Two statistics: <strong>M</strong>, the sum of the absolute edge
 differences (the total amount of difference), and <strong>S</strong>, the
 largest absolute edge difference. Being a single test, it needs no
 multiplicity correction. It is shown by <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>.</p></dd>
 
 
-</dl><p>The smallest attainable p-value is <code>1 / (iter + 1)</code>; with the
+</dl><p>The letters follow this function's historical convention. In
+<code><a href="nct.html">nct</a></code>, M is instead the largest absolute edge difference and
+S the difference in global strength. The sum of absolute edge differences
+here measures total edge difference, not a difference in global strength.
+The smallest attainable p-value is <code>1 / (iter + 1)</code>; with the
 default <code>iter = 1000</code> it is 0.000999, meaning no shuffle came close.</p>
     </div>
     <div class="section level2">
@@ -378,6 +383,16 @@ For association methods the estimator is re-run on every shuffle. If a
 transition network rests on a single sequence, a warning (class
 <code>nestimate_single_sequence</code>) says it cannot be validated by
 resampling.</p>
+<p>Wide rows combined with <code>params = list(concat = k)</code> are shuffled
+as the merged sequences used by the estimator, keeping their internal
+joins. A merged sequence must lie within one actor when <code>actor</code>
+is supplied; paired tests need the same number of merged sequences.
+Both networks must use the same <code>weighted</code> setting.</p>
+<p>An association refit that fails or produces non-finite weights makes
+the permutation statistic undefined for that draw. In that case the
+test raises <code>nestimate_permutation_failed</code>, reporting the number
+of failed draws, and returns no p-values. Failed draws are neither
+counted as non-exceedances nor silently discarded from the null.</p>
 <p><code>permutation()</code> also accepts two <code><a href="net_edge_betweenness.html">net_edge_betweenness</a></code>
 objects. It then permutes the source networks, recomputes edge
 betweenness for each shuffle, and tests the edge-betweenness

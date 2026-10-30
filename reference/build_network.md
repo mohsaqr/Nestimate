@@ -152,10 +152,14 @@ print(x, ...)
 - level:
 
   Character or NULL. Multilevel decomposition for the undirected
-  association methods (`cor`, `pcor`, `glasso`); a directed estimator
-  errors. One of `NULL`, `"between"`, `"within"`, `"both"`. Requires an
-  id column, supplied either as `actor` or as `params$id` /
-  `params$id_col`. Default: `NULL`.
+  association methods (`cor`, `pcor`, `glasso`, `mgm`); a directed
+  estimator errors. One of `NULL`, `"between"`, `"within"`, `"both"`.
+  Requires an id column, supplied either as `actor` or as `params$id` /
+  `params$id_col`. Default: `NULL`. For `method = "mgm"`, a numeric
+  vector instead supplies one category count per modeled variable (`1`
+  for continuous variables), after excluding group, actor and metadata
+  columns. It is checked and retained for compatibility; the MGM fit
+  infers category levels from data.
 
 - time_threshold:
 
@@ -187,7 +191,12 @@ print(x, ...)
   a metadata column happens to contain values that overlap with node
   names (e.g. condition labels `"A","B","C"` and nodes `"A","B","C"`)
   and auto-detection would misclassify it. Default: `NULL`
-  (auto-detect).
+  (auto-detect). For wide sequence data, auto-detection treats numeric
+  columns of a mixed frame as covariates. When the position columns are
+  named as a run (a shared prefix and a number: `T1`, `T2`, ...; or `1`,
+  `2`, ...), every other character or factor column, such as an outcome
+  or a course, is a covariate too. Without such a run, or with two runs
+  of equal size, every character column is read as a position.
 
 - metadata_cols:
 
@@ -404,6 +413,11 @@ allowed and treats all rows as one sequence in row/time order. The
 function warns because a one-sequence transition network is not
 recommended and cannot be validated by bootstrap or other confirmatory
 tests.
+
+For `method = "mgm"`, missing continuous values are filled with the
+observed column mean and missing categorical values with the modal
+level. This retains the rows and is psychnets' documented
+`na_method = "pairwise"` policy; it is not pairwise deletion.
 
 ## Methods
 

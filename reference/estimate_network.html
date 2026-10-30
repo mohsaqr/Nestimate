@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,10 +108,14 @@ result matrix. Default: 0 (no thresholding).</p></dd>
 
 <dt id="arg-level">level<a class="anchor" aria-label="anchor" href="#arg-level"></a></dt>
 <dd><p>Character or NULL. Multilevel decomposition for the undirected
-association methods (<code>cor</code>, <code>pcor</code>, <code>glasso</code>); a directed
+association methods (<code>cor</code>, <code>pcor</code>, <code>glasso</code>, <code>mgm</code>); a directed
 estimator errors. One of <code>NULL</code>, <code>"between"</code>, <code>"within"</code>,
 <code>"both"</code>. Requires an id column, supplied either as <code>actor</code> or
-as <code>params$id</code> / <code>params$id_col</code>. Default: <code>NULL</code>.</p></dd>
+as <code>params$id</code> / <code>params$id_col</code>. Default: <code>NULL</code>.
+For <code>method = "mgm"</code>, a numeric vector instead supplies one
+category count per modeled variable (<code>1</code> for continuous variables),
+after excluding group, actor and metadata columns. It is checked and
+retained for compatibility; the MGM fit infers category levels from data.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

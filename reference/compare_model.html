@@ -23,7 +23,7 @@ correlations."><meta property="og:image" content="https://pak.dynasite.org/Nesti
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -236,7 +236,9 @@ networks to compare. Defaults <code>1L</code> and <code>2L</code>.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Mirrors <code><a href="https://sonsoles.me/tna/reference/compare.html" class="external-link">tna::compare()</a></code> numerically. Inputs are converted to weight
 matrices and scaled before comparison; the choice of scaling determines
-how weights from different estimators are placed on a common footing.</p>
+how weights from different estimators are placed on a common footing.
+Named inputs are aligned by node names; different node sets or duplicate
+names raise an error. A fully unnamed matrix is matched by position.</p>
     </div>
     <div class="section level2">
     <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>

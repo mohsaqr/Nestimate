@@ -166,12 +166,12 @@ tail(global_differences(nested, digits = 3), 5)
     ##  High vs Low      High       Low                   Nesting
     ##  High vs Low      High       Low                   Nesting
     ##  High vs Low      High       Low                   Nesting
-    ##                 metric         key  value perm_p perm_sig
-    ##    M (global strength)      perm_M  2.612  0.001     TRUE
-    ##           S (max edge)      perm_S  0.210  0.001     TRUE
-    ##                    ICC         icc -0.002     NA       NA
-    ##  Design effect (edges)  deff_edges  1.009     NA       NA
-    ##      Design effect (M) deff_global  1.169     NA       NA
+    ##                         metric         key  value perm_p perm_sig
+    ##  M (total absolute difference)      perm_M  2.612  0.001     TRUE
+    ##                   S (max edge)      perm_S  0.210  0.001     TRUE
+    ##                            ICC         icc -0.002     NA       NA
+    ##          Design effect (edges)  deff_edges  1.009     NA       NA
+    ##              Design effect (M) deff_global  1.169     NA       NA
 
 Students are nested in teams, and the achievement level is given per
 team. With `actor = "Group"`, the permutation test reassigns whole teams

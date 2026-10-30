@@ -13,7 +13,7 @@ flagged as over- or under-represented."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -191,8 +191,9 @@ observed / expected; <code>p_value</code> is retained as an alias for
 <code>p_under</code>, the raw lower-tail hypergeometric CDF value;
 <code>p_over</code> is the strict upper-tail probability
 <code>P(X &gt; observed) = 1 - p_under</code>, so that a path is
-over-represented when its HYPA score exceeds <code>1 - alpha</code>
-(LaRock et al., 2020); <code>p_adjusted_under</code> and
+over-represented when its HYPA score is at least
+<code>1 - alpha</code>, i.e. <code>p_over &lt;= alpha</code> (LaRock et al.,
+2020); under-represented when <code>p_under &lt; alpha</code>; <code>p_adjusted_under</code> and
 <code>p_adjusted_over</code> are the corrected p-values for under- and
 over-representation tests respectively.</p></dd>
 

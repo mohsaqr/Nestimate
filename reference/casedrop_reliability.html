@@ -15,7 +15,7 @@ certainty of iterations."><meta property="og:image" content="https://pak.dynasit
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,8 @@ still correlates with the original above <code>threshold</code> in at least
 <span>  certainty <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"spearman"</span>, <span class="st">"pearson"</span>, <span class="st">"kendall"</span><span class="op">)</span>,</span>
 <span>  include_diag <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"existing"</span>, <span class="st">"all"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_casedrop_reliability'</span></span>
@@ -144,6 +145,14 @@ edge vector. Default <code>FALSE</code>.</p></dd>
 <dd><p>Optional integer for reproducibility.</p></dd>
 
 
+<dt id="arg-target">target<a class="anchor" aria-label="anchor" href="#arg-target"></a></dt>
+<dd><p>Cells to assess: <code>"auto"</code> (default) uses <code>"existing"</code>
+for unscaled, unthresholded transition methods and <code>"all"</code> otherwise.
+<code>"existing"</code> assesses only nonzero original cells; <code>"all"</code> includes
+original zeros so edges appearing after case removal are assessed.
+<code>include_diag</code> applies to either target.</p></dd>
+
+
 <dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
 <dd><p>Digits to display. Default <code>3</code>.</p></dd>
 
@@ -169,7 +178,8 @@ edge vector. Default <code>FALSE</code>.</p></dd>
     <p>An object of class <code>net_casedrop_reliability</code> with:</p><dl><dt><code>cs</code></dt>
 <dd><p>Scalar CS-coefficient - the maximum drop proportion for
 which the edge-vector correlation remains &gt;= <code>threshold</code> in at
-least <code>certainty</code> of iterations. Zero if no proportion qualifies.</p></dd>
+least <code>certainty</code> of iterations. Zero if no proportion qualifies;
+<code>NA</code> when the original edge weights do not vary (CS undefined).</p></dd>
 
 <dt><code>summary</code></dt>
 <dd><p>Tidy data frame, one row per metric by drop
@@ -194,14 +204,17 @@ iteration correlations (the <code>correlation</code> entry of <code>metrics</cod
 transition methods, rows of <code>$data</code> otherwise).</p></dd>
 
 <dt><code>n_edges</code></dt>
-<dd><p>Length of the edge vector assessed.</p></dd>
+<dd><p>Number of cells assessed, determined by <code>target</code>
+and <code>include_diag</code>.</p></dd>
 
 
-</dl><p>A <code>netobject_group</code> or <code>mcml</code> input instead returns a
+</dl><p>The resolved target is retained as <code>attr(result, "target")</code>, preserving
+the existing list fields for downstream consumers.
+A <code>netobject_group</code> or <code>mcml</code> input instead returns a
 <code>net_casedrop_reliability_group</code>: a named list of one result per
 constituent network.</p>
 <p>When the original edge vector has zero variance a warning is issued and
-the object is returned with <code>cs = 0</code>, an empty <code>summary</code>, and all-<code>NA</code>
+the object is returned with <code>cs = NA</code>, an empty <code>summary</code>, and all-<code>NA</code>
 metric matrices.</p>
 <p>In <code>print.net_casedrop_reliability()</code>: The input <code>x</code> invisibly.</p>
 <p>In <code>summary.net_casedrop_reliability()</code>: A tidy data frame with columns <code>metric</code>, <code>drop_prop</code>, <code>mean</code>, <code>sd</code> summarising edge-weight stability across case-dropping iterations.</p>
@@ -218,16 +231,19 @@ of <code>$data</code> is one transition, this is case-dropping of <strong>edges<
 <p>For each <code>drop_prop</code> p and each iteration, a size <code>n_cases * (1 - p)</code>
 subset of <code>$data</code> rows is selected <strong>without replacement</strong>, the network
 is re-estimated using the same method/scaling/threshold as the input,
-and the upper/lower-triangle (directed: all off-diagonal entries) of
-the new weight matrix is flattened and correlated with the
-corresponding vector of the original matrix. The correlation method
-defaults to Spearman for robustness to the wide dynamic range of
-transition probabilities.</p>
-<p>Unlike bootstrap CIs, case-dropping does not estimate sampling variance
-and so does not rely on the i.i.d. assumption. This makes it the
-appropriate robustness check for <strong>edgelist-derived</strong> networks (where
-rows of <code>$data</code> lack actor grouping), since dropping rows at random is
-a well-posed operation regardless of within-actor correlation.</p>
+and the selected cells are compared with the same cells of the new
+weight matrix. With <code>target = "auto"</code>, unscaled and unthresholded
+transition methods assess only existing edges: absent transitions cannot
+appear in a subsample, and including these fixed zeros inflates the
+correlation. Association methods and scaled or thresholded networks assess
+all cells, because a zero original weight can become nonzero after case
+removal. Use <code>target = "existing"</code> explicitly to assess only the original
+edges in these networks. The correlation method defaults to Spearman.</p>
+<p>Case-dropping drops rows of <code>$data</code> at random, so it treats the rows as
+independent units. When rows are nested in actors (several sessions per
+person), dropped rows of one actor are replaced by the remaining rows of
+the same actor, and the CS-coefficient overstates the stability; drop
+whole actors instead (for example with <code>tna::estimate_cs(actor = )</code>).</p>
     </div>
     <div class="section level2">
     <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>

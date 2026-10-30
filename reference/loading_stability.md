@@ -3,9 +3,12 @@
 **Experimental.** Bootstraps the item weights of a
 [`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
 fit: rows of the raw data are resampled, the node-level network is
-re-estimated each time, and the connectivity-based composite weights are
-recomputed. Wide intervals mean the weighting (and therefore the
-`"loadings"` macro network) should not be over-interpreted.
+re-estimated each time, and the fitted weighting scheme is reapplied,
+including data-dependent and custom weights and the factor-analysis
+options. Fixed equal or supplied numeric weights retain their magnitudes
+across resamples; item signs may vary. Older saved custom-weight fits
+must be rebuilt to retain their specification. Wide intervals mean the
+weighting should not be over-interpreted.
 
 ## Usage
 

@@ -17,7 +17,8 @@ casedrop_reliability(
   certainty = 0.95,
   method = c("spearman", "pearson", "kendall"),
   include_diag = FALSE,
-  seed = NULL
+  seed = NULL,
+  target = c("auto", "existing", "all")
 )
 
 # S3 method for class 'net_casedrop_reliability'
@@ -100,6 +101,14 @@ plot(
 
   Optional integer for reproducibility.
 
+- target:
+
+  Cells to assess: `"auto"` (default) uses `"existing"` for unscaled,
+  unthresholded transition methods and `"all"` otherwise. `"existing"`
+  assesses only nonzero original cells; `"all"` includes original zeros
+  so edges appearing after case removal are assessed. `include_diag`
+  applies to either target.
+
 - digits:
 
   Digits to display. Default `3`.
@@ -139,7 +148,8 @@ An object of class `net_casedrop_reliability` with:
 
   Scalar CS-coefficient - the maximum drop proportion for which the
   edge-vector correlation remains \>= `threshold` in at least
-  `certainty` of iterations. Zero if no proportion qualifies.
+  `certainty` of iterations. Zero if no proportion qualifies; `NA` when
+  the original edge weights do not vary (CS undefined).
 
 - `summary`:
 
@@ -170,14 +180,15 @@ An object of class `net_casedrop_reliability` with:
 
 - `n_edges`:
 
-  Length of the edge vector assessed.
+  Number of cells assessed, determined by `target` and `include_diag`.
 
-A `netobject_group` or `mcml` input instead returns a
-`net_casedrop_reliability_group`: a named list of one result per
-constituent network.
+The resolved target is retained as `attr(result, "target")`, preserving
+the existing list fields for downstream consumers. A `netobject_group`
+or `mcml` input instead returns a `net_casedrop_reliability_group`: a
+named list of one result per constituent network.
 
 When the original edge vector has zero variance a warning is issued and
-the object is returned with `cs = 0`, an empty `summary`, and all-`NA`
+the object is returned with `cs = NA`, an empty `summary`, and all-`NA`
 metric matrices.
 
 In `print.net_casedrop_reliability()`: The input `x` invisibly.
@@ -207,17 +218,21 @@ is case-dropping of **edges**.
 For each `drop_prop` p and each iteration, a size `n_cases * (1 - p)`
 subset of `$data` rows is selected **without replacement**, the network
 is re-estimated using the same method/scaling/threshold as the input,
-and the upper/lower-triangle (directed: all off-diagonal entries) of the
-new weight matrix is flattened and correlated with the corresponding
-vector of the original matrix. The correlation method defaults to
-Spearman for robustness to the wide dynamic range of transition
-probabilities.
+and the selected cells are compared with the same cells of the new
+weight matrix. With `target = "auto"`, unscaled and unthresholded
+transition methods assess only existing edges: absent transitions cannot
+appear in a subsample, and including these fixed zeros inflates the
+correlation. Association methods and scaled or thresholded networks
+assess all cells, because a zero original weight can become nonzero
+after case removal. Use `target = "existing"` explicitly to assess only
+the original edges in these networks. The correlation method defaults to
+Spearman.
 
-Unlike bootstrap CIs, case-dropping does not estimate sampling variance
-and so does not rely on the i.i.d. assumption. This makes it the
-appropriate robustness check for **edgelist-derived** networks (where
-rows of `$data` lack actor grouping), since dropping rows at random is a
-well-posed operation regardless of within-actor correlation.
+Case-dropping drops rows of `$data` at random, so it treats the rows as
+independent units. When rows are nested in actors (several sessions per
+person), dropped rows of one actor are replaced by the remaining rows of
+the same actor, and the CS-coefficient overstates the stability; drop
+whole actors instead (for example with `tna::estimate_cs(actor = )`).
 
 ## Methods
 

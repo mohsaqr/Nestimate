@@ -40,9 +40,10 @@ plot(
 
 - x:
 
-  A `netobject_group` (from grouped `build_network`), a `netobject`
-  (requires `group`), or a wide-format `data.frame` (requires `group`).
-  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  A `netobject_group` (from grouped `build_network`), a `netobject`,
+  `tna` or `cograph_network` model (requires `group`), or a wide-format
+  `data.frame` (requires `group`). For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
   object of class `net_sequence_comparison`.
 

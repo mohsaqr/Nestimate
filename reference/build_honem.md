@@ -1,8 +1,9 @@
 # Build HONEM Embeddings for Higher-Order Networks
 
-Constructs low-dimensional embeddings from a Higher-Order Network (HON)
-that preserve higher-order dependencies. Uses exponentially-decaying
-matrix powers of the HON transition matrix followed by truncated SVD.
+Constructs low-dimensional embeddings of the nodes of a Higher-Order
+Network (HON), after the HONEM approach of Saebi et al. (2020): no
+random walks or skip-gram, a decayed multi-step proximity matrix and its
+truncated SVD.
 
 ## Usage
 
@@ -35,7 +36,7 @@ plot(x, dims = c(1L, 2L), ...)
 
 - max_power:
 
-  Integer. Maximum walk length for neighborhood computation (default
+  Integer. \\L\\, the highest matrix power in the decayed sum (default
   10). Higher values capture longer-range structure.
 
 - x:
@@ -103,8 +104,21 @@ effect.
 
 ## Details
 
-HONEM is parameter-free and scalable - no random walks, skip-gram, or
-hyperparameter tuning required.
+What is computed: with \\D\\ the row-normalised HON transition matrix
+over *all HON nodes* (higher-order nodes such as `"A -> B"` included),
+\\S = Z^{-1} \sum\_{k=0}^{L} e^{-k} D^{k+1}\\ with \\Z = \sum\_{k=0}^{L}
+e^{-k}\\ and \\L\\ = `max_power`, where \\D^{k+1}\\ is a matrix power.
+Each HON node gets one embedding row, \\U_d \sqrt{\Sigma_d}\\.
+
+**How this differs from the paper.** Saebi et al. write the same sum,
+but there \\D^v\\ is a *v-th-order neighbourhood matrix over first-order
+nodes* (the superscript is an order, not a power), filled from the HON
+edge weights of order-v dependencies, with \\L\\ the highest order
+present, rule extraction changed to keep every lower order, and one
+embedding per first-order node. The paper gives no formula for \\D^v\\,
+and its worked example (Supplementary Table S.1) is internally
+inconsistent; no reference code is public. This function therefore does
+not claim to reproduce the paper's embeddings.
 
 ## References
 
