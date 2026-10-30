@@ -86,14 +86,24 @@ NULL
   # cluster names) are preserved.
   remap_data <- function(d, columns = colnames(d) %||% seq_len(NCOL(d))) {
     if (is.null(d)) return(d)
+    # Numeric sequence states are literal labels, unlike association
+    # measurements and one-hot indicators (which never enter this path).
+    # When any column holds a mapped state, every numeric state column
+    # becomes character: converting only those columns would leave the
+    # others numeric, and as.matrix() then pads them (" 2"), so the
+    # resampler's match() against the labels silently drops those cells.
+    cols_in <- if (is.data.frame(d)) intersect(columns, names(d)) else
+      intersect(columns, colnames(d) %||% seq_len(NCOL(d)))
+    holds_states <- any(vapply(cols_in, \(j) {
+      v <- if (is.data.frame(d)) d[[j]] else d[, j]
+      any(as.character(v) %in% names(map))
+    }, logical(1)))
     remap_column <- function(col) {
       if (is.factor(col)) {
         levels(col) <- remap(levels(col))
         return(col)
       }
-      # Numeric sequence states are literal labels, unlike association
-      # measurements and one-hot indicators (which never enter this path).
-      if (is.character(col) || any(as.character(col) %in% names(map))) {
+      if (is.character(col) || holds_states) {
         return(remap(col))
       }
       col

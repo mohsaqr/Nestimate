@@ -279,7 +279,10 @@
   # at least min_count expected occurrences, so a path that never occurs can
   # still be under-represented.
   is_under <- scores$expected >= min_count & scores$p_adjusted_under < alpha
-  # HYPA >= 1 - alpha (LaRock et al. 2020, Sec. 3) <=> P(X > f) <= alpha
+  # HYPA >= 1 - alpha (LaRock et al. 2020, Sec. 3) <=> P(X > f) <= alpha.
+  # As in the original implementation (tlarock/hypa), a path whose order has
+  # a single possible path has P(X > f) = 0 and is "over" even when its
+  # observed count equals its expected one; pinned by test-hypa-oracles.R.
   is_over  <- scores$observed >= min_count & scores$p_adjusted_over <= alpha
   scores$anomaly <- ifelse(is_under, "under",
                            ifelse(is_over, "over", "normal"))

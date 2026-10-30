@@ -50,7 +50,9 @@
 #' @param anomaly For HYPA pathway complexes, which anomaly direction to
 #'   include: \code{"all"} (default), \code{"over"}, or \code{"under"}.
 #'   Under-represented HYPA paths are ranked by smallest observed/expected
-#'   ratio; over-represented paths are ranked by largest ratio.
+#'   ratio; over-represented paths are ranked by largest ratio. Possible
+#'   paths that never occur are left out: a pathway simplex is a set of
+#'   states observed together on a path.
 #' @param max_scale For \code{type = "vr"}: maximum edge length to include
 #'   in the filtration. \code{NULL} (default) uses \code{max(d)}.
 #' @param ... Additional arguments passed to \code{build_hon()} when
@@ -261,7 +263,9 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
     nodes <- x$first_order_states
     raw_paths <- ho$path
   } else if (inherits(x, "net_hypa")) {
-    scores <- x$scores
+    # a pathway simplex is a set of states observed together on a path, so a
+    # possible path that never occurs (scored "under" since 0.9.26) is not one
+    scores <- x$scores[x$scores$observed > 0, , drop = FALSE]
     if (anomaly == "all") {
       anom <- scores[scores$anomaly != "normal", , drop = FALSE]
     } else {
@@ -990,10 +994,10 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
 
   persistence <- rbind(pairs, ess)
   persistence <- persistence[order(-persistence$persistence), , drop = FALSE]
-  rownames(persistence) <- NULL
 
   # Report homology up to max_dim; the (max_dim + 1)-simplices only kill
   persistence <- persistence[persistence$dimension <= max_dim, , drop = FALSE]
+  rownames(persistence) <- NULL
 
   betti_curve <- .betti_curve_from_pairs(persistence, thresholds, max_dim,
                                          fc$mode)

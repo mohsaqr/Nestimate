@@ -304,8 +304,9 @@ association_rules <- function(x,
       stop("netobject has no $data. Build from sequence data.", call. = FALSE)
     }
     df <- as.data.frame(x$data, stringsAsFactors = FALSE)
-    transactions <- lapply(seq_len(nrow(df)), function(i) {
-      vals <- unlist(df[i, ], use.names = FALSE)
+    # .sequence_rows() reads factor columns by their labels; unlist() of a
+    # mixed row would turn a factor into its integer codes
+    transactions <- lapply(.sequence_rows(df), function(vals) {
       unique(vals[!is.na(vals) & vals != ""])
     })
     return(.ar_transactions_to_matrix(transactions))
@@ -335,9 +336,9 @@ association_rules <- function(x,
       return(.ar_binary_input(as.matrix(x), colnames(x)))
     }
     # Wide character data: each row is a transaction
-    transactions <- lapply(seq_len(nrow(x)), function(i) {
-      vals <- unlist(x[i, ], use.names = FALSE)
-      vals <- as.character(vals)
+    # .sequence_rows() reads factor columns by their labels; unlist() of a
+    # mixed row would turn a factor into its integer codes
+    transactions <- lapply(.sequence_rows(x), function(vals) {
       unique(vals[!is.na(vals) & vals != ""])
     })
     return(.ar_transactions_to_matrix(transactions))

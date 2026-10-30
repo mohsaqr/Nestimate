@@ -44,7 +44,9 @@ pathways to include, ranked by count (HON) or ratio (HYPA).
 \item{anomaly}{For HYPA pathway complexes, which anomaly direction to
 include: \code{"all"} (default), \code{"over"}, or \code{"under"}.
 Under-represented HYPA paths are ranked by smallest observed/expected
-ratio; over-represented paths are ranked by largest ratio.}
+ratio; over-represented paths are ranked by largest ratio. Possible
+paths that never occur are left out: a pathway simplex is a set of
+states observed together on a path.}
 
 \item{max_scale}{For \code{type = "vr"}: maximum edge length to include
 in the filtration. \code{NULL} (default) uses \code{max(d)}.}

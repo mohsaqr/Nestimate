@@ -643,8 +643,14 @@ path_counts <- function(data, k = 2L, top = NULL) {
     trajectories <- lapply(data, as.character)
   }
 
-  all_grams <- unlist(lapply(trajectories, function(traj) {
-    traj <- traj[!is.na(traj)]
+  # a missing value ends a run: k-grams never span it (dropping the NA and
+  # joining the two sides would count paths that were never observed)
+  runs <- unlist(lapply(trajectories, function(traj) {
+    observed <- !is.na(traj)
+    run_id <- cumsum(!observed)
+    unname(split(traj[observed], run_id[observed]))
+  }), recursive = FALSE)
+  all_grams <- unlist(lapply(runs, function(traj) {
     n <- length(traj)
     if (n < k) return(character(0L))
     vapply(seq_len(n - k + 1L), function(i) {

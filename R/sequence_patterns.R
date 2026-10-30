@@ -152,7 +152,7 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
       (is.character(pattern) && length(pattern) == 1L && !is.na(pattern))
   )
   if (is.null(group) && inherits(x, "netobject_group")) {
-    group <- attr(x, "group_col") %||% "group"
+    group <- .group_col_name(x)
   }
   last_obs <- identical(group, "last_obs")
   group_is_column <- !last_obs && is.character(group) && length(group) == 1L
@@ -309,7 +309,9 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
 #' @return list(span, positions of the fixed states, the fixed states)
 #' @noRd
 .sp_parse_template <- function(template) {
-  tokens <- strsplit(template, "->", fixed = TRUE)[[1L]]
+  # "A -> * -> B" (the HON notation) is read like "A->*->B"
+  template <- trimws(template)
+  tokens <- trimws(strsplit(template, "->", fixed = TRUE)[[1L]])
   # strsplit() drops a trailing empty token, so test the end explicitly
   if (length(tokens) == 0L || any(!nzchar(tokens)) ||
       endsWith(template, "->")) {

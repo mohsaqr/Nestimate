@@ -1,7 +1,76 @@
-# Nestimate 1.0.0
+# Nestimate 1.0.1
+
+## Breaking changes since CRAN 0.9.24
+
+* `plot_mosaic()` is no longer exported (it masked `tna::plot_mosaic()`);
+  use `mosaic_plot()`, whose data-frame method takes `x_var`, `y_var` and
+  `weight` (see the 0.9.29 notes).
+* `sequence_plot()` gained `periods`, `fill`, `actor`, `action`, `time` and
+  `order` after `group`, so arguments after `group` must be passed by name.
+* `hypergraph_centrality()` returns only the clique centrality by default;
+  `$Z` and `$H` are computed only when requested and only for uniform
+  hypergraphs.
+
+## New features
+
+* `stability_landscape()` draws a transition network as a ball-in-cup
+  landscape in which each state's cup depth is the log of its expected stay,
+  `-log(1 - P_ii)` (stay = e^depth), with intervals from resampling whole
+  sequences, the share of time in each state, its exit probabilities and,
+  for three states, the net circulation. It takes a network, a grouped
+  network (for example `build_network()` of `build_clusters()`) or a
+  sequence data frame or matrix; `states =` sets the order of the cups.
+  `print()`, `summary()` (`table = "cups"`, `"exits"`, `"circulation"`) and
+  `plot()`.
+* `landscape_surface()` draws the cup depths as a 3D surface over a
+  per-sequence stability measure from `sequence_metrics()` (self-loop
+  tendency, entropy, complexity, ...), estimated from the nearest sequences
+  at each value of the measure, with the most stable end in front.
+  `summary()` compares the two ends of each measure; `plot()` draws one
+  `persp()` surface per network and measure.
+* `landscape_trend()` traces the cup depths along the program phase
+  (sliding windows of time steps) or along a numeric per-sequence
+  covariate such as a grade (nearest-sequence slices), one line per state
+  with intervals from resampling sequences.
 
 ## Bug fixes
 
+* `build_network()`: wide data with number-coded states and a text column
+  (an id) built the network from the text column alone, an all-zero network
+  with no warning. A numbered run of numeric position columns is now the
+  sequence, and the other columns are metadata.
+* The sequence verbs (`extract_sequences()`, `sequence_patterns()`,
+  `sequence_metrics()`, `pattern_outcome()`) read the data of a correlation,
+  glasso, Ising, MGM or window network as states; they now raise
+  `nestimate_bad_input`. A network grouped by two columns (`group =
+  c("Achiever", "Course")`) no longer fails; its groups are labelled in one
+  column, `Achiever-Course`.
+* `sequence_metrics()`: a row with no observed state has `NA`, not 0, for
+  `valid_proportion` and `cyclic_feedback_strength`.
+* `sequence_patterns(pattern =)` accepts the spaced notation
+  `"A -> * -> B"`.
+* `nct()`: an unnamed matrix compared with a named one is matched by
+  position again, as documented.
+* `build_hon()`, `build_mogen()` and `path_counts()`: a missing value inside
+  a sequence ends a run of observed states. `build_hon()` stopped with an
+  error, `build_mogen()` counted `NA` as a state, and `path_counts()` joined
+  the two sides of the gap.
+* `association_rules()` reads factor columns of a wide data frame by their
+  labels, not their integer codes.
+* `build_simplicial(type = "pathway")` leaves out HYPA paths that never
+  occur: since 0.9.26 HYPA scores every possible path, and an unobserved
+  one flagged "under" became a simplex of states never seen together.
+* `persistent_homology()`: the rows of `$persistence` are numbered without
+  gaps.
+* `labels =` on number-coded states: every state column is relabelled
+  together, so `bootstrap_network()` no longer drops the cells of columns
+  that held no relabelled state.
+* `landscape_surface()` and `plot(landscape_trend(), type = "surface")` draw
+  a flat surface instead of failing; a constant measure or covariate raises
+  `nestimate_bad_input`; slices resting on fewer than five effective
+  sequences warn (`nestimate_thin_slice`); input with no observed
+  transition raises `nestimate_landscape_unestimable`; a two-state
+  occupancy landscape reports its single ridge once.
 * `plot()` of a `passage_time()` result drew the matrix transposed: the
   tile in row A, column B showed the passage time from B to A. Rows are now
   the starting states and columns the targets, as documented, for a single
@@ -95,17 +164,24 @@
   `mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")`
   (`x_label`/`y_label` become `xlab`/`ylab`, as in the other methods). A
   network, table or matrix given a data-frame-only argument (`x_var`,
-  `y_var`, `weight`, `fill`, `colors`, `show_labels`, `label_size`) raises
-  `nestimate_bad_input` instead of ignoring it.
+  `y_var`, `weight`, `fill`, `colors`, `show_labels`, and `label_size`
+  except with `style = "flat"`, which uses it for its tile labels) raises
+  `nestimate_bad_input` instead of ignoring it, and so does an unknown
+  argument of the data-frame method.
 * `casedrop_reliability()` compares only the edges present in the original
   network. A subsample cannot contain a transition that is absent from the
   full data, so the empty cells agreed in every draw and inflated the
   correlation: on a sparse 8-state chain the CS-coefficient was 0.9 (the
   top of the grid) with a mean correlation of 0.993 after dropping 90% of
   the sequences. `n_edges` now counts the present edges, and an undefined
-  CS-coefficient (edge weights that do not vary) is `NA` instead of 0. The
-  documentation no longer claims that case-dropping is valid regardless of
-  within-actor correlation.
+  CS-coefficient (edge weights that do not vary) is `NA` instead of 0. Such
+  a result now has the usual summary columns with `NA` statistics, so
+  `summary()` (including the grouped summary) and `plot()` work: the plot
+  states that the CS-coefficient is undefined, and the grouped plot names the
+  networks it leaves out. This case is common now, for example a fixed
+  cycle, where every present edge has probability 1. The documentation no
+  longer claims that case-dropping is valid regardless of within-actor
+  correlation.
 * `permutation(measures = "Diffusion")` (and the node table of
   `compare_networks()`) compares Diffusion after min-max scaling to 0-1, as
   `net_centrality()` reports it and as tna does from 1.4.1.

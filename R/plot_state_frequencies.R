@@ -487,6 +487,7 @@ mosaic_plot.mcml <- function(x,
                              style = c("classic", "flat"),
                              ...) {
   style <- match.arg(style)
+  .mosaic_reject_df_args(style, ...)
   # The classic path takes no extra dots, so a stray arg is a typo -> reject.
   # The flat path legitimately forwards styling args to the renderer (validated
   # there), so only guard unused dots when classic.
@@ -509,12 +510,14 @@ mosaic_plot.mcml <- function(x,
   }
   dot_names <- names(dots)
   dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-  stop(
-    method, "() got unsupported argument",
-    if (length(dots) == 1L) ": " else "s: ",
-    paste(dot_names, collapse = ", "),
-    call. = FALSE
-  )
+  stop(errorCondition(
+    paste0(
+      method, "() got unsupported argument",
+      if (length(dots) == 1L) ": " else "s: ",
+      paste(dot_names, collapse = ", ")
+    ),
+    class = "nestimate_bad_input", call = NULL
+  ))
 }
 
 #' @export
@@ -602,8 +605,8 @@ mosaic_plot.data.frame <- function(x,
                               n_perm = 500L, seed = NULL,
                               ncol = 2L, values = FALSE,
                               style = c("classic", "flat"), ...) {
-  .mosaic_reject_df_args(...)
   style  <- match.arg(style)
+  .mosaic_reject_df_args(style, ...)
   panels <- .mosaic_panels(x, source_class, level)
   xlab <- xlab %||% panels$xlab_default
   ylab <- ylab %||% panels$ylab_default
@@ -1097,7 +1100,7 @@ mosaic_plot.data.frame <- function(x,
                              residuals = "permutation", n_perm = 500L,
                              seed = NULL, axis_groups = NULL,
                              values = FALSE, style = "classic", ...) {
-  .mosaic_reject_df_args(...)
+  .mosaic_reject_df_args(style, ...)
   d <- .mosaic_rect_data(tab, residuals = residuals,
                          n_perm = n_perm, seed = seed)
   # "flat" routes to the ported Saqrmisc renderer: white gutters, theme_void,
@@ -1192,9 +1195,10 @@ mosaic_plot.data.frame <- function(x,
 # clear, listed message instead of an opaque base-R "unused argument" error.
 # The arguments of mosaic_plot.data.frame() mean nothing for a network,
 # table or matrix; classic style would otherwise ignore them silently.
-.mosaic_reject_df_args <- function(...) {
+# `label_size` also sizes the tile labels of the flat renderer.
+.mosaic_reject_df_args <- function(style, ...) {
   df_args <- c("x_var", "y_var", "weight", "fill", "colors", "show_labels",
-               "label_size")
+               if (!identical(style, "flat")) "label_size")
   given <- intersect(names(list(...)), df_args)
   if (length(given)) {
     stop(errorCondition(paste0(

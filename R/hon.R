@@ -82,6 +82,17 @@
     stop("'data' must be a data.frame or list of character vectors") # nocov
   }
 
+  # A missing value inside a sequence ends a run of observed states: the
+  # states on either side are not adjacent, so each run is its own
+  # trajectory (as hypergraphs' HON and Nestimate's HYPA already do).
+  # Without this, NA crashed build_hon() and became a state in build_mogen().
+  trajectories <- unlist(lapply(trajectories, function(traj) {
+    if (!anyNA(traj)) return(list(traj))
+    observed <- !is.na(traj)
+    run_id <- cumsum(!observed)
+    unname(split(traj[observed], run_id[observed]))
+  }), recursive = FALSE)
+
   if (collapse_repeats) {
     trajectories <- lapply(trajectories, function(traj) {
       if (length(traj) <= 1L) return(traj) # nocov

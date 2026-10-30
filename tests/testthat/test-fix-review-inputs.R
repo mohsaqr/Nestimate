@@ -89,6 +89,31 @@ test_that("mosaic_plot network calls honor labels and reject data-frame styling"
   expect_identical(p_df$labels$x, "Groups")
 })
 
+test_that("flat mosaics keep label_size; stray arguments are classed errors", {
+  d <- data.frame(T1 = c("A", "A", "B", "B", "C", "C"),
+                  T2 = c("B", "C", "A", "C", "A", "B"))
+  net <- build_network(d, "frequency")
+  # label_size sizes the flat renderer's tile labels
+  p_flat <- mosaic_plot(net, style = "flat", tile_label = "count",
+                        label_size = 5, residuals = "asymptotic")
+  expect_s3_class(p_flat, "ggplot")
+  label_sizes <- vapply(
+    p_flat$layers,
+    function(l) as.numeric(l$aes_params$size %||% NA_real_),
+    numeric(1L)
+  )
+  expect_true(5 %in% label_sizes)
+  # Classic mosaics have no use for it
+  expect_error(mosaic_plot(net, label_size = 5), class = "nestimate_bad_input")
+  tidy <- data.frame(group = c("g1", "g1", "g2", "g2"),
+                     state = c("A", "B", "A", "B"), count = c(3, 1, 1, 3))
+  expect_error(
+    mosaic_plot(tidy, x_var = "group", y_var = "state", weight = "count",
+                bogus = 1),
+    class = "nestimate_bad_input"
+  )
+})
+
 test_that("comparison global labels describe their actual statistic", {
   d <- data.frame(T1 = c("A", "B", "A", "B"),
                   T2 = c("B", "A", "A", "B"))

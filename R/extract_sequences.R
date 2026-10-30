@@ -60,6 +60,17 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
 #'   sequence), \code{units} (data.frame of per-sequence covariates, same
 #'   rows; possibly zero columns) and \code{alphabet} (sorted states).
 #' @noRd
+# Methods whose $data are sequences of states.
+.sequence_methods <- c("relative", "frequency", "co_occurrence", "attention",
+                       "ngram", "gap", "reverse", "entropy")
+
+# Name of the column that holds a grouped network's group labels: the
+# grouping column, or for several the joined names ("Achiever-Course"),
+# matching the joined group labels ("High-A").
+.group_col_name <- function(x) {
+  paste(attr(x, "group_col") %||% "group", collapse = "-")
+}
+
 .as_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
                           time = NULL, exclude = NULL, ...) {
   if (is.data.frame(x) && !inherits(x, "nestimate_data") && !is.null(action)) {
@@ -70,7 +81,7 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
     states <- x$sequence_data
     units <- x$meta_data
   } else if (inherits(x, "netobject_group")) {
-    group_col <- attr(x, "group_col") %||% "group"
+    group_col <- .group_col_name(x)
     parts <- lapply(x, .as_sequences)
     width <- max(vapply(parts, \(p) ncol(p$states), integer(1)))
     states <- do.call(rbind, lapply(parts, \(p) .pad_states(p$states, width)))
@@ -80,6 +91,16 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
       u
     }, parts, names(x)))
   } else if (inherits(x, c("netobject", "cograph_network", "tna"))) {
+    # an association or window network carries numeric or one-hot data, not
+    # states; reading it as sequences would give meaningless "patterns"
+    if (inherits(x, "netobject") && !is.null(x$method) &&
+        !x$method %in% .sequence_methods) {
+      stop(errorCondition(sprintf(paste(
+        "`x` is a \"%s\" network, whose data are not sequences of states;",
+        "build it with a transition method (\"relative\", \"frequency\",",
+        "...) or pass the sequences."), x$method),
+        class = "nestimate_bad_input", call = NULL))
+    }
     if (is.null(x$data)) {
       stop(errorCondition(
         "`x` holds no sequence data; build it from sequences, not a matrix.",

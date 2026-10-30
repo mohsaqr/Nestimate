@@ -34,8 +34,13 @@
 #' @noRd
 .nct_columns <- function(data1, data2) {
   numeric_only <- function(d) {
+    # an unnamed matrix is matched by position: as.data.frame() would give
+    # it V1..Vp names, so remember that it had none
+    unnamed <- is.matrix(d) && is.null(colnames(d))
     d <- as.data.frame(d, stringsAsFactors = FALSE)
-    as.matrix(d[, vapply(d, is.numeric, logical(1)), drop = FALSE])
+    m <- as.matrix(d[, vapply(d, is.numeric, logical(1)), drop = FALSE])
+    if (unnamed) colnames(m) <- NULL
+    m
   }
   d1 <- numeric_only(data1)
   d2 <- numeric_only(data2)

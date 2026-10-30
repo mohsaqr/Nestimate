@@ -179,12 +179,15 @@ casedrop_reliability <- function(x,
   if (!isTRUE(stats::sd(orig_edges) > 0)) {
     warning("Original edge vector has zero variance; CS undefined.",
             call. = FALSE)
-    empty <- matrix(NA_real_, iter, length(drop_prop))
+    empty <- matrix(NA_real_, iter, length(drop_prop),
+                    dimnames = list(NULL, paste0("p", drop_prop)))
+    metrics <- list(mean_abs_dev = empty, median_abs_dev = empty,
+                    correlation = empty,  max_abs_dev = empty)
     result <- list(
       cs            = NA_real_,
-      summary       = data.frame(),
-      metrics       = list(mean_abs_dev = empty, median_abs_dev = empty,
-                           correlation = empty,  max_abs_dev = empty),
+      # Same columns as a defined result, so print/summary/plot still work
+      summary       = .casedrop_summary(metrics, drop_prop),
+      metrics       = metrics,
       correlations  = empty,
       drop_prop     = drop_prop,
       threshold     = threshold,
@@ -290,24 +293,7 @@ casedrop_reliability <- function(x,
   .warn_failed_resamples(n_failed, n_tried, "casedrop_reliability()")
 
   # ---- Per-drop-proportion summary across iterations ----
-  summary_rows <- lapply(metric_names, function(nm) {
-    m <- metrics[[nm]]
-    data.frame(
-      metric    = nm,
-      drop_prop = drop_prop,
-      mean      = colMeans(m, na.rm = TRUE),
-      sd        = apply(m, 2L, stats::sd,       na.rm = TRUE),
-      median    = apply(m, 2L, stats::median,   na.rm = TRUE),
-      mad       = apply(m, 2L, stats::mad,      na.rm = TRUE),
-      q025      = apply(m, 2L, stats::quantile,
-                        probs = 0.025, na.rm = TRUE),
-      q975      = apply(m, 2L, stats::quantile,
-                        probs = 0.975, na.rm = TRUE),
-      stringsAsFactors = FALSE,
-      row.names = NULL
-    )
-  })
-  summary_df <- do.call(rbind, summary_rows)
+  summary_df <- .casedrop_summary(metrics, drop_prop)
 
   # ---- CS-coefficient: max drop_prop where corr certainty-fraction >= threshold ----
   prop_above <- apply(metrics$correlation, 2L, function(c) {
@@ -333,6 +319,33 @@ casedrop_reliability <- function(x,
     ),
     class = "net_casedrop_reliability"
   )
+}
+
+# One row per metric and drop proportion. Failed resamples are NA in
+# `metrics` and are left out; a proportion without any value (for example
+# when the CS-coefficient is undefined) gets NA statistics.
+#' @noRd
+.casedrop_summary <- function(metrics, drop_prop) {
+  rows <- lapply(names(metrics), function(nm) {
+    m <- metrics[[nm]]
+    means <- colMeans(m, na.rm = TRUE)
+    means[is.nan(means)] <- NA_real_
+    data.frame(
+      metric    = nm,
+      drop_prop = drop_prop,
+      mean      = means,
+      sd        = apply(m, 2L, stats::sd,       na.rm = TRUE),
+      median    = apply(m, 2L, stats::median,   na.rm = TRUE),
+      mad       = apply(m, 2L, stats::mad,      na.rm = TRUE),
+      q025      = apply(m, 2L, stats::quantile,
+                        probs = 0.025, na.rm = TRUE),
+      q975      = apply(m, 2L, stats::quantile,
+                        probs = 0.975, na.rm = TRUE),
+      stringsAsFactors = FALSE,
+      row.names = NULL
+    )
+  })
+  do.call(rbind, rows)
 }
 
 #' @rdname casedrop_reliability
@@ -502,6 +515,10 @@ plot.net_casedrop_reliability <- function(x, combined = TRUE, ...) {
                  x$cs, x$iter, x$n_edges)
   sub_title <- sprintf("Case-dropping on %d cases, %s correlation",
                        x$n_cases, x$method)
+  if (!any(is.finite(df$mean))) {
+    # Nothing to draw: say why instead of an empty or failing panel
+    return(.casedrop_undefined_plot(ttl))
+  }
 
   if (!combined) {
     levs <- levels(df$metric)
@@ -542,6 +559,20 @@ plot.net_casedrop_reliability_group <- function(x,
   })
   df <- do.call(rbind, rows)
   df$network <- factor(df$network, levels = names(x))
+  # Networks whose CS is undefined have no values to draw
+  undefined <- names(x)[!vapply(
+    names(x),
+    function(nm) any(is.finite(df$mean[df$network == nm])),
+    logical(1L)
+  )]
+  df <- df[is.finite(df$mean), , drop = FALSE]
+  if (!nrow(df)) {
+    return(.casedrop_undefined_plot("Edge-weight case-dropping reliability"))
+  }
+  undefined_note <- if (length(undefined)) {
+    paste0("Not shown (edge weights do not vary, CS undefined): ",
+           paste(undefined, collapse = ", "))
+  }
 
   # Use a discrete palette, recycling if there are many networks
   palette <- grDevices::hcl.colors(length(levels(df$network)), "Dynamic")
@@ -569,7 +600,8 @@ plot.net_casedrop_reliability_group <- function(x,
       colour = "Network", fill = "Network",
       title = "Edge-weight case-dropping reliability",
       subtitle = sprintf("Metric: %s; mean \u00b1 sd across iterations",
-                         metric)
+                         metric),
+      caption = undefined_note
     ) +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(
@@ -585,4 +617,18 @@ plot.net_casedrop_reliability_group <- function(x,
   }
 
   p
+}
+
+# A panel that states why there is nothing to draw
+#' @noRd
+.casedrop_undefined_plot <- function(title) {
+  ggplot2::ggplot() +
+    ggplot2::annotate(
+      "text", x = 0, y = 0, size = 4,
+      label = paste0("CS undefined: the edge weights of the original ",
+                     "network do not vary")
+    ) +
+    ggplot2::labs(title = title) +
+    ggplot2::theme_void(base_size = 12) +
+    ggplot2::theme(plot.title = ggplot2::element_text(face = "bold"))
 }

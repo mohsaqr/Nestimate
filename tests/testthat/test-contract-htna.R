@@ -15,7 +15,11 @@ test_that("functions htna calls via Nestimate:: are exported", {
     "state_distribution", "state_frequencies", "plot_state_frequencies",
     "mosaic_plot", "frequencies", "centrality_stability",
     "casedrop_reliability", "network_reliability", "permutation",
-    "markov_order_test", "association_rules"
+    "markov_order_test", "association_rules",
+    # added from htna 0.3.1 (CRAN): every Nestimate:: call in its R/
+    "as_htna", "bayes_compare", "build_clusters", "build_mcml", "certainty",
+    "cluster_mmm", "compare_model", "net_prune", "net_deprune",
+    "net_reprune", "net_pruning_details"
   )
   exported <- getNamespaceExports(asNamespace("Nestimate"))
   expect_true(all(needed %in% exported),

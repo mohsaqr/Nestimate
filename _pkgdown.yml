@@ -72,6 +72,9 @@ reference:
       - entropy_network
       - entropy_trajectory
       - entropy_bayes
+      - stability_landscape
+      - landscape_surface
+      - landscape_trend
 
   - title: Network Pruning
     desc: Non-destructive edge pruning and restoration
@@ -232,4 +235,9 @@ articles:
   - starts_with("articles/tutorial_model_assessment")
   - starts_with("articles/permutation-nested-data")
   - starts_with("articles/compare-networks")
+
+- title: Experimental
+  desc: New methods whose interface may still change
+  contents:
+  - starts_with("articles/stability-landscapes")
 

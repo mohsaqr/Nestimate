@@ -114,6 +114,48 @@ test_that("an undefined CS-coefficient is NA, not zero", {
   expect_true(is.na(es$cs))
 })
 
+test_that("an undefined result keeps its summary, prints and plots", {
+  # A fixed cycle: every present edge has probability 1 in every subsample
+  cycle <- as.data.frame(matrix(rep(c("A", "B", "C"), length.out = 30 * 9),
+                                30, 9, byrow = TRUE))
+  net <- build_network(cycle, method = "relative")
+  expect_warning(
+    es <- casedrop_reliability(net, iter = 5, drop_prop = c(0.3, 0.6),
+                               seed = 1),
+    "zero variance"
+  )
+  tab <- summary(es)
+  expect_named(tab, c("metric", "drop_prop", "mean", "sd", "median", "mad",
+                      "q025", "q975"))
+  expect_equal(nrow(tab), 4L * 2L)
+  expect_true(all(is.na(tab$mean)))
+  expect_false(any(is.nan(tab$mean)))
+  expect_output(print(es), "CS-coefficient")
+  # Plotting states why there is nothing to draw, without warnings
+  p_single <- plot(es)
+  expect_no_warning(ggplot2::ggplot_build(p_single))
+  shown <- unlist(lapply(p_single$layers, function(l) l$aes_params$label))
+  expect_true(any(grepl("CS undefined", shown)))
+  # Grouped: an undefined network next to a defined one
+  set.seed(3)
+  random <- as.data.frame(matrix(sample(c("A", "B", "C"), 30 * 9, TRUE),
+                                 30, 9))
+  mixed <- rbind(cycle, random)
+  mixed$grp <- rep(c("cycle", "random"), each = 30)
+  nets <- build_network(mixed, method = "relative", group = "grp")
+  expect_warning(
+    by_group <- casedrop_reliability(nets, iter = 5, drop_prop = c(0.3, 0.6),
+                                     seed = 2),
+    "zero variance"
+  )
+  group_tab <- summary(by_group, drop_prop = 0.3)
+  expect_equal(rownames(group_tab), c("cycle", "random"))
+  expect_equal(group_tab["cycle", "cor"], "NA +/- NA")
+  p <- plot(by_group)
+  expect_no_warning(ggplot2::ggplot_build(p))
+  expect_match(p$labels$caption, "cycle")
+})
+
 # Reproducibility ----------------------------------------------------------
 
 test_that("same seed yields identical correlation matrix", {

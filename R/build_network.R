@@ -1513,6 +1513,13 @@ predictability.netobject_group <- function(object, ...) {
     is_num <- vapply(data[candidates], is.numeric, logical(1))
     is_cat <- vapply(data[candidates],
                      function(x) is.character(x) || is.factor(x), logical(1))
+    if (any(is_num) && any(is_cat)) {
+      # numeric-coded states: when the largest run of numbered position
+      # names is entirely numeric, it is the sequence and the other columns
+      # (an id, a session label) are covariates, not the other way round
+      numeric_run <- .numeric_position_run(data[candidates])
+      if (length(numeric_run) > 0L) return(numeric_run)
+    }
     inferred <- if (any(is_num) && any(is_cat)) candidates[!is_num] else
       candidates
     covariates <- .categorical_covariates(data[inferred])
@@ -1524,6 +1531,24 @@ predictability.netobject_group <- function(object, ...) {
   # again when its own default selector does not know the session/group role.
   if (any(exclude %in% names(data))) return(candidates)
   NULL
+}
+
+#' The unique largest run of numbered position names, when it is numeric
+#'
+#' Same naming rule as .categorical_covariates(): a shared prefix followed
+#' by a number. Returns the run's column names when the run has at least two
+#' columns, is larger than any other run, and every column in it is
+#' numeric; otherwise character(0).
+#' @noRd
+.numeric_position_run <- function(data) {
+  nms <- names(data)
+  numbered <- grepl("[0-9]+$", nms)
+  if (!any(numbered)) return(character(0))
+  prefix <- sub("[0-9]+$", "", nms)
+  runs <- table(prefix[numbered])
+  if (max(runs) < 2L || sum(runs == max(runs)) > 1L) return(character(0))
+  run <- nms[numbered & prefix == names(runs)[which.max(runs)]]
+  if (all(vapply(data[run], is.numeric, logical(1)))) run else character(0)
 }
 
 #' Categorical columns that are covariates, not sequence positions

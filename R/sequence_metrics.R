@@ -167,6 +167,11 @@ sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
     complexity_index = num("complexity"),
     stringsAsFactors = FALSE
   )
+  # a row with no observed state: max.col() still returns the last column,
+  # so the two indices computed outside .sm_row() must be set to NA here
+  empty <- rowSums(observed) == 0L
+  out$valid_proportion[empty] <- NA_real_
+  out$cyclic_feedback_strength[empty] <- NA_real_
   if (length(fav) == 0L) out$integrative_potential <- NULL
   if (meta && ncol(seqs$units) > 0L) out <- cbind(seqs$units, out)
   rownames(out) <- NULL
