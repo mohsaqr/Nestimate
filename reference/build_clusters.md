@@ -329,6 +329,16 @@ In `print.tidy_covariates()`: The input invisibly.
   was produced, so this method intentionally stays minimal to avoid
   duplication. Auto-prints when the user types the variable at the REPL.
 
+## References
+
+Kaufman, L., & Rousseeuw, P. J. (1990). *Finding Groups in Data: An
+Introduction to Cluster Analysis*. Wiley.
+
+Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+interpretation and validation of cluster analysis. *Journal of
+Computational and Applied Mathematics*, 20, 53–65.
+[doi:10.1016/0377-0427(87)90125-7](https://doi.org/10.1016/0377-0427%2887%2990125-7)
+
 ## Examples
 
 ``` r

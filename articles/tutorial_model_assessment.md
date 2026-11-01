@@ -227,13 +227,14 @@ even 10% of sessions changes the edge map materially. Epskamp, Borsboom
 and Fried (2018) recommend interpreting CS \> 0.5 as “very stable”,
 0.25–0.5 as “moderate”, and below 0.25 as “do not interpret”.
 
-The `$summary` data frame gives the mean correlation at each drop
-proportion, which is useful for seeing *where* the stability breaks down
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the
+per-drop-proportion table (mean, SD and quantiles of each agreement
+metric), which is useful for seeing *where* the stability breaks down
 rather than just the single summary.
 
 ``` r
 
-edge_stab$summary
+summary(edge_stab)
 ```
 
                metric drop_prop        mean           sd      median          mad
@@ -425,14 +426,14 @@ mo
             TRUE
             TRUE
 
-The `test_table` reports, for each order $`k`$, the log-likelihood,
-degrees of freedom, observed $`G^2`$ statistic, permutation p-value, and
-whether the increment from $`k`$ to $`k+1`$ is significant at
-$`\alpha = 0.05`$.
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the test
+table, which reports, for each order $`k`$, the log-likelihood, degrees
+of freedom, observed $`G^2`$ statistic, permutation p-value, and whether
+the increment from $`k`$ to $`k+1`$ is significant at $`\alpha = 0.05`$.
 
 ``` r
 
-mo$test_table
+summary(mo)
 ```
 
       order    loglik      AIC      BIC   df        g2 p_permutation p_asymptotic

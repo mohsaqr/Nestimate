@@ -159,5 +159,27 @@ df <- data.frame(
 )
 prepared <- prepare(df, actor = "student", action = "code",
                     time = "timestamp")
-net <- build_network(prepared$sequence_data, method = "relative")
+prepared
+#> Prepared Data for Network Estimation
+#>   Sessions: 3  |  Actions: 15  |  Max length: 5
+#>   Actors: 3
+#>   Time data: available
+
+# build_network() runs the same preparation itself
+net <- build_network(df, actor = "student", action = "code",
+                     time = "timestamp", method = "relative")
+net
+#> Transition Network (relative probabilities) [directed]
+#>   Weights: [0.200, 0.500]  |  mean: 0.333
+#> 
+#>   Weight matrix:
+#>          read  test write
+#>   read  0.400 0.200 0.400
+#>   test  0.500 0.250 0.250
+#>   write 0.333 0.333 0.333 
+#> 
+#>   Initial probabilities:
+#>   test          0.667  ████████████████████████████████████████
+#>   read          0.333  ████████████████████
+#>   write         0.000  
 ```

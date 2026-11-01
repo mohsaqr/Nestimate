@@ -203,7 +203,7 @@ contexts lead to different outcomes:
 ``` r
 
 mt <- mogen_transitions(mg, order = 2)
-mt[1:8, ]
+head(mt, 8)
 ```
 
                                  path count probability               from
@@ -264,17 +264,18 @@ plot_simplicial(net, pathways = mt, max_pathways = 1)
 
 ![](cograph-tutorial-simplicial_files/figure-html/mogen-transitions-single-1.png)
 
-### Permutation-exact Markov order test
+### Permutation Markov order test
 
-MOGen uses information criteria. A complementary, principled approach is
-the **permutation-exact LRT** in
+MOGen uses information criteria. A complementary approach is the
+**permutation LRT** in
 [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md):
 at each order $`k`$, it tests $`H_0`$: “process is order $`(k-1)`$”
 against $`H_1`$: “process is order $`k`$” by reframing as a
 conditional-independence test on $`(k+1)`$-grams. The null distribution
-is built by **shuffling successor labels within each context** — so the
-test is exact under $`H_0`$, with no plug-in MLE bias from sparse
-$`(k+1)`$-gram tables.
+is built by **shuffling successor labels within each context**, so it
+needs no plug-in MLE approximation for sparse $`(k+1)`$-gram tables. The
+permutation is conditional rather than exact: the overlapping windows of
+one sequence are not independent.
 
 ``` r
 
@@ -910,7 +911,7 @@ clique-finding and verified via the Euler-Poincaré theorem:
 
 ``` r
 
-verify_simplicial(net$weights, threshold = 0.05)
+verify_simplicial(net, threshold = 0.05)
 ```
 
       Cliques:  MATCH (511 simplices)

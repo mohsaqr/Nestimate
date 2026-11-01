@@ -74,8 +74,8 @@ sequences are.
 To implement this method using `Nestimate`, we can use the
 [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 function, which takes either raw sequence data or a network object such
-as the `net` object that we estimated (which also contains the original
-sequences in `$data`):
+as the `net` object that we estimated (which also stores the original
+sequences):
 
 ``` r
 
@@ -97,25 +97,25 @@ The default clustering mechanism uses **Hamming distance** (number of
 positions where sequences differ) with **PAM** (Partitioning Around
 Medoids).
 
-The result contains the cluster `assignments` (which cluster each
-session belongs to), the cluster `sizes`, and a `silhouette` score that
-reflects the quality of the clustering (higher values indicate better
-separation between clusters), among other useful information.
+The printed result reports the cluster sizes, the mean within-cluster
+distance and medoid of each cluster, and the average silhouette width,
+which reflects the quality of the clustering (higher values indicate
+better separation between clusters).
+[`session_ids()`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
+returns which cluster each session belongs to, one row per session,
+keyed by the `session_id` it was built from, so the assignments can be
+joined back to the raw data:
 
 ``` r
 
-# Cluster assignments (first 20 sessions)
-head(clust$assignments, 20)
-#>  [1] 1 1 2 2 1 3 1 2 1 1 1 3 2 1 1 1 1 3 3 3
-
-# Cluster sizes
-clust$sizes
-#>   1   2   3 
-#> 260  94 172
-
-# Silhouette score (clustering quality: higher is better)
-clust$silhouette
-#> [1] 0.2799245
+head(session_ids(clust))
+#>   sequence                  session_label cluster
+#> 1        1 0086cabebd15 | 0086cabebd15 s1       1
+#> 2        2 00bd84ef1666 | 00bd84ef1666 s1       1
+#> 3        3 00da7e5a052d | 00da7e5a052d s1       2
+#> 4        4 0162fe521f0c | 0162fe521f0c s1       2
+#> 5        5 01aa31285a12 | 01aa31285a12 s1       1
+#> 6        6 01eb3fbbd431 | 01eb3fbbd431 s1       3
 ```
 
 ### Visualizing Clusters
@@ -179,13 +179,29 @@ We can specify which distance metric we want to use through the
 
 # Levenshtein distance (allows insertions/deletions)
 clust_lv <- build_clusters(net, k = 3, dissimilarity = "lv")
-clust_lv$silhouette
-#> [1] 0.2689417
+clust_lv
+#> Sequence Clustering [pam]
+#>   Sequences: 526  |  Clusters: 3
+#>   Dissimilarity: lv
+#>   Quality: silhouette = 0.269
+#> 
+#>   Cluster  N            Mean within-dist  Medoid
+#>   1        228 (43.3%)  9.588             245
+#>   2        183 (34.8%)  4.278             46
+#>   3        115 (21.9%)  34.472            420
 
 # Longest common subsequence
 clust_lcs <- build_clusters(net, k = 3, dissimilarity = "lcs")
-clust_lcs$silhouette
-#> [1] 0.1836091
+clust_lcs
+#> Sequence Clustering [pam]
+#>   Sequences: 526  |  Clusters: 3
+#>   Dissimilarity: lcs
+#>   Quality: silhouette = 0.184
+#> 
+#>   Cluster  N            Mean within-dist  Medoid
+#>   1        185 (35.2%)  5.730             511
+#>   2        91 (17.3%)   42.419            420
+#>   3        250 (47.5%)  13.577            325
 ```
 
 Some distance metrics may take additional arguments. For example, the
@@ -200,8 +216,16 @@ clust_weighted <- build_clusters(net,
                                dissimilarity = "hamming",
                                weighted = TRUE,
                                lambda = 0.5)
-clust_weighted$silhouette
-#> [1] 0.2337931
+clust_weighted
+#> Sequence Clustering [pam]
+#>   Sequences: 526  |  Clusters: 3
+#>   Dissimilarity: hamming (weighted, lambda = 0.5)
+#>   Quality: silhouette = 0.234
+#> 
+#>   Cluster  N            Mean within-dist  Medoid
+#>   1        192 (36.5%)  0.623             492
+#>   2        303 (57.6%)  0.667             316
+#>   3        31 ( 5.9%)   0.946             525
 ```
 
 ### Clustering Methods
@@ -242,13 +266,29 @@ To use any of these methods instead of PAM, we need to provide the
 
 # Ward's method (minimizes within-cluster variance)
 clust_ward <- build_clusters(net, k = 3, method = "ward.D2")
-clust_ward$silhouette
-#> [1] 0.5694224
+clust_ward
+#> Sequence Clustering [ward.D2]
+#>   Sequences: 526  |  Clusters: 3
+#>   Dissimilarity: hamming
+#>   Quality: silhouette = 0.569
+#> 
+#>   Cluster  N            Mean within-dist
+#>   1        435 (82.7%)  13.148
+#>   2        83 (15.8%)   38.666
+#>   3        8 ( 1.5%)    92.964
 
 # Complete linkage
 clust_complete <- build_clusters(net, k = 3, method = "complete")
-clust_complete$silhouette
-#> [1] 0.8019662
+clust_complete
+#> Sequence Clustering [complete]
+#>   Sequences: 526  |  Clusters: 3
+#>   Dissimilarity: hamming
+#>   Quality: silhouette = 0.802
+#> 
+#>   Cluster  N            Mean within-dist
+#>   1        518 (98.5%)  21.523
+#>   2        7 ( 1.3%)    87.524
+#>   3        1 ( 0.2%)    0.000
 ```
 
 ### Choosing k, dissimilarity, and method
@@ -337,9 +377,9 @@ plot(ch_d, type = "tradeoff", abbrev = TRUE)
 balance](clustering_files/figure-html/choose-tradeoff-1.png)
 
 Higher silhouette indicates better-defined clusters. The `<-- best`
-marker in the printed table is the silhouette-max row;
-`summary(ch)$best` returns it programmatically. We select `ward.D2` with
-2 clusters here.
+marker in the printed table is the silhouette-max row; `summary(ch)`
+returns the same sweep as a data frame whose `best` column marks that
+row. We select `ward.D2` with 2 clusters here.
 
 ``` r
 
@@ -390,7 +430,8 @@ plot(diag, type = "silhouette")
 ![Per-observation silhouette by
 cluster](clustering_files/figure-html/cluster-diagnostics-plot-1.png)
 
-`as.data.frame(diag)` returns the per-cluster table for downstream use.
+`as.data.frame(diag)` returns the per-cluster table as a data frame for
+downstream use.
 
 ## Mixture Markov Models
 
@@ -434,8 +475,9 @@ summary(mmm_fit)
 ```
 
 The `net_mmm` object contains posterior probabilities, model fit
-statistics (BIC, AIC, ICL), and per-cluster transition matrices in
-`$models`.
+statistics (BIC, AIC, ICL), and one transition matrix per cluster;
+`build_network(mmm_fit)` turns those into per-cluster networks (see
+below).
 [`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
 works on it too, with MMM-specific columns (mixing share, average
 posterior probability, per-cluster classification error):
@@ -599,34 +641,29 @@ cluster_diagnostics(fit_mmm)
 #>   2        334 (63.5%)  55.7%  0.766   0.0%
 ```
 
-Each element is a full `netobject`, addressable by its cluster name:
-
-``` r
-
-grp_dist[["Cluster 1"]]
-#> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.127, 0.634]  |  mean: 0.333
-#> 
-#>   Weight matrix:
-#>                 Directive Evaluative Metacognitive
-#>   Directive         0.634      0.181         0.185
-#>   Evaluative        0.481      0.393         0.127
-#>   Metacognitive     0.426      0.341         0.233 
-#> 
-#>   Initial probabilities:
-#>   Directive     0.903  ████████████████████████████████████████
-#>   Evaluative    0.060  ███
-#>   Metacognitive  0.037  ██
-```
+Each element of the group is a full `netobject` named by its cluster
+(`Cluster 1`, `Cluster 2`), so every verb that takes a network also
+takes the group and returns one result per cluster.
 
 ### Comparing Clusters
 
-We can compare which transition probabilities differ significantly among
-clusters using permutation testing:
+Clustering maximizes the separation between groups by construction, so
+some difference between the cluster networks is guaranteed. A
+permutation test asks which transition probabilities differ by more than
+reassigning sessions to clusters at random would produce:
 
 ``` r
 
 comparison <- permutation(grp_dist, iter = 100)
+comparison
+#> Grouped Permutation Test
+#> Groups: Cluster 1 vs Cluster 2 
+#> 
+#> -- Cluster 1 vs Cluster 2 --
+#> Permutation Test: Transition Network (relative probabilities) [directed]
+#>   Iterations: 100  |  Alpha: 0.05
+#>   Nodes: 3  |  Edges tested: 9  |  Significant: 3
+#>   Global test (networks differ overall?): M = 0.335 (p = 0.0396)  |  S = 0.096 (p = 0.0396)
 ```
 
 ## Workflow Summary

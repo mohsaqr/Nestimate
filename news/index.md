@@ -1,6 +1,6 @@
 # Changelog
 
-## Nestimate 1.0.1
+## Nestimate 1.0.2
 
 ### Breaking changes since CRAN 0.9.24
 
@@ -213,6 +213,25 @@
   the emergent-state rule for a return to the first state is a spell of
   at least 3 that is more than half the opening spell (codyna’s rule);
   the help page said “over twice”.
+
+- Documentation revision (2026-11-01): the README examples used column
+  names that the bundled data do not have (`action`, `time`, `phase`),
+  arguments that do not exist (`markov_stability(times =)`,
+  `build_simplicial(method =)`, `distribution_plot(type =)`,
+  `evaluate_links(held_out =)`) and undefined objects; every README
+  example now runs on bundled data and uses the package’s verbs instead
+  of `$` access. Vignette prose now matches the rendered output
+  (`markov-stability`, `transition-entropy`), the sequence-comparison
+  vignette names its dataset correctly, and the vignettes and examples
+  no longer reach into result objects with `$`. References were added to
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md),
+  [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md),
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+  [`cluster_choice()`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md),
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  and
+  [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md).
 
 ## Nestimate 0.9.29
 

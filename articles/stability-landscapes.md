@@ -274,7 +274,7 @@ passage_time(cluster_networks, states = engagement)
     #> 
     #>            Disengaged Average Active
     #> Disengaged        1.3     9.0     44
-    #> Average           2.5     5.7     35
+    #> Average           2.5     5.8     35
     #> Active            2.0    11.0     23
     #> 
     #> Stationary distribution:

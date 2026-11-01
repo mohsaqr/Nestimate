@@ -3,9 +3,9 @@
 > Unified network estimation, analysis, and validation for behavioral,
 > psychological, and panel data.
 
-Nestimate is a comprehensive R package for estimating, validating, and
-comparing networks from behavioral sequence data, psychological scales,
-and longitudinal panel data. A single entry point —
+Nestimate is an R package for estimating, validating, and comparing
+networks from behavioral sequence data, psychological scales, and
+longitudinal panel data. A single entry point —
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 — dispatches to 14 built-in estimators. Every network type shares the
 same validation pipeline: bootstrap confidence intervals, permutation
@@ -72,8 +72,8 @@ devtools::install_github("mohsaqr/Nestimate")
 
 All dynamic network methods use
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-Pass an event log with `action`, `actor`, and `time` columns — no
-preprocessing needed.
+Pass an event log and name its `action`, `actor`, and `time` columns —
+no preprocessing needed.
 
 ### Estimation Methods
 
@@ -87,16 +87,19 @@ preprocessing needed.
 ``` r
 
 library(Nestimate)
-data(human_long)
 
 net <- build_network(human_long, method = "tna",
-                     action = "action", actor = "session_id", time = "time")
+                     action = "code", actor = "session_id", time = "timestamp")
 
-# Per-group networks in one call
-group_nets <- build_network(human_long, method = "tna",
-                            action = "action", actor = "session_id",
-                            time = "time", group = "phase")
+# Per-group networks in one call: high vs low achievers
+group_nets <- build_network(group_regulation_long, method = "tna",
+                            action = "Action", actor = "Actor",
+                            time = "Time", group = "Achiever")
 ```
+
+Further estimators (`"ngram"`, `"gap"`, `"reverse"`, the window-based
+`"wtna"` family) are listed by
+[`list_estimators()`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md).
 
 ### Window-Based TNA
 
@@ -107,7 +110,6 @@ a mixed network combining both.
 
 ``` r
 
-data(learning_activities)
 net_wtna  <- wtna(learning_activities, actor = "student",
                   method = "transition", type = "relative")
 net_mixed <- wtna(learning_activities, actor = "student",
@@ -124,8 +126,8 @@ more).
 
 ``` r
 
-# From a long-format data frame
-net_co <- cooccurrence(human_long, field = "action", by = "session_id",
+# From a long-format data frame: codes co-occurring within a session
+net_co <- cooccurrence(human_long, field = "code", by = "session_id",
                        similarity = "jaccard", threshold = 0.1)
 ```
 
@@ -141,14 +143,13 @@ net_co <- cooccurrence(human_long, field = "action", by = "session_id",
 | `"ising"` | L1-regularised logistic regression for binary items |
 | `"mgm"` | Mixed Graphical Model — continuous + categorical variables together |
 
-All implemented from scratch with no dependency on igraph, qgraph, or
-bootnet.
+The estimation itself (EBICglasso, Ising, MGM) is delegated to the
+‘psychnets’ package; no igraph, qgraph, or bootnet is needed.
 
 ``` r
 
-data(srl_strategies)
-net_gl  <- build_network(srl_strategies, method = "glasso")
-net_mgm <- build_network(mixed_data, method = "mgm")   # scales + demographics
+net_gl <- build_network(srl_strategies, method = "glasso")
+net_gl
 
 predictability(net_gl)   # R-squared per node from network structure
 ```
@@ -168,19 +169,23 @@ three pillars of mlVAR analysis in a single function call:
 - **Between-subjects** (undirected) — partial correlations of person
   means: who differs from whom
 
-Machine-precision equivalence to `mlVAR::mlVAR()` validated across 25
-real ESM datasets, runs 1.45× faster.
+The estimates match `mlVAR::mlVAR()` with `estimator = "lmer"` and fixed
+temporal and contemporaneous effects.
+[`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
+needs a long panel with one row per beep (`id`, optional `day`, `beep`,
+and the variables); see
+[`?build_mlvar`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
+for a runnable simulated panel.
 
 ``` r
 
-data(chatgpt_srl)
-fit <- build_mlvar(chatgpt_srl, vars = c("planning", "monitoring", "evaluation"),
+# esm: one row per person-beep, columns id, day, beep, happy, calm, tired
+fit <- build_mlvar(esm, vars = c("happy", "calm", "tired"),
                    id = "id", day = "day", beep = "beep")
 
-fit$temporal          # directed network of lagged effects
-fit$contemporaneous   # undirected within-person partial correlations
-fit$between           # undirected between-persons partial correlations
-coefs(fit)            # tidy data.frame: beta, SE, t, p, CI for every edge
+fit           # the temporal, contemporaneous and between-person networks
+summary(fit)
+coefs(fit)    # tidy data.frame: beta, SE, t, p, CI for every edge
 ```
 
 ------------------------------------------------------------------------
@@ -195,9 +200,9 @@ group network would average over meaningfully different individuals.
 
 ``` r
 
-fit_g <- build_gimme(panel_data, vars = c("x1", "x2", "x3"), id = "id")
-fit_g$group_network       # aggregated group-level paths
-fit_g$individual_networks # one network per person
+# panel: one row per person-time point, columns id, V1, ..., V4 (see ?build_gimme)
+fit_g <- build_gimme(panel, vars = c("V1", "V2", "V3", "V4"), id = "id")
+fit_g   # group-level paths and the per-person networks
 ```
 
 ------------------------------------------------------------------------
@@ -208,12 +213,14 @@ fit_g$individual_networks # one network per person
 
 [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 partitions sequences into `k` groups using pairwise distance matrices.
-Supports 9 distance metrics and 8 clustering algorithms. Both
+Supports 9 distance metrics, PAM and 8 hierarchical linkage methods.
+Both
 [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 and
 [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
 results pass directly to
-[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+which returns one network per cluster.
 
 ``` r
 
@@ -233,7 +240,7 @@ selection via
 ``` r
 
 mmm   <- build_mmm(net, k = 3)
-compare_mmm(net, k = 2:6)   # model selection plot + table
+compare_mmm(net, k = 2:4)   # BIC / AIC / ICL per k
 mmm_nets <- build_network(mmm, method = "tna")
 ```
 
@@ -241,14 +248,18 @@ mmm_nets <- build_network(mmm, method = "tna")
 
 [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
 decomposes a network into macro (between-cluster) and micro
-(within-cluster) layers when nodes belong to known groups.
+(within-cluster) layers when nodes belong to known groups — here the
+three code families of `human_long`.
 
 ``` r
 
-clusters <- list(Metacognitive = c("Planning", "Monitoring"),
-                 Cognitive     = c("Elaboration", "Organisation"))
-mcml <- cluster_summary(net, clusters)
-mcml$macro$weights
+families <- list(Directive     = c("Command", "Request", "Specify"),
+                 Evaluative    = c("Correct", "Frustrate", "Refine", "Verify"),
+                 Metacognitive = c("Inquire", "Interrupt"))
+mcml <- build_mcml(human_long, clusters = families, action = "code",
+                   actor = "session_id", time = "timestamp")
+summary(mcml)          # within and between totals per family
+macro_network(mcml)    # the family-level transition network
 ```
 
 ------------------------------------------------------------------------
@@ -269,7 +280,7 @@ Capture dependencies beyond first-order transitions:
 hon  <- build_hon(net, max_order = 2)
 pathways(hon)                      # arrow-notation path strings
 hypa <- build_hypa(net)
-hypa$over                          # over-represented paths with p-values
+summary(hypa)                      # over- and under-represented paths with p-values
 ```
 
 ------------------------------------------------------------------------
@@ -281,7 +292,7 @@ tools from algebraic topology.
 
 ``` r
 
-sc <- build_simplicial(net, method = "clique")
+sc <- build_simplicial(net, type = "clique")
 betti_numbers(sc)          # connected components, cycles, voids
 euler_characteristic(sc)
 ph <- persistent_homology(net)  # track topology across thresholds
@@ -298,7 +309,7 @@ Visualize raw sequence data as index plots or state distribution charts
 
 ``` r
 
-# Sequence index plot: one row per person, coloured by state
+# Sequence heatmap: one row per sequence, coloured by state, sorted by similarity
 sequence_plot(net)
 
 # After clustering: faceted by cluster
@@ -306,8 +317,8 @@ clust <- build_clusters(net, k = 3)
 sequence_plot(clust, type = "index")
 
 # State distribution over time
-distribution_plot(net, type = "area")
-distribution_plot(clust, type = "bar")
+distribution_plot(net, geom = "area")
+distribution_plot(clust, geom = "bar")
 ```
 
 ------------------------------------------------------------------------
@@ -322,13 +333,8 @@ where?”
 
 ``` r
 
-data(human_long)
-net <- build_network(human_long, method = "tna",
-                     action = "action", actor = "session_id",
-                     time = "time", group = "phase")
-
-res <- sequence_compare(net, sub = 2:4, test = "chisq", adjust = "fdr")
-res$patterns                        # per-pattern frequencies + p-values
+res <- sequence_compare(group_nets, sub = 2:4, test = "chisq", adjust = "fdr")
+summary(res)                        # per-pattern frequencies + p-values
 plot(res)                           # back-to-back pyramid chart
 plot(res, style = "heatmap")        # heatmap for many patterns
 ```
@@ -345,12 +351,12 @@ every rule above a threshold.
 ``` r
 
 rules <- association_rules(net, min_support = 0.05, min_confidence = 0.6)
-rules$rules                       # tidy data.frame, sorted by lift
+summary(rules)                    # tidy data.frame, sorted by lift
 pathways(rules)                   # rules as arrow-notation strings
-
-# From a raw binary matrix
-rules2 <- association_rules(binary_mat, min_support = 0.1)
 ```
+
+A binary transaction matrix (rows = transactions, columns = items) is
+accepted as well.
 
 ------------------------------------------------------------------------
 
@@ -364,12 +370,15 @@ computes AUC, precision, and recall against held-out edges.
 
 ``` r
 
-preds <- predict_links(net)       # common neighbours, Adamic-Adar, Katz, ...
-head(preds$scores)                # sorted by predicted score
+# Keep only transitions with probability >= 0.1, then predict the rest
+sparse <- build_network(human_long, method = "tna", action = "code",
+                        actor = "session_id", time = "timestamp",
+                        threshold = 0.1)
+preds <- predict_links(sparse)    # common neighbours, Adamic-Adar, Katz, ...
+summary(preds)
 
-# Evaluate against known missing edges
-eval  <- evaluate_links(net, held_out = test_edges)
-eval$auc
+# Do the predictions recover the weaker transitions (>= 0.05) that were cut?
+evaluate_links(preds, extract_edges(net, threshold = 0.05))
 ```
 
 ------------------------------------------------------------------------
@@ -377,19 +386,21 @@ eval$auc
 ## Markov Chain Analysis
 
 [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
-measures how stable a network partition is under random-walk dynamics at
-different time scales — a resolution-free way to find communities.
+reports, per state, how sticky it is (persistence, sojourn time), how
+much of the long run it takes (stationary probability, return time) and
+how quickly it is reached from the other states.
 [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
-computes expected first-passage and return times between states.
+computes the mean first-passage time between every pair of states.
 
 ``` r
 
-stab <- markov_stability(net, times = seq(0.1, 10, 0.1))
-plot(stab)                # stability vs time-scale curve
+stab <- markov_stability(net)
+summary(stab)             # one row per state
+plot(stab)
 
 pt <- passage_time(net)
-pt$first_passage          # expected steps to reach state j from state i
-pt$return_time            # expected steps to return to the same state
+pt                        # expected steps to reach state j from state i
+plot(pt)
 ```
 
 ------------------------------------------------------------------------
@@ -404,12 +415,13 @@ Every network type shares the same validation pipeline.
 boot <- bootstrap_network(net, iter = 1000)
 summary(boot)
 
-# Permutation test: are two networks different?
-perm <- permutation(group_nets$`Cluster 1`, group_nets$`Cluster 2`)
+# Permutation test: do high and low achievers differ?
+perm <- permutation(group_nets, iter = 1000)
+summary(perm)
 
 # Network Comparison Test (NCT): formal test of structure + global strength
-nct_res <- nct(data1, data2, iter = 500)
-print(nct_res)            # M-statistic, S-statistic, per-edge p-values
+nct_res <- nct(head(srl_strategies, 125), tail(srl_strategies, 125), iter = 500)
+nct_res                   # M (structure), S (global strength), per-edge p-values
 
 # Split-half reliability
 network_reliability(net)
@@ -418,7 +430,8 @@ network_reliability(net)
 centrality_stability(net)
 
 # Glasso-specific bootstrap (edge inclusion + centrality CIs)
-boot_gl <- boot_glasso(net_pna, iter = 1000)
+boot_gl <- boot_glasso(net_gl, iter = 1000)
+summary(boot_gl)
 ```
 
 | Function | Purpose |
@@ -437,12 +450,12 @@ boot_gl <- boot_glasso(net_pna, iter = 1000)
 | Dataset | Description |
 |----|----|
 | `human_long` | 10,796 human actions across 429 human-AI coding sessions |
-| `ai_long` | Matched AI actions from the same 429 sessions |
-| `srl_strategies` | SRL strategy frequencies — 250 students, 9 strategies |
-| `chatgpt_srl` | ChatGPT-generated SRL scale scores for psychological networks |
-| `learning_activities` | Binary learning activity indicators — 200 students × 30 timepoints |
-| `group_regulation_long` | Group regulation sequences with covariates |
-| `trajectories` | 138-student engagement trajectory matrix |
+| `ai_long` | 8,551 AI actions from 428 of the same sessions |
+| `srl_strategies` | Simulated SRL strategy frequencies — 250 students, 9 strategies |
+| `chatgpt_srl` | 1,000 ChatGPT-generated responses scored on 5 SRL scales |
+| `learning_activities` | Simulated binary learning activity indicators — 200 students × 30 time points, 6 activities |
+| `group_regulation_long` | 27,533 group regulation actions with achievement and course covariates |
+| `trajectories` | 138 students × 15 weeks of engagement states (`NA` = drop-out) |
 
 ------------------------------------------------------------------------
 

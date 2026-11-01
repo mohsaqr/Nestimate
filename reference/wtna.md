@@ -146,29 +146,12 @@ print(net)
 
 # Both networks
 nets <- wtna(df, method = "both")
-print(nets$transition)
-#> Network (method: wtna_transition) [directed]
-#>   Weights: [1.000, 2.000]  |  mean: 1.333
-#> 
-#>   Weight matrix:
-#>     A B C
-#>   A 2 2 0
-#>   B 1 1 0
-#>   C 1 1 0 
-#> 
-#>   Initial probabilities:
-#>   A             1.000  ████████████████████████████████████████
-#>   B             0.000  
-#>   C             0.000  
-print(nets$cooccurrence)
-#> Network (method: wtna_cooccurrence) [undirected]
-#>   Weights: [1.000, 5.000]  |  mean: 2.333
-#> 
-#>   Weight matrix:
-#>     A B C
-#>   A 5 3 2
-#>   B 3 2 1
-#>   C 2 1 1 
+print(nets)   # the transition and the co-occurrence network
+#> Mixed Window TNA (transition + co-occurrence)
+#> -- Transition (directed) --
+#>   Nodes: 3  |  Edges: 6
+#> -- Co-occurrence (undirected) --
+#>   Nodes: 3  |  Edges: 6
 
 # With windowing
 net <- wtna(df, window_size = 2, mode = "non-overlapping")

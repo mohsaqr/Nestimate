@@ -447,6 +447,34 @@ level. This retains the rows and is psychnets' documented
   joined into a single wide `data.frame` with one column per group; with
   `combined = FALSE` returns a named list.
 
+## References
+
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
+Tikka, S. (2025). Transition network analysis: A novel framework for
+modeling, visualizing, and identifying the temporal patterns of learners
+and learning processes. In *Proceedings of the 15th International
+Learning Analytics and Knowledge Conference (LAK25)*. ACM.
+[doi:10.1145/3706468.3706513](https://doi.org/10.1145/3706468.3706513)
+
+Friedman, J., Hastie, T., & Tibshirani, R. (2008). Sparse inverse
+covariance estimation with the graphical lasso. *Biostatistics*, 9(3),
+432–441.
+[doi:10.1093/biostatistics/kxm045](https://doi.org/10.1093/biostatistics/kxm045)
+
+Foygel, R., & Drton, M. (2010). Extended Bayesian information criteria
+for Gaussian graphical models. *Advances in Neural Information
+Processing Systems*, 23, 604–612.
+
+van Borkulo, C. D., Borsboom, D., Epskamp, S., Blanken, T. F., Boschloo,
+L., Schoevers, R. A., & Waldorp, L. J. (2014). A new method for
+constructing networks from binary data. *Scientific Reports*, 4, 5918.
+[doi:10.1038/srep05918](https://doi.org/10.1038/srep05918)
+
+Haslbeck, J. M. B., & Waldorp, L. J. (2020). mgm: Estimating
+time-varying mixed graphical models in high-dimensional data. *Journal
+of Statistical Software*, 93(8), 1–46.
+[doi:10.18637/jss.v093.i08](https://doi.org/10.18637/jss.v093.i08)
+
 ## See also
 
 [`register_estimator`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md),

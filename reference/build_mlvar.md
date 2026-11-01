@@ -208,6 +208,13 @@ the tidy model output.
 - `summary.net_mlvar()`: Prints the three weight matrices and the
   significant temporal edges, then returns the tidy coefficient table.
 
+## References
+
+Epskamp, S., Waldorp, L. J., Mõttus, R., & Borsboom, D. (2018). The
+Gaussian graphical model in cross-sectional and time-series data.
+*Multivariate Behavioral Research*, 53(4), 453–480.
+[doi:10.1080/00273171.2018.1454823](https://doi.org/10.1080/00273171.2018.1454823)
+
 ## See also
 
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)

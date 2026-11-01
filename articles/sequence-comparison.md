@@ -2,11 +2,12 @@
 
 ## 1. The dataset
 
-`human_ai_long` is a bundled dataset in `Nestimate` containing coded
-action sequences from **429 human-AI coding sessions across 34
-projects**. Every row is a single action taken during a session with a
-`cluster` label grouping actions into six broad types: `Action`,
-`Communication`, `Directive`, `Evaluative`, `Metacognitive`, `Repair`.
+Do people steer an AI coding assistant differently at the start of a
+session than at the end? `human_long` is a bundled dataset in
+`Nestimate` containing the coded human turns of **429 human-AI coding
+sessions across 34 projects**. Every row is a single action taken during
+a session, with a `cluster` label grouping the nine action codes into
+three broad types: `Directive`, `Evaluative` and `Metacognitive`.
 
 ``` r
 
@@ -52,8 +53,10 @@ table(dat$half)
 
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 is the canonical entry point. Passing `group = "half"` produces a
-`netobject_group` with one netobject per half. Each netobject’s `$data`
-field holds the session-half sequences.
+`netobject_group` with one netobject per half; each stores the
+session-half sequences that
+[`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
+counts patterns in.
 
 ``` r
 
@@ -76,8 +79,9 @@ net
 
 [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
 accepts a `netobject_group` directly — group labels are read from the
-list names, no separate `group` argument needed. Pattern lengths 3–5,
-minimum frequency 25, chi-square test with FDR correction.
+list names, no separate `group` argument needed. Pattern lengths 3–5
+(the default `sub = 3:5`), minimum frequency 25, chi-square test with
+FDR correction (the default `adjust = "fdr"`).
 
 ``` r
 
@@ -111,9 +115,12 @@ res
 #>   ... and 90 more patterns
 ```
 
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the full
+per-pattern table, one row per pattern, ranked by the test statistic:
+
 ``` r
 
-head(res$patterns, 10)
+head(summary(res), 10)
 #>                                                       pattern length freq_early
 #> 1              Directive->Directive->Directive->Metacognitive      4        278
 #> 2  Directive->Directive->Directive->Metacognitive->Evaluative      5         97
@@ -202,15 +209,18 @@ plot(res, style = "pyramid", sort = "frequency", show_residuals = TRUE)
 
 ![](sequence-comparison_files/figure-html/sort-freq-1.png)
 
-## 9. Note on the test choice
+## 8. Note on the test choice
 
-This vignette uses `test = "chisq"` because the split-within-session
-design makes the two halves from the same session non-independent (same
-human, same AI, same project). The chi-square answers the k-gram-level
-question “do the rates differ between halves?” and is the right tool for
-this design.
-
+The split-within-session design makes the two halves of one session
+non-independent (same human, same AI, same project).
 `test = "permutation"` shuffles group labels at the sequence level and
-assumes exchangeability across sequences — it’s the right choice when
-the groups are independent cohorts (e.g., `Project_A` vs `Project_B`),
-not when each session contributes to both groups.
+assumes the sequences are exchangeable, which paired halves are not, so
+it is not used here.
+
+`test = "chisq"` answers the k-gram-level question “do the rates differ
+between halves?”. It does not model the pairing either: every k-gram
+occurrence is treated as an independent count, so its p-values are best
+read as a ranking of the patterns that differ most, not as exact error
+rates. The permutation test is the right choice when the groups are
+independent cohorts (e.g., two projects), where each sequence belongs to
+one group only.

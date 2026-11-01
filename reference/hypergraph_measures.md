@@ -150,7 +150,7 @@ df <- data.frame(
 )
 hg <- bipartite_groups(df, "player", "session")
 m  <- hypergraph_measures(hg)
-print(m)
+print(m)   # node-level, hyperedge-level and global measures
 #> Hypergraph measures: 4 nodes, 3 hyperedges
 #>   Density:                0.5833
 #>   Mean edge size:         2.33
@@ -164,18 +164,4 @@ print(m)
 #>   overlap_0   : 1
 #>   overlap_1   : 1
 #>   overlap_2   : 1
-m$hyperdegree         # how many sessions each player joined
-#> A B C D 
-#> 2 2 2 1 
-m$co_degree           # pairwise co-membership counts
-#>   A B C D
-#> A 0 2 1 0
-#> B 2 0 1 0
-#> C 1 1 0 1
-#> D 0 0 1 0
-m$jaccard             # symmetric overlap between sessions
-#>           S1        S2   S3
-#> S1 0.0000000 0.6666667 0.25
-#> S2 0.6666667 0.0000000 0.00
-#> S3 0.2500000 0.0000000 0.00
 ```

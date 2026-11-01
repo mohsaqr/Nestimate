@@ -76,5 +76,5 @@ hg <- bipartite_groups(events, player = "person", group = "meeting",
                        weight = "hours")
 L <- hypergraph_laplacian(hg, type = "random_walk")
 range(eigen(L, symmetric = TRUE, only.values = TRUE)$values)
-#> [1] -2.899699e-16  1.001279e+00
+#> [1] 4.403481e-17 1.001279e+00
 ```

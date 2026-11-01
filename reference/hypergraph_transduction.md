@@ -92,7 +92,7 @@ plot(x, ...)
 - optional:
 
   Ignored; present so the method matches the signature of the
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
+  [`base::as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
   generic.
 
 - what:

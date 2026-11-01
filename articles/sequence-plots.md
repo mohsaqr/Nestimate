@@ -7,16 +7,21 @@ library(Nestimate)
 
 ## The dataset
 
-`trajectories` ships with Nestimate: 138 student sequences × 15 weeks,
-three states (`Active`, `Average`, `Disengaged`) plus `NA` for missed
-weeks.
+A transition network summarises sequences into one matrix and, in doing
+so, throws away who did what and when. Sequence plots keep every
+sequence visible: they show whether a network’s dominant transitions
+come from most learners or from a few, whether states cluster in time,
+and where sequences end. `trajectories` ships with Nestimate: 138
+student sequences × 15 weeks, three states (`Active`, `Average`,
+`Disengaged`) plus `NA` for missed weeks; a run of `NA` at the end of a
+row marks drop-out.
 
 ``` r
 
 data(trajectories)
 dim(trajectories)
 #> [1] 138  15
-head(trajectories[, 1:8])
+head(trajectories)
 #>      1         2            3            4            5            6           
 #> [1,] "Active"  "Disengaged" "Disengaged" "Disengaged" "Active"     "Active"    
 #> [2,] "Average" "Average"    "Average"    "Average"    "Average"    "Average"   
@@ -24,13 +29,20 @@ head(trajectories[, 1:8])
 #> [4,] "Active"  "Active"     "Active"     "Active"     "Active"     "Average"   
 #> [5,] "Active"  "Active"     "Active"     "Average"    "Active"     "Average"   
 #> [6,] "Average" "Average"    "Disengaged" "Average"    "Disengaged" "Disengaged"
-#>      7         8        
-#> [1,] "Active"  "Active" 
-#> [2,] "Average" "Average"
-#> [3,] "Active"  "Active" 
-#> [4,] "Average" "Active" 
-#> [5,] "Active"  "Active" 
-#> [6,] "Average" "Average"
+#>      7         8         9         10           11        12          
+#> [1,] "Active"  "Active"  "Average" "Active"     "Average" "Active"    
+#> [2,] "Average" "Average" "Average" "Active"     "Average" "Average"   
+#> [3,] "Active"  "Active"  "Active"  "Average"    "Active"  "Active"    
+#> [4,] "Average" "Active"  "Active"  "Active"     "Average" "Active"    
+#> [5,] "Active"  "Active"  "Active"  "Disengaged" "Active"  "Active"    
+#> [6,] "Average" "Average" "Average" "Disengaged" "Average" "Disengaged"
+#>      13        14        15       
+#> [1,] NA        NA        NA       
+#> [2,] "Average" "Average" "Average"
+#> [3,] "Active"  "Active"  "Active" 
+#> [4,] "Average" "Active"  "Average"
+#> [5,] "Active"  "Average" "Average"
+#> [6,] "Average" "Average" "Average"
 sort(unique(as.vector(trajectories)), na.last = NA)
 #> [1] "Active"     "Average"    "Disengaged"
 ```
@@ -44,9 +56,15 @@ is the single entry point for three views of this data:
 | `"index"` | carpet without dendrogram, row-gap optional | no | yes |
 | `"distribution"` | stacked area / bar of state proportions over time | no | yes |
 
-Defaults: `legend = "right"`, `frame = FALSE`.
+Defaults: the legend sits on the right (`legend = NULL` resolves to
+`"right"`), `frame = FALSE`.
 
 ## 1. `type = "heatmap"` — clustered carpet
+
+Start here. Sorting the rows by sequence similarity puts learners with
+the same trajectory next to each other, so recurring trajectories appear
+as bands and the dendrogram shows how many distinct groups the data
+suggest.
 
 ### 1.1 Default — LCS distance, ward.D2 dendrogram
 
@@ -118,7 +136,7 @@ sequence_plot(trajectories, k = 5,
 sequence_plot(trajectories,
               legend = "bottom",
               legend_title = "Engagement",
-              state_colors = c("#2a9d8f", "#e9c46a", "#e76f51"),
+              state_colors = c("#009E73", "#E69F00", "#D55E00"),
               main = "Custom palette + bottom legend")
 ```
 
@@ -147,7 +165,9 @@ sequence_plot(trajectories, frame = TRUE,
 
 ## 2. `type = "index"` — gap-ready carpet with facets
 
-No dendrogram. Rows are sorted within each panel by `sort`. Supports
+Use it once the groups are known (clusters, conditions): each panel
+holds one group’s sequences, so groups are compared side by side. No
+dendrogram. Rows are sorted within each panel by `sort`. Supports
 `group` (vector or auto from a `net_clustering`) plus `ncol` / `nrow`
 facet grids.
 
@@ -195,7 +215,10 @@ sequence_plot(cl, type = "index", ncol = 3, nrow = 1,
 
 ## 3. `type = "distribution"` — state proportions over time
 
-Stacked area or bar chart of state frequencies per time column.
+Stacked area or bar chart of state frequencies per time column. It
+answers *when* rather than *who*: the share of each state at each time
+step, which shows trends (such as rising disengagement) that a
+transition network, pooled over time, cannot.
 
 ### 3.1 Default stacked area
 
@@ -295,7 +318,7 @@ sequence_plot(cl, type = "distribution")
 
 # Polish for a paper:
 sequence_plot(trajectories, k = 3,
-              state_colors = c("#2a9d8f", "#e9c46a", "#e76f51"),
+              state_colors = c("#009E73", "#E69F00", "#D55E00"),
               legend_title = "Engagement",
               legend = "bottom",
               cell_border = "grey70",

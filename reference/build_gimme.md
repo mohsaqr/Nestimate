@@ -219,6 +219,13 @@ individual-level paths in particular – so numeric results are not
 comparable with Nestimate \<= 0.8.5. The returned object also gained
 fields (see **Value**); nothing was removed.
 
+## References
+
+Gates, K. M., & Molenaar, P. C. M. (2012). Group search algorithm
+recovers effective connectivity maps for individuals in homogeneous and
+heterogeneous samples. *NeuroImage*, 63(1), 310–319.
+[doi:10.1016/j.neuroimage.2012.06.026](https://doi.org/10.1016/j.neuroimage.2012.06.026)
+
 ## See also
 
 [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)

@@ -315,6 +315,13 @@ state.
   a one-line dimension header, a quality line with AvePP / entropy /
   classification error, information criteria, and a per-cluster table.
 
+## References
+
+Helske, S., & Helske, J. (2019). Mixture hidden Markov models for
+sequence data: The seqHMM package in R. *Journal of Statistical
+Software*, 88(3), 1–32.
+[doi:10.18637/jss.v088.i03](https://doi.org/10.18637/jss.v088.i03)
+
 ## See also
 
 [`compare_mmm`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md),

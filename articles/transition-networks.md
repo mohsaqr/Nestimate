@@ -211,9 +211,10 @@ print(net_ftna)
 #### Attention Network (ATNA)
 
 The attention method applies temporal decay weighting, giving more
-importance to recent transitions within each sequence. The `lambda`
-parameter controls the decay rate: higher values produce faster decay.
-This captures the idea that later events in a process may be more
+importance to recent transitions within each sequence. The decay rate
+`lambda` (default `1`, passed through `params = list(lambda = ...)`)
+controls how fast the weight falls off: higher values produce faster
+decay. This captures the idea that later events in a process may be more
 indicative of the underlying dynamics than early ones.
 
 ``` r
@@ -426,8 +427,9 @@ Centrality measures quantify the role or importance of each state in the
 process. Centrality stability analysis quantifies how robust centrality
 rankings are to case-dropping: the CS-coefficient is the maximum
 proportion of cases that can be dropped while maintaining a correlation
-of at least 0.7 with the original centrality values. A CS-coefficient
-above 0.5 indicates stable rankings; below 0.25 indicates instability.
+of at least 0.7 with the original centrality values in at least 95% of
+the resamples. A CS-coefficient above 0.5 indicates stable rankings;
+below 0.25 indicates instability (Epskamp et al., 2018).
 
 ``` r
 
@@ -451,8 +453,10 @@ probabilities. Identifying clusters captures the dynamics, revealing
 typical behavioral strategies that learners frequently adopt.
 [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
 computes pairwise dissimilarities between sequences and partitions them
-into `k` groups, then builds a separate network for each cluster
-(López-Pernas et al., 2025).
+into `k` groups; passing the clustering to
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+then builds a separate network for each cluster (López-Pernas et al.,
+2025).
 
 ``` r
 
@@ -477,18 +481,41 @@ corrective — by randomly reassigning sequences to groups while
 preserving internal sequential structure, it constructs null
 distributions for edge-level differences. Only differences that exceed
 this null distribution constitute evidence of genuine structural
-divergence rather than algorithmic artifacts.
+divergence rather than algorithmic artifacts. Given the grouped network,
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+tests every pair of clusters in one call.
 
 ``` r
 
-perm <- permutation(Clusters$`Cluster 1`, Clusters$`Cluster 2`,
-                         iter = 100)
+perm <- permutation(Clusters, iter = 100)
 perm
+#> Grouped Permutation Test
+#> Groups: Cluster 1 vs Cluster 2, Cluster 1 vs Cluster 3, Cluster 2 vs Cluster 3 
+#> 
+#> -- Cluster 1 vs Cluster 2 --
 #> Permutation Test: Transition Network (relative probabilities) [directed]
 #>   Iterations: 100  |  Alpha: 0.05
 #>   Nodes: 9  |  Edges tested: 81  |  Significant: 9
 #>   Global test (networks differ overall?): M = 2.587 (p = 0.0099)  |  S = 0.244 (p = 0.0099)
+#> 
+#> -- Cluster 1 vs Cluster 3 --
+#> Permutation Test: Transition Network (relative probabilities) [directed]
+#>   Iterations: 100  |  Alpha: 0.05
+#>   Nodes: 9  |  Edges tested: 81  |  Significant: 13
+#>   Global test (networks differ overall?): M = 2.336 (p = 0.0099)  |  S = 0.116 (p = 0.198)
+#> 
+#> -- Cluster 2 vs Cluster 3 --
+#> Permutation Test: Transition Network (relative probabilities) [directed]
+#>   Iterations: 100  |  Alpha: 0.05
+#>   Nodes: 9  |  Edges tested: 81  |  Significant: 15
+#>   Global test (networks differ overall?): M = 3.012 (p = 0.0099)  |  S = 0.181 (p = 0.0594)
 ```
+
+All three pairs of clusters differ overall: the global statistic M (the
+sum of the absolute edge differences) has p = 0.0099, the smallest value
+100 permutations can give, and 9 to 15 of the 81 transitions differ per
+pair. With `iter = 100` the p-values are coarse; a reported analysis
+would use the default 1,000.
 
 ### Post-hoc Covariate Analysis
 
@@ -516,7 +543,7 @@ net_GR <- build_network(group_regulation_long, method = "tna",
 # Default estimator = "auto" inspects the cluster x covariate cross-tab
 # and picks firth (brglm2, bias-reduced) only when rare cells signal
 # separation risk; otherwise it uses the much faster nnet::multinom.
-# With Achiever balanced 50/50, multinom is selected (~0.5 s vs ~85 s).
+# With Achiever balanced 50/50, multinom is selected.
 Post <- build_clusters(net_GR, k = 2, covariates = c("Achiever"))
 summary(Post)
 #> Sequence Clustering Summary
@@ -568,10 +595,11 @@ for all others. This approach reveals which variables are directly
 connected versus those whose association is mediated through other
 variables (Saqr et al., 2024).
 
-`Nestimate` supports three estimation methods for psychological
-networks, all accessed through the same
+`Nestimate` supports three estimation methods for continuous
+psychological data, all accessed through the same
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-interface:
+interface (binary data use `method = "ising"`, mixed continuous and
+categorical data `method = "mgm"`):
 
 - **Correlation networks** (`method = "cor"`) estimate pairwise Pearson
   correlations and produce fully connected undirected networks. While
@@ -674,6 +702,11 @@ Clusters with Transition Network Analysis: A Heterogeneity Approach. In
 M. Saqr & S. López-Pernas (Eds.), *Advanced Learning Analytics Methods:
 AI, Precision and Complexity*. Springer Nature Switzerland.
 <https://lamethods.org/book2/chapters/ch17-tna-clusters/ch17-tna-clusters.html>
+
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
+psychological networks and their accuracy: A tutorial paper. *Behavior
+Research Methods*, 50(1), 195–212.
+<https://doi.org/10.3758/s13428-017-0862-1>
 
 Vogelsmeier, L.V.D.E., Oliveira, E., Misiejuk, K., López-Pernas, S., &
 Saqr, M. (2025). Delving into the psychology of Machines: Exploring the

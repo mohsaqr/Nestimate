@@ -260,6 +260,12 @@ cor, ...) order-1 transition counts are recounted from the raw `$data`
 sequences. The function errors only when neither integer weights nor
 `$data` are available.
 
+## References
+
+Friendly, M. (1994). Mosaic displays for multi-way contingency tables.
+*Journal of the American Statistical Association*, 89(425), 190–200.
+[doi:10.1080/01621459.1994.10476460](https://doi.org/10.1080/01621459.1994.10476460)
+
 ## Examples
 
 ``` r

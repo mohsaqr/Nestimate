@@ -50,11 +50,14 @@ and compares the observed differences with the reassigned ones. Two
 kinds of result are reported. The edge tests ask, for each transition,
 whether the High minus Low difference is larger than the reassignments
 produce: 42 of 78 transitions are. The global test asks whether the two
-networks differ at all, with two statistics from the Network Comparison
-Test (van Borkulo et al., 2023): M, the sum of all absolute edge
-differences, and S, the largest one. Both have p = 0.000999, the
-smallest value 1,000 reassignments can give: no reassignment produced a
-difference as large as the observed one.
+networks differ at all, with two statistics: M, the sum of all absolute
+edge differences, and S, the largest one. (These letters follow
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)’s
+convention; in the Network Comparison Test of van Borkulo et al., 2023,
+and in [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md), M
+is the largest edge difference and S the difference in global strength.)
+Both have p = 0.000999, the smallest value 1,000 reassignments can give:
+no reassignment produced a difference as large as the observed one.
 
 The test assumes that any student could have been in either group. In
 this design only whole teams could, so the next step accounts for the

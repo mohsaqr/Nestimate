@@ -185,6 +185,13 @@ Type cheat-sheet:
 Asking for a type the data can't support raises an error pointing at the
 alternatives.
 
+## References
+
+Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+interpretation and validation of cluster analysis. *Journal of
+Computational and Applied Mathematics*, 20, 53–65.
+[doi:10.1016/0377-0427(87)90125-7](https://doi.org/10.1016/0377-0427%2887%2990125-7)
+
 ## See also
 
 [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
