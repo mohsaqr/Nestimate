@@ -660,6 +660,15 @@
 #' summary(cl)
 #' }
 #'
+#' @references
+#' Kaufman, L., & Rousseeuw, P. J. (1990). \emph{Finding Groups in Data: An
+#' Introduction to Cluster Analysis}. Wiley.
+#'
+#' Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+#' interpretation and validation of cluster analysis. \emph{Journal of
+#' Computational and Applied Mathematics}, 20, 53--65.
+#' \doi{10.1016/0377-0427(87)90125-7}
+#'
 #' @importFrom utils combn
 #' @export
 build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",

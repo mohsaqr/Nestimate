@@ -1,6 +1,6 @@
 Package: Nestimate
 Title: Dynamic, Probabilistic, and Higher-Order Network Analysis
-Version: 1.0.1
+Version: 1.0.2
 Authors@R: c(
     person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
     person("Sonsoles", "López-Pernas", email = "sonsoles.lopez@uef.fi", role = "aut"),
@@ -10,8 +10,8 @@ Description: Estimate, compare, and analyze dynamic and psychological networks
     using a unified interface. Provides transition network analysis
     estimation (transition, frequency, co-occurrence, attention-weighted)
     Saqr et al. (2025) <doi:10.1145/3706468.3706513>, psychological
-    network methods (correlation, partial correlation, 'graphical lasso',
-    'Ising') Saqr, Beck, and Lopez-Pernas (2024)
+    network methods (correlation, partial correlation, graphical lasso,
+    Ising model) Saqr, Beck, and Lopez-Pernas (2024)
     <doi:10.1007/978-3-031-54464-4_19>,
     and higher-order network methods including higher-order networks,
     higher-order network embedding, hyper-path anomaly, and multi-order

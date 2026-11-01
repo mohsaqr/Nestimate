@@ -248,3 +248,8 @@ df <- data.frame(
 )
 mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")
 }
+\references{
+Friendly, M. (1994). Mosaic displays for multi-way contingency tables.
+\emph{Journal of the American Statistical Association}, 89(425),
+190--200. \doi{10.1080/01621459.1994.10476460}
+}

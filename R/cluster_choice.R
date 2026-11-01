@@ -69,6 +69,11 @@
 #' # "all" sentinel
 #' cluster_choice(seqs, k = 3, dissimilarity = "all")
 #' }
+#' @references
+#' Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+#' interpretation and validation of cluster analysis. \emph{Journal of
+#' Computational and Applied Mathematics}, 20, 53--65.
+#' \doi{10.1016/0377-0427(87)90125-7}
 #' @export
 cluster_choice <- function(data,
                             k             = 2:5,

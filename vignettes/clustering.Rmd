@@ -56,7 +56,7 @@ net <- build_network(human_long,
 
 Dissimilarity-based clustering groups units of analysis (in our case, sessions, since that is what we provided as `actor`) by directly comparing their observed sequences. In our case, each session is represented by its sequence of actions, and similarity between sessions is defined using a distance metric that quantifies how different two sequences are.
 
-To implement this method using `Nestimate`, we can use the `build_clusters()` function, which takes either  raw sequence data or a network object such as the `net` object that we estimated (which also contains the original sequences in `$data`):
+To implement this method using `Nestimate`, we can use the `build_clusters()` function, which takes either  raw sequence data or a network object such as the `net` object that we estimated (which also stores the original sequences):
 
 ```{r cluster-basic}
 clust <- build_clusters(net, k = 3)
@@ -65,16 +65,10 @@ clust
 ```
 The default clustering mechanism uses **Hamming distance** (number of positions where sequences differ) with **PAM** (Partitioning Around Medoids).
 
-The result contains the cluster `assignments` (which cluster each session belongs to), the cluster `sizes`, and a `silhouette` score that reflects the quality of the clustering (higher values indicate better separation between clusters), among other useful information.
+The printed result reports the cluster sizes, the mean within-cluster distance and medoid of each cluster, and the average silhouette width, which reflects the quality of the clustering (higher values indicate better separation between clusters). `session_ids()` returns which cluster each session belongs to, one row per session, keyed by the `session_id` it was built from, so the assignments can be joined back to the raw data:
+
 ```{r cluster-components}
-# Cluster assignments (first 20 sessions)
-head(clust$assignments, 20)
-
-# Cluster sizes
-clust$sizes
-
-# Silhouette score (clustering quality: higher is better)
-clust$silhouette
+head(session_ids(clust))
 ```
 
 ### Visualizing Clusters
@@ -118,11 +112,11 @@ We can specify which distance metric we want to use through the `dissimilarity` 
 ```{r cluster-metrics}
 # Levenshtein distance (allows insertions/deletions)
 clust_lv <- build_clusters(net, k = 3, dissimilarity = "lv")
-clust_lv$silhouette
+clust_lv
 
 # Longest common subsequence
 clust_lcs <- build_clusters(net, k = 3, dissimilarity = "lcs")
-clust_lcs$silhouette
+clust_lcs
 ```
 
 Some distance metrics may take additional arguments. For example, the Hamming distance accepts **temporal weighting** to emphasize earlier or later positions:
@@ -134,7 +128,7 @@ clust_weighted <- build_clusters(net,
                                dissimilarity = "hamming",
                                weighted = TRUE,
                                lambda = 0.5)
-clust_weighted$silhouette
+clust_weighted
 ```
 
 
@@ -153,11 +147,11 @@ To use any of these methods instead of PAM, we need to provide the `method` argu
 ```{r cluster-methods}
 # Ward's method (minimizes within-cluster variance)
 clust_ward <- build_clusters(net, k = 3, method = "ward.D2")
-clust_ward$silhouette
+clust_ward
 
 # Complete linkage
 clust_complete <- build_clusters(net, k = 3, method = "complete")
-clust_complete$silhouette
+clust_complete
 ```
 
 
@@ -196,7 +190,7 @@ A high silhouette can come from one big cluster and a tiny outlier cluster. The 
 plot(ch_d, type = "tradeoff", abbrev = TRUE)
 ```
 
-Higher silhouette indicates better-defined clusters. The `<-- best` marker in the printed table is the silhouette-max row; `summary(ch)$best` returns it programmatically. We select `ward.D2` with 2 clusters here.
+Higher silhouette indicates better-defined clusters. The `<-- best` marker in the printed table is the silhouette-max row; `summary(ch)` returns the same sweep as a data frame whose `best` column marks that row. We select `ward.D2` with 2 clusters here.
 
 ```{r}
 clust <- build_clusters(net, k = 2, method = "ward.D2", seed = 42)
@@ -216,7 +210,7 @@ diag
 plot(diag, type = "silhouette")
 ```
 
-`as.data.frame(diag)` returns the per-cluster table for downstream use.
+`as.data.frame(diag)` returns the per-cluster table as a data frame for downstream use.
 
 
 
@@ -231,7 +225,7 @@ mmm_fit <- build_mmm(net, k = 2)
 summary(mmm_fit)
 ```
 
-The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and per-cluster transition matrices in `$models`. `cluster_diagnostics()` works on it too, with MMM-specific columns (mixing share, average posterior probability, per-cluster classification error):
+The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and one transition matrix per cluster; `build_network(mmm_fit)` turns those into per-cluster networks (see below). `cluster_diagnostics()` works on it too, with MMM-specific columns (mixing share, average posterior probability, per-cluster classification error):
 
 ```{r mmm-diagnostics}
 diag_mmm <- cluster_diagnostics(mmm_fit)
@@ -320,17 +314,14 @@ cluster_diagnostics(grp_dist)
 cluster_diagnostics(fit_mmm)
 ```
 
-Each element is a full `netobject`, addressable by its cluster name:
-
-```{r}
-grp_dist[["Cluster 1"]]
-```
+Each element of the group is a full `netobject` named by its cluster (`Cluster 1`, `Cluster 2`), so every verb that takes a network also takes the group and returns one result per cluster.
 
 ### Comparing Clusters
 
-We can compare which transition probabilities differ significantly among clusters using permutation testing:
+Clustering maximizes the separation between groups by construction, so some difference between the cluster networks is guaranteed. A permutation test asks which transition probabilities differ by more than reassigning sessions to clusters at random would produce:
 ```{r}
 comparison <- permutation(grp_dist, iter = 100)
+comparison
 ```
 
 ## Workflow Summary

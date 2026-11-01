@@ -126,6 +126,12 @@
 #'   summary(fit)
 #' }
 #'
+#' @references
+#' Epskamp, S., Waldorp, L. J., M\enc{õ}{o}ttus, R., & Borsboom, D. (2018).
+#' The Gaussian graphical model in cross-sectional and time-series data.
+#' \emph{Multivariate Behavioral Research}, 53(4), 453--480.
+#' \doi{10.1080/00273171.2018.1454823}
+#'
 #' @seealso [build_network()]
 #' @export
 build_mlvar <- function(data, vars, id,

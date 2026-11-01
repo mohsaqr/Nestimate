@@ -91,7 +91,7 @@
 #'   fit (e.g. separation) are passed on unchanged.
 #'
 #' @references
-#' Saqr, M., Tikka, S., & López-Pernas, S. (2026). codyna: Complex Dynamic
+#' Saqr, M., Tikka, S., & L\enc{ó}{o}pez-Pernas, S. (2026). codyna: Complex Dynamic
 #' Systems. R package version 1.0.0.
 #'
 #' @examples

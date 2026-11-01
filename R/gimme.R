@@ -110,6 +110,12 @@
 #' print(res)
 #' }
 #'
+#' @references
+#' Gates, K. M., & Molenaar, P. C. M. (2012). Group search algorithm
+#' recovers effective connectivity maps for individuals in homogeneous and
+#' heterogeneous samples. \emph{NeuroImage}, 63(1), 310--319.
+#' \doi{10.1016/j.neuroimage.2012.06.026}
+#'
 #' @seealso \code{\link{build_network}}
 #'
 #' @export

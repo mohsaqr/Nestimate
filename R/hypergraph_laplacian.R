@@ -561,7 +561,7 @@ plot.net_hypergraph_cluster <- function(x,
 #' @param ... In \code{as.data.frame.net_hypergraph_transduction()}, \code{plot.net_hypergraph_transduction()}, \code{print.net_hypergraph_transduction()} and \code{summary.net_hypergraph_transduction()}: Additional arguments (ignored).
 #' @param object For the \code{summary()} method: an object of class \code{net_hypergraph_transduction}.
 #' @param row.names `NULL` (default) or a character vector of row names for the returned data frame.
-#' @param optional Ignored; present so the method matches the signature of the [as.data.frame()] generic.
+#' @param optional Ignored; present so the method matches the signature of the [base::as.data.frame()] generic.
 #' @param what Character. `"predictions"` (default) for the one-row-per-node table, `"scores"` for the tidy long score table (one row per node x class: `node`, `class`, `score`).
 #' @return In \code{print.net_hypergraph_transduction()}: The input object, invisibly.
 #' @return In \code{summary.net_hypergraph_transduction()}: A data.frame, one row per class: `class`, `n_labeled`, `n_predicted`, `mean_margin` (mean winning margin among the nodes predicted into the class).

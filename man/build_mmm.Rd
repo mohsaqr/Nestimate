@@ -194,6 +194,11 @@ summary(mmm)
 }
 
 }
+\references{
+Helske, S., & Helske, J. (2019). Mixture hidden Markov models for
+sequence data: The seqHMM package in R. \emph{Journal of Statistical
+Software}, 88(3), 1--32. \doi{10.18637/jss.v088.i03}
+}
 \seealso{
 \code{\link{compare_mmm}}, \code{\link{build_network}}
 }

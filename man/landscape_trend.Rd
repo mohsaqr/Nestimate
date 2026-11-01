@@ -117,7 +117,6 @@ their stored sequences are refused; pass the original sequences to
 estimate a new landscape. Observed shares count prepared positions without
 sequence weighting. Phase windows retain the full sequence's weight.
 
-
 With \code{depth = "stay"}, a window or slice in which a state is never
 left gives an infinite depth, and one in which it does not occur gives
 \code{NA}. With \code{depth = "occupancy"}, a window whose chain has no

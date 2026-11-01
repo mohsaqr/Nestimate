@@ -72,7 +72,12 @@
 #' )
 #' prepared <- prepare(df, actor = "student", action = "code",
 #'                     time = "timestamp")
-#' net <- build_network(prepared$sequence_data, method = "relative")
+#' prepared
+#'
+#' # build_network() runs the same preparation itself
+#' net <- build_network(df, actor = "student", action = "code",
+#'                      time = "timestamp", method = "relative")
+#' net
 #'
 #' @seealso \code{\link{build_network}}, \code{\link{prepare_onehot}}
 #'

@@ -91,7 +91,6 @@ their stored sequences are refused; pass the original sequences to
 estimate a new landscape. Observed shares count prepared positions without
 sequence weighting. Phase windows retain the full sequence's weight.
 
-
 Depth is a property of the state alone; how often the process enters the
 state is its \code{share} of the observed time steps, reported beside the
 depth. Where the process goes when it leaves is in the exit probabilities

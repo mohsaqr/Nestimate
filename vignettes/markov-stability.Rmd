@@ -63,10 +63,12 @@ table(as.vector(trajectories), useNA = "always")
 
 ## Selecting mostly-active learners
 
-We keep learners who were Active **more than half the time** (> 7 of 15 steps).
+Does a learner who is mostly engaged stay out of disengagement for longer, or
+only visit it less often? To compare, we keep learners who were Active **more
+than half the time** (> 7 of 15 steps; missing weeks do not count as Active).
 
 ```{r}
-sub <- trajectories[rowSums(trajectories == "Active", na.rm = TRUE) > 7, ]
+sub <- subset(trajectories, rowSums(trajectories == "Active", na.rm = TRUE) > 7)
 nrow(sub)
 ```
 
@@ -90,8 +92,8 @@ sequence_plot(sub, type = "heatmap")
 net_all <- build_network(trajectories, method = "relative")
 net_sub <- build_network(sub, method = "relative")
 
-round(net_all$weights, 3)
-round(net_sub$weights, 3)
+net_all
+net_sub
 ```
 
 In the mostly-active group nearly every state transitions predominantly back
@@ -114,8 +116,8 @@ print(pt_all, digits = 2)
 print(pt_sub, digits = 2)
 ```
 
-**Active to Disengaged** rises from 10.4 to ~40 steps -- mostly-active learners
-are nearly four times harder to disengage. The diagonal equals the mean
+**Active to Disengaged** rises from 10.4 to 52.0 steps -- a mostly-active
+learner takes five times as long to reach disengagement. The diagonal equals the mean
 recurrence time (how many steps between consecutive visits to the same state).
 
 ```{r fig.height=4}
@@ -134,13 +136,16 @@ reachable from any state) and the Disengaged column is uniformly pale
 
 ## Stationary distribution
 
-```{r echo=FALSE}
-data.frame(
-  State           = names(pt_all$stationary),
-  `Full sample`   = paste0(round(pt_all$stationary * 100, 1), "%"),
-  `Mostly active` = paste0(round(pt_sub$stationary * 100, 1), "%"),
-  check.names     = FALSE
-)
+The stationary distribution is the long-run share of time spent in each
+state. `markov_stability()` reports it per state as `stationary_prob`,
+beside the other per-state metrics described in the next section.
+
+```{r}
+ms_all <- markov_stability(net_all)
+ms_sub <- markov_stability(net_sub)
+
+summary(ms_all)
+summary(ms_sub)
 ```
 
 In the mostly-active group ~79% of long-run time is spent Active (vs 37% in
@@ -150,15 +155,7 @@ the full sample).
 
 ## Markov Stability
 
-```{r}
-ms_all <- markov_stability(net_all)
-ms_sub <- markov_stability(net_sub)
-
-print(ms_all)
-print(ms_sub)
-```
-
-The `stability` data frame contains:
+The per-state table printed above contains:
 
 | Column | Meaning |
 |--------|---------|
@@ -177,9 +174,11 @@ plot(ms_all, title = "Full sample")
 plot(ms_sub, title = "Mostly-active learners")
 ```
 
-Active leads on persistence (0.81) and sojourn time (5.3 steps) -- once a
-learner is active they stay active. Average has the lowest
-`avg_time_from_others` (1.6 steps) -- the most accessible hub state.
-Disengaged has `avg_time_from_others` of ~39 steps -- effectively unreachable.
+Among the mostly-active learners, Active leads on persistence (0.82) and
+sojourn time (5.5 steps) -- once a learner is active they stay active -- and
+it is also the most accessible state (`avg_time_from_others` 1.5 steps).
+Disengaged has `avg_time_from_others` of 51.6 steps -- effectively
+unreachable. In the full sample the most accessible state is Average
+(3.2 steps), and Disengaged is reached in 9.2 steps on average.
 
 ---

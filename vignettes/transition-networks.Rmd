@@ -91,7 +91,7 @@ print(net_ftna)
 
 ### Attention Network (ATNA)
 
-The attention method applies temporal decay weighting, giving more importance to recent transitions within each sequence. The `lambda` parameter controls the decay rate: higher values produce faster decay. This captures the idea that later events in a process may be more indicative of the underlying dynamics than early ones.
+The attention method applies temporal decay weighting, giving more importance to recent transitions within each sequence. The decay rate `lambda` (default `1`, passed through `params = list(lambda = ...)`) controls how fast the weight falls off: higher values produce faster decay. This captures the idea that later events in a process may be more indicative of the underlying dynamics than early ones.
 
 ```{r atna}
 net_atna <- build_network(human_long, method = "atna",
@@ -166,7 +166,7 @@ boot
 
 ### Centrality Stability
 
-Centrality measures quantify the role or importance of each state in the process. Centrality stability analysis quantifies how robust centrality rankings are to case-dropping: the CS-coefficient is the maximum proportion of cases that can be dropped while maintaining a correlation of at least 0.7 with the original centrality values. A CS-coefficient above 0.5 indicates stable rankings; below 0.25 indicates instability.
+Centrality measures quantify the role or importance of each state in the process. Centrality stability analysis quantifies how robust centrality rankings are to case-dropping: the CS-coefficient is the maximum proportion of cases that can be dropped while maintaining a correlation of at least 0.7 with the original centrality values in at least 95% of the resamples. A CS-coefficient above 0.5 indicates stable rankings; below 0.25 indicates instability (Epskamp et al., 2018).
 
 ```{r cs}
 centrality_stability(net_tna, iter = 100)
@@ -174,7 +174,7 @@ centrality_stability(net_tna, iter = 100)
 
 ## Clustering
 
-Clusters represent typical transition networks that recur across different instances. Unlike communities, clusters involve the entire network where groups of sequences are similarly interconnected and each exhibits a distinct transition pattern with its own set of transition probabilities. Identifying clusters captures the dynamics, revealing typical behavioral strategies that learners frequently adopt. `build_clusters()` computes pairwise dissimilarities between sequences and partitions them into `k` groups, then builds a separate network for each cluster (López-Pernas et al., 2025).
+Clusters represent typical transition networks that recur across different instances. Unlike communities, clusters involve the entire network where groups of sequences are similarly interconnected and each exhibits a distinct transition pattern with its own set of transition probabilities. Identifying clusters captures the dynamics, revealing typical behavioral strategies that learners frequently adopt. `build_clusters()` computes pairwise dissimilarities between sequences and partitions them into `k` groups; passing the clustering to `build_network()` then builds a separate network for each cluster (López-Pernas et al., 2025).
 
 ```{r clustering}
 Cls <- build_clusters(net_tna, k = 3)
@@ -184,13 +184,14 @@ Clusters
 
 ### Permutation Test for Clusters
 
-Permutation testing is particularly important for data-driven clusters: because clustering algorithms partition sequences to maximize between-group separation, some degree of apparent difference is guaranteed by construction. The permutation test provides the necessary corrective --- by randomly reassigning sequences to groups while preserving internal sequential structure, it constructs null distributions for edge-level differences. Only differences that exceed this null distribution constitute evidence of genuine structural divergence rather than algorithmic artifacts.
+Permutation testing is particularly important for data-driven clusters: because clustering algorithms partition sequences to maximize between-group separation, some degree of apparent difference is guaranteed by construction. The permutation test provides the necessary corrective --- by randomly reassigning sequences to groups while preserving internal sequential structure, it constructs null distributions for edge-level differences. Only differences that exceed this null distribution constitute evidence of genuine structural divergence rather than algorithmic artifacts. Given the grouped network, `permutation()` tests every pair of clusters in one call.
 
 ```{r perm-clusters}
-perm <- permutation(Clusters$`Cluster 1`, Clusters$`Cluster 2`,
-                         iter = 100)
+perm <- permutation(Clusters, iter = 100)
 perm
 ```
+
+All three pairs of clusters differ overall: the global statistic M (the sum of the absolute edge differences) has p = 0.0099, the smallest value 100 permutations can give, and 9 to 15 of the 81 transitions differ per pair. With `iter = 100` the p-values are coarse; a reported analysis would use the default 1,000.
 
 
 ## Post-hoc Covariate Analysis
@@ -210,7 +211,7 @@ net_GR <- build_network(group_regulation_long, method = "tna",
 # Default estimator = "auto" inspects the cluster x covariate cross-tab
 # and picks firth (brglm2, bias-reduced) only when rare cells signal
 # separation risk; otherwise it uses the much faster nnet::multinom.
-# With Achiever balanced 50/50, multinom is selected (~0.5 s vs ~85 s).
+# With Achiever balanced 50/50, multinom is selected.
 Post <- build_clusters(net_GR, k = 2, covariates = c("Achiever"))
 summary(Post)
 ```
@@ -227,7 +228,7 @@ Postgr
 
 Psychological network analysis estimates the conditional dependency structure among a set of variables. Variables (e.g., symptoms, traits, behaviors) are represented as nodes, and edges represent partial correlations --- the association between two variables after controlling for all others. This approach reveals which variables are directly connected versus those whose association is mediated through other variables (Saqr et al., 2024).
 
-`Nestimate` supports three estimation methods for psychological networks, all accessed through the same `build_network()` interface:
+`Nestimate` supports three estimation methods for continuous psychological data, all accessed through the same `build_network()` interface (binary data use `method = "ising"`, mixed continuous and categorical data `method = "mgm"`):
 
 - **Correlation networks** (`method = "cor"`) estimate pairwise Pearson correlations and produce fully connected undirected networks. While informative as a starting point, they do not distinguish direct from indirect associations.
 - **Partial correlation networks** (`method = "pcor"`) control for all other variables, revealing only direct associations. They provide a more accurate picture of the dependency structure, though results can be noisy in small samples.
@@ -264,5 +265,7 @@ Saqr, M., López-Pernas, S., & Tikka, S. (2025a). Mapping Relational Dynamics wi
 Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., & Tikka, S. (2025b). Transition network analysis: A novel framework for modeling, visualizing, and identifying the temporal patterns of learners and learning processes. *Proceedings of the 15th International Learning Analytics and Knowledge Conference (LAK25)*. ACM. <https://doi.org/10.1145/3706468.3706513>
 
 López-Pernas, S., Tikka, S., & Saqr, M. (2025). Mining Patterns and Clusters with Transition Network Analysis: A Heterogeneity Approach. In M. Saqr & S. López-Pernas (Eds.), *Advanced Learning Analytics Methods: AI, Precision and Complexity*. Springer Nature Switzerland. <https://lamethods.org/book2/chapters/ch17-tna-clusters/ch17-tna-clusters.html>
+
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. *Behavior Research Methods*, 50(1), 195--212. <https://doi.org/10.3758/s13428-017-0862-1>
 
 Vogelsmeier, L.V.D.E., Oliveira, E., Misiejuk, K., López-Pernas, S., & Saqr, M. (2025). Delving into the psychology of Machines: Exploring the structure of self-regulated learning via LLM-generated survey responses. *Computers in Human Behavior*, 173, 108769. <https://doi.org/10.1016/j.chb.2025.108769>

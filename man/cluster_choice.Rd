@@ -140,6 +140,12 @@ cluster_choice(seqs, k = 2:4, dissimilarity = c("hamming", "lcs"))
 cluster_choice(seqs, k = 3, dissimilarity = "all")
 }
 }
+\references{
+Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+interpretation and validation of cluster analysis. \emph{Journal of
+Computational and Applied Mathematics}, 20, 53--65.
+\doi{10.1016/0377-0427(87)90125-7}
+}
 \seealso{
 \code{\link{build_clusters}}, \code{\link{compare_mmm}} for
 the model-based equivalent, \code{\link{cluster_diagnostics}} for

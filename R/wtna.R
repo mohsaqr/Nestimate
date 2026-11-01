@@ -76,8 +76,7 @@
 #'
 #' # Both networks
 #' nets <- wtna(df, method = "both")
-#' print(nets$transition)
-#' print(nets$cooccurrence)
+#' print(nets)   # the transition and the co-occurrence network
 #'
 #' # With windowing
 #' net <- wtna(df, window_size = 2, mode = "non-overlapping")

@@ -1,5 +1,4 @@
-# Nestimate 1.0.1
-
+# Nestimate 1.0.2
 ## Breaking changes since CRAN 0.9.24
 
 * `plot_mosaic()` is no longer exported (it masked `tna::plot_mosaic()`);
@@ -132,6 +131,20 @@
 * `sequence_metrics()`: the emergent-state rule for a return to the first
   state is a spell of at least 3 that is more than half the opening spell
   (codyna's rule); the help page said "over twice".
+
+* Documentation revision (2026-11-01): the README examples used column
+  names that the bundled data do not have (`action`, `time`, `phase`),
+  arguments that do not exist (`markov_stability(times =)`,
+  `build_simplicial(method =)`, `distribution_plot(type =)`,
+  `evaluate_links(held_out =)`) and undefined objects; every README
+  example now runs on bundled data and uses the package's verbs instead
+  of `$` access. Vignette prose now matches the rendered output
+  (`markov-stability`, `transition-entropy`), the sequence-comparison
+  vignette names its dataset correctly, and the vignettes and examples
+  no longer reach into result objects with `$`. References were added to
+  `build_network()`, `build_mlvar()`, `build_gimme()`,
+  `build_clusters()`, `cluster_choice()`, `build_mmm()` and
+  `mosaic_plot()`.
 
 # Nestimate 0.9.29
 

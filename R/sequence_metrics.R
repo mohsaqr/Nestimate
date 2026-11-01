@@ -93,14 +93,14 @@
 #'   (\code{integrative_potential} only with \code{favorable}).
 #'
 #' @references
-#' Saqr, M., Tikka, S., & López-Pernas, S. (2026). codyna: Complex Dynamic
+#' Saqr, M., Tikka, S., & L\enc{ó}{o}pez-Pernas, S. (2026). codyna: Complex Dynamic
 #' Systems. R package version 1.0.0.
 #'
 #' Brzinsky-Fay, C. (2018). Unused resources: Sequence and trajectory
 #' indicators. International Symposium on Sequence Analysis and Related
-#' Methods, Monte Verità.
+#' Methods, Monte Verit\enc{à}{a}.
 #'
-#' Gabadinho, A., Ritschard, G., Müller, N. S., & Studer, M. (2011).
+#' Gabadinho, A., Ritschard, G., M\enc{ü}{u}ller, N. S., & Studer, M. (2011).
 #' Analyzing and visualizing state sequences in R with TraMineR. Journal of
 #' Statistical Software, 40(4), 1-37. \doi{10.18637/jss.v040.i04}
 #'

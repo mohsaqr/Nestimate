@@ -99,7 +99,6 @@ their stored sequences are refused; pass the original sequences to
 estimate a new landscape. Observed shares count prepared positions without
 sequence weighting. Phase windows retain the full sequence's weight.
 
-
 The measures are computed from the same sequences as the depths, so the
 cups of the most stable sequences are deep by construction (self-loop
 tendency in particular is closely tied to the stay probabilities). What

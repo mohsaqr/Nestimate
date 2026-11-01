@@ -52,7 +52,7 @@ initial labels.}
 
 \item{row.names}{\code{NULL} (default) or a character vector of row names for the returned data frame.}
 
-\item{optional}{Ignored; present so the method matches the signature of the \code{\link[=as.data.frame]{as.data.frame()}} generic.}
+\item{optional}{Ignored; present so the method matches the signature of the \code{\link[base:as.data.frame]{base::as.data.frame()}} generic.}
 
 \item{what}{Character. \code{"predictions"} (default) for the one-row-per-node table, \code{"scores"} for the tidy long score table (one row per node x class: \code{node}, \code{class}, \code{score}).}
 }

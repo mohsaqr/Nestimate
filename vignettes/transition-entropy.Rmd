@@ -66,7 +66,8 @@ independent), and their difference, the redundancy. The process runs at
 2.41 bits per step against a ceiling of $\log_2 9 = 3.17$; the normalized
 entropy 0.76 is the scale-free version Krejtz et al. (2025) report.
 Regulation is far from scripted, but knowing the current action removes
-22% of the uncertainty about the next one (relative redundancy 0.22):
+13% of the uncertainty about the next one (relative redundancy 0.134,
+that is 0.373 of the 2.78 bits of $H(\pi)$):
 sequence carries real information, which is the empirical justification
 for modeling transitions rather than activity frequencies alone.
 
@@ -158,12 +159,14 @@ eb <- entropy_bayes(net, draws = 1000, seed = 1)
 eb
 ```
 
-The posterior mean sits slightly below the plug-in estimate — the
-posterior integrates over sparse-count uncertainty instead of taking the
-point estimate at face value — and the interval quantifies how firmly the
-data pin down the process entropy. An edge is flagged `credible` when its
-share of $H$ credibly exceeds `min_share` (1% by default); `$model`
-contains the entropy network with all other edges zeroed — the stable
+The posterior mean (2.411 bits) sits next to the plug-in estimate
+(2.409): with 27,533 actions every row of the matrix is well populated,
+so the posterior adds little beyond the interval, which quantifies how
+firmly the data pin down the process entropy. On sparse data the two
+move apart, because the posterior integrates over count uncertainty
+instead of taking the point estimate at face value. An edge is flagged `credible` when its
+share of $H$ credibly exceeds `min_share` (1% by default). The result
+also carries the entropy network with all other edges zeroed — the stable
 entropy skeleton, safe to display without overreading thin cells.
 
 ```{r bayes-plot, fig.width = 7.5, fig.height = 6}
@@ -185,7 +188,8 @@ level.
   exploration, phase shifts. Report the window size and step.
 - **Sparse data or formal comparison** — `entropy_bayes()`: credible
   intervals for $H$, per-state and per-edge; group differences via the
-  posterior draws; `$model` for a display pruned of unstable edges.
+  posterior draws; its pruned entropy network for a display without
+  unstable edges.
 
 # References
 

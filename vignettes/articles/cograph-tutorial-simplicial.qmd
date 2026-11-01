@@ -122,7 +122,7 @@ Even when order 1 is globally optimal (by BIC), *specific pathways* may still ex
 
 ```{r mogen-transitions}
 mt <- mogen_transitions(mg, order = 2)
-mt[1:8, ]
+head(mt, 8)
 ```
 
 Each row is a second-order pathway. The `from` column is the two-state context, `to` is the predicted next state, `count` is the empirical frequency, and `probability` is the conditional `P(to | from)`. A high count combined with a high probability is a *predictive* context: knowing the previous two states pins down the next one. A high count with low probability is a *common but ambiguous* context — frequent in the data, but its successor distribution is spread out.
@@ -140,9 +140,9 @@ To zoom in on the single most frequent pathway, set `max_pathways = 1` and let t
 plot_simplicial(net, pathways = mt, max_pathways = 1)
 ```
 
-### Permutation-exact Markov order test
+### Permutation Markov order test
 
-MOGen uses information criteria. A complementary, principled approach is the **permutation-exact LRT** in `markov_order_test()`: at each order $k$, it tests $H_0$: "process is order $(k-1)$" against $H_1$: "process is order $k$" by reframing as a conditional-independence test on $(k+1)$-grams. The null distribution is built by **shuffling successor labels within each context** — so the test is exact under $H_0$, with no plug-in MLE bias from sparse $(k+1)$-gram tables.
+MOGen uses information criteria. A complementary approach is the **permutation LRT** in `markov_order_test()`: at each order $k$, it tests $H_0$: "process is order $(k-1)$" against $H_1$: "process is order $k$" by reframing as a conditional-independence test on $(k+1)$-grams. The null distribution is built by **shuffling successor labels within each context**, so it needs no plug-in MLE approximation for sparse $(k+1)$-gram tables. The permutation is conditional rather than exact: the overlapping windows of one sequence are not independent.
 
 ```{r markov-order, fig.width=12, fig.height=8}
 mot <- markov_order_test(net, max_order = 3, n_perm = 200, seed = 1)
@@ -412,7 +412,7 @@ In the pathway complex, each higher-order pathway becomes a simplex. $\beta_0 > 
 All simplicial computations are cross-validated against igraph's clique-finding and verified via the Euler-Poincaré theorem:
 
 ```{r verify}
-verify_simplicial(net$weights, threshold = 0.05)
+verify_simplicial(net, threshold = 0.05)
 ```
 
 ## Summary

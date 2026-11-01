@@ -140,7 +140,7 @@ pattern_outcome(group_regulation_long, outcome = "Achiever",
 
 }
 \references{
-Saqr, M., Tikka, S., & López-Pernas, S. (2026). codyna: Complex Dynamic
+Saqr, M., Tikka, S., & L\enc{ó}{o}pez-Pernas, S. (2026). codyna: Complex Dynamic
 Systems. R package version 1.0.0.
 }
 \seealso{

@@ -399,6 +399,10 @@
 #'   residual. \code{mcml} with \code{level = "clusters"} returns a single
 #'   \code{facet_wrap}-ed \code{ggplot} (one panel per cluster, shared fill
 #'   scale); every other input returns a single-panel \code{ggplot}.
+#' @references
+#' Friendly, M. (1994). Mosaic displays for multi-way contingency tables.
+#' \emph{Journal of the American Statistical Association}, 89(425),
+#' 190--200. \doi{10.1080/01621459.1994.10476460}
 #' @export
 #' @examples
 #' data(group_regulation_long, package = "Nestimate")

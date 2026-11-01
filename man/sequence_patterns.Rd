@@ -149,7 +149,7 @@ infinite (or zero) odds ratio, with a finite lower (or upper) limit; a
 pattern present in every sequence has none (\code{NA}). For three or more
 groups, the Pearson chi-square of
 the presence-by-group table gives the p-value (G - 1 degrees of freedom),
-with Cramér's V as the effect size. Unlike a comparison of counts against
+with Cram\enc{é}{e}r's V as the effect size. Unlike a comparison of counts against
 an equal split, both tests account for unequal group sizes. p-values are
 adjusted across the returned patterns' family (all patterns passing the
 filters) with \code{adjust}. The rows are then ordered by \code{p_value}.
