@@ -156,7 +156,10 @@ print(x, ...)
 - group:
 
   Optional grouping vector (length `nrow(x)`) producing one facet per
-  group. Index/distribution only. Ignored for heatmap.
+  group. Index/distribution only. Ignored for heatmap. With `periods`,
+  the name of a column of the long data (or of the network's metadata)
+  that is constant within actor, e.g. a class or a condition: one panel
+  per value, one row per actor, all panels on the same period axis.
 
 - periods:
 
@@ -169,8 +172,9 @@ print(x, ...)
   period: factor levels give their order (an unused level is an empty
   block), otherwise they are sorted. Ticks mark the period boundaries
   and each label sits under its block; `tick` thins the labels. Heatmap
-  and index types only; not with `group` or `trim`. Default `NULL` plots
-  the sequences as they are.
+  and index types only. `trim` then counts periods, not time points, and
+  `group` names a column (index type). Default `NULL` plots the
+  sequences as they are.
 
 - fill:
 
@@ -197,7 +201,8 @@ print(x, ...)
   actions into sessions at gaps over 15 minutes, as
   [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
   does; with `periods` it does not, so each actor-period is one
-  sequence. `group` cannot be combined with long data.
+  sequence. `group` combines with long data only together with
+  `periods`, as a column name.
 
 - scale, geom, na:
 
@@ -224,7 +229,9 @@ print(x, ...)
   in `(0, 1)` drops everything past that quantile of sequence lengths
   (e.g. `trim = 0.95` keeps the columns covering the shortest 95% of
   sequences); a value `>= 1` is an absolute cut (`trim = 50` keeps the
-  first 50 time points).
+  first 50 time points). With `periods` the unit is the period block:
+  `trim = 60` keeps the first 60 periods and a fraction keeps the
+  periods up to that quantile of the actors' last active period.
 
 - panel:
 
@@ -442,7 +449,9 @@ invisibly, a list whose shape depends on `type`:
   `ord` (row order of the actors), `codes` (integer matrix, one row per
   actor and one column per period slot, in the `fill = "pad"` layout,
   named `"<period>.<slot>"`), `palette`, `levels`, `periods` (period
-  labels in plotted order) and `fill`.
+  labels in plotted order, after `trim`) and `fill`; with `group`, also
+  `groups` (panel labels) and `orders` (one row order per panel,
+  indexing the actors), `ord` being their concatenation.
 
 - `"distribution"`:
 

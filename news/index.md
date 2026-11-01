@@ -1,5 +1,23 @@
 # Changelog
 
+## Nestimate 1.0.3
+
+- `sequence_plot(periods =)` accepts `trim` and `group`. `trim` counts
+  period blocks (`trim = 60` keeps the first 60 days; a fraction keeps
+  the periods up to that quantile of the actors’ last active period).
+  `group` names a column of the long data (or of the network’s metadata)
+  that is constant within actor and draws one panel per value, one row
+  per actor, on a shared period axis (index type; `combined = FALSE`
+  gives one page per panel). The returned list adds `groups` and
+  `orders` when grouped.
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  on long data with a missing actor or period value raises a
+  `nestimate_bad_input` error naming the column, instead of
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)’s
+  “actor/session” message.
+- Plotting a tibble no longer warns “Unknown or uninitialised column:
+  `state_colors`”.
+
 ## Nestimate 1.0.2
 
 ### Breaking changes since CRAN 0.9.24

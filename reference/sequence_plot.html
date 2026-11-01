@@ -25,7 +25,7 @@ distribution_plot.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -199,7 +199,11 @@ object to supply row ordering (heatmap only; overrides <code>sort</code>).</p></
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
 <dd><p>Optional grouping vector (length <code>nrow(x)</code>) producing
-one facet per group. Index/distribution only. Ignored for heatmap.</p></dd>
+one facet per group. Index/distribution only. Ignored for heatmap.
+With <code>periods</code>, the name of a column of the long data (or of the
+network's metadata) that is constant within actor, e.g. a class or a
+condition: one panel per value, one row per actor, all panels on the
+same period axis.</p></dd>
 
 
 <dt id="arg-periods">periods<a class="anchor" aria-label="anchor" href="#arg-periods"></a></dt>
@@ -213,8 +217,9 @@ row per actor and the time axis is split into equal-width blocks, one
 per period: factor levels give their order (an unused level is an
 empty block), otherwise they are sorted. Ticks mark the period
 boundaries and each label sits under its block; <code>tick</code> thins the
-labels. Heatmap and index types only; not with <code>group</code> or
-<code>trim</code>. Default <code>NULL</code> plots the sequences as they are.</p></dd>
+labels. Heatmap and index types only. <code>trim</code> then counts periods,
+not time points, and <code>group</code> names a column (index type).
+Default <code>NULL</code> plots the sequences as they are.</p></dd>
 
 
 <dt id="arg-fill">fill<a class="anchor" aria-label="anchor" href="#arg-fill"></a></dt>
@@ -240,7 +245,8 @@ actor's actions in order (otherwise row order is used). Without
 <code>periods</code>, a <code>time</code> column also splits an actor's actions
 into sessions at gaps over 15 minutes, as <code><a href="prepare.html">prepare()</a></code> does; with
 <code>periods</code> it does not, so each actor-period is one sequence.
-<code>group</code> cannot be combined with long data.</p></dd>
+<code>group</code> combines with long data only together with
+<code>periods</code>, as a column name.</p></dd>
 
 
 <dt id="arg-scale-geom-na">scale, geom, na<a class="anchor" aria-label="anchor" href="#arg-scale-geom-na"></a></dt>
@@ -268,7 +274,9 @@ plots the full width. A fraction in <code>(0, 1)</code> drops everything
 past that quantile of sequence lengths (e.g. <code>trim = 0.95</code> keeps
 the columns covering the shortest 95% of sequences); a value
 <code>&gt;= 1</code> is an absolute cut (<code>trim = 50</code> keeps the first 50
-time points).</p></dd>
+time points). With <code>periods</code> the unit is the period block:
+<code>trim = 60</code> keeps the first 60 periods and a fraction keeps the
+periods up to that quantile of the actors' last active period.</p></dd>
 
 
 <dt id="arg-panel">panel<a class="anchor" aria-label="anchor" href="#arg-panel"></a></dt>
@@ -493,7 +501,10 @@ the original rows) and <code>groups</code> (panel labels).</p></dd>
 <code>codes</code> (integer matrix, one row per actor and one column per
 period slot, in the <code>fill = "pad"</code> layout, named
 <code>"&lt;period&gt;.&lt;slot&gt;"</code>), <code>palette</code>, <code>levels</code>,
-<code>periods</code> (period labels in plotted order) and <code>fill</code>.</p></dd>
+<code>periods</code> (period labels in plotted order, after <code>trim</code>)
+and <code>fill</code>; with <code>group</code>, also <code>groups</code> (panel
+labels) and <code>orders</code> (one row order per panel, indexing the
+actors), <code>ord</code> being their concatenation.</p></dd>
 
 <dt><code>"distribution"</code></dt>
 <dd><p>Whatever
