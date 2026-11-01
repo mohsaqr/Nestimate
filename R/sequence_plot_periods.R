@@ -19,17 +19,29 @@
 # build_network(). Only the named columns go in, so prepare() has no other
 # metadata to aggregate.
 #' @noRd
-.seqplot_from_long <- function(x, actor, action, time, order, periods) {
+.seqplot_from_long <- function(x, actor, action, time, order, periods,
+                               group = NULL) {
   if (!is.data.frame(x)) {
     .period_bad_input(sprintf(paste0(
       "`action =` reads long data, so `x` must be a data frame; got '%s'."),
       class(x)[1L]))
   }
-  cols <- unique(c(actor, action, time, order, periods))
+  cols <- unique(c(actor, action, time, order, periods, group))
   missing_cols <- setdiff(cols, names(x))
   if (length(missing_cols) > 0L) {
     .period_bad_input(sprintf("Column(s) not in `x`: %s.",
                               paste(missing_cols, collapse = ", ")))
+  }
+  # prepare() would reject these too, but as an "actor/session" error; name
+  # the argument the caller actually used.
+  id_cols <- c(actor, periods)
+  has_na <- id_cols[vapply(id_cols, function(col) anyNA(x[[col]]), logical(1))]
+  if (length(has_na) > 0L) {
+    .period_bad_input(sprintf(paste0(
+      "Column(s) %s have missing values; every row needs an actor%s. ",
+      "Drop or relabel these rows first."),
+      paste(sprintf("`%s`", has_na), collapse = " and "),
+      if (is.null(periods)) "" else " and a period"))
   }
   prep <- prepare(x[cols], actor = actor, action = action, time = time,
                   order = order, session = periods,
@@ -52,7 +64,7 @@
 # Check that the source has one sequence per actor-period and return the
 # sequences with their actor and period.
 #' @noRd
-.period_source <- function(src, periods) {
+.period_source <- function(src, periods, group = NULL) {
   actor <- src$actor
   meta  <- src$metadata
   if (is.null(src$data) || is.null(meta) || is.null(actor) ||
@@ -82,13 +94,47 @@
       "so each period is one sequence."),
       sum(dup), actor, first[1L], periods, first[2L], periods))
   }
-  list(data = src$data, actor = who, period = per)
+  list(data = src$data, actor = who, period = per,
+       group = .period_group(meta, who, group))
+}
+
+# With `periods`, `group` names a metadata column (a covariate of the long
+# data) that is constant within actor; the plot gets one panel per value.
+# Returns one value per sequence, aligned with `who`, or NULL.
+#' @noRd
+.period_group <- function(meta, who, group) {
+  if (is.null(group)) return(NULL)
+  if (!is.character(group) || length(group) != 1L || is.na(group)) {
+    .period_bad_input(paste0(
+      "With `periods`, `group` names one column of the long data (or of the ",
+      "network's metadata) that is constant within actor, not a vector."))
+  }
+  if (!group %in% names(meta)) {
+    .period_bad_input(sprintf(
+      "`group = \"%s\"` is not a column of the data (%s).", group,
+      paste(setdiff(names(meta), c(".session_label", ".session_id")),
+            collapse = ", ")))
+  }
+  g <- meta[[group]]
+  g <- if (is.factor(g)) droplevels(g) else as.vector(g)
+  if (anyNA(g)) {
+    .period_bad_input(sprintf("`%s` has missing values.", group))
+  }
+  n_per_actor <- tapply(as.character(g), as.character(who),
+                        function(v) length(unique(v)))
+  if (any(n_per_actor > 1L)) {
+    .period_bad_input(sprintf(paste0(
+      "`group = \"%s\"` must be constant within actor; %d actor(s) have ",
+      "more than one value (e.g. %s)."), group, sum(n_per_actor > 1L),
+      names(n_per_actor)[which(n_per_actor > 1L)[1L]]))
+  }
+  g
 }
 
 # Cell geometry for both fill modes. Period order: factor levels (so an
 # unused level shows as an empty block), else sorted unique values.
 #' @noRd
-.period_layout <- function(data, actor, period, fill) {
+.period_layout <- function(data, actor, period, fill, trim = NULL) {
   enc   <- .encode_states(data)
   codes <- enc$codes
   period_levels <- if (is.factor(period)) levels(period) else
@@ -98,14 +144,34 @@
 
   idx <- which(!is.na(codes), arr.ind = TRUE)
   idx <- idx[order(idx[, "row"], idx[, "col"]), , drop = FALSE]
-  r       <- idx[, "row"]
-  step    <- stats::ave(r, r, FUN = seq_along)
-  n_steps <- rowSums(!is.na(codes))
-  width   <- as.integer(max(n_steps))
-  denom   <- if (fill == "stretch") n_steps[r] else width
-  p <- match(as.character(period), period_levels)[r]
-  a <- match(as.character(actor), actors)[r]
+  r    <- idx[, "row"]
+  step <- stats::ave(r, r, FUN = seq_along)
+  p    <- match(as.character(period), period_levels)[r]
+  a    <- match(as.character(actor), actors)[r]
   code <- codes[idx]
+
+  # `trim` cuts the period axis as it cuts time points elsewhere: a count
+  # keeps the first `trim` periods, a fraction keeps the periods up to that
+  # quantile of the actors' last active period. Every actor keeps a row.
+  if (!is.null(trim)) {
+    present <- matrix(NA_integer_, length(actors), length(period_levels))
+    present[cbind(a, p)] <- 1L
+    cut <- .trim_cut(present, trim)
+    if (cut < length(period_levels)) {
+      keep <- p <= cut
+      if (!any(keep)) {
+        .period_bad_input(sprintf(
+          "`trim = %s` keeps %d period(s) with no action in them.", trim, cut))
+      }
+      r <- r[keep]; step <- step[keep]; p <- p[keep]; a <- a[keep]
+      code <- code[keep]
+      period_levels <- period_levels[seq_len(cut)]
+    }
+  }
+
+  n_steps <- rowSums(!is.na(codes))
+  width   <- as.integer(max(n_steps[unique(r)]))
+  denom   <- if (fill == "stretch") n_steps[r] else width
 
   cells <- data.frame(actor = a, period = p, step = step,
                       xleft  = p - 1 + (step - 1) / denom,
@@ -137,7 +203,8 @@
                                    cell_border, frame, main, show_n,
                                    time_label, tick, legend, legend_size,
                                    legend_title, legend_ncol, legend_border,
-                                   legend_bty) {
+                                   legend_bty, trim = NULL, group = NULL,
+                                   ncol = NULL, nrow = NULL, combined = TRUE) {
   stopifnot(
     "`periods` must be a single column name" =
       is.character(periods) && length(periods) == 1L && !is.na(periods),
@@ -145,48 +212,138 @@
       is.numeric(row_gap) && length(row_gap) == 1L && row_gap >= 0 &&
       row_gap < 1
   )
-  src <- .period_source(src, periods)
-  lay <- .period_layout(src$data, src$actor, src$period, fill)
+  src <- .period_source(src, periods, group)
+  lay <- .period_layout(src$data, src$actor, src$period, fill, trim)
   levels_all <- lay$levels
   n_rows <- length(lay$actors)
   n_per  <- length(lay$period_levels)
-
-  ord  <- .row_order(lay$trajectory, sort, tree, levels_all)
-  tree <- if (type == "heatmap") attr(ord, "tree") else NULL
-  if (length(ord) != n_rows) {
-    .period_bad_input(sprintf("`tree` has %d leaves but there are %d actors.",
-                              length(ord), n_rows))
-  }
   .report_unused_colors(state_colors, levels_all)
   palette <- .state_palette(state_colors, length(levels_all), levels_all)
   gap <- if (type == "heatmap") 0 else row_gap
 
+  # One panel per group value (index type), else one panel of all actors.
+  # `actor_group` is one value per actor, in `lay$actors` order.
+  actor_group <- if (is.null(src$group)) {
+    factor(rep("all", n_rows))
+  } else {
+    g <- src$group[match(lay$actors, as.character(src$actor))]
+    if (is.factor(src$group)) factor(g, levels = levels(src$group)) else
+      factor(g)
+  }
+  group_levels <- levels(actor_group)
+  G <- length(group_levels)
+
+  # Rows of each panel in plotted order (indices into lay$actors). The
+  # dendrogram, when drawn, orders all actors at once.
+  panels <- lapply(group_levels, function(g) {
+    rows <- which(actor_group == g)
+    ord  <- .row_order(lay$trajectory[rows, , drop = FALSE], sort,
+                       if (G == 1L) tree else NULL, levels_all)
+    structure(rows[ord], tree = attr(ord, "tree"))
+  })
+  tree <- if (type == "heatmap" && G == 1L) attr(panels[[1L]], "tree") else
+    NULL
+  if (G == 1L && length(panels[[1L]]) != n_rows) {
+    .period_bad_input(sprintf("`tree` has %d leaves but there are %d actors.",
+                              length(panels[[1L]]), n_rows))
+  }
+
+  if (is.null(ncol) && is.null(nrow)) {
+    ncol <- as.integer(ceiling(sqrt(G)))
+    nrow <- as.integer(ceiling(G / ncol))
+  } else if (is.null(ncol)) {
+    ncol <- as.integer(ceiling(G / nrow))
+  } else if (is.null(nrow)) {
+    nrow <- as.integer(ceiling(G / ncol))
+  }
+  stopifnot("`ncol * nrow` must hold every group" = ncol * nrow >= G)
+
   op <- graphics::par(no.readonly = TRUE); on.exit(graphics::par(op), add = TRUE)
   oma <- .legend_oma_size(levels_all, legend, legend_size,
                           legend_ncol, legend_title)
-  graphics::par(oma = c(if (legend == "bottom") oma[["oma_b"]] else 0.3,
-                        0.3, 0.3,
-                        if (legend == "right")  oma[["oma_r"]] else 0.3))
+  set_oma <- function() {
+    graphics::par(oma = c(if (legend == "bottom") oma[["oma_b"]] else 0.3,
+                          0.3, 0.3,
+                          if (legend == "right")  oma[["oma_r"]] else 0.3))
+  }
+  set_oma()
+  use_layout <- combined && G > 1L
   if (!is.null(tree)) {
     graphics::layout(matrix(c(1L, 2L), nrow = 1L),
                      widths = c(dendrogram_width, 4))
+  } else if (use_layout) {
+    graphics::layout(matrix(c(seq_len(G), integer(nrow * ncol - G)),
+                            nrow = nrow, ncol = ncol, byrow = TRUE))
   }
   mar_bottom <- if (!is.null(time_label) && nzchar(time_label)) 3 else 1
-  mar_top    <- if (!is.null(main) || isTRUE(show_n)) 2.5 else 1.5
+  mar_top    <- if (!is.null(main) || isTRUE(show_n) || G > 1L) 2.5 else 1.5
   if (!is.null(tree)) {
     graphics::par(mar = c(mar_bottom, 0.5, mar_top, 0.3))
     graphics::plot(tree, horiz = TRUE, axes = FALSE, yaxs = "i",
                    ylim = c(0.5, n_rows + 0.5),
                    leaflab = "none", xlab = "", ylab = "")
   }
-  graphics::par(mar = c(mar_bottom, if (!is.null(tree)) 0 else 2,
-                        mar_top, 1))
-  graphics::plot.new()
-  graphics::plot.window(xlim = c(0, n_per), ylim = c(0.5, n_rows + 0.5),
-                        xaxs = "i", yaxs = "i")
-  graphics::rect(0, 0.5, n_per, n_rows + 0.5, col = na_color, border = NA)
 
-  cells <- lay$cells
+  lapply(seq_len(G), function(g_idx) {
+    ord <- as.integer(panels[[g_idx]])
+    if (!combined && g_idx > 1L) set_oma()
+    graphics::par(mar = c(mar_bottom, if (!is.null(tree)) 0 else 2,
+                          mar_top, 1))
+    .period_panel(lay, ord, palette, gap, na_color, cell_border, frame,
+                  fill, tick, time_label)
+    if (!is.null(k) && !is.null(tree)) {
+      stopifnot(is.numeric(k), length(k) == 1L, k >= 2L, k < n_rows)
+      mem <- stats::cutree(stats::as.hclust(tree), k = as.integer(k))[ord]
+      boundaries <- which(diff(mem) != 0L)
+      if (length(boundaries) > 0L) {
+        graphics::abline(h = boundaries + 0.5, col = k_color,
+                         lwd = k_line_width)
+      }
+    }
+    t_line <- if (G > 1L) {
+      .title_line(group_levels[g_idx], show_n, length(ord))
+    } else .title_line(main, show_n, n_rows)
+    if (!is.null(t_line)) {
+      graphics::mtext(t_line, side = 3, line = if (G > 1L) 0.5 else 1,
+                      font = 2, cex = if (G > 1L) 0.9 else 1)
+    }
+    if (!combined && legend != "none") {
+      .draw_legend_in_oma(levels_all, palette, legend, legend_size,
+                          legend_ncol, legend_title, legend_border,
+                          legend_bty)
+    }
+  })
+  if (combined && G > 1L && !is.null(main)) {
+    graphics::mtext(main, side = 3, line = 1.5, font = 2, outer = TRUE)
+  }
+  if (combined && legend != "none") {
+    .draw_legend_in_oma(levels_all, palette, legend, legend_size,
+                        legend_ncol, legend_title, legend_border, legend_bty)
+  }
+
+  out <- list(ord = unlist(lapply(panels, as.integer)), codes = lay$grid,
+              palette = palette, levels = levels_all,
+              periods = lay$period_levels, fill = fill)
+  if (G > 1L) {
+    out$groups <- group_levels
+    out$orders <- lapply(panels, as.integer)
+  }
+  invisible(out)
+}
+
+# Draw one panel: the actors `ord` (indices into lay$actors, top to bottom
+# in plotted order) over the full period axis, with the period axis.
+#' @noRd
+.period_panel <- function(lay, ord, palette, gap, na_color, cell_border,
+                          frame, fill, tick, time_label) {
+  n_per <- length(lay$period_levels)
+  n_row <- length(ord)
+  graphics::plot.new()
+  graphics::plot.window(xlim = c(0, n_per), ylim = c(0.5, n_row + 0.5),
+                        xaxs = "i", yaxs = "i")
+  graphics::rect(0, 0.5, n_per, n_row + 0.5, col = na_color, border = NA)
+
+  cells <- lay$cells[lay$cells$actor %in% ord, , drop = FALSE]
   y <- match(cells$actor, ord)
   graphics::rect(xleft   = cells$xleft,
                  ybottom = y - 0.5 + gap / 2,
@@ -218,23 +375,5 @@
   if (!is.null(time_label) && nzchar(time_label)) {
     graphics::mtext(time_label, side = 1, line = 1.7)
   }
-
-  if (!is.null(k) && !is.null(tree)) {
-    stopifnot(is.numeric(k), length(k) == 1L, k >= 2L, k < n_rows)
-    mem <- stats::cutree(stats::as.hclust(tree), k = as.integer(k))[ord]
-    boundaries <- which(diff(mem) != 0L)
-    if (length(boundaries) > 0L) {
-      graphics::abline(h = boundaries + 0.5, col = k_color, lwd = k_line_width)
-    }
-  }
-  t_line <- .title_line(main, show_n, n_rows)
-  if (!is.null(t_line)) graphics::mtext(t_line, side = 3, line = 1, font = 2)
-  if (legend != "none") {
-    .draw_legend_in_oma(levels_all, palette, legend, legend_size,
-                        legend_ncol, legend_title, legend_border, legend_bty)
-  }
-
-  invisible(list(ord = ord, codes = lay$grid, palette = palette,
-                 levels = levels_all, periods = lay$period_levels,
-                 fill = fill))
+  invisible(NULL)
 }

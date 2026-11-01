@@ -106,8 +106,6 @@ test_that("periods errors are classed", {
                class = "nestimate_bad_input")
   expect_error(sequence_plot(net, periods = "day", type = "distribution"),
                class = "nestimate_bad_input")
-  expect_error(sequence_plot(net, periods = "day", trim = 2),
-               class = "nestimate_bad_input")
   no_actor <- build_network(.daily_long(), method = "relative",
                             action = "action", session = "day")
   expect_error(sequence_plot(no_actor, periods = "day"),
@@ -118,6 +116,124 @@ test_that("periods errors are classed", {
   two_weeks <- build_network(d, method = "relative", actor = "student",
                              action = "action", session = c("week", "day"))
   expect_error(sequence_plot(two_weeks, periods = "day"),
+               class = "nestimate_bad_input")
+})
+
+test_that("a missing actor or period in long data names the column", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  d <- .daily_long()
+  d$day[2L] <- NA
+  expect_error(sequence_plot(d, actor = "student", action = "action",
+                             periods = "day"),
+               "`day`", class = "nestimate_bad_input")
+  d <- .daily_long()
+  d$student[2L] <- NA
+  expect_error(sequence_plot(d, actor = "student", action = "action",
+                             periods = "day"),
+               "`student`", class = "nestimate_bad_input")
+})
+
+test_that("a tibble without a stored palette plots without warnings", {
+  skip_if_not_installed("tibble")
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  d <- tibble::as_tibble(.daily_long())
+  expect_no_warning(
+    sequence_plot(d, actor = "student", action = "action", periods = "day"))
+  expect_no_warning(
+    sequence_plot(d, actor = "student", action = "action", periods = "day",
+                  type = "index"))
+})
+
+test_that("trim with periods cuts period blocks, not time points", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  net  <- .daily_net()
+  full <- .daily_layout("pad")
+  two  <- .period_layout(net$data, net$metadata$student, net$metadata$day,
+                         "pad", trim = 2)
+  expect_identical(two$period_levels, c("d1", "d2"))
+  expect_identical(two$actors, full$actors)
+  expect_true(all(two$cells$period <= 2L))
+  # Widest kept actor-period (s2 on d2, 3 actions) sets the slot count.
+  expect_identical(two$width, 3L)
+  expect_identical(dim(two$grid), c(3L, 6L))
+  # A count past the number of periods changes nothing.
+  expect_identical(.period_layout(net$data, net$metadata$student,
+                                  net$metadata$day, "pad", trim = 10)$grid,
+                   full$grid)
+  # Fraction: every student is active on d3, so 0.5 keeps all three days.
+  expect_identical(.period_layout(net$data, net$metadata$student,
+                                  net$metadata$day, "pad",
+                                  trim = 0.5)$period_levels,
+                   c("d1", "d2", "d3"))
+  # Through the public verb, both types and both routes.
+  idx <- sequence_plot(.daily_long(), actor = "student", action = "action",
+                       periods = "day", type = "index", trim = 2)
+  expect_identical(idx$periods, c("d1", "d2"))
+  heat <- sequence_plot(net, periods = "day", fill = "pad", trim = 1)
+  expect_identical(heat$periods, "d1")
+  expect_identical(dim(heat$codes), c(3L, 3L))
+  # An empty first factor level under trim = 1 leaves nothing to draw.
+  d <- .daily_long()
+  d$day <- factor(d$day, levels = c("d0", "d1", "d2", "d3"))
+  expect_error(sequence_plot(.daily_net(d), periods = "day", trim = 1),
+               class = "nestimate_bad_input")
+})
+
+test_that("group with periods facets by a per-actor column", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  d <- .daily_long()
+  d$klass <- ifelse(d$student == "s2", "B", "A")
+  res <- sequence_plot(d, actor = "student", action = "action",
+                       periods = "day", type = "index", group = "klass")
+  expect_identical(res$groups, c("A", "B"))
+  # Panel A holds s1 and s3 (actors 1, 3), panel B holds s2.
+  expect_setequal(res$orders[[1L]], c(1L, 3L))
+  expect_identical(res$orders[[2L]], 2L)
+  expect_identical(sort(res$ord), 1:3)
+  # The period axis is shared and the grid is the same as without groups.
+  expect_identical(res$periods, c("d1", "d2", "d3"))
+  expect_identical(res$codes, .daily_layout("stretch")$grid)
+  # Through a netobject whose metadata carries the column; trim combines.
+  # prepare() aggregates covariates to character, so a factor's level order
+  # is honoured only when the metadata column itself is a factor.
+  net <- .daily_net(d)
+  res2 <- sequence_plot(net, periods = "day", type = "index",
+                        group = "klass", trim = 2, combined = FALSE)
+  expect_identical(res2$groups, c("A", "B"))
+  expect_identical(res2$periods, c("d1", "d2"))
+  net$metadata$klass <- factor(net$metadata$klass, levels = c("B", "A"))
+  expect_identical(sequence_plot(net, periods = "day", type = "index",
+                                 group = "klass")$groups, c("B", "A"))
+  # Heatmap ignores group, as it does without periods.
+  heat <- sequence_plot(net, periods = "day", group = "klass")
+  expect_null(heat$groups)
+})
+
+test_that("group with periods rejects what it cannot place", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  d <- .daily_long()
+  d$klass <- ifelse(d$student == "s2", "B", "A")
+  # A vector, not a column name.
+  expect_error(sequence_plot(d, actor = "student", action = "action",
+                             periods = "day", type = "index",
+                             group = c("A", "B", "A")),
+               class = "nestimate_bad_input")
+  # An unknown column.
+  expect_error(sequence_plot(d, actor = "student", action = "action",
+                             periods = "day", type = "index", group = "nope"),
+               class = "nestimate_bad_input")
+  # A column that varies within actor.
+  expect_error(sequence_plot(d, actor = "student", action = "action",
+                             periods = "day", type = "index", group = "day"),
+               class = "nestimate_bad_input")
+  # Missing group values.
+  d$klass[1L] <- NA
+  expect_error(sequence_plot(d, actor = "student", action = "action",
+                             periods = "day", type = "index", group = "klass"),
+               class = "nestimate_bad_input")
+  # Long data without periods still refuses group.
+  expect_error(sequence_plot(d, actor = "student", action = "action",
+                             type = "index", group = "klass"),
                class = "nestimate_bad_input")
 })
 

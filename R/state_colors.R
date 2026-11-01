@@ -195,8 +195,10 @@ state_colors.netobject_group <- function(x, ...) .state_colors_table(x)
 # The palette set with set_state_colors(): an attribute on a
 # netobject_group, a field on a single object.
 .palette_of <- function(x) {
+  # `[[`, not `$`: a tibble warns "Unknown or uninitialised column" when
+  # `$` probes a column it does not have; `[[` returns NULL silently.
   if (inherits(x, "netobject_group")) attr(x, "state_colors") else
-    x$state_colors
+    x[["state_colors"]]
 }
 
 .resolve_state_colors <- function(x) {

@@ -103,7 +103,11 @@ One of \code{"lcs"} (default), \code{"frequency"}, \code{"start"},
 object to supply row ordering (heatmap only; overrides \code{sort}).}
 
 \item{group}{Optional grouping vector (length \code{nrow(x)}) producing
-one facet per group. Index/distribution only. Ignored for heatmap.}
+one facet per group. Index/distribution only. Ignored for heatmap.
+With \code{periods}, the name of a column of the long data (or of the
+network's metadata) that is constant within actor, e.g. a class or a
+condition: one panel per value, one row per actor, all panels on the
+same period axis.}
 
 \item{periods}{Name of the column that splits each actor's sequence into
 periods (days, weeks, ...): a column of the long data, or of the
@@ -115,8 +119,9 @@ row per actor and the time axis is split into equal-width blocks, one
 per period: factor levels give their order (an unused level is an
 empty block), otherwise they are sorted. Ticks mark the period
 boundaries and each label sits under its block; \code{tick} thins the
-labels. Heatmap and index types only; not with \code{group} or
-\code{trim}. Default \code{NULL} plots the sequences as they are.}
+labels. Heatmap and index types only. \code{trim} then counts periods,
+not time points, and \code{group} names a column (index type).
+Default \code{NULL} plots the sequences as they are.}
 
 \item{fill}{With \code{periods}: how an actor's steps fill a block.
 \code{"stretch"} (default) spreads them over the whole block, so one
@@ -138,7 +143,8 @@ actor's actions in order (otherwise row order is used). Without
 \code{periods}, a \code{time} column also splits an actor's actions
 into sessions at gaps over 15 minutes, as \code{prepare()} does; with
 \code{periods} it does not, so each actor-period is one sequence.
-\code{group} cannot be combined with long data.}
+\code{group} combines with long data only together with
+\code{periods}, as a column name.}
 
 \item{scale, geom, na}{Passed to \code{\link{distribution_plot}} when
 \code{type = "distribution"}.
@@ -160,7 +166,9 @@ plots the full width. A fraction in \code{(0, 1)} drops everything
 past that quantile of sequence lengths (e.g. \code{trim = 0.95} keeps
 the columns covering the shortest 95\% of sequences); a value
 \code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
-time points).}
+time points). With \code{periods} the unit is the period block:
+\code{trim = 60} keeps the first 60 periods and a fraction keeps the
+periods up to that quantile of the actors' last active period.}
 
 \item{panel}{\code{mcml} + \code{type = "distribution"} only. Which panel
 to draw. \code{"both"} (default) stacks the macro \code{Summary}
@@ -321,7 +329,10 @@ the original rows) and \code{groups} (panel labels).}
 \code{codes} (integer matrix, one row per actor and one column per
 period slot, in the \code{fill = "pad"} layout, named
 \code{"<period>.<slot>"}), \code{palette}, \code{levels},
-\code{periods} (period labels in plotted order) and \code{fill}.}
+\code{periods} (period labels in plotted order, after \code{trim})
+and \code{fill}; with \code{group}, also \code{groups} (panel
+labels) and \code{orders} (one row order per panel, indexing the
+actors), \code{ord} being their concatenation.}
 \item{\code{"distribution"}}{Whatever
 \code{\link{distribution_plot}} returns: \code{counts},
 \code{proportions}, \code{levels}, \code{palette}, \code{groups}.}

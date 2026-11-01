@@ -143,6 +143,10 @@
 #'   object to supply row ordering (heatmap only; overrides \code{sort}).
 #' @param group Optional grouping vector (length \code{nrow(x)}) producing
 #'   one facet per group. Index/distribution only. Ignored for heatmap.
+#'   With \code{periods}, the name of a column of the long data (or of the
+#'   network's metadata) that is constant within actor, e.g. a class or a
+#'   condition: one panel per value, one row per actor, all panels on the
+#'   same period axis.
 #' @param periods Name of the column that splits each actor's sequence into
 #'   periods (days, weeks, ...): a column of the long data, or of the
 #'   network's metadata. \code{x} must be a
@@ -153,8 +157,9 @@
 #'   per period: factor levels give their order (an unused level is an
 #'   empty block), otherwise they are sorted. Ticks mark the period
 #'   boundaries and each label sits under its block; \code{tick} thins the
-#'   labels. Heatmap and index types only; not with \code{group} or
-#'   \code{trim}. Default \code{NULL} plots the sequences as they are.
+#'   labels. Heatmap and index types only. \code{trim} then counts periods,
+#'   not time points, and \code{group} names a column (index type).
+#'   Default \code{NULL} plots the sequences as they are.
 #' @param fill With \code{periods}: how an actor's steps fill a block.
 #'   \code{"stretch"} (default) spreads them over the whole block, so one
 #'   step fills it and three steps take a third each; the cell width differs
@@ -174,7 +179,8 @@
 #'   \code{periods}, a \code{time} column also splits an actor's actions
 #'   into sessions at gaps over 15 minutes, as \code{prepare()} does; with
 #'   \code{periods} it does not, so each actor-period is one sequence.
-#'   \code{group} cannot be combined with long data.
+#'   \code{group} combines with long data only together with
+#'   \code{periods}, as a column name.
 #' @param scale,geom,na Passed to \code{\link{distribution_plot}} when
 #'   \code{type = "distribution"}.
 #'   For an \code{mcml} (\code{type = "distribution"}), \code{na = FALSE}
@@ -231,7 +237,9 @@
 #'   past that quantile of sequence lengths (e.g. \code{trim = 0.95} keeps
 #'   the columns covering the shortest 95% of sequences); a value
 #'   \code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
-#'   time points).
+#'   time points). With \code{periods} the unit is the period block:
+#'   \code{trim = 60} keeps the first 60 periods and a fraction keeps the
+#'   periods up to that quantile of the actors' last active period.
 #' @param trim_clusterwise Grouped \code{type = "index"} /
 #'   \code{"distribution"} only, and only when \code{trim} is a fraction.
 #'   \code{FALSE} (default) computes one cutoff on the pooled data and
@@ -356,7 +364,10 @@
 #'       \code{codes} (integer matrix, one row per actor and one column per
 #'       period slot, in the \code{fill = "pad"} layout, named
 #'       \code{"<period>.<slot>"}), \code{palette}, \code{levels},
-#'       \code{periods} (period labels in plotted order) and \code{fill}.}
+#'       \code{periods} (period labels in plotted order, after \code{trim})
+#'       and \code{fill}; with \code{group}, also \code{groups} (panel
+#'       labels) and \code{orders} (one row order per panel, indexing the
+#'       actors), \code{ord} being their concatenation.}
 #'     \item{\code{"distribution"}}{Whatever
 #'       \code{\link{distribution_plot}} returns: \code{counts},
 #'       \code{proportions}, \code{levels}, \code{palette}, \code{groups}.}
@@ -502,23 +513,24 @@ sequence_plot <- function(x,
   if (is.null(periods) && !missing(fill)) {
     .period_bad_input("`fill` applies only with `periods`.")
   }
-  if (!is.null(periods) &&
-      (type == "distribution" || !is.null(group) || !is.null(trim))) {
+  if (!is.null(periods) && type == "distribution") {
     .period_bad_input(paste0("`periods` works with type = \"heatmap\" or ",
-                             "\"index\", without `group` or `trim`."))
+                             "\"index\"."))
   }
 
   # Long data (one row per action): `action =` names the action column and
   # prepare() turns it into one sequence per actor (or actor-period).
   long <- NULL
   if (!is.null(action)) {
-    if (!is.null(group)) {
+    if (!is.null(group) && is.null(periods)) {
       .period_bad_input(paste0("`group` is one value per sequence, so it ",
                                "cannot be combined with long data ",
-                               "(`action =`)."))
+                               "(`action =`) unless `periods` is given, ",
+                               "when it names a column of the data."))
     }
     long <- .seqplot_from_long(x, actor = actor, action = action,
-                               time = time, order = order, periods = periods)
+                               time = time, order = order, periods = periods,
+                               group = if (type == "index") group)
     if (is.null(periods)) x <- long$data
   } else if (!is.null(actor) || !is.null(time) || !is.null(order)) {
     .period_bad_input(paste0("`actor`, `time` and `order` describe long ",
@@ -568,7 +580,9 @@ sequence_plot <- function(x,
       show_n = show_n, time_label = time_label, tick = tick,
       legend = legend, legend_size = legend_size,
       legend_title = legend_title, legend_ncol = legend_ncol,
-      legend_border = legend_border, legend_bty = legend_bty))
+      legend_border = legend_border, legend_bty = legend_bty, trim = trim,
+      group = if (type == "index") group, ncol = ncol, nrow = nrow,
+      combined = combined))
   }
 
   if (type == "heatmap") {
