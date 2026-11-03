@@ -74,11 +74,14 @@ distribution_plot(
 
 - trim:
 
-  Optional time-axis truncation, to stop a few long sequences from
-  stretching the plot. `NULL` (default) keeps the full width. A fraction
-  in `(0, 1)` drops everything past that quantile of sequence lengths
-  (e.g. `trim = 0.95`); a value `>= 1` is an absolute cut (`trim = 50`
-  keeps the first 50 time points). See
+  Optional truncation of the time axis (one number) or of the time axis
+  and the rows (two numbers). `NULL` (default) keeps everything. The
+  first number: a fraction in `(0, 1)` drops everything past that
+  quantile of sequence lengths (`trim = 0.95`); a value `>= 1` is an
+  absolute cut (`trim = 50` keeps the first 50 time points). The second
+  number drops the sparsest sequences before the proportions are taken:
+  a count keeps those with at least that many observed states, a
+  fraction keeps the most active share (`trim = c(0.9, 0.9)`). See
   [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
 
 - trim_clusterwise:

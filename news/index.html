@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,13 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.4" id="nestimate-104">Nestimate 1.0.4<a class="anchor" aria-label="anchor" href="#nestimate-104"></a></h2>
+<ul><li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> and <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code>: <code>trim</code> takes two numbers, the time axis and then the rows. The second drops the sparsest sequences, counted over the time points each panel draws: a count keeps those with at least that many observed states (<code>trim = c(60, 5)</code>), a fraction keeps the most active share (<code>trim = c(0.9, 0.9)</code>); <code>NA</code> leaves an axis alone. Works for the heatmap, index, distribution and <code>mcml</code> views and with <code>periods</code>; a row cut cannot be combined with <code>tree</code>.</li>
+<li>
+<code>sequence_plot(periods =)</code>: a <code>Date</code> column gives one block per calendar day and a whole-number column one block per number, from the first to the last, so a day on which nobody acted stays on the axis as an empty block. A count <code>trim</code> bounds the range; more than 100,000 blocks is refused.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.3" id="nestimate-103">Nestimate 1.0.3<a class="anchor" aria-label="anchor" href="#nestimate-103"></a></h2>
 <ul><li>

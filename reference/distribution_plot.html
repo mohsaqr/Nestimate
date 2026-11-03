@@ -13,7 +13,7 @@ Accepts the same inputs as sequence_plot."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,12 +125,15 @@ extra band coloured <code>na_color</code>.</p></dd>
 
 
 <dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
-<dd><p>Optional time-axis truncation, to stop a few long
-sequences from stretching the plot. <code>NULL</code> (default) keeps the
-full width. A fraction in <code>(0, 1)</code> drops everything past that
-quantile of sequence lengths (e.g. <code>trim = 0.95</code>); a value
-<code>&gt;= 1</code> is an absolute cut (<code>trim = 50</code> keeps the first 50
-time points). See <code><a href="sequence_plot.html">sequence_plot</a></code>.</p></dd>
+<dd><p>Optional truncation of the time axis (one number) or of
+the time axis and the rows (two numbers). <code>NULL</code> (default) keeps
+everything. The first number: a fraction in <code>(0, 1)</code> drops
+everything past that quantile of sequence lengths (<code>trim = 0.95</code>);
+a value <code>&gt;= 1</code> is an absolute cut (<code>trim = 50</code> keeps the
+first 50 time points). The second number drops the sparsest
+sequences before the proportions are taken: a count keeps those with
+at least that many observed states, a fraction keeps the most active
+share (<code>trim = c(0.9, 0.9)</code>). See <code><a href="sequence_plot.html">sequence_plot</a></code>.</p></dd>
 
 
 <dt id="arg-trim-clusterwise">trim_clusterwise<a class="anchor" aria-label="anchor" href="#arg-trim-clusterwise"></a></dt>

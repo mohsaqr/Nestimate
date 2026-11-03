@@ -169,10 +169,13 @@ print(x, ...)
   or a netobject built with `actor =` and `session = periods`, so that
   each actor-period pair holds one sequence. The plot then has one row
   per actor and the time axis is split into equal-width blocks, one per
-  period: factor levels give their order (an unused level is an empty
-  block), otherwise they are sorted. Ticks mark the period boundaries
-  and each label sits under its block; `tick` thins the labels. Heatmap
-  and index types only. `trim` then counts periods, not time points, and
+  period. A `Date` column gives one block per calendar day and a
+  whole-number column (a day or week counter) one block per number, from
+  the first to the last, so a period in which nobody acted is an empty
+  block; factor levels give their order (an unused level is an empty
+  block); other columns are sorted. Ticks mark the period boundaries and
+  each label sits under its block; `tick` thins the labels. Heatmap and
+  index types only. `trim` then counts periods, not time points, and
   `group` names a column (index type). Default `NULL` plots the
   sequences as they are.
 
@@ -223,15 +226,27 @@ print(x, ...)
 
 - trim:
 
-  Optional time-axis truncation, to stop a few long sequences from
-  stretching the plot. Applies to all three types (including the `mcml`
-  multichannel view). `NULL` (default) plots the full width. A fraction
-  in `(0, 1)` drops everything past that quantile of sequence lengths
-  (e.g. `trim = 0.95` keeps the columns covering the shortest 95% of
-  sequences); a value `>= 1` is an absolute cut (`trim = 50` keeps the
-  first 50 time points). With `periods` the unit is the period block:
-  `trim = 60` keeps the first 60 periods and a fraction keeps the
-  periods up to that quantile of the actors' last active period.
+  Optional truncation of the time axis (one number) or of the time axis
+  and the rows (two numbers), to stop a few long sequences from
+  stretching the plot and a few near-empty ones from padding it. Applies
+  to all three types (including the `mcml` multichannel view). `NULL`
+  (default) plots everything.
+
+  The first number cuts the time axis: a fraction in `(0, 1)` drops
+  everything past that quantile of sequence lengths (`trim = 0.95` keeps
+  the columns covering the shortest 95% of sequences); a value `>= 1` is
+  an absolute cut (`trim = 50` keeps the first 50 time points). With
+  `periods` the unit is the period block: `trim = 60` keeps the first 60
+  periods and a fraction keeps the periods up to that quantile of the
+  actors' last active period.
+
+  The second number cuts the rows, counted over the time points kept by
+  the first: a value `>= 1` keeps the sequences with at least that many
+  observed states (`trim = c(60, 5)`), a fraction keeps the most active
+  share of the sequences (`trim = c(0.9, 0.9)` drops the longest 10% of
+  the time axis and the sparsest 10% of the rows). `NA` leaves an axis
+  alone (`trim = c(NA, 5)`). A row cut cannot be combined with `tree` or
+  a clustering dendrogram, whose leaves are the full set of rows.
 
 - panel:
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## Nestimate 1.0.4
+
+- [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  and
+  [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md):
+  `trim` takes two numbers, the time axis and then the rows. The second
+  drops the sparsest sequences, counted over the time points each panel
+  draws: a count keeps those with at least that many observed states
+  (`trim = c(60, 5)`), a fraction keeps the most active share
+  (`trim = c(0.9, 0.9)`); `NA` leaves an axis alone. Works for the
+  heatmap, index, distribution and `mcml` views and with `periods`; a
+  row cut cannot be combined with `tree`.
+- `sequence_plot(periods =)`: a `Date` column gives one block per
+  calendar day and a whole-number column one block per number, from the
+  first to the last, so a day on which nobody acted stays on the axis as
+  an empty block. A count `trim` bounds the range; more than 100,000
+  blocks is refused.
+
 ## Nestimate 1.0.3
 
 - `sequence_plot(periods =)` accepts `trim` and `group`. `trim` counts
