@@ -262,6 +262,69 @@ test_that("trim truncates the time axis by quantile and absolute cut", {
   expect_error(sequence_plot(df, type = "index", trim = -1))
 })
 
+test_that("a two-number trim also drops the sparsest rows", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  set.seed(7)
+  # 20 sequences of 30 points; rows 1-4 keep only 2 states, the rest 20+.
+  df <- as.data.frame(matrix(sample(c("A", "B", "C"), 600, TRUE), 20, 30))
+  df[1:4, 3:30] <- NA
+  idx <- sequence_plot(df, type = "index", trim = c(NA, 5), legend = "none")
+  expect_identical(nrow(idx$codes), 16L)
+  expect_identical(ncol(idx$codes), 30L)
+  # `orders` keeps indexing the input rows: the four sparse rows are gone.
+  expect_setequal(unlist(idx$orders), 5:20)
+  # A fraction keeps the most active share: 0.8 of 20 rows is 16.
+  frac <- sequence_plot(df, type = "index", trim = c(0.95, 0.8),
+                        legend = "none")
+  expect_identical(nrow(frac$codes), 16L)
+  expect_lt(ncol(frac$codes), 31L)
+  # The row count is taken over the kept time points: cut at 2 columns,
+  # every row has 2 states, so a row cut of 2 keeps all.
+  both <- sequence_plot(df, type = "index", trim = c(2, 2), legend = "none")
+  expect_identical(dim(both$codes), c(20L, 2L))
+  # Heatmap and distribution take the same vector.
+  hm <- sequence_plot(df, type = "heatmap", trim = c(NA, 5), legend = "none")
+  expect_identical(nrow(hm$codes), 16L)
+  dp <- sequence_plot(df, type = "distribution", trim = c(NA, 5),
+                      legend = "none")
+  expect_identical(sum(dp$counts[[1L]][, 1L]), 16)
+  # Grouped: a group that loses every row loses its panel.
+  grp <- rep(c("sparse", "dense"), c(4L, 16L))
+  g <- sequence_plot(df, type = "index", group = grp, trim = c(NA, 5),
+                     legend = "none")
+  expect_identical(g$groups, "dense")
+  # With trim_clusterwise each panel counts over its own time window:
+  # lengths 2, 2, 10, 100 in short/short/long/long; the pooled 0.5 cut is
+  # 6 columns, but the long panel's own cut keeps its two rows (>= 8).
+  cw <- as.data.frame(matrix("A", 4, 100))
+  cw[1:2, 3:100] <- NA
+  cw[3, 11:100] <- NA
+  cw_grp <- rep(c("short", "long"), each = 2L)
+  cw_res <- sequence_plot(cw, type = "index", group = cw_grp,
+                          trim = c(0.5, 8), trim_clusterwise = TRUE,
+                          legend = "none")
+  expect_identical(cw_res$groups, "long")
+  expect_setequal(unlist(cw_res$orders), 3:4)
+  expect_error(sequence_plot(cw, type = "index", group = cw_grp,
+                             trim = c(0.5, 8), legend = "none"),
+               class = "nestimate_bad_input")
+  cw_dp <- sequence_plot(cw, type = "distribution", group = cw_grp,
+                         trim = c(0.5, 8), trim_clusterwise = TRUE,
+                         legend = "none")
+  expect_identical(cw_dp$groups, "long")
+  # Errors: nothing left, bad shape, a tree with dropped rows.
+  expect_error(sequence_plot(df, type = "index", trim = c(NA, 999)),
+               class = "nestimate_bad_input")
+  expect_error(sequence_plot(df, type = "index", trim = c(1, 2, 3)))
+  tree <- stats::hclust(stats::dist(seq_len(20)))
+  expect_error(sequence_plot(df, type = "heatmap", tree = tree,
+                             trim = c(NA, 5)),
+               class = "nestimate_bad_input")
+  expect_identical(nrow(sequence_plot(df, type = "heatmap", tree = tree,
+                                      trim = c(NA, 1), legend = "none")$codes),
+                   20L)
+})
+
 test_that("trim applies to the distribution and mcml paths", {
   set.seed(1)
   n_row <- 100L; n_col <- 200L
@@ -301,6 +364,15 @@ test_that("trim applies to the distribution and mcml paths", {
 
   expect_s3_class(sequence_plot(fit, type = "index", trim = 15), "mcml_sequence_plot")
   expect_s3_class(sequence_plot(fit, type = "distribution", trim = 0.9), "mcml_sequence_plot")
+
+  # The row half drops the sparsest coalesced sequences from every channel.
+  ch_rows <- Nestimate:::.mcml_seq_channels(fit, c(NA, 0.5))
+  n_kept  <- nrow(ch_rows$summary_mat)
+  expect_lt(n_kept, nrow(ch_full$summary_mat))
+  expect_true(all(vapply(ch_rows$cmats, nrow, 1L) == n_kept))
+  expect_identical(nrow(ch_rows$summary_cluster_mat), n_kept)
+  expect_s3_class(sequence_plot(fit, type = "index", trim = c(15, 0.5)),
+                  "mcml_sequence_plot")
 })
 
 test_that("trim_clusterwise: global keeps panels aligned, clusterwise crops per group", {

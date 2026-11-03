@@ -237,6 +237,75 @@ test_that("group with periods rejects what it cannot place", {
                class = "nestimate_bad_input")
 })
 
+test_that("a Date or day counter keeps the periods nobody acted in", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  d <- data.frame(student = rep(c("s1", "s2"), each = 3),
+                  day = as.Date(c("2026-01-05", "2026-01-05", "2026-01-08",
+                                  "2026-01-05", "2026-01-06", "2026-01-08")),
+                  action = c("a", "b", "a", "b", "b", "c"))
+  res <- sequence_plot(d, actor = "student", action = "action",
+                       periods = "day", type = "index")
+  expect_identical(res$periods, as.character(seq(as.Date("2026-01-05"),
+                                                 as.Date("2026-01-08"),
+                                                 by = "day")))
+  # 7 January is on the axis with no cell; s1 has none on the 6th either.
+  expect_true(all(is.na(res$codes[, startsWith(colnames(res$codes), "2026-01-07")])))
+  expect_true(all(is.na(res$codes["s1", startsWith(colnames(res$codes), "2026-01-06")])))
+  # Same through a network, whose metadata keeps the Date class.
+  net <- build_network(d, method = "relative", actor = "student",
+                       action = "action", session = "day")
+  expect_identical(sequence_plot(net, periods = "day")$periods, res$periods)
+  # A whole-number counter fills the gaps too; a label column does not.
+  d$n <- as.integer(d$day - min(d$day)) + 1L
+  expect_identical(sequence_plot(d, actor = "student", action = "action",
+                                 periods = "n", type = "index")$periods,
+                   as.character(1:4))
+  d$lab <- paste0("d", d$n)
+  expect_identical(sequence_plot(d, actor = "student", action = "action",
+                                 periods = "lab", type = "index")$periods,
+                   c("d1", "d2", "d4"))
+  # A huge day-number range is not expanded past a count cut, and is
+  # refused without one.
+  d$far <- c(1, 1, 1, 1, 1, 1e12)
+  expect_identical(sequence_plot(d, actor = "student", action = "action",
+                                 periods = "far", type = "index",
+                                 trim = 3)$periods, c("1", "2", "3"))
+  expect_error(sequence_plot(d, actor = "student", action = "action",
+                             periods = "far", type = "index"),
+               class = "nestimate_bad_input")
+  # trim counts the empty blocks as well.
+  expect_identical(sequence_plot(d, actor = "student", action = "action",
+                                 periods = "day", type = "index",
+                                 trim = 3)$periods, res$periods[1:3])
+})
+
+test_that("the row half of trim drops the least active actors", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  net <- .daily_net()
+  # s1 has 5 actions, s2 9, s3 6: a row cut of 6 drops s1.
+  lay <- .period_layout(net$data, net$metadata$student, net$metadata$day,
+                        "pad", trim = c(NA, 6))
+  expect_identical(lay$actors, c("s2", "s3"))
+  expect_identical(rownames(lay$grid), c("s2", "s3"))
+  expect_true(all(lay$cells$actor %in% 1:2))
+  expect_identical(nrow(lay$trajectory), 2L)
+  # Counted over the kept periods: on d1 alone s1 has 1, s2 2, s3 3.
+  d1 <- .period_layout(net$data, net$metadata$student, net$metadata$day,
+                       "pad", trim = c(1, 2))
+  expect_identical(d1$actors, c("s2", "s3"))
+  expect_identical(d1$period_levels, "d1")
+  # Through the verb, with group: the dropped actor leaves its panel.
+  d <- .daily_long()
+  d$klass <- ifelse(d$student == "s1", "B", "A")
+  res <- sequence_plot(d, actor = "student", action = "action",
+                       periods = "day", type = "index", group = "klass",
+                       trim = c(NA, 6))
+  expect_identical(res$groups, "A")
+  expect_identical(rownames(res$codes), c("s2", "s3"))
+  expect_error(sequence_plot(net, periods = "day", trim = c(NA, 100)),
+               class = "nestimate_bad_input")
+})
+
 test_that("long data goes straight in and matches the network route", {
   pdf(NULL); on.exit(dev.off(), add = TRUE)
   from_long <- sequence_plot(.daily_long(), actor = "student",

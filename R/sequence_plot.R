@@ -154,8 +154,11 @@
 #'   netobject built with \code{actor =} and \code{session = periods}, so
 #'   that each actor-period pair holds one sequence. The plot then has one
 #'   row per actor and the time axis is split into equal-width blocks, one
-#'   per period: factor levels give their order (an unused level is an
-#'   empty block), otherwise they are sorted. Ticks mark the period
+#'   per period. A \code{Date} column gives one block per calendar day and
+#'   a whole-number column (a day or week counter) one block per number,
+#'   from the first to the last, so a period in which nobody acted is an
+#'   empty block; factor levels give their order (an unused level is an
+#'   empty block); other columns are sorted. Ticks mark the period
 #'   boundaries and each label sits under its block; \code{tick} thins the
 #'   labels. Heatmap and index types only. \code{trim} then counts periods,
 #'   not time points, and \code{group} names a column (index type).
@@ -230,16 +233,29 @@
 #'   by cluster and the rest by state, so a cluster and a state can land on
 #'   the same colour -- drawing one panel avoids that and gives it a default
 #'   title.
-#' @param trim Optional time-axis truncation, to stop a few long
-#'   sequences from stretching the plot. Applies to all three types
-#'   (including the \code{mcml} multichannel view). \code{NULL} (default)
-#'   plots the full width. A fraction in \code{(0, 1)} drops everything
-#'   past that quantile of sequence lengths (e.g. \code{trim = 0.95} keeps
-#'   the columns covering the shortest 95% of sequences); a value
-#'   \code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
-#'   time points). With \code{periods} the unit is the period block:
-#'   \code{trim = 60} keeps the first 60 periods and a fraction keeps the
-#'   periods up to that quantile of the actors' last active period.
+#' @param trim Optional truncation of the time axis (one number) or of
+#'   the time axis and the rows (two numbers), to stop a few long
+#'   sequences from stretching the plot and a few near-empty ones from
+#'   padding it. Applies to all three types (including the \code{mcml}
+#'   multichannel view). \code{NULL} (default) plots everything.
+#'
+#'   The first number cuts the time axis: a fraction in \code{(0, 1)}
+#'   drops everything past that quantile of sequence lengths
+#'   (\code{trim = 0.95} keeps the columns covering the shortest 95% of
+#'   sequences); a value \code{>= 1} is an absolute cut (\code{trim = 50}
+#'   keeps the first 50 time points). With \code{periods} the unit is the
+#'   period block: \code{trim = 60} keeps the first 60 periods and a
+#'   fraction keeps the periods up to that quantile of the actors' last
+#'   active period.
+#'
+#'   The second number cuts the rows, counted over the time points kept by
+#'   the first: a value \code{>= 1} keeps the sequences with at least that
+#'   many observed states (\code{trim = c(60, 5)}), a fraction keeps the
+#'   most active share of the sequences (\code{trim = c(0.9, 0.9)} drops
+#'   the longest 10% of the time axis and the sparsest 10% of the rows).
+#'   \code{NA} leaves an axis alone (\code{trim = c(NA, 5)}). A row cut
+#'   cannot be combined with \code{tree} or a clustering dendrogram, whose
+#'   leaves are the full set of rows.
 #' @param trim_clusterwise Grouped \code{type = "index"} /
 #'   \code{"distribution"} only, and only when \code{trim} is a fraction.
 #'   \code{FALSE} (default) computes one cutoff on the pooled data and
@@ -631,8 +647,19 @@ sequence_plot <- function(x,
 
   x <- extracted$data
 
+  tr         <- .trim_axes(trim)
   enc        <- .encode_states(x)
-  codes      <- .trim_codes(enc$codes, trim)
+  codes      <- .trim_codes(enc$codes, tr$cols)
+  keep_rows  <- .trim_rows_keep(codes, tr$rows)
+  if (!all(keep_rows)) {
+    if (!is.null(tree)) {
+      stop(errorCondition(paste0(
+        "The row half of `trim` drops sequences, so it cannot be combined ",
+        "with `tree` or a clustering dendrogram."),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    codes <- codes[keep_rows, , drop = FALSE]
+  }
   levels_all <- enc$levels
   n_rows     <- nrow(codes); n_cols <- ncol(codes)
 
@@ -751,6 +778,7 @@ sequence_plot <- function(x,
     group <- as.factor(group)
   }
 
+  tr         <- .trim_axes(trim)
   enc        <- .encode_states(x)
   full_codes <- enc$codes
   levels_all <- enc$levels
@@ -760,9 +788,18 @@ sequence_plot <- function(x,
   # One global cut keeps every panel the same width (aligned axes). With
   # trim_clusterwise = TRUE each group is cropped to its own length
   # quantile instead, so panels can end up different widths.
-  global_cut <- .trim_cut(full_codes, trim)
-
-  groups       <- if (is.null(group)) factor(rep("all", nrow(full_codes))) else group
+  global_cut <- .trim_cut(full_codes, tr$cols)
+  groups <- if (is.null(group)) factor(rep("all", nrow(full_codes))) else group
+  # The row cut counts over the time points each panel will draw. `orig`
+  # maps the surviving rows back to the input rows, so `orders` keeps
+  # indexing the input.
+  keep_rows <- .trim_rows_keep_grouped(full_codes, groups, tr$rows, tr$cols,
+                                       global_cut, trim_clusterwise)
+  orig <- which(keep_rows)
+  if (!all(keep_rows)) {
+    full_codes <- full_codes[keep_rows, , drop = FALSE]
+    groups     <- droplevels(groups[keep_rows])
+  }
   group_levels <- levels(groups)
   G            <- length(group_levels)
   group_sizes  <- vapply(group_levels,
@@ -774,10 +811,11 @@ sequence_plot <- function(x,
   panels <- lapply(group_levels, function(g) {
     rows <- which(groups == g)
     sub  <- full_codes[rows, , drop = FALSE]
-    cut  <- if (isTRUE(trim_clusterwise)) .trim_cut(sub, trim) else global_cut
+    cut  <- if (isTRUE(trim_clusterwise)) .trim_cut(sub, tr$cols) else
+      global_cut
     sub  <- sub[, seq_len(cut), drop = FALSE]
     ord  <- .row_order(sub, sort, tree = NULL, levels_all)
-    list(sub = sub[ord, , drop = FALSE], order = rows[ord])
+    list(sub = sub[ord, , drop = FALSE], order = orig[rows[ord]])
   })
 
   if (is.null(ncol) && is.null(nrow)) {

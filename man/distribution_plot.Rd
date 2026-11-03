@@ -56,12 +56,15 @@ total so bands fill 0..1. \code{"count"} keeps raw counts.}
 \item{na}{If \code{TRUE} (default), \code{NA} cells are shown as an
 extra band coloured \code{na_color}.}
 
-\item{trim}{Optional time-axis truncation, to stop a few long
-sequences from stretching the plot. \code{NULL} (default) keeps the
-full width. A fraction in \code{(0, 1)} drops everything past that
-quantile of sequence lengths (e.g. \code{trim = 0.95}); a value
-\code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
-time points). See \code{\link{sequence_plot}}.}
+\item{trim}{Optional truncation of the time axis (one number) or of
+the time axis and the rows (two numbers). \code{NULL} (default) keeps
+everything. The first number: a fraction in \code{(0, 1)} drops
+everything past that quantile of sequence lengths (\code{trim = 0.95});
+a value \code{>= 1} is an absolute cut (\code{trim = 50} keeps the
+first 50 time points). The second number drops the sparsest
+sequences before the proportions are taken: a count keeps those with
+at least that many observed states, a fraction keeps the most active
+share (\code{trim = c(0.9, 0.9)}). See \code{\link{sequence_plot}}.}
 
 \item{trim_clusterwise}{Grouped plots only, fractional \code{trim}
 only. \code{FALSE} (default) uses one pooled cutoff for every panel

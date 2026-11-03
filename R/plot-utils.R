@@ -25,6 +25,72 @@
 }
 
 
+# `trim` is one number (the time axis) or two (the time axis, then the
+# rows). NA on either axis leaves that axis alone. Returns list(cols, rows),
+# each NULL or one positive number, for .trim_cut() / .trim_rows_keep().
+.trim_axes <- function(trim) {
+  if (is.null(trim)) return(list(cols = NULL, rows = NULL))
+  stopifnot(
+    "`trim` must be one number (time axis) or two (time axis, rows)" =
+      is.numeric(trim) && length(trim) %in% c(1L, 2L)
+  )
+  axis <- function(v) if (is.na(v)) NULL else v
+  list(cols = axis(trim[1L]),
+       rows = if (length(trim) == 2L) axis(trim[2L]) else NULL)
+}
+
+# Rows to keep under the row half of `trim`: a count >= 1 keeps the rows
+# with at least that many observed states; a fraction q in (0, 1) keeps the
+# most active share q of the rows (drops those whose count falls below the
+# (1 - q) quantile). Counts are taken over the columns passed in, so callers
+# cut the time axis first and the row cut reflects what is drawn.
+.trim_rows_keep <- function(codes, rows) {
+  keep <- .trim_rows_mask(codes, rows)
+  if (!any(keep)) {
+    stop(errorCondition(sprintf(
+      "`trim` row cut %s leaves no sequence to draw.", format(rows)),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  keep
+}
+
+# The same mask without the empty-result error, for one panel of a grouped
+# plot (a panel may legitimately lose every row; the caller checks that
+# something is left overall).
+.trim_rows_mask <- function(codes, rows) {
+  n <- nrow(codes)
+  if (is.null(rows)) return(rep(TRUE, n))
+  stopifnot(
+    "the row half of `trim` must be a single positive number" =
+      is.numeric(rows) && length(rows) == 1L && !is.na(rows) && rows > 0
+  )
+  counts <- rowSums(!is.na(codes))
+  if (rows < 1) {
+    counts >= stats::quantile(counts, probs = 1 - rows, names = FALSE,
+                              type = 7)
+  } else counts >= rows
+}
+
+# Row mask for a grouped plot: each group's rows are counted over the time
+# window that group's panel will draw (its own cut under trim_clusterwise,
+# else the pooled cut), so the row cut and the panel agree.
+.trim_rows_keep_grouped <- function(codes, groups, rows, cols, global_cut,
+                                    clusterwise) {
+  if (is.null(rows)) return(rep(TRUE, nrow(codes)))
+  idx  <- split(seq_len(nrow(codes)), groups)
+  keep <- unsplit(lapply(idx, function(i) {
+    sub <- codes[i, , drop = FALSE]
+    cut <- if (isTRUE(clusterwise)) .trim_cut(sub, cols) else global_cut
+    .trim_rows_mask(sub[, seq_len(cut), drop = FALSE], rows)
+  }), groups)
+  if (!any(keep)) {
+    stop(errorCondition(sprintf(
+      "`trim` row cut %s leaves no sequence to draw.", format(rows)),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  keep
+}
+
 # Number of time (column) points to keep so a few very long sequences
 # don't blow up the carpet width. `trim = NULL` keeps every column.
 # A fraction in (0, 1) keeps columns up to that quantile of per-row

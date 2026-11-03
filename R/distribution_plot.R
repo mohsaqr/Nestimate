@@ -25,12 +25,15 @@
 #'   \code{"bar"} draws stacked bars.
 #' @param na If \code{TRUE} (default), \code{NA} cells are shown as an
 #'   extra band coloured \code{na_color}.
-#' @param trim Optional time-axis truncation, to stop a few long
-#'   sequences from stretching the plot. \code{NULL} (default) keeps the
-#'   full width. A fraction in \code{(0, 1)} drops everything past that
-#'   quantile of sequence lengths (e.g. \code{trim = 0.95}); a value
-#'   \code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
-#'   time points). See \code{\link{sequence_plot}}.
+#' @param trim Optional truncation of the time axis (one number) or of
+#'   the time axis and the rows (two numbers). \code{NULL} (default) keeps
+#'   everything. The first number: a fraction in \code{(0, 1)} drops
+#'   everything past that quantile of sequence lengths (\code{trim = 0.95});
+#'   a value \code{>= 1} is an absolute cut (\code{trim = 50} keeps the
+#'   first 50 time points). The second number drops the sparsest
+#'   sequences before the proportions are taken: a count keeps those with
+#'   at least that many observed states, a fraction keeps the most active
+#'   share (\code{trim = c(0.9, 0.9)}). See \code{\link{sequence_plot}}.
 #' @param trim_clusterwise Grouped plots only, fractional \code{trim}
 #'   only. \code{FALSE} (default) uses one pooled cutoff for every panel
 #'   so the time axes stay aligned; \code{TRUE} crops each group to its
@@ -166,22 +169,31 @@ distribution_plot <- function(x,
   K_core     <- length(levels_all)
   K          <- K_core + (if (na) 1L else 0L)
   # One pooled cut keeps every panel the same width (aligned axes);
-  # trim_clusterwise crops each group to its own length quantile.
-  global_cut <- .trim_cut(full_codes, trim)
+  # trim_clusterwise crops each group to its own length quantile. The row
+  # half of `trim` drops the sparsest sequences, counted over the kept
+  # time points, before the proportions are taken.
+  tr         <- .trim_axes(trim)
+  global_cut <- .trim_cut(full_codes, tr$cols)
+  groups <- if (is.null(group)) factor(rep("all", nrow(full_codes))) else group
+  keep_rows  <- .trim_rows_keep_grouped(full_codes, groups, tr$rows, tr$cols,
+                                        global_cut, trim_clusterwise)
+  if (!all(keep_rows)) {
+    full_codes <- full_codes[keep_rows, , drop = FALSE]
+    groups     <- droplevels(groups[keep_rows])
+  }
 
   .report_unused_colors(state_colors, levels_all)
   palette       <- .state_palette(state_colors, K_core, levels_all)
   full_palette  <- if (na) c(palette, na_color) else palette
   legend_labels <- if (na) c(levels_all, "NA") else levels_all
 
-  # Factor-rep so grouping dispatch works identically with or without group.
-  groups <- if (is.null(group)) factor(rep("all", nrow(full_codes))) else group
   group_levels <- levels(groups)
   G <- length(group_levels)
 
   count_list <- lapply(group_levels, function(g) {
     sub <- full_codes[groups == g, , drop = FALSE]
-    cut <- if (isTRUE(trim_clusterwise)) .trim_cut(sub, trim) else global_cut
+    cut <- if (isTRUE(trim_clusterwise)) .trim_cut(sub, tr$cols) else
+      global_cut
     sub <- sub[, seq_len(cut), drop = FALSE]
     tab <- vapply(seq_len(cut), function(t) {
       col <- sub[, t]

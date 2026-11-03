@@ -116,8 +116,11 @@ long data frame with \code{actor =} and \code{action =}, or a
 netobject built with \code{actor =} and \code{session = periods}, so
 that each actor-period pair holds one sequence. The plot then has one
 row per actor and the time axis is split into equal-width blocks, one
-per period: factor levels give their order (an unused level is an
-empty block), otherwise they are sorted. Ticks mark the period
+per period. A \code{Date} column gives one block per calendar day and
+a whole-number column (a day or week counter) one block per number,
+from the first to the last, so a period in which nobody acted is an
+empty block; factor levels give their order (an unused level is an
+empty block); other columns are sorted. Ticks mark the period
 boundaries and each label sits under its block; \code{tick} thins the
 labels. Heatmap and index types only. \code{trim} then counts periods,
 not time points, and \code{group} names a column (index type).
@@ -159,16 +162,29 @@ percent (cluster panels only with \code{rest = "clusters"} or
 (TraMineR-style \code{seqdplot} composition); when \code{FALSE} (default)
 the stack shows prevalence and is capped with an \code{NA} band.}
 
-\item{trim}{Optional time-axis truncation, to stop a few long
-sequences from stretching the plot. Applies to all three types
-(including the \code{mcml} multichannel view). \code{NULL} (default)
-plots the full width. A fraction in \code{(0, 1)} drops everything
-past that quantile of sequence lengths (e.g. \code{trim = 0.95} keeps
-the columns covering the shortest 95\% of sequences); a value
-\code{>= 1} is an absolute cut (\code{trim = 50} keeps the first 50
-time points). With \code{periods} the unit is the period block:
-\code{trim = 60} keeps the first 60 periods and a fraction keeps the
-periods up to that quantile of the actors' last active period.}
+\item{trim}{Optional truncation of the time axis (one number) or of
+the time axis and the rows (two numbers), to stop a few long
+sequences from stretching the plot and a few near-empty ones from
+padding it. Applies to all three types (including the \code{mcml}
+multichannel view). \code{NULL} (default) plots everything.
+
+The first number cuts the time axis: a fraction in \code{(0, 1)}
+drops everything past that quantile of sequence lengths
+(\code{trim = 0.95} keeps the columns covering the shortest 95\% of
+sequences); a value \code{>= 1} is an absolute cut (\code{trim = 50}
+keeps the first 50 time points). With \code{periods} the unit is the
+period block: \code{trim = 60} keeps the first 60 periods and a
+fraction keeps the periods up to that quantile of the actors' last
+active period.
+
+The second number cuts the rows, counted over the time points kept by
+the first: a value \code{>= 1} keeps the sequences with at least that
+many observed states (\code{trim = c(60, 5)}), a fraction keeps the
+most active share of the sequences (\code{trim = c(0.9, 0.9)} drops
+the longest 10\% of the time axis and the sparsest 10\% of the rows).
+\code{NA} leaves an axis alone (\code{trim = c(NA, 5)}). A row cut
+cannot be combined with \code{tree} or a clustering dendrogram, whose
+leaves are the full set of rows.}
 
 \item{panel}{\code{mcml} + \code{type = "distribution"} only. Which panel
 to draw. \code{"both"} (default) stacks the macro \code{Summary}

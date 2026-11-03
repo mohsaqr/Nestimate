@@ -67,13 +67,22 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   # channel mostly contains NA, so its per-row length understates the real
   # sequence length). Apply the same cut to every channel to keep rows
   # aligned across panels.
-  cut <- .trim_cut(summary_mat, trim)
+  tr  <- .trim_axes(trim)
+  cut <- .trim_cut(summary_mat, tr$cols)
   if (cut < length(tcols)) {
     keep                <- seq_len(cut)
     tcols               <- tcols[keep]
     cmats               <- lapply(cmats, function(m) m[, keep, drop = FALSE])
     summary_mat         <- summary_mat[, keep, drop = FALSE]
     summary_cluster_mat <- summary_cluster_mat[, keep, drop = FALSE]
+  }
+  # The row half of `trim` drops the sparsest sequences, counted on the
+  # coalesced sequence over the kept time points, from every channel alike.
+  keep_rows <- .trim_rows_keep(summary_mat, tr$rows)
+  if (!all(keep_rows)) {
+    cmats               <- lapply(cmats, function(m) m[keep_rows, , drop = FALSE])
+    summary_mat         <- summary_mat[keep_rows, , drop = FALSE]
+    summary_cluster_mat <- summary_cluster_mat[keep_rows, , drop = FALSE]
   }
 
   # Categories of the summary band: a cluster name, or the member states of a

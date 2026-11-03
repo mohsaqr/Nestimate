@@ -131,14 +131,54 @@
   g
 }
 
-# Cell geometry for both fill modes. Period order: factor levels (so an
-# unused level shows as an empty block), else sorted unique values.
+# The period axis. Factor levels (an unused level is an empty block); every
+# day from the first to the last for a Date; every whole number from the
+# smallest to the largest for a day counter; otherwise the sorted observed
+# values. So a day on which nobody acted stays on the axis as white space.
+#' @noRd
+# `n_max` (a count cut from `trim`) bounds the expansion so a wide range is
+# never materialised beyond what is drawn; past 100,000 blocks the axis is
+# unreadable and the request is refused.
+.period_levels <- function(period, n_max = NULL) {
+  if (is.factor(period)) return(levels(period))
+  gridded <- inherits(period, "Date") ||
+    (is.numeric(period) && all(period == round(period)))
+  if (!gridded) return(as.character(sort(unique(period))))
+  first <- min(period)
+  last  <- max(period)
+  n <- as.numeric(last - first) + 1
+  if (!is.null(n_max)) {
+    n    <- min(n, n_max)
+    last <- first + (n - 1)
+  }
+  if (n > 1e5) {
+    .period_bad_input(sprintf(paste0(
+      "`periods` spans %s blocks from %s to %s; give `trim` a count of ",
+      "periods to draw, or a label or factor column."),
+      format(n, big.mark = ","), format(first), format(last)))
+  }
+  as.character(seq(first, last, by = 1))
+}
+
+# One row per actor, that actor's states in period-then-step order, NA
+# padded to the longest; an actor with no cell is an all-NA row.
+#' @noRd
+.period_trajectory <- function(a, p, step, code, n_actors) {
+  o   <- order(a, p, step)
+  pos <- stats::ave(a[o], a[o], FUN = seq_along)
+  trajectory <- matrix(NA_integer_, n_actors, max(pos, 1L))
+  trajectory[cbind(a[o], pos)] <- code[o]
+  trajectory
+}
+
+# Cell geometry for both fill modes.
 #' @noRd
 .period_layout <- function(data, actor, period, fill, trim = NULL) {
   enc   <- .encode_states(data)
   codes <- enc$codes
-  period_levels <- if (is.factor(period)) levels(period) else
-    as.character(sort(unique(period)))
+  tr <- .trim_axes(trim)
+  period_levels <- .period_levels(
+    period, n_max = if (!is.null(tr$cols) && tr$cols >= 1) tr$cols)
   actors <- if (is.factor(actor)) levels(droplevels(actor)) else
     as.character(sort(unique(actor)))
 
@@ -149,23 +189,45 @@
   p    <- match(as.character(period), period_levels)[r]
   a    <- match(as.character(actor), actors)[r]
   code <- codes[idx]
+  # A period past a count-bounded axis is outside the drawn range.
+  if (anyNA(p)) {
+    inside <- !is.na(p)
+    r <- r[inside]; step <- step[inside]; p <- p[inside]; a <- a[inside]
+    code <- code[inside]
+  }
 
-  # `trim` cuts the period axis as it cuts time points elsewhere: a count
-  # keeps the first `trim` periods, a fraction keeps the periods up to that
-  # quantile of the actors' last active period. Every actor keeps a row.
-  if (!is.null(trim)) {
+  # The time half of `trim` cuts the period axis as it cuts time points
+  # elsewhere: a count keeps the first n periods, a fraction keeps the
+  # periods up to that quantile of the actors' last active period.
+  if (!is.null(tr$cols)) {
     present <- matrix(NA_integer_, length(actors), length(period_levels))
     present[cbind(a, p)] <- 1L
-    cut <- .trim_cut(present, trim)
+    cut <- .trim_cut(present, tr$cols)
     if (cut < length(period_levels)) {
       keep <- p <= cut
       if (!any(keep)) {
         .period_bad_input(sprintf(
-          "`trim = %s` keeps %d period(s) with no action in them.", trim, cut))
+          "`trim = %s` keeps %d period(s) with no action in them.",
+          format(tr$cols), cut))
       }
       r <- r[keep]; step <- step[keep]; p <- p[keep]; a <- a[keep]
       code <- code[keep]
       period_levels <- period_levels[seq_len(cut)]
+    }
+  }
+  # The row half drops the least active actors, counted over the kept
+  # periods; the remaining actors are renumbered so `a` stays an index
+  # into `actors`.
+  if (!is.null(tr$rows)) {
+    keep_actor <- .trim_rows_keep(
+      .period_trajectory(a, p, step, code, length(actors)), tr$rows)
+    if (!all(keep_actor)) {
+      kept    <- which(keep_actor)
+      in_keep <- a %in% kept
+      r <- r[in_keep]; step <- step[in_keep]; p <- p[in_keep]
+      code <- code[in_keep]
+      a <- match(a[in_keep], kept)
+      actors <- actors[kept]
     }
   }
 
@@ -186,10 +248,7 @@
 
   # Each actor's whole trajectory (periods in order, steps joined), used
   # only to order the rows.
-  o   <- order(a, p, step)
-  pos <- stats::ave(a[o], a[o], FUN = seq_along)
-  trajectory <- matrix(NA_integer_, length(actors), max(pos))
-  trajectory[cbind(a[o], pos)] <- code[o]
+  trajectory <- .period_trajectory(a, p, step, code, length(actors))
 
   list(cells = cells, grid = grid, trajectory = trajectory,
        actors = actors, period_levels = period_levels, width = width,
@@ -227,8 +286,9 @@
     factor(rep("all", n_rows))
   } else {
     g <- src$group[match(lay$actors, as.character(src$actor))]
-    if (is.factor(src$group)) factor(g, levels = levels(src$group)) else
-      factor(g)
+    # droplevels: a row trim can empty a level, which must not be a panel.
+    if (is.factor(src$group)) droplevels(factor(g, levels = levels(src$group)))
+    else factor(g)
   }
   group_levels <- levels(actor_group)
   G <- length(group_levels)
@@ -244,8 +304,11 @@
   tree <- if (type == "heatmap" && G == 1L) attr(panels[[1L]], "tree") else
     NULL
   if (G == 1L && length(panels[[1L]]) != n_rows) {
-    .period_bad_input(sprintf("`tree` has %d leaves but there are %d actors.",
-                              length(panels[[1L]]), n_rows))
+    .period_bad_input(sprintf(paste0(
+      "`tree` has %d leaves but there are %d actors",
+      if (!is.null(.trim_axes(trim)$rows)) {
+        " (the row half of `trim` drops actors; it cannot be combined with `tree`)."
+      } else "."), length(panels[[1L]]), n_rows))
   }
 
   if (is.null(ncol) && is.null(nrow)) {
@@ -324,7 +387,7 @@
   out <- list(ord = unlist(lapply(panels, as.integer)), codes = lay$grid,
               palette = palette, levels = levels_all,
               periods = lay$period_levels, fill = fill)
-  if (G > 1L) {
+  if (!is.null(src$group)) {
     out$groups <- group_levels
     out$orders <- lapply(panels, as.integer)
   }
