@@ -43,12 +43,8 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
 
 .summary_metrics_from_weights <- function(W, directed) {
   # Diagonal is preserved as estimated. tna's `summary.tna()` counts edges
-  # via `sum(weights > 0)` without diagonal exclusion, computes density via
-  # igraph's `edge_density` (which uses the same edge total), and labels
-  # in/out strength following the assignment used in tna (`in_strength <-
-  # igraph::strength(g, mode = "out")` and the symmetric swap), so the
-  # values reported under "In-Strength" come from row sums and the values
-  # reported under "Out-Strength" come from column sums.
+  # via `sum(weights > 0)` without diagonal exclusion and computes density
+  # via igraph's `edge_density` (which uses the same edge total).
   n <- nrow(W)
   pos <- W > 0
   edge_count <- sum(pos)
@@ -76,10 +72,11 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
   out_degree_nl <- rowSums(W_no_loops != 0)
   in_degree_nl  <- colSums(W_no_loops != 0)
 
-  # Mirror tna's labelling: row sums are reported as In-Strength,
-  # column sums as Out-Strength.
-  out_strength <- col_strength
-  in_strength  <- row_strength
+  # Rows are sources: out-strength is the row sum, in-strength the column
+  # sum (their means are equal by construction; the SDs are not). Until
+  # 1.0.5 the two were swapped, as in tna before 1.5.4.
+  out_strength <- row_strength
+  in_strength  <- col_strength
 
   cent_out <- .freeman_degree_centralization(out_degree_nl, n, directed)
   cent_in  <- .freeman_degree_centralization(in_degree_nl,  n, directed)

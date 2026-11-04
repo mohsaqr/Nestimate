@@ -182,10 +182,18 @@
   W <- p_ref * exp(-beta * cost)
   Z <- tryCatch(solve(diag(1, n, n) - W), error = function(e) NULL)
   if (is.null(Z)) return(setNames(rep(NA_real_, n), rownames(mat)))
+  # reach[s, t]: t can be reached from s (or s == t). Only these pairs carry
+  # randomized-shortest-path walks; the unreachable entries of Z are zero in
+  # exact arithmetic and their solver noise must not enter.
+  reach <- is.finite(.floyd_warshall_sp(1 * (mat > 0), invert = FALSE)$D)
   Z_recip <- Z^-1
-  Z_recip[is.infinite(Z_recip)] <- 0
-  Z_recip_diag <- diag(Z_recip) * diag(1, n, n)
-  out <- diag(tcrossprod(Z, Z_recip - n * Z_recip_diag) %*% Z)
+  Z_recip[!reach | !is.finite(Z_recip)] <- 0
+  # The correction for walks absorbed at target t is counted once per source
+  # that reaches t: n of them in a strongly connected network, fewer when a
+  # state is never entered or never left. Until 1.0.5 it was always n.
+  n_sources <- .colSums(reach, n, n)
+  Z_recip_diag <- diag(n_sources * diag(Z_recip), n, n)
+  out <- diag(tcrossprod(Z, Z_recip - Z_recip_diag) %*% Z)
   out <- round(out)
   out <- out - min(out, na.rm = TRUE) + 1
   setNames(out, rownames(mat))

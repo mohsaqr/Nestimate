@@ -383,7 +383,10 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   needs_abs_xy <- any(metrics %in% c("canberra", "bray_curtis",
                                      "jaccard", "dice", "overlap"))
   if (needs_abs_xy) {
-    abs_x <- abs(x_vec); abs_y <- abs(y_vec); pos <- abs_x > 0 & abs_y > 0
+    abs_x <- abs(x_vec); abs_y <- abs(y_vec)
+    # Canberra: an edge absent from both networks is 0 / 0 and contributes
+    # nothing; an edge present in only one contributes |w| / |w| = 1.
+    pos <- abs_x + abs_y > 0
   }
   needs_sd <- any(metrics %in% c("pearson", "spearman", "kendall", "cv_ratio"))
   if (needs_sd) { sd_x <- stats::sd(x_vec); sd_y <- stats::sd(y_vec) }
@@ -453,7 +456,11 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 
 # ---- Helpers ----
 
-# Distance correlation per Szekely et al. (2007).
+# Distance correlation per Szekely, Rizzo & Bakirov (2007): the square root
+# of the squared distance covariance over the geometric mean of the squared
+# distance variances. NA when either distance variance is zero (a constant
+# vector), like the Pearson branch above. Until 1.0.5 the squared value was
+# returned.
 .distance_correlation <- function(x, y) {
   dist_x <- as.matrix(stats::dist(x, diag = TRUE, upper = TRUE))
   dist_y <- as.matrix(stats::dist(y, diag = TRUE, upper = TRUE))
@@ -468,7 +475,9 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   v_xy <- n^-2 * sum(xx * yy)
   v_x  <- n^-2 * sum(xx^2)
   v_y  <- n^-2 * sum(yy^2)
-  v_xy / sqrt(v_x * v_y)
+  if (!isTRUE(v_x * v_y > 0)) return(NA_real_)
+  # v_xy is non-negative in exact arithmetic; clamp rounding noise below zero
+  sqrt(max(v_xy, 0) / sqrt(v_x * v_y))
 }
 
 # RV coefficient per Robert & Escoufier (1976).

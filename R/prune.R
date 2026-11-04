@@ -71,10 +71,17 @@
 .disparity_filter <- function(W, level) {
   d          <- ncol(W)
   idx_mat    <- 1 * (W > 0)
-  out_edges  <- W / .rowSums(W, m = d, n = d)
+  # A state with no outgoing (incoming) edges has nothing to normalize;
+  # dividing by 1 keeps its absent edges at 0 instead of 0 / 0 = NaN, which
+  # until 1.0.5 left NA weights around a source or sink state.
+  out_sums   <- .rowSums(W, m = d, n = d)
+  in_sums    <- .colSums(W, m = d, n = d)
+  out_sums[!(out_sums > 0)] <- 1
+  in_sums[!(in_sums > 0)]   <- 1
+  out_edges  <- W / out_sums
   out_degree <- .rowSums(idx_mat, m = d, n = d)
   out_p      <- (1 - out_edges)^(out_degree - 1)
-  in_edges   <- t(W) / .colSums(W, m = d, n = d)
+  in_edges   <- t(W) / in_sums
   in_degree  <- .colSums(idx_mat, m = d, n = d)
   in_p       <- t((1 - in_edges)^(in_degree - 1))
   p_values   <- pmin(out_p, in_p)

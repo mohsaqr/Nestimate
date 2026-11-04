@@ -102,3 +102,24 @@ test_that("net_prune maps over a netobject_group", {
 test_that("net_prune rejects unsupported input", {
   expect_error(net_prune(1:5), "netobject")
 })
+
+test_that("disparity filter keeps the absent edges of a sink or source state at 0, never NA", {
+  # D is a sink (never left), S a source (never entered)
+  seqs <- data.frame(
+    V1 = c("S", "S", "S", "S"), V2 = c("A", "B", "A", "C"),
+    V3 = c("B", "C", "C", "A"), V4 = c("C", "A", "B", "B"),
+    V5 = c("D", "D", "D", "D"),
+    stringsAsFactors = FALSE
+  )
+  net <- build_network(seqs, method = "frequency")
+  expect_true(all(net$weights["D", ] == 0))
+  expect_true(all(net$weights[, "S"] == 0))
+  pruned <- net_prune(net, method = "disparity", level = 0.5)
+  expect_false(anyNA(pruned$weights))
+  expect_true(all(pruned$weights["D", ] == 0))
+  expect_true(all(pruned$weights[, "S"] == 0))
+  expect_true(all((pruned$weights > 0) <= (net$weights > 0)))
+  det <- net_pruning_details(pruned)
+  expect_false(anyNA(det$weight))
+  expect_identical(attr(det, "num_removed"), nrow(det))
+})
