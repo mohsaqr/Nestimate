@@ -119,9 +119,9 @@ summary(nets)
 #>              Network Density      1      1       1      1
 #>                Mean Distance  1.863 0.6584  0.7162 0.5839
 #>            Mean Out-Strength  6.181  1.122   1.207  1.353
-#>              SD Out-Strength 0.8432 0.6844 0.08534 0.2021
+#>              SD Out-Strength 0.5072 0.1253  0.7034 0.4867
 #>             Mean In-Strength  6.181  1.122   1.207  1.353
-#>               SD In-Strength 0.5072 0.1253  0.7034 0.4867
+#>               SD In-Strength 0.8432 0.6844 0.08534 0.2021
 #>              Mean Out-Degree      3      2       2      2
 #>                SD Out-Degree      0      0       0      0
 #>  Centralization (Out-Degree)      0      0       0      0

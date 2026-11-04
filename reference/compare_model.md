@@ -239,10 +239,10 @@ compare_model(nets)
 #>          Correlations              Pearson  0.9211
 #>          Correlations             Spearman  0.9153
 #>          Correlations              Kendall  0.7672
-#>          Correlations             Distance  0.8382
+#>          Correlations             Distance  0.9156
 #>       Dissimilarities            Euclidean  0.4695
 #>       Dissimilarities            Manhattan   2.612
-#>       Dissimilarities             Canberra   14.76
+#>       Dissimilarities             Canberra   19.76
 #>       Dissimilarities          Bray-Curtis  0.1451
 #>       Dissimilarities            Frobenius  0.2213
 #>          Similarities               Cosine   0.954
@@ -260,9 +260,9 @@ compare_model(nets)
 #>              Network Density       1       1
 #>                Mean Distance 0.04229 0.05596
 #>            Mean Out-Strength       1       1
-#>              SD Out-Strength  0.9141  0.7186
+#>              SD Out-Strength       0       0
 #>             Mean In-Strength       1       1
-#>               SD In-Strength       0       0
+#>               SD In-Strength  0.9141  0.7186
 #>              Mean Out-Degree   8.444   8.333
 #>                SD Out-Degree    1.13   0.866
 #>  Centralization (Out-Degree) 0.04688  0.0625

@@ -651,10 +651,10 @@ global_differences(cmp)
 #>          pearson  0.92
 #>         spearman  0.92
 #>          kendall  0.77
-#>     distance_cor  0.84
+#>     distance_cor  0.92
 #>        euclidean  0.47
 #>        manhattan  2.61
-#>         canberra 14.76
+#>         canberra 19.76
 #>      bray_curtis  0.15
 #>        frobenius  0.22
 #>           cosine  0.95
@@ -671,9 +671,9 @@ network_metrics(cmp)
 #>     High             Network Density     1
 #>     High               Mean Distance  0.04
 #>     High           Mean Out-Strength     1
-#>     High             SD Out-Strength  0.91
+#>     High             SD Out-Strength     0
 #>     High            Mean In-Strength     1
-#>     High              SD In-Strength     0
+#>     High              SD In-Strength  0.91
 #>     High             Mean Out-Degree  8.44
 #>     High               SD Out-Degree  1.13
 #>     High Centralization (Out-Degree)  0.05
@@ -684,9 +684,9 @@ network_metrics(cmp)
 #>      Low             Network Density     1
 #>      Low               Mean Distance  0.06
 #>      Low           Mean Out-Strength     1
-#>      Low             SD Out-Strength  0.72
+#>      Low             SD Out-Strength     0
 #>      Low            Mean In-Strength     1
-#>      Low              SD In-Strength     0
+#>      Low              SD In-Strength  0.72
 #>      Low             Mean Out-Degree  8.33
 #>      Low               SD Out-Degree  0.87
 #>      Low Centralization (Out-Degree)  0.06

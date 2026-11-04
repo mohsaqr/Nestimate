@@ -1,5 +1,34 @@
 # Changelog
 
+## Nestimate 1.0.5
+
+Corrections to numerical results, matching tna 1.5.4. Results from the
+functions below can differ from earlier versions.
+
+- [`summary()`](https://rdrr.io/r/base/summary.html) of a network
+  reported the standard deviation of the in-strength as that of the
+  out-strength and vice versa (the means are equal by construction).
+  Out-strength is the row sum.
+- [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
+  and
+  [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md):
+  the distance correlation was reported squared; it is now the distance
+  correlation (Szekely, Rizzo & Bakirov 2007), `NA` when one network is
+  constant. The Canberra distance omitted the edges present in only one
+  network (each contributes 1). `reliability()` and
+  [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  use the same metrics.
+- `BetweennessRSP`
+  ([`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md),
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md))
+  counted the correction for walks absorbed at a target once for every
+  state, also for states that cannot reach it. In a network that is not
+  strongly connected (for example, with a state that is never entered)
+  the values were wrong. Only sources that reach the target are counted;
+  strongly connected networks are unchanged.
+- `net_prune(method = "disparity")` set the absent edges of a state with
+  no outgoing or no incoming edges to `NA`. They stay 0.
+
 ## Nestimate 1.0.4
 
 - [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)

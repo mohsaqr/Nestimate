@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,18 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.5" id="nestimate-105">Nestimate 1.0.5<a class="anchor" aria-label="anchor" href="#nestimate-105"></a></h2>
+<p>Corrections to numerical results, matching tna 1.5.4. Results from the functions below can differ from earlier versions.</p>
+<ul><li>
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a network reported the standard deviation of the in-strength as that of the out-strength and vice versa (the means are equal by construction). Out-strength is the row sum.</li>
+<li>
+<code><a href="../reference/compare_model.html">compare_model()</a></code> and <code><a href="../reference/compare_networks.html">compare_networks()</a></code>: the distance correlation was reported squared; it is now the distance correlation (Szekely, Rizzo &amp; Bakirov 2007), <code>NA</code> when one network is constant. The Canberra distance omitted the edges present in only one network (each contributes 1). <code>reliability()</code> and <code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code> use the same metrics.</li>
+<li>
+<code>BetweennessRSP</code> (<code><a href="../reference/net_centrality.html">net_centrality()</a></code>, <code><a href="../reference/centrality_stability.html">centrality_stability()</a></code>) counted the correction for walks absorbed at a target once for every state, also for states that cannot reach it. In a network that is not strongly connected (for example, with a state that is never entered) the values were wrong. Only sources that reach the target are counted; strongly connected networks are unchanged.</li>
+<li>
+<code>net_prune(method = "disparity")</code> set the absent edges of a state with no outgoing or no incoming edges to <code>NA</code>. They stay 0.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.4" id="nestimate-104">Nestimate 1.0.4<a class="anchor" aria-label="anchor" href="#nestimate-104"></a></h2>
 <ul><li>

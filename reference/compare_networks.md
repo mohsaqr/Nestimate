@@ -639,10 +639,10 @@ global_differences(cmp, pair = c("A", "B"))
 #>          pearson  0.94
 #>         spearman  0.93
 #>          kendall  0.79
-#>     distance_cor  0.88
+#>     distance_cor  0.94
 #>        euclidean  0.41
 #>        manhattan  2.25
-#>         canberra 14.40
+#>         canberra 18.40
 #>      bray_curtis  0.13
 #>        frobenius  0.19
 #>           cosine  0.97
