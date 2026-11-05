@@ -239,29 +239,31 @@
 #'   padding it. Applies to all three types (including the \code{mcml}
 #'   multichannel view). \code{NULL} (default) plots everything.
 #'
-#'   The first number cuts the time axis: a fraction in \code{(0, 1)}
-#'   drops everything past that quantile of sequence lengths
-#'   (\code{trim = 0.95} keeps the columns covering the shortest 95% of
-#'   sequences); a value \code{>= 1} is an absolute cut (\code{trim = 50}
-#'   keeps the first 50 time points). With \code{periods} the unit is the
-#'   period block: \code{trim = 60} keeps the first 60 periods and a
-#'   fraction keeps the periods up to that quantile of the actors' last
-#'   active period.
+#'   The first number cuts the time axis. A fraction in \code{(0, 1)}
+#'   judges each time point on its own activity and keeps the busiest ones
+#'   that together hold that share of the observed states, ties going to the
+#'   earlier one; the rest are removed wherever they sit and the kept ones
+#'   close up under their own labels. So \code{trim = 0.9} removes the quiet
+#'   time points holding the last tenth of the states, which is what a long
+#'   tail consists of, and those with no data. A value \code{>= 1} is an absolute
+#'   cut (\code{trim = 50} keeps the first 50 time points). With
+#'   \code{periods} the unit is the period block: \code{trim = 60} keeps the
+#'   first 60 periods and a fraction judges each period by its actions. Only
+#'   the drawing changes, not the data.
 #'
-#'   The second number cuts the rows, counted over the time points kept by
-#'   the first: a value \code{>= 1} keeps the sequences with at least that
-#'   many observed states (\code{trim = c(60, 5)}), a fraction keeps the
-#'   most active share of the sequences (\code{trim = c(0.9, 0.9)} drops
-#'   the longest 10% of the time axis and the sparsest 10% of the rows).
-#'   \code{NA} leaves an axis alone (\code{trim = c(NA, 5)}). A row cut
-#'   cannot be combined with \code{tree} or a clustering dendrogram, whose
-#'   leaves are the full set of rows.
+#'   The second number ends each row earlier and never removes a row,
+#'   counted over the time points kept by the first: a value \code{>= 1}
+#'   keeps each row's first that many observed states
+#'   (\code{trim = c(60, 5)}), a fraction its first share of them
+#'   (\code{trim = c(0.9, 0.9)}). What is left stays in place; the row is
+#'   white after that point. Only the drawing changes, not the data.
+#'   \code{NA} leaves an axis alone (\code{trim = c(NA, 5)}).
 #' @param trim_clusterwise Grouped \code{type = "index"} /
 #'   \code{"distribution"} only, and only when \code{trim} is a fraction.
 #'   \code{FALSE} (default) computes one cutoff on the pooled data and
 #'   applies it to every panel, so all facets share the same width and the
-#'   time axes stay aligned. \code{TRUE} crops each group to its own
-#'   length quantile, so panels can end up at different widths (ragged
+#'   time axes stay aligned. \code{TRUE} judges the time points within each
+#'   group, so panels can end up at different widths (ragged
 #'   axes). Absolute \code{trim} (\code{>= 1}) ignores this - the column is
 #'   the same everywhere either way.
 #' @param row_gap Fraction of row height used as vertical gap between
@@ -650,21 +652,13 @@ sequence_plot <- function(x,
   tr         <- .trim_axes(trim)
   enc        <- .encode_states(x)
   codes      <- .trim_codes(enc$codes, tr$cols)
-  keep_rows  <- .trim_rows_keep(codes, tr$rows)
-  if (!all(keep_rows)) {
-    if (!is.null(tree)) {
-      stop(errorCondition(paste0(
-        "The row half of `trim` drops sequences, so it cannot be combined ",
-        "with `tree` or a clustering dendrogram."),
-        class = "nestimate_bad_input", call = NULL))
-    }
-    codes <- codes[keep_rows, , drop = FALSE]
-  }
   levels_all <- enc$levels
   n_rows     <- nrow(codes); n_cols <- ncol(codes)
 
+  # Ordered before the row half of `trim`, so a row ending earlier stays put.
   ord  <- .row_order(codes, sort, tree, levels_all)
   tree <- attr(ord, "tree")
+  codes <- .trim_rows_blank(codes, tr$rows)
 
   if (length(ord) != n_rows) {
     stop(sprintf("`tree` has %d leaves but `x` has %d rows.",
@@ -782,40 +776,31 @@ sequence_plot <- function(x,
   enc        <- .encode_states(x)
   full_codes <- enc$codes
   levels_all <- enc$levels
-  col_names  <- colnames(full_codes)
   .report_unused_colors(state_colors, levels_all)
   palette    <- .state_palette(state_colors, length(levels_all), levels_all)
-  # One global cut keeps every panel the same width (aligned axes). With
-  # trim_clusterwise = TRUE each group is cropped to its own length
-  # quantile instead, so panels can end up different widths.
-  global_cut <- .trim_cut(full_codes, tr$cols)
+  # One global set of columns keeps every panel the same width (aligned axes).
+  # With trim_clusterwise = TRUE each group judges the columns on its own
+  # activity instead, so panels can end up different widths.
+  global_keep <- .trim_keep(full_codes, tr$cols)
   groups <- if (is.null(group)) factor(rep("all", nrow(full_codes))) else group
-  # The row cut counts over the time points each panel will draw. `orig`
-  # maps the surviving rows back to the input rows, so `orders` keeps
-  # indexing the input.
-  keep_rows <- .trim_rows_keep_grouped(full_codes, groups, tr$rows, tr$cols,
-                                       global_cut, trim_clusterwise)
-  orig <- which(keep_rows)
-  if (!all(keep_rows)) {
-    full_codes <- full_codes[keep_rows, , drop = FALSE]
-    groups     <- droplevels(groups[keep_rows])
-  }
   group_levels <- levels(groups)
   G            <- length(group_levels)
   group_sizes  <- vapply(group_levels,
                          function(g) sum(groups == g), integer(1))
 
-  # Per-group: crop columns (own cut if clusterwise, else the global cut),
-  # then order rows within the cropped view. `order` keeps the global row
-  # indices so the returned `orders` still maps back to the input rows.
+  # Per-group: crop columns (own set if clusterwise, else the global set), then
+  # order rows within the cropped view, before the row half of `trim` so a row
+  # ending earlier stays put. `order` keeps the global row indices so the
+  # returned `orders` still maps back to the input rows.
   panels <- lapply(group_levels, function(g) {
     rows <- which(groups == g)
     sub  <- full_codes[rows, , drop = FALSE]
-    cut  <- if (isTRUE(trim_clusterwise)) .trim_cut(sub, tr$cols) else
-      global_cut
-    sub  <- sub[, seq_len(cut), drop = FALSE]
+    keep <- if (isTRUE(trim_clusterwise)) .trim_keep(sub, tr$cols) else
+      global_keep
+    sub  <- .trim_columns(sub, keep)
     ord  <- .row_order(sub, sort, tree = NULL, levels_all)
-    list(sub = sub[ord, , drop = FALSE], order = orig[rows[ord]])
+    sub  <- .trim_rows_blank(sub, tr$rows)
+    list(sub = sub[ord, , drop = FALSE], order = rows[ord])
   })
 
   if (is.null(ncol) && is.null(nrow)) {
@@ -849,7 +834,7 @@ sequence_plot <- function(x,
     sub  <- panels[[g_idx]]$sub
     nN   <- nrow(sub)
     nc   <- ncol(sub)
-    ticks <- .tick_positions(nc, tick, col_names[seq_len(nc)])
+    ticks <- .tick_positions(nc, tick, colnames(sub))
 
     if (!combined && g_idx > 1L) {
       graphics::par(oma = c(if (legend == "bottom") oma[["oma_b"]] else 0.3,
@@ -909,7 +894,8 @@ sequence_plot <- function(x,
                         legend_ncol, legend_title, legend_border, legend_bty)
   }
 
-  invisible(list(codes = full_codes[, seq_len(global_cut), drop = FALSE],
+  invisible(list(codes = .trim_rows_blank(
+                   .trim_columns(full_codes, global_keep), tr$rows),
                  palette = palette, levels = levels_all,
                  orders = lapply(panels, `[[`, "order"),
                  groups = group_levels))

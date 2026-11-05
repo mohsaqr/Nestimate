@@ -464,6 +464,27 @@
 # 5. Input Extraction
 # ==============================================================================
 
+#' One windowed sequence per unit of a one-hot network
+#'
+#' The rows of a one-hot network are time points. Treating each as a sequence
+#' would cluster strings of 0 and 1 and break the windows apart.
+#' @noRd
+.onehot_unit_sequences <- function(net) {
+  data <- .resampling_transition_data(net$data, net$metadata, net$params)
+  actor <- .param_get(net$params, "actor")
+  if (is.null(actor)) {
+    stop(errorCondition(
+      paste0("This one-hot network has no `actor` or `session`, so it is one ",
+             "sequence and there is nothing to cluster."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  data$.unit <- .observed_group_id(data[actor], context = "actor/session")
+  .prepare_onehot(data, cols = .param_get(net$params, "codes"), actor = ".unit",
+                 window_size = .param_get(net$params, "window_size", 1L),
+                 window_type = .param_get(net$params, "mode", "non-overlapping"))
+}
+
+
 #' Extract wide-format sequence data from various object types
 #'
 #' Supports: data.frame, matrix, netobject, tna, cograph_network.
@@ -486,6 +507,7 @@
     if (is.null(data$data)) { # nocov start
       stop("netobject has no $data. Pass the original sequence data.", call. = FALSE)
     } # nocov end
+    if (.is_onehot_params(data$params)) return(.onehot_unit_sequences(data))
     return(as.data.frame(data$data, stringsAsFactors = FALSE))
   }
 
@@ -520,6 +542,36 @@
        call. = FALSE)
 }
 
+#' Split a wide frame into sequence positions and set-aside covariates
+#'
+#' Applies the role rules of \code{build_network()} so a verb that reads wide
+#' frames never treats an id or a covariate as a sequence position.
+#' @param data A wide data frame.
+#' @param verb Name of the calling verb, for the message.
+#' @return List with `sequences` (data frame of positions) and `metadata`
+#'   (data frame of the other columns, or NULL when there are none).
+#' @noRd
+.split_sequence_columns <- function(data, verb) {
+  selected <- .build_sequence_cols(data)
+  if (is.null(selected) || setequal(selected, names(data))) {
+    return(list(sequences = data, metadata = NULL))
+  }
+  aside <- setdiff(names(data), selected)
+  if (length(selected) < 2L) {
+    stop(errorCondition(
+      sprintf(paste0("%s() found fewer than two sequence columns: `%s` were ",
+                     "read as covariates. Pass a frame holding only the ",
+                     "sequence columns."),
+              verb, paste(aside, collapse = "`, `")),
+      class = "nestimate_bad_input", call = NULL
+    ))
+  }
+  message(sprintf("%s(): treating `%s` as covariates, not sequence positions.",
+                  verb, paste(aside, collapse = "`, `")))
+  list(sequences = .keep_window_attrs(data[, selected, drop = FALSE], data),
+       metadata = data[, aside, drop = FALSE])
+}
+
 # ==============================================================================
 # 6. Main Function
 # ==============================================================================
@@ -536,7 +588,10 @@
 #' @param data Input data. Accepts multiple formats:
 #' \describe{
 #'   \item{data.frame / matrix}{Wide-format sequences (rows = sequences,
-#'     columns = time points, values = state names).}
+#'     columns = time points, values = state names). Columns of a data frame
+#'     take the same roles as in \code{\link{build_network}}: an id or a
+#'     covariate is not a sequence position. Those set aside are named in a
+#'     message and kept in \code{$metadata}.}
 #'   \item{netobject}{A network object from \code{\link{build_network}}.
 #'     Extracts the stored sequence data. Only valid for sequence-based
 #'     methods (relative, frequency, co_occurrence, attention).}
@@ -640,7 +695,8 @@
 #'     networks can be rebuilt the same way. NULL otherwise.}
 #'   \item{metadata}{For \code{netobject} input, its per-sequence metadata,
 #'     one row per clustered sequence, so \code{\link{session_ids}} can name
-#'     each sequence. NULL otherwise.}
+#'     each sequence. For a data frame, the columns set aside as covariates
+#'     (see \code{data}). NULL otherwise.}
 #'   \item{htna_partition}{For HTNA input, the preserved node-to-actor
 #'     partition used to restore HTNA children when networks are built.}
 #' }
@@ -689,6 +745,8 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
 
   # --- Extract sequence data from supported objects ---
   raw_data <- data
+  onehot_net <- inherits(raw_data, "netobject") &&
+    .is_onehot_params(raw_data$params)
   data <- .extract_sequence_data(data)
   # Resolve post-hoc covariates before constructing distances: named columns
   # in the sequence frame must not become additional sequence positions.
@@ -709,11 +767,19 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
         inherits(raw_data, c("netobject", "cograph_network"))) {
       cov_cols <- setdiff(cov_cols, names(raw_data$metadata))
     }
-    data <- data[, setdiff(names(data), cov_cols), drop = FALSE]
+    data <- .keep_window_attrs(data[, setdiff(names(data), cov_cols), drop = FALSE],
+                               data)
     if (ncol(data) == 0L) {
       stop("No sequence columns remain after excluding post-hoc covariates.",
            call. = FALSE)
     }
+  }
+  # Same roles as build_network(): an id or a covariate is not a position.
+  set_aside <- NULL
+  if (is.data.frame(raw_data)) {
+    roles <- .split_sequence_columns(data, "build_clusters")
+    data <- roles$sequences
+    set_aside <- roles$metadata
   }
 
   # --- Input validation ---
@@ -836,8 +902,8 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
       lambda = lambda,
       covariates = cov_result,
       network_method = if (inherits(raw_data, "netobject")) raw_data$method else NULL,
-      build_args     = if (inherits(raw_data, "netobject")) raw_data$build_args else NULL,
-      metadata       = if (inherits(raw_data, "netobject")) raw_data$metadata else NULL,
+      build_args     = if (inherits(raw_data, "netobject") && !onehot_net) raw_data$build_args else NULL,
+      metadata       = if (onehot_net) NULL else if (inherits(raw_data, "netobject")) raw_data$metadata else set_aside,
       htna_partition = .capture_htna_partition(raw_data)
     ),
     class = "net_clustering"
@@ -1594,8 +1660,8 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       "risk is detected. See Heinze & Schemper (2002).",
       call. = FALSE
     )
-    fml <- stats::as.formula(paste("cluster ~", rhs))
-    fit <- nnet::multinom(fml, data = fit_df, trace = FALSE)
+    design <- stats::model.matrix(stats::as.formula(paste("~", rhs)), fit_df)
+    fit <- .multinom_standardised(fit_df$cluster, design)
     null_fit <- nnet::multinom(cluster ~ 1, data = fit_df, trace = FALSE)
   } else {
     # estimator == "firth"
@@ -1614,10 +1680,10 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
                                                      ref = 1L))
   }
 
-  s <- summary(fit)
-  coefs <- s$coefficients
-  ses <- s$standard.errors
-  if (is.null(ses) && !is.null(s$standard.errors)) ses <- s$standard.errors
+  estimates <- if (estimator == "multinom") fit$estimates else summary(fit)
+  coefs <- estimates$coefficients
+  ses <- estimates$standard.errors
+  if (estimator == "multinom") fit <- fit$model
   if (is.null(ses)) {
     # brmultinom stores SE on the vcov diagonal
     ses <- matrix(sqrt(diag(stats::vcov(fit))),
@@ -1681,10 +1747,81 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       bic = tryCatch(stats::BIC(fit), error = function(e) NA_real_),
       deviance = model_dev,
       mcfadden_r2 = mcfadden_r2,
-      reference_cluster = levels(fit_df$cluster)[1L]
+      reference_cluster = levels(fit_df$cluster)[1L],
+      converged = if (estimator == "multinom") fit$convergence == 0L else NA
     ),
     model = fit
   )
+}
+
+#' Centre and scale a design matrix, and the map back to its original scale
+#'
+#' nnet's optimiser and its numeric Hessian fail on columns far from unit
+#' scale (a year, an income). Fitting on standardised columns keeps the same
+#' model: the likelihood and the fitted values do not change.
+#' @param X Design matrix with named columns.
+#' @return List with `X` (standardised) and `back`, the matrix with
+#'   `original = standardised %*% back` for coefficients in rows.
+#' @noRd
+.standardise_design <- function(X) {
+  is_intercept <- colnames(X) == "(Intercept)"
+  center <- colMeans(X)
+  center[is_intercept] <- 0
+  # Without an intercept, centring would change the model.
+  if (!any(is_intercept)) center[] <- 0
+  spread <- apply(X, 2L, stats::sd)
+  spread[is_intercept | !is.finite(spread) | spread == 0] <- 1
+  back <- diag(1 / spread, nrow = ncol(X))
+  dimnames(back) <- list(colnames(X), colnames(X))
+  if (any(is_intercept)) back[, is_intercept] <- back[, is_intercept] - center / spread
+  list(X = sweep(sweep(X, 2L, center, "-"), 2L, spread, "/"), back = back)
+}
+
+#' Multinomial logit on standardised columns, reported on the original scale
+#'
+#' @param y Factor outcome.
+#' @param design Design matrix of the original covariates.
+#' @return List with `model` (the nnet fit, on the standardised columns) and
+#'   `estimates` (list of `coefficients` and `standard.errors`, one row per
+#'   non-reference level, on the original scale). Warns with class
+#'   `nestimate_no_converge` when the optimiser stopped early.
+#' @noRd
+.multinom_standardised <- function(y, design) {
+  std <- .standardise_design(design)
+  X <- std$X
+  fit <- nnet::multinom(y ~ X - 1, Hess = TRUE, maxit = 1000L, trace = FALSE)
+  .warn_multinom_convergence(fit)
+  levels_kept <- levels(y)[-1L]
+  p <- ncol(design)
+  beta <- matrix(stats::coef(fit), nrow = length(levels_kept), ncol = p,
+                 dimnames = list(levels_kept, colnames(design)))
+  covariance <- stats::vcov(fit)
+  # vcov() holds one p x p block per non-reference level, in level order.
+  ses <- vapply(seq_along(levels_kept), \(level) {
+    block <- (level - 1L) * p + seq_len(p)
+    sqrt(diag(t(std$back) %*% covariance[block, block, drop = FALSE] %*%
+                std$back))
+  }, numeric(p))
+  ses <- matrix(ses, nrow = length(levels_kept), ncol = p, byrow = TRUE,
+                dimnames = dimnames(beta))
+  list(model = fit,
+       estimates = list(coefficients = beta %*% std$back,
+                        standard.errors = ses))
+}
+
+#' Warn when nnet::multinom stopped before converging
+#' @param fit A fit with a `convergence` field (0 = converged).
+#' @return `fit`, invisibly.
+#' @noRd
+.warn_multinom_convergence <- function(fit) {
+  if (!identical(as.integer(fit$convergence), 0L)) {
+    warning(warningCondition(
+      paste0("nnet::multinom did not converge within its iteration limit, ",
+             "so the covariate estimates are not reliable."),
+      class = "nestimate_no_converge", call = NULL
+    ))
+  }
+  invisible(fit)
 }
 
 #' Print covariate profiles and coefficient table (shared by build_clusters/mmm)
@@ -1933,8 +2070,11 @@ print.tidy_covariates <- function(x, ...) {
   build_args <- build_args[setdiff(names(build_args), long_only)]
 
   nets <- lapply(seq_len(k), function(cl) {
-    sub <- seq_data[assignments == cl, , drop = FALSE]
-    do.call(build_network, c(list(data = sub, method = method), build_args))
+    rows <- assignments == cl
+    sub <- seq_data[rows, , drop = FALSE]
+    net <- do.call(build_network, c(list(data = sub, method = method),
+                                    build_args))
+    .attach_set_aside_metadata(net, x$metadata, rows)
   })
 
   names(nets) <- paste("Cluster", seq_len(k))
@@ -1942,6 +2082,20 @@ print.tidy_covariates <- function(x, ...) {
   attr(nets, "clustering") <- x
   class(nets) <- "netobject_group"
   .restore_htna_group(nets, x$htna_partition)
+}
+
+# Add the columns set aside at fitting time to one component's network. The
+# rebuild can find metadata of its own (a position that is empty in this
+# component), so it joins what is there instead of giving way to it.
+#' @noRd
+.attach_set_aside_metadata <- function(net, metadata, rows) {
+  if (is.null(metadata)) return(net)
+  new_cols <- setdiff(names(metadata), names(net$metadata))
+  if (length(new_cols) == 0L) return(net)
+  extra <- metadata[rows, new_cols, drop = FALSE]
+  net$metadata <- if (is.null(net$metadata)) extra else
+    cbind(net$metadata, extra)
+  net
 }
 
 # ==============================================================================

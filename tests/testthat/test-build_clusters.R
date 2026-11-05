@@ -1237,3 +1237,128 @@ test_that("build_clusters weighted=TRUE errors on non-hamming dissimilarity", {
     )
   }
 })
+
+# ---- Column roles of a wide frame ----
+
+.roles_frame <- function() {
+  set.seed(2)
+  wide <- as.data.frame(matrix(sample(LETTERS[1:3], 240, TRUE), 40, 6),
+                        stringsAsFactors = FALSE)
+  names(wide) <- paste0("T", seq_len(6))
+  wide
+}
+
+test_that("build_clusters does not read an id or a covariate as a position", {
+  sequences <- .roles_frame()
+  framed <- sequences
+  framed$course <- rep(c("x", "y"), 20)
+  framed$id <- seq_len(40)
+  expect_message(with_extra <- build_clusters(framed, k = 2),
+                 "`course`, `id` as covariates")
+  alone <- build_clusters(sequences, k = 2)
+  expect_identical(names(with_extra$data), names(sequences))
+  expect_identical(with_extra$assignments, alone$assignments)
+  expect_identical(names(with_extra$metadata), c("course", "id"))
+  expect_null(alone$metadata)
+  # The columns set aside follow each sequence into its cluster's network.
+  nets <- build_network(with_extra)
+  expect_identical(nets[["Cluster 1"]]$metadata$id,
+                   framed$id[with_extra$assignments == 1L])
+})
+
+test_that("build_clusters errors when fewer than two positions remain", {
+  numeric_states <- data.frame(a = c(1, 2, 1, 2), b = c(2, 1, 2, 1),
+                               group = c("x", "y", "x", "y"))
+  expect_error(build_clusters(numeric_states, k = 2),
+               class = "nestimate_bad_input")
+})
+
+# ---- multinom covariates: fit on standard columns, report on the original ----
+
+# Two levels by a binary covariate: slope = log odds ratio,
+# se = sqrt(sum(1 / cells)), which needs no software to check.
+.logit_cells <- function(x0 = 0, x1 = 1) {
+  y <- factor(c(rep(1, 30), rep(2, 10), rep(1, 12), rep(2, 28)))
+  x <- c(rep(x0, 40), rep(x1, 40))
+  list(y = y, design = stats::model.matrix(~ x))
+}
+
+test_that(".multinom_standardised reports the hand-computed logit", {
+  cells <- .logit_cells()
+  fit <- .multinom_standardised(cells$y, cells$design)$estimates
+  expect_equal(fit$coefficients[1, "x"], log(30 * 28 / (10 * 12)),
+               tolerance = 1e-4)
+  expect_equal(fit$coefficients[1, "(Intercept)"], log(10 / 30),
+               tolerance = 1e-4)
+  expect_equal(fit$standard.errors[1, "x"], sqrt(1 / 30 + 1 / 10 + 1 / 12 + 1 / 28),
+               tolerance = 1e-4)
+  expect_equal(fit$standard.errors[1, "(Intercept)"], sqrt(1 / 30 + 1 / 10),
+               tolerance = 1e-4)
+})
+
+test_that("a covariate's location and scale leave the logit equivalent", {
+  base <- .logit_cells()
+  year <- .logit_cells(2015, 2016)
+  income <- .logit_cells(50000, 60000)
+  fit_base <- .multinom_standardised(base$y, base$design)$estimates
+  fit_year <- .multinom_standardised(year$y, year$design)$estimates
+  fit_income <- .multinom_standardised(income$y, income$design)$estimates
+  expect_equal(fit_year$coefficients[1, "x"], fit_base$coefficients[1, "x"],
+               tolerance = 1e-5)
+  expect_equal(fit_year$standard.errors[1, "x"], fit_base$standard.errors[1, "x"],
+               tolerance = 1e-5)
+  expect_equal(fit_income$coefficients[1, "x"] * 10000,
+               fit_base$coefficients[1, "x"], tolerance = 1e-5)
+  expect_equal(fit_income$standard.errors[1, "x"] * 10000,
+               fit_base$standard.errors[1, "x"], tolerance = 1e-5)
+  # Intercept on the year scale: log odds at x = 0, by hand.
+  expect_equal(fit_year$coefficients[1, "(Intercept)"],
+               log(10 / 30) - 2015 * log(30 * 28 / (10 * 12)), tolerance = 1e-4)
+})
+
+test_that(".multinom_standardised lines up the blocks of three levels", {
+  y <- factor(c(rep(1, 20), rep(2, 10), rep(3, 30), rep(1, 25), rep(2, 25), rep(3, 10)))
+  x <- c(rep(2015, 60), rep(2016, 60))
+  fit <- .multinom_standardised(y, stats::model.matrix(~ x))$estimates
+  expect_equal(fit$coefficients["2", "x"], log(25 * 20 / (10 * 25)), tolerance = 1e-4)
+  expect_equal(fit$coefficients["3", "x"], log(10 * 20 / (30 * 25)), tolerance = 1e-4)
+  expect_equal(fit$standard.errors["2", "x"],
+               sqrt(1 / 20 + 1 / 10 + 1 / 25 + 1 / 25), tolerance = 1e-4)
+  expect_equal(fit$standard.errors["3", "x"],
+               sqrt(1 / 20 + 1 / 30 + 1 / 25 + 1 / 10), tolerance = 1e-4)
+})
+
+test_that("multinom non-convergence warns by class", {
+  expect_warning(.warn_multinom_convergence(list(convergence = 1L)),
+                 class = "nestimate_no_converge")
+  expect_no_warning(.warn_multinom_convergence(list(convergence = 0L)))
+})
+
+test_that("build_clusters reports a large-scale covariate on its own scale", {
+  sequences <- .roles_frame()
+  year <- rep(c(2015, 2016, 2017, 2018), 10)
+  fit <- build_clusters(sequences, k = 2, method = "ward.D2",
+                        covariates = data.frame(year = year),
+                        estimator = "multinom") |>
+    suppressWarnings()
+  expect_true(fit$covariates$fit$converged)
+  shifted <- build_clusters(sequences, k = 2, method = "ward.D2",
+                            covariates = data.frame(year = year - 2015),
+                            estimator = "multinom") |>
+    suppressWarnings()
+  slope <- subset(fit$covariates$coefficients, variable == "year")
+  slope_shifted <- subset(shifted$covariates$coefficients, variable == "year")
+  expect_equal(slope$estimate, slope_shifted$estimate, tolerance = 1e-5)
+  expect_equal(slope$std_error, slope_shifted$std_error, tolerance = 1e-5)
+})
+
+test_that("set-aside columns reach a cluster that has metadata of its own", {
+  d <- data.frame(T1 = rep(c("A", "B"), each = 3), T2 = rep(c("A", "B"), each = 3),
+                  T3 = c(NA, NA, NA, "B", "B", "B"), id = paste0("id", 1:6))
+  fit <- suppressMessages(build_clusters(d, k = 2, method = "ward.D2"))
+  nets <- build_network(fit, method = "frequency")
+  # T3 is empty in the first cluster, so that rebuild sets it aside itself.
+  expect_true("T3" %in% names(nets[[1L]]$metadata))
+  expect_identical(nets[[1L]]$metadata$id, d$id[fit$assignments == 1L])
+  expect_identical(nets[[2L]]$metadata$id, d$id[fit$assignments == 2L])
+})

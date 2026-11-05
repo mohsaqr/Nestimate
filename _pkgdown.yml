@@ -148,7 +148,6 @@ reference:
       - long-data
       - prepare_for_tna
       - action_to_onehot
-      - prepare_onehot
       - wide_to_long
       - long_to_wide
       - convert_sequence_format

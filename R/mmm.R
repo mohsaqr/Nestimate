@@ -309,15 +309,20 @@
 #'   `colnames(X)`), wts, and converged (FALSE when multinom hit `maxit`)
 #' @noRd
 .mmm_softmax_mstep <- function(post, X, wts = NULL) {
+  # Standardised columns keep the optimiser on scale; the model is the same,
+  # so a covariate shifted by a constant changes the intercept and nothing else.
+  std <- .standardise_design(X)
+  X_std <- std$X
   # nnet treats a supplied `Wts = NULL` as a weight vector of length 0, so
   # the warm start is passed only when there is one.
   fit <- if (is.null(wts)) {
-    nnet::multinom(post ~ X - 1, maxit = 500L, trace = FALSE)
+    nnet::multinom(post ~ X_std - 1, maxit = 500L, trace = FALSE)
   } else {
-    nnet::multinom(post ~ X - 1, Wts = wts, maxit = 500L, trace = FALSE)
+    nnet::multinom(post ~ X_std - 1, Wts = wts, maxit = 500L, trace = FALSE)
   }
   beta <- stats::coef(fit)
   colnames(beta) <- colnames(X)
+  beta <- beta %*% std$back
   list(log_pi_mat = log(stats::fitted(fit) + 1e-300), beta = beta,
        wts = fit$wts, converged = fit$convergence == 0L)
 }
@@ -354,7 +359,10 @@
 #' @param data A data.frame (wide format), \code{netobject},
 #'   \code{cograph_network}, or \code{tna} model. For tna and
 #'   cograph_network objects the stored (integer-encoded) data is
-#'   extracted and decoded to state labels.
+#'   extracted and decoded to state labels. Columns of a data.frame take the
+#'   same roles as in \code{\link{build_network}}: an id or a covariate is not
+#'   a sequence position. Those set aside are named in a message and kept in
+#'   \code{$metadata}.
 #' @param k Integer. Whole finite number of mixture components, >= 2.
 #'   Default: 2.
 #' @param n_starts Integer. Positive whole finite number of random restarts.
@@ -539,6 +547,12 @@ build_mmm <- function(data,
     metadata       <- data$metadata
     raw_data <- data$data
     states <- data$nodes$label
+    # The rows of a one-hot network are time points, not sequences.
+    if (.is_onehot_params(data$params)) {
+      raw_data <- .onehot_unit_sequences(data)
+      build_args <- NULL
+      metadata <- NULL
+    }
   } else {
     raw_data <- as.data.frame(data)
     state_cols <- .select_state_cols(raw_data, id = NULL, cols = NULL)
@@ -569,6 +583,18 @@ build_mmm <- function(data,
     states <- states[!is.na(states)]
     n_states <- length(states)
     stopifnot("Need at least 2 states" = n_states >= 2L)
+  }
+
+  # Same roles as build_network(): an id or a covariate is not a position.
+  if (is.data.frame(data)) {
+    roles <- .split_sequence_columns(raw_data, "build_mmm")
+    if (!is.null(roles$metadata)) {
+      raw_data <- roles$sequences
+      metadata <- roles$metadata
+      states <- sort(unique(as.vector(as.matrix(raw_data))))
+      n_states <- length(states)
+      stopifnot("Need at least 2 states" = n_states >= 2L)
+    }
   }
 
   # ---- Precompute per-sequence transition counts ----

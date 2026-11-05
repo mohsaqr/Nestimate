@@ -160,11 +160,14 @@ test_that("trim with periods cuts period blocks, not time points", {
   expect_identical(.period_layout(net$data, net$metadata$student,
                                   net$metadata$day, "pad", trim = 10)$grid,
                    full$grid)
-  # Fraction: every student is active on d3, so 0.5 keeps all three days.
+  # Fraction: the busiest periods that hold that share of the actions.
+  counts <- tabulate(full$cells$period, nbins = 3L)
+  expect_gte(sum(sort(counts, decreasing = TRUE)[1:2]) / sum(counts), 0.5)
+  expect_lt(max(counts) / sum(counts), 0.5)
   expect_identical(.period_layout(net$data, net$metadata$student,
                                   net$metadata$day, "pad",
                                   trim = 0.5)$period_levels,
-                   c("d1", "d2", "d3"))
+                   full$period_levels[rank(-counts, ties.method = "first") <= 2L])
   # Through the public verb, both types and both routes.
   idx <- sequence_plot(.daily_long(), actor = "student", action = "action",
                        periods = "day", type = "index", trim = 2)
@@ -279,31 +282,47 @@ test_that("a Date or day counter keeps the periods nobody acted in", {
                                  trim = 3)$periods, res$periods[1:3])
 })
 
-test_that("the row half of trim drops the least active actors", {
+test_that("the row half of trim ends each actor's row earlier and removes none", {
   pdf(NULL); on.exit(dev.off(), add = TRUE)
   net <- .daily_net()
-  # s1 has 5 actions, s2 9, s3 6: a row cut of 6 drops s1.
-  lay <- .period_layout(net$data, net$metadata$student, net$metadata$day,
-                        "pad", trim = c(NA, 6))
-  expect_identical(lay$actors, c("s2", "s3"))
-  expect_identical(rownames(lay$grid), c("s2", "s3"))
-  expect_true(all(lay$cells$actor %in% 1:2))
-  expect_identical(nrow(lay$trajectory), 2L)
+  layout_with <- function(trim, fill = "pad") {
+    .period_layout(net$data, net$metadata$student, net$metadata$day, fill, trim)
+  }
+  full <- layout_with(NULL)
+  per_actor <- function(lay) as.vector(tabulate(lay$cells$actor, nbins = 3L))
+  # s1 has 5 actions, s2 9, s3 6.
+  expect_identical(per_actor(full), c(5L, 9L, 6L))
+  expect_identical(layout_with(c(NA, 4))$actors, full$actors)
+  expect_identical(per_actor(layout_with(c(NA, 4))), c(4L, 4L, 4L))
+  # ceiling(0.5 * 5) = 3, ceiling(0.5 * 9) = 5, ceiling(0.5 * 6) = 3.
+  expect_identical(per_actor(layout_with(c(NA, 0.5))), c(3L, 5L, 3L))
   # Counted over the kept periods: on d1 alone s1 has 1, s2 2, s3 3.
-  d1 <- .period_layout(net$data, net$metadata$student, net$metadata$day,
-                       "pad", trim = c(1, 2))
-  expect_identical(d1$actors, c("s2", "s3"))
+  d1 <- layout_with(c(1, 2))
+  expect_identical(d1$actors, full$actors)
   expect_identical(d1$period_levels, "d1")
-  # Through the verb, with group: the dropped actor leaves its panel.
+  expect_identical(per_actor(d1), c(1L, 2L, 2L))
+  # Kept cells sit exactly where they were: nothing spreads to fill the row.
+  for_key <- function(lay) paste(lay$cells$actor, lay$cells$period,
+                                 lay$cells$xleft, lay$cells$xright)
+  stretched_full <- layout_with(NULL, "stretch")
+  stretched_half <- layout_with(c(NA, 0.5), "stretch")
+  expect_true(all(for_key(stretched_half) %in% for_key(stretched_full)))
+  # They are the earliest actions of each actor.
+  first_of <- function(lay, who) {
+    cells <- lay$cells[lay$cells$actor == who, ]
+    paste(cells$period, cells$step)[order(cells$period, cells$step)]
+  }
+  expect_identical(first_of(stretched_half, 2L),
+                   utils::head(first_of(stretched_full, 2L), 5L))
+  # Through the verb, with group: every actor keeps its row and panel.
   d <- .daily_long()
   d$klass <- ifelse(d$student == "s1", "B", "A")
   res <- sequence_plot(d, actor = "student", action = "action",
                        periods = "day", type = "index", group = "klass",
-                       trim = c(NA, 6))
-  expect_identical(res$groups, "A")
-  expect_identical(rownames(res$codes), c("s2", "s3"))
-  expect_error(sequence_plot(net, periods = "day", trim = c(NA, 100)),
-               class = "nestimate_bad_input")
+                       trim = c(NA, 2))
+  expect_setequal(res$groups, c("A", "B"))
+  expect_identical(rownames(res$codes), c("s1", "s2", "s3"))
+  expect_error(sequence_plot(net, periods = "day", trim = c(NA, -1)))
 })
 
 test_that("long data goes straight in and matches the network route", {
@@ -359,4 +378,73 @@ test_that("long-data argument errors are classed", {
   expect_error(sequence_plot(as.matrix(d), actor = "student",
                              action = "action"),
                class = "nestimate_bad_input")
+})
+
+test_that("a fractional trim removes the weakest periods wherever they sit", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  # Actions per day: d1 6, d2 1, d3 none, d4 6, d5 1, d6 4.
+  ids <- c("a", "b", "c")
+  d <- rbind(
+    data.frame(id = rep(ids, each = 2L), day = 1L, act = "x"),
+    data.frame(id = "a", day = 2L, act = "y"),
+    data.frame(id = rep(ids, each = 2L), day = 4L, act = "x"),
+    data.frame(id = "b", day = 5L, act = "y"),
+    data.frame(id = rep(c("a", "c"), each = 2L), day = 6L, act = "x")
+  )
+  d$day <- as.Date("2024-01-01") + d$day - 1L
+  days_with <- function(trim) {
+    sequence_plot(d, actor = "id", action = "act", periods = "day",
+                  type = "index", trim = trim)$periods
+  }
+  day <- function(i) as.character(as.Date("2024-01-01") + i - 1L)
+  # No fraction: the empty day stays on the axis.
+  expect_identical(days_with(NULL), day(1:6))
+  # Actions per day: d1 6, d2 1, d4 6, d5 1, d6 4; 18 in all, d3 empty.
+  # Busiest first they add up to 6, 12, 16, 17, 18.
+  # 0.6 needs 10.8 actions: d1 and d4 hold 12.
+  expect_identical(days_with(0.6), day(c(1, 4)))
+  # 0.75 needs 13.5: d6 joins.
+  expect_identical(days_with(0.75), day(c(1, 4, 6)))
+  # 0.9 needs 16.2: d2 joins, the earlier of the two days with one action.
+  expect_identical(days_with(0.9), day(c(1, 2, 4, 6)))
+  # All of it: only the empty day goes.
+  expect_identical(days_with(0.999), day(c(1, 2, 4, 5, 6)))
+  # Equal activity: the earlier day stays.
+  expect_identical(days_with(0.4), day(c(1, 4)))
+  expect_identical(days_with(0.2), day(1))
+  # A count is still the first n days, the empty one included.
+  expect_identical(days_with(3), day(1:3))
+
+  # The kept cells sit in the closed-up blocks; rows are counted over them.
+  # Under 0.75, a has 2 + 2 + 2 kept actions, b 2 + 2, c 2 + 2 + 2.
+  prep <- prepare(d, actor = "id", action = "act", session = "day",
+                  time_threshold = FALSE)
+  lay <- .period_layout(prep$sequence_data, prep$meta_data$id,
+                        prep$meta_data$day, "pad", trim = c(0.75, 5))
+  expect_identical(lay$actors, ids)
+  expect_identical(as.vector(tabulate(lay$cells$actor, nbins = 3L)),
+                   c(5L, 4L, 5L))
+  expect_setequal(lay$cells$period, 1:3)
+  # A row cut that empties a period clears it under a fractional column cut:
+  # one action each leaves only d1.
+  one <- .period_layout(prep$sequence_data, prep$meta_data$id,
+                        prep$meta_data$day, "pad", trim = c(0.6, 1))
+  expect_identical(one$period_levels, day(1))
+})
+
+test_that("the row half of trim keeps cell widths and row order in periods", {
+  d <- rbind(c("x", "y", NA, NA, NA, NA), rep("x", 6),
+             c("y", NA, NA, NA, NA, NA))
+  actor <- c("a", "a", "b")
+  period <- c(1, 2, 1)
+  full <- .period_layout(d, actor, period, "pad", trim = NULL)
+  cut <- .period_layout(d, actor, period, "pad", trim = c(NA, 1))
+  # The row of six ends after one action; the width it set stays.
+  expect_identical(cut$width, full$width)
+  kept <- merge(cut$cells, full$cells, by = c("actor", "period", "step"))
+  expect_identical(nrow(kept), nrow(cut$cells))
+  expect_equal(kept$xleft.x, kept$xleft.y)
+  expect_equal(kept$xright.x, kept$xright.y)
+  # Rows are ordered from what they held before the cut.
+  expect_identical(cut$trajectory, full$trajectory)
 })

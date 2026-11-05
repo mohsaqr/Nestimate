@@ -67,22 +67,24 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   # channel mostly contains NA, so its per-row length understates the real
   # sequence length). Apply the same cut to every channel to keep rows
   # aligned across panels.
-  tr  <- .trim_axes(trim)
-  cut <- .trim_cut(summary_mat, tr$cols)
-  if (cut < length(tcols)) {
-    keep                <- seq_len(cut)
+  tr       <- .trim_axes(trim)
+  keep     <- .trim_keep(summary_mat, tr$cols)
+  time_pos <- seq_along(tcols)
+  if (length(keep) < length(tcols)) {
+    time_pos            <- keep
     tcols               <- tcols[keep]
     cmats               <- lapply(cmats, function(m) m[, keep, drop = FALSE])
     summary_mat         <- summary_mat[, keep, drop = FALSE]
     summary_cluster_mat <- summary_cluster_mat[, keep, drop = FALSE]
   }
-  # The row half of `trim` drops the sparsest sequences, counted on the
-  # coalesced sequence over the kept time points, from every channel alike.
-  keep_rows <- .trim_rows_keep(summary_mat, tr$rows)
-  if (!all(keep_rows)) {
-    cmats               <- lapply(cmats, function(m) m[keep_rows, , drop = FALSE])
-    summary_mat         <- summary_mat[keep_rows, , drop = FALSE]
-    summary_cluster_mat <- summary_cluster_mat[keep_rows, , drop = FALSE]
+  # The row half of `trim` ends each sequence earlier, counted on the coalesced
+  # sequence over the kept time points, in every channel alike.
+  trimmed <- .trim_rows_blank(summary_mat, tr$rows)
+  blank   <- is.na(trimmed) & !is.na(summary_mat)
+  if (any(blank)) {
+    cmats <- lapply(cmats, function(m) { m[blank] <- NA; m })
+    summary_mat <- trimmed
+    summary_cluster_mat[blank] <- NA
   }
 
   # Categories of the summary band: a cluster name, or the member states of a
@@ -93,7 +95,8 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   }), use.names = FALSE))
 
   list(cluster_names = cluster_names, clusters = clusters, cmats = cmats,
-       times = seq_along(tcols), all_states = all_states,
+       times = seq_along(tcols), time_pos = time_pos,
+       all_states = all_states,
        macro_keys = macro_keys, expanded = expanded,
        summary_mat = summary_mat, summary_cluster_mat = summary_cluster_mat)
 }
@@ -287,6 +290,20 @@ utils::globalVariables(c("time", "y", "key", "prop"))
       axis.ticks.y     = ggplot2::element_blank()))
 }
 
+# Tick labels for the closed-up time axis: each kept column shows its original
+# position. Nothing removed, or a removed tail, leaves ggplot's default labels.
+.mcml_time_labels <- function(time_pos) {
+  if (identical(time_pos, seq_along(time_pos))) return(ggplot2::waiver())
+  function(breaks) {
+    at <- round(breaks)
+    on_column <- !is.na(breaks) & at >= 1L & at <= length(time_pos) &
+      abs(breaks - at) < sqrt(.Machine$double.eps)
+    labels <- rep("", length(breaks))
+    labels[on_column] <- time_pos[at[on_column]]
+    labels
+  }
+}
+
 # ---- internal: one ggplot per channel, each with its own legend -------------
 # A faceted ggplot has a single fill scale, so every cluster's states pile into
 # one long legend. Each channel is drawn as its own ggplot instead: the Summary
@@ -320,7 +337,8 @@ utils::globalVariables(c("time", "y", "key", "prop"))
                                  breaks = brks, na.value = "white",
                                  name = if (identical(chans[i], "Summary")) "Cluster" else "State") +
       ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1L, byrow = TRUE)) +
-      ggplot2::scale_x_continuous(expand = c(0, 0)) +
+      ggplot2::scale_x_continuous(expand = c(0, 0),
+                                  labels = .mcml_time_labels(ch$time_pos)) +
       ggplot2::labs(x = if (last) time_label else NULL,
                     y = if (mid) y_lab else NULL,
                     title = if (first) main else NULL) +

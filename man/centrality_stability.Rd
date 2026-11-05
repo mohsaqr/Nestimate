@@ -61,7 +61,9 @@ proportion (default: 1000).}
 (default: 0.7).}
 
 \item{certainty}{Numeric. Required proportion of iterations above
-threshold (default: 0.95).}
+threshold (default: 0.95). It is the share of all iterations: one in which
+the correlation is undefined (the measure is constant in that subset)
+counts as not reaching \code{threshold}.}
 
 \item{method}{Character. Correlation method: \code{"pearson"},
 \code{"spearman"}, or \code{"kendall"} (default: \code{"pearson"}).}

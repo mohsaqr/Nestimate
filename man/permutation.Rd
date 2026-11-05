@@ -255,10 +255,10 @@ the design effects.
 
 For transition methods, per-sequence count matrices are computed once
 and each shuffle only re-sums them, which keeps large \code{iter} fast.
-For association methods the estimator is re-run on every shuffle. If a
-transition network rests on a single sequence, a warning (class
-\code{nestimate_single_sequence}) says it cannot be validated by
-resampling.
+For association methods the estimator is re-run on every shuffle. A network
+that rests on one sequence, or one-hot data with no actor or session, has
+nothing to shuffle and raises an error of class
+\code{nestimate_single_sequence}.
 
 Wide rows combined with \code{params = list(concat = k)} are shuffled
 as the merged sequences used by the estimator, keeping their internal

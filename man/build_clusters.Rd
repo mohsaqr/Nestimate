@@ -41,7 +41,10 @@ build_clusters(
 \item{data}{Input data. Accepts multiple formats:
 \describe{
 \item{data.frame / matrix}{Wide-format sequences (rows = sequences,
-columns = time points, values = state names).}
+columns = time points, values = state names). Columns of a data frame
+take the same roles as in \code{\link{build_network}}: an id or a
+covariate is not a sequence position. Those set aside are named in a
+message and kept in \code{$metadata}.}
 \item{netobject}{A network object from \code{\link{build_network}}.
 Extracts the stored sequence data. Only valid for sequence-based
 methods (relative, frequency, co_occurrence, attention).}
@@ -169,7 +172,8 @@ source network's method and stored build arguments, so per-cluster
 networks can be rebuilt the same way. NULL otherwise.}
 \item{metadata}{For \code{netobject} input, its per-sequence metadata,
 one row per clustered sequence, so \code{\link{session_ids}} can name
-each sequence. NULL otherwise.}
+each sequence. For a data frame, the columns set aside as covariates
+(see \code{data}). NULL otherwise.}
 \item{htna_partition}{For HTNA input, the preserved node-to-actor
 partition used to restore HTNA children when networks are built.}
 }

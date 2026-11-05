@@ -18,12 +18,13 @@
 
   incomplete <- names(cols)[vapply(codes, anyNA, logical(1))]
   if (length(incomplete)) {
-    stop(
-      "Missing values in ", context, " column(s): ",
-      paste(incomplete, collapse = ", "),
-      ". Every event needs an identifier; drop or relabel these rows first.",
-      call. = FALSE
-    )
+    stop(errorCondition(
+      paste0("Missing values in ", context, " column(s): ",
+             paste(incomplete, collapse = ", "),
+             ". Every event needs an identifier; drop or relabel these rows ",
+             "first."),
+      class = "nestimate_bad_input", call = NULL
+    ))
   }
 
   n <- length(codes[[1L]])

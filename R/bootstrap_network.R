@@ -23,9 +23,9 @@
 #' and custom estimators), the full estimator is called on resampled rows
 #' each iteration.
 #'
-#' If a transition network contains only one sequence, the function warns that
-#' such a network is not recommended for bootstrap or other confirmatory
-#' testing.
+#' A network that rests on one sequence, or one-hot data with no actor or
+#' session, has nothing to resample and raises an error of class
+#' \code{nestimate_single_sequence}.
 #'
 #' @section Nested data and \code{actor}:
 #' The bootstrap resamples sequences as independent units. When sequences
@@ -204,6 +204,7 @@ bootstrap_network <- function(x,
 
   # ---- netobject_group dispatch: bootstrap each element ----
   if (inherits(x, "netobject_group")) {
+    .stop_single_unit_group(x)
     results <- lapply(x, function(net) {
       bootstrap_network(net, iter = iter, ci_level = ci_level,
                         inference = inference,
@@ -283,18 +284,21 @@ bootstrap_network <- function(x,
   states <- original$nodes$label
   n_states <- length(states)
 
+  .stop_single_unit(x)
+
   # ---- Dispatch bootstrap ----
   # Fast precomputed path only works when data has usable columns
   has_data <- is.data.frame(data) && ncol(data) > 0L && nrow(data) > 0L
-  if (method %in% c("relative", "frequency", "co_occurrence")) {
+  count_method <- .resampling_method(method, params)
+  counts_relative <- .counts_are_relative(count_method, params)
+  if (count_method %in% c("relative", "frequency", "co_occurrence")) {
     if (!has_data) {
       stop("Bootstrap requires the original data stored in the netobject. ",
            "For wtna/cna networks, use wtna() directly instead of ",
            "build_network(method='cna').", call. = FALSE)
     }
     transition_data <- .resampling_transition_data(data, x$metadata, params)
-    .warn_single_sequence_confirmatory_network(transition_data, params)
-    trans_2d <- .precompute_per_sequence(transition_data, method, params,
+    trans_2d <- .precompute_per_sequence(transition_data, count_method, params,
                                          states)
     block_ids <- if (is.null(actor)) NULL else
       .permutation_block_ids(x, actor, nrow(trans_2d), "x")
@@ -308,20 +312,21 @@ bootstrap_network <- function(x,
         class = "nestimate_bad_actor", call = NULL))
     }
     boot_matrices <- .bootstrap_counts(
-      units, method = method, states = states, scaling = scaling,
-      threshold = threshold, iter = iter
+      units, method = count_method, states = states, scaling = scaling,
+      threshold = threshold, iter = iter, is_relative = counts_relative
     )
     # sequence-level reference drawn in the same run, for the design effect
     reference <- if (is.null(block_ids)) NULL else .bootstrap_counts(
-      trans_2d, method = method, states = states, scaling = scaling,
-      threshold = threshold, iter = iter
+      trans_2d, method = count_method, states = states, scaling = scaling,
+      threshold = threshold, iter = iter, is_relative = counts_relative
     )
   } else {
     .stop_block_unsupported(actor, method)
     boot_matrices <- .bootstrap_association(
       data = data, estimator = estimator, params = params, states = states,
       scaling = scaling, threshold = threshold, iter = iter,
-      level = level, id_col = params$id
+      level = level, id_col = params$id,
+      include_zeros = .scaling_includes_zeros(method)
     )
   }
 
@@ -458,46 +463,104 @@ bootstrap_network <- function(x,
   needed <- needed[!is.na(needed) & nzchar(needed)]
   add <- setdiff(intersect(needed, names(metadata)), names(data))
   if (length(add) == 0L) return(data)
-  cbind(metadata[, add, drop = FALSE], data)
+  .keep_window_attrs(cbind(metadata[, add, drop = FALSE], data), data)
 }
 
-
-#' Warn when confirmatory testing is requested for one sequence
+# A network estimated from binary indicator columns, by build_network() or wtna().
 #' @noRd
-.warn_single_sequence_confirmatory_network <- function(data, params,
-                                                       label = NULL) {
-  n_seq <- .transition_resampling_n_sequences(data, params)
-  if (!is.na(n_seq) && n_seq <= 1L) {
-    .single_sequence_notice(label = label)
-  }
-  invisible(n_seq)
+.is_onehot_params <- function(params) {
+  !is.null(.param_get(params, "codes")) ||
+    identical(.param_get(params, "format"), "onehot")
 }
 
-#' Signal that a transition network rests on one sequence
+# .prepare_onehot() records its windows as attributes, and selecting columns
+# drops them. Without them the positions read as one unwindowed sequence.
+#' @noRd
+.keep_window_attrs <- function(subset, source) {
+  kept <- intersect(names(attributes(source)),
+                    c("windowed", "window_size", "window_span", "codes"))
+  attributes(subset)[kept] <- attributes(source)[kept]
+  subset
+}
+
+
+#' The count-based method a network is resampled by
 #'
-#' A network estimated from a single sequence has no between-sequence
-#' variation, so bootstrap and permutation tests, which resample sequences,
-#' cannot validate it. Building such a network is legitimate and raises a
-#' message; running a confirmatory test on it raises a warning. Both carry
-#' the class `nestimate_single_sequence`.
+#' wtna() networks hold one-hot counts, the same as frequency, relative and
+#' co_occurrence do, so their units are resampled the same way. Refitting on
+#' shuffled rows would break the time order their transitions are counted on.
+#' @param method The resolved method name.
+#' @param params The network's stored parameters.
+#' @return A method name.
 #' @noRd
-.single_sequence_notice <- function(type = c("warning", "message"),
-                                    label = NULL) {
-  type <- match.arg(type)
-  text <- paste0(
-    if (is.null(label)) "" else paste0(label, ": "),
-    "A network with one long sequence is not recommended and can't be ",
-    "validated using bootstrap and other confirmatory testings."
+.resampling_method <- function(method, params) {
+  if (!.is_onehot_params(params)) return(method)
+  switch(method,
+    wtna_cooccurrence = "co_occurrence",
+    wtna = if (identical(.param_get(params, "type"), "relative")) "relative" else
+      "frequency",
+    method
   )
-  if (identical(type, "message")) {
-    # base R has no messageCondition(); add the class to a simpleMessage
-    cond <- simpleMessage(paste0(text, "\n"))
-    class(cond) <- c("nestimate_single_sequence", class(cond))
-    message(cond)
-  } else {
-    warning(warningCondition(text, class = "nestimate_single_sequence",
-                             call = NULL))
+}
+
+# One-hot co-occurrence can also be row-normalised, by `type = "relative"`.
+#' @noRd
+.counts_are_relative <- function(method, params) {
+  method == "relative" ||
+    (method == "co_occurrence" &&
+       identical(.param_get(params, "type"), "relative"))
+}
+
+#' Refuse to resample a sequence network that holds a single unit
+#'
+#' Resampling draws whole sequences (or, for one-hot data, whole actors or
+#' sessions). With one there is nothing to draw: every resample is the data,
+#' which gives intervals of zero width and p-values of 1 that read as certainty.
+#' @param x A netobject.
+#' @param label Group name for the message, or NULL.
+#' @noRd
+.stop_single_unit <- function(x, label = NULL) {
+  data <- x$data
+  if (!is.data.frame(data) || is.null(x$method)) return(invisible(NULL))
+  params <- x$params
+  method <- .resampling_method(.resolve_method_alias(x$method), params)
+  sequence_based <- method %in% c("relative", "frequency", "co_occurrence",
+                                  "attention", "ngram", "gap", "reverse") ||
+    .is_onehot_params(params) || isTRUE(attr(data, "windowed"))
+  if (!sequence_based) return(invisible(NULL))
+  n_units <- .transition_resampling_n_sequences(
+    .resampling_transition_data(data, x$metadata, params), params
+  )
+  if (!is.na(n_units) && n_units == 1L) {
+    stop(errorCondition(
+      paste0(if (is.null(label)) "" else paste0(label, ": "),
+             "This network rests on one sequence, so there is nothing to ",
+             "resample. Rebuild it with `actor` or `session` set to the column ",
+             "that identifies the units."),
+      class = c("nestimate_single_sequence", "nestimate_bad_input"),
+      call = NULL
+    ))
   }
+  invisible(NULL)
+}
+
+#' @noRd
+.stop_single_unit_group <- function(x) {
+  invisible(Map(.stop_single_unit, x, label = names(x)))
+}
+
+#' Note that a transition network rests on one sequence
+#'
+#' Building one is legitimate; resampling it is refused by
+#' \code{.stop_single_unit()}. Class \code{nestimate_single_sequence}.
+#' @noRd
+.single_sequence_note <- function() {
+  # base R has no messageCondition(); add the class to a simpleMessage
+  cond <- simpleMessage(paste0(
+    "A network with one long sequence is not recommended and can't be ",
+    "validated using bootstrap and other confirmatory testings.\n"))
+  class(cond) <- c("nestimate_single_sequence", class(cond))
+  message(cond)
 }
 
 
@@ -510,6 +573,8 @@ bootstrap_network <- function(x,
   if (concat > 1L) return(as.integer(ceiling(nrow(data) / concat)))
   actor <- .param_get(params, "actor") %||% .param_get(params, "id") %||%
     .param_get(params, "id_col")
+  # One-hot rows are time points of one sequence unless a column groups them.
+  if (is.null(actor) && .is_onehot_params(params)) return(1L)
   if (!is.null(actor) && all(actor %in% names(data))) {
     if (length(actor) == 1L) {
       return(length(unique(data[[actor]])))
@@ -557,10 +622,9 @@ bootstrap_network <- function(x,
 #' counts) for the cluster bootstrap.
 #' @noRd
 .bootstrap_counts <- function(trans_2d, method, states, scaling, threshold,
-                              iter) {
+                              iter, is_relative = method == "relative") {
   n_states <- length(states)
   nbins <- n_states * n_states
-  is_relative <- method == "relative"
   n_seq <- nrow(trans_2d)
 
   # vapply: each iteration resamples sequences + sums + post-processes
@@ -574,7 +638,10 @@ bootstrap_network <- function(x,
       nz <- rs > 0
       mat[nz, ] <- mat[nz, ] / rs[nz]
     }
-    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling)
+    if (!is.null(scaling)) {
+      mat <- .apply_scaling(mat, scaling,
+                            include_zeros = .scaling_includes_zeros(method))
+    }
     if (threshold > 0) mat[abs(mat) < threshold] <- 0
     as.vector(mat)
   }, numeric(nbins))
@@ -595,10 +662,16 @@ bootstrap_network <- function(x,
 .precompute_per_sequence <- function(data, method, params, states) {
   # Determine format (mirrors estimator dispatch)
   format <- .param_get(params, "format", "auto")
-  action <- .param_get(params, "action", "Action")
+  action <- .param_get(params, "action")
+  codes <- .param_get(params, "codes")
+
+  # Before the format: a one-hot column may be called "Action".
+  if (identical(format, "onehot") || !is.null(codes)) {
+    return(.precompute_per_sequence_onehot(data, method, params, states))
+  }
 
   if (format == "auto") {
-    format <- if (action %in% names(data)) "long" else "wide"
+    format <- .format_from_action(action, data)
   }
 
   if (format == "long") {
@@ -610,16 +683,34 @@ bootstrap_network <- function(x,
   }
 
   id_col <- .param_get(params, "id") %||% .param_get(params, "id_col")
-  codes <- .param_get(params, "codes")
-  if (identical(format, "onehot") || !is.null(codes)) {
-    return(.precompute_per_sequence_onehot(data, method, params, states))
-  }
   cols <- params$cols
+  if (isTRUE(attr(data, "windowed"))) {
+    return(.precompute_per_sequence_windowed(data, method, params, states))
+  }
   .precompute_per_sequence_wide(data, method, cols, id_col, states,
                                 begin_state = .param_get(params, "begin_state"),
                                 end_state = .param_get(params, "end_state"),
                                 weighted = .param_get(params, "weighted", FALSE),
                                 concat = .param_get(params, "concat", 1L))
+}
+
+
+#' Pre-compute per-sequence counts from windowed sequences
+#'
+#' The estimator's own counting on one row at a time, so a window means the
+#' same in a resample as in the network being resampled.
+#' @noRd
+.precompute_per_sequence_windowed <- function(data, method, params, states) {
+  count <- if (method == "co_occurrence") .count_cooccurrence_wide else
+    .count_transitions_wide
+  rows <- lapply(seq_len(nrow(data)), function(i) {
+    mat <- count(data[i, , drop = FALSE], cols = params$cols, alphabet = states,
+                 weighted = .param_get(params, "weighted", FALSE),
+                 begin_state = .param_get(params, "begin_state"),
+                 end_state = .param_get(params, "end_state"))
+    as.vector(t(mat[states, states, drop = FALSE]))
+  })
+  matrix(unlist(rows), nrow = nrow(data), ncol = length(states)^2L, byrow = TRUE)
 }
 
 
@@ -753,7 +844,7 @@ bootstrap_network <- function(x,
 #' @noRd
 .bootstrap_association <- function(data, estimator, params, states,
                                    scaling, threshold, iter,
-                                   level, id_col) {
+                                   level, id_col, include_zeros = FALSE) {
   n <- nrow(data)
   n_states <- length(states)
   nbins <- n_states * n_states
@@ -784,7 +875,9 @@ bootstrap_network <- function(x,
       mat <- mat[states, states] # nocov
     }
 
-    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling) # nocov start
+    if (!is.null(scaling)) { # nocov start
+      mat <- .apply_scaling(mat, scaling, include_zeros = include_zeros)
+    }
     if (threshold > 0) mat[abs(mat) < threshold] <- 0
     as.vector(mat) # nocov end
   }, numeric(nbins))

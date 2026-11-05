@@ -171,6 +171,35 @@
   trajectory
 }
 
+# Periods to keep, one logical per period. `trim` >= 1 keeps the first that
+# many. A fraction judges each period on its own activity: it keeps that share
+# of the periods with actions, the busiest ones (ties to the earlier period),
+# so a period holding one stray action goes, wherever it sits. Periods with no
+# action go too. `p` is one period index per action.
+#' @noRd
+.period_keep <- function(p, n_periods, trim) {
+  stopifnot(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
+  if (trim >= 1) return(seq_len(n_periods) <= round(trim))
+  .keep_busiest(tabulate(p, nbins = n_periods), trim)
+}
+
+# Actions to keep under the row half of `trim`, one logical per action: each
+# actor's first `rows` actions (a count) or first share of them (a fraction).
+#' @noRd
+.period_row_keep <- function(a, p, step, rows) {
+  stopifnot(
+    "the row half of `trim` must be a single positive number" =
+      is.numeric(rows) && length(rows) == 1L && !is.na(rows) && rows > 0
+  )
+  o <- order(a, p, step)
+  position <- stats::ave(a[o], a[o], FUN = seq_along)
+  n <- stats::ave(a[o], a[o], FUN = length)
+  limit <- if (rows < 1) ceiling(rows * n) else pmin(n, round(rows))
+  keep <- logical(length(a))
+  keep[o] <- position <= limit
+  keep
+}
+
 # Cell geometry for both fill modes.
 #' @noRd
 .period_layout <- function(data, actor, period, fill, trim = NULL) {
@@ -196,43 +225,44 @@
     code <- code[inside]
   }
 
-  # The time half of `trim` cuts the period axis as it cuts time points
-  # elsewhere: a count keeps the first n periods, a fraction keeps the
-  # periods up to that quantile of the actors' last active period.
+  # The time half of `trim` removes whole periods (see .period_keep()); the
+  # kept ones close up and keep their own labels.
   if (!is.null(tr$cols)) {
-    present <- matrix(NA_integer_, length(actors), length(period_levels))
-    present[cbind(a, p)] <- 1L
-    cut <- .trim_cut(present, tr$cols)
-    if (cut < length(period_levels)) {
-      keep <- p <= cut
+    keep_period <- .period_keep(p, length(period_levels), tr$cols)
+    if (!all(keep_period)) {
+      keep <- keep_period[p]
       if (!any(keep)) {
         .period_bad_input(sprintf(
           "`trim = %s` keeps %d period(s) with no action in them.",
-          format(tr$cols), cut))
+          format(tr$cols), sum(keep_period)))
       }
-      r <- r[keep]; step <- step[keep]; p <- p[keep]; a <- a[keep]
-      code <- code[keep]
-      period_levels <- period_levels[seq_len(cut)]
+      r <- r[keep]; step <- step[keep]; a <- a[keep]; code <- code[keep]
+      p <- match(p[keep], which(keep_period))
+      period_levels <- period_levels[keep_period]
     }
   }
-  # The row half drops the least active actors, counted over the kept
-  # periods; the remaining actors are renumbered so `a` stays an index
-  # into `actors`.
+  # Slot width and row order come before the row half, so ending a row earlier
+  # neither widens the cells that are left nor reorders the rows.
+  n_steps <- rowSums(!is.na(codes))
+  width   <- as.integer(max(n_steps[unique(r)]))
+  # Each actor's whole trajectory (periods in order, steps joined), used
+  # only to order the rows.
+  trajectory <- .period_trajectory(a, p, step, code, length(actors))
+
+  # The row half ends each actor's row earlier, counted over the kept periods.
+  # Every actor stays and the kept cells do not move.
   if (!is.null(tr$rows)) {
-    keep_actor <- .trim_rows_keep(
-      .period_trajectory(a, p, step, code, length(actors)), tr$rows)
-    if (!all(keep_actor)) {
-      kept    <- which(keep_actor)
-      in_keep <- a %in% kept
-      r <- r[in_keep]; step <- step[in_keep]; p <- p[in_keep]
-      code <- code[in_keep]
-      a <- match(a[in_keep], kept)
-      actors <- actors[kept]
+    keep <- .period_row_keep(a, p, step, tr$rows)
+    r <- r[keep]; step <- step[keep]; p <- p[keep]; a <- a[keep]
+    code <- code[keep]
+    # A fractional column cut also clears the periods this emptied.
+    if (!is.null(tr$cols) && tr$cols < 1) {
+      kept_periods <- sort(unique(p))
+      p <- match(p, kept_periods)
+      period_levels <- period_levels[kept_periods]
     }
   }
 
-  n_steps <- rowSums(!is.na(codes))
-  width   <- as.integer(max(n_steps[unique(r)]))
   denom   <- if (fill == "stretch") n_steps[r] else width
 
   cells <- data.frame(actor = a, period = p, step = step,
@@ -245,10 +275,6 @@
                  dimnames = list(actors, paste(rep(period_levels, each = width),
                                                seq_len(width), sep = ".")))
   grid[cbind(a, (p - 1L) * width + step)] <- code
-
-  # Each actor's whole trajectory (periods in order, steps joined), used
-  # only to order the rows.
-  trajectory <- .period_trajectory(a, p, step, code, length(actors))
 
   list(cells = cells, grid = grid, trajectory = trajectory,
        actors = actors, period_levels = period_levels, width = width,
@@ -286,7 +312,6 @@
     factor(rep("all", n_rows))
   } else {
     g <- src$group[match(lay$actors, as.character(src$actor))]
-    # droplevels: a row trim can empty a level, which must not be a panel.
     if (is.factor(src$group)) droplevels(factor(g, levels = levels(src$group)))
     else factor(g)
   }
@@ -304,11 +329,8 @@
   tree <- if (type == "heatmap" && G == 1L) attr(panels[[1L]], "tree") else
     NULL
   if (G == 1L && length(panels[[1L]]) != n_rows) {
-    .period_bad_input(sprintf(paste0(
-      "`tree` has %d leaves but there are %d actors",
-      if (!is.null(.trim_axes(trim)$rows)) {
-        " (the row half of `trim` drops actors; it cannot be combined with `tree`)."
-      } else "."), length(panels[[1L]]), n_rows))
+    .period_bad_input(sprintf("`tree` has %d leaves but there are %d actors.",
+                              length(panels[[1L]]), n_rows))
   }
 
   if (is.null(ncol) && is.null(nrow)) {

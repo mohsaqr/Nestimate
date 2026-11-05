@@ -87,7 +87,8 @@ test_that("A10-F02: default-tol full-support chain hitting unchanged", {
   # tol-thresholded reach equals the raw P>0 reach, so hitting is the
   # documented all-reachable result.
   net <- suppressWarnings(
-    build_network(as.data.frame(group_regulation_long), method = "relative"))
+    build_network(as.data.frame(group_regulation_long), method = "relative",
+                  action = "Action", time = "Time"))
   cs <- chain_structure(net)
   H <- cs$hitting_probabilities
   expect_false(any(is.na(H)))

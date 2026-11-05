@@ -22,7 +22,8 @@ testthat::skip_on_cran()
 .fix2_directed_net <- function(method = "relative") {
   e <- new.env()
   data("group_regulation_long", package = "Nestimate", envir = e)
-  build_network(e$group_regulation_long, method = method, actor = "Actor")
+  build_network(e$group_regulation_long, method = method, actor = "Actor",
+                action = "Action", time = "Time")
 }
 
 

@@ -47,6 +47,12 @@
 #'   \code{weighted} and \code{concat} (and the low-level \code{begin_state}
 #'   / \code{end_state}, of which \code{start} / \code{end} are the public
 #'   form -- see those arguments).
+#'   \code{window_size} (and \code{window_span}, or \code{windowed = TRUE} for a
+#'   size of 2) counts the methods \code{relative}, \code{frequency} and
+#'   \code{co_occurrence} between consecutive non-overlapping blocks of that many
+#'   positions, as \code{tna::tna()} does; other transition methods raise an error
+#'   of class \code{nestimate_bad_input}, and \code{mode = "overlapping"} a warning
+#'   of class \code{nestimate_ignored_mode}.
 #'   Column-like entries in \code{params} (\code{action}, \code{id},
 #'   \code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order},
 #'   \code{cols}, \code{codes}, and \code{group}) are resolved before format
@@ -90,7 +96,12 @@
 #' @param actor Character. Name of the actor/person ID column for sequence
 #'   grouping. Default: \code{NULL}.
 #' @param action Character. Name of the action/state column (long format).
-#'   Default: \code{NULL}.
+#'   Default: \code{NULL}. Column names give no role: \code{action},
+#'   \code{actor}, \code{time} and \code{session} are read only when set. A
+#'   column called \code{Action} with nothing declared raises an error of class
+#'   \code{nestimate_bad_input}; an undeclared time or session column beside
+#'   \code{action} is named in a message of class
+#'   \code{nestimate_column_role}.
 #' @param time Character. Name of the time column (long format).
 #'   Default: \code{NULL}.
 #' @param session Character. Name of the session column. Default: \code{NULL}.
@@ -107,6 +118,7 @@
 #' @param mode Character. Windowing mode for one-hot input only:
 #'   \code{"non-overlapping"} or \code{"overlapping"}. Has no effect on
 #'   wide or long sequence data (only the one-hot/wtna path reads it).
+#'   See \code{\link{wtna}} for how overlapping windows are counted.
 #'   Default: \code{"non-overlapping"}.
 #' @param time_threshold Numeric or FALSE. Maximum time gap (seconds) for long
 #'   format session splitting. Set to \code{FALSE} to switch session-interval
@@ -137,7 +149,10 @@
 #' @param metadata_cols Character vector or \code{NULL}. Explicit names of
 #'   columns to force into the \code{$metadata} slot. The remaining columns
 #'   are auto-detected as state via the values-in-nodes rule. Cannot overlap
-#'   with \code{state_cols}. Default: \code{NULL}.
+#'   with \code{state_cols}. Default: \code{NULL}. A character column left out
+#'   of a numbered run of positions is named in a message of class
+#'   \code{nestimate_column_role}; listing it here or in \code{state_cols}
+#'   settles it.
 #' @param ... Additional arguments passed to the estimator function. For
 #'   long data, \code{prepare()}'s time options \code{unix_time_unit},
 #'   \code{is_unix_time} and \code{custom_format} are passed to
@@ -327,6 +342,7 @@ build_network <- function(data,
       nets <- lapply(seq_len(k_comp), function(m) {
         sub <- raw_data[assignments == m, , drop = FALSE]
         net <- do.call(build_network, c(list(data = sub, method = method), call_args))
+        net <- .attach_set_aside_metadata(net, data$metadata, assignments == m)
         # Inject EM-fitted initials only for directed sequence methods
         if (resolved %in% c("relative", "frequency", "attention")) {
           net$initial <- data$models[[m]]$initial
@@ -348,7 +364,9 @@ build_network <- function(data,
       )
     }
     # Default: wrap pre-built "relative" models (retain $initial from EM)
-    nets <- data$models
+    nets <- Map(function(net, m) {
+      .attach_set_aside_metadata(net, data$metadata, data$assignments == m)
+    }, data$models, seq_along(data$models))
     if (is.null(names(nets))) names(nets) <- paste0("Cluster ", seq_along(nets))
     class(nets) <- "netobject_group"
     return(.attach_mmm_clustering(nets, data,
@@ -487,16 +505,15 @@ build_network <- function(data,
                                    codes = codes)
   }
 
-  # ---- Auto-match standard column names (case-insensitive) ----
+  # ---- Column roles are declared, never read from names ----
   if (is.data.frame(data)) {
-    col_lower <- tolower(names(data))
-    .match1 <- function(name) {
-      hit <- which(col_lower == name)
-      if (length(hit) == 1L) names(data)[hit] else NULL
-    }
-    if (is.null(action))  action  <- .match1("action")
-    if (is.null(time))    time    <- .match1("time")
-    if (is.null(session)) session <- .match1("session") %||% .match1("session_id")
+    .stop_undeclared_action(data, action, actor, time, session, order, codes,
+                            group, state_cols, metadata_cols, params$cols,
+                            format)
+    .stop_undeclared_identifier(data, method, action, actor, time, session,
+                                order, codes, group, state_cols, metadata_cols,
+                                params$cols, format)
+    .unused_role_notice(data, action, time, session, metadata_cols)
   }
 
   # ---- Group dispatch: per-group networks ----
@@ -506,11 +523,18 @@ build_network <- function(data,
                           "ngram", "gap", "reverse")
   if (method %in% transition_methods && is.data.frame(data) &&
       is.null(action) && is.null(codes) && !identical(format, "onehot")) {
+    roles_declared <- !is.null(params$cols) || !is.null(state_cols) ||
+      !is.null(metadata_cols)
     params$cols <- .build_sequence_cols(data, params$cols, state_cols,
                                         metadata_cols,
                                         exclude = c(group, actor, session,
                                           .param_get(params, "id"),
                                           .param_get(params, "id_col")))
+    if (!roles_declared && !is.null(params$cols)) {
+      .set_aside_notice(data, params$cols,
+                        c(group, actor, session, .param_get(params, "id"),
+                          .param_get(params, "id_col")))
+    }
   }
   if (!is.null(group)) {
     stopifnot(is.character(group))
@@ -606,7 +630,7 @@ build_network <- function(data,
   # ---- Long format: prepare event log data ----
   if (format == "long" && !is.null(action) && is.data.frame(data) &&
       action %in% names(data)) {
-    if (is.null(actor)) .single_sequence_notice(type = "message")
+    if (is.null(actor)) .single_sequence_note()
     prep_args <- list(data = data, action = action)
     if (!is.null(actor)) prep_args$actor <- actor
     if (!is.null(time)) prep_args$time <- time
@@ -674,6 +698,11 @@ build_network <- function(data,
                                             .param_get(params, "id_col")),
                                           infer_numeric_metadata =
                                             method %in% transition_methods)
+    }
+    if (is.data.frame(data) && method %in% transition_methods) {
+      windowing <- .sequence_window(data, params, method)
+      data <- windowing$data
+      params <- windowing$params
     }
   }
 
@@ -830,9 +859,7 @@ build_network <- function(data,
   # Apply scaling
   if (!is.null(scaling)) {
     net_matrix <- .apply_scaling(
-      net_matrix, scaling,
-      include_zeros = method %in% c("relative", "frequency", "co_occurrence",
-                                    "attention", "ngram", "gap", "reverse")
+      net_matrix, scaling, include_zeros = .scaling_includes_zeros(method)
     )
   }
 
@@ -882,9 +909,17 @@ build_network <- function(data,
     } else {
       character(0)
     }
+    # A window with nothing in it still holds its place in the window blocks.
+    auto_window_state <- if (is.null(state_cols) &&
+                             isTRUE(attr(raw_data, "windowed"))) {
+      grep("^W[0-9]+_T[0-9]+$", names(raw_data), value = TRUE)
+    } else {
+      character(0)
+    }
     user_state <- union(intersect(state_cols, names(raw_data)),
                         union(auto_variable_state,
-                              union(auto_onehot_state, auto_wide_state)))
+                              union(auto_window_state,
+                                    union(auto_onehot_state, auto_wide_state))))
     user_meta  <- intersect(metadata_cols, names(raw_data))
 
     if (length(user_state) > 0L) {
@@ -906,7 +941,8 @@ build_network <- function(data,
     if (length(resolved_extra) > 0L) {
       extra_df <- raw_data[, resolved_extra, drop = FALSE]
       metadata <- if (is.null(metadata)) extra_df else cbind(metadata, extra_df)
-      raw_data <- raw_data[, resolved_state, drop = FALSE]
+      raw_data <- .keep_window_attrs(raw_data[, resolved_state, drop = FALSE],
+                                     raw_data)
     }
     # Clean void/missing markers in character/factor state columns
     if (is.data.frame(raw_data)) {
@@ -1041,6 +1077,52 @@ build_network <- function(data,
     group = .take_param(group, "group"),
     format = format
   )
+}
+
+
+#' Window a sequence network from `params`
+#'
+#' `params = list(window_size =, window_span =, windowed =)` count transitions
+#' between consecutive blocks of positions, as tna() does. The window travels as
+#' the data attributes .prepare_onehot() sets, so the estimators and the
+#' resampling verbs read one definition; windows the data already records win.
+#' @noRd
+.sequence_window <- function(data, params, method) {
+  size <- .param_get(params, "window_size")
+  span <- .param_get(params, "window_span")
+  if (is.null(size) && is.null(span) &&
+      !isTRUE(.param_get(params, "windowed"))) {
+    return(list(data = data, params = params))
+  }
+  if (!method %in% c("relative", "frequency", "co_occurrence")) {
+    stop(errorCondition(
+      sprintf(paste0("`params$window_size` applies to the methods relative, ",
+                     "frequency and co_occurrence, not to \"%s\"."), method),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  is_positive_whole <- function(x) {
+    is.null(x) || (is.numeric(x) && length(x) == 1L && is.finite(x) &&
+                     x >= 1 && x == round(x))
+  }
+  if (!is_positive_whole(size) || !is_positive_whole(span)) {
+    stop(errorCondition(
+      "`params$window_size` and `params$window_span` must be positive whole numbers.",
+      class = "nestimate_bad_input", call = NULL))
+  }
+  # Blocks are the only window sequence positions have; `mode` is one-hot only.
+  if (identical(.param_get(params, "mode"), "overlapping")) {
+    warning(warningCondition(
+      paste0("`mode = \"overlapping\"` applies to one-hot data; sequence ",
+             "positions are counted in non-overlapping blocks."),
+      class = "nestimate_ignored_mode", call = NULL))
+  }
+  params$mode <- NULL
+  if (!isTRUE(attr(data, "windowed"))) {
+    attr(data, "windowed") <- TRUE
+    attr(data, "window_size") <- as.integer(size %||% 2L)
+    attr(data, "window_span") <- as.integer(span %||% 1L)
+  }
+  list(data = data, params = params)
 }
 
 
@@ -1558,6 +1640,114 @@ predictability.netobject_group <- function(object, ...) {
   NULL
 }
 
+# Numeric or logical, and only 0, 1 or missing.
+#' @noRd
+.is_binary_column <- function(x) {
+  (is.numeric(x) || is.logical(x)) && all(x[!is.na(x)] %in% c(0, 1))
+}
+
+# Names give no role. A column called `action` with nothing else declared would
+# otherwise become a sequence position, so the call stops and asks. In a frame
+# of 0/1 columns such a column is one more code.
+#' @noRd
+.stop_undeclared_action <- function(data, action, actor, time, session, order,
+                                    codes, group, state_cols, metadata_cols,
+                                    cols, format) {
+  if (!is.null(action) || !is.null(state_cols) || !is.null(cols) ||
+      !is.null(codes) || !identical(format, "auto")) {
+    return(invisible(NULL))
+  }
+  taken <- c(actor, time, session, order, group, metadata_cols)
+  rest <- setdiff(names(data), taken)
+  hit <- rest[tolower(rest) == "action"]
+  if (length(hit) == 0L ||
+      all(vapply(data[rest], .is_binary_column, logical(1)))) {
+    return(invisible(NULL))
+  }
+  stop(errorCondition(
+    sprintf(paste0("build_network(): column names are not read, and `%s` is ",
+                   "not declared. Set `action = \"%s\"` for an event log, or ",
+                   "`state_cols` or `metadata_cols` for a wide table."),
+            hit[1L], hit[1L]),
+    class = "nestimate_bad_input", call = NULL
+  ))
+}
+
+# 0/1 columns beside a numeric column that is not a run of positions: an id left
+# undeclared. Read as wide, its values would become the network's states.
+#' @noRd
+.stop_undeclared_identifier <- function(data, method, action, actor, time,
+                                        session, order, codes, group,
+                                        state_cols, metadata_cols, cols,
+                                        format) {
+  sequence_methods <- c("relative", "frequency", "co_occurrence", "attention",
+                        "ngram", "gap", "reverse", "wtna", "wtna_cooccurrence")
+  if (!method %in% sequence_methods || !is.null(action) ||
+      !is.null(state_cols) || !is.null(cols) || !is.null(codes) ||
+      !identical(format, "auto")) {
+    return(invisible(NULL))
+  }
+  rest <- data[setdiff(names(data),
+                       c(actor, time, session, order, group, metadata_cols))]
+  if (ncol(rest) == 0L || !all(vapply(rest, is.numeric, logical(1)))) {
+    return(invisible(NULL))
+  }
+  binary <- vapply(rest, .is_binary_column, logical(1))
+  if (sum(binary) < 2L || all(binary) ||
+      length(.numeric_position_run(rest)) > 0L) {
+    return(invisible(NULL))
+  }
+  stop(errorCondition(
+    sprintf(paste0("build_network(): %s beside 0/1 columns would become states. ",
+                   "Set `actor` or `session` if it identifies the units, or ",
+                   "`codes`, `state_cols` or `metadata_cols`."),
+            paste(sprintf("`%s`", names(rest)[!binary]), collapse = ", ")),
+    class = "nestimate_bad_input", call = NULL
+  ))
+}
+
+#' @noRd
+.column_role_message <- function(text) {
+  cond <- simpleMessage(paste0("build_network(): ", text, "\n"))
+  class(cond) <- c("nestimate_column_role", class(cond))
+  message(cond)
+  invisible(NULL)
+}
+
+# In an event log an undeclared time or session column changes the result, so
+# the call says it went unused.
+#' @noRd
+.unused_role_notice <- function(data, action, time, session, metadata_cols) {
+  if (is.null(action)) return(invisible(NULL))
+  lower <- tolower(names(data))
+  unused <- c(
+    if (is.null(time)) names(data)[lower == "time"],
+    if (is.null(session)) names(data)[lower %in% c("session", "session_id")]
+  )
+  unused <- setdiff(unused, metadata_cols)
+  if (length(unused) == 0L) return(invisible(NULL))
+  .column_role_message(sprintf(
+    paste0("%s not used: events are read in row order and sessions are not ",
+           "split. Set `time` or `session` to use them, or list them in ",
+           "`metadata_cols`."),
+    paste(sprintf("`%s`", unused), collapse = ", ")))
+}
+
+# A character column could hold states, so leaving one out of the sequence is
+# said aloud. A numeric column beside character states could not.
+#' @noRd
+.set_aside_notice <- function(data, cols, exclude) {
+  candidates <- setdiff(names(data), c(cols, exclude))
+  set_aside <- candidates[vapply(data[candidates],
+                                 \(x) is.character(x) || is.factor(x),
+                                 logical(1))]
+  if (length(set_aside) == 0L) return(invisible(NULL))
+  .column_role_message(sprintf(
+    paste0("setting %s aside as metadata, outside the numbered position ",
+           "columns. Name the column in `state_cols` to count it as a state."),
+    paste(sprintf("`%s`", set_aside), collapse = ", ")))
+}
+
 #' The unique largest run of numbered position names, when it is numeric
 #'
 #' Same naming rule as .categorical_covariates(): a shared prefix followed
@@ -1594,6 +1784,16 @@ predictability.netobject_group <- function(object, ...) {
 #' @return Character vector of covariate column names (possibly empty).
 #' @noRd
 .categorical_covariates <- function(data) {
+  positions <- .categorical_positions(data)
+  if (length(positions) == 0L) return(character(0))
+  is_cat <- vapply(data, \(x) is.character(x) || is.factor(x) ||
+                     all(is.na(x)), logical(1))
+  setdiff(names(data)[is_cat], positions)
+}
+
+# The unique largest run of numbered categorical columns; character(0) if none.
+#' @noRd
+.categorical_positions <- function(data) {
   # an all-missing column (logical NA) is an unobserved position, not a
   # covariate, so it must not break the run of position names
   is_cat <- vapply(data, \(x) is.character(x) || is.factor(x) ||
@@ -1602,11 +1802,13 @@ predictability.netobject_group <- function(object, ...) {
   nms <- names(data)
   numbered <- grepl("[0-9]+$", nms)
   prefix <- sub("[0-9]+$", "", nms)
+  # W0_T1, W1_T1, ... from .prepare_onehot() are one run of positions: windows
+  # of different lengths must not read as competing runs.
+  prefix[grepl("^W[0-9]+_T[0-9]+$", nms)] <- "W_T"
   runs <- table(prefix[is_cat & numbered])
   if (length(runs) == 0L || max(runs) < 2L ||
       sum(runs == max(runs)) > 1L) {
     return(character(0))
   }
-  positions <- is_cat & numbered & prefix == names(runs)[which.max(runs)]
-  nms[is_cat & !positions]
+  nms[is_cat & numbered & prefix == names(runs)[which.max(runs)]]
 }

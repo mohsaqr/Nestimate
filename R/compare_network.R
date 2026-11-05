@@ -81,7 +81,8 @@ compare_model <- function(x, ...) UseMethod("compare_model")
 compare_model.netobject <- function(x, y, scaling = "none", measures = character(0),
                               network = TRUE, ...) {
   .compare_impl(.weights_of(x, label_unnamed = FALSE),
-                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
+                .weights_of(y, label_unnamed = FALSE), scaling, measures, network,
+                directed = c(.compare_directed(x), .compare_directed(y)))
 }
 
 #' @rdname compare_model
@@ -90,7 +91,8 @@ compare_model.cograph_network <- function(x, y, scaling = "none",
                                     measures = character(0), network = TRUE,
                                     ...) {
   .compare_impl(.weights_of(x, label_unnamed = FALSE),
-                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
+                .weights_of(y, label_unnamed = FALSE), scaling, measures, network,
+                directed = c(.compare_directed(x), .compare_directed(y)))
 }
 
 #' @rdname compare_model
@@ -98,7 +100,8 @@ compare_model.cograph_network <- function(x, y, scaling = "none",
 compare_model.matrix <- function(x, y, scaling = "none", measures = character(0),
                            network = TRUE, ...) {
   .compare_impl(.weights_of(x, label_unnamed = FALSE),
-                .weights_of(y, label_unnamed = FALSE), scaling, measures, network)
+                .weights_of(y, label_unnamed = FALSE), scaling, measures, network,
+                directed = c(.compare_directed(x), .compare_directed(y)))
 }
 
 #' @rdname compare_model
@@ -137,6 +140,16 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   }
   stop("`compare_model()` expects a netobject, cograph_network, or numeric matrix.",
        call. = FALSE)
+}
+
+
+# A network's own flag decides. A plain matrix has none, so symmetry stands in;
+# symmetry alone would read a directed network with reciprocal arcs as undirected.
+#' @noRd
+.compare_directed <- function(z) {
+  flag <- if (!is.matrix(z)) z$directed
+  if (isTRUE(flag) || isFALSE(flag)) return(flag)
+  !isSymmetric(unname(.weights_of(z, label_unnamed = FALSE)))
 }
 
 
@@ -184,7 +197,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 
 # ---- Internal: the comparison machinery ----
 
-.compare_impl <- function(x, y, scaling, measures, network) {
+.compare_impl <- function(x, y, scaling, measures, network, directed) {
   stopifnot(identical(dim(x), dim(y)))
   stopifnot(!anyNA(x), !anyNA(y))
   aligned <- .compare_align_nodes(x, y)
@@ -263,10 +276,8 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   )
 
   if (network) {
-    sx <- .summary_metrics_from_weights(x_scaled,
-                                        directed = !isSymmetric(x_scaled))
-    sy <- .summary_metrics_from_weights(y_scaled,
-                                        directed = !isSymmetric(y_scaled))
+    sx <- .summary_metrics_from_weights(x_scaled, directed = directed[[1L]])
+    sy <- .summary_metrics_from_weights(y_scaled, directed = directed[[2L]])
     out$network_metrics <- data.frame(metric = sx$metric,
                                       x = sx$value,
                                       y = sy$value,

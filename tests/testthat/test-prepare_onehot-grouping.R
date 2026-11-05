@@ -1,9 +1,9 @@
 # Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
 testthat::skip_on_cran()
 
-# Grouping safety for prepare_onehot()
+# Grouping safety for .prepare_onehot()
 #
-# prepare_onehot() used to key its actor/session, aggregation, and reshape
+# .prepare_onehot() used to key its actor/session, aggregation, and reshape
 # groups with interaction(), which fails in two independent ways:
 #
 #   1. Separator collision. interaction() pastes with ".", so ("a.b", "c") and
@@ -32,7 +32,7 @@ test_that("separator-colliding actor/session ids stay separate sequences", {
   expect_equal(length(unique(as.character(interaction(keys, drop = TRUE)))), 1L)
   expect_equal(length(unique(.observed_group_id(keys))), 2L)
 
-  res <- prepare_onehot(data, cols = c("A", "B"), actor = "actor",
+  res <- .prepare_onehot(data, cols = c("A", "B"), actor = "actor",
                         session = "session", window_size = 1L)
   expect_equal(nrow(res), 2L)
 })
@@ -47,7 +47,7 @@ test_that("distinct actor/session pairs each yield one sequence", {
     session = sprintf("s%02d", seq_len(n)),
     stringsAsFactors = FALSE
   )
-  res <- prepare_onehot(data, cols = c("A", "B"), actor = "actor",
+  res <- .prepare_onehot(data, cols = c("A", "B"), actor = "actor",
                         session = "session", window_size = 1L)
   expect_equal(nrow(res), n)
 })
@@ -62,7 +62,7 @@ test_that("sequences come back in first-appearance order of actor/session", {
     session = c("y", "y", "x", "x"),
     stringsAsFactors = FALSE
   )
-  res <- prepare_onehot(data, cols = c("A", "B"), actor = "actor",
+  res <- .prepare_onehot(data, cols = c("A", "B"), actor = "actor",
                         session = "session", window_size = 1L)
   expect_equal(nrow(res), 2L)
   # row 1 is actor b (A then B), row 2 is actor a (A then B)
@@ -79,7 +79,7 @@ test_that("missing actor/session identifiers error instead of merging", {
     stringsAsFactors = FALSE
   )
   expect_error(
-    prepare_onehot(data, cols = c("A", "B"), actor = "actor",
+    .prepare_onehot(data, cols = c("A", "B"), actor = "actor",
                    session = "session", window_size = 1L),
     "Missing values in actor/session"
   )
@@ -104,7 +104,7 @@ test_that(".split_first_seen partitions completely, in first-appearance order", 
 })
 
 
-test_that("prepare_onehot stays linear in row count", {
+test_that(".prepare_onehot stays linear in row count", {
   skip_on_cran()
   make <- function(n) {
     data.frame(
@@ -117,7 +117,7 @@ test_that("prepare_onehot stays linear in row count", {
   }
   run <- function(n) {
     system.time(
-      prepare_onehot(make(n), cols = c("A", "B"), actor = "actor",
+      .prepare_onehot(make(n), cols = c("A", "B"), actor = "actor",
                      session = "session", window_size = 1L)
     )[["elapsed"]]
   }

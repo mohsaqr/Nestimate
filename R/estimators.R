@@ -169,9 +169,9 @@
 #' @noRd
 .count_transitions <- function(data,
                                format = "auto",
-                               action = "Action",
+                               action = NULL,
                                id = NULL,
-                               time = "Time",
+                               time = NULL,
                                cols = NULL,
                                alphabet = NULL,
                                weighted = FALSE,
@@ -181,7 +181,7 @@
   stopifnot(is.data.frame(data))
 
   if (format == "auto") {
-    format <- if (action %in% names(data)) "long" else "wide"
+    format <- .format_from_action(action, data)
   }
 
   if (format == "wide") {
@@ -327,12 +327,12 @@
 #'
 #' @importFrom data.table setDT setorderv
 #' @noRd
-.count_transitions_long <- function(data, action = "Action", id = NULL,
-                                    time = "Time", alphabet = NULL,
+.count_transitions_long <- function(data, action = NULL, id = NULL,
+                                    time = NULL, alphabet = NULL,
                                     weighted = FALSE, begin_state = NULL,
                                     end_state = NULL) {
-  if (!action %in% names(data)) {
-    stop("Action column '", action, "' not found in data.")
+  if (is.null(action) || !action %in% names(data)) {
+    stop("Action column '", action %||% "NULL", "' not found in data.")
   }
   if (!is.null(id)) {
     missing_ids <- setdiff(id, names(data))
@@ -350,7 +350,7 @@
   data.table::set(dt, j = ".orig_row", value = seq_len(nrow(dt)))
 
   # Order by id + time + original row order
-  order_cols <- c(id, if (time %in% names(dt)) time, ".orig_row")
+  order_cols <- c(id, intersect(time, names(dt)), ".orig_row")
   data.table::setorderv(dt, order_cols)
 
   action_col <- action
@@ -469,9 +469,9 @@
 #' @noRd
 .compute_initial_probs <- function(data, states,
                                     format = "wide",
-                                    action = "Action",
+                                    action = NULL,
                                     id = NULL,
-                                    time = "Time",
+                                    time = NULL,
                                     cols = NULL,
                                     concat = 1L,
                                     begin_state = NULL,
@@ -490,7 +490,7 @@
     dt <- data.table::as.data.table(data)
     data.table::set(dt, j = action, value = .clean_states(as.character(dt[[action]])))
     data.table::set(dt, j = ".orig_row", value = seq_len(nrow(dt)))
-    order_cols <- c(id, if (time %in% names(dt)) time, ".orig_row")
+    order_cols <- c(id, intersect(time, names(dt)), ".orig_row")
     data.table::setorderv(dt, order_cols)
     if (is.null(id)) {
       vals <- dt[[action]]
@@ -529,11 +529,18 @@
 
 #' Frequency estimator: raw transition counts
 #' @noRd
+# The format of a frame when none is given: an event log only if the caller named
+# its action column.
+#' @noRd
+.format_from_action <- function(action, data) {
+  if (!is.null(action) && action %in% names(data)) "long" else "wide"
+}
+
 .estimator_frequency <- function(data,
                                  format = "auto",
-                                 action = "Action",
+                                 action = NULL,
                                  id = NULL,
-                                 time = "Time",
+                                 time = NULL,
                                  cols = NULL,
                                  codes = NULL,
                                  window_size = 3L,
@@ -566,7 +573,7 @@
   )
   states <- rownames(freq_mat)
   resolved_format <- if (format == "auto") {
-    if (action %in% names(data)) "long" else "wide"
+    .format_from_action(action, data)
   } else format
   initial <- .compute_initial_probs(
     data, states, format = resolved_format,
@@ -588,9 +595,9 @@
 #' @noRd
 .estimator_relative <- function(data,
                                 format = "auto",
-                                action = "Action",
+                                action = NULL,
                                 id = NULL,
-                                time = "Time",
+                                time = NULL,
                                 cols = NULL,
                                 codes = NULL,
                                 window_size = 1L,
@@ -634,7 +641,7 @@
   rel_mat[nonzero, ] <- rel_mat[nonzero, ] / row_sums[nonzero]
 
   resolved_format <- if (format == "auto") {
-    if (action %in% names(data)) "long" else "wide"
+    .format_from_action(action, data)
   } else format
   initial <- .compute_initial_probs(
     data, states, format = resolved_format,
@@ -665,9 +672,9 @@
 #' @noRd
 .estimator_co_occurrence <- function(data,
                                      format = "auto",
-                                     action = "Action",
+                                     action = NULL,
                                      id = NULL,
-                                     time = "Time",
+                                     time = NULL,
                                      cols = NULL,
                                      codes = NULL,
                                      window_size = 3L,
@@ -686,21 +693,21 @@
   }
   stopifnot(is.data.frame(data))
 
+  # Before the format: a one-hot column may be called "Action".
+  if (identical(format, "onehot") || !is.null(codes)) {
+    return(.estimator_wtna_core(
+      data, codes = codes, window_size = window_size,
+      mode = mode, actor = actor,
+      wtna_method = "cooccurrence", ...
+    ))
+  }
+
   if (format == "auto") {
-    format <- if (action %in% names(data)) "long" else "wide"
+    format <- .format_from_action(action, data)
   }
 
   # One-hot binary input detection for wide format
   if (format == "wide") {
-    # If codes explicitly provided, treat as one-hot
-    if (!is.null(codes)) {
-      return(.estimator_wtna_core(
-        data, codes = codes, window_size = window_size,
-        mode = mode, actor = actor,
-        wtna_method = "cooccurrence", ...
-      ))
-    }
-
     # Auto-detect: check if all state columns are binary 0/1
     state_cols <- .select_state_cols(data, c(id, actor), cols)
     is_binary <- length(state_cols) >= 2L && all(vapply(
@@ -870,12 +877,12 @@
 #' Converts to wide-like structure per group, then counts column-pair
 #' co-occurrences.
 #' @noRd
-.count_cooccurrence_long <- function(data, action = "Action", id = NULL,
-                                     time = "Time", alphabet = NULL,
+.count_cooccurrence_long <- function(data, action = NULL, id = NULL,
+                                     time = NULL, alphabet = NULL,
                                      weighted = FALSE, begin_state = NULL,
                                      end_state = NULL) {
-  if (!action %in% names(data)) {
-    stop("Action column '", action, "' not found in data.")
+  if (is.null(action) || !action %in% names(data)) {
+    stop("Action column '", action %||% "NULL", "' not found in data.")
   }
 
   dt <- data.table::as.data.table(data)
@@ -887,7 +894,7 @@
   data.table::set(dt, j = ".orig_row", value = seq_len(nrow(dt)))
 
   # Order by id + time + original row order
-  order_cols <- c(id, if (time %in% names(dt)) time, ".orig_row")
+  order_cols <- c(id, intersect(time, names(dt)), ".orig_row")
   data.table::setorderv(dt, order_cols)
 
   # Build group key
@@ -1065,14 +1072,14 @@
 #'
 #' Converts to per-group wide format, then applies attention counting.
 #' @noRd
-.count_attention_long <- function(data, action = "Action", id = NULL,
-                                   time = "Time", lambda = 1,
+.count_attention_long <- function(data, action = NULL, id = NULL,
+                                   time = NULL, lambda = 1,
                                    direction = "forward", decay = NULL,
                                    time_matrix = NULL, duration = NULL,
                                    alphabet = NULL, begin_state = NULL,
                                    end_state = NULL) {
-  if (!action %in% names(data)) {
-    stop("Action column '", action, "' not found in data.")
+  if (is.null(action) || !action %in% names(data)) {
+    stop("Action column '", action %||% "NULL", "' not found in data.")
   }
 
   dt <- data.table::as.data.table(data)
@@ -1081,7 +1088,7 @@
   data.table::set(dt, j = action, value = .clean_states(as.character(dt[[action]])))
 
   # Order by id + time
-  order_cols <- c(id, if (time %in% names(dt)) time)
+  order_cols <- c(id, intersect(time, names(dt)))
   if (length(order_cols) > 0) {
     data.table::setorderv(dt, order_cols)
   }
@@ -1124,7 +1131,7 @@
     if (n < 2L) next
 
     # Time positions
-    if (time %in% names(g)) {
+    if (!is.null(time) && time %in% names(g)) {
       t_pos <- as.numeric(g[[time]])
       if (!is.null(begin_state)) t_pos <- c(min(t_pos, na.rm = TRUE) - 1, t_pos)
       if (!is.null(end_state)) t_pos <- c(t_pos, max(t_pos, na.rm = TRUE) + 1)
@@ -1189,9 +1196,9 @@
 #' @noRd
 .estimator_attention <- function(data,
                                   format = "auto",
-                                  action = "Action",
+                                  action = NULL,
                                   id = NULL,
-                                  time = "Time",
+                                  time = NULL,
                                   cols = NULL,
                                   alphabet = NULL,
                                   concat = 1L,
@@ -1208,7 +1215,7 @@
   direction <- match.arg(direction, c("forward", "backward", "both"))
 
   if (format == "auto") {
-    format <- if (action %in% names(data)) "long" else "wide" # nocov
+    format <- .format_from_action(action, data) # nocov
   }
 
   if (format == "wide") {

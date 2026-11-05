@@ -99,16 +99,13 @@ test_that("permutation works with method='relative'", {
                      "weight_x", "weight_y") %in% names(perm$summary)))
 })
 
-test_that("permutation warns for one-sequence transition networks", {
+test_that("permutation refuses one-sequence transition networks", {
   long <- data.frame(action = c("A", "B", "C", "A"),
                      stringsAsFactors = FALSE)
   net <- suppressMessages(build_tna(long, action = "action"))
 
-  expect_warning(
-    perm <- permutation(net, net, iter = 2L, seed = 1),
-    class = "nestimate_single_sequence"
-  )
-  expect_s3_class(perm, "net_permutation")
+  expect_error(permutation(net, net, iter = 2L, seed = 1),
+               class = "nestimate_single_sequence")
 })
 
 test_that("permutation works with method='frequency'", {
@@ -174,8 +171,8 @@ test_that("permutation dispatches for wtna_mixed and matches components", {
     B = c(1L, 0L, 1L, 0L, 1L, 0L),
     C = c(0L, 1L, 1L, 0L, 0L, 1L)
   )
-  mixed1 <- wtna(df1, method = "both")
-  mixed2 <- wtna(df2, method = "both")
+  mixed1 <- wtna(.with_units(df1, 2L), method = "both", actor = "unit", window_size = 1L)
+  mixed2 <- wtna(.with_units(df2, 2L), method = "both", actor = "unit", window_size = 1L)
 
   mixed_perm <- permutation(mixed1, mixed2, iter = 20L, seed = 1)
   tran_ref <- permutation(mixed1$transition, mixed2$transition,
@@ -193,8 +190,8 @@ test_that("permutation dispatches for wtna_mixed and matches components", {
 test_that("wtna_mixed permutation print and summary methods work", {
   df1 <- data.frame(A = c(1L, 0L, 1L, 0L), B = c(0L, 1L, 0L, 1L))
   df2 <- data.frame(A = c(0L, 1L, 0L, 1L), B = c(1L, 0L, 1L, 0L))
-  perm <- permutation(wtna(df1, method = "both"),
-                      wtna(df2, method = "both"),
+  perm <- permutation(wtna(.with_units(df1, 2L), method = "both", actor = "unit", window_size = 1L),
+                      wtna(.with_units(df2, 2L), method = "both", actor = "unit", window_size = 1L),
                       iter = 10L, seed = 1)
 
   out <- capture.output(print(perm))

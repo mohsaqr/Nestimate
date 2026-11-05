@@ -15,13 +15,14 @@
 #' all sequences.
 #'
 #' @param data Data frame containing sequence data in long or wide format.
-#' @param action Character. Name of the column containing actions/states
-#'   (for long format). Default: "Action".
+#' @param action Character or NULL. Name of the column containing actions/states
+#'   (for long format). Column names are not read: without it the data is taken
+#'   as wide. Default: NULL.
 #' @param id Character vector. Name(s) of the column(s) identifying sequences.
 #'   For long format, each unique combination of ID values defines a sequence.
 #'   For wide format, used to exclude non-state columns. Default: NULL.
-#' @param time Character. Name of the time column used to order actions within
-#'   sequences (for long format). Default: "Time".
+#' @param time Character or NULL. Name of the time column used to order actions
+#'   within sequences (for long format). Default: NULL (row order).
 #' @param cols Character vector. Names of columns containing states (for wide
 #'   format). If NULL, all non-ID columns are used. Default: NULL.
 #' @param format Character. Format of input data: "auto" (detect automatically),
@@ -62,14 +63,14 @@
 #'
 #' @export
 frequencies <- function(data,
-                        action = "Action",
+                        action = NULL,
                         id = NULL,
-                        time = "Time",
+                        time = NULL,
                         cols = NULL,
                         format = c("auto", "long", "wide")) {
   stopifnot(is.data.frame(data))
-  stopifnot(is.character(action), length(action) == 1)
-  stopifnot(is.character(time), length(time) == 1)
+  stopifnot(is.null(action) || (is.character(action) && length(action) == 1))
+  stopifnot(is.null(time) || (is.character(time) && length(time) == 1))
   stopifnot(is.null(id) || is.character(id))
   stopifnot(is.null(cols) || is.character(cols))
   format <- match.arg(format)
@@ -188,8 +189,8 @@ convert_sequence_format <- function(data,
 
 #' @noRd
 .build_pairs_long <- function(data, action, id, time) {
-  if (!action %in% names(data)) {
-    stop("Action column '", action, "' not found in data.")
+  if (is.null(action) || !action %in% names(data)) {
+    stop("Action column '", action %||% "NULL", "' not found in data.")
   }
   if (!is.null(id)) {
     missing_ids <- setdiff(id, names(data))
@@ -208,7 +209,7 @@ convert_sequence_format <- function(data,
   }
 
   pairs <- lapply(groups, function(g) {
-    if (time %in% names(g)) {
+    if (!is.null(time) && time %in% names(g)) {
       g <- g[order(g[[time]]), ]
     }
     actions <- g[[action]]

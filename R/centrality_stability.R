@@ -35,7 +35,9 @@
 #' @param threshold Numeric. Minimum correlation to consider stable
 #'   (default: 0.7).
 #' @param certainty Numeric. Required proportion of iterations above
-#'   threshold (default: 0.95).
+#'   threshold (default: 0.95). It is the share of all iterations: one in which
+#'   the correlation is undefined (the measure is constant in that subset)
+#'   counts as not reaching \code{threshold}.
 #' @param method Character. Correlation method: \code{"pearson"},
 #'   \code{"spearman"}, or \code{"kendall"} (default: \code{"pearson"}).
 #' @param centrality_fn Optional function. A custom centrality function
@@ -141,6 +143,7 @@ centrality_stability <- function(x,
   if (inherits(x, "mcml")) x <- as_tna(x)
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
   if (inherits(x, "netobject_group")) {
+    .stop_single_unit_group(x)
     out <- lapply(x, function(net) {
       centrality_stability(net, measures = measures, iter = iter,
                            drop_prop = drop_prop, threshold = threshold,
@@ -160,6 +163,7 @@ centrality_stability <- function(x,
     stop("netobject does not contain $data. Rebuild with build_network().",
          call. = FALSE)
   }
+  .stop_single_unit(x)
   stopifnot(
     is.numeric(iter), length(iter) == 1, iter >= 2,
     is.numeric(drop_prop), all(drop_prop > 0), all(drop_prop < 1),
@@ -194,11 +198,11 @@ centrality_stability <- function(x,
   }
 
   # ---- Setup ----
-  net_method <- .resolve_method_alias(x$method)
+  net_method <- .resampling_method(.resolve_method_alias(x$method), x$params)
   states <- x$nodes$label
   n_states <- length(states)
   is_transition <- net_method %in% c("relative", "frequency", "co_occurrence")
-  is_relative <- net_method == "relative"
+  is_relative <- .counts_are_relative(net_method, x$params)
   scaling <- x$scaling
   thresh <- x$threshold
 
@@ -239,7 +243,9 @@ centrality_stability <- function(x,
 
   # ---- Pre-compute for transitions ----
   if (is_transition) {
-    trans_2d <- .precompute_per_sequence(x$data, net_method, x$params, states)
+    transition_data <- .resampling_transition_data(x$data, x$metadata, x$params)
+    trans_2d <- .precompute_per_sequence(transition_data, net_method, x$params,
+                                         states)
     n_seq <- nrow(trans_2d)
   } else {
     data <- x$data
@@ -259,7 +265,10 @@ centrality_stability <- function(x,
       nz <- rs > 0
       mat[nz, ] <- mat[nz, ] / rs[nz]
     }
-    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling) # nocov
+    if (!is.null(scaling)) { # nocov start
+      mat <- .apply_scaling(mat, scaling,
+                            include_zeros = .scaling_includes_zeros(net_method))
+    } # nocov end
     if (thresh > 0) mat[abs(mat) < thresh] <- 0 # nocov
     dimnames(mat) <- list(states, states)
     mat
@@ -281,7 +290,10 @@ centrality_stability <- function(x,
     )
     if (is.null(est)) return(NULL)
     mat <- est$matrix[states, states] # nocov start
-    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling)
+    if (!is.null(scaling)) {
+      mat <- .apply_scaling(mat, scaling,
+                            include_zeros = .scaling_includes_zeros(net_method))
+    }
     if (thresh > 0) mat[abs(mat) < thresh] <- 0
     mat # nocov end
   }
@@ -473,10 +485,20 @@ centrality_stability <- function(x,
 }
 
 
+#' Whether each resample's correlation reaches the threshold
+#'
+#' An undefined correlation (the values are constant in that resample) or a
+#' resample that could not be built does not reach it, so it stays in the
+#' denominator of the certainty rather than being dropped from it.
+#' @noRd
+.reaches_threshold <- function(correlations, threshold) {
+  !is.na(correlations) & correlations >= threshold
+}
+
 #' Calculate CS-coefficient from correlation matrix
 #' @noRd
 .calculate_cs <- function(corr_mat, threshold, certainty, drop_prop) {
-  prop_above <- colMeans(corr_mat >= threshold, na.rm = TRUE)
+  prop_above <- colMeans(.reaches_threshold(corr_mat, threshold))
   valid <- which(prop_above >= certainty)
   if (length(valid) == 0L) 0 else drop_prop[max(valid)]
 }
@@ -541,7 +563,7 @@ summary.net_stability <- function(object, ...) {
         drop_prop = object$drop_prop[j],
         mean_cor = mean(vals, na.rm = TRUE),
         sd_cor = sd(vals, na.rm = TRUE),
-        prop_above = mean(vals >= object$threshold, na.rm = TRUE),
+        prop_above = mean(.reaches_threshold(vals, object$threshold)),
         stringsAsFactors = FALSE,
         row.names = NULL
       )

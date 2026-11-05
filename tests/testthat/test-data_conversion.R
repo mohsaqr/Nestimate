@@ -1,5 +1,5 @@
 # Tests for R/data_conversion.R
-# wide_to_long, long_to_wide, prepare_for_tna, action_to_onehot, prepare_onehot
+# wide_to_long, long_to_wide, prepare_for_tna, action_to_onehot, .prepare_onehot
 
 # --- Fixtures -----------------------------------------------------------
 
@@ -272,11 +272,11 @@ test_that("action_to_onehot errors on missing column", {
   expect_error(action_to_onehot(d), "action_col")
 })
 
-# --- prepare_onehot ------------------------------------------------------
+# --- .prepare_onehot ------------------------------------------------------
 
-test_that("prepare_onehot basic conversion", {
+test_that(".prepare_onehot basic conversion", {
   d <- data.frame(A = c(1, 0, 1), B = c(0, 1, 0))
-  result <- prepare_onehot(d, cols = c("A", "B"))
+  result <- .prepare_onehot(d, cols = c("A", "B"))
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 1)
   # Row 1 time 1: A active
@@ -285,56 +285,56 @@ test_that("prepare_onehot basic conversion", {
   expect_equal(attr(result, "window_span"), 2L)
 })
 
-test_that("prepare_onehot with actor grouping", {
+test_that(".prepare_onehot with actor grouping", {
   d <- data.frame(
     actor = c(1, 1, 2, 2),
     X = c(1, 0, 0, 1),
     Y = c(0, 1, 1, 0)
   )
-  result <- prepare_onehot(d, cols = c("X", "Y"), actor = "actor")
+  result <- .prepare_onehot(d, cols = c("X", "Y"), actor = "actor")
   expect_equal(nrow(result), 2)
 })
 
-test_that("prepare_onehot non-overlapping window", {
+test_that(".prepare_onehot non-overlapping window", {
   d <- data.frame(A = c(1, 0, 1, 0), B = c(0, 1, 0, 1))
-  result <- prepare_onehot(d, cols = c("A", "B"), window_size = 2,
+  result <- .prepare_onehot(d, cols = c("A", "B"), window_size = 2,
                            window_type = "non-overlapping")
   expect_true(attr(result, "windowed"))
   expect_equal(attr(result, "window_size"), 2L)
 })
 
-test_that("prepare_onehot overlapping window", {
+test_that(".prepare_onehot overlapping window", {
   d <- data.frame(A = c(1, 0, 1, 0), B = c(0, 1, 0, 1))
-  result <- prepare_onehot(d, cols = c("A", "B"), window_size = 2,
+  result <- .prepare_onehot(d, cols = c("A", "B"), window_size = 2,
                            window_type = "overlapping")
   expect_true(attr(result, "windowed"))
 })
 
-test_that("prepare_onehot aggregate within windows", {
+test_that(".prepare_onehot aggregate within windows", {
   d <- data.frame(A = c(1, 0, 1, 0), B = c(0, 1, 0, 1))
-  result <- prepare_onehot(d, cols = c("A", "B"), window_size = 2,
+  result <- .prepare_onehot(d, cols = c("A", "B"), window_size = 2,
                            window_type = "non-overlapping", aggregate = TRUE)
   expect_true(attr(result, "windowed"))
 })
 
-test_that("prepare_onehot errors on missing cols", {
+test_that(".prepare_onehot errors on missing cols", {
   d <- data.frame(A = c(1, 0))
-  expect_error(prepare_onehot(d, cols = c("A", "Z")), "cols")
+  expect_error(.prepare_onehot(d, cols = c("A", "Z")), "cols")
 })
 
-test_that("prepare_onehot preserves simultaneous active states", {
+test_that(".prepare_onehot preserves simultaneous active states", {
   d <- data.frame(A = c(1, 0), B = c(1, 1), C = c(0, 0))
   # Pinned to size 1 (the original default) — this test asserts shape
   # under the pre-2026-05-10 default. New default is 3L.
-  result <- prepare_onehot(d, cols = c("A", "B", "C"), window_size = 1L)
+  result <- .prepare_onehot(d, cols = c("A", "B", "C"), window_size = 1L)
   expect_equal(sum(!is.na(as.matrix(result))), 3L)
   expect_equal(result[1, c("W0_T1", "W0_T2", "W1_T2")],
                data.frame(W0_T1 = "A", W0_T2 = "B", W1_T2 = "B"))
 })
 
-test_that("prepare_onehot codes attribute set", {
+test_that(".prepare_onehot codes attribute set", {
   d <- data.frame(X = c(1, 0), Y = c(0, 1))
-  result <- prepare_onehot(d, cols = c("X", "Y"))
+  result <- .prepare_onehot(d, cols = c("X", "Y"))
   expect_equal(attr(result, "codes"), c("X", "Y"))
 })
 
@@ -387,14 +387,14 @@ test_that("prepare_for_tna long errors on missing id col", {
   )
 })
 
-# --- prepare_onehot: overlapping window with group shorter than window_size ---
+# --- .prepare_onehot: overlapping window with group shorter than window_size ---
 
-test_that("prepare_onehot overlapping window: group shorter than window_size produces NA row", {
+test_that(".prepare_onehot overlapping window: group shorter than window_size produces NA row", {
   # Group has 1 row, window_size = 3 -> n < window_size -> that group's row is NA
   # actor=1 has 1 row < ws=3; actor=2 has 3 rows -> 1 window
   # Both groups still produce 1 row each (2 total), actor=1 row has NA content
   d <- data.frame(actor = c(1, 2, 2, 2), A = c(1, 1, 0, 1), B = c(0, 0, 1, 0))
-  result <- prepare_onehot(d, cols = c("A", "B"), actor = "actor",
+  result <- .prepare_onehot(d, cols = c("A", "B"), actor = "actor",
                            window_size = 3, window_type = "overlapping")
   expect_s3_class(result, "data.frame")
   expect_true(attr(result, "windowed"))
@@ -402,12 +402,12 @@ test_that("prepare_onehot overlapping window: group shorter than window_size pro
   expect_true(any(!is.na(result[[grep("^W", names(result))[1]]])))
 })
 
-# --- prepare_onehot: interval grouping ---
+# --- .prepare_onehot: interval grouping ---
 
-test_that("prepare_onehot with interval creates wider columns", {
+test_that(".prepare_onehot with interval creates wider columns", {
   # interval creates W0_T*, W1_T* columns within the single output row
   d <- data.frame(A = c(1, 0, 1, 0, 1, 0), B = c(0, 1, 0, 1, 0, 1))
-  result <- prepare_onehot(d, cols = c("A", "B"), interval = 2L)
+  result <- .prepare_onehot(d, cols = c("A", "B"), interval = 2L)
   expect_s3_class(result, "data.frame")
   # Multiple W* columns created for the interval windows
   w_cols <- grep("^W", names(result), value = TRUE)

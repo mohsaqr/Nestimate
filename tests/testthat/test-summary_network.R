@@ -36,3 +36,49 @@ test_that("transposing the weights swaps the in- and out-strength SDs and keeps 
   expect_equal(value(s, "Mean Out-Strength"), value(s, "Mean In-Strength"))
   expect_equal(value(s, "SD Out-Strength"), stats::sd(c(4, 6, 7, 0)))
 })
+
+# ---- Undirected and signed networks ----
+
+.metric <- function(W, directed, metric) {
+  s <- .summary_metrics_from_weights(W, directed = directed)
+  s$value[s$metric == metric]
+}
+
+test_that("an undirected edge counts once in Edge Count and Density", {
+  star <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  star[1, 2:4] <- star[2:4, 1] <- c(1, 2, 3)
+  expect_equal(.metric(star, FALSE, "Edge Count"), 3)
+  expect_equal(.metric(star, FALSE, "Network Density"), 0.5)
+  # The same matrix read as directed has six arcs out of twelve.
+  expect_equal(.metric(star, TRUE, "Edge Count"), 6)
+  expect_equal(.metric(star, TRUE, "Network Density"), 0.5)
+})
+
+test_that("negative edges count, and their magnitude is their distance", {
+  # Path A - B - C with A-B negative: distances 1, 2 and 3, in both directions.
+  W <- matrix(c(0, -1, 0,
+                -1, 0, 2,
+                0, 2, 0), 3, byrow = TRUE,
+              dimnames = list(LETTERS[1:3], LETTERS[1:3]))
+  expect_equal(.metric(W, FALSE, "Edge Count"), 2)
+  expect_equal(.metric(W, FALSE, "Network Density"), 2 / 3)
+  expect_equal(.metric(W, FALSE, "Mean Distance"), 2)
+  expect_equal(.metric(W, TRUE, "Reciprocity"), 1)
+})
+
+test_that("summary() Edge Count agrees with $n_edges on a glasso network", {
+  skip_if_not_installed("glmnet")
+  net <- build_network(srl_strategies, method = "glasso")
+  s <- summary(net)
+  expect_equal(s$value[s$metric == "Edge Count"], net$n_edges)
+})
+
+test_that("flipping every sign leaves the counts and distances unchanged", {
+  W <- matrix(c(0, 2, 1,
+                2, 0, 4,
+                1, 4, 0), 3, byrow = TRUE,
+              dimnames = list(LETTERS[1:3], LETTERS[1:3]))
+  metrics <- c("Edge Count", "Network Density", "Mean Distance")
+  expect_equal(vapply(metrics, \(m) .metric(-W, FALSE, m), 0),
+               vapply(metrics, \(m) .metric(W, FALSE, m), 0))
+})

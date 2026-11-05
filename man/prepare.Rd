@@ -33,6 +33,12 @@ actor.}
 
 \item{time}{Character or NULL. Column name containing timestamps.
 Supports ISO8601, Unix timestamps (numeric), and 40+ date/time formats.
+A value must match a format completely, with a four-digit year, so a
+two-digit year raises an error instead of being misread. Day-first or
+month-first is decided once for the whole column: any first field above
+12 means day-first, any second field above 12 means month-first. When
+the column cannot decide, values are read day-first with a warning of
+class \code{nestimate_ambiguous_dates}; \code{custom_format} settles it.
 If NULL, row order defines the sequence. Default: NULL.}
 
 \item{order}{Character or NULL. Column name for tie-breaking when
@@ -121,5 +127,5 @@ net
 
 }
 \seealso{
-\code{\link{build_network}}, \code{\link{prepare_onehot}}
+\code{\link{build_network}}
 }

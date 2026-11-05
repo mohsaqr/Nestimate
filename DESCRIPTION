@@ -1,6 +1,6 @@
 Package: Nestimate
 Title: Dynamic, Probabilistic, and Higher-Order Network Analysis
-Version: 1.0.5
+Version: 1.0.7
 Authors@R: c(
     person("Mohammed", "Saqr", email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
     person("Sonsoles", "López-Pernas", email = "sonsoles.lopez@uef.fi", role = "aut"),
@@ -48,6 +48,7 @@ Suggests:
     ggfittext,
     knitr,
     rmarkdown,
+    tibble,
     tna
 Config/testthat/edition: 3
 Depends:

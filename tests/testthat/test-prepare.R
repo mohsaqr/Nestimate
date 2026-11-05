@@ -568,3 +568,107 @@ test_that("grouping keeps interaction()'s row order so seeds stay reproducible",
   # bootstrap indexes rows, so a permutation would change its output.
   expect_identical(sorted$sequence_data, shuffled$sequence_data)
 })
+
+# ---- Time strings: whole-format match, one date layout per column ----
+
+.iso_times <- function(x, ...) {
+  format(.parse_time(x, ...), "%Y-%m-%d %H:%M", tz = "UTC")
+}
+
+test_that(".parse_time keeps the four-digit year of day-first dates", {
+  expect_identical(
+    .iso_times(c("15/01/2024", "16/01/2024", "01/02/2024", "15/01/2025")),
+    c("2024-01-15 00:00", "2024-01-16 00:00", "2024-02-01 00:00",
+      "2025-01-15 00:00")
+  )
+  expect_identical(.iso_times(c("15.01.2024", "16.01.2024")),
+                   c("2024-01-15 00:00", "2024-01-16 00:00"))
+  expect_identical(.iso_times(c("15-01-2024", "16-01-2024")),
+                   c("2024-01-15 00:00", "2024-01-16 00:00"))
+})
+
+test_that(".parse_time refuses a two-digit year unless custom_format reads it", {
+  expect_error(.parse_time("15/01/24 10:30:00"), class = "nestimate_bad_input")
+  expect_identical(.iso_times("15/01/24 10:30:00",
+                              custom_format = "%d/%m/%y %H:%M:%S"),
+                   "2024-01-15 10:30")
+})
+
+test_that(".parse_time accepts seconds with a fraction and repeated spaces", {
+  expect_identical(.iso_times("15-01-2024 10:30:00.5"), "2024-01-15 10:30")
+  expect_identical(.iso_times("2024-01-15  10:30"), "2024-01-15 10:30")
+})
+
+test_that(".parse_time tells a four-digit year from a numeric offset", {
+  expect_identical(.iso_times("01-13-2024"), "2024-01-13 00:00")
+  expect_identical(.iso_times("2024-01-15 10:30:00+02:00"), "2024-01-15 08:30")
+  expect_identical(.iso_times("2024-01-15T10:30-0500"), "2024-01-15 15:30")
+})
+
+test_that(".parse_time reads a Unix string, not a compact date", {
+  expect_identical(.iso_times("1612345678"), "2021-02-03 09:47")
+  expect_identical(.iso_times("20240115103000"), "2024-01-15 10:30")
+})
+
+test_that(".parse_time reads a month-first column month-first throughout", {
+  times <- c("01/13/2024 10:00", "02/01/2024 10:00", "02/13/2024 10:00",
+             "03/02/2024 10:00")
+  expect_identical(.iso_times(times),
+                   c("2024-01-13 10:00", "2024-02-01 10:00",
+                     "2024-02-13 10:00", "2024-03-02 10:00"))
+  # The layout belongs to the column, so row order cannot change a value.
+  expect_identical(.iso_times(rev(times)), rev(.iso_times(times)))
+})
+
+test_that(".parse_time warns when a column cannot decide the date layout", {
+  undecided <- c("01/02/2024", "03/04/2024")
+  expect_warning(parsed <- .iso_times(undecided),
+                 class = "nestimate_ambiguous_dates")
+  expect_identical(parsed, c("2024-02-01 00:00", "2024-04-03 00:00"))
+  # custom_format settles it, and equal day and month are not ambiguous.
+  expect_identical(.iso_times(undecided, custom_format = "%m/%d/%Y"),
+                   c("2024-01-02 00:00", "2024-03-04 00:00"))
+  expect_no_warning(.parse_time(c("01/01/2024", "02/02/2024")))
+  expect_no_warning(.parse_time(c("15/01/2024", "01/02/2024")))
+  expect_warning(.parse_time(c("15/01/2024", "01/13/2024", "01/02/2024")),
+                 class = "nestimate_ambiguous_dates")
+})
+
+test_that("prepare() orders events by the dates the strings state", {
+  day_first <- data.frame(id = "a", act = c("first", "second", "third"),
+                          day = c("15/01/2024", "16/01/2024", "01/02/2024"))
+  prepared <- prepare(day_first, actor = "id", action = "act", time = "day",
+                      time_threshold = FALSE)
+  expect_identical(unlist(prepared$sequence_data, use.names = FALSE),
+                   c("first", "second", "third"))
+  month_first <- data.frame(id = "a", act = c("jan13", "feb01", "mar02"),
+                            t = c("01/13/2024", "02/01/2024", "03/02/2024"))
+  prepared <- prepare(month_first, actor = "id", action = "act", time = "t",
+                      time_threshold = FALSE)
+  expect_identical(unlist(prepared$sequence_data, use.names = FALSE),
+                   c("jan13", "feb01", "mar02"))
+})
+
+test_that(".parse_time keeps a fraction of a second in every layout", {
+  layouts <- c("15/01/2024 10:30:00.9", "15-01-2024 10:30:00.9",
+               "15.01.2024 10:30:00.9", "2024/01/15 10:30:00.9",
+               "2024.01.15 10:30:00.9", "2024-01-15 10:30:00.9",
+               "2024-01-15T10:30:00.9", "15 Jan 2024 10:30:00.9",
+               "Jan 15 2024 10:30:00.9")
+  gaps <- vapply(layouts, function(later) {
+    parsed <- .parse_time(c(later, sub("\\.9$", ".1", later)))
+    as.numeric(parsed[1L]) - as.numeric(parsed[2L])
+  }, numeric(1))
+  expect_equal(unname(gaps), rep(0.8, length(layouts)), tolerance = 1e-4)
+  # Whole seconds and a compact stamp read as they did.
+  expect_identical(.iso_times("15/01/2024 10:30:00"), "2024-01-15 10:30")
+  expect_identical(.iso_times("20240115103000"), "2024-01-15 10:30")
+})
+
+test_that("prepare() orders events within a second by their fraction", {
+  d <- data.frame(id = "a", act = c("late", "early"),
+                  time = c("15/01/2024 10:30:00.9", "15/01/2024 10:30:00.1"))
+  seqs <- prepare(d, actor = "id", action = "act", time = "time",
+                  time_threshold = FALSE)$sequence_data
+  expect_identical(unlist(seqs, use.names = FALSE), c("early", "late"))
+})

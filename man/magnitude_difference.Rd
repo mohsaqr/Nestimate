@@ -8,8 +8,8 @@
 \usage{
 magnitude_difference(
   data,
-  actor = "Actor",
-  action = "Action",
+  actor = NULL,
+  action = NULL,
   time = NULL,
   metric = c("abs_diff", "chord_dist", "atanh_diff", "geom_norm_diff", "cv_inflation"),
   scale = c("tna_range", "rank_minmax", "minmax", "none"),
@@ -23,8 +23,8 @@ magnitude_difference(
 \arguments{
 \item{data}{Long- or wide-format event log (\code{data.frame}).}
 
-\item{actor, action, time}{Column names in \code{data} (long format). \code{time} may
-be \code{NULL}.}
+\item{actor, action, time}{Column names in \code{data} (long format). Column names
+are not read: without \code{action} the data is taken as wide. Default: \code{NULL}.}
 
 \item{metric}{Discrepancy metric. One of \code{"abs_diff"} (default; absolute
 difference, simplest and most robust), \code{"chord_dist"} (chord distance on

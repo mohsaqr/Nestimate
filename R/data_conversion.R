@@ -456,7 +456,9 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
 #'   into each window. Default: 3. Set \code{window_size = 1} for no
 #'   windowing (each row is its own time point).
 #' @param window_type Character. \code{"non-overlapping"} (fixed, separate
-#'   windows) or \code{"overlapping"} (rolling, step = 1).
+#'   windows) or \code{"overlapping"} (rolling, step = 1: each window covers
+#'   exactly \code{window_size} rows, so a group of n rows gives
+#'   n - window_size + 1 windows, and a shorter group gives none).
 #'   Default: \code{"non-overlapping"}.
 #' @param aggregate Logical. If TRUE, aggregate within each window by
 #'   taking the first non-NA indicator per column. Default: FALSE.
@@ -468,34 +470,15 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
 #'   \code{cols}) and \code{codes} (the \code{cols} themselves) are set on
 #'   the result.
 #'
-#' @examples
-#' # Simple binary data
-#' df <- data.frame(
-#'   A = c(1, 0, 1, 0, 1),
-#'   B = c(0, 1, 0, 1, 0),
-#'   C = c(0, 0, 0, 0, 0)
-#' )
-#' seq_data <- prepare_onehot(df, cols = c("A", "B", "C"))
-#'
-#' # With actor grouping
-#' df$actor <- c(1, 1, 1, 2, 2)
-#' seq_data <- prepare_onehot(df, cols = c("A", "B", "C"), actor = "actor")
-#'
-#' # With windowing
-#' seq_data <- prepare_onehot(df, cols = c("A", "B", "C"),
-#'                           window_size = 2, window_type = "non-overlapping")
-#'
-#' @seealso \code{\link{action_to_onehot}} for the reverse conversion.
-#'
-#' @export
-prepare_onehot <- function(data,
-                           cols,
-                           actor = NULL,
-                           session = NULL,
-                           interval = NULL,
-                           window_size = 3L,
-                           window_type = c("non-overlapping", "overlapping"),
-                           aggregate = FALSE) {
+#' @noRd
+.prepare_onehot <- function(data,
+                            cols,
+                            actor = NULL,
+                            session = NULL,
+                            interval = NULL,
+                            window_size = 3L,
+                            window_type = c("non-overlapping", "overlapping"),
+                            aggregate = FALSE) {
   stopifnot(is.data.frame(data))
   stopifnot(is.character(cols), length(cols) >= 1)
   stopifnot(all(cols %in% names(data)))
@@ -543,21 +526,16 @@ prepare_onehot <- function(data,
   work <- do.call(rbind, lapply(groups, function(g) {
     rownames(g) <- NULL
     if (tna_window_type == "sliding") {
-      # seq_len(window_size - 1L) is cleanly empty when window_size == 1L;
-      # seq(1, window_size - 1) on R's "decreasing implied" rule would be
-      # c(1, 0), which iterates twice with an off-by-one shift.
-      for (w in seq_len(window_size - 1L)) {
-        g[cols] <- lapply(cols, function(col) {
-          x <- g[[col]]
-          ifelse(!is.na(x) | !is.na(lag_chr(x, w)), col, NA_character_)
-        })
-        names(g[cols]) <- cols
-      }
-      # Drop only the leading row that the lag propagation invalidates.
-      # window_size == 1L has no overlap, so no row should be dropped.
-      if (window_size > 1L && nrow(g) > 0L) {
-        g <- g[-1L, , drop = FALSE]
-      }
+      # Row t marks the states active in rows t - w + 1, ..., t of the data.
+      # Lags are of the original rows: lagging the result would widen the
+      # window with each step. The first w - 1 rows are incomplete windows.
+      lags <- seq_len(window_size - 1L)
+      g[cols] <- lapply(cols, function(col) {
+        x <- g[[col]]
+        active <- Reduce(`|`, lapply(lags, \(k) !is.na(lag_chr(x, k))), !is.na(x))
+        ifelse(active, col, NA_character_)
+      })
+      g <- g[seq_len(nrow(g)) >= window_size, , drop = FALSE]
       g$.window <- floor(seq_len(nrow(g)) - 1L)
     } else {
       g$.window <- floor((seq_len(nrow(g)) - 1L) / window_size)

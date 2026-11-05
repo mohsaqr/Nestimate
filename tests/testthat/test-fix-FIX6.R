@@ -265,5 +265,5 @@ test_that("A11-F03: window_size guard also covers method='both' / actor path", {
 
 test_that("A11-F04: window_size default value remains 3 (behavior unchanged)", {
   expect_equal(as.integer(formals(wtna)$window_size), 3L)
-  expect_equal(as.integer(formals(prepare_onehot)$window_size), 3L)
+  expect_equal(as.integer(formals(.prepare_onehot)$window_size), 3L)
 })

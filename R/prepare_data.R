@@ -18,6 +18,12 @@
 #' any grouping column raise an error: drop or relabel those events first.
 #' @param time Character or NULL. Column name containing timestamps.
 #'   Supports ISO8601, Unix timestamps (numeric), and 40+ date/time formats.
+#'   A value must match a format completely, with a four-digit year, so a
+#'   two-digit year raises an error instead of being misread. Day-first or
+#'   month-first is decided once for the whole column: any first field above
+#'   12 means day-first, any second field above 12 means month-first. When
+#'   the column cannot decide, values are read day-first with a warning of
+#'   class \code{nestimate_ambiguous_dates}; \code{custom_format} settles it.
 #'   If NULL, row order defines the sequence. Default: NULL.
 #' @param order Character or NULL. Column name for tie-breaking when
 #'   timestamps are identical. If NULL, original row order is used.
@@ -79,7 +85,7 @@
 #'                      time = "timestamp", method = "relative")
 #' net
 #'
-#' @seealso \code{\link{build_network}}, \code{\link{prepare_onehot}}
+#' @seealso \code{\link{build_network}}
 #'
 #' @export
 prepare <- function(data,
@@ -343,20 +349,82 @@ print.nestimate_data <- function(x, ...) {
 #' @param time Character vector.
 #' @param formats Character vector of \code{strptime} formats, tried in order.
 #' @param timezone Olson time zone name.
+#' @param strict Require each value to match the whole of a format with a
+#'   four-digit year. Off for a user's own `custom_format`.
 #' @return POSIXct vector (NA where no format matched).
 #' @noRd
-.parse_time_formats <- function(time, formats, timezone) {
+.parse_time_formats <- function(time, formats, timezone, strict = FALSE) {
   out <- rep(NA_real_, length(time))
   # Sequential fill: each format only sees what earlier formats left NA, so
   # the loop is over formats (short), not elements.
   for (fmt in formats) {
     idx <- which(is.na(out) & !is.na(time))
     if (length(idx) == 0L) break
+    # strptime ignores trailing characters and %Y takes 1 to 4 digits, so
+    # "%Y/%m/%d" alone reads 15/01/2024 as the year 15.
+    if (strict) idx <- idx[grepl(.strptime_regex(fmt), time[idx])]
+    if (length(idx) == 0L) next
     parsed <- as.POSIXct(strptime(time[idx], format = fmt, tz = timezone))
     ok <- !is.na(parsed)
     out[idx[ok]] <- as.numeric(parsed[ok])
   }
   as.POSIXct(out, origin = "1970-01-01", tz = timezone)
+}
+
+#' Regular expression for the complete strings a strptime format may accept
+#'
+#' Fields run together ("%Y%m%d%H%M%S") have a fixed width, otherwise a Unix
+#' time written as a string could pass for a compact date.
+#' @param fmt A single strptime format.
+#' @return A single anchored regular expression.
+#' @noRd
+.strptime_regex <- function(fmt) {
+  field <- if (grepl("[^%A-Za-z]", fmt)) "[0-9]{1,2}" else "[0-9]{2}"
+  seconds <- paste0(field, "(\\.[0-9]+)?")
+  tokens <- c("%Y" = "[0-9]{4}", "%m" = field, "%d" = field, "%H" = field,
+              "%M" = field, "%OS" = seconds, "%S" = seconds,
+              "%b" = "[[:alpha:]]+", "%B" = "[[:alpha:]]+",
+              "%z" = "\\s*[+-][0-9]{4}")
+  literal <- gsub(" ", "\\s+", gsub(".", "\\.", fmt, fixed = TRUE),
+                  fixed = TRUE)
+  body <- Reduce(\(pattern, token) gsub(token, tokens[[token]], pattern,
+                                        fixed = TRUE),
+                 names(tokens), init = literal)
+  paste0("^", body, "$")
+}
+
+#' Decide once per column whether numeric dates are day-first or month-first
+#'
+#' Trying each value separately would read a month-first column day-first
+#' wherever the day is 12 or less, giving one column two layouts.
+#' @param time Character vector of naive time strings.
+#' @param formats The candidate strptime formats, day-first before month-first.
+#' @return `formats`, without the day-first numeric ones for a month-first
+#'   column. Warns when the column cannot decide.
+#' @noRd
+.numeric_date_formats <- function(time, formats) {
+  pattern <- "^([0-9]{1,2})[-/.]([0-9]{1,2})[-/.][0-9]{4}([ T].*)?$"
+  dated <- time[grepl(pattern, time)]
+  if (length(dated) == 0L) return(formats)
+  first <- as.integer(sub(pattern, "\\1", dated))
+  second <- as.integer(sub(pattern, "\\2", dated))
+  day_first <- any(first > 12L)
+  month_first <- any(second > 12L)
+  if (month_first && !day_first) {
+    return(formats[!grepl("^%d[-/.]%m[-/.]%Y", formats)])
+  }
+  undecided <- first <= 12L & second <= 12L & first != second
+  if ((day_first && month_first && any(undecided)) ||
+      (!day_first && !month_first && any(undecided))) {
+    warning(warningCondition(
+      sprintf(paste0("%d time value(s) could be day-first or month-first ",
+                     "(e.g. %s); read as day-first. Set `custom_format` to ",
+                     "settle it, e.g. \"%%m/%%d/%%Y\"."),
+              sum(undecided), dated[which(undecided)[1L]]),
+      class = "nestimate_ambiguous_dates", call = NULL
+    ))
+  }
+  formats
 }
 
 #' Parse time values into POSIXct, independent of the machine time zone
@@ -414,7 +482,8 @@ print.nestimate_data <- function(x, ...) {
   time_offset <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", time_offset,
                      perl = TRUE)
   has_timezone <- grepl(
-    "(?:Z|UTC|GMT|[+-][0-9]{2}:?[0-9]{2}|[A-Za-z]{2,})$",
+    # A numeric offset follows a time; on its own, "-2024" ends DD-MM-YYYY.
+    "(?:Z|UTC|GMT|:[0-9]{2}(?:\\.[0-9]+)?\\s*[+-][0-9]{2}:?[0-9]{2}|[A-Za-z]{2,})$",
     time, ignore.case = TRUE, perl = TRUE
   )
   offset_formats <- c(
@@ -424,30 +493,33 @@ print.nestimate_data <- function(x, ...) {
   offset_idx <- which(is.na(parsed) & has_timezone & !time_empty)
   if (length(offset_idx) > 0L) {
     offset_parsed <- .parse_time_formats(time_offset[offset_idx],
-                                         offset_formats, timezone)
+                                         offset_formats, timezone,
+                                         strict = TRUE)
     ok <- !is.na(offset_parsed)
     parsed[offset_idx[ok]] <- offset_parsed[ok]
   }
 
   # 3. Naive strings, interpreted in `timezone`.
+  # %OS, not %S: %S drops a fraction of a second, which ties or reorders events
+  # within the same second. Compact "%Y%m%d%H%M%S" has no separator for one.
   formats <- c(
-    "%Y-%m-%d %H:%M:%OS", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M",
-    "%Y/%m/%d %H:%M:%S", "%Y/%m/%d %H:%M",
-    "%Y.%m.%d %H:%M:%S", "%Y.%m.%d %H:%M",
-    "%Y-%m-%dT%H:%M:%OS", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M",
+    "%Y-%m-%d %H:%M:%OS", "%Y-%m-%d %H:%M",
+    "%Y/%m/%d %H:%M:%OS", "%Y/%m/%d %H:%M",
+    "%Y.%m.%d %H:%M:%OS", "%Y.%m.%d %H:%M",
+    "%Y-%m-%dT%H:%M:%OS", "%Y-%m-%dT%H:%M",
     "%Y%m%d%H%M%S", "%Y%m%d%H%M",
-    "%d-%m-%Y %H:%M:%S", "%d-%m-%Y %H:%M",
-    "%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M",
-    "%d.%m.%Y %H:%M:%S", "%d.%m.%Y %H:%M",
-    "%d-%m-%YT%H:%M:%S", "%d-%m-%YT%H:%M",
-    "%m-%d-%Y %H:%M:%S", "%m-%d-%Y %H:%M",
-    "%m/%d/%Y %H:%M:%S", "%m/%d/%Y %H:%M",
-    "%m.%d.%Y %H:%M:%S", "%m.%d.%Y %H:%M",
-    "%m-%d-%YT%H:%M:%S", "%m-%d-%YT%H:%M",
-    "%d %b %Y %H:%M:%S", "%d %b %Y %H:%M",
-    "%d %B %Y %H:%M:%S", "%d %B %Y %H:%M",
-    "%b %d %Y %H:%M:%S", "%b %d %Y %H:%M",
-    "%B %d %Y %H:%M:%S", "%B %d %Y %H:%M",
+    "%d-%m-%Y %H:%M:%OS", "%d-%m-%Y %H:%M",
+    "%d/%m/%Y %H:%M:%OS", "%d/%m/%Y %H:%M",
+    "%d.%m.%Y %H:%M:%OS", "%d.%m.%Y %H:%M",
+    "%d-%m-%YT%H:%M:%OS", "%d-%m-%YT%H:%M",
+    "%m-%d-%Y %H:%M:%OS", "%m-%d-%Y %H:%M",
+    "%m/%d/%Y %H:%M:%OS", "%m/%d/%Y %H:%M",
+    "%m.%d.%Y %H:%M:%OS", "%m.%d.%Y %H:%M",
+    "%m-%d-%YT%H:%M:%OS", "%m-%d-%YT%H:%M",
+    "%d %b %Y %H:%M:%OS", "%d %b %Y %H:%M",
+    "%d %B %Y %H:%M:%OS", "%d %B %Y %H:%M",
+    "%b %d %Y %H:%M:%OS", "%b %d %Y %H:%M",
+    "%B %d %Y %H:%M:%OS", "%B %d %Y %H:%M",
     "%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d",
     "%d-%m-%Y", "%d/%m/%Y", "%d.%m.%Y",
     "%m-%d-%Y", "%m/%d/%Y", "%m.%d.%Y",
@@ -455,7 +527,9 @@ print.nestimate_data <- function(x, ...) {
   )
   naive_idx <- which(is.na(parsed) & !has_timezone & !time_empty)
   if (length(naive_idx) > 0L) {
-    naive_parsed <- .parse_time_formats(time[naive_idx], formats, timezone)
+    naive_formats <- .numeric_date_formats(time[naive_idx], formats)
+    naive_parsed <- .parse_time_formats(time[naive_idx], naive_formats,
+                                        timezone, strict = TRUE)
     ok <- !is.na(naive_parsed)
     parsed[naive_idx[ok]] <- naive_parsed[ok]
   }
@@ -470,11 +544,14 @@ print.nestimate_data <- function(x, ...) {
 
   invalid <- which(is.na(parsed) & !time_empty)
   if (length(invalid) > 0L) {
-    stop("Could not parse time values. Sample: ",
-         paste(utils::head(time_original[invalid], 3), collapse = ", "),
-         ". Supported: ISO-8601 (with Z/offset), YYYY-MM-DD HH:MM[:SS], ",
-         "DD-MM-YYYY, MM-DD-YYYY, month names, compact YYYYMMDDHHMMSS, ",
-         "Unix timestamps. Use 'custom_format' otherwise.", call. = FALSE)
+    stop(errorCondition(
+      paste0("Could not parse time values. Sample: ",
+             paste(utils::head(time_original[invalid], 3), collapse = ", "),
+             ". Supported: ISO-8601 (with Z/offset), YYYY-MM-DD HH:MM[:SS], ",
+             "DD-MM-YYYY, MM-DD-YYYY (four-digit year), month names, ",
+             "compact YYYYMMDDHHMMSS, ",
+             "Unix timestamps. Use 'custom_format' otherwise."),
+      class = "nestimate_bad_input", call = NULL))
   }
   parsed
 }

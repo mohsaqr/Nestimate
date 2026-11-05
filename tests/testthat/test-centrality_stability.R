@@ -251,3 +251,41 @@ test_that("centrality_stability default is the trio and accepts measures = 'all'
                     "BetweennessRSP", "Diffusion", "Clustering") %in%
                     s_all$measures))
 })
+
+
+# ---- undefined correlations count against the certainty ----
+
+test_that(".calculate_cs counts an undefined correlation as below threshold", {
+  corr_mat <- cbind(rep(1, 20L), c(rep(1, 18L), NA, NA))
+  # second column: 18 of 20 reach it, .90 < .95; the NAs stay in the denominator
+  expect_equal(
+    Nestimate:::.calculate_cs(corr_mat, 0.7, 0.95, drop_prop = c(0.1, 0.5)), 0.1
+  )
+  expect_equal(
+    Nestimate:::.calculate_cs(cbind(rep(NA_real_, 5L)), 0.7, 0.95, drop_prop = 0.1), 0
+  )
+})
+
+# Ten A-B-C-A cycles and one A-B. Every subset without the A-B has equal
+# in-strengths, so its correlation is undefined; every subset with it correlates
+# 1 with the original. Dropping half keeps 6 of 11, so the A-B is kept in 6 draws
+# of 11: about .55 of draws reach the threshold, far below .95, and the
+# CS-coefficient is 0. Leaving the undefined draws out made it 1 of 1, CS .5.
+.cs_undefined_data <- function() {
+  rbind(
+    data.frame(T1 = rep("A", 10L), T2 = "B", T3 = "C", T4 = "A"),
+    data.frame(T1 = "A", T2 = "B", T3 = NA_character_, T4 = NA_character_)
+  )
+}
+
+test_that("centrality_stability counts subsets with a constant measure", {
+  net <- build_network(.cs_undefined_data(), method = "frequency")
+  cs <- centrality_stability(net, measures = "InStrength", iter = 50L,
+                             drop_prop = 0.5, seed = 1)
+  expect_true(anyNA(cs$correlations$InStrength))
+  expect_equal(unname(cs$cs[["InStrength"]]), 0)
+  # the table reports the share the coefficient used, about 6/11 here
+  expect_equal(summary(cs)$prop_above,
+               mean(!is.na(cs$correlations$InStrength)))
+  expect_lt(abs(summary(cs)$prop_above - 6 / 11), 0.2)
+})

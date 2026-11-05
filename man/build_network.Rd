@@ -92,7 +92,12 @@ Aliases: \code{"tna"} and \code{"transition"} map to \code{"relative"};
 grouping. Default: \code{NULL}.}
 
 \item{action}{Character. Name of the action/state column (long format).
-Default: \code{NULL}.}
+Default: \code{NULL}. Column names give no role: \code{action},
+\code{actor}, \code{time} and \code{session} are read only when set. A
+column called \code{Action} with nothing declared raises an error of class
+\code{nestimate_bad_input}; an undeclared time or session column beside
+\code{action} is named in a message of class
+\code{nestimate_column_role}.}
 
 \item{time}{Character. Name of the time column (long format).
 Default: \code{NULL}.}
@@ -117,6 +122,7 @@ Default: \code{3L}.}
 \item{mode}{Character. Windowing mode for one-hot input only:
 \code{"non-overlapping"} or \code{"overlapping"}. Has no effect on
 wide or long sequence data (only the one-hot/wtna path reads it).
+See \code{\link{wtna}} for how overlapping windows are counted.
 Default: \code{"non-overlapping"}.}
 
 \item{scaling}{Character vector or NULL. Post-estimation scaling to apply
@@ -170,7 +176,10 @@ every character column is read as a position.}
 \item{metadata_cols}{Character vector or \code{NULL}. Explicit names of
 columns to force into the \code{$metadata} slot. The remaining columns
 are auto-detected as state via the values-in-nodes rule. Cannot overlap
-with \code{state_cols}. Default: \code{NULL}.}
+with \code{state_cols}. Default: \code{NULL}. A character column left out
+of a numbered run of positions is named in a message of class
+\code{nestimate_column_role}; listing it here or in \code{state_cols}
+settles it.}
 
 \item{start}{Boundary marker prepended to every sequence as an explicit
 start state (a pure source: no incoming edges, every sequence's first
@@ -198,6 +207,12 @@ Transition estimators accept tna-style sequence options such as
 \code{weighted} and \code{concat} (and the low-level \code{begin_state}
 / \code{end_state}, of which \code{start} / \code{end} are the public
 form -- see those arguments).
+\code{window_size} (and \code{window_span}, or \code{windowed = TRUE} for a
+size of 2) counts the methods \code{relative}, \code{frequency} and
+\code{co_occurrence} between consecutive non-overlapping blocks of that many
+positions, as \code{tna::tna()} does; other transition methods raise an error
+of class \code{nestimate_bad_input}, and \code{mode = "overlapping"} a warning
+of class \code{nestimate_ignored_mode}.
 Column-like entries in \code{params} (\code{action}, \code{id},
 \code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order},
 \code{cols}, \code{codes}, and \code{group}) are resolved before format

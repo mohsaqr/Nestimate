@@ -88,17 +88,9 @@ test_that("wtna overlapping window aggregation", {
               window_size = 2, mode = "overlapping")
   expect_s3_class(net, "netobject")
 
-  # Overlapping with ws=2: windows (1,2), (2,3), (3,4)
-  # Pairwise between-window transitions:
-  # Window(1,2)->Window(2,3): rows {1,2} x rows {2,3} = 4 pairs
-  # Window(2,3)->Window(3,4): rows {2,3} x rows {3,4} = 4 pairs
-  X <- as.matrix(df)
-  expected <- matrix(0, 2, 2)
-  # w1->w2: (1,2)x(2,3)
-  for (j in 1:2) for (k in 2:3) expected <- expected + tcrossprod(X[j,], X[k,])
-  # w2->w3: (2,3)x(3,4)
-  for (j in 2:3) for (k in 3:4) expected <- expected + tcrossprod(X[j,], X[k,])
-  expect_equal(unname(net$weights), unname(expected))
+  # Windows {A,B}, {B}, {A,B}. With window size 2, the first two form a block
+  # (A 1, B 2) and the third the next (A 1, B 1).
+  expect_equal(unname(net$weights), rbind(c(1, 1), c(2, 2)))
 })
 
 test_that("wtna per-actor grouping", {
@@ -291,14 +283,14 @@ test_that("wtna bootstrap works via wtna()", {
     C = sample(0:1, 30, replace = TRUE)
   )
 
-  net <- wtna(df, method = "transition")
+  net <- wtna(.with_units(df), method = "transition", actor = "unit")
   boot <- bootstrap_network(net, iter = 20, seed = 1)
   expect_s3_class(boot, "net_bootstrap")
   expect_true(boot$original$directed)
   expect_true(nrow(boot$summary) > 0)
 })
 
-test_that("wtna bootstrap via build_network falls back to association path", {
+test_that("wtna bootstrap works via build_network", {
   set.seed(42)
   df <- data.frame(
     A = sample(0:1, 30, replace = TRUE),
@@ -306,10 +298,7 @@ test_that("wtna bootstrap via build_network falls back to association path", {
     C = sample(0:1, 30, replace = TRUE)
   )
 
-  # build_network(method="wtna") stores method as "wtna" (not co_occurrence),
-
-  # so bootstrap dispatches via association path — no error but prefer wtna()
-  boot <- bootstrap_network(build_network(df, method = "wtna"),
+  boot <- bootstrap_network(build_network(.with_units(df), method = "wtna", actor = "unit"),
                             iter = 5, seed = 1)
   expect_s3_class(boot, "net_bootstrap")
 })
@@ -322,7 +311,7 @@ test_that("wcna bootstrap works via wtna()", {
     C = sample(0:1, 30, replace = TRUE)
   )
 
-  net <- wtna(df, method = "cooccurrence")
+  net <- wtna(.with_units(df), method = "cooccurrence", actor = "unit")
   boot <- bootstrap_network(net, iter = 20, seed = 1)
   expect_s3_class(boot, "net_bootstrap")
   expect_equal(boot$method, "wtna_cooccurrence")
@@ -337,7 +326,7 @@ test_that("wcna bootstrap works via build_network one-hot data", {
     C = sample(0:1, 30, replace = TRUE)
   )
 
-  boot <- bootstrap_network(build_network(df, method = "cna"),
+  boot <- bootstrap_network(build_network(.with_units(df), method = "cna", actor = "unit"),
                             iter = 20, seed = 1)
   expect_s3_class(boot, "net_bootstrap")
   expect_equal(boot$method, "co_occurrence")
@@ -355,8 +344,8 @@ test_that("wtna permutation test works via wtna()", {
     B = sample(0:1, 20, replace = TRUE)
   )
 
-  net1 <- wtna(df1, method = "transition")
-  net2 <- wtna(df2, method = "transition")
+  net1 <- wtna(.with_units(df1), method = "transition", actor = "unit")
+  net2 <- wtna(.with_units(df2), method = "transition", actor = "unit")
   perm <- permutation(net1, net2, iter = 20, seed = 1)
 
   expect_s3_class(perm, "net_permutation")
@@ -364,15 +353,13 @@ test_that("wtna permutation test works via wtna()", {
   expect_true(all(perm$p_values >= 0 & perm$p_values <= 1))
 })
 
-test_that("wtna permutation via build_network falls back to association path", {
+test_that("wtna permutation works via build_network", {
   set.seed(42)
   df1 <- data.frame(A = sample(0:1, 20, replace = TRUE), B = sample(0:1, 20, replace = TRUE))
   df2 <- data.frame(A = sample(0:1, 20, replace = TRUE), B = sample(0:1, 20, replace = TRUE))
 
-  # build_network(method="wtna") stores method as "wtna" (not co_occurrence),
-  # so permutation dispatches via association path
-  perm <- permutation(build_network(df1, method = "wtna"),
-                      build_network(df2, method = "wtna"),
+  perm <- permutation(build_network(.with_units(df1), method = "wtna", actor = "unit"),
+                      build_network(.with_units(df2), method = "wtna", actor = "unit"),
                       iter = 5, seed = 1)
   expect_s3_class(perm, "net_permutation")
 })
@@ -388,8 +375,8 @@ test_that("wcna permutation test works via wtna()", {
     B = sample(0:1, 20, replace = TRUE)
   )
 
-  net1 <- wtna(df1, method = "cooccurrence")
-  net2 <- wtna(df2, method = "cooccurrence")
+  net1 <- wtna(.with_units(df1), method = "cooccurrence", actor = "unit")
+  net2 <- wtna(.with_units(df2), method = "cooccurrence", actor = "unit")
   perm <- permutation(net1, net2, iter = 20, seed = 1)
 
   expect_s3_class(perm, "net_permutation")
@@ -407,8 +394,8 @@ test_that("wcna permutation works via build_network one-hot data", {
     B = sample(0:1, 20, replace = TRUE)
   )
 
-  perm <- permutation(build_network(df1, method = "cna"),
-                      build_network(df2, method = "cna"),
+  perm <- permutation(build_network(.with_units(df1), method = "cna", actor = "unit"),
+                      build_network(.with_units(df2), method = "cna", actor = "unit"),
                       iter = 20, seed = 1)
   expect_s3_class(perm, "net_permutation")
   expect_equal(perm$method, "co_occurrence")

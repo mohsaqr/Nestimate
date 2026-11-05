@@ -858,3 +858,48 @@ test_that("build_mmm treats sentinel characters as real states (does not honor n
   fit <- build_mmm(seqs, k = 2, n_starts = 1, max_iter = 5, seed = 1)
   expect_true("%" %in% fit$states)
 })
+
+test_that("build_mmm does not read an id or a covariate as a position", {
+  set.seed(2)
+  framed <- as.data.frame(matrix(sample(LETTERS[1:3], 240, TRUE), 40, 6),
+                          stringsAsFactors = FALSE)
+  names(framed) <- paste0("T", seq_len(6))
+  framed$course <- rep(c("x", "y"), 20)
+  framed$id <- seq_len(40)
+  expect_message(fit <- build_mmm(framed, k = 2, n_starts = 1, seed = 1),
+                 "`course`, `id` as covariates")
+  expect_identical(fit$states, c("A", "B", "C"))
+  expect_equal(fit$n_params, 17)
+  expect_identical(names(fit$metadata), c("course", "id"))
+})
+
+test_that("the EM mixing step does not depend on a covariate's location", {
+  set.seed(1)
+  x <- stats::rnorm(120)
+  post <- stats::plogis(0.8 * x + stats::rnorm(120))
+  post <- cbind(1 - post, post)
+  near <- .mmm_softmax_mstep(post, stats::model.matrix(~ x))
+  far <- .mmm_softmax_mstep(post, stats::model.matrix(~ I(x + 2000)))
+  expect_true(near$converged)
+  expect_equal(unname(far$beta[, 2L]), unname(near$beta[, 2L]), tolerance = 1e-6)
+  expect_equal(far$log_pi_mat, near$log_pi_mat, tolerance = 1e-6,
+               ignore_attr = TRUE)
+})
+
+test_that("build_network(net_mmm) keeps set-aside columns on every path", {
+  set.seed(2)
+  d <- as.data.frame(matrix(sample(LETTERS[1:3], 240, TRUE), 40, 6,
+                            dimnames = list(NULL, paste0("T", 1:6))))
+  d$id <- paste0("id", 1:40)
+  fit <- suppressMessages(build_mmm(d, k = 2, n_starts = 1, max_iter = 40,
+                                    seed = 1))
+  ids <- lapply(1:2, function(m) d$id[fit$assignments == m])
+  fitted_nets <- build_network(fit)
+  rebuilt <- build_network(fit, method = "frequency")
+  expect_identical(lapply(fitted_nets, function(n) n$metadata$id),
+                   stats::setNames(ids, names(fitted_nets)))
+  expect_identical(lapply(rebuilt, function(n) n$metadata$id),
+                   stats::setNames(ids, names(rebuilt)))
+  # The EM fit keeps its own object untouched.
+  expect_null(fit$models[[1L]]$metadata$id)
+})

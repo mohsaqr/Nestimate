@@ -52,16 +52,13 @@ test_that("bootstrap_network works with method='frequency'", {
   expect_true(all(boot$mean >= 0))
 })
 
-test_that("bootstrap_network warns for one-sequence transition networks", {
+test_that("bootstrap_network refuses one-sequence transition networks", {
   long <- data.frame(action = c("A", "B", "C", "A"),
                      stringsAsFactors = FALSE)
   net <- suppressMessages(build_tna(long, action = "action"))
 
-  expect_warning(
-    boot <- bootstrap_network(net, iter = 2L, seed = 1),
-    class = "nestimate_single_sequence"
-  )
-  expect_s3_class(boot, "net_bootstrap")
+  expect_error(bootstrap_network(net, iter = 2L, seed = 1),
+               class = "nestimate_single_sequence")
 })
 
 test_that("bootstrap_network onehot frequency uses wtna per-sequence counts", {
@@ -437,7 +434,7 @@ test_that("bootstrap_network dispatches for wtna_mixed (L83-95)", {
     A = c(1,0,1,0,1,0,1,0), B = c(0,1,0,1,0,1,0,1),
     C = c(1,1,0,0,1,1,0,0)
   )
-  mixed <- wtna(oh, method = "both")
+  mixed <- wtna(.with_units(oh, 2L), method = "both", actor = "unit", window_size = 1L)
   boot_mixed <- bootstrap_network(mixed, iter = 10, seed = 1)
   expect_true(inherits(boot_mixed, "wtna_boot_mixed"))
   expect_true(all(c("transition", "cooccurrence") %in% names(boot_mixed)))
@@ -488,7 +485,7 @@ test_that("print.wtna_boot_mixed shows both components (L767-772)", {
     A = c(1,0,1,0,1,0,1,0), B = c(0,1,0,1,0,1,0,1),
     C = c(1,1,0,0,1,1,0,0)
   )
-  mixed <- wtna(oh, method = "both")
+  mixed <- wtna(.with_units(oh, 2L), method = "both", actor = "unit", window_size = 1L)
   boot_mixed <- bootstrap_network(mixed, iter = 10, seed = 1)
   out <- capture.output(print(boot_mixed))
   expect_true(any(grepl("Mixed Window TNA", out)))
@@ -502,7 +499,7 @@ test_that("summary.wtna_boot_mixed returns list of summaries (L798-801)", {
     A = c(1,0,1,0,1,0,1,0), B = c(0,1,0,1,0,1,0,1),
     C = c(1,1,0,0,1,1,0,0)
   )
-  mixed <- wtna(oh, method = "both")
+  mixed <- wtna(.with_units(oh, 2L), method = "both", actor = "unit", window_size = 1L)
   boot_mixed <- bootstrap_network(mixed, iter = 10, seed = 1)
   s <- summary(boot_mixed)
   expect_true(is.list(s))

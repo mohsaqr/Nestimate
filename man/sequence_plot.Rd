@@ -168,23 +168,25 @@ sequences from stretching the plot and a few near-empty ones from
 padding it. Applies to all three types (including the \code{mcml}
 multichannel view). \code{NULL} (default) plots everything.
 
-The first number cuts the time axis: a fraction in \code{(0, 1)}
-drops everything past that quantile of sequence lengths
-(\code{trim = 0.95} keeps the columns covering the shortest 95\% of
-sequences); a value \code{>= 1} is an absolute cut (\code{trim = 50}
-keeps the first 50 time points). With \code{periods} the unit is the
-period block: \code{trim = 60} keeps the first 60 periods and a
-fraction keeps the periods up to that quantile of the actors' last
-active period.
+The first number cuts the time axis. A fraction in \code{(0, 1)}
+judges each time point on its own activity and keeps the busiest ones
+that together hold that share of the observed states, ties going to the
+earlier one; the rest are removed wherever they sit and the kept ones
+close up under their own labels. So \code{trim = 0.9} removes the quiet
+time points holding the last tenth of the states, which is what a long
+tail consists of, and those with no data. A value \code{>= 1} is an absolute
+cut (\code{trim = 50} keeps the first 50 time points). With
+\code{periods} the unit is the period block: \code{trim = 60} keeps the
+first 60 periods and a fraction judges each period by its actions. Only
+the drawing changes, not the data.
 
-The second number cuts the rows, counted over the time points kept by
-the first: a value \code{>= 1} keeps the sequences with at least that
-many observed states (\code{trim = c(60, 5)}), a fraction keeps the
-most active share of the sequences (\code{trim = c(0.9, 0.9)} drops
-the longest 10\% of the time axis and the sparsest 10\% of the rows).
-\code{NA} leaves an axis alone (\code{trim = c(NA, 5)}). A row cut
-cannot be combined with \code{tree} or a clustering dendrogram, whose
-leaves are the full set of rows.}
+The second number ends each row earlier and never removes a row,
+counted over the time points kept by the first: a value \code{>= 1}
+keeps each row's first that many observed states
+(\code{trim = c(60, 5)}), a fraction its first share of them
+(\code{trim = c(0.9, 0.9)}). What is left stays in place; the row is
+white after that point. Only the drawing changes, not the data.
+\code{NA} leaves an axis alone (\code{trim = c(NA, 5)}).}
 
 \item{panel}{\code{mcml} + \code{type = "distribution"} only. Which panel
 to draw. \code{"both"} (default) stacks the macro \code{Summary}
@@ -233,8 +235,8 @@ Must not equal a state or cluster name.}
 \code{"distribution"} only, and only when \code{trim} is a fraction.
 \code{FALSE} (default) computes one cutoff on the pooled data and
 applies it to every panel, so all facets share the same width and the
-time axes stay aligned. \code{TRUE} crops each group to its own
-length quantile, so panels can end up at different widths (ragged
+time axes stay aligned. \code{TRUE} judges the time points within each
+group, so panels can end up at different widths (ragged
 axes). Absolute \code{trim} (\code{>= 1}) ignores this - the column is
 the same everywhere either way.}
 

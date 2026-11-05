@@ -86,3 +86,13 @@ test_that("distribution_plot rejects all-NA input", {
   expect_error(distribution_plot(matrix(NA_character_, 4, 3)),
                "no non-NA values")
 })
+
+test_that("a count axis reaches the tallest stack", {
+  counts <- matrix(c(52, 50, 34, 2,
+                     46, 60, 25, 7), nrow = 4,
+                   dimnames = list(c("A", "B", "C", NA), NULL))
+  shorter <- counts / 2
+  # Hand: both columns of `counts` total 138; the largest cell is only 60.
+  expect_equal(.distribution_y_max(list(counts, shorter), "count"), 138)
+  expect_equal(.distribution_y_max(list(counts), "proportion"), 1)
+})

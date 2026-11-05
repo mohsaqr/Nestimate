@@ -232,3 +232,18 @@ test_that("print methods run without error", {
   esg <- casedrop_reliability(mc, iter = 5, drop_prop = 0.3, seed = 1)
   expect_invisible(print(esg))
 })
+
+
+test_that("a subset with a constant edge vector counts against the certainty", {
+  # Ten A-B-C-A cycles and one A-B: without the A-B all edge counts are equal, so
+  # the correlation is undefined; with it, it is 1. Dropping half keeps the A-B
+  # in 6 draws of 11, far below .95; leaving the undefined draws out gave CS .5.
+  d <- rbind(
+    data.frame(T1 = rep("A", 10L), T2 = "B", T3 = "C", T4 = "A"),
+    data.frame(T1 = "A", T2 = "B", T3 = NA_character_, T4 = NA_character_)
+  )
+  net <- build_network(d, method = "frequency")
+  res <- casedrop_reliability(net, iter = 50L, drop_prop = 0.5, seed = 1)
+  expect_true(anyNA(res$correlations))
+  expect_equal(res$cs, 0)
+})

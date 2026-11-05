@@ -58,13 +58,15 @@ extra band coloured \code{na_color}.}
 
 \item{trim}{Optional truncation of the time axis (one number) or of
 the time axis and the rows (two numbers). \code{NULL} (default) keeps
-everything. The first number: a fraction in \code{(0, 1)} drops
-everything past that quantile of sequence lengths (\code{trim = 0.95});
+everything. The first number: a fraction in \code{(0, 1)} keeps the
+busiest time points that together hold that share of the observed
+states, and removes the rest wherever they sit (\code{trim = 0.95});
 a value \code{>= 1} is an absolute cut (\code{trim = 50} keeps the
-first 50 time points). The second number drops the sparsest
-sequences before the proportions are taken: a count keeps those with
-at least that many observed states, a fraction keeps the most active
-share (\code{trim = c(0.9, 0.9)}). See \code{\link{sequence_plot}}.}
+first 50 time points). The second number ends each sequence earlier
+before the proportions are taken: a count keeps its first that many
+observed states, a fraction its first share of them
+(\code{trim = c(0.9, 0.9)}); no sequence is removed. See
+\code{\link{sequence_plot}}.}
 
 \item{trim_clusterwise}{Grouped plots only, fractional \code{trim}
 only. \code{FALSE} (default) uses one pooled cutoff for every panel

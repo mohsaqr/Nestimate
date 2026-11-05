@@ -41,7 +41,10 @@ build_mmm(
 \item{data}{A data.frame (wide format), \code{netobject},
 \code{cograph_network}, or \code{tna} model. For tna and
 cograph_network objects the stored (integer-encoded) data is
-extracted and decoded to state labels.}
+extracted and decoded to state labels. Columns of a data.frame take the
+same roles as in \code{\link{build_network}}: an id or a covariate is not
+a sequence position. Those set aside are named in a message and kept in
+\code{$metadata}.}
 
 \item{k}{Integer. Whole finite number of mixture components, >= 2.
 Default: 2.}

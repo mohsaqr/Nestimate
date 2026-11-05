@@ -223,6 +223,11 @@ build_ising <- function(data, ...) {
 
 #' Apply scaling transformations to a network matrix
 #' @noRd
+.scaling_includes_zeros <- function(method) {
+  method %in% c("relative", "frequency", "co_occurrence", "attention", "ngram",
+                "gap", "reverse")
+}
+
 .apply_scaling <- function(mat, scaling, include_zeros = FALSE) {
   for (s in scaling) {
     mat <- switch(s,

@@ -42,12 +42,17 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
 # ---- Internal: compute the 13 metrics from a weight matrix ----
 
 .summary_metrics_from_weights <- function(W, directed) {
-  # Diagonal is preserved as estimated. tna's `summary.tna()` counts edges
-  # via `sum(weights > 0)` without diagonal exclusion and computes density
-  # via igraph's `edge_density` (which uses the same edge total).
+  # Diagonal is preserved as estimated: self-loops count as edges, as in
+  # igraph's `edge_density` and tna's `summary.tna()`. An edge is any non-zero
+  # weight, so signed networks keep their negative edges, and an undirected
+  # edge is counted once (upper triangle), in line with `$n_edges`.
   n <- nrow(W)
-  pos <- W > 0
-  edge_count <- sum(pos)
+  present <- W != 0
+  edge_count <- if (directed) {
+    sum(present)
+  } else {
+    sum(present[upper.tri(present, diag = TRUE)])
+  }
 
   density <- if (n > 1L) {
     if (directed) edge_count / (n * (n - 1))
@@ -55,7 +60,8 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
   } else 0
   density <- min(density, 1)
 
-  D <- .floyd_warshall_sp(W, invert = FALSE)$D
+  # Shortest paths need non-negative costs: a signed edge costs its magnitude.
+  D <- .floyd_warshall_sp(abs(W), invert = FALSE)$D
   finite_off <- is.finite(D) & D > 0
   mean_distance <- if (any(finite_off)) mean(D[finite_off]) else NaN
 
@@ -83,11 +89,11 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
 
   # igraph's default `reciprocity()` excludes self-loops, so we measure
   # mutual-edge fraction over off-diagonal positions only.
-  pos_off <- pos
-  diag(pos_off) <- FALSE
-  reciprocity <- if (directed && any(pos_off)) {
-    mutual <- pos_off & t(pos_off)
-    sum(mutual) / sum(pos_off)
+  present_off <- present
+  diag(present_off) <- FALSE
+  reciprocity <- if (directed && any(present_off)) {
+    mutual <- present_off & t(present_off)
+    sum(mutual) / sum(present_off)
   } else if (!directed) {
     1
   } else {

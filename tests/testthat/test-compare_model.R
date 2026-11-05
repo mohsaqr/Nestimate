@@ -34,3 +34,41 @@ test_that("compare_model() carries the corrected Canberra and distance correlati
   expect_length(dcor, 1L)
   expect_equal(dcor, .distance_correlation(as.vector(x), as.vector(y)))
 })
+
+test_that("compare_model metrics take direction from the network, not symmetry", {
+  edge_count <- function(res) {
+    metrics <- res$network_metrics
+    metrics$x[metrics$metric == "Edge Count"]
+  }
+  density <- function(res) {
+    metrics <- res$network_metrics
+    metrics$x[metrics$metric == "Network Density"]
+  }
+  # Four arcs (A<->B, A<->C) make a symmetric matrix on a directed network.
+  directed <- build_network(data.frame(T1 = c("A", "B", "A", "C"),
+                                       T2 = c("B", "A", "C", "A")),
+                            method = "frequency")
+  res <- compare_model(directed, directed)
+  expect_identical(edge_count(res), 4)
+  expect_equal(density(res), 4 / 6)
+
+  # The same pattern as a plain matrix has no flag, so symmetry stands in.
+  symmetric <- matrix(c(0, 1, 1, 1, 0, 0, 1, 0, 0), 3, 3,
+                      dimnames = list(LETTERS[1:3], LETTERS[1:3]))
+  res <- compare_model(symmetric, symmetric)
+  expect_identical(edge_count(res), 2)
+  expect_equal(density(res), 2 / 3)
+  arcs <- symmetric
+  arcs[2L, 1L] <- 0
+  res <- compare_model(arcs, arcs)
+  expect_identical(edge_count(res), 3)
+  expect_equal(density(res), 3 / 6)
+
+  # Each side uses its own flag.
+  undirected <- directed
+  undirected$directed <- FALSE
+  res <- compare_model(directed, undirected)
+  metrics <- res$network_metrics
+  expect_identical(metrics$y[metrics$metric == "Edge Count"], 2)
+  expect_identical(edge_count(res), 4)
+})

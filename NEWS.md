@@ -1,3 +1,133 @@
+# Nestimate 1.0.7
+
+Corrections from the 2026-11 package review. Each changes results for the input
+it names.
+
+* `prepare()` and every verb that reads a long log: time strings must match a
+  format completely, with a four-digit year. `15/01/2024` was read as the year
+  15 and the event order followed that. A two-digit year now raises an error;
+  `custom_format` reads it. Fractions of a second now count in every layout;
+  `15/01/2024 10:30:00.9` lost its `.9`, which could reverse two events. A string
+  that cannot be parsed raises an error of class `nestimate_bad_input`.
+* `prepare()`: day-first or month-first is decided once per column. A month-first
+  column was read day-first wherever the day was 12 or less, which shuffled the
+  events. A column that cannot decide is read day-first with a warning of class
+  `nestimate_ambiguous_dates`.
+* `summary()` and the metrics in `compare_networks()`/`compare_model()`: an
+  undirected edge counts once, and a negative edge counts. Edge Count and Network
+  Density were doubled on undirected networks and ignored negative edges. Mean
+  Distance now treats a signed edge's magnitude as its cost; it used positive
+  edges only.
+* `build_clusters()`, `build_mmm()`: `multinom` runs on centred and scaled
+  columns and reports on the original scale, and a fit that does not converge
+  warns with class `nestimate_no_converge`. Standard errors were far too small on
+  covariates such as a year or an income. `$covariates$model` now holds the fit on
+  the standardised columns, and `$covariates$fit$converged` records convergence.
+* `build_clusters()`, `build_mmm()`: columns of a wide frame take the same roles
+  as in `build_network()`. An id or a covariate was read as a sequence position,
+  which shaped the clusters and, in `build_mmm()`, added its values as states.
+  The columns set aside are named in a message and kept in `$metadata`, and in
+  the `$metadata` of each network that `build_network()` makes from the result.
+* `build_mcml()`: a wide frame named `V1`, `V2`, `V3`, ... is read as sequences,
+  also when `trim` leaves only `V1` and `V2`. It was read as an edge list, which
+  dropped every column after `V2`.
+* `distribution_plot()`, `sequence_plot(type = "distribution")`: with
+  `scale = "count"` the y axis reaches the tallest stack. It stopped at the
+  largest single cell and clipped the stacks.
+
+* `bootstrap_network()`, `permutation()`, `network_reliability()`,
+  `centrality_stability()`, `casedrop_reliability()` on a `wtna()` network, or
+  `build_network(method = "wtna")`: whole units are resampled. Rows were shuffled
+  one at a time, which broke the time order transitions are counted on: in a data
+  set with no A->A transition the bootstrap mean for A->A was about 6, and A->B
+  fell from 18 to about 6. `permutation()` with an actor failed outright.
+* Column names no longer give a role, and existing calls may need changing.
+  `build_network()`, its wrappers, `frequencies()` and `magnitude_difference()`
+  read `action`, `actor`, `time` and `session` only when they are set. A column
+  called `Action` used to be read as the action, in any spelling, and could
+  replace an explicit `state_cols` or the columns `T1`, `T2`, .... With nothing
+  declared it now raises an error of class `nestimate_bad_input`: set `action`
+  for an event log, or `state_cols` or `metadata_cols` for a wide table.
+  * An undeclared `Time`, `Session` or `session_id` beside `action` is not used,
+    and a message of class `nestimate_column_role` says so. Events follow row
+    order unless `time` is set.
+  * A numeric id beside 0/1 columns on a sequence method raises the same error. Its
+    values used to become the network's states.
+  * A character column left out of a numbered run, which could hold states, is
+    named in a message of class `nestimate_column_role`.
+* A network that rests on one sequence, and one-hot data with no actor or session
+  or with one actor, cannot be resampled: the five verbs above raise an error of
+  class `nestimate_single_sequence`, naming the group if there is one. They
+  returned zero-width intervals and p-values of 1, one-hot data without saying so.
+  Building such a network stays legitimate. Bootstrapping groups stops if any group
+  has one sequence, for instance a cluster of one.
+* `prepare_onehot()` is no longer exported. Use `wtna()` or
+  `build_network(codes =, window_size =, mode =)`, which now count overlapping
+  windows the same way. Its `interval` and `aggregate` options have no public
+  route.
+* `wtna(mode = "overlapping")`, `build_network(mode = "overlapping")`: the count
+  now matches `tna::import_onehot(window_type = "sliding")`. Each window marks the
+  codes active in any of its rows, and the windows are counted in blocks of
+  `window_size`. Overlapping results change.
+
+* One-hot data and the networks built from it:
+  * `association_rules()` on a one-hot network: the codes are the items and each
+    window is a transaction. The items were the values `0` and `1`.
+  * An overlapping window covers exactly `window_size` rows and incomplete windows
+    are dropped, as in tna 1.5.5. Each step lagged the result of the last, so a
+    window of 6 spanned 16 rows.
+  * `build_clusters()`, `build_mmm()`, `build_network()` read every `W<n>_T<n>`
+    column as a position. When windows differed in length the shorter ones were
+    set aside, which could leave a network with no transitions.
+  * `build_clusters()` on a one-hot network clusters one windowed sequence per
+    actor or session and errors without one. It clustered each row as a string of
+    0 and 1.
+  * `bootstrap_network()`, `permutation()`, `network_reliability()`,
+    `centrality_stability()`, `casedrop_reliability()` respect the windows of
+    `tna::import_onehot()` data, which were ignored when resampling.
+  * `network_reliability()`, `centrality_stability()`, `casedrop_reliability()` no
+    longer error on a one-hot network with an actor or session.
+  * `build_network()`, `wtna()`: a one-hot column holding anything but 0, 1 or
+    missing, or a row with a missing actor or session, raises an error of class
+    `nestimate_bad_input`. A 2 counted as weight 2, `"Yes"`/`"No"` gave missing
+    weights, and rows with a missing actor were dropped.
+* `bootstrap_network()`, `permutation()`, `network_reliability()`,
+  `centrality_stability()`, `casedrop_reliability()`: a resample is scaled the way
+  the network was, zeros included for the transition methods. `"minmax"` used two
+  different scales, so edges could fall outside their own intervals.
+* `centrality_stability()`, `casedrop_reliability()`: a subset in which the
+  correlation is undefined (the measure or edge vector is constant in it), or
+  that could not be built, was dropped from the share of draws above `threshold`,
+  which could raise the CS-coefficient. It now counts as a draw below the
+  threshold, as in `tna::estimate_cs()` since tna 1.5.4. The `prop_above` column
+  of `summary()` is the same share.
+* `build_network()`: `params = list(window_size =)` on sequence data was recorded
+  in `$params` and otherwise ignored, so a network that said it was windowed was
+  not. It now counts `relative`, `frequency` and `co_occurrence` between
+  consecutive blocks of that many positions, as `tna::tna()` does since tna 1.5.4,
+  and the resampling verbs follow. Other transition methods raise an error of
+  class `nestimate_bad_input`. `mode = "overlapping"` raises a warning of class
+  `nestimate_ignored_mode`: blocks are the only window sequence positions have.
+
+# Nestimate 1.0.6
+
+* `sequence_plot(periods =)`: a fraction in the time half of `trim` judges each
+  period on its own activity. It keeps the busiest periods that together hold
+  that share of the actions, and removes the rest wherever they sit, along with
+  periods with no action; the kept periods close up under their own labels. It used a
+  quantile of the actors' last active period, which cut nothing on a calendar
+  axis most actors run to the end of.
+* `sequence_plot()`, `distribution_plot()`: the same for a fraction in the time
+  half of `trim` without `periods`: the busiest time points that hold that share
+  of the observed states stay, and the rest are removed wherever they sit, under
+  their own labels. It cut everything past a quantile of sequence lengths, so
+  fewer or more time points can remain than before. `build_mcml(trim =)` still
+  cuts by the quantile, because it changes the data.
+* `sequence_plot()`, `distribution_plot()`: the row half of `trim` no longer
+  removes rows. Each row ends earlier and stays in place, with the row order and
+  cell widths it had before: a count keeps its first that many observed states,
+  a fraction its first share of them, and it now works with `tree`.
+
 # Nestimate 1.0.5
 
 Corrections to numerical results, matching tna 1.5.4. Results from the

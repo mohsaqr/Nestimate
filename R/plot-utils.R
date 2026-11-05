@@ -27,7 +27,7 @@
 
 # `trim` is one number (the time axis) or two (the time axis, then the
 # rows). NA on either axis leaves that axis alone. Returns list(cols, rows),
-# each NULL or one positive number, for .trim_cut() / .trim_rows_keep().
+# each NULL or one positive number, for .trim_keep() / .trim_rows_blank().
 .trim_axes <- function(trim) {
   if (is.null(trim)) return(list(cols = NULL, rows = NULL))
   stopifnot(
@@ -39,65 +39,32 @@
        rows = if (length(trim) == 2L) axis(trim[2L]) else NULL)
 }
 
-# Rows to keep under the row half of `trim`: a count >= 1 keeps the rows
-# with at least that many observed states; a fraction q in (0, 1) keeps the
-# most active share q of the rows (drops those whose count falls below the
-# (1 - q) quantile). Counts are taken over the columns passed in, so callers
-# cut the time axis first and the row cut reflects what is drawn.
-.trim_rows_keep <- function(codes, rows) {
-  keep <- .trim_rows_mask(codes, rows)
-  if (!any(keep)) {
-    stop(errorCondition(sprintf(
-      "`trim` row cut %s leaves no sequence to draw.", format(rows)),
-      class = "nestimate_bad_input", call = NULL))
-  }
-  keep
-}
-
-# The same mask without the empty-result error, for one panel of a grouped
-# plot (a panel may legitimately lose every row; the caller checks that
-# something is left overall).
-.trim_rows_mask <- function(codes, rows) {
-  n <- nrow(codes)
-  if (is.null(rows)) return(rep(TRUE, n))
+# The row half of `trim`: every row stays and ends earlier. A count >= 1 keeps
+# each row's first that many observed states, a fraction q in (0, 1) its first
+# ceiling(q * n) of n; the later ones become NA, so the row stops there and
+# what is left does not move. Works on numeric or character matrices.
+.trim_rows_blank <- function(codes, rows) {
+  if (is.null(rows)) return(codes)
   stopifnot(
     "the row half of `trim` must be a single positive number" =
       is.numeric(rows) && length(rows) == 1L && !is.na(rows) && rows > 0
   )
-  counts <- rowSums(!is.na(codes))
-  if (rows < 1) {
-    counts >= stats::quantile(counts, probs = 1 - rows, names = FALSE,
-                              type = 7)
-  } else counts >= rows
+  observed <- !is.na(codes)
+  n    <- rowSums(observed)
+  keep <- if (rows < 1) ceiling(rows * n) else pmin(n, round(rows))
+  # matrix(): apply() over one column returns a vector, not a matrix.
+  position <- t(matrix(apply(observed, 1L, cumsum),
+                       nrow = ncol(codes), ncol = nrow(codes)))
+  codes[observed & position > keep] <- NA
+  codes
 }
 
-# Row mask for a grouped plot: each group's rows are counted over the time
-# window that group's panel will draw (its own cut under trim_clusterwise,
-# else the pooled cut), so the row cut and the panel agree.
-.trim_rows_keep_grouped <- function(codes, groups, rows, cols, global_cut,
-                                    clusterwise) {
-  if (is.null(rows)) return(rep(TRUE, nrow(codes)))
-  idx  <- split(seq_len(nrow(codes)), groups)
-  keep <- unsplit(lapply(idx, function(i) {
-    sub <- codes[i, , drop = FALSE]
-    cut <- if (isTRUE(clusterwise)) .trim_cut(sub, cols) else global_cut
-    .trim_rows_mask(sub[, seq_len(cut), drop = FALSE], rows)
-  }), groups)
-  if (!any(keep)) {
-    stop(errorCondition(sprintf(
-      "`trim` row cut %s leaves no sequence to draw.", format(rows)),
-      class = "nestimate_bad_input", call = NULL))
-  }
-  keep
-}
-
-# Number of time (column) points to keep so a few very long sequences
-# don't blow up the carpet width. `trim = NULL` keeps every column.
-# A fraction in (0, 1) keeps columns up to that quantile of per-row
+# build_mcml(trim =) only: the number of leading columns to keep when the data
+# itself is cut. It takes a prefix so no transition is created across a removed
+# column. A fraction in (0, 1) keeps columns up to that quantile of per-row
 # sequence lengths (last non-NA position); a value >= 1 is an absolute
-# "drop after column t" cut. Works on numeric or character matrices.
-# Returns an integer in [1, ncol]. Callers apply it to one or more
-# matrices that share the same time axis.
+# "drop after column t" cut. Returns an integer in [1, ncol]. Drawings use
+# .trim_keep() instead.
 .trim_cut <- function(codes, trim) {
   n_cols <- ncol(codes)
   if (is.null(trim)) return(n_cols)
@@ -114,12 +81,42 @@
   max(1L, min(as.integer(cut), n_cols))
 }
 
-# Truncate a codes matrix on the time (column) axis. Column names (tick
-# labels) are preserved.
+# The busiest columns or periods that together hold `share` of the data, by
+# their own counts, with ties going to the earlier one. A share of the data, not
+# of the columns: a long tail is many columns holding little, so a share of the
+# columns would keep most of it. Returns one logical per count.
+.keep_busiest <- function(counts, share) {
+  busiest_first <- order(-counts, seq_along(counts))
+  held_before <- c(0, cumsum(counts[busiest_first]))[seq_along(counts)]
+  needed <- share * sum(counts) - sqrt(.Machine$double.eps)
+  keep <- logical(length(counts))
+  keep[busiest_first] <- counts[busiest_first] > 0 & held_before < needed
+  keep
+}
+
+# The columns a drawing keeps under the time half of `trim`, as positions. A
+# fraction judges each column on its own activity, wherever it sits; a value
+# >= 1 keeps the first that many. At least one column stays.
+.trim_keep <- function(codes, trim) {
+  n_cols <- ncol(codes)
+  if (is.null(trim)) return(seq_len(n_cols))
+  stopifnot(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
+  if (trim >= 1) return(seq_len(min(n_cols, as.integer(round(trim)))))
+  keep <- which(unname(.keep_busiest(colSums(!is.na(codes)), trim)))
+  if (length(keep) > 0L) keep else seq_len(min(1L, n_cols))
+}
+
+# Crop to the kept columns, which close up. Each keeps its own tick label: its
+# name, or its original position when the columns have no names.
+.trim_columns <- function(codes, keep) {
+  if (length(keep) == ncol(codes)) return(codes)
+  if (is.null(colnames(codes))) colnames(codes) <- seq_len(ncol(codes))
+  codes[, keep, drop = FALSE]
+}
+
+# Truncate a codes matrix on the time (column) axis.
 .trim_codes <- function(codes, trim) {
-  cut <- .trim_cut(codes, trim)
-  if (cut >= ncol(codes)) return(codes)
-  codes[, seq_len(cut), drop = FALSE]
+  .trim_columns(codes, .trim_keep(codes, trim))
 }
 
 

@@ -10,13 +10,13 @@
 #'
 #' @return List with `matrix` (character, NA-padded) and `states`.
 #' @noRd
-.sequence_matrix <- function(data, format = "auto", action = "Action",
-                             id = NULL, time = "Time", cols = NULL,
+.sequence_matrix <- function(data, format = "auto", action = NULL,
+                             id = NULL, time = NULL, cols = NULL,
                              alphabet = NULL, concat = 1L,
                              begin_state = NULL, end_state = NULL) {
   stopifnot("`data` must be a data frame" = is.data.frame(data))
   if (identical(format, "auto")) {
-    format <- if (action %in% names(data)) "long" else "wide"
+    format <- .format_from_action(action, data)
   }
   if (identical(format, "long")) {
     id_col <- if (is.null(id)) ".sequence" else id[1L]
@@ -26,7 +26,8 @@
       long[[".sequence"]] <- .group_label(long[, id, drop = FALSE])
       id_col <- ".sequence"
     }
-    time_col <- if (time %in% names(long)) time else NULL
+    time_col <- intersect(time, names(long))
+    if (length(time_col) == 0L) time_col <- NULL
     wide <- long_to_wide(long, id_col = id_col, time_col = time_col,
                          action_col = action, fill_na = TRUE)
     data <- wide
@@ -79,7 +80,7 @@
                                        action, id, time, cols, concat,
                                        begin_state, end_state) {
   resolved_format <- if (identical(format, "auto")) {
-    if (action %in% names(data)) "long" else "wide"
+    .format_from_action(action, data)
   } else format
   initial <- .compute_initial_probs(
     data, states, format = resolved_format,
@@ -102,8 +103,8 @@
 #' adjacent pairs once, so interior pairs are counted up to `n_gram - 1`
 #' times. Matches `tna::build_model(type = "n-gram")`.
 #' @noRd
-.estimator_ngram <- function(data, format = "auto", action = "Action",
-                             id = NULL, time = "Time", cols = NULL,
+.estimator_ngram <- function(data, format = "auto", action = NULL,
+                             id = NULL, time = NULL, cols = NULL,
                              alphabet = NULL, concat = 1L,
                              begin_state = NULL, end_state = NULL,
                              n_gram = 2L, ...) {
@@ -140,8 +141,8 @@
 #' `1 / (j - i)`. Matches `tna::build_model(type = "gap")`, where
 #' `max_gap = 1` (default) allows one intervening state.
 #' @noRd
-.estimator_gap <- function(data, format = "auto", action = "Action",
-                           id = NULL, time = "Time", cols = NULL,
+.estimator_gap <- function(data, format = "auto", action = NULL,
+                           id = NULL, time = NULL, cols = NULL,
                            alphabet = NULL, concat = 1L,
                            begin_state = NULL, end_state = NULL,
                            max_gap = 1L, ...) {
@@ -171,8 +172,8 @@
 #' the transpose of the frequency matrix. With `weighted = TRUE` each pair is
 #' weighted by the inverse of its sequence length, as in tna.
 #' @noRd
-.estimator_reverse <- function(data, format = "auto", action = "Action",
-                               id = NULL, time = "Time", cols = NULL,
+.estimator_reverse <- function(data, format = "auto", action = NULL,
+                               id = NULL, time = NULL, cols = NULL,
                                alphabet = NULL, concat = 1L,
                                begin_state = NULL, end_state = NULL,
                                weighted = FALSE, ...) {

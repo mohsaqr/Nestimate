@@ -262,67 +262,71 @@ test_that("trim truncates the time axis by quantile and absolute cut", {
   expect_error(sequence_plot(df, type = "index", trim = -1))
 })
 
-test_that("a two-number trim also drops the sparsest rows", {
+test_that("the row half of trim ends each row earlier and removes none", {
   pdf(NULL); on.exit(dev.off(), add = TRUE)
   set.seed(7)
-  # 20 sequences of 30 points; rows 1-4 keep only 2 states, the rest 20+.
+  # 20 sequences of 30 points; rows 1-4 hold 2 states, the rest 30.
   df <- as.data.frame(matrix(sample(c("A", "B", "C"), 600, TRUE), 20, 30))
   df[1:4, 3:30] <- NA
-  idx <- sequence_plot(df, type = "index", trim = c(NA, 5), legend = "none")
-  expect_identical(nrow(idx$codes), 16L)
-  expect_identical(ncol(idx$codes), 30L)
-  # `orders` keeps indexing the input rows: the four sparse rows are gone.
-  expect_setequal(unlist(idx$orders), 5:20)
-  # A fraction keeps the most active share: 0.8 of 20 rows is 16.
-  frac <- sequence_plot(df, type = "index", trim = c(0.95, 0.8),
-                        legend = "none")
-  expect_identical(nrow(frac$codes), 16L)
-  expect_lt(ncol(frac$codes), 31L)
-  # The row count is taken over the kept time points: cut at 2 columns,
-  # every row has 2 states, so a row cut of 2 keeps all.
-  both <- sequence_plot(df, type = "index", trim = c(2, 2), legend = "none")
-  expect_identical(dim(both$codes), c(20L, 2L))
+  observed <- function(res) unname(rowSums(!is.na(res$codes)))
+  idx <- sequence_plot(df, type = "index", trim = c(NA, 5), sort = "start",
+                       legend = "none")
+  expect_identical(dim(idx$codes), c(20L, 30L))
+  expect_setequal(unlist(idx$orders), 1:20)
+  expect_identical(sort(observed(idx)), c(rep(2, 4L), rep(5, 16L)))
+  # A fraction: ceiling(0.5 * 2) = 1 and ceiling(0.5 * 30) = 15.
+  frac <- sequence_plot(df, type = "index", trim = c(NA, 0.5), legend = "none")
+  expect_identical(sort(observed(frac)), c(rep(1, 4L), rep(15, 16L)))
+  # Counted over the kept time points: 10 columns, 0.5 of 10 is 5.
+  both <- sequence_plot(df, type = "index", trim = c(10, 0.5), legend = "none")
+  expect_identical(dim(both$codes), c(20L, 10L))
+  expect_identical(sort(observed(both)), c(rep(1, 4L), rep(5, 16L)))
+  # A count past a row's length changes nothing.
+  expect_identical(sequence_plot(df, type = "index", trim = c(NA, 999),
+                                 legend = "none")$codes,
+                   sequence_plot(df, type = "index", legend = "none")$codes)
   # Heatmap and distribution take the same vector.
   hm <- sequence_plot(df, type = "heatmap", trim = c(NA, 5), legend = "none")
-  expect_identical(nrow(hm$codes), 16L)
+  expect_identical(nrow(hm$codes), 20L)
+  expect_identical(sort(observed(hm)), c(rep(2, 4L), rep(5, 16L)))
   dp <- sequence_plot(df, type = "distribution", trim = c(NA, 5),
                       legend = "none")
-  expect_identical(sum(dp$counts[[1L]][, 1L]), 16)
-  # Grouped: a group that loses every row loses its panel.
+  states <- c("A", "B", "C")
+  expect_identical(sum(dp$counts[[1L]][states, 5L]), 16)
+  expect_identical(sum(dp$counts[[1L]][states, 6L]), 0)
+  # Grouped: every panel stays, and each counts over its own time window.
   grp <- rep(c("sparse", "dense"), c(4L, 16L))
   g <- sequence_plot(df, type = "index", group = grp, trim = c(NA, 5),
                      legend = "none")
-  expect_identical(g$groups, "dense")
-  # With trim_clusterwise each panel counts over its own time window:
-  # lengths 2, 2, 10, 100 in short/short/long/long; the pooled 0.5 cut is
-  # 6 columns, but the long panel's own cut keeps its two rows (>= 8).
+  expect_setequal(g$groups, c("sparse", "dense"))
+  expect_setequal(unlist(g$orders), 1:20)
   cw <- as.data.frame(matrix("A", 4, 100))
   cw[1:2, 3:100] <- NA
   cw[3, 11:100] <- NA
   cw_grp <- rep(c("short", "long"), each = 2L)
   cw_res <- sequence_plot(cw, type = "index", group = cw_grp,
-                          trim = c(0.5, 8), trim_clusterwise = TRUE,
+                          trim = c(0.5, 0.5), trim_clusterwise = TRUE,
                           legend = "none")
-  expect_identical(cw_res$groups, "long")
-  expect_setequal(unlist(cw_res$orders), 3:4)
-  expect_error(sequence_plot(cw, type = "index", group = cw_grp,
-                             trim = c(0.5, 8), legend = "none"),
-               class = "nestimate_bad_input")
-  cw_dp <- sequence_plot(cw, type = "distribution", group = cw_grp,
-                         trim = c(0.5, 8), trim_clusterwise = TRUE,
-                         legend = "none")
-  expect_identical(cw_dp$groups, "long")
-  # Errors: nothing left, bad shape, a tree with dropped rows.
-  expect_error(sequence_plot(df, type = "index", trim = c(NA, 999)),
-               class = "nestimate_bad_input")
-  expect_error(sequence_plot(df, type = "index", trim = c(1, 2, 3)))
+  expect_setequal(cw_res$groups, c("short", "long"))
+  expect_setequal(unlist(cw_res$orders), 1:4)
+  # A tree has one leaf per row, and every row stays.
   tree <- stats::hclust(stats::dist(seq_len(20)))
-  expect_error(sequence_plot(df, type = "heatmap", tree = tree,
-                             trim = c(NA, 5)),
-               class = "nestimate_bad_input")
   expect_identical(nrow(sequence_plot(df, type = "heatmap", tree = tree,
-                                      trim = c(NA, 1), legend = "none")$codes),
+                                      trim = c(NA, 5), legend = "none")$codes),
                    20L)
+  expect_error(sequence_plot(df, type = "index", trim = c(1, 2, 3)))
+})
+
+test_that(".trim_rows_blank keeps the first states and moves nothing", {
+  codes <- rbind(c(1, NA, 2, 3), c(NA, NA, 4, NA), c(NA, NA, NA, NA))
+  expect_identical(.trim_rows_blank(codes, NULL), codes)
+  expect_identical(.trim_rows_blank(codes, 2),
+                   rbind(c(1, NA, 2, NA), c(NA, NA, 4, NA), rep(NA_real_, 4L)))
+  # ceiling(0.5 * 3) = 2, ceiling(0.5 * 1) = 1, and an empty row stays empty.
+  expect_identical(.trim_rows_blank(codes, 0.5), .trim_rows_blank(codes, 2))
+  one_col <- matrix(c("a", NA, "b"), ncol = 1L)
+  expect_identical(.trim_rows_blank(one_col, 1), one_col)
+  expect_error(.trim_rows_blank(codes, -1))
 })
 
 test_that("trim applies to the distribution and mcml paths", {
@@ -365,12 +369,14 @@ test_that("trim applies to the distribution and mcml paths", {
   expect_s3_class(sequence_plot(fit, type = "index", trim = 15), "mcml_sequence_plot")
   expect_s3_class(sequence_plot(fit, type = "distribution", trim = 0.9), "mcml_sequence_plot")
 
-  # The row half drops the sparsest coalesced sequences from every channel.
+  # The row half ends each coalesced sequence earlier in every channel; rows stay.
   ch_rows <- Nestimate:::.mcml_seq_channels(fit, c(NA, 0.5))
-  n_kept  <- nrow(ch_rows$summary_mat)
-  expect_lt(n_kept, nrow(ch_full$summary_mat))
-  expect_true(all(vapply(ch_rows$cmats, nrow, 1L) == n_kept))
-  expect_identical(nrow(ch_rows$summary_cluster_mat), n_kept)
+  n_rows  <- nrow(ch_full$summary_mat)
+  expect_identical(nrow(ch_rows$summary_mat), n_rows)
+  expect_lt(sum(!is.na(ch_rows$summary_mat)), sum(!is.na(ch_full$summary_mat)))
+  expect_identical(is.na(ch_rows$summary_cluster_mat), is.na(ch_rows$summary_mat))
+  channel_cells <- Reduce(`+`, lapply(ch_rows$cmats, function(m) !is.na(m)))
+  expect_identical(channel_cells > 0L, !is.na(ch_rows$summary_mat))
   expect_s3_class(sequence_plot(fit, type = "index", trim = c(15, 0.5)),
                   "mcml_sequence_plot")
 })
@@ -451,4 +457,97 @@ test_that("a half-named state_colors is rejected, not half-honoured", {
   pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
   expect_error(sequence_plot(m, state_colors = c("#111111", b = "#222222")),
                "mixes named and unnamed colours")
+})
+
+test_that("a fractional column trim judges each column on its own activity", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  d <- rbind(c("A", NA, "B", "C"), c("A", NA, "B", "C"), c("A", "X", "B", NA))
+  colnames(d) <- paste0("T", 1:4)
+  # Activity 3, 1, 3, 2: half of four columns keeps the two busiest.
+  expect_identical(.trim_keep(d, 0.5), c(1L, 3L))
+  expect_identical(colnames(sequence_plot(d, type = "index", trim = c(0.5, NA),
+                                          legend = "none")$codes),
+                   c("T1", "T3"))
+  expect_identical(colnames(sequence_plot(d, type = "heatmap", trim = c(0.5, NA),
+                                          legend = "none")$codes),
+                   c("T1", "T3"))
+  counts <- distribution_plot(d, trim = c(0.5, NA), legend = "none")$counts[[1L]]
+  expect_identical(colnames(counts), c("T1", "T3"))
+  expect_equal(unname(colSums(counts)), c(3, 3))
+
+  # Ties go to the earlier column; a count still keeps the first columns.
+  expect_identical(.trim_keep(d, 0.25), 1L)
+  expect_identical(.trim_keep(d, 2), 1:2)
+  expect_identical(.trim_keep(d, 99), 1:4)
+  # A column with no data goes even when the share rounds up to all of them.
+  e <- d; e[, "T2"] <- NA
+  expect_identical(.trim_keep(e, 0.99), c(1L, 3L, 4L))
+  # Nothing observed still leaves one column to draw.
+  expect_identical(.trim_keep(matrix(NA_character_, 2, 3), 0.5), 1L)
+
+  # Unnamed columns label by original position, not by their new place.
+  expect_identical(colnames(.trim_codes(unname(d), 0.5)), c("1", "3"))
+  expect_null(colnames(.trim_codes(unname(d), NULL)))
+  grouped <- sequence_plot(d, type = "index", group = c("a", "a", "b"),
+                           trim = c(0.5, NA), legend = "none")
+  expect_identical(colnames(grouped$codes), c("T1", "T3"))
+  # The input is not changed: only the drawing is.
+  expect_identical(colnames(d), paste0("T", 1:4))
+})
+
+test_that("clusterwise column trim judges the columns within each group", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  d <- rbind(c("A", "B", "A", NA), c("B", "B", "A", NA),
+             c("A", NA, "A", "B"), c("B", NA, "B", "B"))
+  colnames(d) <- paste0("T", 1:4)
+  res <- distribution_plot(d, group = c("x", "x", "y", "y"), trim = 0.6,
+                           trim_clusterwise = TRUE, legend = "none")
+  # Each group has three columns with data and keeps the first two of them.
+  expect_identical(colnames(res$counts$x), c("T1", "T2"))
+  expect_identical(colnames(res$counts$y), c("T1", "T3"))
+})
+
+test_that("the mcml axis labels the columns a fractional trim keeps", {
+  label <- .mcml_time_labels(c(1L, 3L))
+  expect_identical(label(c(1, 1.5, 2, NA, 3)), c("1", "", "3", "", ""))
+  expect_s3_class(.mcml_time_labels(1:3), "waiver")
+})
+
+test_that("the row half of trim leaves the row order alone", {
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  d <- rbind(c("A", "Z"), c("B", "A"), c("A", "B"))
+  order_of <- function(type, trim, group = NULL) {
+    res <- sequence_plot(d, type = type, sort = "end", trim = trim, group = group,
+                         legend = "none")
+    unlist(res$orders %||% res$ord)
+  }
+  expect_identical(order_of("index", c(NA, 1)), order_of("index", NULL))
+  expect_identical(order_of("heatmap", c(NA, 1)), order_of("heatmap", NULL))
+  grp <- c("g", "g", "g")
+  expect_identical(order_of("index", c(NA, 1), grp), order_of("index", NULL, grp))
+  # Every row stays and is blank after its first state.
+  codes <- sequence_plot(d, type = "index", sort = "end", trim = c(NA, 1),
+                         legend = "none")$codes
+  expect_identical(dim(codes), dim(d))
+  expect_true(all(is.na(codes[, 2L])))
+})
+
+test_that("a fractional column trim removes a long tail", {
+  # Ten rows of length 2, one of which runs on alone for eight more columns:
+  # 28 states, with 20 in the first two columns.
+  d <- matrix(NA_character_, 10, 10)
+  d[, 1:2] <- "A"
+  d[10L, ] <- "B"
+  counts <- colSums(!is.na(d))
+  expect_identical(unname(counts), c(10, 10, rep(1, 8)))
+  # 95% of 28 is 26.6: two busy columns hold 20, then seven tail columns.
+  expect_identical(.trim_keep(d, 0.95), 1:9)
+  # 70% of 28 is 19.6: the first two columns are enough.
+  expect_identical(.trim_keep(d, 0.7), 1:2)
+  # A share of exactly what two columns hold needs no third column.
+  expect_identical(.trim_keep(d, 20 / 28), 1:2)
+  # The share kept never falls short of the share asked for.
+  invisible(lapply(c(0.1, 0.33, 0.5, 0.8, 0.99), function(share) {
+    expect_gte(sum(counts[.trim_keep(d, share)]) / sum(counts), share - 1e-8)
+  }))
 })

@@ -25,7 +25,8 @@ association_rules(
 \item{x}{Input data. Accepts:
 \describe{
 \item{netobject}{Uses \code{$data} sequences - each sequence becomes
-a transaction of its unique states.}
+a transaction of its unique states. In a one-hot network the codes
+are the items and each window is one transaction.}
 \item{list}{Each element is a character vector of items (one transaction).}
 \item{data.frame}{Wide format: each row is a transaction, character
 columns are item occurrences. Or binary (0/1 or logical) columns,

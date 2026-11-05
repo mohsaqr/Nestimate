@@ -42,7 +42,9 @@ test_that("naive timestamps are interpreted in `timezone`", {
 test_that("mixed layouts in one column all parse", {
   mixed <- c("2024-01-01 10:00:00", "01/02/2024 10:00", "2024-01-03T10:00:00Z",
              "20240104100000", "1704448800")
-  parsed <- .parse_time(mixed, timezone = "UTC")
+  # 01/02/2024 alone cannot say which number is the day.
+  expect_warning(parsed <- .parse_time(mixed, timezone = "UTC"),
+                 class = "nestimate_ambiguous_dates")
   expect_false(anyNA(parsed))
   expect_s3_class(parsed, "POSIXct")
 })

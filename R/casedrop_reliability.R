@@ -27,7 +27,9 @@
 #'   for an iteration to count as stable. Default `0.7`.
 #' @param certainty Numeric in `[0, 1]`. Required fraction of iterations
 #'   whose correlation must exceed `threshold` for a drop proportion to
-#'   qualify. Default `0.95`.
+#'   qualify. Default `0.95`. It is the share of all iterations: one in which
+#'   the correlation is undefined (the edge vector is constant in that subset)
+#'   counts as not reaching `threshold`.
 #' @param method Correlation method: `"pearson"` (weight magnitudes),
 #'   `"spearman"` (ranks, robust to scale), or `"kendall"`. Default
 #'   `"spearman"` because edge weights often span several orders of
@@ -126,6 +128,7 @@ casedrop_reliability <- function(x,
   # ---- Dispatch for mcml / group inputs ----
   if (inherits(x, "mcml")) x <- as_tna(x)
   if (inherits(x, "netobject_group")) {
+    .stop_single_unit_group(x)
     out <- lapply(x, function(net) {
       casedrop_reliability(net, iter = iter, drop_prop = drop_prop,
                      threshold = threshold, certainty = certainty,
@@ -146,6 +149,7 @@ casedrop_reliability <- function(x,
     stop("netobject does not contain $data. Rebuild with build_network().",
          call. = FALSE)
   }
+  .stop_single_unit(x)
 
   # ---- Input validation ----
   stopifnot(
@@ -165,11 +169,11 @@ casedrop_reliability <- function(x,
   }
 
   # ---- Resolve estimator + reuse bootstrap precompute for transition methods ----
-  net_method <- .resolve_method_alias(x$method)
+  net_method <- .resampling_method(.resolve_method_alias(x$method), x$params)
   states     <- x$nodes$label
   n_states   <- length(states)
   is_transition <- net_method %in% c("relative", "frequency", "co_occurrence")
-  is_relative   <- net_method == "relative"
+  is_relative   <- .counts_are_relative(net_method, x$params)
   scaling <- x$scaling
   thresh  <- x$threshold
 
@@ -220,7 +224,9 @@ casedrop_reliability <- function(x,
 
   # ---- Build-matrix closure: transition fast path or association slow path ----
   if (is_transition) {
-    trans_2d <- .precompute_per_sequence(x$data, net_method, x$params, states)
+    transition_data <- .resampling_transition_data(x$data, x$metadata, x$params)
+    trans_2d <- .precompute_per_sequence(transition_data, net_method, x$params,
+                                         states)
     n_cases  <- nrow(trans_2d)
 
     build_matrix <- function(idx) {
@@ -231,7 +237,10 @@ casedrop_reliability <- function(x,
         nz <- rs > 0
         mat[nz, ] <- mat[nz, ] / rs[nz]
       }
-      if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling)
+      if (!is.null(scaling)) {
+        mat <- .apply_scaling(mat, scaling,
+                              include_zeros = .scaling_includes_zeros(net_method))
+      }
       if (thresh > 0) mat[abs(mat) < thresh] <- 0
       mat
     }
@@ -259,7 +268,10 @@ casedrop_reliability <- function(x,
       )
       if (is.null(est)) return(NULL)
       mat <- est$matrix[states, states]
-      if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling)
+      if (!is.null(scaling)) {
+        mat <- .apply_scaling(mat, scaling,
+                              include_zeros = .scaling_includes_zeros(net_method))
+      }
       if (thresh > 0) mat[abs(mat) < thresh] <- 0
       mat
     }
@@ -312,11 +324,7 @@ casedrop_reliability <- function(x,
   summary_df <- .casedrop_summary(metrics, drop_prop)
 
   # ---- CS-coefficient: max drop_prop where corr certainty-fraction >= threshold ----
-  prop_above <- apply(metrics$correlation, 2L, function(c) {
-    mean(c >= threshold, na.rm = TRUE)
-  })
-  qualifying <- which(prop_above >= certainty)
-  cs <- if (length(qualifying) > 0L) max(drop_prop[qualifying]) else 0
+  cs <- .calculate_cs(metrics$correlation, threshold, certainty, drop_prop)
 
   structure(
     list(

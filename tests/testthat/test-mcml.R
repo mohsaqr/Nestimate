@@ -2053,3 +2053,58 @@ test_that("as_tna(expand =) changes the macro layer and nothing else", {
   expect_equal(open$G1, plain$G1)
   expect_equal(open$G2, plain$G2)
 })
+
+# ============================================
+# Wide frames named V1, V2, ...
+# ============================================
+
+test_that("build_mcml reads a V-named wide frame as sequences", {
+  wide <- data.frame(V1 = c("A", "B", "C"), V2 = c("B", "C", "D"),
+                     V3 = c("C", "D", "A"), V4 = c("D", "A", "B"))
+  clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
+  from_v <- build_mcml(wide, clusters, type = "raw")
+  # Hand: 3 sequences x 3 transitions.
+  expect_equal(sum(from_v$macro$weights), 9)
+  renamed <- wide
+  names(renamed) <- paste0("T", seq_len(ncol(wide)))
+  expect_equal(unname(from_v$macro$weights),
+               unname(build_mcml(renamed, clusters, type = "raw")$macro$weights))
+  from_net <- build_mcml(build_network(wide, method = "frequency"), clusters,
+                         type = "raw")
+  expect_equal(sum(from_net$macro$weights), 9)
+})
+
+test_that("V1 and V2 alone, or with a weight, stay an edge list", {
+  clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
+  edges <- data.frame(V1 = c("A", "C", "B"), V2 = c("C", "D", "A"),
+                      weight = c(2, 5, 1))
+  expect_identical(.detect_mcml_input(edges), "edgelist")
+  expect_equal(sum(build_mcml(edges, clusters, type = "raw")$macro$weights), 8)
+  expect_identical(.detect_mcml_input(edges[c("V1", "V2")]), "edgelist")
+  expect_identical(.detect_mcml_input(data.frame(V1 = "A", V2 = "B", V3 = "C")),
+                   "sequence")
+})
+
+test_that("a trim leaving V1 and V2 still reads the frame as sequences", {
+  v <- data.frame(V1 = c("A", "B", "C"), V2 = c("B", "C", "D"),
+                  V3 = c("C", "D", "A"), V4 = c("D", "A", "B"))
+  t_named <- stats::setNames(v, paste0("T", 1:4))
+  groups <- list(G1 = c("A", "B"), G2 = c("C", "D"))
+  fit <- build_mcml(v, groups, type = "raw", trim = 2)
+  # First states A, B, C: two of three start in G1.
+  expect_equal(unname(fit$macro$inits[c("G1", "G2")]), c(2, 1) / 3)
+  expect_equal(fit$macro$weights,
+               build_mcml(t_named, groups, type = "raw", trim = 2)$macro$weights)
+  # The terminal marker does not change how the two columns are read.
+  ended <- build_mcml(v, c(groups, list(Fin = "Done")), type = "raw", trim = 2,
+                      end = "Done")
+  expect_equal(unname(ended$macro$inits[c("G1", "G2", "Fin")]), c(2, 1, 0) / 3)
+})
+
+test_that("a fractional build_mcml trim only ever cuts the end of the data", {
+  # T2 is the quietest column, but removing it would invent T1 -> T3 transitions.
+  d <- data.frame(T1 = c("A", "A", "A", "A"), T2 = c(NA, NA, NA, "B"),
+                  T3 = c("B", "B", "B", "A"), T4 = c("A", "A", "A", NA))
+  expect_identical(names(.mcml_trim_sequences(d, 0.5)), c("T1", "T2", "T3", "T4"))
+  expect_identical(names(.mcml_trim_sequences(d, 2)), c("T1", "T2"))
+})

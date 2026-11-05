@@ -89,10 +89,10 @@
 #' @section Other inputs:
 #' For transition methods, per-sequence count matrices are computed once
 #' and each shuffle only re-sums them, which keeps large \code{iter} fast.
-#' For association methods the estimator is re-run on every shuffle. If a
-#' transition network rests on a single sequence, a warning (class
-#' \code{nestimate_single_sequence}) says it cannot be validated by
-#' resampling.
+#' For association methods the estimator is re-run on every shuffle. A network
+#' that rests on one sequence, or one-hot data with no actor or session, has
+#' nothing to shuffle and raises an error of class
+#' \code{nestimate_single_sequence}.
 #'
 #' Wide rows combined with \code{params = list(concat = k)} are shuffled
 #' as the merged sequences used by the estimator, keeping their internal
@@ -336,6 +336,8 @@ permutation <- function(x, y = NULL,
     if (length(common) == 0L) {
       stop("No matching group names between x and y.", call. = FALSE)
     }
+    .stop_single_unit_group(x[common])
+    .stop_single_unit_group(y[common])
     results <- lapply(common, function(nm) {
       permutation(x[[nm]], y[[nm]], iter = iter, alpha = alpha,
                   paired = paired, adjust = adjust, measures = measures,
@@ -400,7 +402,8 @@ permutation <- function(x, y = NULL,
   directed <- x$directed
   n_nodes <- length(nodes)
 
-  if (paired && !method %in% c("relative", "frequency", "co_occurrence")) {
+  count_method <- .resampling_method(method, x$params)
+  if (paired && !count_method %in% c("relative", "frequency", "co_occurrence")) {
     if (nrow(x$data) != nrow(y$data)) {
       stop("Paired test requires equal number of observations in x and y.",
            call. = FALSE)
@@ -432,10 +435,13 @@ permutation <- function(x, y = NULL,
     obs_cent_diff <- NULL
   }
 
+  .stop_single_unit(x)
+  .stop_single_unit(y)
+
   # ---- Dispatch permutation ----
   has_data_x <- is.data.frame(x$data) && ncol(x$data) > 0L
   has_data_y <- is.data.frame(y$data) && ncol(y$data) > 0L
-  if (method %in% c("relative", "frequency", "co_occurrence")) {
+  if (count_method %in% c("relative", "frequency", "co_occurrence")) {
     if (!has_data_x || !has_data_y) {
       stop("Permutation test requires the original data stored in the netobject. ",
            "For wtna/cna networks, use wtna() directly instead of ",
@@ -443,14 +449,8 @@ permutation <- function(x, y = NULL,
     }
     x$data <- .resampling_transition_data(x$data, x$metadata, x$params)
     y$data <- .resampling_transition_data(y$data, y$metadata, y$params)
-    n_seq_x <- .transition_resampling_n_sequences(x$data, x$params)
-    n_seq_y <- .transition_resampling_n_sequences(y$data, y$params)
-    if ((!is.na(n_seq_x) && n_seq_x <= 1L) ||
-        (!is.na(n_seq_y) && n_seq_y <= 1L)) {
-      .single_sequence_notice()
-    }
     perm_result <- .permutation_transition(
-      x = x, y = y, nodes = nodes, method = method,
+      x = x, y = y, nodes = nodes, method = count_method,
       iter = iter, paired = paired,
       measures = measures, directed = directed, obs_cent_diff = obs_cent_diff,
       block = actor, alpha = alpha
@@ -698,7 +698,8 @@ permutation <- function(x, y = NULL,
   directed <- x$directed
   n_nodes <- length(nodes)
 
-  if (paired && !method %in% c("relative", "frequency", "co_occurrence") &&
+  count_method <- .resampling_method(method, x_src$params)
+  if (paired && !count_method %in% c("relative", "frequency", "co_occurrence") &&
       nrow(x$data) != nrow(y$data)) {
     stop("Paired test requires equal number of observations in x and y.",
          call. = FALSE)
@@ -720,9 +721,12 @@ permutation <- function(x, y = NULL,
     .edge_betweenness(mat, invert = invert)
   }
 
+  .stop_single_unit(x_src)
+  .stop_single_unit(y_src)
+
   has_data_x <- is.data.frame(x_src$data) && ncol(x_src$data) > 0L
   has_data_y <- is.data.frame(y_src$data) && ncol(y_src$data) > 0L
-  if (method %in% c("relative", "frequency", "co_occurrence")) {
+  if (count_method %in% c("relative", "frequency", "co_occurrence")) {
     if (!has_data_x || !has_data_y) {
       stop("Permutation test requires the original data stored in the netobject. ",
            "For wtna/cna networks, use wtna() directly instead of ",
@@ -734,14 +738,8 @@ permutation <- function(x, y = NULL,
     y_src$data <- .resampling_transition_data(
       y_src$data, y_src$metadata, y_src$params
     )
-    n_seq_x <- .transition_resampling_n_sequences(x_src$data, x_src$params)
-    n_seq_y <- .transition_resampling_n_sequences(y_src$data, y_src$params)
-    if ((!is.na(n_seq_x) && n_seq_x <= 1L) ||
-        (!is.na(n_seq_y) && n_seq_y <= 1L)) {
-      .single_sequence_notice()
-    }
     perm_result <- .permutation_transition(
-      x = x_src, y = y_src, nodes = nodes, method = method,
+      x = x_src, y = y_src, nodes = nodes, method = count_method,
       iter = iter, paired = paired,
       measures = NULL, directed = directed, obs_cent_diff = NULL,
       transform = transform_eb, obs_diff = obs_diff,
@@ -824,7 +822,8 @@ permutation <- function(x, y = NULL,
                                     block = NULL, alpha = 0.05) {
   n_nodes <- length(nodes)
   nbins <- n_nodes * n_nodes
-  is_relative <- method == "relative"
+  is_relative <- .counts_are_relative(method, x$params)
+  zeros_scaled <- .scaling_includes_zeros(method)
   do_cent <- !is.null(measures)
   if (is.null(transform)) transform <- identity
   if (do_cent) {
@@ -872,9 +871,11 @@ permutation <- function(x, y = NULL,
     ref_m_sumsq <- 0
     split_diff <- function(in_x) {
       mat_x <- .postprocess_counts(colSums(pooled[in_x, , drop = FALSE]),
-                                   n_nodes, is_relative, x$scaling, x$threshold)
+                                   n_nodes, is_relative, x$scaling, x$threshold,
+                                   include_zeros = zeros_scaled)
       mat_y <- .postprocess_counts(colSums(pooled[-in_x, , drop = FALSE]),
-                                   n_nodes, is_relative, y$scaling, y$threshold)
+                                   n_nodes, is_relative, y$scaling, y$threshold,
+                                   include_zeros = zeros_scaled)
       as.vector(transform(mat_x)) - as.vector(transform(mat_y))
     }
   }
@@ -916,9 +917,11 @@ permutation <- function(x, y = NULL,
 
     # Post-process each group to get network matrix
     mat_x <- .postprocess_counts(counts_x, n_nodes, is_relative,
-                                 x$scaling, x$threshold)
+                                 x$scaling, x$threshold,
+                                   include_zeros = zeros_scaled)
     mat_y <- .postprocess_counts(counts_y, n_nodes, is_relative,
-                                 y$scaling, y$threshold)
+                                 y$scaling, y$threshold,
+                                   include_zeros = zeros_scaled)
 
     mat_x <- transform(mat_x)
     mat_y <- transform(mat_y)
@@ -1167,14 +1170,16 @@ permutation <- function(x, y = NULL,
 #' Convert flat count vector to network matrix with post-processing
 #' @noRd
 .postprocess_counts <- function(counts, n_nodes, is_relative,
-                                scaling, threshold) {
+                                scaling, threshold, include_zeros = FALSE) {
   mat <- matrix(counts, n_nodes, n_nodes, byrow = TRUE)
   if (is_relative) {
     rs <- rowSums(mat)
     nz <- rs > 0
     mat[nz, ] <- mat[nz, ] / rs[nz]
   }
-  if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling) # nocov start
+  if (!is.null(scaling)) { # nocov start
+    mat <- .apply_scaling(mat, scaling, include_zeros = include_zeros)
+  }
   if (threshold > 0) mat[abs(mat) < threshold] <- 0 # nocov end
   mat
 }
@@ -1340,9 +1345,15 @@ permutation <- function(x, y = NULL,
     }
 
     # Apply scaling and threshold
-    if (!is.null(scaling_x)) mat_x <- .apply_scaling(mat_x, scaling_x) # nocov
+    if (!is.null(scaling_x)) { # nocov start
+      mat_x <- .apply_scaling(mat_x, scaling_x,
+                              include_zeros = .scaling_includes_zeros(method))
+    } # nocov end
     if (threshold_x > 0) mat_x[abs(mat_x) < threshold_x] <- 0
-    if (!is.null(scaling_y)) mat_y <- .apply_scaling(mat_y, scaling_y) # nocov
+    if (!is.null(scaling_y)) { # nocov start
+      mat_y <- .apply_scaling(mat_y, scaling_y,
+                              include_zeros = .scaling_includes_zeros(method))
+    } # nocov end
     if (threshold_y > 0) mat_y[abs(mat_y) < threshold_y] <- 0
 
     mat_x <- transform(mat_x)

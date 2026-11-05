@@ -131,8 +131,10 @@ the matching cells are set to \code{NA}.}
 keeps every time point. A fraction in \code{(0, 1)} keeps the columns
 covering that quantile of sequence lengths (\code{trim = 0.95} keeps the
 shortest 95\%); a value \code{>= 1} is an absolute cut
-(\code{trim = 10} keeps the first 10 time points). Same semantics as
-\code{\link{sequence_plot}}'s \code{trim}.}
+(\code{trim = 10} keeps the first 10 time points). This changes the
+data, so it only ever cuts the end of a sequence. The fraction in
+\code{\link{sequence_plot}}'s \code{trim} works differently, because it
+changes only the drawing.}
 
 \item{end}{Terminal state appended after each sequence's last observed
 state. \code{FALSE} (default) adds none, \code{TRUE} adds one labelled

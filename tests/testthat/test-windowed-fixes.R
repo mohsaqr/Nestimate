@@ -4,7 +4,7 @@ testthat::skip_on_cran()
 # Worked-example regression tests locking the correct behavior for three regressions caught
 # by the 2026-05-10 Codex review of the working tree:
 #
-#   #1  prepare_onehot(window_size = 1L, window_type = "overlapping") drops
+#   #1  .prepare_onehot(window_size = 1L, window_type = "overlapping") drops
 #       the first row unconditionally even though there is no overlap to remove.
 #   #2  .count_transitions_wide() ignores `weighted = TRUE` whenever the input
 #       is windowed (attr "windowed" is TRUE).
@@ -16,10 +16,10 @@ testthat::skip_on_cran()
 # silently revert.
 
 # ---------------------------------------------------------------------------
-# #1: prepare_onehot — size-1 overlapping must preserve all rows
+# #1: .prepare_onehot — size-1 overlapping must preserve all rows
 # ---------------------------------------------------------------------------
 
-test_that("prepare_onehot(window_size = 1L, overlapping) keeps the first row per actor", {
+test_that(".prepare_onehot(window_size = 1L, overlapping) keeps the first row per actor", {
   # Single-row actor: with the original bug, the leading row of each group
   # was unconditionally removed even when window_size = 1L (no overlap to
   # remove), leaving zero rows. After the fix the row survives and the
@@ -30,15 +30,15 @@ test_that("prepare_onehot(window_size = 1L, overlapping) keeps the first row per
     B = c(0L, 1L),
     actor = c("a1", "a2")  # one row per actor
   )
-  ov <- prepare_onehot(df, cols = c("A", "B"), actor = "actor",
+  ov <- .prepare_onehot(df, cols = c("A", "B"), actor = "actor",
                        window_size = 1L, window_type = "overlapping")
-  no <- prepare_onehot(df, cols = c("A", "B"), actor = "actor",
+  no <- .prepare_onehot(df, cols = c("A", "B"), actor = "actor",
                        window_size = 1L, window_type = "non-overlapping")
   expect_equal(nrow(ov), nrow(no))
   expect_equal(nrow(ov), nrow(df))
 })
 
-test_that("prepare_onehot size-1 overlapping == size-1 non-overlapping", {
+test_that(".prepare_onehot size-1 overlapping == size-1 non-overlapping", {
   # With window_size = 1L the two window types are semantically identical:
   # each row is its own window. They must produce the same state cells.
   df <- data.frame(
@@ -46,9 +46,9 @@ test_that("prepare_onehot size-1 overlapping == size-1 non-overlapping", {
     B = c(0L, 1L, 0L, 1L, 0L, 1L),
     actor = c(1L, 1L, 1L, 2L, 2L, 2L)
   )
-  ov <- prepare_onehot(df, cols = c("A", "B"), actor = "actor",
+  ov <- .prepare_onehot(df, cols = c("A", "B"), actor = "actor",
                        window_size = 1L, window_type = "overlapping")
-  no <- prepare_onehot(df, cols = c("A", "B"), actor = "actor",
+  no <- .prepare_onehot(df, cols = c("A", "B"), actor = "actor",
                        window_size = 1L, window_type = "non-overlapping")
   expect_equal(nrow(ov), nrow(no))
   expect_equal(ov$A, no$A)

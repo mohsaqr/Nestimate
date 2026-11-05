@@ -113,7 +113,8 @@ simulate_hypergraph_incidence <- function(n_nodes = 15, n_edges = 20,
             density > 0, density <= 1)
   if (!is.null(seed)) set.seed(seed)
   nodes <- paste0("n", seq_len(n_nodes))
-  sizes <- sample(edge_size_range[1]:edge_size_range[2], n_edges, replace = TRUE)
+  size_options <- seq(edge_size_range[1], edge_size_range[2])
+  sizes <- size_options[sample.int(length(size_options), n_edges, replace = TRUE)]
   keep <- stats::runif(n_edges) < density
   edges <- mapply(function(sz, k) {
     if (!k) return(integer(0))
@@ -127,4 +128,10 @@ simulate_hypergraph_incidence <- function(n_nodes = 15, n_edges = 20,
                 dimnames = list(nodes, paste0("e", seq_along(edges))))
   for (j in seq_along(edges)) inc[edges[[j]], j] <- 1L
   list(incidence = inc, hyperedges = edges, nodes = nodes)
+}
+
+# One-hot rows are time points: consecutive rows form the units to resample.
+.with_units <- function(data, n_units = 3L) {
+  data$unit <- sort(rep_len(seq_len(n_units), nrow(data)))
+  data
 }

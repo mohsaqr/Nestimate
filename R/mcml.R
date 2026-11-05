@@ -647,6 +647,16 @@ cluster_summary <- function(x,
   df[, seq_len(cut), drop = FALSE]
 }
 
+# A trim can leave only V1 and V2 of a V1, V2, ... frame. Those names mark the
+# endpoints of an edge list, and this frame is already known to be sequences.
+.mcml_unmask_positions <- function(df) {
+  numbered <- grepl("^v[0-9]+$", tolower(names(df)))
+  if (any(tolower(names(df)) %in% c("v1", "v2")) && sum(numbered) <= 2L) {
+    names(df) <- paste0("T", seq_along(df))
+  }
+  df
+}
+
 # Resolve `end` (FALSE / TRUE / label) to a label or NULL.
 .mcml_end_label <- function(end) {
   if (isFALSE(end)) return(NULL)
@@ -826,8 +836,10 @@ cluster_summary <- function(x,
 #'   keeps every time point. A fraction in \code{(0, 1)} keeps the columns
 #'   covering that quantile of sequence lengths (\code{trim = 0.95} keeps the
 #'   shortest 95%); a value \code{>= 1} is an absolute cut
-#'   (\code{trim = 10} keeps the first 10 time points). Same semantics as
-#'   \code{\link{sequence_plot}}'s \code{trim}.
+#'   (\code{trim = 10} keeps the first 10 time points). This changes the
+#'   data, so it only ever cuts the end of a sequence. The fraction in
+#'   \code{\link{sequence_plot}}'s \code{trim} works differently, because it
+#'   changes only the drawing.
 #' @param end Terminal state appended after each sequence's last observed
 #'   state. \code{FALSE} (default) adds none, \code{TRUE} adds one labelled
 #'   \code{"End"}, and a string supplies the label. Applied \emph{after}
@@ -1072,7 +1084,7 @@ build_mcml <- function(x,
     if (!is.null(end_label)) {
       seq_df <- .mcml_append_end(seq_df, end_label, seq_len(nrow(seq_df)))
     }
-    x <- seq_df
+    x <- .mcml_unmask_positions(seq_df)
   }
 
   # Coerce cograph_network so downstream branches see a netobject
@@ -1255,8 +1267,9 @@ build_mcml <- function(x,
 
   if (is.data.frame(x)) {
     col_names <- tolower(names(x))
-    from_cols <- c("from", "source", "src", "v1", "node1", "i")
-    to_cols <- c("to", "target", "tgt", "v2", "node2", "j")
+    endpoints <- .mcml_endpoint_names(names(x))
+    from_cols <- endpoints$from
+    to_cols <- endpoints$to
     weight_cols <- c("weight", "w", "value", "strength")
     has_from <- any(from_cols %in% col_names)
     has_to <- any(to_cols %in% col_names)
@@ -1274,6 +1287,24 @@ build_mcml <- function(x,
   }
 
   "unknown"
+}
+
+#' Column names that mark the endpoints of an edge list
+#'
+#' `V1` and `V2` are endpoints only when no `V3` follows. A longer run is the
+#' default naming of a wide sequence frame, where they are the first two
+#' positions.
+#' @param nms Column names.
+#' @return List with lower-case `from` and `to` candidates.
+#' @noRd
+.mcml_endpoint_names <- function(nms) {
+  from <- c("from", "source", "src", "v1", "node1", "i")
+  to <- c("to", "target", "tgt", "v2", "node2", "j")
+  if (sum(grepl("^v[0-9]+$", tolower(nms))) > 2L) {
+    from <- setdiff(from, "v1")
+    to <- setdiff(to, "v2")
+  }
+  list(from = from, to = to)
 }
 
 .mcml_has_time_step_names <- function(nms) {
@@ -1587,9 +1618,7 @@ build_mcml <- function(x,
   # documented earlier -- there is no first-state to read off an edgelist.
   is_edgelist_data <- identical(attr(data, "source"), "edgelist")
   is_seq_for_inits <- is.data.frame(data) && !is_edgelist_data &&
-    !any(tolower(names(data)) %in%
-    c("from", "source", "src", "v1", "node1", "i",
-      "to", "target", "tgt", "v2", "node2", "j"))
+    !any(tolower(names(data)) %in% unlist(.mcml_endpoint_names(names(data))))
   between_inits <- if (is_seq_for_inits) {
     # tna-equivalent macro inits: tabulate column 1 (first time-step) of the
     # wide sequence, drop NAs, map each first state to its cluster, normalise.
@@ -1627,9 +1656,7 @@ build_mcml <- function(x,
   between_seq_data <- NULL
   within_seq_data_list <- NULL
   is_seq <- is.data.frame(data) && !is_edgelist_data &&
-    !any(tolower(names(data)) %in%
-    c("from", "source", "src", "v1", "node1", "i",
-      "to", "target", "tgt", "v2", "node2", "j"))
+    !any(tolower(names(data)) %in% unlist(.mcml_endpoint_names(names(data))))
 
   if (is_seq) {
     # Recode sequences to cluster labels
@@ -1816,10 +1843,9 @@ build_mcml <- function(x,
   col_names <- tolower(names(df))
 
   # Detect from/to columns
-  from_col <- which(col_names %in% c("from", "source", "src",
-                                       "v1", "node1", "i"))[1]
-  to_col <- which(col_names %in% c("to", "target", "tgt",
-                                     "v2", "node2", "j"))[1]
+  endpoints <- .mcml_endpoint_names(names(df))
+  from_col <- which(col_names %in% endpoints$from)[1]
+  to_col <- which(col_names %in% endpoints$to)[1]
   if (is.na(from_col)) from_col <- 1L
   if (is.na(to_col)) {
     to_col <- setdiff(seq_len(ncol(df)), from_col)[1L]

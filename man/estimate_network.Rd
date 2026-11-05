@@ -33,6 +33,12 @@ Transition estimators accept tna-style sequence options such as
 \code{weighted} and \code{concat} (and the low-level \code{begin_state}
 / \code{end_state}, of which \code{start} / \code{end} are the public
 form -- see those arguments).
+\code{window_size} (and \code{window_span}, or \code{windowed = TRUE} for a
+size of 2) counts the methods \code{relative}, \code{frequency} and
+\code{co_occurrence} between consecutive non-overlapping blocks of that many
+positions, as \code{tna::tna()} does; other transition methods raise an error
+of class \code{nestimate_bad_input}, and \code{mode = "overlapping"} a warning
+of class \code{nestimate_ignored_mode}.
 Column-like entries in \code{params} (\code{action}, \code{id},
 \code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order},
 \code{cols}, \code{codes}, and \code{group}) are resolved before format

@@ -7,9 +7,9 @@
 \usage{
 frequencies(
   data,
-  action = "Action",
+  action = NULL,
   id = NULL,
-  time = "Time",
+  time = NULL,
   cols = NULL,
   format = c("auto", "long", "wide")
 )
@@ -19,15 +19,16 @@ frequencies(
 \arguments{
 \item{data}{Data frame containing sequence data in long or wide format.}
 
-\item{action}{Character. Name of the column containing actions/states
-(for long format). Default: "Action".}
+\item{action}{Character or NULL. Name of the column containing actions/states
+(for long format). Column names are not read: without it the data is taken
+as wide. Default: NULL.}
 
 \item{id}{Character vector. Name(s) of the column(s) identifying sequences.
 For long format, each unique combination of ID values defines a sequence.
 For wide format, used to exclude non-state columns. Default: NULL.}
 
-\item{time}{Character. Name of the time column used to order actions within
-sequences (for long format). Default: "Time".}
+\item{time}{Character or NULL. Name of the time column used to order actions
+within sequences (for long format). Default: NULL (row order).}
 
 \item{cols}{Character vector. Names of columns containing states (for wide
 format). If NULL, all non-ID columns are used. Default: NULL.}

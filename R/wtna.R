@@ -22,7 +22,8 @@
 #'   \code{window_size = 1} for ordinary consecutive (t -> t+1) transitions
 #'   with no windowing.
 #' @param mode Character. Window mode: \code{"non-overlapping"} (fixed, separate
-#'   windows) or \code{"overlapping"} (rolling, step = 1).
+#'   windows) or \code{"overlapping"} (rolling, step = 1, the same count as
+#'   \code{tna::import_onehot(window_type = "sliding")}).
 #'   Default: \code{"non-overlapping"}.
 #' @param actor Character or NULL. Name of the actor/ID column for per-group
 #'   computation. If NULL, treats all rows as one group. Default: NULL.
@@ -50,9 +51,11 @@
 #'
 #' \strong{Windowing}: For \code{window_size > 1}, rows are aggregated into
 #' windows before computing networks. Non-overlapping windows are fixed,
-#' separate blocks; overlapping windows roll forward one row at a time.
-#' Within each window, any active indicator (1) in any row makes that state
-#' active for the window.
+#' separate blocks, and a state counts once for each row it is active in.
+#' Overlapping windows roll forward one row at a time: each window of exactly
+#' \code{window_size} rows marks a state active if it is active in any of them,
+#' a group of n rows gives n - window_size + 1 windows, and those windows are
+#' then counted in blocks of \code{window_size}.
 #'
 #' \strong{Per-actor}: When \code{actor} is specified, networks are computed
 #' per group and summed.
@@ -82,7 +85,7 @@
 #' net <- wtna(df, window_size = 2, mode = "non-overlapping")
 #' }
 #'
-#' @seealso \code{\link{build_network}}, \code{\link{prepare_onehot}}
+#' @seealso \code{\link{build_network}}
 #'
 #' @export
 wtna <- function(data,
@@ -95,7 +98,7 @@ wtna <- function(data,
   method <- match.arg(method)
   type <- match.arg(type)
   mode <- match.arg(mode)
-  # Mirror prepare_onehot()'s window_size guard so an invalid value (non-
+  # Mirror .prepare_onehot()'s window_size guard so an invalid value (non-
   # integer, zero, negative) errors cleanly instead of producing a distinct
   # garbage matrix (2.7) or silently falling to the non-windowed branch (0/-5).
   stopifnot(length(window_size) == 1L, is.numeric(window_size),
@@ -146,6 +149,18 @@ wtna <- function(data,
 #' indicator exports from propagating NA through cross-product counts.
 #' @noRd
 .wtna_code_matrix <- function(df, codes) {
+  bad <- codes[!vapply(df[codes], function(x) all(x[!is.na(x)] %in% c(0, 1)),
+                       logical(1))]
+  if (length(bad) > 0L) {
+    stop(errorCondition(
+      sprintf(paste0("one-hot column(s) must hold only 0, 1 or missing: `%s` ",
+                     "(found %s). Recode them first, for example `x > 0` for ",
+                     "counts or `x == \"Yes\"` for labels."),
+              paste(bad, collapse = "`, `"),
+              paste(utils::head(setdiff(unique(as.vector(unlist(df[bad]))),
+                                        c(0, 1, NA)), 3L), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
+  }
   X <- as.matrix(df[, codes, drop = FALSE])
   X[is.na(X)] <- 0L
   storage.mode(X) <- "integer"
@@ -170,33 +185,36 @@ wtna <- function(data,
   }
 
   weights <- matrix(0, k, k)
+  X <- .wtna_window_rows(X, window_size, mode)
+  n <- nrow(X)
+  if (n < 2L) return(weights)
 
-  if (mode == "non-overlapping") {
-    # Match tna's compute_transitions_windowed: pair every position in
-    # window_i with every position in window_{i+1}
-    divides <- n %% window_size == 0L
-    q <- n %/% window_size - 1L * divides
-    for (i in seq_len(q)) {
-      j_idx <- seq((i - 1L) * window_size + 1L, i * window_size)
-      k_idx <- seq(i * window_size + 1L, min(n, (i + 1L) * window_size))
-      # sum_j sum_ki tcrossprod(X[j,], X[ki,]) = tcrossprod(colSums, colSums)
-      s_curr <- colSums(X[j_idx, , drop = FALSE])
-      s_next <- colSums(X[k_idx, , drop = FALSE])
-      weights <- weights + tcrossprod(s_curr, s_next)
-    }
-  } else {
-    # Overlapping: consecutive windows shifted by 1
-    n_windows <- n - window_size + 1L
-    if (n_windows < 2L) return(weights)
-    for (i in seq_len(n_windows - 1L)) {
-      j_idx <- seq(i, i + window_size - 1L)
-      k_idx <- seq(i + 1L, i + window_size)
-      s_curr <- colSums(X[j_idx, , drop = FALSE])
-      s_next <- colSums(X[k_idx, , drop = FALSE])
-      weights <- weights + tcrossprod(s_curr, s_next)
-    }
+  # Match tna's compute_transitions_windowed: pair every position in
+  # window_i with every position in window_{i+1}
+  divides <- n %% window_size == 0L
+  q <- n %/% window_size - 1L * divides
+  for (i in seq_len(q)) {
+    j_idx <- seq((i - 1L) * window_size + 1L, i * window_size)
+    k_idx <- seq(i * window_size + 1L, min(n, (i + 1L) * window_size))
+    # sum_j sum_ki tcrossprod(X[j,], X[ki,]) = tcrossprod(colSums, colSums)
+    s_curr <- colSums(X[j_idx, , drop = FALSE])
+    s_next <- colSums(X[k_idx, , drop = FALSE])
+    weights <- weights + tcrossprod(s_curr, s_next)
   }
   weights
+}
+
+
+#' The rows the windowed counts are taken over
+#'
+#' Overlapping: one row per sliding window, marking the codes active anywhere in
+#' it, as tna::import_onehot(window_type = "sliding") does. Both modes then
+#' count those rows in blocks of window_size, so "overlapping" means the same
+#' here as in tna.
+#' @noRd
+.wtna_window_rows <- function(X, window_size, mode) {
+  if (mode == "non-overlapping") return(X)
+  .onehot_window_presence(X, window_size, mode) * 1
 }
 
 
@@ -214,24 +232,16 @@ wtna <- function(data,
   if (window_size <= 1L) return(crossprod(X))
 
   weights <- matrix(0, k, k)
+  X <- .wtna_window_rows(X, window_size, mode)
+  n <- nrow(X)
 
-  if (mode == "non-overlapping") {
-    # Match tna: pair every position with every other position within
-    # the same window (including self-pairs at same position)
-    n_windows <- ceiling(n / window_size)
-    for (i in seq_len(n_windows)) {
-      idx <- seq((i - 1L) * window_size + 1L, min(n, i * window_size))
-      s <- colSums(X[idx, , drop = FALSE])
-      weights <- weights + tcrossprod(s)
-    }
-  } else {
-    n_windows <- n - window_size + 1L # nocov start
-    if (n_windows < 1L) return(weights)
-    for (i in seq_len(n_windows)) {
-      idx <- seq(i, i + window_size - 1L)
-      s <- colSums(X[idx, , drop = FALSE])
-      weights <- weights + tcrossprod(s) # nocov end
-    }
+  # Match tna: pair every position with every other position within
+  # the same window (including self-pairs at same position)
+  n_windows <- ceiling(n / window_size)
+  for (i in seq_len(n_windows)) {
+    idx <- seq((i - 1L) * window_size + 1L, min(n, i * window_size))
+    s <- colSums(X[idx, , drop = FALSE])
+    weights <- weights + tcrossprod(s)
   }
   weights
 }
@@ -261,6 +271,8 @@ wtna <- function(data,
 .wtna_compute_by_actor <- function(df, codes, window_size, mode, actor, method) {
   n_codes <- length(codes)
   init_mat <- matrix(0, n_codes, n_codes)
+  # Raises on a missing identifier; split() below would drop those rows unseen.
+  .observed_group_id(df[actor], context = "actor/session")
   if (length(actor) == 1L) {
     groups <- split(df, df[[actor]])
   } else {
@@ -502,9 +514,9 @@ wtna <- function(data,
 #' @noRd
 .estimator_wtna <- function(data,
                              format = "auto",
-                             action = "Action",
+                             action = NULL,
                              id = NULL,
-                             time = "Time",
+                             time = NULL,
                              cols = NULL,
                              codes = NULL,
                              window_size = 3L,
@@ -513,9 +525,17 @@ wtna <- function(data,
                              ...) {
   df <- as.data.frame(data)
 
+  # Before the format: a one-hot column may be called "Action".
+  if (identical(format, "onehot") || !is.null(codes)) {
+    return(.estimator_wtna_core(
+      data, codes = codes, window_size = window_size,
+      mode = mode, actor = actor, wtna_method = "transition", ...
+    ))
+  }
+
   # Detect format: one-hot vs sequence
   if (format == "auto") {
-    format <- if (action %in% names(df)) "long" else "wide"
+    format <- .format_from_action(action, df)
   }
 
   if (format == "wide") {

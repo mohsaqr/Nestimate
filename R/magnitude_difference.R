@@ -82,8 +82,8 @@ utils::globalVariables(c(
 #' *magnitude difference*.
 #'
 #' @param data Long- or wide-format event log (`data.frame`).
-#' @param actor,action,time Column names in `data` (long format). `time` may
-#'   be `NULL`.
+#' @param actor,action,time Column names in `data` (long format). Column names
+#'   are not read: without `action` the data is taken as wide. Default: `NULL`.
 #' @param metric Discrepancy metric. One of `"abs_diff"` (default; absolute
 #'   difference, simplest and most robust), `"chord_dist"` (chord distance on
 #'   the unit sphere), `"atanh_diff"` (Fisher z-style on a bounded scale),
@@ -118,7 +118,7 @@ utils::globalVariables(c(
 #' }
 #' @seealso [build_network()], [compare_model()]
 #' @export
-magnitude_difference <- function(data, actor = "Actor", action = "Action",
+magnitude_difference <- function(data, actor = NULL, action = NULL,
                                  time = NULL,
                                  metric = c("abs_diff", "chord_dist",
                                             "atanh_diff", "geom_norm_diff",
@@ -134,7 +134,8 @@ magnitude_difference <- function(data, actor = "Actor", action = "Action",
   # Build both views. Wide-format input (one sequence per row, columns =
   # positions) is detected by the absence of an `action` column.
   is_wide <- format == "wide" ||
-             (format == "auto" && !(action %in% names(data)))
+             (format == "auto" &&
+                (is.null(action) || !action %in% names(data)))
   if (is_wide) {
     args_f <- list(data = data, method = "frequency", format = "wide")
     args_t <- list(data = data, method = "relative",  format = "wide")

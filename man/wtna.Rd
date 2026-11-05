@@ -40,7 +40,8 @@ per window. Default: 3 (windowed pairwise between-window counting). Set
 with no windowing.}
 
 \item{mode}{Character. Window mode: \code{"non-overlapping"} (fixed, separate
-windows) or \code{"overlapping"} (rolling, step = 1).
+windows) or \code{"overlapping"} (rolling, step = 1, the same count as
+\code{tna::import_onehot(window_type = "sliding")}).
 Default: \code{"non-overlapping"}.}
 
 \item{actor}{Character or NULL. Name of the actor/ID column for per-group
@@ -81,9 +82,11 @@ simultaneously active in the same row.
 
 \strong{Windowing}: For \code{window_size > 1}, rows are aggregated into
 windows before computing networks. Non-overlapping windows are fixed,
-separate blocks; overlapping windows roll forward one row at a time.
-Within each window, any active indicator (1) in any row makes that state
-active for the window.
+separate blocks, and a state counts once for each row it is active in.
+Overlapping windows roll forward one row at a time: each window of exactly
+\code{window_size} rows marks a state active if it is active in any of them,
+a group of n rows gives n - window_size + 1 windows, and those windows are
+then counted in blocks of \code{window_size}.
 
 \strong{Per-actor}: When \code{actor} is specified, networks are computed
 per group and summed.
@@ -115,5 +118,5 @@ net <- wtna(df, window_size = 2, mode = "non-overlapping")
 
 }
 \seealso{
-\code{\link{build_network}}, \code{\link{prepare_onehot}}
+\code{\link{build_network}}
 }

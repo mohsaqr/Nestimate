@@ -1,16 +1,16 @@
 # Skipped on CRAN to keep the check under its time limit; runs locally and in CI.
 testthat::skip_on_cran()
 
-# ---- prepare_onehot() tests ----
+# ---- .prepare_onehot() tests ----
 
-test_that("prepare_onehot basic conversion", {
+test_that(".prepare_onehot basic conversion", {
   df <- data.frame(
     A = c(1, 0, 1, 0, 1),
     B = c(0, 1, 0, 1, 0),
     C = c(0, 0, 0, 0, 0)
   )
 
-  result <- prepare_onehot(df, cols = c("A", "B", "C"))
+  result <- .prepare_onehot(df, cols = c("A", "B", "C"))
   expect_true(is.data.frame(result))
   # Should have columns like W0_T1, W0_T2, etc.
   expect_true(any(grepl("^W\\d+_T\\d+$", names(result))))
@@ -20,86 +20,86 @@ test_that("prepare_onehot basic conversion", {
   expect_true("B" %in% vals)
 })
 
-test_that("prepare_onehot with actor grouping", {
+test_that(".prepare_onehot with actor grouping", {
   df <- data.frame(
     actor = c(1, 1, 1, 2, 2),
     A = c(1, 0, 1, 0, 1),
     B = c(0, 1, 0, 1, 0)
   )
 
-  result <- prepare_onehot(df, cols = c("A", "B"), actor = "actor")
+  result <- .prepare_onehot(df, cols = c("A", "B"), actor = "actor")
   expect_true(is.data.frame(result))
   # Should have at least 2 rows (one per actor)
   expect_true(nrow(result) >= 2)
 })
 
-test_that("prepare_onehot non-overlapping window", {
+test_that(".prepare_onehot non-overlapping window", {
   df <- data.frame(
     A = c(1, 0, 1, 0),
     B = c(0, 1, 0, 1)
   )
 
-  result <- prepare_onehot(df, cols = c("A", "B"),
+  result <- .prepare_onehot(df, cols = c("A", "B"),
                            window_size = 2, window_type = "non-overlapping")
   expect_true(is.data.frame(result))
   expect_true(attr(result, "windowed"))
   expect_equal(attr(result, "window_size"), 2L)
 })
 
-test_that("prepare_onehot overlapping window", {
+test_that(".prepare_onehot overlapping window", {
   df <- data.frame(
     A = c(1, 0, 0, 1),
     B = c(0, 1, 1, 0)
   )
 
-  result <- prepare_onehot(df, cols = c("A", "B"),
+  result <- .prepare_onehot(df, cols = c("A", "B"),
                            window_size = 2, window_type = "overlapping")
   expect_true(is.data.frame(result))
   expect_true(attr(result, "windowed"))
 })
 
-test_that("prepare_onehot aggregate mode", {
+test_that(".prepare_onehot aggregate mode", {
   df <- data.frame(
     A = c(1, 0, 0, 1),
     B = c(0, 1, 1, 0)
   )
 
-  result <- prepare_onehot(df, cols = c("A", "B"),
+  result <- .prepare_onehot(df, cols = c("A", "B"),
                            window_size = 2, window_type = "non-overlapping",
                            aggregate = TRUE)
   expect_true(is.data.frame(result))
 })
 
-test_that("prepare_onehot default actor/session (single group)", {
+test_that(".prepare_onehot default actor/session (single group)", {
   df <- data.frame(
     A = c(1, 0, 1),
     B = c(0, 1, 0)
   )
 
-  result <- prepare_onehot(df, cols = c("A", "B"))
+  result <- .prepare_onehot(df, cols = c("A", "B"))
   expect_true(is.data.frame(result))
   # Should have 1 row (single group)
   expect_equal(nrow(result), 1)
 })
 
-test_that("prepare_onehot attributes set correctly", {
+test_that(".prepare_onehot attributes set correctly", {
   df <- data.frame(
     A = c(1, 0, 1),
     B = c(0, 1, 0)
   )
 
   # Pinned to size 1 (was the implicit default before 2026-05-10).
-  result <- prepare_onehot(df, cols = c("A", "B"), window_size = 1L)
+  result <- .prepare_onehot(df, cols = c("A", "B"), window_size = 1L)
   expect_true(attr(result, "windowed"))
   expect_equal(attr(result, "window_size"), 1L)
   expect_equal(attr(result, "window_span"), 2L)
   expect_equal(attr(result, "codes"), c("A", "B"))
 
-  result2 <- prepare_onehot(df, cols = c("A", "B"), window_size = 2)
+  result2 <- .prepare_onehot(df, cols = c("A", "B"), window_size = 2)
   expect_true(attr(result2, "windowed"))
 })
 
-test_that("prepare_onehot with session", {
+test_that(".prepare_onehot with session", {
   df <- data.frame(
     actor = c(1, 1, 1, 1),
     session = c("s1", "s1", "s2", "s2"),
@@ -107,12 +107,12 @@ test_that("prepare_onehot with session", {
     B = c(0, 1, 0, 1)
   )
 
-  result <- prepare_onehot(df, cols = c("A", "B"),
+  result <- .prepare_onehot(df, cols = c("A", "B"),
                            actor = "actor", session = "session")
   expect_true(is.data.frame(result))
 })
 
-test_that("prepare_onehot output feeds into build_network", {
+test_that(".prepare_onehot output feeds into build_network", {
   df <- data.frame(
     A = c(1, 0, 1, 0, 1, 0),
     B = c(0, 1, 0, 1, 0, 1),
@@ -120,7 +120,7 @@ test_that("prepare_onehot output feeds into build_network", {
     actor = c(1, 1, 1, 2, 2, 2)
   )
 
-  result <- prepare_onehot(df, cols = c("A", "B", "C"), actor = "actor")
+  result <- .prepare_onehot(df, cols = c("A", "B", "C"), actor = "actor")
   # The wide format should be usable for build_network
   seq_cols <- grep("^W\\d+_T\\d+$", names(result), value = TRUE)
   if (length(seq_cols) >= 2) {
@@ -130,13 +130,13 @@ test_that("prepare_onehot output feeds into build_network", {
   }
 })
 
-test_that("prepare_onehot validates inputs", {
+test_that(".prepare_onehot validates inputs", {
   df <- data.frame(A = c(1, 0), B = c(0, 1))
-  expect_error(prepare_onehot(df, cols = c("X", "Y")))
-  expect_error(prepare_onehot(df, cols = "A", actor = "missing_col"))
+  expect_error(.prepare_onehot(df, cols = c("X", "Y")))
+  expect_error(.prepare_onehot(df, cols = "A", actor = "missing_col"))
 })
 
-test_that("prepare_onehot preserves multi-hot rows", {
+test_that(".prepare_onehot preserves multi-hot rows", {
   df <- data.frame(
     A = c(1L, 0L),
     B = c(1L, 1L),
@@ -144,7 +144,7 @@ test_that("prepare_onehot preserves multi-hot rows", {
   )
 
   # Pinned to size 1 (was the implicit default before 2026-05-10).
-  result <- prepare_onehot(df, cols = c("A", "B", "C"), window_size = 1L)
+  result <- .prepare_onehot(df, cols = c("A", "B", "C"), window_size = 1L)
   expect_equal(sum(!is.na(as.matrix(result))), 3L)
   expect_equal(result$W0_T1, "A")
   expect_equal(result$W0_T2, "B")

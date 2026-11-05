@@ -27,13 +27,15 @@
 #'   extra band coloured \code{na_color}.
 #' @param trim Optional truncation of the time axis (one number) or of
 #'   the time axis and the rows (two numbers). \code{NULL} (default) keeps
-#'   everything. The first number: a fraction in \code{(0, 1)} drops
-#'   everything past that quantile of sequence lengths (\code{trim = 0.95});
+#'   everything. The first number: a fraction in \code{(0, 1)} keeps the
+#'   busiest time points that together hold that share of the observed
+#'   states, and removes the rest wherever they sit (\code{trim = 0.95});
 #'   a value \code{>= 1} is an absolute cut (\code{trim = 50} keeps the
-#'   first 50 time points). The second number drops the sparsest
-#'   sequences before the proportions are taken: a count keeps those with
-#'   at least that many observed states, a fraction keeps the most active
-#'   share (\code{trim = c(0.9, 0.9)}). See \code{\link{sequence_plot}}.
+#'   first 50 time points). The second number ends each sequence earlier
+#'   before the proportions are taken: a count keeps its first that many
+#'   observed states, a fraction its first share of them
+#'   (\code{trim = c(0.9, 0.9)}); no sequence is removed. See
+#'   \code{\link{sequence_plot}}.
 #' @param trim_clusterwise Grouped plots only, fractional \code{trim}
 #'   only. \code{FALSE} (default) uses one pooled cutoff for every panel
 #'   so the time axes stay aligned; \code{TRUE} crops each group to its
@@ -165,22 +167,15 @@ distribution_plot <- function(x,
   enc        <- .encode_states(x)
   full_codes <- enc$codes
   levels_all <- enc$levels
-  col_names  <- colnames(full_codes)
   K_core     <- length(levels_all)
   K          <- K_core + (if (na) 1L else 0L)
-  # One pooled cut keeps every panel the same width (aligned axes);
-  # trim_clusterwise crops each group to its own length quantile. The row
-  # half of `trim` drops the sparsest sequences, counted over the kept
-  # time points, before the proportions are taken.
+  # One pooled set of columns keeps every panel the same width (aligned axes);
+  # trim_clusterwise judges the columns within each group. The row
+  # half of `trim` ends each sequence earlier, counted over the kept time
+  # points, before the proportions are taken.
   tr         <- .trim_axes(trim)
-  global_cut <- .trim_cut(full_codes, tr$cols)
+  global_keep <- .trim_keep(full_codes, tr$cols)
   groups <- if (is.null(group)) factor(rep("all", nrow(full_codes))) else group
-  keep_rows  <- .trim_rows_keep_grouped(full_codes, groups, tr$rows, tr$cols,
-                                        global_cut, trim_clusterwise)
-  if (!all(keep_rows)) {
-    full_codes <- full_codes[keep_rows, , drop = FALSE]
-    groups     <- droplevels(groups[keep_rows])
-  }
 
   .report_unused_colors(state_colors, levels_all)
   palette       <- .state_palette(state_colors, K_core, levels_all)
@@ -192,16 +187,16 @@ distribution_plot <- function(x,
 
   count_list <- lapply(group_levels, function(g) {
     sub <- full_codes[groups == g, , drop = FALSE]
-    cut <- if (isTRUE(trim_clusterwise)) .trim_cut(sub, tr$cols) else
-      global_cut
-    sub <- sub[, seq_len(cut), drop = FALSE]
-    tab <- vapply(seq_len(cut), function(t) {
+    keep <- if (isTRUE(trim_clusterwise)) .trim_keep(sub, tr$cols) else
+      global_keep
+    sub <- .trim_rows_blank(.trim_columns(sub, keep), tr$rows)
+    tab <- vapply(seq_len(ncol(sub)), function(t) {
       col <- sub[, t]
       out <- tabulate(col, nbins = K_core)
       if (na) out <- c(out, sum(is.na(col)))
       out
     }, numeric(K))
-    rownames(tab) <- legend_labels
+    dimnames(tab) <- list(legend_labels, colnames(sub))
     tab
   })
   names(count_list) <- group_levels
@@ -214,7 +209,7 @@ distribution_plot <- function(x,
     sweep(m, 2, cs, "/")
   })
   plot_mats <- if (scale == "proportion") prop_list else count_list
-  y_max <- if (scale == "proportion") 1 else max(vapply(plot_mats, max, 0))
+  y_max <- .distribution_y_max(plot_mats, scale)
   if (is.null(y_label)) {
     y_label <- if (scale == "proportion") "Proportion" else "Count"
   }
@@ -252,7 +247,7 @@ distribution_plot <- function(x,
     g   <- group_levels[g_idx]
     mat <- plot_mats[[g_idx]]
     nc  <- ncol(mat)
-    ticks <- .tick_positions(nc, tick, col_names[seq_len(nc)])
+    ticks <- .tick_positions(nc, tick, colnames(mat))
     # When combined = FALSE, restore oma per page so each group's legend
     # has room (graphics::layout() preserves oma for the whole page; with
     # no layout, every plot.new() starts a fresh page that resets oma).
@@ -331,4 +326,17 @@ distribution_plot <- function(x,
                  levels      = legend_labels,
                  palette     = full_palette,
                  groups      = group_levels))
+}
+
+#' Upper y limit of a distribution plot
+#'
+#' Areas and bars are stacked, so a count axis must reach the tallest stack,
+#' not the largest single cell.
+#' @param plot_mats List of state-by-position matrices.
+#' @param scale `"proportion"` or `"count"`.
+#' @return A single number.
+#' @noRd
+.distribution_y_max <- function(plot_mats, scale) {
+  if (scale == "proportion") return(1)
+  max(vapply(plot_mats, \(m) max(colSums(m)), numeric(1L)))
 }

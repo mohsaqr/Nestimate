@@ -13,7 +13,8 @@
 #' @param x Input data. Accepts:
 #'   \describe{
 #'     \item{netobject}{Uses \code{$data} sequences - each sequence becomes
-#'       a transaction of its unique states.}
+#'       a transaction of its unique states. In a one-hot network the codes
+#'       are the items and each window is one transaction.}
 #'     \item{list}{Each element is a character vector of items (one transaction).}
 #'     \item{data.frame}{Wide format: each row is a transaction, character
 #'       columns are item occurrences. Or binary (0/1 or logical) columns,
@@ -303,6 +304,7 @@ association_rules <- function(x,
     if (is.null(x$data)) {
       stop("netobject has no $data. Build from sequence data.", call. = FALSE)
     }
+    if (.is_onehot_params(x$params)) return(.ar_onehot_input(x))
     df <- as.data.frame(x$data, stringsAsFactors = FALSE)
     # .sequence_rows() reads factor columns by their labels; unlist() of a
     # mixed row would turn a factor into its integer codes
@@ -347,6 +349,39 @@ association_rules <- function(x,
   stop("x must be a netobject, list, data.frame, or matrix.", call. = FALSE)
 }
 
+
+# One-hot network: the codes are the items and each window is a transaction,
+# the unit the network itself counts co-occurrence in.
+#' @noRd
+.ar_onehot_input <- function(x) {
+  data <- .resampling_transition_data(x$data, x$metadata, x$params)
+  codes <- .param_get(x$params, "codes")
+  actor <- .param_get(x$params, "actor")
+  size <- as.integer(.param_get(x$params, "window_size", 1L))
+  mode <- .param_get(x$params, "mode", "non-overlapping")
+  X <- .wtna_code_matrix(data, codes)
+  units <- if (is.null(actor)) list(seq_len(nrow(X))) else
+    .split_first_seen(.observed_group_id(data[actor], context = "actor/session"))
+  windows <- lapply(units, function(rows) {
+    .onehot_window_presence(X[rows, , drop = FALSE], size, mode)
+  })
+  .ar_binary_input(do.call(rbind, windows), codes)
+}
+
+# One logical row per window: which codes are active anywhere in it. The windows
+# are those of .wtna_cooccurrence().
+#' @noRd
+.onehot_window_presence <- function(X, size, mode) {
+  n <- nrow(X)
+  if (size <= 1L) return(X > 0L)
+  if (mode == "non-overlapping") {
+    return(unname(rowsum(X, (seq_len(n) - 1L) %/% size, reorder = FALSE) > 0L))
+  }
+  starts <- seq_len(max(n - size + 1L, 0L))
+  matrix(vapply(starts, function(s) {
+    colSums(X[s:(s + size - 1L), , drop = FALSE]) > 0L
+  }, logical(ncol(X))), nrow = length(starts), ncol = ncol(X), byrow = TRUE)
+}
 
 #' @noRd
 .ar_binary_input <- function(mat, items) {

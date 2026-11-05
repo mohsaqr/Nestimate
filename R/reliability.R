@@ -107,6 +107,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   if (length(objs) == 0L) {
     stop("At least one netobject is required.", call. = FALSE)
   }
+  invisible(Map(.stop_single_unit, objs, label = labels))
 
   # Deduplicate names
   labels <- make.unique(labels, sep = "_")
@@ -133,7 +134,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
            call. = FALSE)
     }
 
-    method <- .resolve_method_alias(net$method)
+    method <- .resampling_method(.resolve_method_alias(net$method), net$params)
     is_transition <- method %in% c("relative", "frequency", "co_occurrence")
 
     if (is_transition) {
@@ -190,12 +191,15 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   states <- net$nodes$label
   n_states <- length(states)
   nbins <- n_states * n_states
-  is_relative <- method == "relative"
+  is_relative <- .counts_are_relative(method, net$params)
   scaling <- net$scaling
   threshold <- net$threshold
 
   # Pre-compute per-sequence count matrix (reuse bootstrap infrastructure)
-  trans_2d <- .precompute_per_sequence(net$data, method, net$params, states)
+  transition_data <- .resampling_transition_data(net$data, net$metadata,
+                                                 net$params)
+  trans_2d <- .precompute_per_sequence(transition_data, method, net$params,
+                                       states)
   n_seq <- nrow(trans_2d)
   n_half <- max(1L, round(n_seq * split))
 
@@ -207,7 +211,10 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
       nz <- rs > 0
       mat[nz, ] <- mat[nz, ] / rs[nz]
     }
-    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling) # nocov
+    if (!is.null(scaling)) { # nocov start
+      mat <- .apply_scaling(mat, scaling,
+                            include_zeros = .scaling_includes_zeros(method))
+    } # nocov end
     if (threshold > 0) mat[abs(mat) < threshold] <- 0 # nocov
     mat
   }
@@ -260,7 +267,10 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   n_half <- max(1L, round(n * split))
 
   postprocess <- function(mat) {
-    if (!is.null(scaling)) mat <- .apply_scaling(mat, scaling) # nocov start
+    if (!is.null(scaling)) { # nocov start
+      mat <- .apply_scaling(mat, scaling,
+                            include_zeros = .scaling_includes_zeros(method))
+    }
     if (threshold > 0) mat[abs(mat) < threshold] <- 0
     mat # nocov end
   }
