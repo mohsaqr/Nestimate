@@ -79,6 +79,11 @@ vector satisfies it only at the normalisation chosen inside the
 iteration. Hyperedges with one member contribute nothing and are ignored
 by the uniformity check. For mixed sizes use \code{"clique"}, or keep one
 size with \code{\link[=build_hypergraph]{build_hypergraph()}} (\code{include_pairwise = FALSE}).
+
+\strong{Disconnected hypergraphs.} The Z-eigenvector is not unique when the
+hypergraph has several components: different iterations can solve the
+equation with different vectors, so compare \code{"Z"} values within one connected
+hypergraph only.
 }
 \note{
 The \code{"clique"} (CEC) variant is validated against

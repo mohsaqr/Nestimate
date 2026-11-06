@@ -1,3 +1,8 @@
+# Nestimate 1.0.8
+
+* `hypergraph_centrality()`: the help page says that the Z-eigenvector is not
+  unique on a disconnected hypergraph.
+
 # Nestimate 1.0.7
 
 Corrections from the 2026-11 package review. Each changes results for the input

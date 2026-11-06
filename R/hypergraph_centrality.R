@@ -73,6 +73,11 @@
 #' by the uniformity check. For mixed sizes use `"clique"`, or keep one
 #' size with [build_hypergraph()] (`include_pairwise = FALSE`).
 #'
+#' **Disconnected hypergraphs.** The Z-eigenvector is not unique when the
+#' hypergraph has several components: different iterations can solve the
+#' equation with different vectors, so compare `"Z"` values within one connected
+#' hypergraph only.
+#'
 #' @seealso [build_hypergraph()], [clique_expansion()],
 #'   [hypergraph_measures()].
 #'
