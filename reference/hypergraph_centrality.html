@@ -17,7 +17,7 @@ higher-order groups directly."><meta property="og:image" content="https://pak.dy
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -144,6 +144,10 @@ vector satisfies it only at the normalisation chosen inside the
 iteration. Hyperedges with one member contribute nothing and are ignored
 by the uniformity check. For mixed sizes use <code>"clique"</code>, or keep one
 size with <code><a href="build_hypergraph.html">build_hypergraph()</a></code> (<code>include_pairwise = FALSE</code>).</p>
+<p><strong>Disconnected hypergraphs.</strong> The Z-eigenvector is not unique when the
+hypergraph has several components: different iterations can solve the
+equation with different vectors, so compare <code>"Z"</code> values within one connected
+hypergraph only.</p>
     </div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>

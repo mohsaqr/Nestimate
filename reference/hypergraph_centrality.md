@@ -97,6 +97,11 @@ size with
 [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
 (`include_pairwise = FALSE`).
 
+**Disconnected hypergraphs.** The Z-eigenvector is not unique when the
+hypergraph has several components: different iterations can solve the
+equation with different vectors, so compare `"Z"` values within one
+connected hypergraph only.
+
 ## Note
 
 The `"clique"` (CEC) variant is validated against
