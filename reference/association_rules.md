@@ -38,7 +38,8 @@ plot(x, ...)
   netobject
 
   :   Uses `$data` sequences - each sequence becomes a transaction of
-      its unique states.
+      its unique states. In a one-hot network the codes are the items
+      and each window is one transaction.
 
   list
 

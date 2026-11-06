@@ -361,9 +361,10 @@ interval, whether actors sit in one group (`between`), in both
 
 For transition methods, per-sequence count matrices are computed once
 and each shuffle only re-sums them, which keeps large `iter` fast. For
-association methods the estimator is re-run on every shuffle. If a
-transition network rests on a single sequence, a warning (class
-`nestimate_single_sequence`) says it cannot be validated by resampling.
+association methods the estimator is re-run on every shuffle. A network
+that rests on one sequence, or one-hot data with no actor or session,
+has nothing to shuffle and raises an error of class
+`nestimate_single_sequence`.
 
 Wide rows combined with `params = list(concat = k)` are shuffled as the
 merged sequences used by the estimator, keeping their internal joins. A

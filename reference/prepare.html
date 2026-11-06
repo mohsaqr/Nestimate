@@ -11,7 +11,7 @@ detects sessions from time gaps, and handles tie-breaking."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,6 +95,12 @@ actor.</p></dd>
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
 <dd><p>Character or NULL. Column name containing timestamps.
 Supports ISO8601, Unix timestamps (numeric), and 40+ date/time formats.
+A value must match a format completely, with a four-digit year, so a
+two-digit year raises an error instead of being misread. Day-first or
+month-first is decided once for the whole column: any first field above
+12 means day-first, any second field above 12 means month-first. When
+the column cannot decide, values are read day-first with a warning of
+class <code>nestimate_ambiguous_dates</code>; <code>custom_format</code> settles it.
 If NULL, row order defines the sequence. Default: NULL.</p></dd>
 
 
@@ -190,7 +196,7 @@ any grouping column raise an error: drop or relabel those events first.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code>, <code><a href="prepare_onehot.html">prepare_onehot</a></code></p></div>
+    <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code></p></div>
     </div>
 
     <div class="section level2">

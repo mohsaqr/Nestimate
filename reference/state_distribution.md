@@ -65,6 +65,10 @@ data(group_regulation_long, package = "Nestimate")
 net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
                      order = "Time", group = "Course")
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
 state_distribution(net)
 #>    group      state count proportion
 #> 1      A  consensus  3298 0.26618241

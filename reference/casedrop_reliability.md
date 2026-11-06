@@ -83,7 +83,9 @@ plot(
 
   Numeric in `[0, 1]`. Required fraction of iterations whose correlation
   must exceed `threshold` for a drop proportion to qualify. Default
-  `0.95`.
+  `0.95`. It is the share of all iterations: one in which the
+  correlation is undefined (the edge vector is constant in that subset)
+  counts as not reaching `threshold`.
 
 - method:
 

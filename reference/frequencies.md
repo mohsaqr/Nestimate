@@ -9,9 +9,9 @@ occurs across all sequences.
 ``` r
 frequencies(
   data,
-  action = "Action",
+  action = NULL,
   id = NULL,
-  time = "Time",
+  time = NULL,
   cols = NULL,
   format = c("auto", "long", "wide")
 )
@@ -28,8 +28,9 @@ summary(object, ...)
 
 - action:
 
-  Character. Name of the column containing actions/states (for long
-  format). Default: "Action".
+  Character or NULL. Name of the column containing actions/states (for
+  long format). Column names are not read: without it the data is taken
+  as wide. Default: NULL.
 
 - id:
 
@@ -39,8 +40,8 @@ summary(object, ...)
 
 - time:
 
-  Character. Name of the time column used to order actions within
-  sequences (for long format). Default: "Time".
+  Character or NULL. Name of the time column used to order actions
+  within sequences (for long format). Default: NULL (row order).
 
 - cols:
 

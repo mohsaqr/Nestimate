@@ -25,7 +25,7 @@ are computed directly from the matrix without igraph."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,7 +148,9 @@ proportion (default: 1000).</p></dd>
 
 <dt id="arg-certainty">certainty<a class="anchor" aria-label="anchor" href="#arg-certainty"></a></dt>
 <dd><p>Numeric. Required proportion of iterations above
-threshold (default: 0.95).</p></dd>
+threshold (default: 0.95). It is the share of all iterations: one in which
+the correlation is undefined (the measure is constant in that subset)
+counts as not reaching <code>threshold</code>.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>

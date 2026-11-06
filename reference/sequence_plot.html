@@ -25,7 +25,7 @@ distribution_plot.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -275,22 +275,24 @@ the time axis and the rows (two numbers), to stop a few long
 sequences from stretching the plot and a few near-empty ones from
 padding it. Applies to all three types (including the <code>mcml</code>
 multichannel view). <code>NULL</code> (default) plots everything.</p>
-<p>The first number cuts the time axis: a fraction in <code>(0, 1)</code>
-drops everything past that quantile of sequence lengths
-(<code>trim = 0.95</code> keeps the columns covering the shortest 95% of
-sequences); a value <code>&gt;= 1</code> is an absolute cut (<code>trim = 50</code>
-keeps the first 50 time points). With <code>periods</code> the unit is the
-period block: <code>trim = 60</code> keeps the first 60 periods and a
-fraction keeps the periods up to that quantile of the actors' last
-active period.</p>
-<p>The second number cuts the rows, counted over the time points kept by
-the first: a value <code>&gt;= 1</code> keeps the sequences with at least that
-many observed states (<code>trim = c(60, 5)</code>), a fraction keeps the
-most active share of the sequences (<code>trim = c(0.9, 0.9)</code> drops
-the longest 10% of the time axis and the sparsest 10% of the rows).
-<code>NA</code> leaves an axis alone (<code>trim = c(NA, 5)</code>). A row cut
-cannot be combined with <code>tree</code> or a clustering dendrogram, whose
-leaves are the full set of rows.</p></dd>
+<p>The first number cuts the time axis. A fraction in <code>(0, 1)</code>
+judges each time point on its own activity and keeps the busiest ones
+that together hold that share of the observed states, ties going to the
+earlier one; the rest are removed wherever they sit and the kept ones
+close up under their own labels. So <code>trim = 0.9</code> removes the quiet
+time points holding the last tenth of the states, which is what a long
+tail consists of, and those with no data. A value <code>&gt;= 1</code> is an absolute
+cut (<code>trim = 50</code> keeps the first 50 time points). With
+<code>periods</code> the unit is the period block: <code>trim = 60</code> keeps the
+first 60 periods and a fraction judges each period by its actions. Only
+the drawing changes, not the data.</p>
+<p>The second number ends each row earlier and never removes a row,
+counted over the time points kept by the first: a value <code>&gt;= 1</code>
+keeps each row's first that many observed states
+(<code>trim = c(60, 5)</code>), a fraction its first share of them
+(<code>trim = c(0.9, 0.9)</code>). What is left stays in place; the row is
+white after that point. Only the drawing changes, not the data.
+<code>NA</code> leaves an axis alone (<code>trim = c(NA, 5)</code>).</p></dd>
 
 
 <dt id="arg-panel">panel<a class="anchor" aria-label="anchor" href="#arg-panel"></a></dt>
@@ -351,8 +353,8 @@ Must not equal a state or cluster name.</p></dd>
 <code>"distribution"</code> only, and only when <code>trim</code> is a fraction.
 <code>FALSE</code> (default) computes one cutoff on the pooled data and
 applies it to every panel, so all facets share the same width and the
-time axes stay aligned. <code>TRUE</code> crops each group to its own
-length quantile, so panels can end up at different widths (ragged
+time axes stay aligned. <code>TRUE</code> judges the time points within each
+group, so panels can end up at different widths (ragged
 axes). Absolute <code>trim</code> (<code>&gt;= 1</code>) ignores this - the column is
 the same everywhere either way.</p></dd>
 

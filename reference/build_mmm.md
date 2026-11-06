@@ -48,6 +48,10 @@ plot(
   A data.frame (wide format), `netobject`, `cograph_network`, or `tna`
   model. For tna and cograph_network objects the stored
   (integer-encoded) data is extracted and decoded to state labels.
+  Columns of a data.frame take the same roles as in
+  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+  an id or a covariate is not a sequence position. Those set aside are
+  named in a message and kept in `$metadata`.
 
 - k:
 

@@ -76,12 +76,13 @@ distribution_plot(
 
   Optional truncation of the time axis (one number) or of the time axis
   and the rows (two numbers). `NULL` (default) keeps everything. The
-  first number: a fraction in `(0, 1)` drops everything past that
-  quantile of sequence lengths (`trim = 0.95`); a value `>= 1` is an
-  absolute cut (`trim = 50` keeps the first 50 time points). The second
-  number drops the sparsest sequences before the proportions are taken:
-  a count keeps those with at least that many observed states, a
-  fraction keeps the most active share (`trim = c(0.9, 0.9)`). See
+  first number: a fraction in `(0, 1)` keeps the busiest time points
+  that together hold that share of the observed states, and removes the
+  rest wherever they sit (`trim = 0.95`); a value `>= 1` is an absolute
+  cut (`trim = 50` keeps the first 50 time points). The second number
+  ends each sequence earlier before the proportions are taken: a count
+  keeps its first that many observed states, a fraction its first share
+  of them (`trim = c(0.9, 0.9)`); no sequence is removed. See
   [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
 
 - trim_clusterwise:

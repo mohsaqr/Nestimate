@@ -11,7 +11,7 @@ or both network types."><meta property="og:image" content="https://pak.dynasite.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -106,7 +106,8 @@ with no windowing.</p></dd>
 
 <dt id="arg-mode">mode<a class="anchor" aria-label="anchor" href="#arg-mode"></a></dt>
 <dd><p>Character. Window mode: <code>"non-overlapping"</code> (fixed, separate
-windows) or <code>"overlapping"</code> (rolling, step = 1).
+windows) or <code>"overlapping"</code> (rolling, step = 1, the same count as
+<code>tna::import_onehot(window_type = "sliding")</code>).
 Default: <code>"non-overlapping"</code>.</p></dd>
 
 
@@ -147,15 +148,17 @@ how often state i is active at time t AND state j at time t+1.</p>
 simultaneously active in the same row.</p>
 <p><strong>Windowing</strong>: For <code>window_size &gt; 1</code>, rows are aggregated into
 windows before computing networks. Non-overlapping windows are fixed,
-separate blocks; overlapping windows roll forward one row at a time.
-Within each window, any active indicator (1) in any row makes that state
-active for the window.</p>
+separate blocks, and a state counts once for each row it is active in.
+Overlapping windows roll forward one row at a time: each window of exactly
+<code>window_size</code> rows marks a state active if it is active in any of them,
+a group of n rows gives n - window_size + 1 windows, and those windows are
+then counted in blocks of <code>window_size</code>.</p>
 <p><strong>Per-actor</strong>: When <code>actor</code> is specified, networks are computed
 per group and summed.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code>, <code><a href="prepare_onehot.html">prepare_onehot</a></code></p></div>
+    <div class="dont-index"><p><code><a href="build_network.html">build_network</a></code></p></div>
     </div>
 
     <div class="section level2">

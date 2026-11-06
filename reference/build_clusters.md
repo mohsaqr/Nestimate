@@ -52,7 +52,11 @@ print(x, ...)
   data.frame / matrix
 
   :   Wide-format sequences (rows = sequences, columns = time points,
-      values = state names).
+      values = state names). Columns of a data frame take the same roles
+      as in
+      [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+      an id or a covariate is not a sequence position. Those set aside
+      are named in a message and kept in `$metadata`.
 
   netobject
 
@@ -290,7 +294,8 @@ An object of class `"net_clustering"` containing:
   For `netobject` input, its per-sequence metadata, one row per
   clustered sequence, so
   [`session_ids`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
-  can name each sequence. NULL otherwise.
+  can name each sequence. For a data frame, the columns set aside as
+  covariates (see `data`). NULL otherwise.
 
 - htna_partition:
 

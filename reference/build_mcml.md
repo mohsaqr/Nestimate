@@ -201,9 +201,10 @@ summary(object, ...)
   time point. A fraction in `(0, 1)` keeps the columns covering that
   quantile of sequence lengths (`trim = 0.95` keeps the shortest 95%); a
   value `>= 1` is an absolute cut (`trim = 10` keeps the first 10 time
-  points). Same semantics as
+  points). This changes the data, so it only ever cuts the end of a
+  sequence. The fraction in
   [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)'s
-  `trim`.
+  `trim` works differently, because it changes only the drawing.
 
 - end:
 

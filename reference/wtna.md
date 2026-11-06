@@ -57,7 +57,9 @@ print(x, ...)
 - mode:
 
   Character. Window mode: `"non-overlapping"` (fixed, separate windows)
-  or `"overlapping"` (rolling, step = 1). Default: `"non-overlapping"`.
+  or `"overlapping"` (rolling, step = 1, the same count as
+  `tna::import_onehot(window_type = "sliding")`). Default:
+  `"non-overlapping"`.
 
 - actor:
 
@@ -100,17 +102,18 @@ simultaneously active in the same row.
 
 **Windowing**: For `window_size > 1`, rows are aggregated into windows
 before computing networks. Non-overlapping windows are fixed, separate
-blocks; overlapping windows roll forward one row at a time. Within each
-window, any active indicator (1) in any row makes that state active for
-the window.
+blocks, and a state counts once for each row it is active in.
+Overlapping windows roll forward one row at a time: each window of
+exactly `window_size` rows marks a state active if it is active in any
+of them, a group of n rows gives n - window_size + 1 windows, and those
+windows are then counted in blocks of `window_size`.
 
 **Per-actor**: When `actor` is specified, networks are computed per
 group and summed.
 
 ## See also
 
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
-[`prepare_onehot`](https://pak.dynasite.org/Nestimate/reference/prepare_onehot.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

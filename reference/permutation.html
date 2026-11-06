@@ -17,7 +17,7 @@ with registered custom estimators."><meta property="og:image" content="https://p
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -379,10 +379,10 @@ the design effects.</p>
 
 <p>For transition methods, per-sequence count matrices are computed once
 and each shuffle only re-sums them, which keeps large <code>iter</code> fast.
-For association methods the estimator is re-run on every shuffle. If a
-transition network rests on a single sequence, a warning (class
-<code>nestimate_single_sequence</code>) says it cannot be validated by
-resampling.</p>
+For association methods the estimator is re-run on every shuffle. A network
+that rests on one sequence, or one-hot data with no actor or session, has
+nothing to shuffle and raises an error of class
+<code>nestimate_single_sequence</code>.</p>
 <p>Wide rows combined with <code>params = list(concat = k)</code> are shuffled
 as the merged sequences used by the estimator, keeping their internal
 joins. A merged sequence must lie within one actor when <code>actor</code>

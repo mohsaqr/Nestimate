@@ -273,6 +273,7 @@ data(group_regulation_long, package = "Nestimate")
 net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
                      order = "Time")
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
 mosaic_plot(net, seed = 1)
 
 

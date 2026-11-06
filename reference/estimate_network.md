@@ -41,11 +41,18 @@ estimate_network(
   method internals. Transition estimators accept tna-style sequence
   options such as `weighted` and `concat` (and the low-level
   `begin_state` / `end_state`, of which `start` / `end` are the public
-  form – see those arguments). Column-like entries in `params`
-  (`action`, `id`, `id_col`, `actor`, `time`, `session`, `order`,
-  `cols`, `codes`, and `group`) are resolved before format detection and
-  must name existing columns. If the same column role is supplied both
-  directly and through `params`, the names must agree.
+  form – see those arguments). `window_size` (and `window_span`, or
+  `windowed = TRUE` for a size of 2) counts the methods `relative`,
+  `frequency` and `co_occurrence` between consecutive non-overlapping
+  blocks of that many positions, as
+  [`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html)
+  does; other transition methods raise an error of class
+  `nestimate_bad_input`, and `mode = "overlapping"` a warning of class
+  `nestimate_ignored_mode`. Column-like entries in `params` (`action`,
+  `id`, `id_col`, `actor`, `time`, `session`, `order`, `cols`, `codes`,
+  and `group`) are resolved before format detection and must name
+  existing columns. If the same column role is supplied both directly
+  and through `params`, the names must agree.
 
 - scaling:
 

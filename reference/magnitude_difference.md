@@ -15,8 +15,8 @@ difference*.
 ``` r
 magnitude_difference(
   data,
-  actor = "Actor",
-  action = "Action",
+  actor = NULL,
+  action = NULL,
   time = NULL,
   metric = c("abs_diff", "chord_dist", "atanh_diff", "geom_norm_diff", "cv_inflation"),
   scale = c("tna_range", "rank_minmax", "minmax", "none"),
@@ -38,7 +38,8 @@ plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
 
 - actor, action, time:
 
-  Column names in `data` (long format). `time` may be `NULL`.
+  Column names in `data` (long format). Column names are not read:
+  without `action` the data is taken as wide. Default: `NULL`.
 
 - metric:
 

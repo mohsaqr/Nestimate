@@ -59,6 +59,7 @@ net <- build_network(human_long,
                      action = "cluster",
                      actor  = "session_id",
                      time   = "timestamp")
+#> build_network(): `session_id` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
 #> Metadata aggregated per session: ties resolved by first occurrence in 'code' (99 sessions)
 ```
 
@@ -109,13 +110,13 @@ joined back to the raw data:
 ``` r
 
 head(session_ids(clust))
-#>   sequence                  session_label cluster
-#> 1        1 0086cabebd15 | 0086cabebd15 s1       1
-#> 2        2 00bd84ef1666 | 00bd84ef1666 s1       1
-#> 3        3 00da7e5a052d | 00da7e5a052d s1       2
-#> 4        4 0162fe521f0c | 0162fe521f0c s1       2
-#> 5        5 01aa31285a12 | 01aa31285a12 s1       1
-#> 6        6 01eb3fbbd431 | 01eb3fbbd431 s1       3
+#>   sequence   session_id   session_label cluster
+#> 1        1 0086cabebd15 0086cabebd15 s1       1
+#> 2        2 00bd84ef1666 00bd84ef1666 s1       1
+#> 3        3 00da7e5a052d 00da7e5a052d s1       2
+#> 4        4 0162fe521f0c 0162fe521f0c s1       2
+#> 5        5 01aa31285a12 01aa31285a12 s1       1
+#> 6        6 01eb3fbbd431 01eb3fbbd431 s1       3
 ```
 
 ### Visualizing Clusters

@@ -924,8 +924,6 @@ Convert and prepare data for network estimation
   : Prepare Data for TNA Analysis
 - [`action_to_onehot()`](https://pak.dynasite.org/Nestimate/reference/action_to_onehot.md)
   : Convert Action Column to One-Hot Encoding
-- [`prepare_onehot()`](https://pak.dynasite.org/Nestimate/reference/prepare_onehot.md)
-  : Import One-Hot Encoded Data into Sequence Format
 - [`wide_to_long()`](https://pak.dynasite.org/Nestimate/reference/wide_to_long.md)
   : Convert Wide Sequences to Long Format
 - [`long_to_wide()`](https://pak.dynasite.org/Nestimate/reference/long_to_wide.md)

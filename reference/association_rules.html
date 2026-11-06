@@ -15,7 +15,7 @@ and logical matrix indexing for k-itemsets."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,8 @@ and logical matrix indexing for k-itemsets.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>Input data. Accepts:</p><dl><dt>netobject</dt>
 <dd><p>Uses <code>$data</code> sequences - each sequence becomes
-a transaction of its unique states.</p></dd>
+a transaction of its unique states. In a one-hot network the codes
+are the items and each window is one transaction.</p></dd>
 
 <dt>list</dt>
 <dd><p>Each element is a character vector of items (one transaction).</p></dd>

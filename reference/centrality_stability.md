@@ -86,7 +86,9 @@ plot(x, ...)
 - certainty:
 
   Numeric. Required proportion of iterations above threshold (default:
-  0.95).
+  0.95). It is the share of all iterations: one in which the correlation
+  is undefined (the measure is constant in that subset) counts as not
+  reaching `threshold`.
 
 - method:
 

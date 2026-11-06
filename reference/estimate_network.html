@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,6 +87,12 @@ Transition estimators accept tna-style sequence options such as
 <code>weighted</code> and <code>concat</code> (and the low-level <code>begin_state</code>
 / <code>end_state</code>, of which <code>start</code> / <code>end</code> are the public
 form – see those arguments).
+<code>window_size</code> (and <code>window_span</code>, or <code>windowed = TRUE</code> for a
+size of 2) counts the methods <code>relative</code>, <code>frequency</code> and
+<code>co_occurrence</code> between consecutive non-overlapping blocks of that many
+positions, as <code><a href="https://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::tna()</a></code> does; other transition methods raise an error
+of class <code>nestimate_bad_input</code>, and <code>mode = "overlapping"</code> a warning
+of class <code>nestimate_ignored_mode</code>.
 Column-like entries in <code>params</code> (<code>action</code>, <code>id</code>,
 <code>id_col</code>, <code>actor</code>, <code>time</code>, <code>session</code>, <code>order</code>,
 <code>cols</code>, <code>codes</code>, and <code>group</code>) are resolved before format

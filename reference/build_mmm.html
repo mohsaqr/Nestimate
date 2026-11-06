@@ -11,7 +11,7 @@ matrix. Sequences are probabilistically assigned to components."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,7 +97,10 @@ matrix. Sequences are probabilistically assigned to components.</p>
 <dd><p>A data.frame (wide format), <code>netobject</code>,
 <code>cograph_network</code>, or <code>tna</code> model. For tna and
 cograph_network objects the stored (integer-encoded) data is
-extracted and decoded to state labels.</p></dd>
+extracted and decoded to state labels. Columns of a data.frame take the
+same roles as in <code><a href="build_network.html">build_network</a></code>: an id or a covariate is not
+a sequence position. Those set aside are named in a message and kept in
+<code>$metadata</code>.</p></dd>
 
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>

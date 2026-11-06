@@ -15,7 +15,7 @@ original transition data to produce the TRUE Markov chain over cluster states.">
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -236,8 +236,10 @@ the matching cells are set to <code>NA</code>.</p></dd>
 keeps every time point. A fraction in <code>(0, 1)</code> keeps the columns
 covering that quantile of sequence lengths (<code>trim = 0.95</code> keeps the
 shortest 95%); a value <code>&gt;= 1</code> is an absolute cut
-(<code>trim = 10</code> keeps the first 10 time points). Same semantics as
-<code><a href="sequence_plot.html">sequence_plot</a></code>'s <code>trim</code>.</p></dd>
+(<code>trim = 10</code> keeps the first 10 time points). This changes the
+data, so it only ever cuts the end of a sequence. The fraction in
+<code><a href="sequence_plot.html">sequence_plot</a></code>'s <code>trim</code> works differently, because it
+changes only the drawing.</p></dd>
 
 
 <dt id="arg-end">end<a class="anchor" aria-label="anchor" href="#arg-end"></a></dt>

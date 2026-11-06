@@ -320,6 +320,10 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   plot(res)             # ggplot chart
   head(as.data.frame(res))
 }
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
+#> build_network(): `Time` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
 #> State frequencies (style = marimekko, source = netobject_group)
 #>   Total events: 27,533  |  Groups: 3  |  States: 9
 #> 

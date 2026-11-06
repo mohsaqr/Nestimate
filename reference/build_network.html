@@ -13,7 +13,7 @@ estimator registry, so custom estimators can also be used."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -157,7 +157,12 @@ grouping. Default: <code>NULL</code>.</p></dd>
 
 <dt id="arg-action">action<a class="anchor" aria-label="anchor" href="#arg-action"></a></dt>
 <dd><p>Character. Name of the action/state column (long format).
-Default: <code>NULL</code>.</p></dd>
+Default: <code>NULL</code>. Column names give no role: <code>action</code>,
+<code>actor</code>, <code>time</code> and <code>session</code> are read only when set. A
+column called <code>Action</code> with nothing declared raises an error of class
+<code>nestimate_bad_input</code>; an undeclared time or session column beside
+<code>action</code> is named in a message of class
+<code>nestimate_column_role</code>.</p></dd>
 
 
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
@@ -198,6 +203,7 @@ Default: <code>3L</code>.</p></dd>
 <dd><p>Character. Windowing mode for one-hot input only:
 <code>"non-overlapping"</code> or <code>"overlapping"</code>. Has no effect on
 wide or long sequence data (only the one-hot/wtna path reads it).
+See <code><a href="wtna.html">wtna</a></code> for how overlapping windows are counted.
 Default: <code>"non-overlapping"</code>.</p></dd>
 
 
@@ -267,7 +273,10 @@ every character column is read as a position.</p></dd>
 <dd><p>Character vector or <code>NULL</code>. Explicit names of
 columns to force into the <code>$metadata</code> slot. The remaining columns
 are auto-detected as state via the values-in-nodes rule. Cannot overlap
-with <code>state_cols</code>. Default: <code>NULL</code>.</p></dd>
+with <code>state_cols</code>. Default: <code>NULL</code>. A character column left out
+of a numbered run of positions is named in a message of class
+<code>nestimate_column_role</code>; listing it here or in <code>state_cols</code>
+settles it.</p></dd>
 
 
 <dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
@@ -301,6 +310,12 @@ Transition estimators accept tna-style sequence options such as
 <code>weighted</code> and <code>concat</code> (and the low-level <code>begin_state</code>
 / <code>end_state</code>, of which <code>start</code> / <code>end</code> are the public
 form – see those arguments).
+<code>window_size</code> (and <code>window_span</code>, or <code>windowed = TRUE</code> for a
+size of 2) counts the methods <code>relative</code>, <code>frequency</code> and
+<code>co_occurrence</code> between consecutive non-overlapping blocks of that many
+positions, as <code><a href="https://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::tna()</a></code> does; other transition methods raise an error
+of class <code>nestimate_bad_input</code>, and <code>mode = "overlapping"</code> a warning
+of class <code>nestimate_ignored_mode</code>.
 Column-like entries in <code>params</code> (<code>action</code>, <code>id</code>,
 <code>id_col</code>, <code>actor</code>, <code>time</code>, <code>session</code>, <code>order</code>,
 <code>cols</code>, <code>codes</code>, and <code>group</code>) are resolved before format

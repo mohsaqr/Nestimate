@@ -99,7 +99,11 @@ print(x, ...)
 - action:
 
   Character. Name of the action/state column (long format). Default:
-  `NULL`.
+  `NULL`. Column names give no role: `action`, `actor`, `time` and
+  `session` are read only when set. A column called `Action` with
+  nothing declared raises an error of class `nestimate_bad_input`; an
+  undeclared time or session column beside `action` is named in a
+  message of class `nestimate_column_role`.
 
 - time:
 
@@ -136,7 +140,9 @@ print(x, ...)
 
   Character. Windowing mode for one-hot input only: `"non-overlapping"`
   or `"overlapping"`. Has no effect on wide or long sequence data (only
-  the one-hot/wtna path reads it). Default: `"non-overlapping"`.
+  the one-hot/wtna path reads it). See
+  [`wtna`](https://pak.dynasite.org/Nestimate/reference/wtna.md) for how
+  overlapping windows are counted. Default: `"non-overlapping"`.
 
 - scaling:
 
@@ -203,7 +209,9 @@ print(x, ...)
   Character vector or `NULL`. Explicit names of columns to force into
   the `$metadata` slot. The remaining columns are auto-detected as state
   via the values-in-nodes rule. Cannot overlap with `state_cols`.
-  Default: `NULL`.
+  Default: `NULL`. A character column left out of a numbered run of
+  positions is named in a message of class `nestimate_column_role`;
+  listing it here or in `state_cols` settles it.
 
 - start:
 
@@ -235,11 +243,18 @@ print(x, ...)
   method internals. Transition estimators accept tna-style sequence
   options such as `weighted` and `concat` (and the low-level
   `begin_state` / `end_state`, of which `start` / `end` are the public
-  form – see those arguments). Column-like entries in `params`
-  (`action`, `id`, `id_col`, `actor`, `time`, `session`, `order`,
-  `cols`, `codes`, and `group`) are resolved before format detection and
-  must name existing columns. If the same column role is supplied both
-  directly and through `params`, the names must agree.
+  form – see those arguments). `window_size` (and `window_span`, or
+  `windowed = TRUE` for a size of 2) counts the methods `relative`,
+  `frequency` and `co_occurrence` between consecutive non-overlapping
+  blocks of that many positions, as
+  [`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html)
+  does; other transition methods raise an error of class
+  `nestimate_bad_input`, and `mode = "overlapping"` a warning of class
+  `nestimate_ignored_mode`. Column-like entries in `params` (`action`,
+  `id`, `id_col`, `actor`, `time`, `session`, `order`, `cols`, `codes`,
+  and `group`) are resolved before format detection and must name
+  existing columns. If the same column role is supplied both directly
+  and through `params`, the names must agree.
 
 - labels:
 

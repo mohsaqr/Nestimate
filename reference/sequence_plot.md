@@ -232,21 +232,24 @@ print(x, ...)
   to all three types (including the `mcml` multichannel view). `NULL`
   (default) plots everything.
 
-  The first number cuts the time axis: a fraction in `(0, 1)` drops
-  everything past that quantile of sequence lengths (`trim = 0.95` keeps
-  the columns covering the shortest 95% of sequences); a value `>= 1` is
-  an absolute cut (`trim = 50` keeps the first 50 time points). With
+  The first number cuts the time axis. A fraction in `(0, 1)` judges
+  each time point on its own activity and keeps the busiest ones that
+  together hold that share of the observed states, ties going to the
+  earlier one; the rest are removed wherever they sit and the kept ones
+  close up under their own labels. So `trim = 0.9` removes the quiet
+  time points holding the last tenth of the states, which is what a long
+  tail consists of, and those with no data. A value `>= 1` is an
+  absolute cut (`trim = 50` keeps the first 50 time points). With
   `periods` the unit is the period block: `trim = 60` keeps the first 60
-  periods and a fraction keeps the periods up to that quantile of the
-  actors' last active period.
+  periods and a fraction judges each period by its actions. Only the
+  drawing changes, not the data.
 
-  The second number cuts the rows, counted over the time points kept by
-  the first: a value `>= 1` keeps the sequences with at least that many
-  observed states (`trim = c(60, 5)`), a fraction keeps the most active
-  share of the sequences (`trim = c(0.9, 0.9)` drops the longest 10% of
-  the time axis and the sparsest 10% of the rows). `NA` leaves an axis
-  alone (`trim = c(NA, 5)`). A row cut cannot be combined with `tree` or
-  a clustering dendrogram, whose leaves are the full set of rows.
+  The second number ends each row earlier and never removes a row,
+  counted over the time points kept by the first: a value `>= 1` keeps
+  each row's first that many observed states (`trim = c(60, 5)`), a
+  fraction its first share of them (`trim = c(0.9, 0.9)`). What is left
+  stays in place; the row is white after that point. Only the drawing
+  changes, not the data. `NA` leaves an axis alone (`trim = c(NA, 5)`).
 
 - panel:
 
@@ -303,9 +306,9 @@ print(x, ...)
   Grouped `type = "index"` / `"distribution"` only, and only when `trim`
   is a fraction. `FALSE` (default) computes one cutoff on the pooled
   data and applies it to every panel, so all facets share the same width
-  and the time axes stay aligned. `TRUE` crops each group to its own
-  length quantile, so panels can end up at different widths (ragged
-  axes). Absolute `trim` (`>= 1`) ignores this - the column is the same
+  and the time axes stay aligned. `TRUE` judges the time points within
+  each group, so panels can end up at different widths (ragged axes).
+  Absolute `trim` (`>= 1`) ignores this - the column is the same
   everywhere either way.
 
 - row_gap:

@@ -16,9 +16,9 @@ merged sequence must belong entirely to one actor.
 For association methods (&quot;cor&quot;, &quot;pcor&quot;, &quot;glasso&quot;,
 and custom estimators), the full estimator is called on resampled rows
 each iteration.
-If a transition network contains only one sequence, the function warns that
-such a network is not recommended for bootstrap or other confirmatory
-testing."><meta property="og:description" content="Non-parametric bootstrap for any network estimated by
+A network that rests on one sequence, or one-hot data with no actor or
+session, has nothing to resample and raises an error of class
+nestimate_single_sequence."><meta property="og:description" content="Non-parametric bootstrap for any network estimated by
 build_network. Works with all built-in methods
 (transition and association) as well as custom registered estimators.
 For transition methods (&quot;relative&quot;, &quot;frequency&quot;,
@@ -35,9 +35,9 @@ merged sequence must belong entirely to one actor.
 For association methods (&quot;cor&quot;, &quot;pcor&quot;, &quot;glasso&quot;,
 and custom estimators), the full estimator is called on resampled rows
 each iteration.
-If a transition network contains only one sequence, the function warns that
-such a network is not recommended for bootstrap or other confirmatory
-testing."><meta property="og:image" content="https://pak.dynasite.org/Nestimate/logo.svg"></head><body>
+A network that rests on one sequence, or one-hot data with no actor or
+session, has nothing to resample and raises an error of class
+nestimate_single_sequence."><meta property="og:image" content="https://pak.dynasite.org/Nestimate/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -45,7 +45,7 @@ testing."><meta property="og:image" content="https://pak.dynasite.org/Nestimate/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,9 +99,9 @@ merged sequence must belong entirely to one actor.</p>
 <p>For association methods (<code>"cor"</code>, <code>"pcor"</code>, <code>"glasso"</code>,
 and custom estimators), the full estimator is called on resampled rows
 each iteration.</p>
-<p>If a transition network contains only one sequence, the function warns that
-such a network is not recommended for bootstrap or other confirmatory
-testing.</p>
+<p>A network that rests on one sequence, or one-hot data with no actor or
+session, has nothing to resample and raises an error of class
+<code>nestimate_single_sequence</code>.</p>
     </div>
 
     <div class="section level2">

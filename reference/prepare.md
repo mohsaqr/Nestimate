@@ -46,8 +46,14 @@ print(x, ...)
 - time:
 
   Character or NULL. Column name containing timestamps. Supports
-  ISO8601, Unix timestamps (numeric), and 40+ date/time formats. If
-  NULL, row order defines the sequence. Default: NULL.
+  ISO8601, Unix timestamps (numeric), and 40+ date/time formats. A value
+  must match a format completely, with a four-digit year, so a two-digit
+  year raises an error instead of being misread. Day-first or
+  month-first is decided once for the whole column: any first field
+  above 12 means day-first, any second field above 12 means month-first.
+  When the column cannot decide, values are read day-first with a
+  warning of class `nestimate_ambiguous_dates`; `custom_format` settles
+  it. If NULL, row order defines the sequence. Default: NULL.
 
 - order:
 
@@ -145,8 +151,7 @@ events first.
 
 ## See also
 
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
-[`prepare_onehot`](https://pak.dynasite.org/Nestimate/reference/prepare_onehot.md)
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

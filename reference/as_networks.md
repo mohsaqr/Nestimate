@@ -87,7 +87,7 @@ summary(nets)
 #> Network metrics by group:
 #>                       metric   macro       A       B
 #>                   Node Count       2       3       3
-#>                   Edge Count       2       6       6
+#>                   Edge Count       1       3       3
 #>              Network Density       1       1       1
 #>                Mean Distance 0.00676  0.4597  0.5117
 #>            Mean Out-Strength 0.00676  0.9193   1.023

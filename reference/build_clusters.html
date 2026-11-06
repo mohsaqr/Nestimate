@@ -15,7 +15,7 @@ distance computation for 100-1000x speedup on edit distances."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,7 +102,10 @@ distance computation for 100-1000x speedup on edit distances.</p>
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Input data. Accepts multiple formats:</p><dl><dt>data.frame / matrix</dt>
 <dd><p>Wide-format sequences (rows = sequences,
-columns = time points, values = state names).</p></dd>
+columns = time points, values = state names). Columns of a data frame
+take the same roles as in <code><a href="build_network.html">build_network</a></code>: an id or a
+covariate is not a sequence position. Those set aside are named in a
+message and kept in <code>$metadata</code>.</p></dd>
 
 <dt>netobject</dt>
 <dd><p>A network object from <code><a href="build_network.html">build_network</a></code>.
@@ -308,7 +311,8 @@ networks can be rebuilt the same way. NULL otherwise.</p></dd>
 <dt>metadata</dt>
 <dd><p>For <code>netobject</code> input, its per-sequence metadata,
 one row per clustered sequence, so <code><a href="session_ids.html">session_ids</a></code> can name
-each sequence. NULL otherwise.</p></dd>
+each sequence. For a data frame, the columns set aside as covariates
+(see <code>data</code>). NULL otherwise.</p></dd>
 
 <dt>htna_partition</dt>
 <dd><p>For HTNA input, the preserved node-to-actor

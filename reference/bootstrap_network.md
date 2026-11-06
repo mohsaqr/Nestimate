@@ -20,9 +20,9 @@ For association methods (`"cor"`, `"pcor"`, `"glasso"`, and custom
 estimators), the full estimator is called on resampled rows each
 iteration.
 
-If a transition network contains only one sequence, the function warns
-that such a network is not recommended for bootstrap or other
-confirmatory testing.
+A network that rests on one sequence, or one-hot data with no actor or
+session, has nothing to resample and raises an error of class
+`nestimate_single_sequence`.
 
 ## Usage
 
