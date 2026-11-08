@@ -12,7 +12,8 @@ landscape_surface(
   measure = "longitudinal_entropy",
   states = NULL,
   k = 30L,
-  n_grid = 25L
+  n_grid = 25L,
+  cols = NULL
 )
 
 \method{summary}{net_landscape_surface}(object, ends = TRUE, ...)
@@ -39,6 +40,10 @@ number of sequences).}
 \item{n_grid}{Integer. Slices between the 5th and 95th percentile of the
 measure. If these percentiles coincide for a nonconstant measure,
 its full range is used. Default 25.}
+
+\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
+holding the positions. Needed when they are not a numbered run (\code{T1},
+\code{T2}, ...) or one of them is called \code{action}.}
 
 \item{object}{A \code{net_landscape_surface} object (for
 \code{summary()}).}

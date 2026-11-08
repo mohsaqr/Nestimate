@@ -308,11 +308,10 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
     dots <- list(...)
     method <- match.arg(dots$method %||% "hon", c("hon", "hypa", "mogen"))
     dots$method <- NULL
-    seqs <- .coerce_sequence_input(x)
     ho_obj <- switch(method,
-      hon   = do.call(build_hon,   c(list(seqs), dots)),
-      hypa  = do.call(build_hypa,  c(list(seqs), dots)),
-      mogen = do.call(build_mogen, c(list(seqs), dots))
+      hon   = do.call(build_hon,   c(list(x), dots)),
+      hypa  = do.call(build_hypa,  c(list(x), dots)),
+      mogen = do.call(build_mogen, c(list(x), dots))
     )
     return(.build_simplicial_pathway(ho_obj, max_dim, max_pathways,
                                      anomaly = anomaly))

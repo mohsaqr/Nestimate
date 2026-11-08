@@ -74,6 +74,12 @@ frequencies <- function(data,
   stopifnot(is.null(id) || is.character(id))
   stopifnot(is.null(cols) || is.character(cols))
   format <- match.arg(format)
+  .check_declared_columns(data, "frequencies()", action = action, id = id,
+                          time = time, cols = cols)
+  if (is.null(action) && is.null(cols) && identical(format, "auto")) {
+    .refuse_undeclared_roles(data, "frequencies()", taken = c(id, time),
+                             whole_frame = TRUE)
+  }
 
   mat <- .count_transitions(
     data, format = format, action = action, id = id, time = time, cols = cols
@@ -154,7 +160,14 @@ convert_sequence_format <- function(data,
   stopifnot(is.data.frame(data))
   format <- match.arg(format)
 
-  is_long <- !is.null(action) && action %in% names(data)
+  .check_declared_columns(data, "convert_sequence_format()", action = action,
+                          id_col = id_col, time = time, seq_cols = seq_cols)
+  is_long <- !is.null(action)
+  if (is.null(action) && is.null(seq_cols)) {
+    .refuse_undeclared_roles(data, "convert_sequence_format()",
+                             taken = c(id_col, time), wide = "`seq_cols`",
+                             whole_frame = TRUE)
+  }
 
   if (is_long) {
     long <- .standardize_long(data, id_col, action, time)

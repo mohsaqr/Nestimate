@@ -363,6 +363,31 @@ safe_sd <- function(x) {
 #' @return A data.frame or list suitable for \code{.hon_parse_input()}.
 #' @noRd
 .coerce_sequence_input <- function(data) {
+  # Only sequences of states read as sequences: a group of networks, the 0/1
+  # codes of a one-hot network, the variables of an association network and a
+  # list of anything but state vectors would otherwise become "states".
+  if (inherits(data, "netobject_group")) {
+    stop(errorCondition(paste(
+      "A netobject_group holds one network per group, not one set of",
+      "sequences; pass one group's network or the sequences."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (inherits(data, c("netobject", "cograph_network"))) {
+    params <- data$params
+    if (is.list(params) && (!is.null(params[["codes"]]) ||
+                            identical(params[["format"]], "onehot"))) {
+      stop(errorCondition(paste(
+        "This is a one-hot network, whose data hold 0 and 1 per code, not",
+        "positions of states. Build it from sequences."),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    if (isTRUE(data$method %in% c("cor", "pcor", "glasso", "ising", "mgm"))) {
+      stop(errorCondition(sprintf(paste(
+        "This \"%s\" network holds variables, not sequences of states; build",
+        "it with a transition method or pass the sequences."), data$method),
+        class = "nestimate_bad_input", call = NULL))
+    }
+  }
   if (inherits(data, "tna")) {
     if (is.null(data$data)) { # nocov start
       stop("tna object has no sequence data ($data). ",
@@ -396,9 +421,24 @@ safe_sd <- function(x) {
     }
     return(as.data.frame(data$data, stringsAsFactors = FALSE))
   }
+  # a matrix of only 0 and 1 could hold one-hot codes or positions
+  if (is.matrix(data) && (is.numeric(data) || is.logical(data)) &&
+      all(data[!is.na(data)] %in% c(0, 1))) {
+    stop(errorCondition(paste(
+      "This matrix holds only 0 and 1, so it could hold one-hot codes or",
+      "positions. If they are positions, give them as a character matrix."),
+      class = "nestimate_bad_input", call = NULL))
+  }
   ## Bare sequence matrix (character / logical) -> wide data.frame.
   if (is.matrix(data) && !is.numeric(data)) {
     return(as.data.frame(data, stringsAsFactors = FALSE))
+  }
+  # a fitted result (htest, acf, ...) is a classed list of atomic fields
+  if (is.list(data) && !is.data.frame(data) &&
+      (!is.null(oldClass(data)) || !all(vapply(data, is.atomic, logical(1L))))) {
+    stop(errorCondition(
+      "A list of sequences must be a plain list holding one vector of states per sequence.",
+      class = "nestimate_bad_input", call = NULL))
   }
   data
 }
@@ -469,16 +509,19 @@ safe_sd <- function(x) {
 
   edges <- .extract_edges_from_matrix(mat, directed = directed)
 
-  structure(list(
+  out <- structure(list(
     data = raw_data, weights = mat, nodes = nodes_df,
     edges = edges, directed = directed, method = method,
-    params = list(), scaling = NULL, threshold = 0,
+    params = x$params %||% list(), scaling = NULL, threshold = 0,
     n_nodes = length(states), n_edges = nrow(edges),
     level = NULL,
     meta = x$meta %||% list(source = "cograph", layout = NULL,
                             tna = list(method = method)),
     node_groups = x$node_groups
   ), class = c("netobject", "cograph_network"))
+  # the declaration and the columns it names travel with the data
+  if (!is.null(x$metadata)) out$metadata <- x$metadata
+  out
 }
 
 
@@ -525,12 +568,21 @@ safe_sd <- function(x) {
 #' not abort the run; the count is reported here instead of being dropped
 #' silently.
 #' @noRd
-.warn_failed_resamples <- function(n_failed, n_total, fn) {
+.warn_failed_resamples <- function(n_failed, n_total, fn,
+                                   below_threshold = FALSE) {
   if (n_failed > 0L) {
-    warning(warningCondition(sprintf(paste0(
-      "%s: %d of %d resamples failed to estimate a network and are left ",
-      "out%s."), fn, n_failed, n_total,
-      if (n_failed == n_total) " (all of them: the results are NA)" else ""),
+    # the CS verbs count an unbuilt draw as below the threshold (owner,
+    # 2026-11-06); the others leave it out of their summaries
+    outcome <- if (below_threshold) {
+      "each counts as below the correlation threshold"
+    } else if (n_failed == n_total) {
+      "are left out (all of them: the results are NA)"
+    } else {
+      "are left out"
+    }
+    warning(warningCondition(sprintf(
+      "%s: %d of %d resamples failed to estimate a network; %s.",
+      fn, n_failed, n_total, outcome),
       class = "nestimate_resample_failed", call = NULL))
   }
   invisible(n_failed)

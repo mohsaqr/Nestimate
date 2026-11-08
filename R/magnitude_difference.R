@@ -130,6 +130,14 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
   scale  <- match.arg(scale)
   format <- match.arg(format)
   stopifnot(is.data.frame(data))
+  .check_declared_columns(data, "magnitude_difference()", actor = actor,
+                          action = action, time = time)
+  if (is.null(action) && identical(format, "auto")) {
+    .refuse_undeclared_roles(data, "magnitude_difference()",
+                             taken = c(actor, time),
+                             wide = "`format = \"wide\"`",
+                             whole_frame = TRUE)
+  }
 
   # Build both views. Wide-format input (one sequence per row, columns =
   # positions) is detected by the absence of an `action` column.

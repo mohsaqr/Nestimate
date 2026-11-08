@@ -325,6 +325,9 @@
 #' @param legend_ncol Number of legend columns.
 #' @param legend_border Swatch border colour.
 #' @param legend_bty \code{"n"} or \code{"o"}.
+#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
+#'   holding the positions. Needed when they are not a numbered run (\code{T1},
+#'   \code{T2}, ...) or one of them is called \code{action}.
 #'
 #' @section Multichannel view of an mcml:
 #' An \code{mcml} built from sequences stores, for every cluster, the full
@@ -494,7 +497,8 @@ sequence_plot <- function(x,
                           legend_title     = NULL,
                           legend_ncol      = NULL,
                           legend_border    = NA,
-                          legend_bty       = "n") {
+                          legend_bty       = "n",
+                          cols             = NULL) {
 
   type <- match.arg(type)
   sort <- match.arg(sort)
@@ -536,6 +540,17 @@ sequence_plot <- function(x,
                              "\"index\"."))
   }
 
+  .refuse_onehot_network(x, "sequence_plot()")
+  .refuse_binary_matrix(x, "sequence_plot()", takes_cols = TRUE)
+  if (is.data.frame(x) && !inherits(x, "nestimate_data")) {
+    .check_declared_columns(x, "sequence_plot()", action = action, actor = actor,
+                            time = time, order = order, cols = cols)
+    if (!is.null(cols)) x <- x[cols]
+  } else if (!is.null(cols)) {
+    stop(errorCondition("`cols` applies to a wide data frame.",
+                        class = "nestimate_bad_input", call = NULL))
+  }
+
   # Long data (one row per action): `action =` names the action column and
   # prepare() turns it into one sequence per actor (or actor-period).
   long <- NULL
@@ -554,6 +569,11 @@ sequence_plot <- function(x,
     .period_bad_input(paste0("`actor`, `time` and `order` describe long ",
                              "data; name the action column with `action =` ",
                              "too."))
+  }
+
+  if (is.data.frame(x) && is.null(action) && is.null(cols) &&
+      !inherits(x, "nestimate_data")) {
+    .refuse_undeclared_roles(x, "sequence_plot()", taken = group, whole_frame = TRUE)
   }
 
   # Open a new device when width/height supplied (interactive use). In
@@ -581,7 +601,8 @@ sequence_plot <- function(x,
       tick = tick, ncol = ncol, nrow = nrow, combined = combined,
       legend = legend, legend_size = legend_size,
       legend_title = legend_title, legend_ncol = legend_ncol,
-      legend_border = legend_border, legend_bty = legend_bty))
+      legend_border = legend_border, legend_bty = legend_bty,
+      cols = if (is.data.frame(x)) names(x)))
   }
 
   if (!is.null(periods)) {

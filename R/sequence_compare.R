@@ -277,6 +277,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 .cs_parse_input <- function(x, group) {
   # netobject_group: each element has $data
   if (inherits(x, "netobject_group")) {
+    .refuse_onehot_network(x, "sequence_compare()")
     group_names <- names(x)
     mats <- lapply(seq_along(x), function(i) {
       d <- .coerce_sequence_input(x[[i]])
@@ -299,10 +300,17 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   # netobject or tna: extract $data
   if (inherits(x, "tna") || inherits(x, "netobject") ||
       inherits(x, "cograph_network")) {
+    .refuse_onehot_network(x, "sequence_compare()")
     d <- .coerce_sequence_input(x)
     if (is.null(d)) stop("Object has no $data.", call. = FALSE)
     seq_mat <- as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
   } else if (is.data.frame(x) || is.matrix(x)) {
+    if (is.data.frame(x)) {
+      taken <- if (is.character(group) && length(group) == 1L) group
+      .refuse_undeclared_roles(x, "sequence_compare()", taken = taken,
+                               via_network = TRUE, whole_frame = TRUE)
+    }
+    .refuse_binary_matrix(x, "sequence_compare()")
     seq_mat <- as.matrix(as.data.frame(x, stringsAsFactors = FALSE))
   } else {
     stop("x must be a netobject_group, netobject, tna, data.frame, or matrix.",

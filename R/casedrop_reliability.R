@@ -267,6 +267,9 @@ casedrop_reliability <- function(x,
         error = function(e) NULL
       )
       if (is.null(est)) return(NULL)
+      # a state lost to the subset (a column constant in it) leaves no network
+      # to compare: an unbuilt draw, which counts as below the threshold
+      if (!all(states %in% rownames(est$matrix))) return(NULL)
       mat <- est$matrix[states, states]
       if (!is.null(scaling)) {
         mat <- .apply_scaling(mat, scaling,
@@ -318,7 +321,8 @@ casedrop_reliability <- function(x,
     }
   }
 
-  .warn_failed_resamples(n_failed, n_tried, "casedrop_reliability()")
+  .warn_failed_resamples(n_failed, n_tried, "casedrop_reliability()",
+                         below_threshold = TRUE)
 
   # ---- Per-drop-proportion summary across iterations ----
   summary_df <- .casedrop_summary(metrics, drop_prop)

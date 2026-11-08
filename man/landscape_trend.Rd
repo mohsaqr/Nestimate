@@ -17,7 +17,8 @@ landscape_trend(
   n_grid = 20L,
   iter = 500L,
   ci_level = 0.95,
-  seed = NULL
+  seed = NULL,
+  cols = NULL
 )
 
 \method{summary}{net_landscape_trend}(object, ...)
@@ -57,6 +58,10 @@ percentile, with the full range used if these coincide. Default 20.}
 
 \item{seed}{Integer or \code{NULL}. Seed for the resampling, scoped to the
 call.}
+
+\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
+holding the positions. Needed when they are not a numbered run (\code{T1},
+\code{T2}, ...) or one of them is called \code{action}.}
 
 \item{object}{A \code{net_landscape_trend} object (for \code{summary()}).}
 

@@ -235,7 +235,7 @@ test_that("wtna works via build_network registry", {
   expect_true(net$directed)
   expect_equal(net$method, "wtna")
 
-  net2 <- build_network(df, method = "cna")
+  net2 <- build_network(df, method = "cna", format = "onehot")
   expect_s3_class(net2, "netobject")
   expect_false(net2$directed)
   expect_equal(net2$method, "co_occurrence")
@@ -326,7 +326,7 @@ test_that("wcna bootstrap works via build_network one-hot data", {
     C = sample(0:1, 30, replace = TRUE)
   )
 
-  boot <- bootstrap_network(build_network(.with_units(df), method = "cna", actor = "unit"),
+  boot <- bootstrap_network(build_network(.with_units(df), method = "cna", actor = "unit", format = "onehot"),
                             iter = 20, seed = 1)
   expect_s3_class(boot, "net_bootstrap")
   expect_equal(boot$method, "co_occurrence")
@@ -394,8 +394,10 @@ test_that("wcna permutation works via build_network one-hot data", {
     B = sample(0:1, 20, replace = TRUE)
   )
 
-  perm <- permutation(build_network(.with_units(df1), method = "cna", actor = "unit"),
-                      build_network(.with_units(df2), method = "cna", actor = "unit"),
+  perm <- permutation(build_network(.with_units(df1), method = "cna", actor = "unit",
+                                    format = "onehot"),
+                      build_network(.with_units(df2), method = "cna", actor = "unit",
+                                    format = "onehot"),
                       iter = 20, seed = 1)
   expect_s3_class(perm, "net_permutation")
   expect_equal(perm$method, "co_occurrence")

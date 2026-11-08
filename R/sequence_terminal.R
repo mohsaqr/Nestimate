@@ -37,7 +37,13 @@
 actor_endpoints <- function(data, cols = NULL) {
   if (is.matrix(data)) data <- as.data.frame(data, stringsAsFactors = FALSE)
   stopifnot(is.data.frame(data))
-  if (!is.null(cols)) data <- data[, cols, drop = FALSE]
+  .check_declared_columns(data, "actor_endpoints()", cols = cols)
+  if (is.null(cols)) {
+    .refuse_undeclared_roles(data, "actor_endpoints()", whole_frame = TRUE,
+                             takes_action = FALSE)
+  } else {
+    data <- data[, cols, drop = FALSE]
+  }
 
   M <- as.matrix(data)
   storage.mode(M) <- "character"
@@ -116,7 +122,13 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
   stopifnot(is.character(state), length(state) == 1L, nzchar(state))
   if (is.matrix(data)) data <- as.data.frame(data, stringsAsFactors = FALSE)
   stopifnot(is.data.frame(data))
-  if (!is.null(cols)) data <- data[, cols, drop = FALSE]
+  .check_declared_columns(data, "mark_first_state()", cols = cols)
+  if (is.null(cols)) {
+    .refuse_undeclared_roles(data, "mark_first_state()", whole_frame = TRUE,
+                             takes_action = FALSE)
+  } else {
+    data <- data[, cols, drop = FALSE]
+  }
   if (state %in% unlist(lapply(data, as.character))) {
     warning(sprintf("State '%s' already appears in `data`; using a unique replacement label.",
                     state), call. = FALSE)
@@ -139,7 +151,7 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
   }
   out <- as.data.frame(M, stringsAsFactors = FALSE)
   attr(out, "leading_state") <- state
-  out
+  .mark_positions(out)
 }
 
 #' Mark terminal-NA cells with an explicit state label
@@ -187,7 +199,13 @@ mark_terminal_state <- function(data, state = "End", cols = NULL) {
   stopifnot(is.character(state), length(state) == 1L, nzchar(state))
   if (is.matrix(data)) data <- as.data.frame(data, stringsAsFactors = FALSE)
   stopifnot(is.data.frame(data))
-  if (!is.null(cols)) data <- data[, cols, drop = FALSE]
+  .check_declared_columns(data, "mark_terminal_state()", cols = cols)
+  if (is.null(cols)) {
+    .refuse_undeclared_roles(data, "mark_terminal_state()", whole_frame = TRUE,
+                             takes_action = FALSE)
+  } else {
+    data <- data[, cols, drop = FALSE]
+  }
   if (state %in% unlist(lapply(data, as.character))) {
     warning(sprintf("State '%s' already appears in `data`; using a unique replacement label.",
                     state), call. = FALSE)
@@ -210,5 +228,5 @@ mark_terminal_state <- function(data, state = "End", cols = NULL) {
   }
   out <- as.data.frame(M, stringsAsFactors = FALSE)
   attr(out, "terminal_state") <- state
-  out
+  .mark_positions(out)
 }

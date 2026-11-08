@@ -312,6 +312,10 @@ entropy_network <- function(x, base = 2,
     src <- x
   } else if (is.data.frame(x) ||
              (is.matrix(x) && (is.character(x) || is.logical(x)))) {
+    if (is.data.frame(x)) {
+      .refuse_undeclared_roles(x, "Reading sequences", via_network = TRUE,
+                               reads_onehot = TRUE)
+    }
     src <- build_network(as.data.frame(x, stringsAsFactors = FALSE),
                          method = "relative")
   }
@@ -728,32 +732,132 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
     }
     return(x)
   }
-  if (inherits(x, "netobject") || inherits(x, "cograph_network") ||
-      inherits(x, "tna")) {
-    w <- x$weights
-    if (is.matrix(w) && is.numeric(w) && all(w >= 0) &&
-        all(w == floor(w)) && sum(w) > 0) {
-      return(w)  # already a frequency (count) network
-    }
-    if (!is.null(x$data) && is.data.frame(x$data)) {
-      cw <- build_network(x$data, method = "frequency")$weights
-      if (!identical(rownames(cw), rownames(w)) &&
-          setequal(rownames(cw), rownames(w))) {
-        cw <- cw[rownames(w), rownames(w)]
-      }
-      return(cw)
-    }
-    stop("Cannot recover transition counts from this object. Supply a ",
-         "frequency network (build_network(method = 'frequency')), a count ",
-         "matrix, or the sequence data.", call. = FALSE)
+  if (inherits(x, "tna")) return(.te_tna_counts(x))
+  if (inherits(x, "netobject") || inherits(x, "cograph_network")) {
+    return(.te_network_counts(x))
   }
   if (is.data.frame(x) ||
       (is.matrix(x) && (is.character(x) || is.logical(x)))) {
+    if (is.data.frame(x)) {
+      .refuse_undeclared_roles(x, "Reading sequences", via_network = TRUE,
+                               reads_onehot = TRUE)
+    }
     return(build_network(as.data.frame(x, stringsAsFactors = FALSE),
                          method = "frequency")$weights)
   }
   stop("'x' must be a count matrix, a netobject / cograph_network / tna ",
        "object, or a sequence data.frame.", call. = FALSE)
+}
+
+# Counts of a network, decided by its declared method, never by its values:
+# whole-number weights can be probabilities (a deterministic chain) or scaled
+# counts. A sequence network with its data is recounted by the estimator's own
+# per-sequence counting, which honours start/end states, concatenation, windows
+# and one-hot units. Weights are read as counts only from an unscaled count
+# network without data, or a network with no declared method.
+#' @noRd
+.te_network_counts <- function(x) {
+  w <- x$weights
+  method <- x$method %||% x$meta$tna$method
+  if (isTRUE(method %in% .association_methods)) {
+    stop(errorCondition(sprintf(paste(
+      "This \"%s\" network holds associations between variables, not",
+      "transitions. Pass sequence data or a frequency network."), method),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  declared <- is.character(method) && length(method) == 1L
+  if (!declared && identical(x$meta$source, "tna")) {
+    # a cograph conversion of a tna model: its sequences count only when they
+    # reproduce its weights (windows and settings are not kept)
+    counts <- .tna_conversion_counts(x)
+    if (is.null(counts)) {
+      stop(errorCondition(paste(
+        "This network was converted from a tna model, and its sequences do not",
+        "reproduce its weights (windows, scaling or other settings were lost).",
+        "Pass the tna model itself or the sequences."),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    return(counts)
+  }
+  params <- x$params
+  count_method <- if (declared) .resampling_method(method, params) else NULL
+  states <- rownames(w)
+  if (isTRUE(count_method %in% c("relative", "frequency", "co_occurrence")) &&
+      is.data.frame(x$data) && nrow(x$data) > 0L && !is.null(states)) {
+    # raw counts: neither row normalisation nor 1 / length weighting
+    params$weighted <- NULL
+    counting <- if (count_method == "co_occurrence") "co_occurrence" else
+      "frequency"
+    data <- .resampling_transition_data(x$data, x$metadata, params)
+    per <- .precompute_per_sequence(data, counting, params, states)
+    return(matrix(colSums(per), nrow = length(states), byrow = TRUE,
+                  dimnames = list(states, states)))
+  }
+  unscaled <- is.null(x$scaling) || identical(x$scaling, "none")
+  counts_held <- !declared ||
+    (isTRUE(count_method %in% c("frequency", "co_occurrence", "reverse")) &&
+       !.counts_are_relative(count_method, params) &&
+       !isTRUE(.param_get(params, "weighted", FALSE)))
+  if (counts_held && unscaled && is.matrix(w) && is.numeric(w) &&
+      all(w >= 0) && all(w == floor(w)) && sum(w) > 0) {
+    return(w)
+  }
+  stop(errorCondition(paste0(
+    "Cannot recover transition counts from this ",
+    if (declared) sprintf("\"%s\" ", method) else "",
+    "network: its weights are not counts, and only a relative or frequency ",
+    "network is recounted from its sequences. Supply a frequency network (build_network(method = 'frequency')), ",
+    "a count matrix, or the sequence data."),
+    class = "nestimate_bad_input", call = NULL))
+}
+
+# A tna model declares its type. An unscaled model of a counting type holds
+# its counts. A relative or scaled model with no other settings is recounted
+# from its sequences, decoded through its labels; one with windows or other
+# settings cannot be replayed here and is refused, as is attention or gap.
+#' @noRd
+.te_tna_counts <- function(x) {
+  w <- x$weights
+  type <- attr(x, "type") %||% "relative"
+  scaling <- attr(x, "scaling")
+  unscaled <- length(scaling) == 0L || identical(scaling, "none")
+  params <- attr(x, "params")
+  # weighted models divide each sequence's counts by its length
+  weighted <- isTRUE(params$weighted)
+  if (unscaled && !weighted &&
+      type %in% c("frequency", "co-occurrence", "reverse", "n-gram") &&
+      is.matrix(w) && all(w >= 0) && all(w == floor(w)) && sum(w) > 0) {
+    return(w)
+  }
+  # weighting changes the estimate, not the sequences, so a weighted model is
+  # recounted from them like a relative one
+  plain <- !isTRUE(params$windowed) &&
+    length(setdiff(names(params), c("windowed", "weighted"))) == 0L
+  labels <- x$labels %||% rownames(w)
+  if (!type %in% c("relative", "frequency") || !plain || is.null(x$data) ||
+      is.null(labels)) {
+    stop(errorCondition(sprintf(paste(
+      "Cannot recover transition counts from this tna model (type \"%s\"%s):",
+      "its weights are not counts and its settings cannot be replayed. Supply",
+      "an unscaled frequency model (tna::ftna()) or the sequence data."),
+      type, if (plain) "" else ", windowed or with settings"),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  data <- unclass(x$data)
+  decoded <- matrix(labels[data], nrow = nrow(data),
+                    dimnames = list(NULL, colnames(data) %||%
+                                      paste0("T", seq_len(ncol(data)))))
+  decoded <- as.data.frame(decoded, stringsAsFactors = FALSE)
+  cw <- build_network(decoded, method = "frequency",
+                      state_cols = names(decoded))$weights
+  missing <- setdiff(labels, rownames(cw))
+  if (length(missing) > 0L) {
+    out <- matrix(0, length(labels), length(labels),
+                  dimnames = list(labels, labels))
+    out[rownames(cw), colnames(cw)] <- cw
+    cw <- out
+  }
+  cw[labels, labels, drop = FALSE]
 }
 
 #' Bayesian Transition Entropy
@@ -775,9 +879,14 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #' skeleton.
 #'
 #' @param x A frequency \code{netobject}
-#'   (\code{build_network(method = "frequency")}), any \code{netobject} that
-#'   carries its \code{$data} (counts are rebuilt automatically), a
-#'   count matrix, or a wide sequence data.frame. Group dispatch on
+#'   (\code{build_network(method = "frequency")}), a relative or frequency
+#'   \code{netobject} that carries its \code{$data} (counts are recounted with
+#'   the network's own start/end states, concatenation, windows and one-hot
+#'   units), a \code{tna} model, a count matrix, or a wide sequence
+#'   data.frame. Counts are read from the declared method, never from the
+#'   values: a scaled or relative network is recounted from its data, and an
+#'   association network or any other network without counts raises
+#'   \code{nestimate_bad_input}. Group dispatch on
 #'   \code{netobject_group}. For the \code{print()} and \code{plot()} methods: an object of class \code{net_entropy_bayes} or \code{net_entropy_bayes_group}.
 #' @param prior Numeric. Dirichlet prior concentration added to every cell
 #'   of the count matrix (default \code{0.5}, Jeffreys).

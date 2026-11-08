@@ -637,7 +637,7 @@ boot_glasso <- function(x,
       vals <- cors[[m]][[d_idx]]
       mean_cor <- if (length(vals) > 0) mean(vals, na.rm = TRUE) else NA_real_
       prop_above <- if (length(vals) > 0) {
-        mean(vals > 0.7, na.rm = TRUE)
+        mean(!is.na(vals) & vals > 0.7)
       } else {
         NA_real_
       }
@@ -680,7 +680,8 @@ boot_glasso <- function(x,
   # For each drop proportion, compute proportion of samples exceeding threshold
   prop_above <- vapply(cors_per_prop, function(vals) {
     if (length(vals) == 0 || all(is.na(vals))) return(NA_real_)
-    mean(vals > cor_threshold, na.rm = TRUE)
+    # a draw without a correlation does not reach the threshold
+    mean(!is.na(vals) & vals > cor_threshold)
   }, numeric(1))
 
   # CS = max drop proportion where prop_above > prop_threshold

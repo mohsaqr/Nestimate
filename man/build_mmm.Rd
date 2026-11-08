@@ -170,6 +170,12 @@ be treated as missing, recode them to \code{NA} before calling
 EM treats as an uninformative initial distribution), or left-trim the
 leading missings so each sequence's first column carries an observed
 state.
+
+A one-hot network is the exception: its units are windows whose slots
+are codes, not positions, so the first column only says whether the
+first code was active. Its initial state is the one code observed in the
+first window, and no initial state (uninformative) when that window holds
+several codes or none.
 }
 
 \section{Methods}{

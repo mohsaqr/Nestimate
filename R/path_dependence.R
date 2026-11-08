@@ -172,6 +172,11 @@ path_dependence <- function(x, order = 2L, min_count = 5L, base = 2) {
     is.numeric(base), length(base) == 1L, base > 0, base != 1
   )
 
+  .refuse_onehot_network(x, "path_dependence()")
+  if (is.data.frame(x)) {
+    .refuse_undeclared_roles(x, "path_dependence()", via_network = TRUE,
+                             whole_frame = TRUE)
+  }
   data <- .pd_extract_data(x)
 
   ## Counts at order k (full context + next) and at order 1 (last state + next)

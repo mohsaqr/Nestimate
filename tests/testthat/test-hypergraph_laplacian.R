@@ -31,12 +31,13 @@ testthat::skip_on_cran()
 
 # ---- formula: Zhou Theta against independent brute-force ---------------
 
-test_that("zhou Laplacian matches the paper formula computed brute-force", {
+test_that("zhou Laplacian matches the paper formula on fixed edge weights", {
   hg <- .hl_weighted()
   H <- (hg$incidence > 0) * 1.0
   n <- nrow(H); m <- ncol(H)
-  set.seed(7)
-  w <- runif(m, 0.5, 2)
+  # four meetings, fixed unequal weights
+  w <- c(1, 2, 0.5, 1.5)
+  expect_identical(m, 4L)
   d <- as.vector(H %*% w)
   delta <- colSums(H)
   Theta_bf <- outer(seq_len(n), seq_len(n), Vectorize(function(u, v) {

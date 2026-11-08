@@ -265,6 +265,11 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
                                parallel = FALSE, n_cores = 2L, seed = NULL,
                                dof = c("paths", "observed")) {
   dof <- match.arg(dof)
+  .refuse_onehot_network(data, "markov_order_test()")
+  if (is.data.frame(data)) {
+    .refuse_undeclared_roles(data, "markov_order_test()", via_network = TRUE,
+                             whole_frame = TRUE)
+  }
   if (inherits(data, "netobject_group")) {
     out <- lapply(data, function(net) {
       seq_data <- net$data
@@ -272,7 +277,7 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
         stop("netobject_group member has no $data; rebuild with build_network().",
              call. = FALSE)
       }
-      markov_order_test(seq_data, max_order = max_order, n_perm = n_perm,
+      markov_order_test(net, max_order = max_order, n_perm = n_perm,
                         alpha = alpha, parallel = parallel,
                         n_cores = n_cores, seed = seed, dof = dof)
     })

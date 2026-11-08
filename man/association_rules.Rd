@@ -12,7 +12,8 @@ association_rules(
   min_support = 0.1,
   min_confidence = 0.5,
   min_lift = 1,
-  max_length = 5L
+  max_length = 5L,
+  format = c("auto", "binary")
 )
 
 \method{print}{net_association_rules}(x, ...)
@@ -46,6 +47,11 @@ For the \code{print()} and \code{plot()} methods: an object of class \code{net_a
 \item{min_lift}{Numeric. Minimum lift threshold. Default: 1.0.}
 
 \item{max_length}{Integer. Maximum itemset size. Default: 5.}
+
+\item{format}{\code{"auto"} (default) or \code{"binary"}. Columns of only 0 and 1
+could be items or recoded positions, so \code{"auto"} raises an error of class
+\code{nestimate_bad_input} on them. \code{"binary"} declares them items, one row
+per transaction.}
 
 \item{...}{In \code{plot.net_association_rules()}: Additional arguments passed to \code{ggplot2} functions. In \code{print.net_association_rules()} and \code{summary.net_association_rules()}: Additional arguments (ignored).}
 

@@ -72,7 +72,7 @@ A \code{netobject} (see \code{\link{build_network}}).
 This function is deprecated. Use \code{\link{build_network}} instead.
 }
 \examples{
-data <- data.frame(A = c("x","y","z","x"), B = c("y","x","z","y"))
+data <- data.frame(T1 = c("x","y","z","x"), T2 = c("y","x","z","y"))
 net <- estimate_network(data, method = "relative")
 
 }

@@ -84,13 +84,16 @@ test_that('compare_model aligns named nodes and rejects different node sets', {
                 expected$difference_matrix)
 })
 
-test_that('ordinary Gaussian outcome intervals agree with linear model t intervals', {
+test_that('ordinary Gaussian outcome intervals are the t intervals of least squares', {
   d <- data.frame(x = 1:6)
   d$y <- .6 * d$x + c(1, -1, 0, 0, -1, 1)
   fit <- outcome_model(d, 'y', 'x', family = 'gaussian')
-  oracle <- stats::confint(stats::lm(y ~ x, d))
-  expect_equal(fit$effects$ci_lower, unname(oracle[, 1]))
-  expect_equal(fit$effects$ci_upper, unname(oracle[, 2]))
+  # By hand: the residuals sum to 0 and are orthogonal to x, so the fit is
+  # 0 + .6 x; RSS = 4 on 4 df gives sigma^2 = 1, Sxx = 17.5, mean x = 3.5.
+  se <- c(sqrt(1 / 6 + 3.5^2 / 17.5), sqrt(1 / 17.5))
+  half <- stats::qt(.975, 4) * se
+  expect_equal(fit$effects$ci_lower, c(0, .6) - half)
+  expect_equal(fit$effects$ci_upper, c(0, .6) + half)
   expect_lt(fit$effects$ci_lower[2], 0)
   expect_gt(fit$effects$p_value[2], .05)
   binary <- data.frame(x = rep(0:1, each = 6), y = rep(c(0, 0, 1, 1, 0, 1), 2))

@@ -114,7 +114,8 @@ test_that("mosaic_plot.mcml panels use transposed MCML weights", {
     stringsAsFactors = FALSE
   )
   clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
-  fit <- build_mcml(edges, clusters, type = "frequency")
+  fit <- build_mcml(edges, clusters, type = "frequency", from = "from",
+                    to = "to", weight = "weight")
 
   macro_tab <- Nestimate:::.mosaic_panels(fit, "mcml", "macro")$tabs[[1]]
   cluster_tabs <- Nestimate:::.mosaic_panels(fit, "mcml", "clusters")$tabs
@@ -166,8 +167,20 @@ test_that("permutation residuals converge to asymptotic stdres on large N", {
   tab <- as.table(matrix(counts, 3, 3,
                          dimnames = list(LETTERS[1:3], letters[1:3])))
   z_perm <- Nestimate:::.mosaic_perm_stdres(tab, n_perm = 2000L, seed = 1L)
-  z_asy  <- suppressWarnings(stats::chisq.test(tab))$stdres
+  # the asymptotic adjusted residuals, by their formula
+  o <- unclass(tab)
+  n <- sum(o)
+  e <- outer(rowSums(o), colSums(o)) / n
+  z_asy <- (o - e) / sqrt(e * outer(1 - rowSums(o) / n, 1 - colSums(o) / n))
   expect_equal(as.numeric(z_perm), as.numeric(z_asy), tolerance = 0.2)
+  # a table far from independence: the residuals are +/- 4.5 by the formula,
+  # and the permutation ones must carry the same size and sign
+  strong <- as.table(matrix(c(30, 10, 10, 30), 2L,
+                            dimnames = list(c("a", "b"), c("x", "y"))))
+  z_strong <- Nestimate:::.mosaic_perm_stdres(strong, n_perm = 2000L, seed = 1L)
+  # E = 20 everywhere, row and column shares 1/2: (30 - 20) / sqrt(20 / 4)
+  hand <- matrix(c(1, -1, -1, 1), 2L) * 10 / sqrt(5)
+  expect_equal(unname(unclass(z_strong)), hand, tolerance = 0.1)
 })
 
 test_that("mosaic_plot works on a tna-type mcml via count recovery from $data", {

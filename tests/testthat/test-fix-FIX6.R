@@ -88,8 +88,12 @@ test_that("A11-F01: a genuine leading id is used only when passed explicitly (Co
     stringsAsFactors = FALSE
   )
 
-  # id_col = NULL: no guessing -> Student is a state, nothing dropped.
-  el_noid <- convert_sequence_format(wide_data, format = "edgelist")
+  # Nothing declared: no guessing, and an id is not read as a state.
+  expect_error(convert_sequence_format(wide_data, format = "edgelist"),
+               class = "nestimate_bad_input")
+  # Declared as positions: Student is a state, nothing dropped.
+  el_noid <- convert_sequence_format(wide_data, seq_cols = names(wide_data),
+                                     format = "edgelist")
   expect_equal(nrow(el_noid), 4L)                       # 2 rows x 2 transitions
   expect_true(any(c("101", "202") %in% c(el_noid$from, el_noid$to)))
 

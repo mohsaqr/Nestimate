@@ -542,7 +542,8 @@ wtna <- function(data,
     state_cols <- .select_state_cols(df, c(id, actor), cols)
     is_binary <- length(state_cols) >= 2L && all(vapply(
       df[, state_cols, drop = FALSE],
-      function(x) is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1)),
+      function(x) (is.numeric(x) || is.logical(x)) &&
+          all(x[!is.na(x)] %in% c(0, 1)),
       logical(1)
     ))
 

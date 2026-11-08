@@ -676,15 +676,23 @@ test_that("covariate M-step maximises sum(post * log(pi)) over the softmax", {
   post <- matrix(runif(n * 3), n)
   post <- post / rowSums(post)
   sm <- .mmm_softmax_mstep(post, X)
+  expect_true(sm$converged)
+  # the objective is concave, so its maximum is where the gradient
+  # t(X) (post - pi) of every non-reference class is zero
+  pi_fit <- exp(sm$log_pi_mat)
+  gradient <- crossprod(X, post[, -1L] - pi_fit[, -1L])
+  # (to the M-step's convergence tolerance, on a sum over 120 rows)
+  expect_lt(max(abs(gradient)), 1e-4)
+  # and it is a maximum: a small step in any coordinate lowers the objective
   objective <- function(b) {
     eta <- cbind(0, X %*% t(matrix(b, 2L, 2L)))
     sum(post * (eta - log(rowSums(exp(eta)))))
   }
-  best <- stats::optim(numeric(4), objective, method = "BFGS",
-                       control = list(fnscale = -1, reltol = 1e-12))
-  expect_true(sm$converged)
-  expect_equal(sum(post * sm$log_pi_mat), best$value, tolerance = 1e-6)
-  expect_equal(unname(sm$beta), matrix(best$par, 2L, 2L), tolerance = 1e-3)
+  top <- objective(c(sm$beta))
+  expect_equal(sum(post * sm$log_pi_mat), top)
+  steps <- lapply(seq_len(4L), \(i) replace(numeric(4), i, 1e-2))
+  expect_true(all(vapply(steps, \(h) objective(c(sm$beta) + h) < top &&
+                           objective(c(sm$beta) - h) < top, logical(1))))
   # fitted mixing probabilities are a distribution per sequence
   expect_equal(unname(rowSums(exp(sm$log_pi_mat))), rep(1, n), tolerance = 1e-12)
 })

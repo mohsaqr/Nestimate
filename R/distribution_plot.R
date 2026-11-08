@@ -64,6 +64,9 @@
 #' @param ncol,nrow Facet grid dimensions. \code{NULL} = auto:
 #'   \code{ncol = ceiling(sqrt(G))}, \code{nrow = ceiling(G / ncol)}.
 #'   Ignored when \code{combined = FALSE}.
+#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
+#'   holding the positions. Needed when they are not a numbered run (\code{T1},
+#'   \code{T2}, ...) or one of them is called \code{action}.
 #' @param combined When \code{TRUE} (default), groups are arranged on one
 #'   figure via \code{graphics::layout()}. When \code{FALSE}, each group
 #'   is drawn on its own page (one full-size figure per group, with its
@@ -124,13 +127,29 @@ distribution_plot <- function(x,
                               legend_title   = NULL,
                               legend_ncol    = NULL,
                               legend_border  = NA,
-                              legend_bty     = "n") {
+                              legend_bty     = "n",
+                              cols           = NULL) {
 
   scale  <- match.arg(scale)
   geom   <- match.arg(geom)
   legend <- match.arg(legend)
   if (!is.null(xlab)) time_label <- xlab
   if (!is.null(ylab)) y_label    <- ylab
+  .refuse_onehot_network(x, "distribution_plot()")
+  .refuse_binary_matrix(x, "distribution_plot()", takes_cols = TRUE)
+  if (is.data.frame(x)) {
+    .check_declared_columns(x, "distribution_plot()", cols = cols)
+    if (is.null(cols)) {
+      .refuse_undeclared_roles(x, "distribution_plot()",
+                               wide = "`cols`", whole_frame = TRUE,
+                               takes_action = FALSE)
+    } else {
+      x <- x[cols]
+    }
+  } else if (!is.null(cols)) {
+    stop(errorCondition("`cols` applies to a wide data frame.",
+                        class = "nestimate_bad_input", call = NULL))
+  }
 
   stopifnot(
     is.logical(na),       length(na)       == 1L,

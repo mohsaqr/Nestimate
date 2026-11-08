@@ -15,8 +15,11 @@ nct_fit <- function(i, ...) {
 test_that("complete-data output is frozen (input handling moves no number)", {
   base <- readRDS(test_path("fixtures", "nct-baseline.rds"))
   invisible(lapply(seq_len(nrow(nct_configs)), function(i)
-    expect_identical(nct_numbers(nct_fit(i)), base[[i]],
-                     label = sprintf("config %d", i))))
+    # the fixture was saved on one platform; floating point differs across
+    # BLAS and OS at the last bits, so identical() fails on CI
+    # (CI: at most 8.4e-15 relative on Windows, run 42246640148)
+    expect_equal(nct_numbers(nct_fit(i)), base[[i]], tolerance = 1e-12,
+                 label = sprintf("config %d", i))))
 })
 
 test_that("a missing cell is handled pairwise instead of failing", {

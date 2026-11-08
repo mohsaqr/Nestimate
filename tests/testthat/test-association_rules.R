@@ -179,7 +179,7 @@ test_that("association_rules works on character data frame", {
 test_that("association_rules works on binary matrix", {
   mat <- matrix(c(1,1,0, 1,0,1, 0,1,1, 1,1,1), nrow = 4, byrow = TRUE)
   colnames(mat) <- c("X", "Y", "Z")
-  rules <- association_rules(mat, min_support = 0.3,
+  rules <- association_rules(mat, format = "binary", min_support = 0.3,
                              min_confidence = 0, min_lift = 0)
   expect_s3_class(rules, "net_association_rules")
   expect_equal(rules$items, c("X", "Y", "Z"))
@@ -204,7 +204,7 @@ test_that("a character matrix is read as states, not as column items", {
 
   binary <- matrix(c(1, 1, 0, 1, 1, 1, 1, 0, 0), nrow = 3, byrow = TRUE,
                    dimnames = list(NULL, c("A", "B", "C")))
-  from_binary <- association_rules(binary, min_support = 0.1,
+  from_binary <- association_rules(binary, format = "binary", min_support = 0.1,
                                    min_confidence = 0, min_lift = 0)
   expect_identical(rules$rules, from_binary$rules)
 })
@@ -221,11 +221,11 @@ test_that("a character matrix with drop-out NAs matches its data frame", {
 test_that("logical binary input equals its 0/1 version", {
   binary <- matrix(c(1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1), nrow = 4,
                    byrow = TRUE, dimnames = list(NULL, c("X", "Y", "Z")))
-  reference <- association_rules(binary, min_support = 0.3,
+  reference <- association_rules(binary, format = "binary", min_support = 0.3,
                                  min_confidence = 0, min_lift = 0)
-  from_logical <- association_rules(binary > 0, min_support = 0.3,
+  from_logical <- association_rules(binary > 0, format = "binary", min_support = 0.3,
                                     min_confidence = 0, min_lift = 0)
-  from_logical_df <- association_rules(as.data.frame(binary > 0),
+  from_logical_df <- association_rules(as.data.frame(binary > 0), format = "binary",
                                        min_support = 0.3,
                                        min_confidence = 0, min_lift = 0)
   expect_identical(from_logical$rules, reference$rules)
@@ -235,12 +235,14 @@ test_that("logical binary input equals its 0/1 version", {
 test_that("missing or non-binary cells in binary input are refused", {
   binary <- matrix(c(1, NA, 0, 1), nrow = 2,
                    dimnames = list(NULL, c("X", "Y")))
-  expect_error(association_rules(binary), class = "nestimate_bad_input")
-  expect_error(association_rules(as.data.frame(binary)),
+  expect_error(association_rules(binary, format = "binary"), "missing cell",
+               class = "nestimate_bad_input")
+  expect_error(association_rules(as.data.frame(binary), format = "binary"), "missing cell",
                class = "nestimate_bad_input")
   counts <- matrix(c(2, 0, 1, 3), nrow = 2,
                    dimnames = list(NULL, c("X", "Y")))
   expect_error(association_rules(counts), class = "nestimate_bad_input")
+  expect_error(association_rules(counts, format = "binary"), class = "nestimate_bad_input")
 })
 
 

@@ -47,7 +47,7 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
   seqs <- .as_sequences(x, cols = cols, actor = actor, action = action,
                         time = time, ...)
   states <- as.data.frame(seqs$states, stringsAsFactors = FALSE)
-  if (!meta || ncol(seqs$units) == 0L) return(states)
+  if (!meta || ncol(seqs$units) == 0L) return(.mark_positions(states))
   out <- cbind(seqs$units, states)
   rownames(out) <- NULL
   out
@@ -73,9 +73,18 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
 
 .as_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
                           time = NULL, exclude = NULL, ...) {
+  if (is.data.frame(x) && !inherits(x, "nestimate_data")) {
+    .check_declared_columns(x, "Reading sequences", cols = cols, actor = actor,
+                            action = action, time = time)
+  }
+  if (is.data.frame(x) && !inherits(x, "nestimate_data") && is.null(action) &&
+      is.null(cols)) {
+    .refuse_undeclared_roles(x, "Reading sequences", taken = c(actor, time, exclude))
+  }
   if (is.data.frame(x) && !inherits(x, "nestimate_data") && !is.null(action)) {
     x <- prepare(x, actor = actor, action = action, time = time, ...)
   }
+  .refuse_binary_matrix(x, "Reading sequences", takes_cols = TRUE)
 
   if (inherits(x, "nestimate_data")) {
     states <- x$sequence_data
@@ -91,6 +100,7 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
       u
     }, parts, names(x)))
   } else if (inherits(x, c("netobject", "cograph_network", "tna"))) {
+    .refuse_onehot_network(x, "Reading sequences")
     # an association or window network carries numeric or one-hot data, not
     # states; reading it as sequences would give meaningless "patterns"
     if (inherits(x, "netobject") && !is.null(x$method) &&

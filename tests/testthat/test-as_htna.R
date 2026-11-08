@@ -171,7 +171,7 @@ test_that("as_htna(mcml) robustness across build inputs", {
   # edge list and matrix inputs carry no expandable source -> clear error
   el <- data.frame(from = c("A", "B", "C", "E"), to = c("B", "C", "D", "F"),
                    weight = c(2, 1, 3, 1), stringsAsFactors = FALSE)
-  expect_error(as_htna(build_mcml(el, cl)), "no expandable node-level source")
+  expect_error(as_htna(build_mcml(el, cl, from = "from", to = "to", weight = "weight")), "no expandable node-level source")
   w <- matrix(c(0, 2, 1, 3, 0, 2, 1, 1, 0), 3, 3,
               dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
   expect_error(as_htna(build_mcml(w, list(G1 = c("A", "B"), G2 = "C"))),

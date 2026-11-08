@@ -71,13 +71,13 @@ test_that("binary matrix input produces correct co-occurrence matrix", {
     nrow = 3, byrow = TRUE,
     dimnames = list(NULL, c("A", "B", "C"))
   )
-  net <- cooccurrence(bin)
+  net <- cooccurrence(bin, format = "binary")
   expect_equal(net$weights, .co_expected_raw)
 })
 
 test_that("binary data.frame input produces correct co-occurrence matrix", {
   df <- data.frame(A = c(1, 0, 1), B = c(1, 1, 0), C = c(1, 1, 1))
-  net <- cooccurrence(df)
+  net <- cooccurrence(df, format = "binary")
   expect_equal(net$weights, .co_expected_raw)
 })
 
@@ -117,7 +117,7 @@ test_that("all 6 formats produce the same co-occurrence matrix", {
 
   bin <- matrix(c(1, 1, 1, 0, 1, 1, 1, 0, 1), nrow = 3, byrow = TRUE,
                 dimnames = list(NULL, c("A", "B", "C")))
-  net_bin <- cooccurrence(bin)
+  net_bin <- cooccurrence(bin, format = "binary")
 
   df_wide <- data.frame(V1 = c("A", "B", "A"), V2 = c("B", "C", "C"),
                          V3 = c("C", NA, NA), stringsAsFactors = FALSE)
@@ -368,7 +368,7 @@ test_that("large number of items works", {
 
 test_that("binary matrix without colnames gets auto-named", {
   bin <- matrix(c(1, 0, 1, 1), nrow = 2)
-  net <- cooccurrence(bin)
+  net <- cooccurrence(bin, format = "binary")
   expect_equal(colnames(net$weights), c("V1", "V2"))
 })
 

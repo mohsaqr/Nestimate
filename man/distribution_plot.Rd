@@ -32,7 +32,8 @@ distribution_plot(
   legend_title = NULL,
   legend_ncol = NULL,
   legend_border = NA,
-  legend_bty = "n"
+  legend_bty = "n",
+  cols = NULL
 )
 }
 \arguments{
@@ -129,6 +130,10 @@ from device width (clamped to \code{[0.65, 1.2]}).}
 \item{legend_border}{Swatch border colour.}
 
 \item{legend_bty}{\code{"n"} (borderless) or \code{"o"} (boxed).}
+
+\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
+holding the positions. Needed when they are not a numbered run (\code{T1},
+\code{T2}, ...) or one of them is called \code{action}.}
 }
 \value{
 Invisibly, a list describing the drawn figure:

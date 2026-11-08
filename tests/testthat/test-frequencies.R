@@ -277,9 +277,13 @@ test_that("convert_sequence_format does not guess id_col; explicit id_col honore
   )
 
   # id_col = NULL: NO value-based id inference (the old "first column = id"
-  # guess silently dropped the first time point). Every column is a state,
-  # so Student's values 1/2 are states and nothing is dropped.
-  el_noid <- convert_sequence_format(wide_data, format = "edgelist")
+  # guess silently dropped the first time point), and an id is not read as a
+  # state either: the call asks.
+  expect_error(convert_sequence_format(wide_data, format = "edgelist"),
+               class = "nestimate_bad_input")
+  # Declared as positions, Student's values 1/2 are states and nothing is dropped.
+  el_noid <- convert_sequence_format(wide_data, seq_cols = names(wide_data),
+                                     format = "edgelist")
   expect_equal(nrow(el_noid), 4L)
   expect_true(any(c("1", "2") %in% c(el_noid$from, el_noid$to)))
 

@@ -350,6 +350,12 @@
 #' @export
 build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt"),
                         lrt_alpha = 0.01, dof = c("paths", "observed")) {
+  .refuse_onehot_network(data, "build_mogen()")
+  .refuse_binary_matrix(data, "build_mogen()")
+  if (is.data.frame(data)) {
+    .refuse_undeclared_roles(data, "build_mogen()", via_network = TRUE,
+                             whole_frame = TRUE)
+  }
   data <- .coerce_sequence_input(data)
   criterion <- match.arg(criterion)
   dof <- match.arg(dof)
@@ -628,6 +634,12 @@ mogen_transitions <- function(x, order = NULL, min_count = 1L) {
 #'
 #' @export
 path_counts <- function(data, k = 2L, top = NULL) {
+  .refuse_onehot_network(data, "path_counts()")
+  .refuse_binary_matrix(data, "path_counts()")
+  if (is.data.frame(data)) {
+    .refuse_undeclared_roles(data, "path_counts()", via_network = TRUE,
+                             whole_frame = TRUE)
+  }
   data <- .coerce_sequence_input(data)
   stopifnot(
     "'k' must be a whole number" =
@@ -692,6 +704,12 @@ path_counts <- function(data, k = 2L, top = NULL) {
 #'
 #' @export
 state_frequencies <- function(data) {
+  .refuse_onehot_network(data, "state_frequencies()")
+  .refuse_binary_matrix(data, "state_frequencies()")
+  if (is.data.frame(data)) {
+    .refuse_undeclared_roles(data, "state_frequencies()", via_network = TRUE,
+                             whole_frame = TRUE)
+  }
   data <- .coerce_sequence_input(data)
   if (is.data.frame(data)) {
     all_states <- unlist(lapply(data, as.character), use.names = FALSE)

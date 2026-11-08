@@ -36,6 +36,8 @@ utils::globalVariables(c("fill", "label", "txt_col"))
     x <- as.data.frame(x, stringsAsFactors = FALSE)
   }
   if (is.data.frame(x)) {
+    .refuse_undeclared_roles(x, "Reading a chain", via_network = TRUE,
+                           reads_onehot = TRUE)
     net <- build_network(x, method = "relative")
     return(net$weights)
   }

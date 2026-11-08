@@ -495,14 +495,20 @@
 #' @return A data frame of wide-format sequences
 #' @noRd
 .extract_sequence_data <- function(data) {
+  # A bare cograph_network is coerced first, so it meets the same method and
+  # one-hot checks as a netobject.
+  if (inherits(data, "cograph_network") && !inherits(data, "netobject")) {
+    data <- .as_netobject(data)
+  }
   # --- netobject (from Nestimate) ---
   if (inherits(data, "netobject")) {
     seq_methods <- c("relative", "frequency", "co_occurrence", "attention")
     if (!is.null(data$method) && !(data$method %in% seq_methods)) {
-      stop(sprintf(
+      stop(errorCondition(paste0(sprintf(
         "build_clusters() requires sequence data, but this netobject uses method '%s'. ",
         data$method
-      ), "Pass the original sequence data frame instead.", call. = FALSE)
+      ), "Pass the original sequence data frame instead."),
+      class = "nestimate_bad_input", call = NULL))
     }
     if (is.null(data$data)) { # nocov start
       stop("netobject has no $data. Pass the original sequence data.", call. = FALSE)
@@ -552,6 +558,8 @@
 #'   (data frame of the other columns, or NULL when there are none).
 #' @noRd
 .split_sequence_columns <- function(data, verb) {
+  .refuse_undeclared_roles(data, paste0(verb, "()"), via_network = TRUE,
+                           reads_onehot = TRUE)
   selected <- .build_sequence_cols(data)
   if (is.null(selected) || setequal(selected, names(data))) {
     return(list(sequences = data, metadata = NULL))
@@ -2189,7 +2197,11 @@ cluster_network <- function(data, k, cluster_by = "pam",
     mmm_arg_names  <- setdiff(names(formals(build_mmm)), c("data", "k"))
     mmm_args   <- caller_dots[intersect(names(caller_dots), mmm_arg_names)]
     build_dots <- caller_dots[setdiff(names(caller_dots), mmm_arg_names)]
-    if (inherits(data, "netobject")) {
+    # A one-hot network's units are fitted as windowed state sequences, so the
+    # fit carries the method that rebuilds them (build_mmm()); its own wtna
+    # method and one-hot build arguments would read those as 0/1 codes.
+    onehot <- inherits(data, "netobject") && .is_onehot_params(data$params)
+    if (inherits(data, "netobject") && !onehot) {
       if (!is.null(data$build_args))
         build_dots <- modifyList(data$build_args, build_dots)
       if (is.null(build_dots$method))
@@ -2197,6 +2209,9 @@ cluster_network <- function(data, k, cluster_by = "pam",
     }
     .validate_cluster_network_build_args(build_dots)
     mmm_fit <- do.call(build_mmm, c(list(data = data, k = k), mmm_args))
+    if (onehot && is.null(build_dots$method)) {
+      build_dots$method <- mmm_fit$network_method %||% "relative"
+    }
     return(do.call(build_network, c(list(data = mmm_fit), build_dots)))
   }
 

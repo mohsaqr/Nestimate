@@ -297,6 +297,9 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
     est_b <- build_half(data[idx_b, , drop = FALSE])
 
     if (is.null(est_a) || is.null(est_b)) return(rep(NA_real_, 4))
+    # a state lost to one half (a column constant in it) leaves no pair to compare
+    if (!all(states %in% rownames(est_a$matrix)) ||
+        !all(states %in% rownames(est_b$matrix))) return(rep(NA_real_, 4))
 
     mat_a <- est_a$matrix[states, states] # nocov start
     mat_b <- est_b$matrix[states, states]

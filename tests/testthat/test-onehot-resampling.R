@@ -122,7 +122,8 @@ test_that("a one-hot network clusters and rebuilds by unit", {
   expect_equal(total, net$weights[codes, codes])
   # Without a unit there is nothing to cluster.
   alone <- suppressWarnings(build_network(.hot_actors()[c("A", "B", "C")],
-                                          method = "cna", window_size = 2))
+                                          method = "cna", window_size = 2,
+                                          format = "onehot"))
   expect_error(build_clusters(alone, k = 2), class = "nestimate_bad_input")
   mmm <- suppressWarnings(build_mmm(net, k = 2, n_starts = 1, max_iter = 5,
                                     seed = 1))
@@ -306,10 +307,13 @@ test_that("an undeclared identifier beside 0/1 columns stops the call", {
   expect_error(build_network(d, method = "relative"),
                class = "nestimate_bad_input")
   expect_error(build_network(d, method = "wtna"), class = "nestimate_bad_input")
-  net <- build_network(d, method = "frequency", actor = "student")
+  net <- build_network(d, method = "frequency", actor = "student", format = "onehot")
   expect_identical(rownames(net$weights), c("A", "B", "C"))
-  net <- build_network(d, method = "frequency", session = "student")
+  net <- build_network(d, method = "frequency", session = "student", format = "onehot")
   expect_identical(rownames(net$weights), c("A", "B", "C"))
+  # with the unit declared and nothing else, 0/1 columns are still not guessed
+  expect_error(build_network(d, method = "frequency", actor = "student"),
+               class = "nestimate_bad_input")
   # Other methods keep such variables, and numbered numeric positions are states.
   expect_true("student" %in% rownames(build_network(d, method = "cor")$weights))
   wide <- data.frame(T1 = c(0, 1, 0), T2 = c(1, 0, 1), T3 = c(2, 1, 0))
@@ -335,13 +339,13 @@ test_that("a character column left out of the sequence is announced once", {
   all_states <- build_network(wide, method = "frequency",
                               state_cols = names(wide))
   expect_equal(sum(all_states$weights), 40)
-  # A declared covariate, and a numeric one, say nothing.
+  # A declared covariate says nothing; a numeric one left out is named too.
   expect_no_message(build_network(wide, method = "frequency",
                                   metadata_cols = "final_state"),
                     class = "nestimate_column_role")
   wide$final_state <- 1:8
-  expect_no_message(build_network(wide, method = "frequency"),
-                    class = "nestimate_column_role")
+  expect_message(build_network(wide, method = "frequency"),
+                 class = "nestimate_column_role")
 })
 
 test_that("a resample is scaled the way the network was", {
@@ -374,10 +378,12 @@ test_that("a 0/1 column stays a code, whatever it is called", {
                                   names))
   }
   action <- suppressWarnings(build_network(binary(c("Action", "B", "C")),
-                                           method = "cna", window_size = 2))
+                                           method = "cna", window_size = 2,
+                                           format = "onehot"))
   expect_identical(rownames(action$weights), c("Action", "B", "C"))
   session <- suppressWarnings(build_network(binary(c("A", "B", "Session")),
-                                            method = "cna", window_size = 2))
+                                            method = "cna", window_size = 2,
+                                            format = "onehot"))
   expect_identical(rownames(session$weights), c("A", "B", "Session"))
   expect_null(session$params$actor)
   # A grouping column is used only when set.
@@ -386,7 +392,7 @@ test_that("a 0/1 column stays a code, whatever it is called", {
   expect_error(build_network(grouped, method = "cna", window_size = 2),
                class = "nestimate_bad_input")
   net <- build_network(grouped, method = "cna", window_size = 2,
-                       session = "session_id")
+                       session = "session_id", format = "onehot")
   expect_identical(net$params$actor, "session_id")
 })
 

@@ -114,7 +114,10 @@ Returns a \code{netobject_group} (named list of netobjects).
 Default: \code{NULL}.}
 
 \item{format}{Character. Input format: \code{"auto"}, \code{"wide"},
-\code{"long"}, or \code{"onehot"}. Default: \code{"auto"}.}
+\code{"long"}, or \code{"onehot"}. Default: \code{"auto"} reads an event log when
+\code{action} is set, one-hot data when \code{codes} is set, and otherwise wide
+positions; it does not read one-hot data from the values. The association methods
+and the \code{wtna} methods read 0/1 columns as they always do.}
 
 \item{window_size}{Integer. Window size for one-hot windowing.
 Default: \code{3L}.}
@@ -165,19 +168,22 @@ slot. When provided, all other columns of the cleaned input go to
 Use this when a metadata column happens to contain values that overlap
 with node names (e.g. condition labels \code{"A","B","C"} and nodes
 \code{"A","B","C"}) and auto-detection would misclassify it. Default:
-\code{NULL} (auto-detect). For wide sequence data, auto-detection
-treats numeric columns of a mixed frame as covariates. When the
-position columns are named as a run (a shared prefix and a number:
-\code{T1}, \code{T2}, ...; or \code{1}, \code{2}, ...), every other
-character or factor column, such as an outcome or a course, is a
-covariate too. Without such a run, or with two runs of equal size,
-every character column is read as a position.}
+\code{NULL}. Declared columns are positions, also when they hold only 0 and 1:
+use \code{codes} or \code{format = "onehot"} for one-hot data. For wide sequence
+data with nothing declared, the frame must be one column or hold position
+columns named as a run (a shared prefix and a number: \code{T1}, \code{T2}, ...;
+or \code{1}, \code{2}, ...). Columns of only 0 and 1 on a sequence method raise an
+error of class \code{nestimate_bad_input}: nothing says whether they are one-hot
+codes or positions. Numeric
+columns of a mixed frame are then covariates, and so is every character or
+factor column outside the run. Any other frame on a sequence method raises
+an error of class \code{nestimate_bad_input}: set \code{action} for an
+event log, or this argument for a wide table.}
 
 \item{metadata_cols}{Character vector or \code{NULL}. Explicit names of
-columns to force into the \code{$metadata} slot. The remaining columns
-are auto-detected as state via the values-in-nodes rule. Cannot overlap
-with \code{state_cols}. Default: \code{NULL}. A character column left out
-of a numbered run of positions is named in a message of class
+columns to force into the \code{$metadata} slot. Cannot overlap
+with \code{state_cols}. Default: \code{NULL}. A column left out of a numbered
+run of positions is named in a message of class
 \code{nestimate_column_role}; listing it here or in \code{state_cols}
 settles it.}
 
@@ -313,11 +319,11 @@ the data (between-person means or within-person centering).
 \item Extracts edges and constructs the \code{netobject}.
 }
 
-For long-format transition data, supplying \code{action} without
-\code{actor} is allowed and treats all rows as one sequence in row/time
-order. The function warns because a one-sequence transition network is not
-recommended and cannot be validated by bootstrap or other confirmatory
-tests.
+For long-format transition data, supplying \code{action} alone treats all
+rows as one sequence in row order; \code{session}, or a \code{time} gap above
+\code{time_threshold}, splits them without an \code{actor}. A message says so
+when one sequence is built, because a one-sequence transition network is not
+recommended and cannot be validated by bootstrap or other confirmatory tests.
 
 For \code{method = "mgm"}, missing continuous values are filled with the
 observed column mean and missing categorical values with the modal level.

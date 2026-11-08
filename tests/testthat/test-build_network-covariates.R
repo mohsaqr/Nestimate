@@ -34,17 +34,22 @@ test_that("covariates sharing values with each other are still covariates", {
   expect_true(all(c("pre", "post") %in% names(net$metadata)))
 })
 
-test_that("roles are left alone without a single run of position names", {
+test_that("without a single run of position names the roles must be declared", {
   # Two runs of equal size: ambiguous
   tied <- data.frame(A1 = c("a", "b"), A2 = c("b", "a"),
                      B1 = c("x", "y"), B2 = c("y", "x"))
-  net <- build_network(tied, method = "relative")
+  expect_error(build_network(tied, method = "relative"),
+               class = "nestimate_bad_input")
+  net <- build_network(tied, method = "relative", state_cols = names(tied))
   expect_identical(sort(net$nodes$label), c("a", "b", "x", "y"))
-  # No numbered names at all: every character column is a position
+  # No numbered names at all
   plain <- data.frame(first = c("a", "b"), second = c("b", "a"),
                       label = c("x", "y"))
-  net <- build_network(plain, method = "relative")
-  expect_identical(sort(net$nodes$label), c("a", "b", "x", "y"))
+  expect_error(build_network(plain, method = "relative"),
+               class = "nestimate_bad_input")
+  net <- build_network(plain, method = "relative",
+                       state_cols = c("first", "second"))
+  expect_identical(sort(net$nodes$label), c("a", "b"))
 })
 
 test_that("a position whose states occur nowhere else stays a position", {

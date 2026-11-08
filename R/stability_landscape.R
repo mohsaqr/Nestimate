@@ -56,7 +56,7 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 
 #' @noRd
 # Replay sequence preparation before counting or selecting bootstrap units.
-.ls_sequences <- function(x) {
+.ls_sequences <- function(x, cols = NULL) {
   if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
     x <- .as_netobject(x)
   }
@@ -64,7 +64,10 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
       !isTRUE(x$method %in% c("relative", "frequency"))) {
     .mpt_not_a_chain(sprintf("A \"%s\" network", x$method %||% "unknown"))
   }
-  seqs <- .as_sequences(x)
+  if (is.data.frame(x) && is.null(cols)) {
+    .refuse_undeclared_roles(x, "The landscape verbs", takes_action = FALSE)
+  }
+  seqs <- .as_sequences(x, cols = cols)
   seqs$sequence_weights <- rep(1, nrow(seqs$states))
   if (!inherits(x, "netobject")) return(seqs)
   if ((!is.null(x$scaling) && !identical(x$scaling, "none")) ||
@@ -217,6 +220,9 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #'   alphabetical order.
 #' @param iter Integer. Bootstrap resamples of sequences. Default 1000.
 #' @param ci_level Numeric in (0, 1). Interval level. Default 0.95.
+#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
+#'   holding the positions. Needed when they are not a numbered run (\code{T1},
+#'   \code{T2}, ...) or one of them is called \code{action}.
 #' @param seed Integer or \code{NULL}. Seed for the resampling, scoped to the
 #'   call (the global random state is restored).
 #' @param table One of \code{"cups"}, \code{"exits"}, \code{"circulation"}.
@@ -299,7 +305,7 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #'
 #' @export
 stability_landscape <- function(x, states = NULL, iter = 1000L,
-                                ci_level = 0.95, seed = NULL) {
+                                ci_level = 0.95, seed = NULL, cols = NULL) {
   stopifnot(
     "`iter` must be a single non-negative integer" =
       length(iter) == 1L && is.numeric(iter) && is.finite(iter) && iter >= 0,
@@ -309,7 +315,7 @@ stability_landscape <- function(x, states = NULL, iter = 1000L,
   )
   parts <- if (inherits(x, "netobject_group")) as.list(x) else
     list(network = x)
-  seqs <- lapply(parts, .ls_sequences)
+  seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   if (length(alphabet) < 2L) .ls_bad("A landscape needs at least two states.")
   states <- .ls_states(states, alphabet)
@@ -537,6 +543,9 @@ plot.net_landscape <- function(x, ...) {
 #' their weighted pooled transitions. Moving along the axis goes from the
 #' most stable to the most volatile sequences.
 #'
+#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
+#'   holding the positions. Needed when they are not a numbered run (\code{T1},
+#'   \code{T2}, ...) or one of them is called \code{action}.
 #' @param x A transition network from \code{build_network()} (method
 #'   \code{"relative"} or \code{"frequency"}), a grouped one, or a wide
 #'   sequence data frame or matrix. For the \code{print()} and \code{plot()}
@@ -624,7 +633,7 @@ plot.net_landscape <- function(x, ...) {
 #'
 #' @export
 landscape_surface <- function(x, measure = "longitudinal_entropy",
-                              states = NULL, k = 30L, n_grid = 25L) {
+                              states = NULL, k = 30L, n_grid = 25L, cols = NULL) {
   stopifnot(
     "`k` must be a single integer >= 5" =
       length(k) == 1L && is.numeric(k) && k >= 5,
@@ -636,7 +645,7 @@ landscape_surface <- function(x, measure = "longitudinal_entropy",
   }
   parts <- if (inherits(x, "netobject_group")) as.list(x) else
     list(network = x)
-  seqs <- lapply(parts, .ls_sequences)
+  seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   states <- .ls_states(states, alphabet)
   probe <- sequence_metrics(unname(seqs[[1]]$states))
@@ -930,6 +939,9 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #'   percentile, with the full range used if these coincide. Default 20.
 #' @param iter Integer. Bootstrap resamples of sequences. Default 500.
 #' @param ci_level Numeric in (0, 1). Interval level. Default 0.95.
+#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
+#'   holding the positions. Needed when they are not a numbered run (\code{T1},
+#'   \code{T2}, ...) or one of them is called \code{action}.
 #' @param seed Integer or \code{NULL}. Seed for the resampling, scoped to the
 #'   call.
 #' @param type In \code{plot()}: \code{"lines"} (default), one line per state
@@ -1009,7 +1021,7 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 landscape_trend <- function(x, along = "phase",
                             depth = c("stay", "occupancy"), states = NULL,
                             window = 5L, k = 30L, n_grid = 20L, iter = 500L,
-                            ci_level = 0.95, seed = NULL) {
+                            ci_level = 0.95, seed = NULL, cols = NULL) {
   depth <- match.arg(depth)
   stopifnot(
     "`along` must be a single string" =
@@ -1027,7 +1039,7 @@ landscape_trend <- function(x, along = "phase",
   )
   parts <- if (inherits(x, "netobject_group")) as.list(x) else
     list(network = x)
-  seqs <- lapply(parts, .ls_sequences)
+  seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   states <- .ls_states(states, alphabet)
   covariates <- lapply(seqs, \(s) {

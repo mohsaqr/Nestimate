@@ -28,9 +28,14 @@ entropy_bayes(
 }
 \arguments{
 \item{x}{A frequency \code{netobject}
-(\code{build_network(method = "frequency")}), any \code{netobject} that
-carries its \code{$data} (counts are rebuilt automatically), a
-count matrix, or a wide sequence data.frame. Group dispatch on
+(\code{build_network(method = "frequency")}), a relative or frequency
+\code{netobject} that carries its \code{$data} (counts are recounted with
+the network's own start/end states, concatenation, windows and one-hot
+units), a \code{tna} model, a count matrix, or a wide sequence
+data.frame. Counts are read from the declared method, never from the
+values: a scaled or relative network is recounted from its data, and an
+association network or any other network without counts raises
+\code{nestimate_bad_input}. Group dispatch on
 \code{netobject_group}. For the \code{print()} and \code{plot()} methods: an object of class \code{net_entropy_bayes} or \code{net_entropy_bayes_group}.}
 
 \item{prior}{Numeric. Dirichlet prior concentration added to every cell

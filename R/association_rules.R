@@ -30,6 +30,10 @@
 #' @param min_confidence Numeric. Minimum confidence threshold. Default: 0.5.
 #' @param min_lift Numeric. Minimum lift threshold. Default: 1.0.
 #' @param max_length Integer. Maximum itemset size. Default: 5.
+#' @param format \code{"auto"} (default) or \code{"binary"}. Columns of only 0 and 1
+#'   could be items or recoded positions, so \code{"auto"} raises an error of class
+#'   \code{nestimate_bad_input} on them. \code{"binary"} declares them items, one row
+#'   per transaction.
 #'
 #' @return An object of class \code{"net_association_rules"} containing:
 #' \describe{
@@ -106,7 +110,9 @@ association_rules <- function(x,
                               min_support = 0.1,
                               min_confidence = 0.5,
                               min_lift = 1.0,
-                              max_length = 5L) {
+                              max_length = 5L,
+                              format = c("auto", "binary")) {
+  format <- match.arg(format)
 
   # ---- Input validation ----
   stopifnot(
@@ -120,7 +126,7 @@ association_rules <- function(x,
   max_length <- as.integer(max_length)
 
   # ---- Parse input to binary transaction matrix ----
-  parsed <- .ar_parse_input(x)
+  parsed <- .ar_parse_input(x, format)
   trans_mat <- parsed$matrix  # logical matrix: rows=transactions, cols=items
   items <- parsed$items
   n_trans <- nrow(trans_mat)
@@ -268,10 +274,27 @@ association_rules <- function(x,
 # ---- Input Parsing ----
 
 #' @noRd
-.ar_parse_input <- function(x) {
+# Columns of 0 and 1 could be items or recoded positions: no reading is guessed.
+#' @noRd
+.ar_stop_undeclared_binary <- function() {
+  stop(errorCondition(
+    paste0("association_rules(): these columns hold only 0 and 1, so they could be ",
+           "items or positions. Set `format = \"binary\"` if they are items."),
+    class = "nestimate_bad_input", call = NULL))
+}
+
+.ar_parse_input <- function(x, format = "auto") {
   # mcml -> netobject_group -> use first element
-  if (inherits(x, "mcml")) x <- as_tna(x)
-  if (inherits(x, "netobject_group")) x <- x[[1]]
+  if (inherits(x, "mcml")) {
+    x <- as_tna(x)
+    if (inherits(x, "netobject_group")) x <- x[[1]]
+  }
+  if (inherits(x, "netobject_group")) {
+    stop(errorCondition(paste(
+      "association_rules(): a netobject_group holds one network per group;",
+      "pass one group's network."),
+      class = "nestimate_bad_input", call = NULL))
+  }
   if (inherits(x, "cograph_network") && !inherits(x, "netobject")) {
     x <- .as_netobject(x)
   }
@@ -305,6 +328,13 @@ association_rules <- function(x,
       stop("netobject has no $data. Build from sequence data.", call. = FALSE)
     }
     if (.is_onehot_params(x$params)) return(.ar_onehot_input(x))
+    if (isTRUE(x$method %in% .association_methods)) {
+      stop(errorCondition(sprintf(paste(
+        "association_rules(): this \"%s\" network holds variables, not",
+        "transactions. Pass its data with `format = \"binary\"` if the",
+        "variables are 0/1 items."), x$method),
+        class = "nestimate_bad_input", call = NULL))
+    }
     df <- as.data.frame(x$data, stringsAsFactors = FALSE)
     # .sequence_rows() reads factor columns by their labels; unlist() of a
     # mixed row would turn a factor into its integer codes
@@ -316,7 +346,14 @@ association_rules <- function(x,
 
   # List of character vectors
   if (is.list(x) && !is.data.frame(x)) {
-    stopifnot(all(vapply(x, is.character, logical(1))))
+    # A classed list (packageDescription, htest, ...) is a result, not
+    # transactions, even when every field is character.
+    if (!is.null(oldClass(x)) || !all(vapply(x, is.character, logical(1L)))) {
+      stop(errorCondition(paste(
+        "association_rules(): a list of transactions must be a plain list",
+        "holding one character vector of items each."),
+        class = "nestimate_bad_input", call = NULL))
+    }
     return(.ar_transactions_to_matrix(x))
   }
 
@@ -324,7 +361,10 @@ association_rules <- function(x,
   # data-frame path; a numeric or logical matrix is a binary item matrix
   if (is.matrix(x)) {
     if (is.character(x)) {
-      return(.ar_parse_input(as.data.frame(x, stringsAsFactors = FALSE)))
+      return(.ar_parse_input(as.data.frame(x, stringsAsFactors = FALSE), format))
+    }
+    if (identical(format, "auto") && all(x[!is.na(x)] %in% c(0, 1))) {
+      .ar_stop_undeclared_binary()
     }
     return(.ar_binary_input(x, colnames(x) %||% paste0("I", seq_len(ncol(x)))))
   }
@@ -335,8 +375,16 @@ association_rules <- function(x,
     all_binary_type <- all(vapply(x, \(col) is.numeric(col) || is.logical(col),
                                   logical(1)))
     if (all_binary_type && all(unlist(x) %in% c(0, 1, NA))) {
+      if (identical(format, "auto")) .ar_stop_undeclared_binary()
       return(.ar_binary_input(as.matrix(x), colnames(x)))
     }
+    if (identical(format, "binary")) {
+      stop(errorCondition(
+        "association_rules(): `format = \"binary\"` needs a frame or matrix of only 0 and 1.",
+        class = "nestimate_bad_input", call = NULL))
+    }
+    .refuse_undeclared_roles(x, "association_rules()", via_network = TRUE,
+                             whole_frame = TRUE)
     # Wide character data: each row is a transaction
     # .sequence_rows() reads factor columns by their labels; unlist() of a
     # mixed row would turn a factor into its integer codes
@@ -399,8 +447,8 @@ association_rules <- function(x,
     bad <- utils::head(setdiff(unique(as.vector(mat)), c(0, 1)), 3L)
     stop(errorCondition(
       sprintf(paste0("a numeric transaction matrix `x` must be binary (0/1); ",
-                     "found %s. Pass `x > 0` to read counts as presence, or a ",
-                     "character matrix of states."),
+                     "found %s. Pass `x > 0` with `format = \"binary\"` to read ",
+                     "counts as presence, or a character matrix of states."),
               paste(bad, collapse = ", ")),
       class = "nestimate_bad_input", call = NULL))
   }

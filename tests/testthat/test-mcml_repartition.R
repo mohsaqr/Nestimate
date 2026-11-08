@@ -150,12 +150,14 @@ test_that("an edge-list mcml refuses a re-partition with the classed error", {
   el <- data.frame(from = sample(LETTERS[1:6], 200, TRUE),
                    to = sample(LETTERS[1:6], 200, TRUE), weight = runif(200))
   me <- build_mcml(el, clusters = list(G1 = c("A", "B"), G2 = c("C", "D"),
-                                       G3 = c("E", "F")))
+                                       G3 = c("E", "F")),
+                   from = "from", to = "to", weight = "weight")
   expect_error(build_mcml(me, combine = c("G1", "G2")),
                class = "nestimate_mcml_no_sequences")
   # the fresh route still works on the edge list itself
   expect_setequal(names(build_mcml(el, clusters = list(G1 = c("A", "B"), G2 = c("C", "D"),
                                                        G3 = c("E", "F")),
+                                   from = "from", to = "to", weight = "weight",
                                    combine = c("G1", "G2"))$cluster_members),
                   c("G1 + G2", "G3"))
 })

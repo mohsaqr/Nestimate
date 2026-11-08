@@ -289,6 +289,9 @@ centrality_stability <- function(x,
       error = function(e) NULL
     )
     if (is.null(est)) return(NULL)
+    # a state lost to the subset (a column constant in it) leaves no network to
+    # correlate: an unbuilt draw, which counts as below the threshold
+    if (!all(states %in% rownames(est$matrix))) return(NULL)
     mat <- est$matrix[states, states] # nocov start
     if (!is.null(scaling)) {
       mat <- .apply_scaling(mat, scaling,
@@ -356,7 +359,8 @@ centrality_stability <- function(x,
     }
   }
 
-  .warn_failed_resamples(failed$n, failed$total, "centrality_stability()")
+  .warn_failed_resamples(failed$n, failed$total, "centrality_stability()",
+                         below_threshold = TRUE)
 
   # ---- Compute CS coefficients ----
   cs <- vapply(measures, function(m) {

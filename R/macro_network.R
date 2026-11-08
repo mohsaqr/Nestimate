@@ -117,7 +117,7 @@ macro_network <- function(x, expand = NULL, method = "relative", ...) {
     lapply(data, function(col) unname(map[as.character(col)])),
     stringsAsFactors = FALSE
   )
-  net <- build_network(recoded, method = method, ...)
+  net <- build_network(.mark_positions(recoded), method = method, ...)
 
   # Label every node with the cluster it belongs to, so the result plots
   # grouped: an expanded state carries its cluster, a collapsed cluster itself.

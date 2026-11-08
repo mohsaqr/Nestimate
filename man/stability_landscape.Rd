@@ -12,7 +12,8 @@ stability_landscape(
   states = NULL,
   iter = 1000L,
   ci_level = 0.95,
-  seed = NULL
+  seed = NULL,
+  cols = NULL
 )
 
 \method{summary}{net_landscape}(object, table = c("cups", "exits", "circulation"), ...)
@@ -39,6 +40,10 @@ alphabetical order.}
 
 \item{seed}{Integer or \code{NULL}. Seed for the resampling, scoped to the
 call (the global random state is restored).}
+
+\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
+holding the positions. Needed when they are not a numbered run (\code{T1},
+\code{T2}, ...) or one of them is called \code{action}.}
 
 \item{object}{A \code{net_landscape} object (for \code{summary()}).}
 

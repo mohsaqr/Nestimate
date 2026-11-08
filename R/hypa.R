@@ -440,6 +440,12 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
     .Deprecated(msg = "'k' is deprecated; use 'order' instead.")
     order <- k
   }
+  .refuse_onehot_network(data, "build_hypa()")
+  .refuse_binary_matrix(data, "build_hypa()")
+  if (is.data.frame(data)) {
+    .refuse_undeclared_roles(data, "build_hypa()", via_network = TRUE,
+                             whole_frame = TRUE)
+  }
   data <- .coerce_sequence_input(data)
 
   valid_methods <- c(stats::p.adjust.methods, "none")

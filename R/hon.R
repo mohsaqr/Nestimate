@@ -1167,6 +1167,12 @@
 build_hon <- function(data, max_order = 5L, min_freq = 1L,
                       collapse_repeats = FALSE, method = "hon+") {
   # --- Coerce tna/netobject to labeled data.frame ---
+  .refuse_onehot_network(data, "build_hon()")
+  .refuse_binary_matrix(data, "build_hon()")
+  if (is.data.frame(data)) {
+    .refuse_undeclared_roles(data, "build_hon()", via_network = TRUE,
+                             whole_frame = TRUE)
+  }
   data <- .coerce_sequence_input(data)
 
   # --- Input validation ---

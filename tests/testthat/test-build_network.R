@@ -210,10 +210,10 @@ test_that("pcor warns on near-singular matrix", {
 })
 
 test_that("pcor output unchanged for well-conditioned data", {
-  # Verify the rcond check doesn't alter numerical output
-  set.seed(456)
+  # Verify the rcond check doesn't alter numerical output, on fixed data
   df <- data.frame(
-    V1 = rnorm(100), V2 = rnorm(100), V3 = rnorm(100), V4 = rnorm(100)
+    V1 = c(1, 3, 2, 5, 4, 6, 8, 7), V2 = c(2, 1, 4, 3, 6, 5, 7, 9),
+    V3 = c(5, 3, 4, 1, 2, 0, 1, 2), V4 = c(1, 2, 2, 3, 5, 4, 3, 6)
   )
   net <- build_network(df, method = "pcor")
   # Manual reference: solve(cor) -> precision -> pcor

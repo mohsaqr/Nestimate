@@ -351,7 +351,7 @@ test_that("build_mcml with edge list", {
   )
   clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
 
-  cs <- build_mcml(edges, clusters)
+  cs <- build_mcml(edges, clusters, from = "from", to = "to", weight = "weight")
   expect_s3_class(cs, "mcml")
   expect_equal(nrow(cs$macro$weights), 2)
 })
@@ -523,22 +523,18 @@ test_that("build_mcml handles netobject with sequence data (netobject_data branc
   expect_s3_class(cs, "mcml")
 })
 
-test_that("build_mcml handles netobject with edge list data (netobject_data edgelist, L593-595)", {
+test_that("a netobject whose positions are named from and to is read as sequences", {
   edges <- data.frame(
     from = c("A", "A", "B", "C"),
     to   = c("B", "C", "A", "A"),
     stringsAsFactors = FALSE
   )
-  net <- build_network(edges, method = "relative")
-  # If net has $data, it should route through netobject_data
-  if (!is.null(net$data)) {
-    cs <- build_mcml(net, list(G1 = c("A", "B"), G2 = "C"))
-    expect_s3_class(cs, "mcml")
-  } else {
-    # Falls to netobject_matrix branch — still valid test
-    cs <- build_mcml(net, list(G1 = c("A", "B"), G2 = "C"))
-    expect_s3_class(cs, "mcml")
-  }
+  net <- build_network(edges, method = "relative", state_cols = c("from", "to"))
+  cs <- build_mcml(net, list(G1 = c("A", "B"), G2 = "C"), type = "raw")
+  expect_s3_class(cs, "mcml")
+  # A->B within, A->C out, B->A within, C->A in
+  expect_equal(sum(cs$macro$weights), 4)
+  expect_null(attr(cs$macro$data, "source"))
 })
 
 # ---- build_mcml: netobject_matrix branch (L601-607) ----
@@ -619,17 +615,12 @@ test_that(".detect_mcml_input returns unknown for unrecognized class (L644)", {
   expect_equal(result, "unknown")
 })
 
-test_that(".detect_mcml_input accepts igraph-style first-two-column edge lists", {
-  unnamed_edges <- data.frame(node_from = c("A", "B"),
-                              node_to = c("B", "A"),
-                              stringsAsFactors = FALSE)
-  weighted_edges <- data.frame(node_from = c("A", "B"),
-                               node_to = c("B", "A"),
-                               weight = c(2, 3),
-                               stringsAsFactors = FALSE)
-
-  expect_equal(Nestimate:::.detect_mcml_input(unnamed_edges), "edgelist")
-  expect_equal(Nestimate:::.detect_mcml_input(weighted_edges), "edgelist")
+test_that(".detect_mcml_input reads no column name; only a stored edge list is tagged", {
+  named <- data.frame(from = c("A", "B"), to = c("B", "A"),
+                      stringsAsFactors = FALSE)
+  expect_equal(Nestimate:::.detect_mcml_input(named), "sequence")
+  attr(named, "source") <- "edgelist"
+  expect_equal(Nestimate:::.detect_mcml_input(named), "edgelist")
 })
 
 test_that(".detect_mcml_input keeps named two-step sequence data as sequence", {
@@ -832,7 +823,7 @@ test_that("build_mcml zero transitions produce uniform between_inits (L784)", {
     to   = c("B", "A", "C"),
     stringsAsFactors = FALSE
   )
-  cs <- build_mcml(edges2, clusters, type = "raw")
+  cs <- build_mcml(edges2, clusters, type = "raw", from = "from", to = "to")
   expect_s3_class(cs, "mcml")
 })
 
@@ -939,9 +930,9 @@ test_that("build_mcml single-node cluster with no self-loops returns 0 weight (L
   expect_equal(unname(cs$clusters$G2$inits), 1)
 })
 
-# ---- .build_mcml_edgelist: igraph-style endpoint detection ----
+# ---- .build_mcml_edgelist: declared endpoints ----
 
-test_that(".build_mcml_edgelist accepts first two columns as endpoints", {
+test_that(".build_mcml_edgelist reads the declared endpoints", {
   edges <- data.frame(
     node_from = c("A", "B", "C"),
     node_to   = c("B", "C", "A"),
@@ -949,7 +940,8 @@ test_that(".build_mcml_edgelist accepts first two columns as endpoints", {
   )
   clusters <- list(G1 = c("A", "B"), G2 = "C")
   cs <- Nestimate:::.build_mcml_edgelist(edges, clusters, "sum", "raw",
-                                         TRUE, TRUE)
+                                         TRUE, TRUE, from = "node_from",
+                                         to = "node_to")
 
   expect_s3_class(cs, "mcml")
   expect_equal(cs$macro$weights["G1", "G1"], 1)
@@ -957,7 +949,7 @@ test_that(".build_mcml_edgelist accepts first two columns as endpoints", {
   expect_equal(cs$macro$weights["G2", "G1"], 1)
 })
 
-test_that("build_mcml distinguishes two-step sequences from unnamed edge lists", {
+test_that("build_mcml distinguishes two-step sequences from declared edge lists", {
   clusters <- list(G1 = "A", G2 = "B")
   seqs <- data.frame(T1 = c("A", "A", "B"),
                      T2 = c("B", "B", "B"),
@@ -967,7 +959,8 @@ test_that("build_mcml distinguishes two-step sequences from unnamed edge lists",
                       stringsAsFactors = FALSE)
 
   seq_mc <- build_mcml(seqs, clusters, type = "raw")
-  edge_mc <- build_mcml(edges, clusters, type = "raw")
+  edge_mc <- build_mcml(edges, clusters, type = "raw", from = "node_from",
+                        to = "node_to")
 
   expect_null(attr(seq_mc$macro$data, "source"))
   expect_identical(attr(edge_mc$macro$data, "source"), "edgelist")
@@ -984,7 +977,7 @@ test_that("build_mcml edgelist validates endpoints and weights", {
     build_mcml(
       data.frame(from = c("A", ""), to = c("B", "A"),
                  stringsAsFactors = FALSE),
-      clusters, type = "raw"
+      clusters, type = "raw", from = "from", to = "to"
     ),
     "source and target columns must not contain missing or empty values"
   )
@@ -992,7 +985,7 @@ test_that("build_mcml edgelist validates endpoints and weights", {
     build_mcml(
       data.frame(from = c("A", "B"), to = c("B", "A"),
                  weight = c("2", "bad"), stringsAsFactors = FALSE),
-      clusters, type = "raw"
+      clusters, type = "raw", from = "from", to = "to", weight = "weight"
     ),
     "weight column must be numeric"
   )
@@ -1000,7 +993,7 @@ test_that("build_mcml edgelist validates endpoints and weights", {
     build_mcml(
       data.frame(from = c("A", "B"), to = c("B", "A"),
                  weight = c(2, NA_real_), stringsAsFactors = FALSE),
-      clusters, type = "raw"
+      clusters, type = "raw", from = "from", to = "to", weight = "weight"
     ),
     "weight column must contain finite non-missing values"
   )
@@ -1008,7 +1001,7 @@ test_that("build_mcml edgelist validates endpoints and weights", {
     build_mcml(
       data.frame(from = c("A", "B"), to = c("B", "A"),
                  weight = c(2, -1), stringsAsFactors = FALSE),
-      clusters, type = "raw"
+      clusters, type = "raw", from = "from", to = "to", weight = "weight"
     ),
     "weight column must not contain negative values"
   )
@@ -1023,7 +1016,7 @@ test_that("build_mcml edgelist accepts cluster column name (L971-989)", {
     group = c("G1", "G1", "G2", "G2"),
     stringsAsFactors = FALSE
   )
-  cs <- build_mcml(edges, clusters = "group")
+  cs <- build_mcml(edges, clusters = "group", from = "from", to = "to")
   expect_s3_class(cs, "mcml")
   expect_equal(nrow(cs$macro$weights), 2)
 })
@@ -1037,7 +1030,7 @@ test_that("build_mcml edgelist cluster column rejects conflicting node groups", 
   )
 
   expect_error(
-    build_mcml(edges, clusters = "group"),
+    build_mcml(edges, clusters = "group", from = "from", to = "to"),
     "assigns nodes to multiple groups"
   )
 })
@@ -1048,7 +1041,7 @@ test_that("build_mcml edgelist errors when clusters=NULL (L992-993)", {
     to   = c("B", "A"),
     stringsAsFactors = FALSE
   )
-  expect_error(build_mcml(edges, clusters = NULL),
+  expect_error(build_mcml(edges, clusters = NULL, from = "from", to = "to"),
                "clusters argument is required")
 })
 
@@ -1060,7 +1053,7 @@ test_that("build_mcml edgelist accepts membership vector clusters (L1000)", {
   )
   # character membership vector for the 3 unique sorted nodes (A, B, C)
   clusters <- c("G1", "G1", "G2")
-  cs <- build_mcml(edges, clusters)
+  cs <- build_mcml(edges, clusters, from = "from", to = "to")
   expect_s3_class(cs, "mcml")
 })
 
@@ -1686,7 +1679,7 @@ test_that("edgelist input yields macro/per-cluster $data usable by bootstrap", {
     stringsAsFactors = FALSE
   )
   clusters <- list(A = c("a1", "a2"), B = c("b1", "b2"))
-  mc <- build_mcml(edges, clusters)
+  mc <- build_mcml(edges, clusters, from = "from", to = "to", weight = "weight")
 
   # Previous bug: $macro$data was NULL for edgelist input
   expect_false(is.null(mc$macro$data))
@@ -1868,7 +1861,8 @@ test_that("edge-list clusters-by-column reflects documented narrow contract", {
     grp   = c("G1", "G1", "G2", "G2"),
     stringsAsFactors = FALSE
   )
-  mc <- build_mcml(edges_clean, clusters = "grp")
+  mc <- build_mcml(edges_clean, clusters = "grp", from = "from", to = "to",
+                   weight = "weight")
   members <- mc$cluster_members
   expect_setequal(members$G1, c("A", "B"))
   expect_setequal(members$G2, c("C", "D"))
@@ -2074,15 +2068,33 @@ test_that("build_mcml reads a V-named wide frame as sequences", {
   expect_equal(sum(from_net$macro$weights), 9)
 })
 
-test_that("V1 and V2 alone, or with a weight, stay an edge list", {
+test_that("names give no role: an edge list is declared", {
   clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
   edges <- data.frame(V1 = c("A", "C", "B"), V2 = c("C", "D", "A"),
                       weight = c(2, 5, 1))
-  expect_identical(.detect_mcml_input(edges), "edgelist")
-  expect_equal(sum(build_mcml(edges, clusters, type = "raw")$macro$weights), 8)
-  expect_identical(.detect_mcml_input(edges[c("V1", "V2")]), "edgelist")
-  expect_identical(.detect_mcml_input(data.frame(V1 = "A", V2 = "B", V3 = "C")),
-                   "sequence")
+  # A->C 2, C->D 5, B->A 1
+  declared <- build_mcml(edges, clusters, type = "raw", from = "V1", to = "V2",
+                         weight = "weight")
+  expect_equal(sum(declared$macro$weights), 8)
+  expect_error(build_mcml(edges, clusters, type = "raw"),
+               class = "nestimate_bad_input")
+  # positions named from and to are positions when declared, and refused when not
+  wide <- data.frame(from = c("A", "B"), to = c("B", "C"), T3 = c("C", "D"),
+                     T4 = c("D", "A"))
+  expect_error(build_mcml(wide, clusters, type = "raw"),
+               class = "nestimate_bad_input")
+  expect_equal(sum(build_mcml(wide, clusters, type = "raw",
+                              cols = names(wide))$macro$weights), 6)
+  # a run of two positions: two sequences of one transition each
+  run <- data.frame(V1 = c("A", "C"), V2 = c("B", "D"))
+  expect_equal(sum(build_mcml(run, clusters, type = "raw")$macro$weights), 2)
+  # a role that names no column, half an edge list, or two declarations
+  expect_error(build_mcml(edges, clusters, from = "V1", to = "absent"),
+               class = "nestimate_bad_input")
+  expect_error(build_mcml(edges, clusters, from = "V1"),
+               class = "nestimate_bad_input")
+  expect_error(build_mcml(edges, clusters, from = "V1", to = "V2", cols = "V1"),
+               class = "nestimate_bad_input")
 })
 
 test_that("a trim leaving V1 and V2 still reads the frame as sequences", {

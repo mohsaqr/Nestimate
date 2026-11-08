@@ -112,10 +112,13 @@ test_that("a network keeps the outcome when the positions are named T1, T2", {
   expect_identical(pattern_outcome(net, outcome = "y", len = 2, n = 1,
                                    min_freq = 1, min_support = 0)$pattern,
                    "A->B")
-  # positions without numbered names: the outcome is read as a position
+  # positions without numbered names are not guessed: the roles are declared
   unnamed <- .po_data()
   names(unnamed) <- c("first", "second", "y")
-  absorbed <- build_network(unnamed, method = "relative")
+  expect_error(build_network(unnamed, method = "relative"),
+               class = "nestimate_bad_input")
+  absorbed <- build_network(unnamed, method = "relative",
+                            state_cols = c("first", "second", "y"))
   expect_error(pattern_outcome(absorbed, outcome = "y"),
                class = "nestimate_bad_input")
   kept <- build_network(.po_data(), method = "relative", metadata_cols = "y")

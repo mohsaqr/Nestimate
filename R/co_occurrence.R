@@ -11,7 +11,8 @@
 #'   \itemize{
 #'     \item A \code{data.frame} with a delimited column (\code{field} + \code{sep}).
 #'     \item A \code{data.frame} in long/bipartite format (\code{field} + \code{by}).
-#'     \item A binary (0/1) \code{data.frame} or \code{matrix} (auto-detected).
+#'     \item A binary \code{data.frame} or \code{matrix} (0/1 or
+#'       \code{TRUE}/\code{FALSE}), declared with \code{format = "binary"}.
 #'     \item A wide sequence \code{data.frame} or \code{matrix} (non-binary).
 #'     \item A \code{list} of character vectors (each element is a transaction).
 #'   }
@@ -54,6 +55,10 @@
 #'   If \code{FALSE}, the diagonal is zeroed.
 #' @param top_n Integer or \code{NULL}. If specified, return only the top
 #'   \code{top_n} edges by weight. Default \code{NULL} (all edges).
+#' @param format \code{"auto"} (default) or \code{"binary"}. Columns of only 0 and 1
+#'   could be items or recoded positions, so \code{"auto"} raises an error of class
+#'   \code{nestimate_bad_input} on them. \code{"binary"} declares them items, one row
+#'   per transaction; a missing cell counts as no occurrence.
 #' @param ... Currently unused.
 #'
 #' @return A \code{netobject} (undirected, class
@@ -81,11 +86,19 @@
 #'     Groups by \code{by}; unique values of \code{field} within each group
 #'     form a transaction.
 #'   \item \strong{Binary matrix}: No \code{field}/\code{by}/\code{sep}, all
-#'     values 0/1. Columns are items, rows are transactions.
+#'     values 0/1 or logical, and \code{format = "binary"}. Columns are items,
+#'     rows are transactions; a missing cell is no occurrence. Without
+#'     \code{format = "binary"} such data is refused, since 0/1 columns could
+#'     also be recoded positions.
 #'   \item \strong{Wide sequence}: No \code{field}/\code{by}/\code{sep},
 #'     non-binary. Unique values across each row form a transaction.
 #'   \item \strong{List}: A plain list of character vectors.
 #' }
+#'
+#' A network object (\code{netobject}, \code{netobject_group},
+#' \code{cograph_network}, \code{tna}) is refused: pass the data it was built
+#' from, or use \code{build_network(method = "co_occurrence")} for positional
+#' co-occurrence of sequences.
 #'
 #' The pipeline converts all formats into a list of character vectors
 #' (transactions), optionally filters by \code{min_occur}, builds a binary
@@ -126,7 +139,7 @@
 #' # Binary matrix
 #' bin <- matrix(c(1,0,1, 1,1,0, 0,1,1), nrow = 3, byrow = TRUE,
 #'               dimnames = list(NULL, c("X", "Y", "Z")))
-#' net <- cooccurrence(bin)
+#' net <- cooccurrence(bin, format = "binary")
 #'
 #' @export
 cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
@@ -134,21 +147,76 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
                                          "inclusion", "association",
                                          "dice", "equivalence", "relative"),
                           threshold = 0, min_occur = 1L,
-                          diagonal = TRUE, top_n = NULL, ...) {
+                          diagonal = TRUE, top_n = NULL, ...,
+                          format = c("auto", "binary")) {
   similarity <- match.arg(similarity)
+  format <- match.arg(format)
   threshold <- as.numeric(threshold)
   min_occur <- as.integer(min_occur)
   stopifnot(threshold >= 0, min_occur >= 1L,
             is.logical(diagonal), length(diagonal) == 1L)
 
+  # A network is a list, so its fields would otherwise be read as transactions
+  if (inherits(data, c("netobject", "netobject_group", "cograph_network", "tna"))) {
+    stop(errorCondition(paste0(
+      "cooccurrence(): `data` is a network, not data. Pass the data it was ",
+      "built from, or use build_network(method = \"co_occurrence\") for ",
+      "positional co-occurrence of sequences."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (is.list(data) && !is.data.frame(data) &&
+      (!is.null(oldClass(data)) || !all(vapply(data, is.atomic, logical(1L))))) {
+    stop(errorCondition(
+      "cooccurrence(): a list of transactions must be a plain list holding one vector of items each.",
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (is.data.frame(data)) {
+    .check_declared_columns(data, "cooccurrence()", field = field, by = by)
+  }
+  # A role that the format ignores is a mistake, not a request to read the input
+  # some other way: `by` and `sep` both need `field`, and `field` needs one of them.
+  # A list of transactions has no columns to name.
+  roles_set <- !is.null(field) || !is.null(by) || !is.null(sep)
+  if (is.list(data) && !is.data.frame(data) && roles_set) {
+    stop(errorCondition(
+      "cooccurrence(): `field`, `by` and `sep` name columns; a list has none.",
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (roles_set && (is.null(field) || (is.null(by) && is.null(sep)))) {
+    stop(errorCondition(
+      paste0("cooccurrence(): set `field` and `by` for a long table, or `field` ",
+             "and `sep` for delimited columns."),
+      class = "nestimate_bad_input", call = NULL))
+  }
   # Convert input to list of character vectors (transactions)
   fmt <- .co_detect_format(data, field, by, sep)
+  # Columns of 0 and 1 could be items or recoded positions: no reading is guessed.
+  if (identical(fmt, "binary") && identical(format, "auto")) {
+    stop(errorCondition(
+      paste0("cooccurrence(): these columns hold only 0 and 1, so they could be ",
+             "items or positions. Set `format = \"binary\"` if they are items, where ",
+             "a missing cell counts as no occurrence."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (identical(format, "binary") && !identical(fmt, "binary")) {
+    stop(errorCondition(
+      "cooccurrence(): `format = \"binary\"` needs a frame or matrix of only 0 and 1 (or TRUE and FALSE).",
+      class = "nestimate_bad_input", call = NULL))
+  }
   transactions <- switch(fmt,
     delimited       = .co_parse_delimited(data, field, sep),
     multi_delimited = .co_parse_multi_delimited(data, field, sep),
     long            = .co_parse_long(data, field, by),
     binary          = .co_parse_binary(data),
-    wide            = .co_parse_wide(data),
+    wide            = {
+      if (is.data.frame(data)) {
+        .refuse_undeclared_roles(
+          data, "cooccurrence()", whole_frame = TRUE,
+          advice = paste0("Set `field` and `by` for a long table, or `field` ",
+                          "and `sep` for delimited columns."))
+      }
+      .co_parse_wide(data)
+    },
     list            = .co_parse_list(data)
   )
 
@@ -241,7 +309,7 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
   # Matrix or data.frame without field/by/sep
   if (is.matrix(data) || is.data.frame(data)) {
     mat <- if (is.data.frame(data)) as.matrix(data) else data
-    if (is.numeric(mat) && all(mat[!is.na(mat)] %in% c(0, 1)))
+    if ((is.numeric(mat) || is.logical(mat)) && all(mat[!is.na(mat)] %in% c(0, 1)))
       return("binary")
     return("wide")
   }
@@ -298,7 +366,8 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
   if (is.null(colnames(mat)))
     colnames(mat) <- paste0("V", seq_len(ncol(mat)))
   cn <- colnames(mat)
-  lapply(seq_len(nrow(mat)), function(i) cn[mat[i, ] == 1])
+  # a missing cell is not an occurrence; a bare `==` would keep it as an NA item
+  lapply(seq_len(nrow(mat)), function(i) cn[which(mat[i, ] == 1)])
 }
 
 #' Parse wide sequence data (unique values per row = transaction)

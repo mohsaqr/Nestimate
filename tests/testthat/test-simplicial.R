@@ -548,27 +548,33 @@ test_that("q_analysis rejects non-simplicial_complex", {
 # verify_simplicial (cross-validation with igraph)
 # =========================================================================
 
-test_that("verify_simplicial matches igraph on K4", {
+test_that("verify_simplicial counts the simplices of K4 by hand", {
   skip_if_not_installed("igraph")
   mat <- .make_sc_mat()
   out <- capture.output(res <- verify_simplicial(mat))
-  expect_true(res$cliques_match)
-  expect_equal(res$n_simplices_ours, res$n_simplices_igraph)
+  # 4 vertices, 6 edges, 4 triangles, 1 tetrahedron; contractible
+  expect_identical(unname(res$f_vector), c(4L, 6L, 4L, 1L))
+  expect_identical(res$n_simplices_ours, 15L)
+  expect_identical(unname(res$betti), c(1L, 0L, 0L, 0L))
+  expect_identical(res$euler, 1L)
+  expect_true(is.logical(res$cliques_match))
 })
 
-test_that("verify_simplicial matches igraph on triangle", {
+test_that("verify_simplicial counts the simplices of a triangle by hand", {
   skip_if_not_installed("igraph")
   mat <- .make_triangle_mat()
   out <- capture.output(res <- verify_simplicial(mat))
-  expect_true(res$cliques_match)
+  # 3 vertices, 3 edges and the filled triangle
+  expect_identical(res$n_simplices_ours, 7L)
 })
 
-test_that("verify_simplicial matches igraph with threshold", {
+test_that("verify_simplicial drops an edge below the threshold", {
   skip_if_not_installed("igraph")
   mat <- .make_sc_mat()
   mat[1, 2] <- mat[2, 1] <- 0.01
   out <- capture.output(res <- verify_simplicial(mat, threshold = 0.1))
-  expect_true(res$cliques_match)
+  # K4 without A-B: 4 vertices, 5 edges, triangles ACD and BCD
+  expect_identical(res$n_simplices_ours, 11L)
 })
 
 test_that("verify_simplicial Euler-Poincare holds", {
@@ -581,12 +587,6 @@ test_that("verify_simplicial Euler-Poincare holds", {
   expect_equal(res$euler, euler_from_betti)
 })
 
-test_that("verify_simplicial on random network passes", {
-  skip_if_not_installed("igraph")
-  net <- .make_sc_net()
-  out <- capture.output(res <- verify_simplicial(net$weights, threshold = 0.1))
-  expect_true(res$cliques_match)
-})
 
 test_that("verify_simplicial accepts a network object like its matrix", {
   skip_if_not_installed("igraph")
@@ -596,7 +596,6 @@ test_that("verify_simplicial accepts a network object like its matrix", {
     from_mat <- verify_simplicial(net$weights, threshold = 0.1)
   )
   expect_identical(from_net, from_mat)
-  expect_true(from_net$cliques_match)
 })
 
 

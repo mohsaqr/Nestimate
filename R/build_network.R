@@ -112,7 +112,10 @@
 #'   Returns a \code{netobject_group} (named list of netobjects).
 #'   Default: \code{NULL}.
 #' @param format Character. Input format: \code{"auto"}, \code{"wide"},
-#'   \code{"long"}, or \code{"onehot"}. Default: \code{"auto"}.
+#'   \code{"long"}, or \code{"onehot"}. Default: \code{"auto"} reads an event log when
+#'   \code{action} is set, one-hot data when \code{codes} is set, and otherwise wide
+#'   positions; it does not read one-hot data from the values. The association methods
+#'   and the \code{wtna} methods read 0/1 columns as they always do.
 #' @param window_size Integer. Window size for one-hot windowing.
 #'   Default: \code{3L}.
 #' @param mode Character. Windowing mode for one-hot input only:
@@ -139,18 +142,21 @@
 #'   Use this when a metadata column happens to contain values that overlap
 #'   with node names (e.g. condition labels \code{"A","B","C"} and nodes
 #'   \code{"A","B","C"}) and auto-detection would misclassify it. Default:
-#'   \code{NULL} (auto-detect). For wide sequence data, auto-detection
-#'   treats numeric columns of a mixed frame as covariates. When the
-#'   position columns are named as a run (a shared prefix and a number:
-#'   \code{T1}, \code{T2}, ...; or \code{1}, \code{2}, ...), every other
-#'   character or factor column, such as an outcome or a course, is a
-#'   covariate too. Without such a run, or with two runs of equal size,
-#'   every character column is read as a position.
+#'   \code{NULL}. Declared columns are positions, also when they hold only 0 and 1:
+#'   use \code{codes} or \code{format = "onehot"} for one-hot data. For wide sequence
+#'   data with nothing declared, the frame must be one column or hold position
+#'   columns named as a run (a shared prefix and a number: \code{T1}, \code{T2}, ...;
+#'   or \code{1}, \code{2}, ...). Columns of only 0 and 1 on a sequence method raise an
+#'   error of class \code{nestimate_bad_input}: nothing says whether they are one-hot
+#'   codes or positions. Numeric
+#'   columns of a mixed frame are then covariates, and so is every character or
+#'   factor column outside the run. Any other frame on a sequence method raises
+#'   an error of class \code{nestimate_bad_input}: set \code{action} for an
+#'   event log, or this argument for a wide table.
 #' @param metadata_cols Character vector or \code{NULL}. Explicit names of
-#'   columns to force into the \code{$metadata} slot. The remaining columns
-#'   are auto-detected as state via the values-in-nodes rule. Cannot overlap
-#'   with \code{state_cols}. Default: \code{NULL}. A character column left out
-#'   of a numbered run of positions is named in a message of class
+#'   columns to force into the \code{$metadata} slot. Cannot overlap
+#'   with \code{state_cols}. Default: \code{NULL}. A column left out of a numbered
+#'   run of positions is named in a message of class
 #'   \code{nestimate_column_role}; listing it here or in \code{state_cols}
 #'   settles it.
 #' @param ... Additional arguments passed to the estimator function. For
@@ -215,11 +221,11 @@
 #'   \item Extracts edges and constructs the \code{netobject}.
 #' }
 #'
-#' For long-format transition data, supplying \code{action} without
-#' \code{actor} is allowed and treats all rows as one sequence in row/time
-#' order. The function warns because a one-sequence transition network is not
-#' recommended and cannot be validated by bootstrap or other confirmatory
-#' tests.
+#' For long-format transition data, supplying \code{action} alone treats all
+#' rows as one sequence in row order; \code{session}, or a \code{time} gap above
+#' \code{time_threshold}, splits them without an \code{actor}. A message says so
+#' when one sequence is built, because a one-sequence transition network is not
+#' recommended and cannot be validated by bootstrap or other confirmatory tests.
 #'
 #' For \code{method = "mgm"}, missing continuous values are filled with the
 #' observed column mean and missing categorical values with the modal level.
@@ -339,8 +345,17 @@ build_network <- function(data,
       k_comp      <- data$k
       # Merge stored build_args with caller's ...; caller takes precedence
       call_args <- if (!is.null(data$build_args)) modifyList(data$build_args, dots) else dots
+      empty <- setdiff(seq_len(k_comp), assignments)
+      if (length(empty) > 0L) {
+        stop(errorCondition(sprintf(paste(
+          "build_network(): no sequence is assigned to cluster %s, so its",
+          "\"%s\" network cannot be built. Refit the mixture with fewer",
+          "clusters or more starts."), paste(empty, collapse = ", "), method),
+          class = "nestimate_empty_cluster", call = NULL))
+      }
       nets <- lapply(seq_len(k_comp), function(m) {
-        sub <- raw_data[assignments == m, , drop = FALSE]
+        sub <- .keep_window_attrs(raw_data[assignments == m, , drop = FALSE],
+                                  raw_data)
         net <- do.call(build_network, c(list(data = sub, method = method), call_args))
         net <- .attach_set_aside_metadata(net, data$metadata, assignments == m)
         # Inject EM-fitted initials only for directed sequence methods
@@ -506,14 +521,27 @@ build_network <- function(data,
   }
 
   # ---- Column roles are declared, never read from names ----
+  # The wtna methods read one-hot codes; declared positions would be ignored
+  if (method %in% c("wtna", "wtna_cooccurrence") &&
+      (!is.null(state_cols) || !is.null(.param_get(params, "cols")))) {
+    stop(errorCondition(
+      sprintf(paste0("build_network(): method \"%s\" reads one-hot codes, and ",
+                     "`state_cols` declares positions. Use \"relative\" or ",
+                     "\"frequency\" for positions, or `codes` to name the one-hot ",
+                     "columns."), method),
+      class = "nestimate_bad_input", call = NULL))
+  }
   if (is.data.frame(data)) {
-    .stop_undeclared_action(data, action, actor, time, session, order, codes,
-                            group, state_cols, metadata_cols, params$cols,
-                            format)
+    .refuse_duplicate_names(data, "build_network()")
     .stop_undeclared_identifier(data, method, action, actor, time, session,
                                 order, codes, group, state_cols, metadata_cols,
                                 params$cols, format)
-    .unused_role_notice(data, action, time, session, metadata_cols)
+    .stop_undeclared_roles(data, method, action, actor, time, session, order,
+                           codes, group, state_cols, metadata_cols, params$cols,
+                           format)
+    .unused_role_notice(data, action, time, session,
+                        c(action, actor, time, session, group, order,
+                          metadata_cols, state_cols), order = order)
   }
 
   # ---- Group dispatch: per-group networks ----
@@ -611,12 +639,20 @@ build_network <- function(data,
       # Has action column = long event log
       format <- "long"
     } else {
-      # Check if all columns (excluding actor/session) are binary
-      exclude <- c(actor, session)
+      # One-hot is never read from the values (owner, 2026-11-07): only
+      # `method = "wtna"` declares it, by its name. Every other method reads
+      # 0/1 columns as positions (sequence methods, which refuse them unless
+      # declared) or as variables (association methods).
+      # Declared roles are not codes: the same exclusion `.resolve_codes()` uses.
+      exclude <- c(actor, session, metadata_cols, group)
       check_cols <- setdiff(names(data), exclude)
-      if (length(check_cols) >= 2L && all(vapply(
+      declared <- !is.null(state_cols) || !is.null(.param_get(params, "cols")) ||
+        !is.null(.marked_positions(data))
+      if (!declared && method %in% c("wtna", "wtna_cooccurrence") &&
+          length(check_cols) >= 2L && all(vapply(
         data[, check_cols, drop = FALSE],
-        function(x) is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1)),
+        function(x) (is.numeric(x) || is.logical(x)) &&
+          all(x[!is.na(x)] %in% c(0, 1)),
         logical(1)
       ))) {
         is_onehot <- TRUE
@@ -630,7 +666,6 @@ build_network <- function(data,
   # ---- Long format: prepare event log data ----
   if (format == "long" && !is.null(action) && is.data.frame(data) &&
       action %in% names(data)) {
-    if (is.null(actor)) .single_sequence_note()
     prep_args <- list(data = data, action = action)
     if (!is.null(actor)) prep_args$actor <- actor
     if (!is.null(time)) prep_args$time <- time
@@ -647,6 +682,7 @@ build_network <- function(data,
 
     prepared <- do.call(prepare, prep_args)
     data <- prepared$sequence_data
+    if (nrow(data) == 1L) .single_sequence_note()
     format <- "wide"
     params$format <- "wide"
   } else {
@@ -655,9 +691,17 @@ build_network <- function(data,
 
   # ---- One-hot format: dispatch to wtna/cna path ----
   if (format == "onehot" || is_onehot) {
+    # These count positions of states, and would read 0, 1 and the ids as states
+    if (method %in% c("attention", "ngram", "gap", "reverse")) {
+      stop(errorCondition(
+        sprintf(paste0("build_network(): method \"%s\" reads positions of states and ",
+                       "has no reading of one-hot data. Use \"relative\", ",
+                       "\"frequency\", \"co_occurrence\" or \"wtna\"."), method),
+        class = "nestimate_bad_input", call = NULL))
+    }
     resolved_codes <- .resolve_codes(
       as.data.frame(data), codes,
-      exclude = c(actor, session)
+      exclude = c(actor, session, metadata_cols, group)
     )
 
     # Warning for one-hot without windowing or session
@@ -700,7 +744,7 @@ build_network <- function(data,
                                             method %in% transition_methods)
     }
     if (is.data.frame(data) && method %in% transition_methods) {
-      windowing <- .sequence_window(data, params, method)
+      windowing <- .sequence_window(data, params, method, mode)
       data <- windowing$data
       params <- windowing$params
     }
@@ -731,7 +775,8 @@ build_network <- function(data,
     if (sum(is_cat) >= 2L && sum(is_num) < 2L) {
       seq_data <- data[c(exclude, check_cols[is_cat])]
       freq_data <- convert_sequence_format(
-        seq_data, id_col = if (length(exclude) == 0L) character(0) else exclude,
+        seq_data, seq_cols = check_cols[is_cat],
+        id_col = if (length(exclude) == 0L) character(0) else exclude,
         format = "frequency"
       )
       # Drop rid and ID columns, keep only numeric frequency columns
@@ -965,7 +1010,9 @@ build_network <- function(data,
   )
 
   result <- list(
-    data = raw_data,
+    # the network holds its roles, so a verb that rebuilds from it needs no guess
+    data = if (is.data.frame(raw_data) && method %in% transition_methods &&
+               !identical(format, "onehot")) .mark_positions(raw_data) else raw_data,
     metadata = metadata,
     weights = net_matrix,
     nodes = nodes_df,
@@ -1087,7 +1134,7 @@ build_network <- function(data,
 #' the data attributes .prepare_onehot() sets, so the estimators and the
 #' resampling verbs read one definition; windows the data already records win.
 #' @noRd
-.sequence_window <- function(data, params, method) {
+.sequence_window <- function(data, params, method, mode = NULL) {
   size <- .param_get(params, "window_size")
   span <- .param_get(params, "window_span")
   if (is.null(size) && is.null(span) &&
@@ -1110,7 +1157,8 @@ build_network <- function(data,
       class = "nestimate_bad_input", call = NULL))
   }
   # Blocks are the only window sequence positions have; `mode` is one-hot only.
-  if (identical(.param_get(params, "mode"), "overlapping")) {
+  if (identical(.param_get(params, "mode"), "overlapping") ||
+      identical(mode, "overlapping")) {
     warning(warningCondition(
       paste0("`mode = \"overlapping\"` applies to one-hot data; sequence ",
              "positions are counted in non-overlapping blocks."),
@@ -1616,14 +1664,18 @@ predictability.netobject_group <- function(object, ...) {
   if (!is.null(state_cols)) return(state_cols)
   candidates <- setdiff(names(data), c(metadata_cols, exclude))
   if (!is.null(metadata_cols)) return(candidates)
+  # positions a verb already resolved keep their roles, whatever they are called;
+  # a role declared in this call comes first
+  if (!is.null(.marked_positions(data))) return(candidates)
   if (isTRUE(infer_numeric_metadata)) {
     is_num <- vapply(data[candidates], is.numeric, logical(1))
     is_cat <- vapply(data[candidates],
                      function(x) is.character(x) || is.factor(x), logical(1))
-    if (any(is_num) && any(is_cat)) {
+    all_binary <- all(vapply(data[candidates], .is_binary_column, logical(1)))
+    if (any(is_num) && !all_binary) {
       # numeric-coded states: when the largest run of numbered position
       # names is entirely numeric, it is the sequence and the other columns
-      # (an id, a session label) are covariates, not the other way round
+      # (an id, a grade, a session label) are covariates, not the other way round
       numeric_run <- .numeric_position_run(data[candidates])
       if (length(numeric_run) > 0L) return(numeric_run)
     }
@@ -1646,29 +1698,211 @@ predictability.netobject_group <- function(object, ...) {
   (is.numeric(x) || is.logical(x)) && all(x[!is.na(x)] %in% c(0, 1))
 }
 
-# Names give no role. A column called `action` with nothing else declared would
-# otherwise become a sequence position, so the call stops and asks. In a frame
-# of 0/1 columns such a column is one more code.
+# Names give no role, so a frame a sequence method would read with nothing
+# declared has to be one it can read safely. Association methods read numeric
+# columns and pass; a registered estimator reads what it likes.
 #' @noRd
-.stop_undeclared_action <- function(data, action, actor, time, session, order,
-                                    codes, group, state_cols, metadata_cols,
-                                    cols, format) {
-  if (!is.null(action) || !is.null(state_cols) || !is.null(cols) ||
-      !is.null(codes) || !identical(format, "auto")) {
+.stop_undeclared_roles <- function(data, method, action, actor, time, session,
+                                   order, codes, group, state_cols,
+                                   metadata_cols, cols, format) {
+  # the wtna methods read one-hot data by definition, so naming one declares it
+  sequence_methods <- c("relative", "frequency", "co_occurrence", "attention",
+                        "ngram", "gap", "reverse")
+  if (!method %in% sequence_methods || !is.null(action) ||
+      !is.null(state_cols) || !is.null(cols) || !is.null(codes) ||
+      !identical(format, "auto")) {
     return(invisible(NULL))
   }
-  taken <- c(actor, time, session, order, group, metadata_cols)
+  .refuse_undeclared_roles(
+    data, "build_network()",
+    taken = c(actor, time, session, order, group, metadata_cols),
+    wide = "`state_cols` or `metadata_cols`",
+    rest_declared = !is.null(metadata_cols),
+    binary_advice = if (method %in% c("relative", "frequency", "co_occurrence")) {
+      paste0("Set `format = \"onehot\"` or `codes` for one-hot data, ",
+             "or `state_cols` for positions.")
+    } else {
+      sprintf(paste0("Set `state_cols` if they are positions. Method \"%s\" has no ",
+                     "reading of one-hot data; \"relative\", \"frequency\", ",
+                     "\"co_occurrence\" and \"wtna\" have."), method)
+    }
+  )
+}
+
+# Reading an event log as positions turns its ids and times into states, without
+# a word, and no value tells a log from a table. So a frame is read as positions
+# with nothing declared only when it holds one column or a numbered run of positions
+# (T1, T2, ...). Anything else, any column called `action`, and columns of only 0 and
+# 1, stop and ask. This refuses; it never assigns a role from a name.
+#' @noRd
+.refuse_undeclared_roles <- function(data, verb, taken = NULL, wide = "`cols`",
+                                     via_network = FALSE, whole_frame = FALSE,
+                                     rest_declared = FALSE, takes_action = TRUE,
+                                     advice = NULL, binary_advice = NULL,
+                                     reads_onehot = FALSE) {
+  .refuse_duplicate_names(data, verb)
+  if (!is.null(.marked_positions(data))) return(invisible(NULL))
   rest <- setdiff(names(data), taken)
+  if (length(rest) == 0L) return(invisible(NULL))
+  # Columns of 0 and 1 could be one-hot codes or positions, and nothing in them says
+  # which. No reading is guessed.
+  if (all(vapply(data[rest], .is_binary_column, logical(1)))) {
+    stop(errorCondition(
+      sprintf("%s: these columns hold only 0 and 1, so they could be one-hot codes or positions: %s. %s",
+              verb, paste(sprintf("`%s`", utils::head(rest, 6L)), collapse = ", "),
+              binary_advice %||% if (via_network && reads_onehot) {
+                paste0("Declare them with build_network(format = \"onehot\") or ",
+                       "build_network(state_cols = ), and pass the network.")
+              } else if (via_network) {
+                paste0("If they are positions, declare them with ",
+                       "build_network(state_cols = ) and pass the network. One-hot ",
+                       "codes are not sequences of states, which this verb reads.")
+              } else {
+                sprintf("Set %s if they are positions.", wide)
+              }),
+      class = "nestimate_bad_input", call = NULL
+    ))
+  }
   hit <- rest[tolower(rest) == "action"]
-  if (length(hit) == 0L ||
-      all(vapply(data[rest], .is_binary_column, logical(1)))) {
-    return(invisible(NULL))
+  frame <- data[rest]
+  # One column has nothing beside it to mistake for a state. Otherwise a verb that
+  # sets covariates aside needs a run among the columns, and one that reads every
+  # column needs the frame to be nothing else.
+  readable <- rest_declared || length(rest) == 1L || if (whole_frame) {
+    .all_one_position_run(rest)
+  } else {
+    length(.categorical_positions(frame)) > 0L ||
+      length(.numeric_position_run(frame)) > 0L
+  }
+  if (length(hit) == 0L && readable) return(invisible(NULL))
+  problem <- if (length(hit) > 0L) {
+    sprintf("column names are not read, and `%s` is not declared", hit[1L])
+  } else {
+    sprintf(paste0("no column role is declared, and these columns are not a ",
+                   "numbered run of positions (T1, T2, ...): %s"),
+            paste(sprintf("`%s`", utils::head(rest, 6L)), collapse = ", "))
+  }
+  advice <- advice %||% if (via_network) {
+    paste0("Declare them with build_network(action = ) for an event log or ",
+           "build_network(state_cols = ) for a wide table, and pass the network.")
+  } else if (takes_action) {
+    sprintf("Set `action` for an event log, or %s for a wide table.", wide)
+  } else {
+    sprintf("Set %s to the columns holding the positions.", wide)
   }
   stop(errorCondition(
-    sprintf(paste0("build_network(): column names are not read, and `%s` is ",
-                   "not declared. Set `action = \"%s\"` for an event log, or ",
-                   "`state_cols` or `metadata_cols` for a wide table."),
-            hit[1L], hit[1L]),
+    sprintf("%s: %s. %s", verb, problem, advice),
+    class = "nestimate_bad_input", call = NULL
+  ))
+}
+
+# A verb that returns positions has had them declared or checked already, so its
+# result reads back in without declaring them twice, whatever they are called. The
+# mark holds the columns, so a column added afterwards is not trusted. A numbered
+# run needs no mark, and stays a plain data frame.
+#' @noRd
+.mark_positions <- function(data) {
+  if (!.all_one_position_run(names(data))) {
+    attr(data, "nestimate_positions") <- names(data)
+  }
+  data
+}
+
+# The position columns in their current order, or NULL when the frame no longer
+# holds exactly the marked ones.
+#' @noRd
+.marked_positions <- function(data) {
+  marked <- attr(data, "nestimate_positions", exact = TRUE)
+  nms <- names(data)
+  # setequal() ignores repeats, so a duplicated name would let a column in
+  if (is.character(marked) && !anyDuplicated(nms) &&
+      length(marked) == length(nms) && setequal(marked, nms)) nms
+}
+
+# A numeric or logical matrix of only 0 and 1 could hold one-hot codes or
+# positions, and it has no columns to declare; a character matrix holds states.
+#' @noRd
+.refuse_binary_matrix <- function(x, verb, takes_cols = FALSE) {
+  if (is.matrix(x) && (is.numeric(x) || is.logical(x)) &&
+      all(x[!is.na(x)] %in% c(0, 1))) {
+    stop(errorCondition(
+      sprintf(paste0("%s: this matrix holds only 0 and 1, so it could hold one-hot ",
+                     "codes or positions. If they are positions, give them as a ",
+                     "character matrix%s."), verb,
+              if (takes_cols) " or a data frame with `cols`" else ""),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(NULL)
+}
+
+# Two columns with one name cannot be told apart by any role, and different
+# readers would keep different ones of them.
+#' @noRd
+.refuse_duplicate_names <- function(data, verb) {
+  if (!is.data.frame(data)) return(invisible(NULL))
+  dup <- unique(names(data)[duplicated(names(data))])
+  if (length(dup) == 0L) return(invisible(NULL))
+  stop(errorCondition(
+    sprintf("%s: column names must be unique; repeated: %s.", verb,
+            paste(sprintf("`%s`", dup), collapse = ", ")),
+    class = "nestimate_bad_input", call = NULL))
+}
+
+# A one-hot network stores 0 and 1 per code, and an association network its
+# variables, so reading either as positions gives meaningless states. Verbs with
+# no reading of them stop and say so, for each network of a group too.
+#' @noRd
+.refuse_onehot_network <- function(x, verb) {
+  if (inherits(x, "netobject_group")) {
+    lapply(x, .refuse_onehot_network, verb = verb)
+    return(invisible(NULL))
+  }
+  if (!inherits(x, c("netobject", "cograph_network"))) return(invisible(NULL))
+  if (.is_onehot_params(x$params)) {
+    stop(errorCondition(
+      sprintf(paste0("%s: this is a one-hot network, whose data hold 0 and 1 per code, ",
+                     "not positions of states. Build it from sequences."), verb),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (isTRUE(x$method %in% .association_methods)) {
+    stop(errorCondition(
+      sprintf(paste0("%s: this \"%s\" network holds variables, not sequences of ",
+                     "states. Build it with a transition method or pass the ",
+                     "sequences."), verb, x$method),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(NULL)
+}
+
+# Methods whose data are variables (columns measured on each row), not states.
+#' @noRd
+.association_methods <- c("cor", "pcor", "glasso", "ising", "mgm")
+
+# Every name numbered, with one prefix: T1, T2, ...; 1, 2, ...; W0_T1, W1_T1, ...
+#' @noRd
+.all_one_position_run <- function(nms) {
+  prefix <- sub("[0-9]+$", "", nms)
+  prefix[grepl("^W[0-9]+_T[0-9]+$", nms)] <- "W_T"
+  all(grepl("[0-9]+$", nms)) && length(unique(prefix)) == 1L
+}
+
+# A role that names a column the data lacks is a mistake, not a request to read
+# the frame some other way.
+#' @noRd
+.check_declared_columns <- function(data, verb, ...) {
+  .refuse_duplicate_names(data, verb)
+  declared <- list(...)
+  declared <- declared[lengths(declared) > 0L]
+  missing_cols <- vapply(names(declared), function(role) {
+    absent <- setdiff(declared[[role]], names(data))
+    if (length(absent) == 0L) "" else
+      sprintf("`%s` (%s)", role, paste(absent, collapse = ", "))
+  }, character(1))
+  missing_cols <- missing_cols[nzchar(missing_cols)]
+  if (length(missing_cols) == 0L) return(invisible(NULL))
+  stop(errorCondition(
+    sprintf("%s: column(s) not found in `data`: %s.", verb,
+            paste(missing_cols, collapse = "; ")),
     class = "nestimate_bad_input", call = NULL
   ))
 }
@@ -1717,30 +1951,33 @@ predictability.netobject_group <- function(object, ...) {
 # In an event log an undeclared time or session column changes the result, so
 # the call says it went unused.
 #' @noRd
-.unused_role_notice <- function(data, action, time, session, metadata_cols) {
+.unused_role_notice <- function(data, action, time, session, declared,
+                                order = NULL) {
   if (is.null(action)) return(invisible(NULL))
   lower <- tolower(names(data))
   unused <- c(
     if (is.null(time)) names(data)[lower == "time"],
     if (is.null(session)) names(data)[lower %in% c("session", "session_id")]
   )
-  unused <- setdiff(unused, metadata_cols)
+  # a column declared under any other role is in use, whatever it is called
+  unused <- setdiff(unused, declared)
   if (length(unused) == 0L) return(invisible(NULL))
+  ordered <- !is.null(time) || !is.null(order)
+  effects <- c(if (!ordered) "events are read in row order",
+               if (is.null(session)) "no session column splits them",
+               if (ordered && !is.null(session) && is.null(time)) "`order` sets the events' order")
+  roles <- c(if (is.null(time)) "`time`", if (is.null(session)) "`session`")
   .column_role_message(sprintf(
-    paste0("%s not used: events are read in row order and sessions are not ",
-           "split. Set `time` or `session` to use them, or list them in ",
-           "`metadata_cols`."),
-    paste(sprintf("`%s`", unused), collapse = ", ")))
+    "%s not used: %s. Set %s to use them, or list them in `metadata_cols`.",
+    paste(sprintf("`%s`", unused), collapse = ", "),
+    paste(effects, collapse = " and "), paste(roles, collapse = " or ")))
 }
 
 # A character column could hold states, so leaving one out of the sequence is
 # said aloud. A numeric column beside character states could not.
 #' @noRd
 .set_aside_notice <- function(data, cols, exclude) {
-  candidates <- setdiff(names(data), c(cols, exclude))
-  set_aside <- candidates[vapply(data[candidates],
-                                 \(x) is.character(x) || is.factor(x),
-                                 logical(1))]
+  set_aside <- setdiff(names(data), c(cols, exclude))
   if (length(set_aside) == 0L) return(invisible(NULL))
   .column_role_message(sprintf(
     paste0("setting %s aside as metadata, outside the numbered position ",

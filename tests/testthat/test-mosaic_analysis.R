@@ -33,10 +33,11 @@ test_that("Cramer's V is in [0,1] and matches a manual chi-square", {
   res <- mosaic_analysis(make_df(), "g", "lvl", min_count = 5)
   expect_gte(res$cramers_v, 0)
   expect_lte(res$cramers_v, 1)
-  tab <- res$table
-  chi <- suppressWarnings(stats::chisq.test(tab))
-  v <- sqrt(as.numeric(chi$statistic) /
-              (sum(tab) * (min(dim(tab)) - 1)))
+  tab <- unclass(res$table)
+  # Pearson's chi-square by hand: sum (O - E)^2 / E, E = row x column / n
+  expected <- outer(rowSums(tab), colSums(tab)) / sum(tab)
+  x2 <- sum((tab - expected)^2 / expected)
+  v <- sqrt(x2 / (sum(tab) * (min(dim(tab)) - 1)))
   expect_equal(res$cramers_v, v, tolerance = 1e-10)
 })
 
@@ -117,9 +118,15 @@ test_that("mosaic_plot(style='flat') rejects unknown styling args clearly", {
 
 test_that("flat fill matches the reported chi-square residuals (no recompute)", {
   res <- mosaic_analysis(make_df(), "g", "lvl", min_count = 5)
-  # The stored residual matrix is exactly chisq.test()$stdres on the table.
-  chi <- suppressWarnings(stats::chisq.test(res$table))
-  expect_equal(res$plot_parts$res, chi$stdres, tolerance = 1e-12)
+  # The stored residuals are the adjusted (standardised) Pearson residuals,
+  # (O - E) / sqrt(E (1 - row share) (1 - column share)), worked by hand.
+  tab <- unclass(res$table)
+  n <- sum(tab)
+  expected <- outer(rowSums(tab), colSums(tab)) / n
+  stdres <- (tab - expected) /
+    sqrt(expected * outer(1 - rowSums(tab) / n, 1 - colSums(tab) / n))
+  expect_equal(unclass(res$plot_parts$res), stdres, tolerance = 1e-12,
+               ignore_attr = TRUE)
 })
 
 test_that("interpret_cramers_v honours df-adjusted thresholds", {

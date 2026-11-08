@@ -55,7 +55,8 @@ sequence_plot(
   legend_title = NULL,
   legend_ncol = NULL,
   legend_border = NA,
-  legend_bty = "n"
+  legend_bty = "n",
+  cols = NULL
 )
 
 \method{print}{mcml_sequence_plot}(x, ...)
@@ -321,6 +322,10 @@ from the device width so the legend looks proportional at 5 in vs
 \item{legend_border}{Swatch border colour.}
 
 \item{legend_bty}{\code{"n"} or \code{"o"}.}
+
+\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
+holding the positions. Needed when they are not a numbered run (\code{T1},
+\code{T2}, ...) or one of them is called \code{action}.}
 
 \item{...}{In \code{print.mcml_sequence_plot()}: Ignored.}
 }

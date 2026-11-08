@@ -665,9 +665,8 @@
 #' if both positions have non-NA states, the co-occurrence count is incremented
 #' for both (from, to) and (to, from). This matches tna::ctna() semantics.
 #'
-#' When the input is one-hot binary data (all values 0/1), automatically
-#' uses crossprod-based co-occurrence counting instead. This means
-#' \code{method = "cna"} works for both sequence and one-hot data.
+#' One-hot data is read only when declared (`format = "onehot"` or `codes`);
+#' 0/1 columns are otherwise positions whose states are 0 and 1.
 #'
 #' @noRd
 .estimator_co_occurrence <- function(data,
@@ -704,25 +703,6 @@
 
   if (format == "auto") {
     format <- .format_from_action(action, data)
-  }
-
-  # One-hot binary input detection for wide format
-  if (format == "wide") {
-    # Auto-detect: check if all state columns are binary 0/1
-    state_cols <- .select_state_cols(data, c(id, actor), cols)
-    is_binary <- length(state_cols) >= 2L && all(vapply(
-      data[, state_cols, drop = FALSE],
-      function(x) is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1)),
-      logical(1)
-    ))
-
-    if (is_binary) { # nocov start
-      return(.estimator_wtna_core(
-        data, codes = state_cols, window_size = window_size,
-        mode = mode, actor = actor,
-        wtna_method = "cooccurrence", ...
-      )) # nocov end
-    }
   }
 
   # Sequence co-occurrence (column-pair counting)

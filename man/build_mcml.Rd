@@ -26,7 +26,11 @@ build_mcml(
   end_by = NULL,
   labels = NULL,
   combine = NULL,
-  expand = NULL
+  expand = NULL,
+  from = NULL,
+  to = NULL,
+  weight = NULL,
+  cols = NULL
 )
 
 \method{print}{mcml_layer}(x, ...)
@@ -38,16 +42,18 @@ build_mcml(
 \arguments{
 \item{x}{Input data. Accepts multiple formats:
 \describe{
-\item{data.frame with from/to columns}{Edge list. Columns named
-from/source/src/v1/node1/i and to/target/tgt/v2/node2/j are
-auto-detected. Optional weight column (weight/w/value/strength).}
-\item{data.frame without from/to columns}{Sequence data. Each row is a
-sequence, columns are time steps. Consecutive pairs (t, t+1) become
+\item{data.frame with \code{from} and \code{to} set}{Edge list, with
+optional \code{weight}.}
+\item{data.frame with \code{action} set}{Event log, read by
+\code{\link{prepare}}.}
+\item{data.frame of positions}{Sequence data, either nothing but a
+numbered run of columns or the columns set in \code{cols}. Each row is
+a sequence, columns are time steps. Consecutive pairs (t, t+1) become
 transitions.}
 \item{tna object}{If \code{x$data} is non-NULL, uses sequence path on
 the raw data. Otherwise falls back to \code{\link{cluster_summary}}.}
-\item{netobject}{If \code{x$data} is non-NULL, detects edge list
-vs sequence data. Otherwise falls back to \code{\link{cluster_summary}}.}
+\item{netobject}{If \code{x$data} is non-NULL, uses sequence path on
+it. Otherwise falls back to \code{\link{cluster_summary}}.}
 \item{mcml}{An \code{mcml} object is returned unchanged, unless
 \code{clusters}, \code{combine} or \code{expand} changes its
 partition: it is then re-estimated from the sequences it carries
@@ -185,6 +191,14 @@ options: its \code{combine} draws exactly what it draws for
 \code{build_mcml(x, combine = )}, while its \code{expand} opens clusters
 in the Summary panel only and keeps one panel per cluster.}
 
+\item{from, to, weight}{Column names of an edge list, and its optional weight.
+Names give no role: a frame is an edge list only when these are set.}
+
+\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
+holding the positions. Needed when the frame is anything but a numbered run
+(\code{T1}, \code{T2}, ...). Any other frame with no role declared raises
+an error of class \code{nestimate_bad_input}.}
+
 \item{...}{In \code{print.mcml()}, \code{print.mcml_layer()} and \code{summary.mcml()}: Unsupported. Supplying unused arguments raises an error.}
 
 \item{object}{For the \code{summary()} method: an object of class \code{mcml}.}
@@ -225,14 +239,14 @@ original transition data to produce the TRUE Markov chain over cluster states.
 }
 
 \examples{
-# Edge list with clusters
+# Edge list with clusters: its columns are declared
 edges <- data.frame(
-  from = c("A", "A", "B", "C", "C", "D"),
-  to   = c("B", "C", "A", "D", "D", "A"),
-  weight = c(1, 2, 1, 3, 1, 2)
+  source = c("A", "A", "B", "C", "C", "D"),
+  target = c("B", "C", "A", "D", "D", "A"),
+  count  = c(1, 2, 1, 3, 1, 2)
 )
 clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
-build_mcml(edges, clusters)
+build_mcml(edges, clusters, from = "source", to = "target", weight = "count")
 
 # Sequence data with clusters
 seqs <- data.frame(

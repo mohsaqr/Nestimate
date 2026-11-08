@@ -468,6 +468,12 @@
 #' leading missings so each sequence's first column carries an observed
 #' state.
 #'
+#' A one-hot network is the exception: its units are windows whose slots
+#' are codes, not positions, so the first column only says whether the
+#' first code was active. Its initial state is the one code observed in the
+#' first window, and no initial state (uninformative) when that window holds
+#' several codes or none.
+#'
 #' @references
 #' Helske, S., & Helske, J. (2019). Mixture hidden Markov models for
 #' sequence data: The seqHMM package in R. \emph{Journal of Statistical
@@ -535,15 +541,49 @@ build_mmm <- function(data,
       stop("tna model does not contain $data. ", # nocov start
            "Rebuild with tna::tna(data) where data is kept.", call. = FALSE) # nocov end
     }
+    # A windowed model (tna::import_onehot(), windowed sequences) counts within
+    # windows whose layout its decoded data does not carry; fitted as plain
+    # positions it would count across slots that are never adjacent.
+    if (isTRUE(attr(data, "params")$windowed)) {
+      stop(errorCondition(paste(
+        "build_mmm(): this tna model is windowed, and its windows cannot be",
+        "replayed. Build the network with build_network(format = \"onehot\",",
+        "actor = ) or pass the sequences."),
+        class = "nestimate_bad_input", call = NULL))
+    }
     raw_data <- .mmm_decode_int_data(raw_data, states)
-  } else if (inherits(data, "cograph_network") && !inherits(data, "netobject")) {
-    # Pure cograph_network (from cograph package): coerce to decode integer data
-    data <- .as_netobject(data)
-    raw_data <- data$data
-    states <- data$nodes$label
-  } else if (inherits(data, "netobject")) {
-    network_method <- data$method
-    build_args     <- data$build_args
+  } else if (inherits(data, "netobject_group")) {
+    stop(errorCondition(paste(
+      "build_mmm(): a netobject_group holds several networks, not one set of",
+      "sequences. Fit each network, or pass the sequences of all groups."),
+      class = "nestimate_bad_input", call = NULL))
+  } else if (inherits(data, c("netobject", "cograph_network"))) {
+    # A bare cograph_network is coerced first, so it meets the same refusals
+    # and the same one-hot unit rule as a netobject. Its declared method (a
+    # bare network keeps $method) rebuilds the clusters and decides the
+    # association refusal; an inferred one is not a declaration.
+    bare <- !inherits(data, "netobject")
+    declared_method <- data$method %||% data$meta$tna$method
+    if (bare && is.null(data$method) && identical(data$meta$source, "tna") &&
+        is.null(.tna_conversion_counts(data))) {
+      # cograph's conversion of a tna model keeps neither its type nor its
+      # windows; its positions are read only when they reproduce its weights
+      stop(errorCondition(paste(
+        "build_mmm(): this network was converted from a tna model, and its",
+        "sequences do not reproduce its weights (windows, scaling or other",
+        "settings were lost). Pass the tna model itself or the sequences."),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    .mmm_refuse_association(list(method = declared_method))
+    if (bare) data <- .as_netobject(data)
+    .mmm_refuse_association(data)
+    network_method <- if (bare) declared_method else data$method
+    build_args     <- if (bare) NULL else data$build_args
+    # the estimator's own settings (n_gram, start/end states, concatenation)
+    # rebuild the clusters as the source network was built
+    if (!bare && length(data$params) > 0L && is.null(build_args$params)) {
+      build_args$params <- data$params
+    }
     metadata       <- data$metadata
     raw_data <- data$data
     states <- data$nodes$label
@@ -552,6 +592,11 @@ build_mmm <- function(data,
       raw_data <- .onehot_unit_sequences(data)
       build_args <- NULL
       metadata <- NULL
+      # its units are windowed state sequences now, which the wtna methods
+      # (they read 0/1 codes) cannot rebuild; their counting methods can
+      if (!is.null(network_method)) {
+        network_method <- .resampling_method(network_method, data$params)
+      }
     }
   } else {
     raw_data <- as.data.frame(data)
@@ -575,7 +620,9 @@ build_mmm <- function(data,
   if (!is.null(cov_df) && is.data.frame(raw_data)) {
     cov_col_names <- names(cov_df)
     keep <- setdiff(names(raw_data), cov_col_names)
-    if (length(keep) > 0L) raw_data <- raw_data[, keep, drop = FALSE]
+    if (length(keep) > 0L) {
+      raw_data <- .keep_window_attrs(raw_data[, keep, drop = FALSE], raw_data)
+    }
     # Re-extract states after removing covariate columns
     state_cols_clean <- .select_state_cols(raw_data, id = NULL, cols = NULL)
     mat <- as.matrix(raw_data[, state_cols_clean, drop = FALSE])
@@ -598,9 +645,16 @@ build_mmm <- function(data,
   }
 
   # ---- Precompute per-sequence transition counts ----
-  counts <- .precompute_per_sequence_wide(
-    raw_data, method = "relative", cols = NULL, id_col = NULL, states = states
-  )
+  # Windowed rows (one-hot units, sequence windows) count within their windows,
+  # as the network they came from does.
+  counts <- if (isTRUE(attr(raw_data, "windowed"))) {
+    .precompute_per_sequence_windowed(raw_data, method = "relative",
+                                      params = list(), states = states)
+  } else {
+    .precompute_per_sequence_wide(
+      raw_data, method = "relative", cols = NULL, id_col = NULL, states = states
+    )
+  }
   N <- nrow(counts)
   K2 <- n_states * n_states
 
@@ -611,6 +665,19 @@ build_mmm <- function(data,
   # uninformative initial distribution.
   state_cols <- .select_state_cols(raw_data, id = NULL, cols = NULL)
   first_col <- as.character(raw_data[[state_cols[1L]]])
+  if (isTRUE(attr(raw_data, "windowed")) && !is.null(attr(raw_data, "codes"))) {
+    # A one-hot window's slots are codes, not positions: the first state is
+    # the one state observed in the first window, none when it holds several.
+    width <- as.integer(attr(raw_data, "window_size") %||% 2L) *
+      as.integer(attr(raw_data, "window_span") %||% 1L)
+    first <- as.matrix(raw_data[, state_cols[seq_len(min(width,
+                                                         length(state_cols)))],
+                                drop = FALSE])
+    first_col <- apply(first, 1L, \(row) {
+      seen <- unique(row[!is.na(row)])
+      if (length(seen) == 1L) as.character(seen) else NA_character_
+    })
+  }
   init_state <- match(first_col, states)
 
   # Handle covariate NAs: subset counts, init_state, cov_df. Done only in
@@ -1352,4 +1419,43 @@ plot.net_mmm_clustering <- function(x, type = c("posterior", "covariates",
   # type == "posterior": .plot_mmm_posterior() reads only $posterior +
   # $assignments, both carried by net_mmm_clustering.
   .plot_mmm_posterior(x)
+}
+
+# The rows of an association network (cor, pcor, glasso, ising, mgm) are
+# variables, so it has no transitions to fit a mixture of chains on.
+.mmm_refuse_association <- function(net) {
+  if (isTRUE(net$method %in% .association_methods)) {
+    stop(errorCondition(sprintf(paste(
+      "build_mmm(): this \"%s\" network holds variables, not sequences of",
+      "states. Build it with a transition method or pass the sequences."),
+      net$method), class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(NULL)
+}
+
+
+#' Counts of a network converted from a tna model, when they can be trusted
+#'
+#' `cograph::as_cograph()` keeps a tna model's weights and encoded sequences,
+#' but not its type, windows or settings. The sequences are read as plain
+#' positions only when recounting them reproduces the weights, as counts or as
+#' row probabilities; otherwise the conversion lost something and NULL is
+#' returned for the caller to refuse.
+#' @noRd
+.tna_conversion_counts <- function(x) {
+  w <- x$weights
+  if (!is.matrix(w) || is.null(x$data) || is.null(rownames(w))) return(NULL)
+  data <- .as_netobject(x)$data
+  if (!is.data.frame(data) || nrow(data) == 0L) return(NULL)
+  counts <- build_network(data, method = "frequency",
+                          state_cols = names(data))$weights
+  states <- rownames(w)
+  if (!all(rownames(counts) %in% states)) return(NULL)
+  full <- matrix(0, length(states), length(states),
+                 dimnames = list(states, states))
+  full[rownames(counts), colnames(counts)] <- counts
+  sums <- rowSums(full)
+  probs <- full / ifelse(sums > 0, sums, 1)
+  same <- function(a) isTRUE(all.equal(unname(a), unname(w), tolerance = 1e-10))
+  if (same(full) || same(probs)) full else NULL
 }

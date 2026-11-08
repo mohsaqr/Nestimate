@@ -647,16 +647,6 @@ cluster_summary <- function(x,
   df[, seq_len(cut), drop = FALSE]
 }
 
-# A trim can leave only V1 and V2 of a V1, V2, ... frame. Those names mark the
-# endpoints of an edge list, and this frame is already known to be sequences.
-.mcml_unmask_positions <- function(df) {
-  numbered <- grepl("^v[0-9]+$", tolower(names(df)))
-  if (any(tolower(names(df)) %in% c("v1", "v2")) && sum(numbered) <= 2L) {
-    names(df) <- paste0("T", seq_along(df))
-  }
-  df
-}
-
 # Resolve `end` (FALSE / TRUE / label) to a label or NULL.
 .mcml_end_label <- function(end) {
   if (isFALSE(end)) return(NULL)
@@ -750,16 +740,18 @@ cluster_summary <- function(x,
 #'
 #' @param x Input data. Accepts multiple formats:
 #'   \describe{
-#'     \item{data.frame with from/to columns}{Edge list. Columns named
-#'       from/source/src/v1/node1/i and to/target/tgt/v2/node2/j are
-#'       auto-detected. Optional weight column (weight/w/value/strength).}
-#'     \item{data.frame without from/to columns}{Sequence data. Each row is a
-#'       sequence, columns are time steps. Consecutive pairs (t, t+1) become
+#'     \item{data.frame with \code{from} and \code{to} set}{Edge list, with
+#'       optional \code{weight}.}
+#'     \item{data.frame with \code{action} set}{Event log, read by
+#'       \code{\link{prepare}}.}
+#'     \item{data.frame of positions}{Sequence data, either nothing but a
+#'       numbered run of columns or the columns set in \code{cols}. Each row is
+#'       a sequence, columns are time steps. Consecutive pairs (t, t+1) become
 #'       transitions.}
 #'     \item{tna object}{If \code{x$data} is non-NULL, uses sequence path on
 #'       the raw data. Otherwise falls back to \code{\link{cluster_summary}}.}
-#'     \item{netobject}{If \code{x$data} is non-NULL, detects edge list
-#'       vs sequence data. Otherwise falls back to \code{\link{cluster_summary}}.}
+#'     \item{netobject}{If \code{x$data} is non-NULL, uses sequence path on
+#'       it. Otherwise falls back to \code{\link{cluster_summary}}.}
 #'     \item{mcml}{An \code{mcml} object is returned unchanged, unless
 #'       \code{clusters}, \code{combine} or \code{expand} changes its
 #'       partition: it is then re-estimated from the sequences it carries
@@ -850,6 +842,12 @@ cluster_summary <- function(x,
 #'   marked -- e.g. \code{session = "AttemptID", end = "Conclude",
 #'   end_by = "SkillID"} closes each skill once, not each attempt. Requires
 #'   long-format input, since the grouping column lives there.
+#' @param from,to,weight Column names of an edge list, and its optional weight.
+#'   Names give no role: a frame is an edge list only when these are set.
+#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
+#'   holding the positions. Needed when the frame is anything but a numbered run
+#'   (\code{T1}, \code{T2}, ...). Any other frame with no role declared raises
+#'   an error of class \code{nestimate_bad_input}.
 #' @param labels Optional name -> label remap applied to within-cluster nodes
 #'   (the macro layer is left untouched because its labels are cluster
 #'   names). Accepts a 2-column data.frame \code{(name, label)}, a named
@@ -908,14 +906,14 @@ cluster_summary <- function(x,
 #'   cluster expanded
 #'
 #' @examples
-#' # Edge list with clusters
+#' # Edge list with clusters: its columns are declared
 #' edges <- data.frame(
-#'   from = c("A", "A", "B", "C", "C", "D"),
-#'   to   = c("B", "C", "A", "D", "D", "A"),
-#'   weight = c(1, 2, 1, 3, 1, 2)
+#'   source = c("A", "A", "B", "C", "C", "D"),
+#'   target = c("B", "C", "A", "D", "D", "A"),
+#'   count  = c(1, 2, 1, 3, 1, 2)
 #' )
 #' clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
-#' build_mcml(edges, clusters)
+#' build_mcml(edges, clusters, from = "source", to = "target", weight = "count")
 #'
 #' # Sequence data with clusters
 #' seqs <- data.frame(
@@ -957,7 +955,11 @@ build_mcml <- function(x,
                        end_by = NULL,
                        labels = NULL,
                        combine = NULL,
-                       expand = NULL) {
+                       expand = NULL,
+                       from = NULL,
+                       to = NULL,
+                       weight = NULL,
+                       cols = NULL) {
   if (!is.logical(directed) || length(directed) != 1L || is.na(directed)) {
     stop("'directed' must be TRUE or FALSE.", call. = FALSE)
   }
@@ -981,7 +983,9 @@ build_mcml <- function(x,
                  time_threshold = !missing(time_threshold),
                  exclude = !missing(exclude), trim = !missing(trim),
                  end = !missing(end), end_by = !missing(end_by),
-                 labels = !missing(labels))
+                 labels = !missing(labels), from = !missing(from),
+                 to = !missing(to), weight = !missing(weight),
+                 cols = !missing(cols))
     if (any(shaping)) {
       stop("`", paste(names(shaping)[shaping], collapse = "`, `"),
            "` cannot be applied when re-partitioning an mcml: the sequences ",
@@ -1005,7 +1009,8 @@ build_mcml <- function(x,
                  compute_within = compute_within, actor = actor,
                  action = action, time = time, order = order,
                  session = session, time_threshold = time_threshold,
-                 exclude = exclude, trim = trim, end = end, end_by = end_by)
+                 exclude = exclude, trim = trim, end = end, end_by = end_by,
+                 from = from, to = to, weight = weight, cols = cols)
     # The first build only reads the partition: without `labels` (its
     # cluster_members must hold the raw state names the second build maps)
     # and without method/type (which do not change the partition, and whose
@@ -1039,6 +1044,9 @@ build_mcml <- function(x,
 
   .mcml_check_seq_args(exclude, trim, end, end_by)
   end_label <- .mcml_end_label(end)
+  is_edge_list <- .mcml_check_roles(x, action, actor, time, order, session, from,
+                                    to, weight, cols)
+  if (is.data.frame(x) && !is.null(cols)) x <- .mark_positions(x[cols])
 
   # Long-format event-log shortcut: if `action` is supplied on a data.frame,
   # delegate to prepare() and feed the resulting wide sequence into the
@@ -1074,7 +1082,7 @@ build_mcml <- function(x,
            "data.frame/matrix, or long-format input via `action`); got '",
            class(x)[1L], "'.", call. = FALSE)
     }
-    if (identical(.detect_mcml_input(x), "edgelist")) {
+    if (is_edge_list) {
       stop("`exclude`, `trim` and `end` apply to sequence data, not to an ",
            "edge list.", call. = FALSE)
     }
@@ -1084,13 +1092,13 @@ build_mcml <- function(x,
     if (!is.null(end_label)) {
       seq_df <- .mcml_append_end(seq_df, end_label, seq_len(nrow(seq_df)))
     }
-    x <- .mcml_unmask_positions(seq_df)
+    x <- seq_df
   }
 
   # Coerce cograph_network so downstream branches see a netobject
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
 
-  input_type <- .detect_mcml_input(x)
+  input_type <- if (is_edge_list) "edgelist" else .detect_mcml_input(x)
 
   is_matrix_path <- input_type %in% c("matrix", "tna_matrix",
                                        "netobject_matrix")
@@ -1104,8 +1112,9 @@ build_mcml <- function(x,
   }
 
   result <- switch(input_type,
-    "edgelist" = .build_mcml_edgelist(x, clusters, method, type,
-                                       directed, compute_within),
+"edgelist" = .build_mcml_edgelist(x, clusters, method, type,
+                                       directed, compute_within,
+                                       from = from, to = to, weight = weight),
     "sequence" = .build_mcml_sequence(x, clusters, method, type,
                                        directed, compute_within),
     # tna stores sequences integer-coded; decode to state labels first.
@@ -1130,7 +1139,8 @@ build_mcml <- function(x,
       count_methods <- c("relative", "frequency", "co_occurrence",
                          "tna", "ftna", "cna", "wcna", "wtna",
                          "wtna_cooccurrence", "wtna_transition")
-      if (net_method %in% count_methods) {
+      # a one-hot network's data are 0 and 1 per code, not positions of states
+      if (net_method %in% count_methods && !.is_onehot_params(x$params)) {
         data <- x$data
         sub_type <- .detect_mcml_input(data)
         if (sub_type == "edgelist") {
@@ -1245,7 +1255,8 @@ build_mcml <- function(x,
     clusters <- .mcml_partition(x$cluster_members, combine, expand)
   }
   out <- build_mcml(seqs, clusters = clusters, method = method, type = type,
-                    directed = directed, compute_within = compute_within)
+                    directed = directed, compute_within = compute_within,
+                    cols = names(seqs))
   # The node-level source (used by as_htna) does not depend on the partition;
   # keep the original's, not the coalesced (possibly relabelled) sequences.
   attr(out, "htna_source") <- attr(x, "htna_source")
@@ -1265,20 +1276,9 @@ build_mcml <- function(x,
     return("netobject_matrix")
   }
 
+  # Names give no role: an edge list is declared, and stored ones are tagged.
   if (is.data.frame(x)) {
-    col_names <- tolower(names(x))
-    endpoints <- .mcml_endpoint_names(names(x))
-    from_cols <- endpoints$from
-    to_cols <- endpoints$to
-    weight_cols <- c("weight", "w", "value", "strength")
-    has_from <- any(from_cols %in% col_names)
-    has_to <- any(to_cols %in% col_names)
-    has_weight <- any(weight_cols %in% col_names)
-    if ((has_from || has_to || has_weight) && ncol(x) >= 2L) return("edgelist")
-    if (ncol(x) == 2L && !.mcml_has_time_step_names(names(x))) {
-      return("edgelist")
-    }
-    return("sequence")
+    return(if (identical(attr(x, "source"), "edgelist")) "edgelist" else "sequence")
   }
 
   if (is.matrix(x)) {
@@ -1289,29 +1289,68 @@ build_mcml <- function(x,
   "unknown"
 }
 
-#' Column names that mark the endpoints of an edge list
+#' Validate the declared roles of build_mcml() and refuse an undeclared frame
 #'
-#' `V1` and `V2` are endpoints only when no `V3` follows. A longer run is the
-#' default naming of a wide sequence frame, where they are the first two
-#' positions.
-#' @param nms Column names.
-#' @return List with lower-case `from` and `to` candidates.
+#' Names give no role. An edge list is declared with `from` and `to`, wide data
+#' with `cols` or as nothing but a numbered run of positions, an event log with
+#' `action`. Reading any other frame as positions would turn its ids, weights and
+#' covariates into states, and reading positions as endpoints would drop columns.
+#' @return `TRUE` when `x` is a declared edge list.
 #' @noRd
-.mcml_endpoint_names <- function(nms) {
-  from <- c("from", "source", "src", "v1", "node1", "i")
-  to <- c("to", "target", "tgt", "v2", "node2", "j")
-  if (sum(grepl("^v[0-9]+$", tolower(nms))) > 2L) {
-    from <- setdiff(from, "v1")
-    to <- setdiff(to, "v2")
-  }
-  list(from = from, to = to)
-}
-
-.mcml_has_time_step_names <- function(nms) {
-  if (is.null(nms) || any(is.na(nms)) || any(!nzchar(nms))) {
+.mcml_check_roles <- function(x, action, actor, time, order, session, from, to,
+                              weight, cols) {
+  edge_args <- c(from = !is.null(from), to = !is.null(to),
+                 weight = !is.null(weight))
+  if (!is.data.frame(x)) {
+    if (any(edge_args) || !is.null(cols)) {
+      stop(errorCondition(
+        "`from`, `to`, `weight` and `cols` apply to a data frame.",
+        class = "nestimate_bad_input", call = NULL))
+    }
     return(FALSE)
   }
-  all(grepl("^(t|time|step)[0-9]+$", tolower(nms)))
+  .check_declared_columns(x, "build_mcml()", action = action, actor = actor,
+                          time = time, order = order, session = session,
+                          from = from, to = to, weight = weight, cols = cols)
+  is_edge_list <- any(edge_args)
+  if (is_edge_list) {
+    single <- all(lengths(list(from, to)) == 1L) && length(weight) <= 1L
+    if (!all(edge_args[c("from", "to")]) || !single) {
+      stop(errorCondition(
+        "An edge list needs one `from` and one `to` column, and at most one `weight`.",
+        class = "nestimate_bad_input", call = NULL))
+    }
+    if (!is.null(action) || !is.null(cols)) {
+      stop(errorCondition(
+        "Declare an edge list (`from`, `to`), an event log (`action`) or positions (`cols`), not several.",
+        class = "nestimate_bad_input", call = NULL))
+    }
+    return(TRUE)
+  }
+  if (!is.null(action) || !is.null(cols) || !is.null(.marked_positions(x))) {
+    return(FALSE)
+  }
+  # columns of 0 and 1 could be one-hot codes or positions: no reading is guessed
+  if (all(vapply(x, .is_binary_column, logical(1)))) {
+    stop(errorCondition(
+      sprintf(paste0("build_mcml(): these columns hold only 0 and 1, so they could ",
+                     "be one-hot codes or positions: %s. Set `cols` if they are ",
+                     "positions; for one-hot data pass ",
+                     "build_network(format = \"onehot\")."),
+              paste(sprintf("`%s`", utils::head(names(x), 6L)), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  positions <- c(.categorical_positions(x), .numeric_position_run(x))
+  if (!setequal(positions, names(x))) {
+    stop(errorCondition(
+      sprintf(paste0("build_mcml(): no column role is declared, and these columns ",
+                     "are not all a numbered run of positions (T1, T2, ...): %s. ",
+                     "Set `from` and `to` for an edge list, `action` for an event ",
+                     "log, or `cols` for wide sequences."),
+              paste(sprintf("`%s`", utils::head(names(x), 6L)), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  FALSE
 }
 
 #' Auto-detect clusters from netobject
@@ -1617,8 +1656,7 @@ build_mcml <- function(x,
   # otherwise (edgelist or no data) we fall back to the column-sum proxy
   # documented earlier -- there is no first-state to read off an edgelist.
   is_edgelist_data <- identical(attr(data, "source"), "edgelist")
-  is_seq_for_inits <- is.data.frame(data) && !is_edgelist_data &&
-    !any(tolower(names(data)) %in% unlist(.mcml_endpoint_names(names(data))))
+  is_seq_for_inits <- is.data.frame(data) && !is_edgelist_data
   between_inits <- if (is_seq_for_inits) {
     # tna-equivalent macro inits: tabulate column 1 (first time-step) of the
     # wide sequence, drop NAs, map each first state to its cluster, normalise.
@@ -1655,8 +1693,7 @@ build_mcml <- function(x,
   #     is the correct bootstrap at the edge level.
   between_seq_data <- NULL
   within_seq_data_list <- NULL
-  is_seq <- is.data.frame(data) && !is_edgelist_data &&
-    !any(tolower(names(data)) %in% unlist(.mcml_endpoint_names(names(data))))
+  is_seq <- is.data.frame(data) && !is_edgelist_data
 
   if (is_seq) {
     # Recode sequences to cluster labels
@@ -1838,29 +1875,15 @@ build_mcml <- function(x,
 #' Build MCML from edge list data.frame
 #' @noRd
 .build_mcml_edgelist <- function(df, clusters, method, type,
-                                  directed, compute_within) {
-
-  col_names <- tolower(names(df))
-
-  # Detect from/to columns
-  endpoints <- .mcml_endpoint_names(names(df))
-  from_col <- which(col_names %in% endpoints$from)[1]
-  to_col <- which(col_names %in% endpoints$to)[1]
-  if (is.na(from_col)) from_col <- 1L
-  if (is.na(to_col)) {
-    to_col <- setdiff(seq_len(ncol(df)), from_col)[1L]
-  }
-  if (is.na(to_col) || from_col == to_col) {
+                                  directed, compute_within, from = "from",
+                                  to = "to", weight = NULL) {
+  if (identical(from, to)) {
     stop("Edge-list input must include at least two endpoint columns.",
          call. = FALSE)
   }
-
-  # Detect weight column
-  weight_col <- which(col_names %in% c("weight", "w", "value", "strength"))[1]
-  has_weight <- !is.na(weight_col)
-
-  from_vals <- as.character(df[[from_col]])
-  to_vals <- as.character(df[[to_col]])
+  has_weight <- !is.null(weight)
+  from_vals <- as.character(df[[from]])
+  to_vals <- as.character(df[[to]])
   if (any(is.na(from_vals) | !nzchar(from_vals) |
           is.na(to_vals) | !nzchar(to_vals))) {
     stop("Edge-list source and target columns must not contain missing or empty values.",
@@ -1868,7 +1891,7 @@ build_mcml <- function(x,
   }
 
   if (has_weight) {
-    weights <- df[[weight_col]]
+    weights <- df[[weight]]
     if (!is.numeric(weights)) {
       stop("Edge-list weight column must be numeric.", call. = FALSE)
     }
