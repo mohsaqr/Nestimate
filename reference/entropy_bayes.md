@@ -46,11 +46,15 @@ plot(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 
 - x:
 
-  A frequency `netobject` (`build_network(method = "frequency")`), any
-  `netobject` that carries its `$data` (counts are rebuilt
-  automatically), a count matrix, or a wide sequence data.frame. Group
-  dispatch on `netobject_group`. For the
-  [`print()`](https://rdrr.io/r/base/print.html) and
+  A frequency `netobject` (`build_network(method = "frequency")`), a
+  relative or frequency `netobject` that carries its `$data` (counts are
+  recounted with the network's own start/end states, concatenation,
+  windows and one-hot units), a `tna` model, a count matrix, or a wide
+  sequence data.frame. Counts are read from the declared method, never
+  from the values: a scaled or relative network is recounted from its
+  data, and an association network or any other network without counts
+  raises `nestimate_bad_input`. Group dispatch on `netobject_group`. For
+  the [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
   object of class `net_entropy_bayes` or `net_entropy_bayes_group`.
 

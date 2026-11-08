@@ -32,7 +32,8 @@ landscape_trend(
   n_grid = 20L,
   iter = 500L,
   ci_level = 0.95,
-  seed = NULL
+  seed = NULL,
+  cols = NULL
 )
 
 # S3 method for class 'net_landscape_trend'
@@ -98,6 +99,12 @@ plot(x, type = c("lines", "surface"), theta = 10, phi = 30, ...)
 - seed:
 
   Integer or `NULL`. Seed for the resampling, scoped to the call.
+
+- cols:
+
+  Character vector or `NULL`. For a wide data frame: the columns holding
+  the positions. Needed when they are not a numbered run (`T1`, `T2`,
+  ...) or one of them is called `action`.
 
 - object:
 

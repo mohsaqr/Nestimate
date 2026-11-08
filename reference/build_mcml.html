@@ -15,7 +15,7 @@ original transition data to produce the TRUE Markov chain over cluster states.">
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,11 @@ original transition data to produce the TRUE Markov chain over cluster states.</
 <span>  end_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  combine <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  expand <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  expand <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  from <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  to <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cols <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'mcml_layer'</span></span>
@@ -98,14 +102,18 @@ original transition data to produce the TRUE Markov chain over cluster states.</
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>Input data. Accepts multiple formats:</p><dl><dt>data.frame with from/to columns</dt>
-<dd><p>Edge list. Columns named
-from/source/src/v1/node1/i and to/target/tgt/v2/node2/j are
-auto-detected. Optional weight column (weight/w/value/strength).</p></dd>
+<dd><p>Input data. Accepts multiple formats:</p><dl><dt>data.frame with <code>from</code> and <code>to</code> set</dt>
+<dd><p>Edge list, with
+optional <code>weight</code>.</p></dd>
 
-<dt>data.frame without from/to columns</dt>
-<dd><p>Sequence data. Each row is a
-sequence, columns are time steps. Consecutive pairs (t, t+1) become
+<dt>data.frame with <code>action</code> set</dt>
+<dd><p>Event log, read by
+<code><a href="prepare.html">prepare</a></code>.</p></dd>
+
+<dt>data.frame of positions</dt>
+<dd><p>Sequence data, either nothing but a
+numbered run of columns or the columns set in <code>cols</code>. Each row is
+a sequence, columns are time steps. Consecutive pairs (t, t+1) become
 transitions.</p></dd>
 
 <dt>tna object</dt>
@@ -113,8 +121,8 @@ transitions.</p></dd>
 the raw data. Otherwise falls back to <code><a href="cluster_summary.html">cluster_summary</a></code>.</p></dd>
 
 <dt>netobject</dt>
-<dd><p>If <code>x$data</code> is non-NULL, detects edge list
-vs sequence data. Otherwise falls back to <code><a href="cluster_summary.html">cluster_summary</a></code>.</p></dd>
+<dd><p>If <code>x$data</code> is non-NULL, uses sequence path on
+it. Otherwise falls back to <code><a href="cluster_summary.html">cluster_summary</a></code>.</p></dd>
 
 <dt>mcml</dt>
 <dd><p>An <code>mcml</code> object is returned unchanged, unless
@@ -299,6 +307,18 @@ options: its <code>combine</code> draws exactly what it draws for
 in the Summary panel only and keeps one panel per cluster.</p></dd>
 
 
+<dt id="arg-from-to-weight">from, to, weight<a class="anchor" aria-label="anchor" href="#arg-from-to-weight"></a></dt>
+<dd><p>Column names of an edge list, and its optional weight.
+Names give no role: a frame is an edge list only when these are set.</p></dd>
+
+
+<dt id="arg-cols">cols<a class="anchor" aria-label="anchor" href="#arg-cols"></a></dt>
+<dd><p>Character vector or <code>NULL</code>. For a wide data frame: the columns
+holding the positions. Needed when the frame is anything but a numbered run
+(<code>T1</code>, <code>T2</code>, ...). Any other frame with no role declared raises
+an error of class <code>nestimate_bad_input</code>.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>In <code>print.mcml()</code>, <code>print.mcml_layer()</code> and <code>summary.mcml()</code>: Unsupported. Supplying unused arguments raises an error.</p></dd>
 
@@ -342,14 +362,14 @@ cluster expanded</p></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Edge list with clusters</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Edge list with clusters: its columns are declared</span></span></span>
 <span class="r-in"><span><span class="va">edges</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  from <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  to   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"A"</span>, <span class="st">"D"</span>, <span class="st">"D"</span>, <span class="st">"A"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  weight <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"A"</span>, <span class="st">"D"</span>, <span class="st">"D"</span>, <span class="st">"A"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  count  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>G1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>, G2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">build_mcml</span><span class="op">(</span><span class="va">edges</span>, <span class="va">clusters</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">build_mcml</span><span class="op">(</span><span class="va">edges</span>, <span class="va">clusters</span>, from <span class="op">=</span> <span class="st">"source"</span>, to <span class="op">=</span> <span class="st">"target"</span>, weight <span class="op">=</span> <span class="st">"count"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> MCML Network</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ============</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Type: tna  | Method: sum </span>

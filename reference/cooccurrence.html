@@ -13,7 +13,7 @@ measure. Argument names follow the citenets convention."><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,8 @@ measure. Argument names follow the citenets convention.</p>
 <span>  min_occur <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  diagonal <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  top_n <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"binary"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -80,7 +81,8 @@ measure. Argument names follow the citenets convention.</p>
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Input data. Accepts:</p><ul><li><p>A <code>data.frame</code> with a delimited column (<code>field</code> + <code>sep</code>).</p></li>
 <li><p>A <code>data.frame</code> in long/bipartite format (<code>field</code> + <code>by</code>).</p></li>
-<li><p>A binary (0/1) <code>data.frame</code> or <code>matrix</code> (auto-detected).</p></li>
+<li><p>A binary <code>data.frame</code> or <code>matrix</code> (0/1 or
+<code>TRUE</code>/<code>FALSE</code>), declared with <code>format = "binary"</code>.</p></li>
 <li><p>A wide sequence <code>data.frame</code> or <code>matrix</code> (non-binary).</p></li>
 <li><p>A <code>list</code> of character vectors (each element is a transaction).</p></li>
 </ul></dd>
@@ -167,6 +169,13 @@ If <code>FALSE</code>, the diagonal is zeroed.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Currently unused.</p></dd>
 
+
+<dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
+<dd><p><code>"auto"</code> (default) or <code>"binary"</code>. Columns of only 0 and 1
+could be items or recoded positions, so <code>"auto"</code> raises an error of class
+<code>nestimate_bad_input</code> on them. <code>"binary"</code> declares them items, one row
+per transaction; a missing cell counts as no occurrence.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -194,11 +203,18 @@ Values from multiple columns are split, pooled, and de-duplicated per row.</p></
 Groups by <code>by</code>; unique values of <code>field</code> within each group
 form a transaction.</p></li>
 <li><p><strong>Binary matrix</strong>: No <code>field</code>/<code>by</code>/<code>sep</code>, all
-values 0/1. Columns are items, rows are transactions.</p></li>
+values 0/1 or logical, and <code>format = "binary"</code>. Columns are items,
+rows are transactions; a missing cell is no occurrence. Without
+<code>format = "binary"</code> such data is refused, since 0/1 columns could
+also be recoded positions.</p></li>
 <li><p><strong>Wide sequence</strong>: No <code>field</code>/<code>by</code>/<code>sep</code>,
 non-binary. Unique values across each row form a transaction.</p></li>
 <li><p><strong>List</strong>: A plain list of character vectors.</p></li>
-</ol><p>The pipeline converts all formats into a list of character vectors
+</ol><p>A network object (<code>netobject</code>, <code>netobject_group</code>,
+<code>cograph_network</code>, <code>tna</code>) is refused: pass the data it was built
+from, or use <code>build_network(method = "co_occurrence")</code> for positional
+co-occurrence of sequences.</p>
+<p>The pipeline converts all formats into a list of character vectors
 (transactions), optionally filters by <code>min_occur</code>, builds a binary
 transaction matrix, computes <code>crossprod(B)</code> for the raw co-occurrence
 counts, normalizes via the chosen <code>similarity</code>, then applies
@@ -242,7 +258,7 @@ the American Society for Information Science and Technology</em>, 60(8),
 <span class="r-in"><span><span class="co"># Binary matrix</span></span></span>
 <span class="r-in"><span><span class="va">bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">0</span>,<span class="fl">1</span>, <span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">0</span>, <span class="fl">0</span>,<span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">3</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>              dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"X"</span>, <span class="st">"Y"</span>, <span class="st">"Z"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu">cooccurrence</span><span class="op">(</span><span class="va">bin</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu">cooccurrence</span><span class="op">(</span><span class="va">bin</span>, format <span class="op">=</span> <span class="st">"binary"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

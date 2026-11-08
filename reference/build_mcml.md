@@ -30,7 +30,11 @@ build_mcml(
   end_by = NULL,
   labels = NULL,
   combine = NULL,
-  expand = NULL
+  expand = NULL,
+  from = NULL,
+  to = NULL,
+  weight = NULL,
+  cols = NULL
 )
 
 # S3 method for class 'mcml_layer'
@@ -49,16 +53,20 @@ summary(object, ...)
 
   Input data. Accepts multiple formats:
 
-  data.frame with from/to columns
+  data.frame with `from` and `to` set
 
-  :   Edge list. Columns named from/source/src/v1/node1/i and
-      to/target/tgt/v2/node2/j are auto-detected. Optional weight column
-      (weight/w/value/strength).
+  :   Edge list, with optional `weight`.
 
-  data.frame without from/to columns
+  data.frame with `action` set
 
-  :   Sequence data. Each row is a sequence, columns are time steps.
-      Consecutive pairs (t, t+1) become transitions.
+  :   Event log, read by
+      [`prepare`](https://pak.dynasite.org/Nestimate/reference/prepare.md).
+
+  data.frame of positions
+
+  :   Sequence data, either nothing but a numbered run of columns or the
+      columns set in `cols`. Each row is a sequence, columns are time
+      steps. Consecutive pairs (t, t+1) become transitions.
 
   tna object
 
@@ -68,8 +76,8 @@ summary(object, ...)
 
   netobject
 
-  :   If `x$data` is non-NULL, detects edge list vs sequence data.
-      Otherwise falls back to
+  :   If `x$data` is non-NULL, uses sequence path on it. Otherwise falls
+      back to
       [`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md).
 
   mcml
@@ -260,6 +268,18 @@ summary(object, ...)
   `expand` opens clusters in the Summary panel only and keeps one panel
   per cluster.
 
+- from, to, weight:
+
+  Column names of an edge list, and its optional weight. Names give no
+  role: a frame is an edge list only when these are set.
+
+- cols:
+
+  Character vector or `NULL`. For a wide data frame: the columns holding
+  the positions. Needed when the frame is anything but a numbered run
+  (`T1`, `T2`, ...). Any other frame with no role declared raises an
+  error of class `nestimate_bad_input`.
+
 - ...:
 
   In `print.mcml()`, `print.mcml_layer()` and `summary.mcml()`:
@@ -319,14 +339,14 @@ for the cluster-level network with one cluster expanded
 ## Examples
 
 ``` r
-# Edge list with clusters
+# Edge list with clusters: its columns are declared
 edges <- data.frame(
-  from = c("A", "A", "B", "C", "C", "D"),
-  to   = c("B", "C", "A", "D", "D", "A"),
-  weight = c(1, 2, 1, 3, 1, 2)
+  source = c("A", "A", "B", "C", "C", "D"),
+  target = c("B", "C", "A", "D", "D", "A"),
+  count  = c(1, 2, 1, 3, 1, 2)
 )
 clusters <- list(G1 = c("A", "B"), G2 = c("C", "D"))
-build_mcml(edges, clusters)
+build_mcml(edges, clusters, from = "source", to = "target", weight = "count")
 #> MCML Network
 #> ============
 #> Type: tna  | Method: sum 

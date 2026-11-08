@@ -264,14 +264,15 @@ print(net_atna)
 
 When the data is binary (0/1) — as is common in learning analytics where
 activities are coded as present or absent within time windows —
-[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-automatically detects the format and uses co-occurrence analysis. The
-resulting undirected network captures which events tend to co-occur.
+`format = "onehot"` declares it, because columns of 0 and 1 could also
+be positions. The resulting undirected network captures which events
+tend to co-occur.
 
 ``` r
 
 data(learning_activities)
-net <- build_network(learning_activities, method = "cna", actor = "student")
+net <- build_network(learning_activities, method = "cna", actor = "student",
+                     format = "onehot")
 print(net)
 #> Co-occurrence Network [undirected]
 #>   Weights: [2681.000, 6262.000]  |  mean: 3867.381

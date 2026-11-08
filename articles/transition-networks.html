@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -360,12 +360,13 @@ dynamics than early ones.</p>
 </h4>
 <p>When the data is binary (0/1) — as is common in learning analytics
 where activities are coded as present or absent within time windows —
-<code><a href="../reference/build_network.html">build_network()</a></code> automatically detects the format and uses
-co-occurrence analysis. The resulting undirected network captures which
+<code>format = "onehot"</code> declares it, because columns of 0 and 1
+could also be positions. The resulting undirected network captures which
 events tend to co-occur.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">learning_activities</span><span class="op">)</span></span>
-<span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">learning_activities</span>, method <span class="op">=</span> <span class="st">"cna"</span>, actor <span class="op">=</span> <span class="st">"student"</span><span class="op">)</span></span>
+<span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">learning_activities</span>, method <span class="op">=</span> <span class="st">"cna"</span>, actor <span class="op">=</span> <span class="st">"student"</span>,</span>
+<span>                     format <span class="op">=</span> <span class="st">"onehot"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Co-occurrence Network [undirected]</span></span>
 <span><span class="co">#&gt;   Weights: [2681.000, 6262.000]  |  mean: 3867.381</span></span>

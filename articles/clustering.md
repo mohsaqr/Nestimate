@@ -59,7 +59,6 @@ net <- build_network(human_long,
                      action = "cluster",
                      actor  = "session_id",
                      time   = "timestamp")
-#> build_network(): `session_id` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
 #> Metadata aggregated per session: ties resolved by first occurrence in 'code' (99 sessions)
 ```
 

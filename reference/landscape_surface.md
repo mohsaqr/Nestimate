@@ -20,7 +20,8 @@ landscape_surface(
   measure = "longitudinal_entropy",
   states = NULL,
   k = 30L,
-  n_grid = 25L
+  n_grid = 25L,
+  cols = NULL
 )
 
 # S3 method for class 'net_landscape_surface'
@@ -66,6 +67,12 @@ plot(x, max_stay = 50, theta = 10, phi = 30, ncol = NULL, ...)
   Integer. Slices between the 5th and 95th percentile of the measure. If
   these percentiles coincide for a nonconstant measure, its full range
   is used. Default 25.
+
+- cols:
+
+  Character vector or `NULL`. For a wide data frame: the columns holding
+  the positions. Needed when they are not a numbered run (`T1`, `T2`,
+  ...) or one of them is called `action`.
 
 - object:
 

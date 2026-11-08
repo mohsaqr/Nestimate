@@ -130,7 +130,10 @@ print(x, ...)
 - format:
 
   Character. Input format: `"auto"`, `"wide"`, `"long"`, or `"onehot"`.
-  Default: `"auto"`.
+  Default: `"auto"` reads an event log when `action` is set, one-hot
+  data when `codes` is set, and otherwise wide positions; it does not
+  read one-hot data from the values. The association methods and the
+  `wtna` methods read 0/1 columns as they always do.
 
 - window_size:
 
@@ -196,22 +199,26 @@ print(x, ...)
   Auto-detection (values-in-nodes heuristic) is bypassed. Use this when
   a metadata column happens to contain values that overlap with node
   names (e.g. condition labels `"A","B","C"` and nodes `"A","B","C"`)
-  and auto-detection would misclassify it. Default: `NULL`
-  (auto-detect). For wide sequence data, auto-detection treats numeric
-  columns of a mixed frame as covariates. When the position columns are
-  named as a run (a shared prefix and a number: `T1`, `T2`, ...; or `1`,
-  `2`, ...), every other character or factor column, such as an outcome
-  or a course, is a covariate too. Without such a run, or with two runs
-  of equal size, every character column is read as a position.
+  and auto-detection would misclassify it. Default: `NULL`. Declared
+  columns are positions, also when they hold only 0 and 1: use `codes`
+  or `format = "onehot"` for one-hot data. For wide sequence data with
+  nothing declared, the frame must be one column or hold position
+  columns named as a run (a shared prefix and a number: `T1`, `T2`, ...;
+  or `1`, `2`, ...). Columns of only 0 and 1 on a sequence method raise
+  an error of class `nestimate_bad_input`: nothing says whether they are
+  one-hot codes or positions. Numeric columns of a mixed frame are then
+  covariates, and so is every character or factor column outside the
+  run. Any other frame on a sequence method raises an error of class
+  `nestimate_bad_input`: set `action` for an event log, or this argument
+  for a wide table.
 
 - metadata_cols:
 
   Character vector or `NULL`. Explicit names of columns to force into
-  the `$metadata` slot. The remaining columns are auto-detected as state
-  via the values-in-nodes rule. Cannot overlap with `state_cols`.
-  Default: `NULL`. A character column left out of a numbered run of
-  positions is named in a message of class `nestimate_column_role`;
-  listing it here or in `state_cols` settles it.
+  the `$metadata` slot. Cannot overlap with `state_cols`. Default:
+  `NULL`. A column left out of a numbered run of positions is named in a
+  message of class `nestimate_column_role`; listing it here or in
+  `state_cols` settles it.
 
 - start:
 
@@ -423,9 +430,10 @@ The function works as follows:
 
 7.  Extracts edges and constructs the `netobject`.
 
-For long-format transition data, supplying `action` without `actor` is
-allowed and treats all rows as one sequence in row/time order. The
-function warns because a one-sequence transition network is not
+For long-format transition data, supplying `action` alone treats all
+rows as one sequence in row order; `session`, or a `time` gap above
+`time_threshold`, splits them without an `actor`. A message says so when
+one sequence is built, because a one-sequence transition network is not
 recommended and cannot be validated by bootstrap or other confirmatory
 tests.
 

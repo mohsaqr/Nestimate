@@ -16,7 +16,8 @@ association_rules(
   min_support = 0.1,
   min_confidence = 0.5,
   min_lift = 1,
-  max_length = 5L
+  max_length = 5L,
+  format = c("auto", "binary")
 )
 
 # S3 method for class 'net_association_rules'
@@ -78,6 +79,13 @@ plot(x, ...)
 - max_length:
 
   Integer. Maximum itemset size. Default: 5.
+
+- format:
+
+  `"auto"` (default) or `"binary"`. Columns of only 0 and 1 could be
+  items or recoded positions, so `"auto"` raises an error of class
+  `nestimate_bad_input` on them. `"binary"` declares them items, one row
+  per transaction.
 
 - ...:
 

@@ -18,7 +18,8 @@ stability_landscape(
   states = NULL,
   iter = 1000L,
   ci_level = 0.95,
-  seed = NULL
+  seed = NULL,
+  cols = NULL
 )
 
 # S3 method for class 'net_landscape'
@@ -66,6 +67,12 @@ plot(x, ...)
 
   Integer or `NULL`. Seed for the resampling, scoped to the call (the
   global random state is restored).
+
+- cols:
+
+  Character vector or `NULL`. For a wide data frame: the columns holding
+  the positions. Needed when they are not a numbered run (`T1`, `T2`,
+  ...) or one of them is called `action`.
 
 - object:
 

@@ -20,7 +20,8 @@ cooccurrence(
   min_occur = 1L,
   diagonal = TRUE,
   top_n = NULL,
-  ...
+  ...,
+  format = c("auto", "binary")
 )
 ```
 
@@ -34,7 +35,8 @@ cooccurrence(
 
   - A `data.frame` in long/bipartite format (`field` + `by`).
 
-  - A binary (0/1) `data.frame` or `matrix` (auto-detected).
+  - A binary `data.frame` or `matrix` (0/1 or `TRUE`/`FALSE`), declared
+    with `format = "binary"`.
 
   - A wide sequence `data.frame` or `matrix` (non-binary).
 
@@ -123,6 +125,13 @@ cooccurrence(
 
   Currently unused.
 
+- format:
+
+  `"auto"` (default) or `"binary"`. Columns of only 0 and 1 could be
+  items or recoded positions, so `"auto"` raises an error of class
+  `nestimate_bad_input` on them. `"binary"` declares them items, one row
+  per transaction; a missing cell counts as no occurrence.
+
 ## Value
 
 A `netobject` (undirected, class `c("netobject", "cograph_network")`)
@@ -151,13 +160,20 @@ Six input formats are supported, auto-detected from the combination of
 3.  **Long bipartite**: `field` + `by`. Groups by `by`; unique values of
     `field` within each group form a transaction.
 
-4.  **Binary matrix**: No `field`/`by`/`sep`, all values 0/1. Columns
-    are items, rows are transactions.
+4.  **Binary matrix**: No `field`/`by`/`sep`, all values 0/1 or logical,
+    and `format = "binary"`. Columns are items, rows are transactions; a
+    missing cell is no occurrence. Without `format = "binary"` such data
+    is refused, since 0/1 columns could also be recoded positions.
 
 5.  **Wide sequence**: No `field`/`by`/`sep`, non-binary. Unique values
     across each row form a transaction.
 
 6.  **List**: A plain list of character vectors.
+
+A network object (`netobject`, `netobject_group`, `cograph_network`,
+`tna`) is refused: pass the data it was built from, or use
+`build_network(method = "co_occurrence")` for positional co-occurrence
+of sequences.
 
 The pipeline converts all formats into a list of character vectors
 (transactions), optionally filters by `min_occur`, builds a binary
@@ -204,5 +220,5 @@ net <- cooccurrence(transactions, similarity = "jaccard")
 # Binary matrix
 bin <- matrix(c(1,0,1, 1,1,0, 0,1,1), nrow = 3, byrow = TRUE,
               dimnames = list(NULL, c("X", "Y", "Z")))
-net <- cooccurrence(bin)
+net <- cooccurrence(bin, format = "binary")
 ```

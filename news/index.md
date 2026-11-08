@@ -1,5 +1,331 @@
 # Changelog
 
+## Nestimate 1.0.9
+
+Corrections to 1.0.7, from a review of that release.
+
+- [`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.md)
+  and
+  [`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
+  on an event log with `action` not declared read the log as positions
+  without a word: `group_regulation_long` gave 14,034 states instead of
+  9, with timestamps as states. As 1.0.7 said it would, a column called
+  `action` that is not declared now raises an error of class
+  `nestimate_bad_input`.
+  [`convert_sequence_format()`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md),
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
+  [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md),
+  [`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md),
+  [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md),
+  [`stability_landscape()`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
+  and
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  had the same fault, from before 1.0.7, and raise the same error.
+- A frame read with no role declared must now be readable: one column or
+  a numbered run of positions (`T1`, `T2`, …). Any other frame raises an
+  error of class `nestimate_bad_input` on every sequence verb, because
+  reading a log as positions turns its ids and dates into states:
+  `build_network(human_long, method = "frequency")` gave 507 nodes
+  instead of 9. Calls on a wide table with other column names need
+  `state_cols` in
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  `cols` in
+  [`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.md),
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md),
+  [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md),
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md),
+  [`stability_landscape()`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md),
+  [`landscape_surface()`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md),
+  [`landscape_trend()`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md),
+  [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md),
+  [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
+  and
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
+  or a network from `build_network(state_cols = )` in
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md),
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md),
+  [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md),
+  [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md),
+  [`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md),
+  [`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md),
+  [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md),
+  [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md),
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+  [`cluster_data()`](https://pak.dynasite.org/Nestimate/reference/cluster_data.md),
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  and
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md).
+  The verbs that read every column also refuse a numbered run with
+  anything else beside it, whose values would become states.
+- [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  no longer reads column names. `from`, `to` and `T3` … were read as an
+  edge list and the later positions dropped: `trajectories` with two
+  positions renamed went from a macro total of 1,734 to 131. An edge
+  list is declared with the new `from`, `to` and `weight`, wide data
+  with the new `cols` or as a numbered run. Calls with an edge list need
+  the arguments added. A two-column frame named `V1`, `V2` is now two
+  positions, with inits from its first column.
+- A declared column that does not exist now raises
+  `nestimate_bad_input`:
+  [`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.md),
+  [`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
+  and
+  [`convert_sequence_format()`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)
+  read `action = "misspelled"` as a wide table (38 x 38 states instead
+  of 9 x 9),
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  ignored a wrong `cols` beside `action`, and
+  [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
+  ignored a wrong `field` or `by`.
+  [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
+  also refuses `field`, `by` or `sep` without its partner, which it read
+  as a wide table, and any of them on a list.
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  and the verbs that set covariates aside: a numeric column beside a
+  numeric numbered run, such as `grade` beside `T1`, `T2`, …, became a
+  state: on `trajectories` coded as numbers it gave 138 nodes instead
+  of 3. It is now set aside as metadata, and every column set aside this
+  way is named in a message.
+- Positions a verb has resolved read back in: the unnumbered positions
+  that
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
+  [`mark_first_state()`](https://pak.dynasite.org/Nestimate/reference/mark_first_state.md),
+  [`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md)
+  and a network’s `$data` return keep their role while the frame holds
+  exactly those columns, in the order it then holds them. A column added
+  afterwards is refused or set aside, not read as a state, and a role
+  declared in the later call comes first. Base column selection drops
+  the role, so a selected frame is declared again.
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  no longer guesses one-hot data from the values. Columns of only 0 and
+  1 were read as one-hot codes, also with `state_cols` set: 15 positions
+  recoded this way gave 15 nodes and 30,606 transitions instead of 2
+  states and 1,734. On a sequence method they now raise
+  `nestimate_bad_input` unless declared: `format = "onehot"` or `codes`
+  for one-hot data, `state_cols` for positions. Calls that relied on the
+  guess need the argument added. The same error stops
+  [`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.md),
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md),
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
+  and the other verbs that read positions, which read such frames as the
+  states 0 and 1, and so does a single 0/1 column, a numeric or logical
+  0/1 matrix and an undeclared 0/1 run in
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md).
+  The `wtna` methods read 0/1 columns as before. The association methods
+  read them as variables with the same weights, but no longer record
+  guessed one-hot codes and windows: those made
+  [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
+  on a `cor` network mine one invented transaction, and made
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md),
+  [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md),
+  [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  and
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  refuse a binary MGM network as one sequence.
+- `build_network(method = "co_occurrence")` read 0/1 positions declared
+  with `state_cols` or `params$cols` as one-hot codes: three positions
+  gave the nodes `T1`, `T2`, `T3` instead of the states 0 and 1 (also in
+  1.0.8; recoded `trajectories` gave 15 nodes and 34,419 instead of 2
+  and 16,250).
+- [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
+  and
+  [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
+  no longer guess binary items from the values either: columns of only 0
+  and 1 raise `nestimate_bad_input` unless the new `format = "binary"`
+  declares them. Calls such as `cooccurrence(bin)` need the argument
+  added.
+  [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
+  on a 0/1 frame with a missing value failed with
+  `subscript out of bounds`; a missing cell now counts as no occurrence.
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+  `format = "onehot"` counted a column named in `metadata_cols` as a
+  code (4 nodes and total weight 72 instead of 3 and 36). `attention`,
+  `ngram`, `gap` and `reverse` on one-hot data counted the raw columns,
+  with 0, 1 and the actor ids as nodes; they now raise
+  `nestimate_bad_input`.
+- A one-hot network passed to
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md),
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md),
+  [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md),
+  [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md),
+  [`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md),
+  [`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md),
+  [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md),
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md),
+  [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md),
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  or the other sequence readers was read as positions of the states 0
+  and 1. These raise `nestimate_bad_input`.
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  aggregates its weights, as for a matrix. The same holds for the
+  one-hot networks of a `netobject_group`
+  ([`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  drew the states 0 and 1,
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
+  read the networks’ fields as 15 states) and for a bare
+  `cograph_network`, whose declaration converting it to a netobject
+  dropped. An association network (`cor`, `pcor`, `glasso`, `ising`,
+  `mgm`) passed to a sequence reader or
+  [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
+  raises the same error: its rows are variables.
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md),
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md),
+  [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md)
+  and
+  [`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md)
+  refuse a `netobject_group` and any list that is not a plain list of
+  sequences, such as a fitted
+  [`t.test()`](https://rdrr.io/r/stats/t.test.html) result, whose fields
+  they read as states (also in 1.0.8); so does
+  [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md).
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  and
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+  refuse an association network, also as a bare `cograph_network`, which
+  they fitted from zero transitions (also in 1.0.8).
+  `build_network(method = "wtna")` refuses `state_cols`, which it
+  ignored: `wtna` reads one-hot codes.
+- `build_network(method = "wtna")` and `"wtna_cooccurrence"` read
+  logical one-hot columns as codes, as numeric 0/1 columns and
+  [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
+  already did. They were read as the states `FALSE` and `TRUE`, and
+  `wtna_cooccurrence` ignored `window_size` (also in 1.0.8).
+- [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
+  refuses a classed list, such as
+  [`packageDescription()`](https://rdrr.io/r/utils/packageDescription.html),
+  whose character fields it read as transactions (also in 1.0.8), and
+  raises `nestimate_bad_input` for a list holding anything other than
+  character vectors.
+- [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
+  on a `netobject_group` mined only its first group, without a word; it
+  now raises `nestimate_bad_input`.
+- [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
+  on a network read its fields as transactions (24 nodes, including
+  `NULL` and `frequency`; also in 1.0.8), and on a logical matrix gave
+  the nodes `FALSE` and `TRUE`. A network now raises
+  `nestimate_bad_input`; logical columns are binary items under
+  `format = "binary"` and refused without it.
+- Duplicated column names raise `nestimate_bad_input`. A column added
+  under a name the frame already had was trusted as a marked position:
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
+  read it as a state, and
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  gave 4 transitions where 1.0.8 gave 6.
+- The advice in these errors names only routes the verb reads: the
+  sequence readers and `attention`, `ngram`, `gap` and `reverse` no
+  longer suggest `format = "onehot"`, which they then refused.
+- [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
+  reads counts from a network’s declared method, not from its values. A
+  relative or scaled network is recounted from its sequences with the
+  network’s own start and end states, concatenation, windows and one-hot
+  units: a deterministic chain, a `scaling = "max"` frequency network
+  and a relative `tna` model were read as counts of one where the data
+  hold four (also in 1.0.8), and a relative one-hot network, refused
+  before, is counted per unit. Relative co-occurrence networks
+  (`type = "relative"`) and weighted networks
+  (`params = list(weighted = TRUE)`) are recounted as raw counts; a
+  relative co-occurrence network was read as counts of one (also in
+  1.0.8). A `tna` model of a counting type (frequency, co-occurrence,
+  reverse, n-gram) gives its counts; a relative, scaled or weighted one
+  is recounted from its sequences (a weighted
+  [`tna::ftna()`](https://sonsoles.me/tna/reference/build_model.html)
+  was read as counts of one where the data hold three; also in 1.0.8),
+  and one with windows, attention or gap weights raises
+  `nestimate_bad_input`. An association network raises
+  `nestimate_bad_input`: perfect correlations were read as six
+  transitions (also in 1.0.8). A network with weights that are not
+  counts and no counting rule (`attention`, `ngram`, `gap`) raises
+  `nestimate_bad_input`; it was recounted as a frequency network of its
+  data, without its settings.
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  and
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+  on a one-hot network fitted every unit from zero transitions and
+  uniform components: they counted adjacent window slots, which are
+  never both filled. They now count within the windows, as the network
+  does, and a bare `cograph_network` gets the same one-hot units instead
+  of one unit per row (also in 1.0.8). The initial state of a one-hot
+  unit is the code of its first window (none when that window holds
+  several); it was read from the slot of the first code, so only units
+  starting with that code had one.
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  of a fit, and `cluster_network(cluster_by = "mmm")`, on a
+  `wtna_cooccurrence` network failed with “No one-hot columns found”;
+  the clusters are rebuilt with the network’s counting method (also in
+  1.0.8). A bare `cograph_network` keeps its declared method for that
+  rebuild; it was rebuilt as a relative network (also in 1.0.8). A
+  windowed `tna` model (from
+  [`tna::import_onehot()`](https://sonsoles.me/tna/reference/import_onehot.html))
+  raises `nestimate_bad_input`: its windows were read as plain
+  positions, 4 of 32 transitions (also in 1.0.8). A network converted
+  from a `tna` model by
+  [`cograph::as_cograph()`](https://sonsoles.me/cograph/reference/as_cograph.html)
+  keeps neither type nor windows:
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  and
+  [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
+  read its sequences only when recounting them reproduces its weights,
+  and refuse it otherwise (the windowed example above);
+  [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
+  read its probabilities of one as counts.
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+  on a `netobject_group` fitted its edge tables as sequences, with group
+  labels as states, and a bare association network declaring only
+  `$method` was accepted (both also in 1.0.8); both raise
+  `nestimate_bad_input`. Rebuilding a fit keeps the source network’s
+  settings: an `ngram` network with `n_gram = 3` was rebuilt with
+  bigrams (also in 1.0.8).
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  of a fit with an empty component failed with “Estimator ‘frequency’
+  must return a list”; it raises `nestimate_empty_cluster`.
+- `build_network(method = "wtna")` and `"wtna_cooccurrence"` with
+  `metadata_cols` read the declared column beside the codes, missed the
+  one-hot data and ignored `window_size` (also in 1.0.8).
+- [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  and
+  [`cluster_data()`](https://pak.dynasite.org/Nestimate/reference/cluster_data.md)
+  clustered the rows of an association network passed as a bare
+  `cograph_network` (60 measurement rows in two clusters), and the rows
+  of a bare one-hot network instead of its units. A bare network now
+  meets the checks of a netobject; the refusal is `nestimate_bad_input`
+  (also in 1.0.8).
+- [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md),
+  [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
+  and
+  [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md):
+  a resample that lost a state to a constant column stopped with
+  `subscript out of bounds`. It counts as below the threshold, as an
+  unbuilt draw; split halves leave it out. The warning about failed
+  resamples said they were left out with results `NA` in the stability
+  verbs, which count them as below the threshold; it now says that.
+- A numeric column called `action` no longer stops
+  `build_network(method = "cor")` and the other association methods,
+  which read numeric columns.
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+  the message that a `time` or `session` column is not used named
+  columns declared under another role: `session_id` given as `actor`,
+  `group`, `order` or `time`. It is shown only for a column with no
+  role. It also said events were read in row order and sessions not
+  split whatever was declared, also with `order` set; it now says only
+  what holds for the call.
+- [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+  the note about one long sequence followed the arguments and was shown
+  for several sequences, with `session` or with time gaps and no
+  `actor`. It is shown when one sequence was built.
+- `build_network(mode = "overlapping")` with
+  `params = list(window_size =)` on sequence data now raises the warning
+  of class `nestimate_ignored_mode` that the same `mode` in `params`
+  raises.
+- [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md):
+  a draw without a correlation counts as below the threshold in the
+  CS-coefficient, as in
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
+  since 1.0.7.
+
 ## Nestimate 1.0.8
 
 - [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md):

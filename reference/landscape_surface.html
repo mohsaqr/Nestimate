@@ -23,7 +23,7 @@ most stable to the most volatile sequences."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,8 @@ most stable to the most volatile sequences.</p>
 <span>  measure <span class="op">=</span> <span class="st">"longitudinal_entropy"</span>,</span>
 <span>  states <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  k <span class="op">=</span> <span class="fl">30L</span>,</span>
-<span>  n_grid <span class="op">=</span> <span class="fl">25L</span></span>
+<span>  n_grid <span class="op">=</span> <span class="fl">25L</span>,</span>
+<span>  cols <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_landscape_surface'</span></span>
@@ -121,6 +122,12 @@ number of sequences).</p></dd>
 <dd><p>Integer. Slices between the 5th and 95th percentile of the
 measure. If these percentiles coincide for a nonconstant measure,
 its full range is used. Default 25.</p></dd>
+
+
+<dt id="arg-cols">cols<a class="anchor" aria-label="anchor" href="#arg-cols"></a></dt>
+<dd><p>Character vector or <code>NULL</code>. For a wide data frame: the columns
+holding the positions. Needed when they are not a numbered run (<code>T1</code>,
+<code>T2</code>, ...) or one of them is called <code>action</code>.</p></dd>
 
 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>

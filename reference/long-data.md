@@ -73,7 +73,6 @@ Saqr, M. (2026). Human-AI vibe coding interaction study.
 net <- build_network(human_long, method = "tna",
                      action = "code", actor = "session_id",
                      time = "timestamp")
-#> build_network(): `session_id` not used: events are read in row order and sessions are not split. Set `time` or `session` to use them, or list them in `metadata_cols`.
 #> Metadata aggregated per session: ties resolved by first occurrence in 'cluster' (20 sessions)
 net
 #> Transition Network (relative probabilities) [directed]

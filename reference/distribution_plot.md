@@ -37,7 +37,8 @@ distribution_plot(
   legend_title = NULL,
   legend_ncol = NULL,
   legend_border = NA,
-  legend_bty = "n"
+  legend_bty = "n",
+  cols = NULL
 )
 ```
 
@@ -182,6 +183,12 @@ distribution_plot(
 - legend_bty:
 
   `"n"` (borderless) or `"o"` (boxed).
+
+- cols:
+
+  Character vector or `NULL`. For a wide data frame: the columns holding
+  the positions. Needed when they are not a numbered run (`T1`, `T2`,
+  ...) or one of them is called `action`.
 
 ## Value
 

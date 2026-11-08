@@ -15,7 +15,7 @@ and logical matrix indexing for k-itemsets."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,8 @@ and logical matrix indexing for k-itemsets.</p>
 <span>  min_support <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  min_confidence <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  min_lift <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  max_length <span class="op">=</span> <span class="fl">5L</span></span>
+<span>  max_length <span class="op">=</span> <span class="fl">5L</span>,</span>
+<span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"binary"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_association_rules'</span></span>
@@ -123,6 +124,13 @@ For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">
 
 <dt id="arg-max-length">max_length<a class="anchor" aria-label="anchor" href="#arg-max-length"></a></dt>
 <dd><p>Integer. Maximum itemset size. Default: 5.</p></dd>
+
+
+<dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
+<dd><p><code>"auto"</code> (default) or <code>"binary"</code>. Columns of only 0 and 1
+could be items or recoded positions, so <code>"auto"</code> raises an error of class
+<code>nestimate_bad_input</code> on them. <code>"binary"</code> declares them items, one row
+per transaction.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

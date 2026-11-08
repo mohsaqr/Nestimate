@@ -11,7 +11,7 @@ matrix. Sequences are probabilistically assigned to components."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -284,6 +284,11 @@ be treated as missing, recode them to <code>NA</code> before calling
 EM treats as an uninformative initial distribution), or left-trim the
 leading missings so each sequence's first column carries an observed
 state.</p>
+<p>A one-hot network is the exception: its units are windows whose slots
+are codes, not positions, so the first column only says whether the
+first code was active. Its initial state is the one code observed in the
+first window, and no initial state (uninformative) when that window holds
+several codes or none.</p>
     </div>
     <div class="section level2">
     <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
