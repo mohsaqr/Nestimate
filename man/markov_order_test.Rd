@@ -61,7 +61,8 @@ they run serially. With \code{TRUE} the permutations are reproducible from
 \code{seed} only under \code{RNGkind("L'Ecuyer-CMRG")}; under the default
 generator they differ from run to run.}
 
-\item{n_cores}{The number of cores for \code{parallel = TRUE}. Default \code{2}.}
+\item{n_cores}{The number of cores for \code{parallel = TRUE}, a single
+number of at least 1. Default \code{2}.}
 
 \item{seed}{An integer that makes the permutations reproducible (with
 \code{parallel = TRUE}, only under the L'Ecuyer-CMRG generator). Default
@@ -87,7 +88,10 @@ used.}
 
 \item{panel}{For the \code{plot()} method: which panels to draw. \code{"both"}
 (default), \code{"ic"} (the fit across orders) or \code{"permutation"} (the
-permutation nulls); a single panel is returned as a ggplot.}
+permutation nulls); a single panel is returned as a ggplot. When no
+tested order has a permutation null (every test has 0 degrees of
+freedom, as for constant sequences), only \code{"ic"} can be drawn and the
+other two raise an error of class \code{nestimate_bad_input}.}
 
 \item{combined}{For the \code{plot()} method with \code{panel = "both"}: \code{TRUE}
 (default) draws the two panels side by side and returns them as one

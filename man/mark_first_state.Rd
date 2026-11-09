@@ -15,7 +15,7 @@ raise an error of class \code{nestimate_bad_input}.}
 
 \item{state}{The label written into the leading missing cells, a single
 non-empty string. Default \code{"Start"}. If the label already occurs in
-\code{data}, a warning is given and \verb{_1}, \verb{_2}, ... is appended until it is
+\code{data}, a warning of class \code{nestimate_state_collision} is given and \verb{_1}, \verb{_2}, ... is appended until it is
 unique, so the marker is never confused with an observed state.}
 
 \item{cols}{The columns holding the positions, in order; only they are

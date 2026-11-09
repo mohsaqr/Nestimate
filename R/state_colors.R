@@ -178,8 +178,9 @@ state_colors.netobject_group <- function(x, ...) .state_colors_table(x)
   unique(as.character(x$nodes$name))
 }
 
-# A stored palette is always a named character vector restricted to nothing -
-# extra names are dropped here, once, at set time, rather than at every plot.
+# A stored palette is always a named character vector. Names the object does
+# not carry are kept (one project-wide palette can sit on every object) and
+# are reported here, once, at set time.
 .validate_state_colors <- function(colors, keys) {
   if (is.null(colors)) {
     return(NULL)
@@ -189,8 +190,30 @@ state_colors.netobject_group <- function(x, ...) .state_colors_table(x)
     "`colors` must be named: c(state = \"#0072B2\", ...)" =
       .is_named_colors(colors),
     "every colour in `colors` must be named" = all(nzchar(names(colors))))
-  .report_unused_colors(colors, keys, arg = "colors")
+  .report_unmatched_colors(colors, keys)
   colors
+}
+
+# The set-time counterpart of .report_unused_colors(): nothing is drawn yet
+# and nothing is dropped, so the message says what holds - the names match no
+# state of the object and stay in its palette.
+.report_unmatched_colors <- function(colors, keys) {
+  nm        <- names(colors)
+  unmatched <- setdiff(nm, keys)
+  if (length(unmatched) == 0L) {
+    return(invisible(NULL))
+  }
+  shown <- paste0(paste(utils::head(unmatched, 6L), collapse = ", "),
+                  if (length(unmatched) > 6L) ", ..." else "")
+  if (length(unmatched) == length(nm)) {
+    message("`colors`: no name matches a state of this object, so every ",
+            "state keeps its default colour. Unmatched: ", shown, ".")
+  } else {
+    message("`colors`: ", length(unmatched), " of ", length(nm),
+            " names are not drawn, because the object has no such state: ",
+            shown, ". They stay in its palette.")
+  }
+  invisible(NULL)
 }
 
 # Mirror the palette into the cograph producer contract, in node order, so

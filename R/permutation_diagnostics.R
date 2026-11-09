@@ -151,8 +151,11 @@ permutation_diagnostics <- function(x, y = NULL, actor, iter = 1000L,
            name = paste(names(x)[idx[1L, k]], "vs", names(x)[idx[2L, k]]))
     })
   } else {
-    .assert("`x` and `y` must be netobjects" =
-                inherits(x, "netobject") && inherits(y, "netobject"))
+    .assert(
+      "`y` must be NULL when `x` is a netobject_group: its networks are compared pairwise" =
+        !inherits(x, "netobject_group"),
+      "`x` and `y` must be netobjects" =
+        inherits(x, "netobject") && inherits(y, "netobject"))
     list(list(x = x, y = y, name = "x vs y"))
   }
 

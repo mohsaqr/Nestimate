@@ -50,11 +50,12 @@ rename_models <- function(x, new_names) {
 #' @export
 rename_models.netobject_group <- function(x, new_names) {
   .assert(
-    is.character(new_names),
-    length(new_names) == length(x),
-    !anyNA(new_names),
-    all(nzchar(new_names)),
-    !anyDuplicated(new_names)
+    "`new_names` must be a character vector" = is.character(new_names),
+    "`new_names` must have one name per network" =
+      length(new_names) == length(x),
+    "`new_names` must not contain missing or empty names" =
+      !anyNA(new_names) && all(nzchar(new_names)),
+    "`new_names` must be unique" = !anyDuplicated(new_names)
   )
   names(x) <- new_names
   x

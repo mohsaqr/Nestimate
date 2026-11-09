@@ -18,6 +18,11 @@ name: the fourteen built-ins and any added with
 \code{"tna"} or \code{"ebicglasso"} are not listed; the \emph{Estimators} section of
 \code{\link[=build_network]{build_network()}} gives them.
 }
+\note{
+The \pkg{idiographic} package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write \code{Nestimate::list_estimators()} to call this one.
+}
 \examples{
 list_estimators()
 

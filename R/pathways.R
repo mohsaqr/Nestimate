@@ -120,7 +120,7 @@ pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
 #'
 #' @export
 pathways.net_hypa <- function(x, type = "all", ...) {
-  type <- match.arg(type, c("all", "over", "under"))
+  type <- .ho_match_arg(type, "type", c("all", "over", "under"))
   scores <- x$scores
   if (is.null(scores) || nrow(scores) == 0L) return(character(0)) # nocov
 
@@ -151,7 +151,7 @@ pathways.net_hypa <- function(x, type = "all", ...) {
 #'
 #' @export
 pathways.netobject <- function(x, ho_method = c("hon", "hypa"), ...) {
-  ho_method <- match.arg(ho_method)
+  ho_method <- .ho_match_arg(ho_method, "ho_method")
   if (ho_method == "hon") {
     pathways(build_hon(x), ...)
   } else {

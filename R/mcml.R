@@ -8,31 +8,41 @@
 # Field access (`$weights`, `$inits`, `$labels`, `$data`) is unchanged.
 .mcml_layer <- function(weights, inits, labels, data = NULL) {
   if (!is.matrix(weights) || !is.numeric(weights)) {
-    stop("'weights' must be a numeric matrix.", call. = FALSE)
+    stop(errorCondition(
+      "'weights' must be a numeric matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (nrow(weights) != ncol(weights)) {
-    stop("'weights' must be a square matrix.", call. = FALSE)
+    stop(errorCondition(
+      "'weights' must be a square matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   .validate_mcml_matrix(weights)
   if (!is.character(labels) || length(labels) != nrow(weights) ||
       any(is.na(labels)) || any(!nzchar(labels))) {
-    stop("'labels' must be a non-missing character vector with one value per node.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'labels' must be a non-missing character vector with one value per node.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (anyDuplicated(labels)) {
-    stop("'labels' must be unique.", call. = FALSE)
+    stop(errorCondition(
+      "'labels' must be unique.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.null(inits)) {
     if (!is.numeric(inits) || length(inits) != length(labels) ||
         any(is.na(inits) | !is.finite(inits))) {
-      stop("'inits' must be a finite numeric vector with one value per node.",
-           call. = FALSE)
+      stop(errorCondition(
+        "'inits' must be a finite numeric vector with one value per node.",
+        class = "nestimate_bad_input", call = NULL))
     }
     if (!is.null(names(inits))) {
       missing_inits <- setdiff(labels, names(inits))
       extra_inits <- setdiff(names(inits), labels)
       if (length(missing_inits) > 0L || length(extra_inits) > 0L) {
-        stop("'inits' names must match layer labels.", call. = FALSE)
+        stop(errorCondition(
+          "'inits' names must match layer labels.",
+          class = "nestimate_bad_input", call = NULL))
       }
       inits <- inits[labels]
     } else {
@@ -54,7 +64,17 @@ print.mcml_layer <- function(x, ...) {
     cat("MCML layer  [empty]\n"); return(invisible(x))
   }
 
-  cat("MCML layer (transition probabilities)  [directed]\n")
+  # A layer stores no type: the header describes the matrix as it is. Rows
+  # that each sum to 1 are transition probabilities; anything else (raw
+  # counts, co-occurrence counts, aggregates) is reported as weights.
+  rs <- rowSums(w)
+  is_prob <- all(w >= 0) && all(abs(rs[rs != 0] - 1) < 1e-8) && any(rs != 0)
+  if (is_prob) {
+    cat("MCML layer (transition probabilities)  [directed]\n")
+  } else {
+    cat(sprintf("MCML layer (weights)  [%s]\n",
+                if (isSymmetric(unname(w))) "symmetric" else "directed"))
+  }
   cat(sprintf("  Nodes: %d  |  Non-zero edges: %d\n",
               nrow(w), sum(w != 0)))
 
@@ -83,11 +103,12 @@ print.mcml_layer <- function(x, ...) {
     ord   <- order(init, decreasing = TRUE)
     bar_w <- 40L
     max_v <- max(init, na.rm = TRUE)
-    for (i in ord) {
-      bars <- if (is.finite(max_v) && max_v > 0)
-        strrep("#", round(init[i] / max_v * bar_w)) else ""
-      cat(sprintf("  %-14s  %.3f  %s\n", nm[i], init[i], bars))
+    bars <- if (is.finite(max_v) && max_v > 0) {
+      strrep("#", round(init[ord] / max_v * bar_w))
+    } else {
+      rep("", length(ord))
     }
+    cat(sprintf("  %-14s  %.3f  %s\n", nm[ord], init[ord], bars), sep = "")
   }
 
   # ---- Data dimensions ----
@@ -190,7 +211,9 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
       pos_w <- w[w > 0]
       if (length(pos_w) == 0) 0 else exp(mean(log(pos_w)))
     },
-    stop("Unknown method: ", method, call. = FALSE)
+    stop(errorCondition(
+      paste0("Unknown method: ", method),
+      class = "nestimate_bad_input", call = NULL))
   )
 }
 
@@ -427,7 +450,7 @@ cluster_summary <- function(x,
     return(x) # nocov
   }
 
-  method <- match.arg(method)
+  method <- .ho_match_arg(method, "method")
 
   # Store original for cluster extraction
   x_orig <- x
@@ -488,20 +511,16 @@ cluster_summary <- function(x,
   between_raw <- matrix(0, n_clusters, n_clusters,
                         dimnames = list(cluster_names, cluster_names))
 
-  for (i in seq_len(n_clusters)) {
+  # Both diagonal (within-cluster) and off-diagonal (between-cluster) cells.
+  # vapply() fills one column per source cluster i, hence the t().
+  between_raw[] <- t(vapply(seq_len(n_clusters), function(i) {
     idx_i <- cluster_indices[[i]]
-    n_i <- length(idx_i)
-
-    for (j in seq_len(n_clusters)) {
+    vapply(seq_len(n_clusters), function(j) {
       idx_j <- cluster_indices[[j]]
-      n_j <- length(idx_j)
-
-      # Both diagonal (within-cluster) and off-diagonal (between-cluster)
-      w_ij <- mat[idx_i, idx_j]
-      n_possible <- n_i * n_j
-      between_raw[i, j] <- net_aggregate_weights(as.vector(w_ij), method, n_possible)
-    }
-  }
+      net_aggregate_weights(as.vector(mat[idx_i, idx_j]), method,
+                            length(idx_i) * length(idx_j))
+    }, numeric(1L))
+  }, numeric(n_clusters)))
 
   # Matrix path is aggregation only -- no post-processing. Caller normalises
   # downstream if they need a Markov chain (e.g. via as_tna()).
@@ -665,6 +684,22 @@ cluster_summary <- function(x,
 }
 
 # Resolve `end` (FALSE / TRUE / label) to a label or NULL.
+# The end marker is a state like any other and needs a cluster. Without one
+# the build stops at "Unmapped nodes"; this names the argument that added it.
+# Called once the marker has been appended, so the checks on the sequence
+# arguments themselves are reported first.
+.mcml_check_end_cluster <- function(end_label, clusters) {
+  if (!is.list(clusters) || is.data.frame(clusters)) return(invisible(NULL))
+  if (end_label %in% as.character(unlist(clusters, use.names = FALSE))) {
+    return(invisible(NULL))
+  }
+  stop(errorCondition(
+    paste0("Unmapped nodes: ", end_label, ". `end` adds the state '",
+           end_label, "' after each sequence, so `clusters` must assign ",
+           "it to a cluster."),
+    class = "nestimate_bad_input", call = NULL))
+}
+
 .mcml_end_label <- function(end) {
   if (isFALSE(end)) return(NULL)
   if (isTRUE(end)) return("End")
@@ -926,7 +961,10 @@ cluster_summary <- function(x,
 #'   network, within-cluster networks and stored sequences) from the
 #'   sequences it carries, with its original `type`, `method` and `directed`
 #'   unless these are passed; a new `clusters` does the same under that
-#'   partition, and an unchanged partition returns an equal object. Any
+#'   partition, and an unchanged partition returns an equal object. With
+#'   none of `clusters`, `combine` and `expand` the `mcml` is returned as
+#'   it is, and a shaping argument passed with it is ignored with a warning
+#'   of class `nestimate_ignored_argument`. Any
 #'   session split, `exclude`, `trim` or `end` applied at build time is
 #'   already in those sequences, so passing one of them (or `actor`,
 #'   `action`, `time`, `order`, `session`, `time_threshold`, `end_by`,
@@ -1060,9 +1098,6 @@ build_mcml <- function(x,
   # An existing mcml: unchanged unless the partition is changed, in which
   # case it is re-estimated from the sequences it carries.
   if (inherits(x, "mcml")) {
-    if (is.null(clusters) && is.null(combine) && is.null(expand)) {
-      return(x)
-    }
     # Everything that shaped the sequences was applied when x was built and
     # is baked into the sequences it carries; accepting these again would
     # silently do nothing.
@@ -1075,6 +1110,21 @@ build_mcml <- function(x,
                  labels = !missing(labels), from = !missing(from),
                  to = !missing(to), weight = !missing(weight),
                  cols = !missing(cols))
+    if (is.null(clusters) && is.null(combine) && is.null(expand)) {
+      # Nothing to re-partition: the mcml is returned as it is, and any
+      # shaping argument has no effect. Say so instead of dropping it quietly.
+      if (any(shaping)) {
+        warning(warningCondition(
+          paste0(
+            "`",
+            paste(names(shaping)[shaping], collapse = "`, `"),
+            "` ignored: `x` is already an mcml and is returned unchanged. ",
+            "Build from the original data to apply ",
+            if (sum(shaping) == 1L) "it." else "them."),
+          class = "nestimate_ignored_argument", call = NULL))
+      }
+      return(x)
+    }
     if (any(shaping)) {
       stop(errorCondition(
         paste0(
@@ -1087,8 +1137,9 @@ build_mcml <- function(x,
     }
     return(.mcml_rebuild(
       x, clusters = clusters, combine = combine, expand = expand,
-      method = if (missing(method)) x$meta$method else match.arg(method),
-      type = if (missing(type)) x$meta$type else match.arg(type),
+      method = if (missing(method)) x$meta$method else
+        .ho_match_arg(method, "method"),
+      type = if (missing(type)) x$meta$type else .ho_match_arg(type, "type"),
       directed = if (missing(directed)) x$meta$directed %||% directed else directed,
       compute_within = compute_within))
   }
@@ -1134,8 +1185,8 @@ build_mcml <- function(x,
       class = "nestimate_bad_input", call = NULL))
   }
 
-  type <- match.arg(type)
-  method <- match.arg(method)
+  type <- .ho_match_arg(type, "type")
+  method <- .ho_match_arg(method, "method")
 
   .mcml_check_seq_args(exclude, trim, end, end_by)
   end_label <- .mcml_end_label(end)
@@ -1163,6 +1214,7 @@ build_mcml <- function(x,
         seq_df, end_label,
         .mcml_end_rows(prepared$meta_data, prepared$long_data, end_by,
                        nrow(seq_df)))
+      .mcml_check_end_cluster(end_label, clusters)
     }
     x <- seq_df
   } else if (!is.null(exclude) || !is.null(trim) || !is.null(end_label)) {
@@ -1203,6 +1255,7 @@ build_mcml <- function(x,
     if (!is.null(trim))    seq_df <- .mcml_trim_sequences(seq_df, trim)
     if (!is.null(end_label)) {
       seq_df <- .mcml_append_end(seq_df, end_label, seq_len(nrow(seq_df)))
+      .mcml_check_end_cluster(end_label, clusters)
     }
     x <- seq_df
   }
@@ -1215,12 +1268,27 @@ build_mcml <- function(x,
   is_matrix_path <- input_type %in% c("matrix", "tna_matrix",
                                        "netobject_matrix")
   if (type_explicit && is_matrix_path) {
-    warning(
-      "`type` is ignored for matrix input: the matrix path of build_mcml() ",
-      "is aggregation-only. Pass `method` to choose the aggregation and ",
-      "normalise downstream if a Markov chain is needed (e.g. via as_tna()).",
-      call. = FALSE
-    )
+    warning(warningCondition(
+      paste0(
+        "`type` is ignored for matrix input: the matrix path of build_mcml() ",
+        "is aggregation-only. Pass `method` to choose the aggregation; the ",
+        "weights are returned as aggregated and are not row-normalised ",
+        "(as_tna() does not normalise them either)."),
+      class = "nestimate_ignored_argument", call = NULL))
+  }
+  # A network whose weights are not counts (attention, cor, glasso, ...) or a
+  # one-hot network is aggregated from its weight matrix too, so `type` has
+  # no effect there either.
+  if (type_explicit && identical(input_type, "netobject_data") &&
+      !.mcml_recounts(x)) {
+    warning(warningCondition(
+      paste0(
+        "`type` is ignored for a network of method '",
+        x$method %||% "relative",
+        "': its weights are aggregated as they are (the matrix path of ",
+        "build_mcml()), not re-counted from the data. Pass `method` to ",
+        "choose the aggregation."),
+      class = "nestimate_ignored_argument", call = NULL))
   }
 
   result <- switch(input_type,
@@ -1247,12 +1315,7 @@ build_mcml <- function(x,
       # Markov chain. Model-derived methods (attention, ising, glasso,
       # mgm, pcor, cor, mlvar_*) carry weights that re-counting would
       # silently discard, so we route through the matrix path on $weights.
-      net_method <- x$method %||% "relative"
-      count_methods <- c("relative", "frequency", "co_occurrence",
-                         "tna", "ftna", "cna", "wcna", "wtna",
-                         "wtna_cooccurrence", "wtna_transition")
-      # a one-hot network's data are 0 and 1 per code, not positions of states
-      if (net_method %in% count_methods && !.is_onehot_params(x$params)) {
+      if (.mcml_recounts(x)) {
         data <- x$data
         sub_type <- .detect_mcml_input(data)
         if (sub_type == "edgelist") {
@@ -1472,6 +1535,17 @@ build_mcml <- function(x,
 
 #' Auto-detect clusters from netobject
 #' @noRd
+# Whether build_mcml() re-counts a netobject from its data (count-based
+# methods) or aggregates its weight matrix (everything else).
+.mcml_recounts <- function(x) {
+  net_method <- x$method %||% "relative"
+  count_methods <- c("relative", "frequency", "co_occurrence",
+                     "tna", "ftna", "cna", "wcna", "wtna",
+                     "wtna_cooccurrence", "wtna_transition")
+  # a one-hot network's data are 0 and 1 per code, not positions of states
+  net_method %in% count_methods && !.is_onehot_params(x$params)
+}
+
 .auto_detect_clusters <- function(x) {
   # Prefer x$nodes-embedded cluster column. x$nodes is the canonical node
   # table - if it carries a cluster column, the row order is by definition
@@ -1479,12 +1553,10 @@ build_mcml <- function(x,
   clusters <- NULL
   if (!is.null(x$nodes)) {
     cluster_cols <- c("clusters", "cluster", "groups", "group")
-    for (col in cluster_cols) {
-      if (col %in% names(x$nodes)) {
-        clusters <- x$nodes[[col]]
-        .validate_auto_clusters(clusters, "x$nodes")
-        break
-      }
+    col <- intersect(cluster_cols, names(x$nodes))
+    if (length(col) > 0L) {
+      clusters <- x$nodes[[col[1L]]]
+      .validate_auto_clusters(clusters, "x$nodes")
     }
   }
 
@@ -1610,7 +1682,7 @@ build_mcml <- function(x,
 .build_cluster_lookup <- function(clusters, all_nodes) {
   if (is.data.frame(clusters)) { # nocov start
     # Defensive: .normalize_clusters converts df to list before this is called
-    stopifnot(ncol(clusters) >= 2)
+    .assert(ncol(clusters) >= 2)
     nodes <- as.character(clusters[[1]])
     groups <- as.character(clusters[[2]])
     clusters <- split(nodes, groups)
@@ -1620,6 +1692,8 @@ build_mcml <- function(x,
     # Named list: cluster_name -> node vector
     .validate_cluster_partition(clusters, all_nodes)
     lookup <- character(0)
+    # A loop on purpose: later clusters overwrite earlier ones node by node,
+    # and the lookup keeps first-assignment order.
     for (cl_name in names(clusters)) {
       nodes <- clusters[[cl_name]]
       lookup[nodes] <- cl_name
@@ -1627,9 +1701,10 @@ build_mcml <- function(x,
     # Verify all nodes are mapped
     unmapped <- setdiff(all_nodes, names(lookup))
     if (length(unmapped) > 0) {
-      stop("Unmapped nodes: ",
-           paste(utils::head(unmapped, 5), collapse = ", "),
-           call. = FALSE)
+      stop(errorCondition(
+        paste0("Unmapped nodes: ",
+           paste(utils::head(unmapped, 5), collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
     }
     return(lookup)
   }
@@ -1637,9 +1712,10 @@ build_mcml <- function(x,
   if (is.character(clusters) || is.factor(clusters)) {
     clusters <- as.character(clusters)
     if (length(clusters) != length(all_nodes)) {
-      stop("Membership vector length (", length(clusters),
-           ") must equal number of unique nodes (", length(all_nodes), ")",
-           call. = FALSE)
+      stop(errorCondition(
+        paste0("Membership vector length (", length(clusters),
+           ") must equal number of unique nodes (", length(all_nodes), ")"),
+        class = "nestimate_bad_input", call = NULL))
     }
     lookup <- setNames(clusters, all_nodes)
     return(lookup)
@@ -1647,16 +1723,18 @@ build_mcml <- function(x,
 
   if (is.numeric(clusters) || is.integer(clusters)) {
     if (length(clusters) != length(all_nodes)) {
-      stop("Membership vector length (", length(clusters),
-           ") must equal number of unique nodes (", length(all_nodes), ")",
-           call. = FALSE)
+      stop(errorCondition(
+        paste0("Membership vector length (", length(clusters),
+           ") must equal number of unique nodes (", length(all_nodes), ")"),
+        class = "nestimate_bad_input", call = NULL))
     }
     lookup <- setNames(as.character(clusters), all_nodes)
     return(lookup)
   }
 
-  stop("clusters must be a named list, character/numeric vector, or column name",
-       call. = FALSE)
+  stop(errorCondition(
+    "clusters must be a named list, character/numeric vector, or column name",
+    class = "nestimate_bad_input", call = NULL))
 }
 
 #' Empirical first-state distribution from a wide sequence data.frame.
@@ -1689,59 +1767,76 @@ build_mcml <- function(x,
                                      method, type, directed,
                                      compute_within, data = NULL) {
   if (!is.character(from_nodes) || !is.character(to_nodes)) {
-    stop("'from_nodes' and 'to_nodes' must be character vectors.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'from_nodes' and 'to_nodes' must be character vectors.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (length(from_nodes) != length(to_nodes) ||
       length(from_nodes) != length(weights)) {
-    stop("'from_nodes', 'to_nodes', and 'weights' must have the same length.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'from_nodes', 'to_nodes', and 'weights' must have the same length.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (any(is.na(from_nodes) | !nzchar(from_nodes) |
           is.na(to_nodes) | !nzchar(to_nodes))) {
-    stop("'from_nodes' and 'to_nodes' must not contain missing or empty values.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'from_nodes' and 'to_nodes' must not contain missing or empty values.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.numeric(weights) || any(is.na(weights) | !is.finite(weights))) {
-    stop("'weights' must be a finite non-missing numeric vector.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'weights' must be a finite non-missing numeric vector.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (any(weights < 0)) {
-    stop("'weights' must not contain negative values.", call. = FALSE)
+    stop(errorCondition(
+      "'weights' must not contain negative values.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.list(cluster_list) || is.data.frame(cluster_list)) {
-    stop("'cluster_list' must be a named list.", call. = FALSE)
+    stop(errorCondition(
+      "'cluster_list' must be a named list.",
+      class = "nestimate_bad_input", call = NULL))
   }
   cluster_nodes <- sort(unique(unlist(cluster_list, use.names = FALSE)))
   .validate_cluster_partition(cluster_list, cluster_nodes)
   if (!is.character(cluster_lookup) || is.null(names(cluster_lookup))) {
-    stop("'cluster_lookup' must be a named character vector.", call. = FALSE)
+    stop(errorCondition(
+      "'cluster_lookup' must be a named character vector.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (any(is.na(names(cluster_lookup)) | !nzchar(names(cluster_lookup))) ||
       any(is.na(cluster_lookup) | !nzchar(cluster_lookup))) {
-    stop("'cluster_lookup' names and values must not be missing or empty.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'cluster_lookup' names and values must not be missing or empty.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (anyDuplicated(names(cluster_lookup))) {
-    stop("'cluster_lookup' names must be unique.", call. = FALSE)
+    stop(errorCondition(
+      "'cluster_lookup' names must be unique.",
+      class = "nestimate_bad_input", call = NULL))
   }
   missing_lookup <- setdiff(unique(c(from_nodes, to_nodes)),
                             names(cluster_lookup))
   if (length(missing_lookup) > 0L) {
-    stop("'cluster_lookup' is missing node(s): ",
-         paste(utils::head(missing_lookup, 5L), collapse = ", "),
-         call. = FALSE)
+    stop(errorCondition(
+      paste0("'cluster_lookup' is missing node(s): ",
+         paste(utils::head(missing_lookup, 5L), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   unknown_clusters <- setdiff(unique(unname(cluster_lookup)),
                               names(cluster_list))
   if (length(unknown_clusters) > 0L) {
-    stop("'cluster_lookup' contains unknown cluster(s): ",
-         paste(utils::head(unknown_clusters, 5L), collapse = ", "),
-         call. = FALSE)
+    stop(errorCondition(
+      paste0("'cluster_lookup' contains unknown cluster(s): ",
+         paste(utils::head(unknown_clusters, 5L), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.logical(compute_within) || length(compute_within) != 1L ||
       is.na(compute_within)) {
-    stop("'compute_within' must be TRUE or FALSE.", call. = FALSE)
+    stop(errorCondition(
+      "'compute_within' must be TRUE or FALSE.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Sort clusters alphabetically (TNA convention)
@@ -2120,7 +2215,7 @@ build_mcml <- function(x,
 
   if (is.matrix(df)) df <- as.data.frame(df, stringsAsFactors = FALSE)
 
-  stopifnot(is.data.frame(df))
+  .assert(is.data.frame(df))
 
   nc <- ncol(df)
   if (nc < 2) {
@@ -2170,21 +2265,31 @@ build_mcml <- function(x,
 #' @noRd
 .process_weights <- function(raw_weights, type, directed = TRUE) {
   if (!is.matrix(raw_weights) || !is.numeric(raw_weights)) {
-    stop("'raw_weights' must be a numeric matrix.", call. = FALSE)
+    stop(errorCondition(
+      "'raw_weights' must be a numeric matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (nrow(raw_weights) != ncol(raw_weights)) {
-    stop("'raw_weights' must be a square matrix.", call. = FALSE)
+    stop(errorCondition(
+      "'raw_weights' must be a square matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.character(type) || length(type) != 1L || is.na(type)) {
-    stop("'type' must be a single non-missing character value.", call. = FALSE)
+    stop(errorCondition(
+      "'type' must be a single non-missing character value.",
+      class = "nestimate_bad_input", call = NULL))
   }
   valid_types <- c("raw", "frequency", "cooccurrence", "tna")
   if (!type %in% valid_types) {
-    stop("'type' must be one of: ",
-         paste(valid_types, collapse = ", "), call. = FALSE)
+    stop(errorCondition(
+      paste0("'type' must be one of: ",
+         paste(valid_types, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.logical(directed) || length(directed) != 1L || is.na(directed)) {
-    stop("'directed' must be TRUE or FALSE.", call. = FALSE)
+    stop(errorCondition(
+      "'directed' must be TRUE or FALSE.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (!isTRUE(directed) || type == "cooccurrence") {
@@ -2367,19 +2472,26 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
 .wrap_netobject <- function(mat, data = NULL, method = "relative",
                             directed = TRUE, inits = NULL) {
   if (!is.matrix(mat) || !is.numeric(mat)) {
-    stop("'mat' must be a numeric matrix.", call. = FALSE)
+    stop(errorCondition(
+      "'mat' must be a numeric matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (nrow(mat) != ncol(mat)) {
-    stop("'mat' must be a square matrix.", call. = FALSE)
+    stop(errorCondition(
+      "'mat' must be a square matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   .validate_mcml_matrix(mat)
   if (!is.character(method) || length(method) != 1L || is.na(method) ||
       !nzchar(method)) {
-    stop("'method' must be a single non-missing character value.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'method' must be a single non-missing character value.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.logical(directed) || length(directed) != 1L || is.na(directed)) {
-    stop("'directed' must be TRUE or FALSE.", call. = FALSE)
+    stop(errorCondition(
+      "'directed' must be TRUE or FALSE.",
+      class = "nestimate_bad_input", call = NULL))
   }
   states <- rownames(mat)
   if (is.null(states)) {
@@ -2394,14 +2506,17 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
   if (!is.null(inits)) {
     if (!is.numeric(inits) || length(inits) != length(states) ||
         any(is.na(inits) | !is.finite(inits))) {
-      stop("'inits' must be a finite numeric vector with one value per state.",
-           call. = FALSE)
+      stop(errorCondition(
+        "'inits' must be a finite numeric vector with one value per state.",
+        class = "nestimate_bad_input", call = NULL))
     }
     if (!is.null(names(inits))) {
       missing_inits <- setdiff(states, names(inits))
       extra_inits <- setdiff(names(inits), states)
       if (length(missing_inits) > 0L || length(extra_inits) > 0L) {
-        stop("'inits' names must match matrix state names.", call. = FALSE)
+        stop(errorCondition(
+          "'inits' names must match matrix state names.",
+          class = "nestimate_bad_input", call = NULL))
       }
       inits <- inits[states]
     } else {
@@ -2546,8 +2661,9 @@ as_htna.mcml <- function(x, clusters = NULL, method = "relative",
   if (is.null(data)) {
     stop(errorCondition(
       paste0(
-        "This mcml carries no expandable node-level source (it was built ",
-        "from a matrix, aggregate, or edge list), so it cannot be expanded ",
+        "This mcml carries no expandable node-level source (only an mcml ",
+        "built from sequence data keeps one, not one built from a matrix, ",
+        "an edge list or a network), so it cannot be expanded ",
         "to an htna on its own. Pass the original data:\n",
         "  as_htna(mcml, data = <original data>)   # reuses mcml$cluster_members\n",
         "or equivalently as_htna(<original data>, clusters = mcml$cluster_members)."),
@@ -2820,10 +2936,10 @@ print.mcml <- function(x, ...) {
   }
 
   cat("Clusters:\n")
-  for (cl in names(x$cluster_members)) {
-    cat("  ", cl, " (", cluster_sizes[cl], "): ",
-        paste(x$cluster_members[[cl]], collapse = ", "), "\n", sep = "")
-  }
+  cl_names <- names(x$cluster_members)
+  cat(sprintf("  %s (%s): %s\n", cl_names, cluster_sizes[cl_names],
+              vapply(x$cluster_members, paste, character(1L),
+                     collapse = ", ")), sep = "")
 
   cat("\nMacro (cluster-level) weights:\n")
   print(round(x$macro$weights, 4))
@@ -2893,7 +3009,7 @@ summary.mcml <- function(object, ...) {
   if (!length(dots)) {
     return(invisible(TRUE))
   }
-  dot_names <- names(dots)
+  dot_names <- names(dots) %||% rep("", length(dots))
   dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
   stop(errorCondition(paste0(
     method, "() got unsupported argument",

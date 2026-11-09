@@ -243,7 +243,7 @@ compare_networks <- function(...,
                              seed = NULL,
                              actor = NULL) {
   scaling <- match.arg(scaling)
-  .assert(
+  .cn_assert(
     "`test` must be a character vector" = is.character(test) && length(test) >= 1L,
     "`iter` must be a single integer >= 2" =
       is.numeric(iter) && length(iter) == 1L && is.finite(iter) && iter >= 2,
@@ -378,6 +378,18 @@ compare_networks <- function(...,
 
 # ---- Conditions ----------------------------------------------------------
 
+# .assert() whose error also carries `nestimate_compare_error`, the class of
+# every other compare_networks() refusal.
+.cn_assert <- function(...) {
+  withCallingHandlers(
+    eval.parent(substitute(stopifnot(...))),
+    error = function(e) {
+      stop(errorCondition(conditionMessage(e),
+                          class = c("nestimate_compare_error",
+                                    "nestimate_bad_input"), call = NULL))
+    })
+}
+
 .cn_stop <- function(msg, class) {
   # every compare_networks() refusal is about its input, so it is also a
   # nestimate_bad_input, as everywhere else in the package
@@ -398,7 +410,7 @@ compare_networks <- function(...,
 
 .cn_resolve_measures <- function(measures) {
   if (is.null(measures) || length(measures) == 0L) return(character(0))
-  .assert("`measures` must be a character vector" = is.character(measures))
+  .cn_assert("`measures` must be a character vector" = is.character(measures))
   if (length(measures) == 1L && identical(tolower(measures), "all")) {
     return(.centrality_all_measures())
   }
@@ -573,7 +585,7 @@ compare_networks <- function(...,
     a <- names[idx[1L, ]]
     b <- names[idx[2L, ]]
   } else {
-    .assert("`reference` must be a single name or index" = length(reference) == 1L)
+    .cn_assert("`reference` must be a single name or index" = length(reference) == 1L)
     ref <- if (is.character(reference)) match(reference, names) else
       as.integer(reference)
     if (is.na(ref) || ref < 1L || ref > length(names)) {
@@ -1105,13 +1117,13 @@ network_metrics <- function(x, digits = 2L) {
 }
 
 .cn_check_object <- function(x) {
-  .assert("`x` must be a net_network_comparison (from compare_networks())" =
+  .cn_assert("`x` must be a net_network_comparison (from compare_networks())" =
               inherits(x, "net_network_comparison"))
   invisible(TRUE)
 }
 
 .cn_check_digits <- function(digits) {
-  .assert("`digits` must be a single non-negative integer" =
+  .cn_assert("`digits` must be a single non-negative integer" =
               is.numeric(digits) && length(digits) == 1L && !is.na(digits) &&
               digits >= 0)
   as.integer(digits)

@@ -71,7 +71,9 @@ independence predicts.}
 items or recoded positions, so with \code{"auto"} (default) they raise an
 error of class \code{nestimate_bad_input}. \code{"binary"} declares them items,
 one row per transaction; it raises the same error on a data frame with
-any other value.}
+any other value. A list of transactions or a network has no 0/1
+columns, so \code{"binary"} is ignored for them with a warning of class
+\code{nestimate_ignored_argument}.}
 
 \item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: ignored.}
 

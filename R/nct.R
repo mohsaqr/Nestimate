@@ -5,6 +5,17 @@
   stop(errorCondition(msg, class = "nestimate_bad_input", call = NULL))
 }
 
+# match.arg() with a classed error that names the argument.
+#' @noRd
+.nct_match_arg <- function(arg, choices, name) {
+  tryCatch(
+    match.arg(arg, choices),
+    error = function(e) {
+      .nct_bad_input(sprintf("`%s` should be one of %s.", name,
+                             paste0("\"", choices, "\"", collapse = ", ")))
+    })
+}
+
 #' @noRd
 .nct_degenerate <- function(msg) {
   stop(errorCondition(msg, class = "nestimate_degenerate_sample", call = NULL))
@@ -268,14 +279,16 @@
 nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
                 paired = FALSE, abs = TRUE, weighted = TRUE,
                 p_adjust = "none", na_method = c("pairwise", "listwise")) {
-  if (!requireNamespace("Matrix", quietly = TRUE)) {
-    stop("nct() requires the 'Matrix' package.", call. = FALSE)
-  }
-  na_method <- match.arg(na_method)
+  if (!requireNamespace("Matrix", quietly = TRUE)) { # nocov start
+    stop(errorCondition("nct() requires the 'Matrix' package.",
+                        class = "nestimate_missing_package", call = NULL))
+  } # nocov end
+  na_method <- .nct_match_arg(na_method, c("pairwise", "listwise"),
+                              "na_method")
   groups <- c(.nct_label(substitute(data1), "group 1"),
               .nct_label(substitute(data2), "group 2"))
   .nct_validate(iter, gamma, paired, abs, weighted)
-  p_adjust <- match.arg(p_adjust, stats::p.adjust.methods)
+  p_adjust <- .nct_match_arg(p_adjust, stats::p.adjust.methods, "p_adjust")
   cols <- .nct_columns(data1, data2)
   data1 <- cols$data1
   data2 <- cols$data2

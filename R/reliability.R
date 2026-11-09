@@ -48,7 +48,7 @@
 #'   [build_network()] keeps) raises an error, a
 #'   network resting on one sequence an error of class
 #'   `nestimate_single_sequence`, and networks of different methods with
-#'   `scale = "none"` a warning. For the `print()`, `summary()` and
+#'   `scale = "none"` a warning of class `nestimate_mixed_methods`. For the `print()`, `summary()` and
 #'   `plot()` methods: ignored.
 #' @param iter The number of split-half iterations, at least 2. Default
 #'   `1000`.
@@ -123,28 +123,25 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   }
 
   # ---- Flatten netobject_group elements ----
-  objs <- list()
-  labels <- character(0)
-  for (i in seq_along(dots)) {
+  flat <- lapply(seq_along(dots), function(i) {
     obj <- dots[[i]]
     nm <- names(dots)[i]
     if (inherits(obj, "mcml")) obj <- as_tna(obj)
     if (inherits(obj, "cograph_network")) obj <- .as_netobject(obj)
     if (inherits(obj, "netobject_group")) {
-      for (g in names(obj)) {
-        objs <- c(objs, list(obj[[g]]))
-        labels <- c(labels, g)
-      }
+      list(objs = lapply(names(obj), function(g) obj[[g]]),
+           labels = names(obj))
     } else if (inherits(obj, "netobject")) {
       label <- if (!is.null(nm) && nzchar(nm)) nm else obj$method
-      objs <- c(objs, list(obj))
-      labels <- c(labels, label)
+      list(objs = list(obj), labels = label)
     } else {
       stop(errorCondition(
         "All arguments must be netobject or netobject_group objects.",
         class = "nestimate_bad_input", call = NULL))
     }
-  }
+  })
+  objs <- do.call(c, lapply(flat, function(f) f$objs)) %||% list()
+  labels <- as.character(unlist(lapply(flat, function(f) f$labels)))
 
   if (length(objs) == 0L) {
     stop(errorCondition("At least one netobject is required.",
@@ -159,12 +156,11 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   # ---- Warn if different methods without scaling ----
   methods <- vapply(model_list, function(m) m$method, character(1))
   if (length(unique(methods)) > 1L && scale == "none") {
-    warning(
+    warning(warningCondition(paste0(
       "Models use different methods (",
       paste(unique(methods), collapse = ", "),
-      "). Consider setting scale = 'minmax' for comparable results.",
-      call. = FALSE
-    )
+      "). Consider setting scale = 'minmax' for comparable results."),
+      class = "nestimate_mixed_methods", call = NULL))
   }
 
   # ---- Run split-half per model ----
@@ -448,16 +444,17 @@ print.net_reliability <- function(x, ...) {
     max_dev = "Max Abs. Diff."
   )
 
-  for (m in models) {
-    if (length(models) > 1L) cat(sprintf("\n  %s:\n", m))
+  prefix <- if (length(models) > 1L) "    " else "  "
+  model_blocks <- vapply(models, function(m) {
     sub <- x$summary[x$summary$model == m, , drop = FALSE]
-    for (i in seq_len(nrow(sub))) {
-      label <- metric_labels[sub$metric[i]]
-      prefix <- if (length(models) > 1L) "    " else "  "
-      cat(sprintf("%s%-18s  mean = %.4f  sd = %.4f\n",
-                  prefix, label, sub$mean[i], sub$sd[i]))
-    }
-  }
+    paste0(
+      if (length(models) > 1L) sprintf("\n  %s:\n", m) else "",
+      paste(sprintf("%s%-18s  mean = %.4f  sd = %.4f\n",
+                    rep(prefix, nrow(sub)), metric_labels[sub$metric],
+                    sub$mean, sub$sd),
+            collapse = ""))
+  }, character(1))
+  cat(model_blocks, sep = "")
 
   invisible(x)
 }

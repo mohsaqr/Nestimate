@@ -124,7 +124,8 @@ must have one leaf per row. Default \code{NULL}.}
 sequence (\code{nrow(x)} values), for the index and distribution views; the
 heatmap ignores it. \code{NULL} (default) uses the cluster assignments of a
 \code{net_clustering}, \code{net_mmm} or \code{netobject_group} input, and draws one
-panel otherwise. With \code{periods}, \code{group} instead names a column of the
+panel otherwise. Index panels are titled
+\code{"Cluster <label>"}, whatever the grouping. With \code{periods}, \code{group} instead names a column of the
 event log (or of the network's metadata) that is constant within
 actor, such as a class or a condition: one panel per value, one row
 per actor, all panels on the same period axis. With an event log it
@@ -159,7 +160,8 @@ there are at most 60 in all). With \code{periods}, empty space is white
 unless \code{na_color} is given, so it is never confused with a state drawn
 in grey. Repeats of a state merge into one spell; \code{cell_border = "white"} (TraMineR's \code{border}) outlines each action so they show as
 separate, equal shares of the period. Setting \code{fill} without \code{periods}
-raises an error of class \code{nestimate_bad_input}; an \code{mcml} ignores it.}
+raises an error of class \code{nestimate_bad_input}; an \code{mcml} ignores it
+with a warning.}
 
 \item{actor, action, time, order}{For an event log: column names, as in
 \code{\link[=build_network]{build_network()}}. Giving \code{action} declares \code{x} an event log (one row
@@ -364,8 +366,8 @@ for a bottom legend, one column for a right legend.}
 Needed when they are not a numbered run (\code{T1}, \code{T2}, ...), when one of
 them is called \code{action}, or when any other column sits beside them;
 given for any other input it raises an error of class
-\code{nestimate_bad_input}, except for an \code{mcml}, which ignores it.
-Default \code{NULL}.}
+\code{nestimate_bad_input}, except for an \code{mcml}, which ignores it with a
+warning. Default \code{NULL}.}
 
 \item{...}{For the \code{print()} method: ignored.}
 }
@@ -421,8 +423,10 @@ a macro \code{Summary} panel and one panel per cluster (see the section
 \emph{Multichannel view of an mcml}). That figure is drawn with ggplot2 and
 takes only \code{type}, \code{trim}, \code{state_colors}, \code{na_color}, \code{main},
 \code{time_label} (or \code{xlab}) and the mcml options (\code{normalize}, \code{na},
-\code{panel}, \code{expand}, \code{combine}, \code{rest}, \code{rest_label}); every other figure
-is drawn with base graphics.
+\code{panel}, \code{expand}, \code{combine}, \code{rest}, \code{rest_label}); any other argument
+given with an \code{mcml} is ignored with a warning of class
+\code{nestimate_ignored_argument}. Every other figure is drawn with base
+graphics.
 
 The plot describes the sequences; it does not model them. The row order
 of a heatmap comes from \code{sort} and is a display choice, so blocks of

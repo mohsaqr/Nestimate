@@ -48,14 +48,15 @@
 #' other method (the association methods, `"attention"`, `"ngram"`, `"gap"`,
 #' `"reverse"` and registered estimators) is re-estimated in full on
 #' resampled rows. A replicate whose estimation fails, or that loses a
-#' node, is left out of the p-values without a warning, and the bootstrap
+#' node, is left out of the p-values, with a warning of class
+#' `nestimate_resample_failed` that counts them, and the bootstrap
 #' statistics are computed over the remaining replicates; if every
 #' replicate fails, every p-value is 1.
 #'
 #' A network built from an edge list (for example an `mcml` from
 #' [build_mcml()] with `from` and `to`) has no sequences, so each
-#' transition is resampled as an independent case, with a warning that
-#' points to the alternatives.
+#' transition is resampled as an independent case, with a warning of class
+#' `nestimate_edgelist_resampling` that points to the alternatives.
 #'
 #' @section Nested data and \code{actor}:
 #' The bootstrap resamples sequences as independent units. When sequences
@@ -292,7 +293,7 @@ bootstrap_network <- function(x,
   # under-represent within-actor correlation. Case-dropping and actor-
   # level sequence reconstruction are both more robust alternatives.
   if (identical(attr(x$data, "source"), "edgelist")) {
-    warning(
+    warning(warningCondition(paste0(
       "Bootstrapping a network built from edgelist input (no per-actor ",
       "sequence data). Each transition is treated as an independent case, ",
       "which has limitations when transitions are correlated within ",
@@ -306,9 +307,8 @@ bootstrap_network <- function(x,
       "  * Use case-dropping rather than bootstrap:\n",
       "      - casedrop_reliability(x)  - model-level edge-weight reliability\n",
       "      - centrality_stability(x)  - per-centrality CS coefficient\n",
-      "  * permutation(x, y) for comparing two networks.",
-      call. = FALSE
-    )
+      "  * permutation(x, y) for comparing two networks."),
+      class = "nestimate_edgelist_resampling", call = NULL))
   }
 
   data <- x$data
@@ -738,11 +738,10 @@ bootstrap_network <- function(x,
   }
 
   if (format == "long") {
-    stop(
+    stop(errorCondition(paste0(
       "Bootstrap fast path requires wide-format data. ",
-      "Convert with convert_sequence_format() first.",
-      call. = FALSE
-    )
+      "Convert with convert_sequence_format() first."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   id_col <- .param_get(params, "id") %||% .param_get(params, "id_col")
@@ -861,6 +860,9 @@ bootstrap_network <- function(x,
     # Co-occurrence: all column pairs (i, j) where i < j
     result <- matrix(0, nrow = nr, ncol = nbins)
 
+    # Loop kept on purpose: it accumulates into one nr x nbins matrix per
+    # column pair; an apply over the nc * (nc - 1) / 2 pairs would hold one
+    # such matrix per pair before summing them.
     for (i in seq_len(nc - 1L)) {
       col_i <- int_mat[, i]
       for (j in seq(i + 1L, nc)) {
@@ -944,6 +946,12 @@ bootstrap_network <- function(x,
     if (threshold > 0) mat[abs(mat) < threshold] <- 0
     as.vector(mat) # nocov end
   }, numeric(nbins))
+
+  # A replicate that could not be estimated, or that lost a node, is a
+  # column of NA left out of the statistics: counted and said, as the other
+  # resampling verbs do.
+  .warn_failed_resamples(sum(colSums(!is.na(boot_flat)) == 0L), iter,
+                         "bootstrap_network()", below_threshold = FALSE)
 
   t(boot_flat)
 }
@@ -1064,6 +1072,28 @@ bootstrap_network <- function(x,
 }
 
 
+# ---- Print helpers (shared with print.net_certainty) ----
+
+# sprintf("%-20s") pads by bytes, so a label holding the multibyte arrow came
+# out short; these pad by display width, and widen the column to the longest
+# label so a long state name does not push the numbers out of line.
+.edge_label_width <- function(labels, min_width = 20L) {
+  max(min_width, nchar(labels, type = "width"))
+}
+
+.pad_label <- function(labels, width) {
+  paste0(labels, strrep(" ", pmax(0L, width - nchar(labels, type = "width"))))
+}
+
+# Header of the top-edges table: the interval is labelled with the level the
+# intervals were computed at, not a fixed 95%.
+.cat_edge_table_header <- function(width, ci_pct) {
+  cat(sprintf("  %s   Mean     %-6s          p\n",
+              .pad_label("Edge", width), paste(ci_pct, "CI")))
+  cat(sprintf("  %s\n", strrep("-", width + 27L)))
+}
+
+
 # ---- S3 Methods ----
 
 #' @rdname bootstrap_network
@@ -1103,18 +1133,19 @@ print.net_bootstrap <- function(x, ...) {
     if (nrow(sig_s) > 0L) {
       sig_s <- sig_s[order(abs(sig_s$mean), decreasing = TRUE), , drop = FALSE]
       top   <- head(sig_s, 5L)
-      cat("  Edge                   Mean     95% CI          p\n")
-      cat("  -----------------------------------------------\n")
-      for (i in seq_len(nrow(top))) {
-        r <- top[i, ]
-        lbl <- if (!is.null(r$from) && !is.null(r$to))
-          sprintf("%-20s", paste0(r$from, " \u2192 ", r$to))
-        else
-          sprintf("%-20s", r$edge)
-        stars <- if (r$p_value < 0.001) "***" else if (r$p_value < 0.01) "** " else "*  "
-        cat(sprintf("  %s  %6.3f  [%5.3f, %5.3f]  %s\n",
-                    lbl, r$mean, r$ci_lower, r$ci_upper, stars))
+      lbl <- if (!is.null(top$from) && !is.null(top$to)) {
+        paste0(top$from, " \u2192 ", top$to)
+      } else {
+        as.character(top$edge)
       }
+      width <- .edge_label_width(lbl)
+      .cat_edge_table_header(width, ci_pct)
+      stars <- ifelse(top$p_value < 0.001, "***",
+                      ifelse(top$p_value < 0.01, "** ", "*  "))
+      cat(sprintf("  %s  %6.3f  [%5.3f, %5.3f]  %s\n",
+                  .pad_label(lbl, width), top$mean, top$ci_lower,
+                  top$ci_upper, stars),
+          sep = "")
       if (nrow(sig_s) > 5L)
         cat(sprintf("  ... and %d more significant edges\n", nrow(sig_s) - 5L))
       cat("\n")
@@ -1198,30 +1229,43 @@ print.net_bootstrap_group <- function(x, ...) {
     }, numeric(1L))
     top_shared <- shared[order(shared_max, decreasing = TRUE)][seq_len(min(5L, length(shared)))]
     hdr <- paste(sprintf("%-8s", grp_names), collapse = "  ")
-    cat(sprintf("  Edge                   %s\n", hdr))
-    cat(sprintf("  %s\n", strrep("-", 24L + 10L * length(grp_names))))
-    for (k in top_shared) {
+    width <- .edge_label_width(top_shared, min_width = 22L)
+    cat(sprintf("  %s  %s\n", .pad_label("Edge", width), hdr))
+    cat(sprintf("  %s\n", strrep("-", width + 2L + 10L * length(grp_names))))
+    vals_str <- vapply(top_shared, function(k) {
       grp_vals <- vapply(grp_names, .mean_for_key, numeric(1L), key = k)
-      vals_str <- paste(sprintf("%-8.3f", grp_vals), collapse = "  ")
-      cat(sprintf("  %-22s  %s\n", k, vals_str))
-    }
+      paste(sprintf("%-8.3f", grp_vals), collapse = "  ")
+    }, character(1L))
+    cat(sprintf("  %s  %s\n", .pad_label(top_shared, width), vals_str),
+        sep = "")
     if (length(shared) > 5L)
       cat(sprintf("  ... and %d more shared significant edges\n", length(shared) - 5L))
     cat("\n")
   }
 
-  cat(sprintf("Grouped Bootstrap  [%d groups | %d iterations | %s CI]\n",
-              length(grp_names), iter, ci_pct))
-  for (nm in grp_names) {
-    cat(sprintf("  %-20s  %d sig / %d total",
-                nm, grp_stats["sig", nm], grp_stats["total", nm]))
-    cl <- x[[nm]]$clustering
-    if (!is.null(cl)) {
-      cat(sprintf("  |  %s: %d actors, ICC %.3f, design effect %.2f",
-                  x[[nm]]$actor, cl$n_actors, cl$icc, cl$deff_edges))
-    }
-    cat("\n")
+  # certainty() on a group returns this class too; it draws nothing, so it
+  # has a prior where a bootstrap has a number of iterations.
+  is_certainty <- inherits(x, "net_certainty_group")
+  if (is_certainty) {
+    cat(sprintf("Grouped Certainty  [%d groups | Dirichlet(%.2f) prior | %s CI]\n",
+                length(grp_names), x[[1L]]$prior, ci_pct))
+  } else {
+    cat(sprintf("Grouped Bootstrap  [%d groups | %d iterations | %s CI]\n",
+                length(grp_names), iter, ci_pct))
   }
+  sig_word <- if (is_certainty) "certain" else "sig"
+  group_lines <- vapply(grp_names, function(nm) {
+    cl <- x[[nm]]$clustering
+    paste0(
+      sprintf("  %-20s  %d %s / %d total",
+              nm, grp_stats["sig", nm], sig_word, grp_stats["total", nm]),
+      if (!is.null(cl)) {
+        sprintf("  |  %s: %d actors, ICC %.3f, design effect %.2f",
+                x[[nm]]$actor, cl$n_actors, cl$icc, cl$deff_edges)
+      },
+      "\n")
+  }, character(1L))
+  cat(group_lines, sep = "")
   if (has_shared_space) {
     cat(sprintf("  Shared (all groups)   %d edges\n", length(shared)))
   }

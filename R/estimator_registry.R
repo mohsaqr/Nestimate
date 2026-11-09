@@ -41,7 +41,10 @@
 #'
 #' @param name The name the estimator is called by, as `method` in
 #'   [build_network()]: a single non-empty string. A name already registered
-#'   is replaced.
+#'   is replaced. A name that is a method alias (such as `"tna"`) is stored
+#'   with a warning of class `nestimate_alias_shadowed`, because
+#'   [build_network()] resolves the alias to the built-in method and never
+#'   calls the registered function.
 #' @param fn The estimator function. Its first argument is `data`, and it
 #'   must accept `...`, because [build_network()] passes every setting by
 #'   name. It returns a list with `matrix` (the square numeric weight matrix),
@@ -73,14 +76,30 @@
 #' @seealso \code{\link{get_estimator}}, \code{\link{list_estimators}},
 #'   \code{\link{remove_estimator}}, \code{\link{build_network}}
 #'
+#' @note The \pkg{idiographic} package exports a function with the same
+#'   name. With both packages attached, the one attached last masks the
+#'   other; write `Nestimate::register_estimator()` to call this one.
 #' @export
 register_estimator <- function(name, fn, description, directed) {
   .assert(
-    is.character(name), length(name) == 1, nzchar(name),
-    is.function(fn),
-    is.character(description), length(description) == 1,
-    is.logical(directed), length(directed) == 1
+    "`name` must be a single non-empty character string" =
+      is.character(name) && length(name) == 1 && nzchar(name),
+    "`fn` must be a function" = is.function(fn),
+    "`description` must be a single character string" =
+      is.character(description) && length(description) == 1,
+    "`directed` must be TRUE or FALSE" =
+      is.logical(directed) && length(directed) == 1
   )
+  # build_network() resolves a method alias before it reads the registry, so
+  # an estimator registered under one is stored but never called.
+  resolved <- .resolve_method_alias(name)
+  if (!identical(resolved, name)) {
+    warning(warningCondition(sprintf(paste0(
+      "\"%s\" is an alias of the built-in method \"%s\": build_network(method = ",
+      "\"%s\") runs \"%s\", so this estimator will not be called. Register it ",
+      "under another name."), name, resolved, name, resolved),
+      class = "nestimate_alias_shadowed", call = NULL))
+  }
   entry <- list(fn = fn, description = description, directed = directed)
   assign(name, entry, envir = .estimator_registry)
   invisible(NULL)
@@ -107,9 +126,13 @@ register_estimator <- function(name, fn, description, directed) {
 #'
 #' @seealso \code{\link{register_estimator}}, \code{\link{list_estimators}}
 #'
+#' @note The \pkg{idiographic} package exports a function with the same
+#'   name. With both packages attached, the one attached last masks the
+#'   other; write `Nestimate::get_estimator()` to call this one.
 #' @export
 get_estimator <- function(name) {
-  .assert(is.character(name), length(name) == 1)
+  .assert("`name` must be a single character string" =
+            is.character(name) && length(name) == 1)
   if (!exists(name, envir = .estimator_registry, inherits = FALSE)) {
     available <- ls(envir = .estimator_registry)
     stop(errorCondition(
@@ -140,6 +163,9 @@ get_estimator <- function(name) {
 #'
 #' @seealso \code{\link{register_estimator}}, \code{\link{get_estimator}}
 #'
+#' @note The \pkg{idiographic} package exports a function with the same
+#'   name. With both packages attached, the one attached last masks the
+#'   other; write `Nestimate::list_estimators()` to call this one.
 #' @export
 list_estimators <- function() {
   nms <- ls(envir = .estimator_registry)
@@ -186,9 +212,13 @@ list_estimators <- function() {
 #'
 #' @seealso \code{\link{register_estimator}}, \code{\link{list_estimators}}
 #'
+#' @note The \pkg{idiographic} package exports a function with the same
+#'   name. With both packages attached, the one attached last masks the
+#'   other; write `Nestimate::remove_estimator()` to call this one.
 #' @export
 remove_estimator <- function(name) {
-  .assert(is.character(name), length(name) == 1)
+  .assert("`name` must be a single character string" =
+            is.character(name) && length(name) == 1)
   if (!exists(name, envir = .estimator_registry, inherits = FALSE)) {
     stop(errorCondition(
       sprintf("Estimator '%s' not found in registry.", name),

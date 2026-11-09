@@ -55,6 +55,11 @@ model, and a bare matrix is undirected when it is symmetric.
 An edge list is the form most other network tools (igraph, export to
 Gephi or a spreadsheet) take.
 }
+\note{
+The \pkg{idiographic} package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write \code{Nestimate::extract_edges()} to call this one.
+}
 \examples{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))
 net <- build_network(seqs, method = "relative")

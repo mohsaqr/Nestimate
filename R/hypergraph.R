@@ -130,13 +130,18 @@ build_hypergraph <- function(net,
       class = "nestimate_bad_input", call = NULL))
   }
   .assert(
-    is.numeric(p), length(p) == 1L, p >= 0, p <= 1,
-    is.logical(include_pairwise), length(include_pairwise) == 1L,
-    is.numeric(max_size), length(max_size) == 1L, max_size >= 2L,
-    is.numeric(threshold), length(threshold) == 1L
+    "`p` must be a single number between 0 and 1" =
+      is.numeric(p) && length(p) == 1L && !is.na(p) && p >= 0 && p <= 1,
+    "`include_pairwise` must be TRUE or FALSE" =
+      is.logical(include_pairwise) && length(include_pairwise) == 1L,
+    "`max_size` must be a single number of at least 2" =
+      is.numeric(max_size) && length(max_size) == 1L && !is.na(max_size) &&
+        max_size >= 2L,
+    "`threshold` must be a single number" =
+      is.numeric(threshold) && length(threshold) == 1L
   )
   max_size <- as.integer(max_size)
-  if (!is.null(seed)) .local_seed(as.integer(seed))
+  if (!is.null(seed)) .local_seed(.hg_seed(seed))
 
   # ---- Get adjacency + node names from any supported input ------------
   parsed <- .hg_extract_adj(net)
@@ -173,9 +178,8 @@ build_hypergraph <- function(net,
   } else {
     incidence <- matrix(0L, nrow = n, ncol = m,
                         dimnames = list(nodes, paste0("h", seq_len(m))))
-    for (j in seq_len(m)) {
-      incidence[hyperedges[[j]], j] <- 1L
-    }
+    members <- unlist(hyperedges, use.names = FALSE)
+    incidence[cbind(members, rep(seq_len(m), lengths(hyperedges)))] <- 1L
   }
 
   # ---- Size distribution ----------------------------------------------
@@ -212,6 +216,18 @@ build_hypergraph <- function(net,
 
 # ---- Internal helpers --------------------------------------------------
 
+# A `seed` as the integer set.seed() takes. One that set.seed() cannot read
+# used to stop there with "supplied seed is not a valid integer".
+#' @noRd
+.hg_seed <- function(seed) {
+  value <- tryCatch(as.integer(seed), error = function(e) integer(0L))
+  if (length(value) < 1L || is.na(value[1L])) {
+    stop(errorCondition("`seed` must be a single whole number or NULL.",
+                        class = "nestimate_bad_input", call = NULL))
+  }
+  value
+}
+
 #' Extract symmetric numeric adjacency + node names from any supported input
 #' @noRd
 .hg_extract_adj <- function(net) {
@@ -220,9 +236,10 @@ build_hypergraph <- function(net,
     n     <- length(nodes)
     adj   <- matrix(0, n, n, dimnames = list(nodes, nodes))
     edge_simp <- Filter(function(s) length(s) == 2L, net$simplices)
-    for (e in edge_simp) {
-      adj[e[1L], e[2L]] <- 1
-      adj[e[2L], e[1L]] <- 1
+    if (length(edge_simp)) {
+      ends <- do.call(rbind, edge_simp)
+      adj[ends] <- 1
+      adj[ends[, 2:1, drop = FALSE]] <- 1
     }
     return(list(adj = adj, nodes = nodes))
   }
@@ -270,9 +287,8 @@ print.net_hypergraph <- function(x, ...) {
               x$n_nodes, x$n_hyperedges))
   if (length(x$size_distribution)) {
     cat("Size distribution:\n")
-    for (nm in names(x$size_distribution)) {
-      cat(sprintf("  %-8s : %d\n", nm, x$size_distribution[[nm]]))
-    }
+    cat(sprintf("  %-8s : %d\n", names(x$size_distribution),
+                x$size_distribution), sep = "")
   }
   cat(sprintf("Method: %s, p = %.2f, include_pairwise = %s, max_size = %d\n",
               x$params$method, x$params$p,

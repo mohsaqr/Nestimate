@@ -7,9 +7,11 @@
 #' @rdname build_network
 #' @export
 summary.netobject <- function(object, ...) {
-  stopifnot(inherits(object, "netobject") || inherits(object, "cograph_network"))
+  .assert("`object` must be a netobject or cograph_network" =
+            inherits(object, "netobject") || inherits(object, "cograph_network"))
   W <- object$weights
-  stopifnot(is.matrix(W), nrow(W) == ncol(W))
+  .assert("`object$weights` must be a square matrix" =
+            is.matrix(W) && nrow(W) == ncol(W))
   directed <- isTRUE(object$directed)
 
   .summary_metrics_from_weights(W, directed)
@@ -18,8 +20,10 @@ summary.netobject <- function(object, ...) {
 #' @rdname build_network
 #' @export
 summary.netobject_group <- function(object, combined = TRUE, ...) {
-  stopifnot(inherits(object, "netobject_group"))
-  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
+  .assert("`object` must be a netobject_group" =
+            inherits(object, "netobject_group"),
+          "`combined` must be TRUE or FALSE" =
+            is.logical(combined) && length(combined) == 1L && !is.na(combined))
 
   per_group <- lapply(object, summary)
 
@@ -174,11 +178,11 @@ print.summary.netobject <- function(x, ...) {
 #' @export
 print.summary.netobject_group <- function(x, ...) {
   if (isFALSE(attr(x, "combined"))) {
-    for (nm in names(x)) {
+    invisible(lapply(names(x), function(nm) {
       cat("Group:", nm, "\n")
       print(x[[nm]])
       cat("\n")
-    }
+    }))
     return(invisible(x))
   }
   cat("Network metrics by group:\n")

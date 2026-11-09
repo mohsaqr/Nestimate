@@ -246,13 +246,18 @@ bayes_compare <- function(x, y = NULL,
 
   # ---- Input validation ----
   .assert(
-    inherits(x, "netobject"),
-    inherits(y, "netobject"),
-    is.numeric(prior), length(prior) == 1, prior > 0,
-    is.numeric(draws), length(draws) == 1, draws >= 2,
-    is.numeric(ci), length(ci) == 1, ci > 0, ci < 1,
-    is.numeric(mean_threshold), length(mean_threshold) == 1,
-    is.numeric(bound_threshold), length(bound_threshold) == 1
+    "`x` and `y` must be netobjects (from build_network())" =
+      inherits(x, "netobject") && inherits(y, "netobject"),
+    "`prior` must be a single positive number" =
+      is.numeric(prior) && length(prior) == 1L && prior > 0,
+    "`draws` must be a single number >= 2" =
+      is.numeric(draws) && length(draws) == 1L && draws >= 2,
+    "`ci` must be a single number in (0, 1)" =
+      is.numeric(ci) && length(ci) == 1L && ci > 0 && ci < 1,
+    "`mean_threshold` must be a single number" =
+      is.numeric(mean_threshold) && length(mean_threshold) == 1L,
+    "`bound_threshold` must be a single number" =
+      is.numeric(bound_threshold) && length(bound_threshold) == 1L
   )
   draws <- as.integer(draws)
 
@@ -281,7 +286,8 @@ bayes_compare <- function(x, y = NULL,
   }
 
   if (!is.null(seed)) {
-    .assert(is.numeric(seed), length(seed) == 1)
+    .assert("`seed` must be NULL or a single number" =
+              is.numeric(seed) && length(seed) == 1L)
     .local_seed(seed)
   }
 
@@ -386,11 +392,16 @@ bayes_compare <- function(x, y = NULL,
       class = "nestimate_bad_input", call = NULL))
   }
   .assert(
-    is.numeric(prior), length(prior) == 1, prior > 0,
-    is.numeric(draws), length(draws) == 1, draws >= 2,
-    is.numeric(ci), length(ci) == 1, ci > 0, ci < 1,
-    is.numeric(mean_threshold), length(mean_threshold) == 1,
-    is.numeric(bound_threshold), length(bound_threshold) == 1
+    "`prior` must be a single positive number" =
+      is.numeric(prior) && length(prior) == 1L && prior > 0,
+    "`draws` must be a single number >= 2" =
+      is.numeric(draws) && length(draws) == 1L && draws >= 2,
+    "`ci` must be a single number in (0, 1)" =
+      is.numeric(ci) && length(ci) == 1L && ci > 0 && ci < 1,
+    "`mean_threshold` must be a single number" =
+      is.numeric(mean_threshold) && length(mean_threshold) == 1L,
+    "`bound_threshold` must be a single number" =
+      is.numeric(bound_threshold) && length(bound_threshold) == 1L
   )
   draws <- as.integer(draws)
 
@@ -432,7 +443,8 @@ bayes_compare <- function(x, y = NULL,
   }
 
   if (!is.null(seed)) {
-    .assert(is.numeric(seed), length(seed) == 1)
+    .assert("`seed` must be NULL or a single number" =
+              is.numeric(seed) && length(seed) == 1L)
     .local_seed(seed)
   }
 

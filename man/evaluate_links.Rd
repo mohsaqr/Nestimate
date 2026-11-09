@@ -13,7 +13,9 @@ evaluate_links(pred, true_edges, k = c(5L, 10L, 20L))
 \code{to} (every row is an edge, whatever its other columns, such as a
 weight, hold), or a matrix whose non-zero cells are edges. Its row
 names name both its rows and its columns (column names are not read),
-so its columns must be in the same order as its rows; without row
+so its columns must be in the same order as its rows (column names
+that differ from the row names raise a warning of class
+\code{nestimate_ignored_argument}); without row
 names, the nodes of \code{pred} are used. For a directed prediction, pairs
 are matched by \code{from} and \code{to}, direction included; for an undirected
 one, in either order, so \verb{(C, A)} matches the listed pair \verb{(A, C)}.}

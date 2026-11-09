@@ -2,10 +2,13 @@
 % Please edit documentation in R/extraction.R
 \name{extract_initial_probs}
 \alias{extract_initial_probs}
+\alias{print.nest_initial_probs}
 \alias{summary.nest_initial_probs}
 \title{Extract Initial Probabilities from Model}
 \usage{
 extract_initial_probs(model)
+
+\method{print}{nest_initial_probs}(x, ...)
 
 \method{summary}{nest_initial_probs}(object, ...)
 }
@@ -14,9 +17,12 @@ extract_initial_probs(model)
 or a list holding an \code{initial} element. Input from which neither
 initial probabilities nor a weight matrix can be read raises an error.}
 
-\item{object}{For the \code{summary()} method: a \code{nest_initial_probs}.}
+\item{x}{For the \code{print()} method: a \code{nest_initial_probs}.}
 
-\item{...}{For the \code{summary()} method: ignored.}
+\item{...}{For the \code{summary()} method: ignored. For the \code{print()} method:
+passed on to the vector print.}
+
+\item{object}{For the \code{summary()} method: a \code{nest_initial_probs}.}
 }
 \value{
 For a single network: a named numeric vector of initial-state

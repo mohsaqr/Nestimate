@@ -247,8 +247,11 @@
 #'   (otherwise they raise an error, as does an unnamed one): `lavaan::cfa()`
 #'   arguments for `"cfa"` (`estimator = "WLSMV"`, `missing = "fiml"`,
 #'   `se = "robust"`, ...), `stats::factanal()` arguments for `"ml"`, and
-#'   `max_iter` / `tol` for `"paf"` (other names are not used there);
-#'   `"minres"` uses none. `estimator` is lavaan's and raises an error for
+#'   `max_iter` / `tol` for `"paf"`; `"minres"` uses none. A name the
+#'   backend does not read is dropped with a warning of class
+#'   `nestimate_ignored_argument`. A `"paf"` or `"minres"` extraction that
+#'   stops before converging keeps its last loadings and raises a warning of
+#'   class `nestimate_no_converge`. `estimator` is lavaan's and raises an error for
 #'   any other `fa_method`, since the network estimator is set by `method`.
 #'   Arguments the backend call sets itself (`model` and `data` for `"cfa"`;
 #'   `covmat`, `n.obs`, `factors`, `x` and `data` for `"ml"`; `R` for
@@ -433,6 +436,18 @@ build_mcml_pc <- function(x,
       warning("fa_args element(s) ignored (managed internally): ",
               paste(bad, collapse = ", "), call. = FALSE)
       fa_args[bad] <- NULL
+    }
+    # "paf" reads max_iter and tol, "minres" takes no argument: say which of
+    # the rest are dropped instead of dropping them without a word.
+    unused <- switch(fa_method,
+      paf = setdiff(names(fa_args), c("max_iter", "tol")),
+      minres = names(fa_args),
+      character())
+    if (length(unused) > 0) {
+      warning(warningCondition(
+        paste0("Argument(s) in ... ignored by fa_method = \"", fa_method,
+               "\": ", paste(unused, collapse = ", "), "."),
+        class = "nestimate_ignored_argument", call = NULL))
     }
   }
   .assert(
@@ -629,8 +644,9 @@ build_mcml_pc <- function(x,
 .pc_estimate <- function(data, estimator, cor_method) {
   if (identical(cor_method, "polychoric")) {
     if (!requireNamespace("lavaan", quietly = TRUE)) {
-      stop("cor_method = \"polychoric\" requires the 'lavaan' package.",
-           call. = FALSE)
+      stop(errorCondition(
+        "cor_method = \"polychoric\" requires the 'lavaan' package.",
+        class = "nestimate_missing_package", call = NULL))
     }
     df <- as.data.frame(data)
     S <- lavaan::lavCor(df, ordered = names(df))
@@ -919,7 +935,8 @@ build_mcml_pc <- function(x,
 #' @param seed An integer that makes the resampling reproducible. Default
 #'   `NULL`. The session's own random stream is left as it was.
 #'
-#' @return A `pc_loading_stability` object. `print()` shows the item table;
+#' @return A `pc_loading_stability` object. `print()` shows the item table
+#'   and `summary()` returns it;
 #'   `plot()` draws each item's signed weight with its interval, one panel
 #'   per cluster. The object's fields:
 #'   \describe{
@@ -995,6 +1012,9 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
       class = "nestimate_bad_input", call = NULL))
   }
 
+  # A factor extraction that stops unconverged warns once per cluster and
+  # replicate; they are counted here and reported in one warning below.
+  n_unconverged <- 0L
   boot <- vapply(seq_len(iter), function(b) {
     rows <- sample.int(n_rows, n_rows, replace = TRUE)
     data_b <- data[rows, , drop = FALSE]
@@ -1003,17 +1023,30 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
       .pc_network_loadings(net_b$weights, members, signed = signed)
     )
     if (!identical(weighting, "strength")) {
-      ld_b <- .pc_apply_weighting(ld_b, net_b$weights, data_b, members,
-                                  weighting, signed,
-                                  fa_method = x$meta$fa_method %||% "ml",
-                                  cor_method = cor_method,
-                                  fa_args = x$meta$fa_args %||% list())
+      ld_b <- withCallingHandlers(
+        .pc_apply_weighting(ld_b, net_b$weights, data_b, members,
+                            weighting, signed,
+                            fa_method = x$meta$fa_method %||% "ml",
+                            cor_method = cor_method,
+                            fa_args = x$meta$fa_args %||% list()),
+        nestimate_no_converge = function(w) {
+          n_unconverged <<- n_unconverged + 1L
+          invokeRestart("muffleWarning")
+        })
     }
     idx <- match(node_order, ld_b$node)
     ld_b$weight[idx] * ld_b$sign[idx]
   }, numeric(length(node_order)))
   boot <- t(boot)
   colnames(boot) <- node_order
+  if (n_unconverged > 0L) {
+    warning(warningCondition(
+      sprintf(paste0("loading_stability(): the factor extraction stopped ",
+                     "unconverged in %d cluster fit(s) over %d replicates; ",
+                     "their last-iteration loadings are used."),
+              n_unconverged, iter),
+      class = "nestimate_no_converge", call = NULL))
+  }
 
   observed <- x$loadings$weight * x$loadings$sign
   probs <- c(ci_level / 2, 1 - ci_level / 2)
@@ -1044,7 +1077,7 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
 #' @rdname loading_stability
 #' @param digits For the `print()` method: the decimal places of the
 #'   numeric columns. Default `3`.
-#' @param ... For the `print()` and `plot()` methods: ignored.
+#' @param ... For the `print()`, `summary()` and `plot()` methods: ignored.
 #' @return For the methods: `print()` returns `x` invisibly, `plot()` a
 #'   `ggplot`.
 #' @export
@@ -1057,6 +1090,16 @@ print.pc_loading_stability <- function(x, digits = 3, ...) {
   df[num_cols] <- lapply(df[num_cols], round, digits = digits)
   print(df, row.names = FALSE)
   invisible(x)
+}
+
+
+#' @rdname loading_stability
+#' @param object For the `summary()` method: a `pc_loading_stability` object.
+#' @return For the `summary()` method: the item table, a data frame with one
+#'   row per item and the columns listed under `summary` above.
+#' @export
+summary.pc_loading_stability <- function(object, ...) {
+  object$summary
 }
 
 
@@ -1101,10 +1144,20 @@ plot.pc_loading_stability <- function(x, ...) {
 print.mcml_pc <- function(x, digits = 3, ...) {
   m <- x$meta
   cat("MCML for Psychometric Networks (experimental)\n")
+  # "Estimator" is the macro network's. A descriptive aggregation re-estimates
+  # no macro network, but within = "reestimate" still re-estimates the
+  # within-cluster ones: name their estimator beside it.
   est <- if (is.na(m$method)) "none (no re-estimation)" else m$method
   wt <- if (is.na(m$weighting)) "" else paste0(" | Weights: ", m$weighting)
+  within_method <- unique(unlist(lapply(x$clusters, function(net) net$method)))
+  within_lab <- if (is.na(m$method) && identical(m$within, "reestimate") &&
+                    length(within_method) == 1L) {
+    sprintf("%s (%s)", m$within, within_method)
+  } else {
+    m$within
+  }
   cat(sprintf("  Aggregation: %s | Estimator: %s | Within: %s | cor: %s%s\n",
-              m$aggregation, est, m$within, m$cor_method, wt))
+              m$aggregation, est, within_lab, m$cor_method, wt))
   cat(sprintf("  %d nodes in %d clusters (%s)\n",
               m$n_nodes, m$n_clusters,
               paste(names(m$cluster_sizes), m$cluster_sizes,
@@ -1112,7 +1165,9 @@ print.mcml_pc <- function(x, digits = 3, ...) {
   if (m$n_misfit > 0) {
     cat(sprintf("  ! %d misfit item(s) - see item_loadings()\n", m$n_misfit))
   }
-  if (m$n_flipped > 0) {
+  # Items are flipped only where scores are formed (the composite path with
+  # signed = TRUE); the descriptive aggregations flip nothing.
+  if (m$n_flipped > 0 && !is.na(m$method) && !isFALSE(m$signed)) {
     cat(sprintf("  ! %d reverse-keyed item(s) flipped - see item_loadings()\n",
                 m$n_flipped))
   }
@@ -1330,9 +1385,9 @@ composites.mcml_pc <- function(x, ...) {
 #' `netobject_group`, so they go through the same verbs as any other group of
 #' networks: `print()`, `summary()`, [net_centrality()], and
 #' `cograph::splot()` for drawing. It is the psychometric-network
-#' counterpart of [as_tna()].
+#' counterpart of \code{\link[=as_tna]{as_tna()}}.
 #'
-#' [as_tna()] converts \emph{transition} networks (directed, row-normalised,
+#' \code{\link[=as_tna]{as_tna()}} converts \emph{transition} networks (directed, row-normalised,
 #' with initial probabilities) and re-wraps raw matrices. The macro and
 #' within-cluster networks of an `mcml_pc` object are already full
 #' netobjects of \emph{psychometric} networks (undirected; correlation,
@@ -1562,8 +1617,9 @@ as_networks.default <- function(x) {
   df <- as.data.frame(block)
   if (identical(cor_method, "polychoric")) {
     if (!requireNamespace("lavaan", quietly = TRUE)) {
-      stop("cor_method = \"polychoric\" requires the 'lavaan' package.",
-           call. = FALSE)
+      stop(errorCondition(
+        "cor_method = \"polychoric\" requires the 'lavaan' package.",
+        class = "nestimate_missing_package", call = NULL))
     }
     S <- lavaan::lavCor(df, ordered = names(df))
     S <- unclass(S)
@@ -1599,8 +1655,9 @@ as_networks.default <- function(x) {
 
   if (fa_method == "cfa") {
     if (!requireNamespace("lavaan", quietly = TRUE)) {
-      stop("fa_method = \"cfa\" requires the 'lavaan' package.",
-           call. = FALSE)
+      stop(errorCondition(
+        "fa_method = \"cfa\" requires the 'lavaan' package.",
+        class = "nestimate_missing_package", call = NULL))
     }
     df <- as.data.frame(block)
     # syntactic-safe internal names for the lavaan model string
@@ -1642,14 +1699,27 @@ as_networks.default <- function(x) {
 #' @noRd
 .pc_fa_paf <- function(R, max_iter = 100L, tol = 1e-6) {
   h2 <- 1 - 1 / diag(solve(R))  # squared multiple correlations start
+  converged <- FALSE
+  # A loop on purpose: a fixed-point iteration, each step starts from the
+  # communalities of the one before and stops at convergence.
   for (it in seq_len(max_iter)) {
     Rr <- R
     diag(Rr) <- h2
     e <- eigen(Rr, symmetric = TRUE)
     lambda <- e$vectors[, 1] * sqrt(max(e$values[1], 0))
     h2_new <- pmin(lambda^2, 0.998)
-    if (max(abs(h2_new - h2)) < tol) break
+    if (max(abs(h2_new - h2)) < tol) {
+      converged <- TRUE
+      break
+    }
     h2 <- h2_new
+  }
+  if (!converged) {
+    warning(warningCondition(
+      sprintf(paste0("Principal axis factoring did not converge in %d ",
+                     "iterations; the loadings of the last iteration are ",
+                     "used. Raise max_iter or tol."), as.integer(max_iter)),
+      class = "nestimate_no_converge", call = NULL))
   }
   lambda
 }
@@ -1673,5 +1743,13 @@ as_networks.default <- function(x) {
   start <- pmin(pmax(1 / diag(solve(R)), 0.005), 0.995)
   fit <- stats::optim(start, obj, method = "L-BFGS-B",
                       lower = rep(0.005, m), upper = rep(0.995, m))
+  if (fit$convergence != 0L) {
+    warning(warningCondition(
+      sprintf(paste0("Minimum-residual factoring did not converge (optim ",
+                     "code %d%s); the loadings at the last iterate are used."),
+              fit$convergence,
+              if (is.null(fit$message)) "" else paste0(": ", fit$message)),
+      class = "nestimate_no_converge", call = NULL))
+  }
   lambda_for(fit$par)
 }

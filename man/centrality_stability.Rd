@@ -176,7 +176,8 @@ Measures without variance are handled by two different rules, both
 long-standing behaviour. When \emph{some} requested measures do not vary
 across the nodes of the original network (or are undefined on it), they
 are dropped, and the result covers only the retained ones. When \emph{every}
-requested measure is so, a warning is issued and \emph{all} requested names
+requested measure is so, a warning of class \code{nestimate_constant_measure}
+is issued and \emph{all} requested names
 are returned with a CS-coefficient of 0 and correlations that are all
 \code{NA}. A measure counts as constant when its values span no more than
 the square root of the machine epsilon relative to their size, so

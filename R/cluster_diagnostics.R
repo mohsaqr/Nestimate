@@ -56,10 +56,10 @@
 #'   `netobject_group` carrying a clustering (built by [cluster_network()]
 #'   or by [build_network()] from a `net_clustering` or `net_mmm`), or a
 #'   `net_mmm_clustering`. A `netobject_group` without a clustering, and any
-#'   other object, raise an error. For the `print()`, `plot()` and
-#'   `as.data.frame()` methods: a `net_cluster_diagnostics`.
+#'   other object, raise an error. For the `print()` and `plot()`
+#'   methods: a `net_cluster_diagnostics`.
 #' @param ... Not used: an extra argument raises an error, here and in the
-#'   `print()` and `as.data.frame()` methods. For `plot()`: further
+#'   `print()` and `summary()` methods. For `plot()`: further
 #'   arguments for the clustering's own `plot()` method, such as `combined`.
 #' @return A `net_cluster_diagnostics` object. `print()` shows the numbers
 #'   of sequences and clusters (with the method and dissimilarity of a
@@ -106,7 +106,7 @@
 #' \donttest{
 #' fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
 #' cluster_diagnostics(fit)
-#' as.data.frame(cluster_diagnostics(fit))
+#' summary(cluster_diagnostics(fit))
 #' }
 #' @export
 cluster_diagnostics <- function(x, ...) {
@@ -148,17 +148,24 @@ cluster_diagnostics.net_clustering <- function(x, ...) {
   sil_mean <- rep(NA_real_, k)
   overall_sil <- as.numeric(x$silhouette %||% NA_real_)
   if (!is.null(x$distance) && requireNamespace("cluster", quietly = TRUE)) {
+    # A silhouette that cannot be computed leaves the columns NA, as before,
+    # and now says why.
     sil <- tryCatch(
       cluster::silhouette(assignments, dist = x$distance),
-      error = function(e) NULL
-    )
-    if (!is.null(sil) && nrow(sil) > 0L) {
-      widths <- sil[, 3L]
-      cls    <- sil[, 1L]
-      for (cl in seq_len(k)) {
-        sel <- cls == cl
-        if (any(sel)) sil_mean[cl] <- mean(widths[sel])
+      error = function(e) {
+        warning(warningCondition(
+          paste0("cluster_diagnostics(): the per-cluster silhouette could ",
+                 "not be computed (", conditionMessage(e), "); it is NA."),
+          class = "nestimate_no_silhouette", call = NULL))
+        NULL
       }
+    )
+    # silhouette() returns NA, not a matrix, for a single cluster.
+    if (is.matrix(sil) && nrow(sil) > 0L) {
+      widths <- sil[, 3L]
+      means  <- tapply(widths, sil[, 1L], mean)
+      found  <- intersect(as.character(seq_len(k)), names(means))
+      sil_mean[as.integer(found)] <- as.numeric(means[found])
       if (is.na(overall_sil)) overall_sil <- mean(widths)
     }
   }
@@ -295,7 +302,8 @@ cluster_diagnostics.netobject_group <- function(x, ...) {
     stop(errorCondition(
       paste0(
         "cluster_diagnostics() requires a clustering attribute on the ",
-        "netobject_group. Build with cluster_network() or cluster_mmm() ",
+        "netobject_group. Build with cluster_network(), or with ",
+        "build_network() on a build_clusters() or cluster_mmm() fit ",
         "(or attach an existing net_clustering / net_mmm_clustering as ",
         "attr(grp, \"clustering\"))."),
       class = "nestimate_bad_input", call = NULL))
@@ -334,13 +342,13 @@ cluster_diagnostics.netobject_group <- function(x, ...) {
 #'   [build_clusters()]); a mixture takes `"covariates"`, with
 #'   `"predictors"` accepted for it when the source is a
 #'   `net_mmm_clustering` (see [build_mmm()]).
-#' @param row.names,optional For `as.data.frame()`: accepted for the
-#'   generic and ignored.
+#' @param object For the `summary()` method: a `net_cluster_diagnostics`.
 #' @return For `print()`: the input, invisibly. For `plot()`: what the
 #'   clustering's own `plot()` method returns, a `ggplot` object (invisibly)
 #'   or, for the covariate views with `combined = FALSE`, a list of
-#'   `ggplot` objects named by cluster (invisibly). For `as.data.frame()`:
-#'   the per-cluster table described under `per_cluster`.
+#'   `ggplot` objects named by cluster (invisibly). For `summary()`:
+#'   the per-cluster table described under `per_cluster`, a data frame with
+#'   one row per cluster.
 #' @export
 print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
   dots <- list(...)
@@ -413,12 +421,13 @@ print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
   }
   cat(paste(.cluster_table_lines(cols), collapse = "\n"), "\n", sep = "")
 
-  cov_names <- x$metadata$covariates
-  if (!is.null(cov_names) && length(cov_names) > 0L) {
-    label <- if (x$family == "distance") "post-hoc" else "integrated"
-    cat(sprintf("\n  Covariates: %s (%s, %d predictors)\n",
-                paste(cov_names, collapse = ", "), label,
-                length(cov_names)))
+  # Read from the fitted object, not metadata$covariates: that field lists
+  # the logit's design columns and is empty after a chi-square analysis.
+  cov <- x$source$covariates
+  if (!is.null(cov)) {
+    label <- if (x$family == "distance") "post-hoc" else
+      .mmm_covariate_label(x$source$covariate_effect)
+    cat(.covariate_line(cov, label))
   }
 
   invisible(x)
@@ -438,24 +447,32 @@ plot.net_cluster_diagnostics <- function(x, type = NULL, ...) {
 }
 
 # ---------------------------------------------------------------------------
-# as.data.frame method
+# summary method: the per-cluster table
 # ---------------------------------------------------------------------------
 
 #' @rdname cluster_diagnostics
-#' @method as.data.frame net_cluster_diagnostics
 #' @export
-as.data.frame.net_cluster_diagnostics <- function(x, row.names = NULL,
-                                                   optional = FALSE, ...) {
+summary.net_cluster_diagnostics <- function(object, ...) {
   dots <- list(...)
   if (length(dots)) {
-    dot_names <- names(dots)
+    dot_names <- names(dots) %||% rep("", length(dots))
     dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
     stop(errorCondition(
       paste0(
-        "as.data.frame.net_cluster_diagnostics() got unsupported argument",
+        "summary.net_cluster_diagnostics() got unsupported argument",
         if (length(dots) == 1L) ": " else "s: ",
         paste(dot_names, collapse = ", ")),
       class = "nestimate_bad_input", call = NULL))
   }
-  x$per_cluster
+  object$per_cluster
+}
+
+# Kept so that code written against earlier versions still runs; the
+# documented verb is summary().
+#' @method as.data.frame net_cluster_diagnostics
+#' @export
+#' @noRd
+as.data.frame.net_cluster_diagnostics <- function(x, row.names = NULL,
+                                                   optional = FALSE, ...) {
+  summary(x, ...)
 }

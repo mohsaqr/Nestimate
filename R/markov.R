@@ -71,7 +71,9 @@ utils::globalVariables(c("fill", "label", "txt_col"))
     if (!normalize)
       stop(errorCondition("Transition matrix rows must sum to 1.",
                           class = "nestimate_bad_input", call = NULL))
-    warning("Rows do not sum to 1; normalizing.", call. = FALSE)
+    warning(warningCondition("Rows do not sum to 1; normalizing.",
+                             class = "nestimate_rows_normalized",
+                             call = NULL))
     P <- P / row_sums
   }
 
@@ -343,11 +345,11 @@ print.net_mpt <- function(x, digits = 1, ...) {
 print.net_mpt_group <- function(x, ...) {
   cat(sprintf("Mean First Passage Times -- %d groups: %s\n\n",
               length(x), paste(names(x), collapse = ", ")))
-  for (nm in names(x)) {
+  invisible(lapply(names(x), function(nm) {
     cat(sprintf("--- %s ---\n", nm))
     print(x[[nm]], ...)
     cat("\n")
-  }
+  }))
   invisible(x)
 }
 
@@ -389,6 +391,7 @@ plot.net_mpt <- function(x,
                           low       = "#004d00",
                           high      = "#ccffcc",
                           ...) {
+  .mpt_check_plot_args(log_scale, digits)
   .mpt_heatmap(.mpt_tiles(x, log_scale, digits), log_scale, title, low, high)
 }
 
@@ -401,12 +404,24 @@ plot.net_mpt_group <- function(x,
                                 low       = "#004d00",
                                 high      = "#ccffcc",
                                 ...) {
+  .mpt_check_plot_args(log_scale, digits)
   tiles <- do.call(rbind, Map(\(g, m) {
     cbind(group = g, .mpt_tiles(m, log_scale, digits))
   }, names(x), x))
   tiles$group <- factor(tiles$group, levels = names(x))
   .mpt_heatmap(tiles, log_scale, title, low, high) +
     ggplot2::facet_wrap(~ group)
+}
+
+#' Arguments of the passage-time plots, checked before any drawing
+#' @noRd
+.mpt_check_plot_args <- function(log_scale, digits) {
+  .assert(
+    "`log_scale` must be TRUE or FALSE" =
+      (is.logical(log_scale) || is.numeric(log_scale)) &&
+      length(log_scale) == 1L && !is.na(log_scale),
+    "`digits` must be numeric" = is.numeric(digits)
+  )
 }
 
 #' Long tile table of one passage-time matrix
@@ -599,7 +614,8 @@ markov_stability <- function(x, normalize = TRUE) {
 #' @param combined For `plot()` of a single network: `TRUE` (default) draws
 #'   the metrics as panels of one plot; `FALSE` returns a named list of
 #'   one-panel plots, one per metric, to print or save separately. Ignored
-#'   for a group, whose `plot()` always draws one plot.
+#'   for a group, whose `plot()` always draws one plot, with a warning of
+#'   class `nestimate_ignored_argument`.
 #' @export
 print.net_markov_stability <- function(x, ...) {
   cat("Markov Stability Analysis\n\n")
@@ -612,11 +628,11 @@ print.net_markov_stability <- function(x, ...) {
 print.net_markov_stability_group <- function(x, ...) {
   cat(sprintf("Markov Stability -- %d groups: %s\n\n",
               length(x), paste(names(x), collapse = ", ")))
-  for (nm in names(x)) {
+  invisible(lapply(names(x), function(nm) {
     cat(sprintf("--- %s ---\n", nm))
     print(x[[nm]], ...)
     cat("\n")
-  }
+  }))
   invisible(x)
 }
 
@@ -706,6 +722,12 @@ plot.net_markov_stability_group <- function(x,
                                                          "avg_time_from_others"),
                                              ...) {
   metrics <- match.arg(metrics, several.ok = TRUE)
+  if ("combined" %in% names(list(...))) {
+    warning(warningCondition(paste0(
+      "`combined` is ignored for a group: its plot() always draws one plot, ",
+      "one panel per metric."),
+      class = "nestimate_ignored_argument", call = NULL))
+  }
   labels <- c(
     persistence          = "Persistence",
     stationary_prob      = "Stationary Prob.",

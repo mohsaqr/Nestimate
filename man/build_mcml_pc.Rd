@@ -196,8 +196,11 @@ that backend spells them, and allowed only with \code{weighting = "factor"}
 (otherwise they raise an error, as does an unnamed one): \code{lavaan::cfa()}
 arguments for \code{"cfa"} (\code{estimator = "WLSMV"}, \code{missing = "fiml"},
 \code{se = "robust"}, ...), \code{stats::factanal()} arguments for \code{"ml"}, and
-\code{max_iter} / \code{tol} for \code{"paf"} (other names are not used there);
-\code{"minres"} uses none. \code{estimator} is lavaan's and raises an error for
+\code{max_iter} / \code{tol} for \code{"paf"}; \code{"minres"} uses none. A name the
+backend does not read is dropped with a warning of class
+\code{nestimate_ignored_argument}. A \code{"paf"} or \code{"minres"} extraction that
+stops before converging keeps its last loadings and raises a warning of
+class \code{nestimate_no_converge}. \code{estimator} is lavaan's and raises an error for
 any other \code{fa_method}, since the network estimator is set by \code{method}.
 Arguments the backend call sets itself (\code{model} and \code{data} for \code{"cfa"};
 \code{covmat}, \code{n.obs}, \code{factors}, \code{x} and \code{data} for \code{"ml"}; \code{R} for

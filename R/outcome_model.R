@@ -143,8 +143,8 @@ outcome_model <- function(data, outcome, predictors, group = NULL,
                           family = c("auto", "binomial", "gaussian"),
                           select = c("none", "split"), n_select = 10L,
                           correction = "BH", ci_level = 0.95, seed = NULL) {
-  family <- match.arg(family)
-  select <- match.arg(select)
+  family <- .ho_match_arg(family, "family")
+  select <- .ho_match_arg(select, "select")
   .assert(
     "`data` must be a data.frame" = is.data.frame(data),
     "`outcome` must be a single column name" =
@@ -173,10 +173,22 @@ outcome_model <- function(data, outcome, predictors, group = NULL,
 
   y <- d[[outcome]]
   fam <- .om_family(y, family)
+  # A gaussian model needs a number to predict; a character or factor outcome
+  # used to fail inside glm() with an arithmetic error.
+  if (identical(fam, "gaussian") && !is.numeric(y) && !is.logical(y)) {
+    stop(errorCondition(
+      sprintf(paste0(
+        "`outcome` column '%s' is %s with %d distinct values: a gaussian ",
+        "model needs a numeric outcome, and a binomial one an outcome with ",
+        "two values."),
+        outcome, class(y)[1L], length(unique(y))),
+      class = "nestimate_bad_input", call = NULL))
+  }
   if (identical(fam, "binomial")) d[[outcome]] <- .om_binary(y)
 
-  # Drop predictors with no variance -- they cannot carry an effect, and in a
-  # binomial fit they produce separation rather than an error.
+  # Drop predictors that are not numeric or have no variance -- the latter
+  # cannot carry an effect, and in a binomial fit they produce separation
+  # rather than an error.
   keep <- vapply(predictors, function(p) {
     v <- d[[p]]
     is.numeric(v) && stats::var(v) > 0
@@ -185,7 +197,8 @@ outcome_model <- function(data, outcome, predictors, group = NULL,
   predictors <- predictors[keep]
   if (length(predictors) == 0L) {
     stop(errorCondition(
-      "Every predictor is constant after dropping incomplete rows.",
+      paste0("Every predictor is non-numeric or constant after dropping ",
+             "incomplete rows."),
       class = "nestimate_no_variance", call = NULL))
   }
 
@@ -385,7 +398,8 @@ print.net_outcome_model <- function(x, ...) {
       "\n")
   if (length(x$adjust)) cat("Adjusted :", paste(x$adjust, collapse = ", "), "\n")
   if (length(x$dropped)) {
-    cat("Dropped  :", paste(x$dropped, collapse = ", "), "(no variance)\n")
+    cat("Dropped  :", paste(x$dropped, collapse = ", "),
+        "(not numeric or no variance)\n")
   }
   cat("p-values :", x$correction, "corrected\n\n")
   print(effects_table(x))
@@ -423,7 +437,8 @@ plot.net_outcome_model <- function(x, ...) {
     ggplot2::scale_shape_manual(values = c(`FALSE` = 21, `TRUE` = 19),
                                 name = sprintf("%s < 0.05", x$correction)) +
     ggplot2::labs(
-      x = if (ratio) "Odds ratio (95% CI)" else "Estimate (95% CI)",
+      x = sprintf("%s (%s%% CI)", if (ratio) "Odds ratio" else "Estimate",
+                  format(100 * (x$ci_level %||% 0.95))),
       y = NULL,
       title = sprintf("%s: %s", x$outcome, x$family)) +
     ggplot2::theme_minimal(base_size = 12)

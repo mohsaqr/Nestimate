@@ -48,7 +48,9 @@ input except a \code{netobject_group} needs \code{group}. For the \code{print()}
 \item{group}{The group of each sequence: the name of a column of a data
 frame or matrix \code{x} (that column is then not read as a position), or a
 vector with one label per sequence. Ignored for a \code{netobject_group};
-required otherwise. At least two groups are needed. Default \code{NULL}.}
+required otherwise. At least two groups are needed. Sequences with a
+missing group are left out of the counts with a warning of class
+\code{nestimate_missing_group}. Default \code{NULL}.}
 
 \item{sub}{The pattern lengths to count, positive whole numbers.
 Lengths longer than the sequences are dropped, and an error is raised
@@ -62,7 +64,8 @@ reaches it, an error is raised. Default \code{5}.}
 \code{"none"}; see \emph{Details}.}
 
 \item{iter}{The number of permutations for \code{test = "permutation"}, a
-positive whole number; ignored otherwise. Default \code{1000}.}
+positive whole number; ignored otherwise. \code{iter = 1} gives a warning
+of class \code{nestimate_undefined_effect_size}. Default \code{1000}.}
 
 \item{adjust}{The p-value adjustment, any method of \code{\link[stats:p.adjust]{stats::p.adjust()}}
 (\code{"holm"}, \code{"hochberg"}, \code{"hommel"}, \code{"bonferroni"}, \code{"BH"}, \code{"BY"},

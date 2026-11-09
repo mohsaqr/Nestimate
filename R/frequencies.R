@@ -89,12 +89,24 @@ frequencies <- function(data,
                         time = NULL,
                         cols = NULL,
                         format = c("auto", "long", "wide")) {
-  .assert(is.data.frame(data))
-  .assert(is.null(action) || (is.character(action) && length(action) == 1))
-  .assert(is.null(time) || (is.character(time) && length(time) == 1))
-  .assert(is.null(id) || is.character(id))
-  .assert(is.null(cols) || is.character(cols))
+  .assert("`data` must be a data frame" = is.data.frame(data))
+  .assert("`action` must be NULL or a single column name" =
+            is.null(action) || (is.character(action) && length(action) == 1))
+  .assert("`time` must be NULL or a single column name" =
+            is.null(time) || (is.character(time) && length(time) == 1))
+  .assert("`id` must be NULL or a character vector of column names" =
+            is.null(id) || is.character(id))
+  .assert("`cols` must be NULL or a character vector of column names" =
+            is.null(cols) || is.character(cols))
   format <- match.arg(format)
+  # without this the event-log reader stopped with "Action column 'NULL' not
+  # found in data."
+  if (identical(format, "long") && is.null(action)) {
+    stop(errorCondition(paste0(
+      "frequencies(): `format = \"long\"` reads an event log, so `action` ",
+      "must name the column holding the states."),
+      class = "nestimate_bad_input", call = NULL))
+  }
   .check_declared_columns(data, "frequencies()", action = action, id = id,
                           time = time, cols = cols)
   if (is.null(action) && is.null(cols) && identical(format, "auto")) {
@@ -200,7 +212,7 @@ convert_sequence_format <- function(data,
                                     time = NULL,
                                     format = c("frequency", "onehot",
                                                "edgelist", "follows")) {
-  .assert(is.data.frame(data))
+  .assert("`data` must be a data frame" = is.data.frame(data))
   format <- match.arg(format)
 
   .check_declared_columns(data, "convert_sequence_format()", action = action,
@@ -431,6 +443,8 @@ convert_sequence_format <- function(data,
   id_map <- unique(uniq[, c(id_col, "rid"), drop = FALSE])
   mat <- matrix(0L, nrow = nrow(id_map), ncol = length(all_acts),
                 dimnames = list(NULL, all_acts))
+  # Loop kept: one indexed assignment per sequence, by action name; a
+  # two-column index matrix would need its own rule for repeated row ids.
   for (i in seq_len(nrow(id_map))) {
     acts_i <- uniq$act[uniq$rid == id_map$rid[i]]
     mat[i, acts_i] <- 1L

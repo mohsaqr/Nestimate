@@ -40,8 +40,9 @@ at least 1 without duplicates. Default \code{2}. Order \code{k} tests paths of
 \code{k + 1} states (\code{k} transitions), each conditioned on the \code{k}-state
 context before its last state. With several orders, one layer is built
 per order, in ascending order whatever the order given; an order with
-no paths (longer than the sequences allow) is dropped without a
-message, and an error is raised when none is left. The network fields
+no paths (longer than the sequences allow) is dropped with a warning
+of class \code{nestimate_ignored_argument}, and an error is raised when none
+is left. The network fields
 (\code{weights}, \code{edges}, \code{adjacency}, \code{xi}, \code{nodes}, \code{meta}) describe the
 lowest order built, while \code{scores} holds every order.}
 

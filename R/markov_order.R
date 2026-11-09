@@ -244,7 +244,8 @@
 #'   they run serially. With `TRUE` the permutations are reproducible from
 #'   `seed` only under `RNGkind("L'Ecuyer-CMRG")`; under the default
 #'   generator they differ from run to run.
-#' @param n_cores The number of cores for `parallel = TRUE`. Default `2`.
+#' @param n_cores The number of cores for `parallel = TRUE`, a single
+#'   number of at least 1. Default `2`.
 #' @param seed An integer that makes the permutations reproducible (with
 #'   `parallel = TRUE`, only under the L'Ecuyer-CMRG generator). Default
 #'   `NULL`. The session's own random stream is left as it was; a group's
@@ -347,6 +348,13 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
     "'alpha' must be in (0, 1)" = alpha > 0 && alpha < 1,
     is.logical(parallel)
   )
+  # `n_cores` is read only where mclapply() runs; checked here so a bad value
+  # is named instead of failing inside parallel::mclapply().
+  if (isTRUE(parallel) && .Platform$OS.type != "windows") {
+    .assert("'n_cores' must be a single number >= 1" =
+              is.numeric(n_cores) && length(n_cores) == 1L &&
+              !is.na(n_cores) && n_cores >= 1)
+  }
   if (!is.null(seed)) .local_seed(as.integer(seed))
 
   # Accept a prepare() result directly: use its $sequence_data (wide df)
@@ -460,7 +468,10 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
 #' @param object For the `summary()` method: a `net_markov_order`.
 #' @param panel For the `plot()` method: which panels to draw. `"both"`
 #'   (default), `"ic"` (the fit across orders) or `"permutation"` (the
-#'   permutation nulls); a single panel is returned as a ggplot.
+#'   permutation nulls); a single panel is returned as a ggplot. When no
+#'   tested order has a permutation null (every test has 0 degrees of
+#'   freedom, as for constant sequences), only `"ic"` can be drawn and the
+#'   other two raise an error of class `nestimate_bad_input`.
 #' @param combined For the `plot()` method with `panel = "both"`: `TRUE`
 #'   (default) draws the two panels side by side and returns them as one
 #'   gtable when \pkg{gridExtra} is installed, or, without it, draws them
@@ -489,11 +500,11 @@ print.net_markov_order <- function(x, ...) {
 print.net_markov_order_group <- function(x, ...) {
   cat(sprintf("Markov Order Test -- %d groups: %s\n\n",
               length(x), paste(names(x), collapse = ", ")))
-  for (nm in names(x)) {
+  invisible(lapply(names(x), function(nm) {
     cat(sprintf("--- %s ---\n", nm))
     print(x[[nm]], ...)
     cat("\n")
-  }
+  }))
   invisible(x)
 }
 
@@ -586,7 +597,14 @@ plot.net_markov_order <- function(x,
     p     = tt$p_permutation[-1L],
     sig   = tt$significant[-1L]
   )
-  obs_df$decision <- ifelse(obs_df$sig, "reject H0", "accept H0")
+  if (is.null(null_df) && panel != "ic") {
+    stop(errorCondition(paste0(
+      "No tested order has a permutation null to draw (every test has 0 ",
+      "degrees of freedom, as for constant sequences). Use ",
+      "plot(x, panel = \"ic\") for the fit across orders."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  obs_df$decision <- ifelse(obs_df$sig, "reject H0", "do not reject H0")
   if (!is.null(null_df)) {
     null_df$order_fac <- factor(sprintf("order %d vs %d", null_df$order,
                                          null_df$order - 1L),
@@ -615,7 +633,8 @@ plot.net_markov_order <- function(x,
                        hjust = -0.1, vjust = -0.8, size = 3.2,
                        show.legend = FALSE) +
     ggplot2::scale_color_manual(values = c("reject H0" = unname(pal["reject"]),
-                                            "accept H0" = unname(pal["accept"])),
+                                            "do not reject H0" =
+                                              unname(pal["accept"])),
                                 name = NULL) +
     ggplot2::facet_wrap(~ .data$order_fac, scales = "free", ncol = 1) +
     ggplot2::labs(x = expression(G^2 ~ "statistic"),

@@ -38,7 +38,8 @@ compares a three-state history, and so on. The data need at least
 \item{min_count}{The number of times a context must be observed to be
 reported, a whole number of at least 1. Default \code{5}. Contexts seen less
 often give noisy KL estimates; when no context reaches \code{min_count},
-\code{path_dependence()} stops with an error.}
+\code{path_dependence()} stops with an error of class
+\code{nestimate_bad_input}.}
 
 \item{base}{The logarithm base for the entropies and the KL divergence:
 \code{2} (default) gives bits, \code{exp(1)} nats and \code{10} hartleys. A positive

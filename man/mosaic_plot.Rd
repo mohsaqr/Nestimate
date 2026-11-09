@@ -120,7 +120,8 @@ of a network, table or matrix; an unknown name raises an error that
 lists the valid ones. The data-frame method takes no \code{style} and
 raises an error of class \code{nestimate_bad_input} for any argument it
 does not take; the \code{mcml} method does the same with
-\code{style = "classic"}; the other methods ignore it.}
+\code{style = "classic"}; the other methods ignore it with a warning of
+class \code{nestimate_ignored_argument}.}
 
 \item{xlab, ylab}{Axis titles. The network and \code{mcml} methods draw none
 by default (\code{NULL}); the \code{table} and \code{matrix} methods default to

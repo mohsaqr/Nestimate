@@ -9,7 +9,10 @@ register_estimator(name, fn, description, directed)
 \arguments{
 \item{name}{The name the estimator is called by, as \code{method} in
 \code{\link[=build_network]{build_network()}}: a single non-empty string. A name already registered
-is replaced.}
+is replaced. A name that is a method alias (such as \code{"tna"}) is stored
+with a warning of class \code{nestimate_alias_shadowed}, because
+\code{\link[=build_network]{build_network()}} resolves the alias to the built-in method and never
+calls the registered function.}
 
 \item{fn}{The estimator function. Its first argument is \code{data}, and it
 must accept \code{...}, because \code{\link[=build_network]{build_network()}} passes every setting by
@@ -63,6 +66,11 @@ Besides \code{matrix}, \code{nodes} and \code{directed}, the returned list may h
 any other named element is copied onto the \code{netobject}, replacing a field
 of the same name. A return value without \code{matrix}, \code{nodes} or \code{directed}
 makes \code{\link[=build_network]{build_network()}} stop with an error.
+}
+\note{
+The \pkg{idiographic} package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write \code{Nestimate::register_estimator()} to call this one.
 }
 \examples{
 my_fn <- function(data, ...) {

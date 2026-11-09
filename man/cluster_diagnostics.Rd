@@ -4,7 +4,7 @@
 \alias{cluster_diagnostics}
 \alias{print.net_cluster_diagnostics}
 \alias{plot.net_cluster_diagnostics}
-\alias{as.data.frame.net_cluster_diagnostics}
+\alias{summary.net_cluster_diagnostics}
 \title{Cluster Diagnostics}
 \usage{
 cluster_diagnostics(x, ...)
@@ -13,18 +13,18 @@ cluster_diagnostics(x, ...)
 
 \method{plot}{net_cluster_diagnostics}(x, type = NULL, ...)
 
-\method{as.data.frame}{net_cluster_diagnostics}(x, row.names = NULL, optional = FALSE, ...)
+\method{summary}{net_cluster_diagnostics}(object, ...)
 }
 \arguments{
 \item{x}{The clustering: a \code{net_clustering}, a \code{net_mmm}, a
 \code{netobject_group} carrying a clustering (built by \code{\link[=cluster_network]{cluster_network()}}
 or by \code{\link[=build_network]{build_network()}} from a \code{net_clustering} or \code{net_mmm}), or a
 \code{net_mmm_clustering}. A \code{netobject_group} without a clustering, and any
-other object, raise an error. For the \code{print()}, \code{plot()} and
-\code{as.data.frame()} methods: a \code{net_cluster_diagnostics}.}
+other object, raise an error. For the \code{print()} and \code{plot()}
+methods: a \code{net_cluster_diagnostics}.}
 
 \item{...}{Not used: an extra argument raises an error, here and in the
-\code{print()} and \code{as.data.frame()} methods. For \code{plot()}: further
+\code{print()} and \code{summary()} methods. For \code{plot()}: further
 arguments for the clustering's own \code{plot()} method, such as \code{combined}.}
 
 \item{digits}{For \code{print()}: decimal places of the silhouette widths,
@@ -40,8 +40,7 @@ clustering also takes \code{"mds"}, \code{"heatmap"} and \code{"predictors"} (se
 \code{"predictors"} accepted for it when the source is a
 \code{net_mmm_clustering} (see \code{\link[=build_mmm]{build_mmm()}}).}
 
-\item{row.names, optional}{For \code{as.data.frame()}: accepted for the
-generic and ignored.}
+\item{object}{For the \code{summary()} method: a \code{net_cluster_diagnostics}.}
 }
 \value{
 A \code{net_cluster_diagnostics} object. \code{print()} shows the numbers
@@ -78,8 +77,9 @@ without recomputing anything.}
 For \code{print()}: the input, invisibly. For \code{plot()}: what the
 clustering's own \code{plot()} method returns, a \code{ggplot} object (invisibly)
 or, for the covariate views with \code{combined = FALSE}, a list of
-\code{ggplot} objects named by cluster (invisibly). For \code{as.data.frame()}:
-the per-cluster table described under \code{per_cluster}.
+\code{ggplot} objects named by cluster (invisibly). For \code{summary()}:
+the per-cluster table described under \code{per_cluster}, a data frame with
+one row per cluster.
 }
 \description{
 \code{cluster_diagnostics()} collects the quality measures of a clustering in
@@ -122,7 +122,7 @@ cluster_diagnostics(cl)
 \donttest{
 fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 20, seed = 1)
 cluster_diagnostics(fit)
-as.data.frame(cluster_diagnostics(fit))
+summary(cluster_diagnostics(fit))
 }
 }
 \references{

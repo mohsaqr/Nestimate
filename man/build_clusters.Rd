@@ -168,7 +168,7 @@ sequences ordered by cluster; \code{"predictors"} draws a forest plot of the
 covariates' odds ratios (log scale) for each cluster against the
 reference cluster. \code{"predictors"} needs a fit with \code{covariates} and a
 logit estimator; with \code{estimator = "chisq"}, which has no odds ratios,
-it raises an error.}
+it raises an error that points to \code{\link[=summary]{summary()}} for the tests.}
 
 \item{combined}{For \code{plot()} with \code{type = "predictors"}: \code{TRUE} (default)
 draws one plot with a panel per non-reference cluster; \code{FALSE} returns
@@ -179,8 +179,8 @@ views.}
 A \code{net_clustering} object. \code{print()} shows the method,
 dissimilarity and average silhouette width, then one row per cluster
 with its size (count and percentage), mean within-cluster distance and,
-for PAM, its medoid; after a logit covariate analysis it adds a line
-naming the predictors. \code{\link[=summary]{summary()}} prints the method, dissimilarity and
+for PAM, its medoid; after a covariate analysis it adds a line
+naming the covariates. \code{\link[=summary]{summary()}} prints the method, dissimilarity and
 average silhouette width and a per-cluster table of sizes and mean
 within-cluster distances, followed by the covariate analysis when there
 is one, and returns a per-cluster table, or the covariate table after a

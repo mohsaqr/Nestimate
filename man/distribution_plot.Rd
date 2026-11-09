@@ -50,8 +50,8 @@ frame's columns as positions), raise an error of class
 \code{nrow(x)}), drawing one panel per group in the order of its factor
 levels (sorted for a character or numeric vector). \code{NULL} (default)
 uses the cluster assignments carried by a \code{net_clustering}, \code{net_mmm}
-or \code{netobject_group}; a \code{group} given overrides them. Grouped panels
-are titled \code{"Cluster <label>"}, whatever the grouping.}
+or \code{netobject_group}; a \code{group} given overrides them. Panels are
+titled \code{"Cluster <label>"}, whatever the grouping.}
 
 \item{scale}{What the y-axis shows: \code{"proportion"} (default) divides
 each time point by its total, so the bands fill 0 to 1; \code{"count"}

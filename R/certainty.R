@@ -270,9 +270,10 @@ print.net_certainty <- function(x, ...) {
     if (nrow(sig_s) > 0L) {
       sig_s <- sig_s[order(abs(sig_s$mean), decreasing = TRUE), , drop = FALSE]
       top <- head(sig_s, 5L)
-      cat("  Edge                   Mean     95% CI          p\n")
-      cat("  -----------------------------------------------\n")
-      lbl2  <- sprintf("%-20s", paste0(top$from, " \u2192 ", top$to))
+      lbl   <- paste0(top$from, " \u2192 ", top$to)
+      width <- .edge_label_width(lbl)
+      .cat_edge_table_header(width, ci_pct)
+      lbl2  <- .pad_label(lbl, width)
       stars <- ifelse(top$p_value < 0.001, "***",
                       ifelse(top$p_value < 0.01, "** ", "*  "))
       cat(sprintf("  %s  %6.3f  [%5.3f, %5.3f]  %s\n",

@@ -36,7 +36,8 @@ test_that("Codex P2 #2: mosaic uses the estimator's stored frequency_matrix", {
 test_that("Codex P2 #3: build_hypa $order/$k report only built layers", {
   trajs <- list(c("A", "B", "C"), c("A", "B", "C"), c("C", "B", "D"),
                 c("A", "B", "D"), c("C", "B", "A"), c("A", "B", "C"))
-  h <- build_hypa(trajs, order = c(2L, 10L))   # order 10 builds no layer
+  expect_warning(h <- build_hypa(trajs, order = c(2L, 10L)),  # no layer at 10
+                 class = "nestimate_ignored_argument")
   expect_identical(as.integer(h$order), as.integer(names(h$by_order)))
   expect_identical(as.integer(h$k), as.integer(names(h$by_order)))
   expect_false(10L %in% h$order)

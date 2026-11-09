@@ -2,6 +2,7 @@
 % Please edit documentation in R/compare_network.R
 \name{compare_model}
 \alias{compare_model}
+\alias{compare_model.default}
 \alias{compare_model.netobject}
 \alias{compare_model.cograph_network}
 \alias{compare_model.matrix}
@@ -11,6 +12,8 @@
 \title{Compare two networks descriptively}
 \usage{
 compare_model(x, ...)
+
+\method{compare_model}{default}(x, ...)
 
 \method{compare_model}{netobject}(
   x,
@@ -96,8 +99,8 @@ centred.}
 weight at or below 0 raises an error of class
 \code{nestimate_bad_input} (use \code{"log1p"} for networks with zeros).}
 \item{\code{"log1p"}}{\eqn{\log(1 + w)}{log(1 + w)}; defined for
-\eqn{w > -1}{w > -1}. A weight of -1 or below makes the comparison
-fail with an error.}
+\eqn{w > -1}{w > -1}: a weight of -1 or below raises an error of
+class \code{nestimate_bad_input}.}
 \item{\code{"softmax"}}{A numerically stable softmax over all the cells.}
 \item{\code{"quantile"}}{The empirical cumulative distribution of the
 cells.}

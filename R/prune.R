@@ -292,7 +292,14 @@ net_prune.netobject <- function(x, method = "threshold", threshold = 0.1,
       "undo it, then net_prune() with the new settings."),
       class = "nestimate_bad_input", call = NULL))
   }
-  .assert(is.numeric(threshold), length(threshold) == 1L)
+  .assert(
+    "'threshold' must be a single number" =
+      is.numeric(threshold) && length(threshold) == 1L,
+    # a missing or non-scalar value used to fail inside `if` with a base error
+    "'lowest' must be a single value in [0, 1]" =
+      length(lowest) == 1L && !is.na(lowest),
+    "'level' must be a single value in [0, 1]" =
+      length(level) == 1L && !is.na(level))
   if (lowest < 0 || lowest > 1) stop(errorCondition(
     "'lowest' must be in [0, 1].",
     class = "nestimate_bad_input", call = NULL))

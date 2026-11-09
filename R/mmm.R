@@ -66,6 +66,8 @@
 
   log_lik <- matrix(0, N, n_comp)
 
+  # A loop on purpose: EM is a fixed-point iteration, each step starts from
+  # the posterior of the one before and stops at convergence.
   for (iter in seq_len(max_iter)) {
     # ---- M-step ----
     # Compute transition table directly in K^2 x M shape so the E-step
@@ -178,7 +180,7 @@
   N <- nrow(counts)
   if (N <= n_comp) {
     post <- matrix(0, nrow = N, ncol = n_comp)
-    for (i in seq_len(N)) post[i, ((i - 1L) %% n_comp) + 1L] <- 1
+    post[cbind(seq_len(N), ((seq_len(N) - 1L) %% n_comp) + 1L)] <- 1
     return(post)
   }
 
@@ -756,12 +758,14 @@ build_mmm <- function(data,
   n_refine <- max(3L, n_starts %/% 10L)
 
   # Collect all initializations (before forking for seed control)
-  inits <- vector("list", n_starts)
-  inits[[1L]] <- .mmm_init_kmeans(counts, k)
-  for (s in seq_len(n_starts - 1L)) {
-    inits[[s + 1L]] <- matrix(runif(N * k), nrow = N, ncol = k)
-    inits[[s + 1L]] <- inits[[s + 1L]] / rowSums(inits[[s + 1L]])
-  }
+  # k-means first, then the random starts in order: the draws follow the
+  # same random stream as before.
+  init_kmeans <- .mmm_init_kmeans(counts, k)
+  init_random <- lapply(seq_len(n_starts - 1L), function(s) {
+    post <- matrix(runif(N * k), nrow = N, ncol = k)
+    post / rowSums(post)
+  })
+  inits <- c(list(init_kmeans), init_random)
 
   # Screen: short EM runs (parallel on Unix)
   n_cores <- 1L
@@ -800,6 +804,8 @@ build_mmm <- function(data,
   refine_idx <- unique(c(top_idx, conv_idx))
 
   best <- list(ll = -Inf)
+  # A loop on purpose: it keeps one running best fit instead of holding every
+  # refined EM result (posterior and K^2 x M tables) in memory at once.
   for (idx in refine_idx) {
     if (is.null(screen_results[[idx]])) next
     # Always refine when covariates present (screen ran without them)
@@ -822,8 +828,9 @@ build_mmm <- function(data,
     if (!is.null(run)) best <- run
   }
   if (is.null(best$P_all)) {
-    stop("EM algorithm failed to produce a valid result in all starting configurations.",
-         call. = FALSE)
+    stop(errorCondition(
+      "EM algorithm failed to produce a valid result in all starting configurations.",
+      class = "nestimate_em_failed", call = NULL))
   }
 
   # ---- Assignments ----
@@ -1118,12 +1125,8 @@ print.net_mmm <- function(x, digits = 3L, ...) {
   cat(paste(.cluster_table_lines(cols), collapse = "\n"), "\n", sep = "")
 
   if (!is.null(x$covariates)) {
-    cov_names <- setdiff(
-      unique(x$covariates$coefficients$variable), "(Intercept)"
-    )
-    cat(sprintf("\n  Covariates: %s (%s, %d predictors)\n",
-                paste(cov_names, collapse = ", "),
-                .mmm_covariate_label(x$covariate_effect), length(cov_names)))
+    cat(.covariate_line(x$covariates,
+                        .mmm_covariate_label(x$covariate_effect)))
   }
 
   invisible(x)
@@ -1142,13 +1145,13 @@ summary.net_mmm <- function(object, ...) {
   .net_mmm_check_unused_dots("summary.net_mmm", ...)
   print(object)
   cat("\n")
-  for (m in seq_len(object$k)) {
+  invisible(lapply(seq_len(object$k), function(m) {
     n_in <- sum(object$assignments == m)
     cat(sprintf("--- Cluster %d (%.1f%%, n=%d) ---\n",
                 m, object$mixing[m] * 100, n_in))
     print(round(object$models[[m]]$weights, 3))
     cat("\n")
-  }
+  }))
 
   # Covariate analysis
   if (!is.null(object$covariates)) {
@@ -1200,6 +1203,7 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"),
         "No covariate analysis found. Run build_mmm() with covariates.",
         class = "nestimate_bad_input", call = NULL))
     }
+    .require_covariate_coefficients(x$covariates, "covariates")
     return(.plot_covariate_forest(
       x$covariates$coefficients,
       sprintf("Covariate Effects (ref: Cluster %s)",
@@ -1217,7 +1221,8 @@ plot.net_mmm <- function(x, type = c("posterior", "covariates"),
 #' @noRd
 .plot_mmm_posterior <- function(x) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' required.", call. = FALSE) # nocov
+    stop(errorCondition("Package 'ggplot2' required.",
+                        class = "nestimate_missing_package", call = NULL)) # nocov
   }
 
   max_post <- apply(x$posterior, 1L, max)
@@ -1248,7 +1253,7 @@ print.mmm_compare <- function(x, ...) {
   best_icl <- which.min(x$ICL)
   x$best <- ""
   x$best[best_bic] <- "<-- BIC"
-  if (best_icl != best_bic) x$best[best_icl] <- paste(x$best[best_icl], "<-- ICL")
+  if (best_icl != best_bic) x$best[best_icl] <- "<-- ICL"
   print.data.frame(x, row.names = FALSE, right = FALSE)
   invisible(x)
 }
@@ -1276,7 +1281,8 @@ summary.mmm_compare <- function(object, ...) {
 plot.mmm_compare <- function(x, ...) {
   .mmm_compare_check_unused_dots(...)
   if (!requireNamespace("ggplot2", quietly = TRUE)) { # nocov start
-    stop("Package 'ggplot2' required.", call. = FALSE)
+    stop(errorCondition("Package 'ggplot2' required.",
+                        class = "nestimate_missing_package", call = NULL))
   } # nocov end
 
   df <- data.frame(
@@ -1489,12 +1495,8 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
   cat(paste(.cluster_table_lines(cols), collapse = "\n"), "\n", sep = "")
 
   if (!is.null(x$covariates)) {
-    cov_names <- setdiff(
-      unique(x$covariates$coefficients$variable), "(Intercept)"
-    )
-    cat(sprintf("\n  Covariates: %s (%s, %d predictors)\n",
-                paste(cov_names, collapse = ", "),
-                .mmm_covariate_label(x$covariate_effect), length(cov_names)))
+    cat(.covariate_line(x$covariates,
+                        .mmm_covariate_label(x$covariate_effect)))
   }
 
   invisible(x)
@@ -1511,8 +1513,8 @@ print.net_mmm_clustering <- function(x, digits = 3L, ...) {
 #' of one minus the largest posterior; Vermunt & Magidson, 2005); a line when the EM did not converge;
 #' and one row per subgroup with its size, mixing proportion and AvePP. For a
 #' model fitted with `covariates`, a last line names them, says whether they
-#' entered the EM (integrated) or were related post hoc, and gives the number
-#' of predictors. The layout follows `print()` of a `net_clustering` from
+#' entered the EM (integrated) or were related post hoc, and gives their
+#' number. The layout follows `print()` of a `net_clustering` from
 #' [build_clusters()], so dissimilarity-based and model-based clusterings read
 #' alike.
 #'
@@ -1543,6 +1545,7 @@ plot.net_mmm_clustering <- function(x, type = c("posterior", "covariates",
           "cluster_mmm() (or build_mmm()) with covariates = ..."),
         class = "nestimate_bad_input", call = NULL))
     }
+    .require_covariate_coefficients(x$covariates, "covariates")
     return(.plot_covariate_forest(
       x$covariates$coefficients,
       sprintf("Covariate Effects (ref: Cluster %s)",

@@ -50,8 +50,8 @@
 #' @param drop_prop The proportions of cases to drop, each strictly between
 #'   0 and 1, in any order. Default `seq(0.1, 0.9, by = 0.1)`.
 #'   A proportion that drops no case of a small sample (`n * p < 1`) is
-#'   not run (without a warning; its metrics are `NA`) and counts as not
-#'   passing. For the `summary()` method of a group result: the one
+#'   not run (its metrics are `NA`) and counts as not passing, with a
+#'   warning of class `nestimate_drop_prop_skipped`. For the `summary()` method of a group result: the one
 #'   proportion to report, which must be one of those the result was built
 #'   with; a value outside them raises an error listing the available ones.
 #'   Default `NULL` there, the middle proportion of the grid (the lower of
@@ -252,8 +252,9 @@ casedrop_reliability <- function(x,
   if (target == "existing") idx_mask <- idx_mask & x$weights != 0
   orig_edges <- as.vector(x$weights[idx_mask])
   if (.is_constant_vector(orig_edges)) {
-    warning("Original edge vector has zero variance; CS undefined.",
-            call. = FALSE)
+    warning(warningCondition(
+      "Original edge vector has zero variance; CS undefined.",
+      class = "nestimate_constant_measure", call = NULL))
     empty <- matrix(NA_real_, iter, length(drop_prop),
                     dimnames = list(NULL, paste0("p", drop_prop)))
     metrics <- list(mean_abs_dev = empty, median_abs_dev = empty,
@@ -350,6 +351,19 @@ casedrop_reliability <- function(x,
   case_seq <- seq_len(n_cases)
   n_failed <- 0L
   n_tried <- 0L
+  # A proportion too small to drop one whole case is not run: its metrics
+  # stay NA and it counts as not passing, which is said rather than left to
+  # be found in the table.
+  not_run <- drop_prop[floor(n_cases * drop_prop) == 0L]
+  if (length(not_run) > 0L) {
+    warning(warningCondition(sprintf(paste0(
+      "casedrop_reliability(): drop_prop = %s drops no case out of %d, so ",
+      "it was not run; its metrics are NA and it counts as not passing."),
+      paste(not_run, collapse = ", "), n_cases),
+      class = "nestimate_drop_prop_skipped", call = NULL))
+  }
+  # Loops kept on purpose: the proportions and iterations draw from one
+  # random stream in order and fill pre-allocated matrices in place.
   for (p_idx in seq_len(n_prop)) {
     n_drop <- floor(n_cases * drop_prop[p_idx])
     if (n_drop == 0L || n_drop >= n_cases) next
@@ -463,7 +477,7 @@ casedrop_reliability <- function(x,
 #' @export
 print.net_casedrop_reliability <- function(x, digits = 3, ...) {
   cat(sprintf("Edge-weight Case-dropping Stability\n"))
-  cat(sprintf("  Cases (rows of $data) : %d\n", x$n_cases))
+  cat(sprintf("  Cases (resampled)     : %d\n", x$n_cases))
   cat(sprintf("  Edges assessed        : %d%s\n", x$n_edges,
               if (!x$include_diag) " (diagonal excluded)" else ""))
   cat(sprintf("  Iterations / prop     : %d\n", x$iter))
@@ -486,7 +500,7 @@ print.net_casedrop_reliability <- function(x, digits = 3, ...) {
               paste(sprintf("%-11s", sprintf("p=%.1f", props)),
                     collapse = "  ")))
   show("mean_abs_dev",   "mean|diff|")
-  show("median_abs_dev", "MAD")
+  show("median_abs_dev", "median|diff|")
   show("correlation",    "cor")
   show("max_abs_dev",    "max|diff|")
   invisible(x)

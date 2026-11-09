@@ -103,11 +103,11 @@ test_that("build_mlvar validates required arguments", {
   vars <- attr(d, "vars")
 
   expect_error(build_mlvar(list(), vars = vars, id = "id"),
-               "is.data.frame")
+               "`data`", class = "nestimate_bad_input")
   expect_error(build_mlvar(d, vars = "only_one", id = "id"),
-               "length")
+               "`vars`", class = "nestimate_bad_input")
   expect_error(build_mlvar(d, vars = vars, id = c("a", "b")),
-               "length")
+               "`id`", class = "nestimate_bad_input")
   expect_error(build_mlvar(d, vars = vars, id = "nonexistent_column"),
                "not found in data")
   expect_error(build_mlvar(d, vars = vars, id = "id", lag = 0),
@@ -120,9 +120,10 @@ test_that("print.net_mlvar shows the three-network structure", {
   fit <- build_mlvar(d, vars = vars, id = "id", day = "day", beep = "beep")
 
   joined <- paste(capture.output(print(fit)), collapse = "\n")
-  expect_match(joined, "\\$temporal")
-  expect_match(joined, "\\$contemporaneous")
-  expect_match(joined, "\\$between")
+  expect_match(joined, "temporal", fixed = TRUE)
+  expect_match(joined, "contemporaneous", fixed = TRUE)
+  expect_match(joined, "between", fixed = TRUE)
+  expect_no_match(joined, "$", fixed = TRUE)
   expect_match(joined,
                sprintf("%d x %d directed", length(vars), length(vars)))
   expect_match(joined, "edges significant at p<0.05")

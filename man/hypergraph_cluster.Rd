@@ -4,7 +4,7 @@
 \alias{hypergraph_cluster}
 \alias{print.net_hypergraph_cluster}
 \alias{summary.net_hypergraph_cluster}
-\alias{as.data.frame.net_hypergraph_cluster}
+\alias{node_clusters}
 \alias{plot.net_hypergraph_cluster}
 \title{Spectral clustering of hypergraph vertices}
 \usage{
@@ -21,7 +21,7 @@ hypergraph_cluster(
 
 \method{summary}{net_hypergraph_cluster}(object, ...)
 
-\method{as.data.frame}{net_hypergraph_cluster}(x, ...)
+node_clusters(x)
 
 \method{plot}{net_hypergraph_cluster}(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
 }
@@ -42,8 +42,8 @@ best. Default \code{25}.}
 \item{seed}{A whole number that makes the k-means starts reproducible.
 The session's own random stream is left as it was. Default \code{NULL}.}
 
-\item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: a
-\code{net_hypergraph_cluster} object.}
+\item{x}{For the \code{print()} and \code{plot()} methods and for
+\code{node_clusters()}: a \code{net_hypergraph_cluster} object.}
 
 \item{...}{For the methods: ignored.}
 
@@ -55,7 +55,9 @@ a scree plot of the smallest eigenvalues with the \code{k} used marked, so
 the eigengap after \code{k} can be read; \code{"embedding"} places the nodes on
 the first two embedding dimensions, labelled, coloured and shaped by
 cluster and sized by stationary probability, which is the geometry
-k-means clustered; \code{"both"} (default) draws the two side by side.}
+k-means clustered (beyond nine clusters the colours repeat and the
+shape tells the clusters of one colour apart); \code{"both"} (default) draws
+the two side by side.}
 
 \item{n_values}{For the \code{plot()} method: how many of the smallest
 eigenvalues the spectrum panel shows. Default \code{NULL}, which shows
@@ -85,7 +87,7 @@ k-means total within-cluster sum of squares (\code{tot_withinss}).}
 
 The \code{print()} method returns its input invisibly. The \code{summary()}
 method returns a data frame with one row per cluster: \code{cluster}, \code{size}
-and \code{share} (the proportion of nodes). The \code{as.data.frame()} method
+and \code{share} (the proportion of nodes). \code{node_clusters()}
 returns a data frame with one row per node: \code{node}, \code{cluster}, \code{pi}
 (the node's stationary probability under the Laplacian's walk) and the
 embedding coordinates \code{dim1} to \code{dimk}. The \code{plot()} method returns a
@@ -123,7 +125,7 @@ events <- data.frame(
 hg <- bipartite_groups(events, player = "person", group = "meeting")
 cl <- hypergraph_cluster(hg, k = 2, seed = 1)
 cl
-as.data.frame(cl)
+node_clusters(cl)
 
 }
 \references{

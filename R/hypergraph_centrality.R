@@ -140,10 +140,15 @@ hypergraph_centrality <- function(hg,
                                    tol      = 1e-8,
                                    normalize = TRUE) {
   .assert(
-    inherits(hg, "net_hypergraph"),
-    is.numeric(max_iter), length(max_iter) == 1L, max_iter > 0,
-    is.numeric(tol), length(tol) == 1L, tol > 0,
-    is.logical(normalize), length(normalize) == 1L
+    "`hg` must be a net_hypergraph (build_hypergraph/bipartite_groups)" =
+      inherits(hg, "net_hypergraph"),
+    "`max_iter` must be a single positive number" =
+      is.numeric(max_iter) && length(max_iter) == 1L && !is.na(max_iter) &&
+        max_iter > 0,
+    "`tol` must be a single positive number" =
+      is.numeric(tol) && length(tol) == 1L && !is.na(tol) && tol > 0,
+    "`normalize` must be TRUE or FALSE" =
+      is.logical(normalize) && length(normalize) == 1L
   )
   type <- match.arg(type, choices = c("clique", "Z", "H"), several.ok = TRUE)
 
@@ -362,6 +367,7 @@ hypergraph_centrality <- function(hg,
   cells <- which(adjacency != 0, arr.ind = TRUE)
   if (nrow(cells) == 0L) return(label)
   row_of <- factor(cells[, 1L], levels = seq_len(n))
+  # A loop: labels spread one step per pass, at most n - 1 passes.
   repeat {
     neighbour <- vapply(
       split(label[cells[, 2L]], row_of),

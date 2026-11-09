@@ -49,8 +49,8 @@
 #' subtract_networks(net_edge_betweenness(a), net_edge_betweenness(b))
 #' @export
 subtract_networks <- function(x, y) {
-  wx <- .weights_of(x)
-  wy <- .weights_of(y)
+  wx <- .weights_of(x, fn = "subtract_networks")
+  wy <- .weights_of(y, fn = "subtract_networks")
   if (!identical(dim(wx), dim(wy))) {
     stop(errorCondition("x and y must have the same number of nodes.",
       class = "nestimate_bad_input", call = NULL))

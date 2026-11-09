@@ -60,7 +60,8 @@ Default all six.}
 \item{combined}{For \code{plot()} of a single network: \code{TRUE} (default) draws
 the metrics as panels of one plot; \code{FALSE} returns a named list of
 one-panel plots, one per metric, to print or save separately. Ignored
-for a group, whose \code{plot()} always draws one plot.}
+for a group, whose \code{plot()} always draws one plot, with a warning of
+class \code{nestimate_ignored_argument}.}
 }
 \value{
 A \code{net_markov_stability} object; for a \code{netobject_group}, a

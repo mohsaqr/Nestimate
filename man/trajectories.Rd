@@ -6,7 +6,7 @@
 \title{Student Engagement Trajectories}
 \format{
 A character matrix with 138 rows and 15 columns named \code{"1"} to
-\code{"15"}, in time order. Each entry is \code{"Active"}, \code{"Average"},
+\code{"15"}, the courses in the order they were taken. Each entry is \code{"Active"}, \code{"Average"},
 \code{"Disengaged"} or \code{NA}. The trailing \code{NA} runs are what the
 right-censored sequence verbs (\code{\link[=actor_endpoints]{actor_endpoints()}},
 \code{\link[=mark_terminal_state]{mark_terminal_state()}}) are built to read.
@@ -15,8 +15,8 @@ right-censored sequence verbs (\code{\link[=actor_endpoints]{actor_endpoints()}}
 trajectories
 }
 \description{
-Wide-format sequences of student engagement over 15 consecutive
-observations, one row per student and one column per observation. The
+Wide-format sequences of student engagement over the 15 successive
+courses of a programme, one row per student and one column per course. The
 states are \code{"Active"}, \code{"Average"} and \code{"Disengaged"}. A missing value
 occurs only as a run at the end of a row, which marks drop-out; two rows
 are missing throughout.

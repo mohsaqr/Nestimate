@@ -208,7 +208,8 @@ test_that("A07-F01: build_network(method='mgm', level=<vec>) reachable + clear e
   # non-mgm methods keep the original enum semantics unchanged
   expect_error(build_network(dd, method = "cor", level = 2))
   expect_error(build_network(dd, method = "cor", threshold = "LW"),
-               "is.numeric")
+               "`threshold` must be a single number",
+               class = "nestimate_bad_input")
 })
 
 # --------------------------------------------------------------------- #

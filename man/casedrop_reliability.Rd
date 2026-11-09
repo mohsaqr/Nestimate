@@ -58,8 +58,8 @@ at least 2. Default \code{1000}.}
 \item{drop_prop}{The proportions of cases to drop, each strictly between
 0 and 1, in any order. Default \code{seq(0.1, 0.9, by = 0.1)}.
 A proportion that drops no case of a small sample (\code{n * p < 1}) is
-not run (without a warning; its metrics are \code{NA}) and counts as not
-passing. For the \code{summary()} method of a group result: the one
+not run (its metrics are \code{NA}) and counts as not passing, with a
+warning of class \code{nestimate_drop_prop_skipped}. For the \code{summary()} method of a group result: the one
 proportion to report, which must be one of those the result was built
 with; a value outside them raises an error listing the available ones.
 Default \code{NULL} there, the middle proportion of the grid (the lower of

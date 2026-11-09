@@ -190,7 +190,7 @@
                                concat = 1L,
                                begin_state = NULL,
                                end_state = NULL) {
-  .assert(is.data.frame(data))
+  .assert_frame(data)
 
   if (format == "auto") {
     format <- .format_from_action(action, data)
@@ -267,6 +267,8 @@
     }
     nbins <- n_states * n_states
 
+    # Loop kept: it runs over pairs of columns (window positions), not rows;
+    # each pass is one vectorised tabulate() into the same accumulator.
     for (i in seq_len(q)) {
       j_idx <- seq((i - 1L) * effective_window + 1L,
                    i * effective_window)
@@ -706,7 +708,7 @@
     return(list(matrix = cooc_mat, nodes = rownames(cooc_mat),
                 directed = FALSE, cleaned_data = NULL))
   }
-  .assert(is.data.frame(data))
+  .assert_frame(data)
 
   # Before the format: a one-hot column may be called "Action".
   if (identical(format, "onehot") || !is.null(codes)) {
@@ -788,6 +790,7 @@
       seq_lengths <- rowSums(!is.na(mat))
     }
 
+    # Loop kept: over column pairs within a window, accumulating in place.
     for (i in seq_len(q + 1L)) {
       j_idx <- seq((i - 1L) * effective_window + 1L,
                    min(nc, i * effective_window))
@@ -828,6 +831,8 @@
   # Accumulate counts across column pairs
   counts <- integer(nbins)
 
+  # Loop kept: over column pairs; materialising all pairs at once would
+  # need nrow x ncol^2 / 2 cells.
   for (i in seq_len(nc - 1L)) {
     col_i <- int_mat[, i]
     for (j in seq(i + 1L, nc)) {
@@ -1012,10 +1017,12 @@
 
   # Build time matrix
   if (!is.null(time_matrix)) {
-    .assert(nrow(time_matrix) == nr, ncol(time_matrix) == nc)
+    .assert("`time_matrix` must have the dimensions of the sequence data" =
+              nrow(time_matrix) == nr && ncol(time_matrix) == nc)
     tmat <- time_matrix
   } else if (!is.null(duration)) {
-    .assert(length(duration) == nc)
+    .assert("`duration` must hold one value per position" =
+              length(duration) == nc)
     cum_time <- cumsum(duration)
     tmat <- matrix(rep(cum_time, each = nr), nr, nc)
   } else {
@@ -1033,6 +1040,8 @@
   # Accumulate weighted counts
   counts <- numeric(n_states * n_states)
 
+  # Loop kept: over column pairs; each pass is vectorised over rows and
+  # calls the user's `decay` once, as its contract states.
   for (i in seq_len(nc)) {
     for (j in seq_len(nc)) {
       if (i == j) next
@@ -1048,6 +1057,14 @@
       fi <- col_i[valid]
       tj <- col_j[valid]
       d <- decay(tmat[valid, i], tmat[valid, j], lambda)
+      # a decay that returns one value for all pairs failed inside tapply()
+      if (length(d) != length(fi)) {
+        stop(errorCondition(sprintf(paste0(
+          "`decay` must return one weight per pair of positions: it was ",
+          "given %d pairs and returned %d value(s)."),
+          length(fi), length(d)),
+          class = "nestimate_bad_input", call = NULL))
+      }
 
       pair_idx <- (fi - 1L) * n_states + tj
       agg <- tapply(d, pair_idx, sum)
@@ -1123,6 +1140,8 @@
   counts <- numeric(n_states * n_states)
 
   groups <- split(dt, dt[[grp_col]])
+  # Loop kept: `decay` is a user function with no vectorisation contract,
+  # so it is called once per pair of events, in a fixed order.
   for (g in groups) {
     a <- g[[action_col]]
     if (!is.null(begin_state)) a <- c(as.character(begin_state)[1L], a)
@@ -1210,8 +1229,9 @@
                                   time_matrix = NULL,
                                   duration = NULL,
                                   ...) {
-  .assert(is.data.frame(data))
-  .assert(is.numeric(lambda), length(lambda) == 1, lambda > 0)
+  .assert_frame(data)
+  .assert("`lambda` must be a single positive number" =
+            is.numeric(lambda) && length(lambda) == 1 && lambda > 0)
   direction <- match.arg(direction, c("forward", "backward", "both"))
 
   if (format == "auto") {
@@ -1344,7 +1364,8 @@
         "Sample size 'n' is required when data is a matrix.",
         class = "nestimate_bad_input", call = NULL))
     }
-    .assert(is.numeric(n), length(n) == 1, n > 0)
+    .assert("`n` must be a single positive number" =
+              is.numeric(n) && length(n) == 1 && n > 0)
 
     if (input_type == "auto") {
       diag_vals <- diag(data)
@@ -1433,11 +1454,11 @@
     )
   }
   if (rc < 1e-12) {
-    warning(sprintf(
+    warning(warningCondition(paste0(sprintf(
       "Correlation matrix is near-singular (rcond = %.2e). ",
       rc
-    ), "Results may be numerically unstable. Consider method = 'glasso'.",
-    call. = FALSE)
+    ), "Results may be numerically unstable. Consider method = 'glasso'."),
+    class = "nestimate_near_singular", call = NULL))
   }
 
   # Math delegated to psychnets (max abs delta 5.6e-17 vs the former
@@ -1510,11 +1531,15 @@
   n_obs <- prepared$n
   p <- ncol(S)
 
-  .assert(is.numeric(gamma), length(gamma) == 1, gamma >= 0)
-  .assert(is.numeric(nlambda), length(nlambda) == 1, nlambda >= 2)
-  .assert(is.numeric(lambda.min.ratio), lambda.min.ratio > 0,
-            lambda.min.ratio < 1)
-  .assert(is.logical(penalize.diagonal), length(penalize.diagonal) == 1)
+  .assert("`gamma` must be a single number of at least 0" =
+            is.numeric(gamma) && length(gamma) == 1 && gamma >= 0)
+  .assert("`nlambda` must be a single number of at least 2" =
+            is.numeric(nlambda) && length(nlambda) == 1 && nlambda >= 2)
+  .assert("`lambda.min.ratio` must be a number between 0 and 1" =
+            is.numeric(lambda.min.ratio) && all(lambda.min.ratio > 0) &&
+            all(lambda.min.ratio < 1))
+  .assert("`penalize.diagonal` must be TRUE or FALSE" =
+            is.logical(penalize.diagonal) && length(penalize.diagonal) == 1)
 
   # Math delegated to psychnets. Default branch is exact (max abs delta 0
   # on weights/precision/lambda/EBIC path); penalize.diagonal is within
@@ -1574,7 +1599,7 @@
   # A fitted network stores its cleaned data as a numeric matrix; resamplers
   # pass that back in, so accept it as well as a data frame.
   if (is.matrix(data) && is.numeric(data)) data <- as.data.frame(data)
-  .assert(is.data.frame(data))
+  .assert_frame(data, what = "a data frame or a numeric matrix of 0/1 variables")
 
   # Exclude id columns and "rid"
 
@@ -1701,17 +1726,19 @@
                               rule = "AND",
                               ...) {
   if (!requireNamespace("glmnet", quietly = TRUE)) {
-    stop( # nocov start
+    stop(errorCondition(paste0( # nocov start
       "Package 'glmnet' is required for Ising model estimation. ",
-      "Install it with: install.packages('glmnet')",
-      call. = FALSE
-    ) # nocov end
+      "Install it with: install.packages('glmnet')"),
+      class = "nestimate_missing_package", call = NULL
+    )) # nocov end
   }
 
   # Validate parameters
-  .assert(is.numeric(gamma), length(gamma) == 1, gamma >= 0)
+  .assert("`gamma` must be a single number of at least 0" =
+            is.numeric(gamma) && length(gamma) == 1 && gamma >= 0)
   nlambda <- as.integer(nlambda)
-  .assert(is.integer(nlambda), length(nlambda) == 1, nlambda >= 2L)
+  .assert("`nlambda` must be a single whole number of at least 2" =
+            is.integer(nlambda) && length(nlambda) == 1 && nlambda >= 2L)
   rule <- match.arg(rule, c("AND", "OR"))
 
   # Prepare input: listwise NA removal and the binary (0/1) check
@@ -1738,4 +1765,24 @@
     n = prepared$n,
     p = prepared$p
   )
+}
+
+# The estimators' first check: `data` is a data frame. The result of prepare()
+# and a matrix handed to a sequence method used to stop here with the deparsed
+# "is.data.frame(data) is not TRUE"; both now say what to pass.
+.assert_frame <- function(data,
+                          what = "a data frame of sequences or an event log") {
+  if (inherits(data, "nestimate_data")) {
+    stop(errorCondition(paste0(
+      "`data` is the result of prepare(). build_network() prepares an event ",
+      "log itself: pass the data frame given to prepare(), with the same ",
+      "`action`, `actor`, `time`, `session` and `order`."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (!is.data.frame(data)) {
+    stop(errorCondition(sprintf(
+      "`data` must be %s; got <%s>.", what, class(data)[1L]),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(data)
 }

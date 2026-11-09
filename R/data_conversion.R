@@ -57,11 +57,15 @@ wide_to_long <- function(data,
                          time_col = "Time",
                          drop_na = TRUE) {
   # Input validation
-  .assert(is.data.frame(data))
-  .assert(is.character(time_prefix), length(time_prefix) == 1)
-  .assert(is.character(action_col), length(action_col) == 1)
-  .assert(is.character(time_col), length(time_col) == 1)
-  .assert(is.logical(drop_na), length(drop_na) == 1)
+  .assert("`data` must be a data frame" = is.data.frame(data))
+  .assert("`time_prefix` must be a single character string" =
+            is.character(time_prefix) && length(time_prefix) == 1)
+  .assert("`action_col` must be a single character string" =
+            is.character(action_col) && length(action_col) == 1)
+  .assert("`time_col` must be a single character string" =
+            is.character(time_col) && length(time_col) == 1)
+  .assert("`drop_na` must be TRUE or FALSE" =
+            is.logical(drop_na) && length(drop_na) == 1)
 
   # Identify time columns
   time_cols <- grep(paste0("^", time_prefix, "[0-9]+$"), names(data), value = TRUE)
@@ -168,12 +172,17 @@ long_to_wide <- function(data,
                          time_prefix = "V",
                          fill_na = TRUE) {
   # Input validation
-  .assert(is.data.frame(data))
-  .assert(is.character(id_col), length(id_col) == 1)
-  .assert(is.character(time_col), length(time_col) == 1)
-  .assert(is.character(action_col), length(action_col) == 1)
-  .assert(is.character(time_prefix), length(time_prefix) == 1)
-  .assert(is.logical(fill_na), length(fill_na) == 1)
+  .assert("`data` must be a data frame" = is.data.frame(data))
+  .assert("`id_col` must be a single character string" =
+            is.character(id_col) && length(id_col) == 1)
+  .assert("`time_col` must be a single character string" =
+            is.character(time_col) && length(time_col) == 1)
+  .assert("`action_col` must be a single character string" =
+            is.character(action_col) && length(action_col) == 1)
+  .assert("`time_prefix` must be a single character string" =
+            is.character(time_prefix) && length(time_prefix) == 1)
+  .assert("`fill_na` must be TRUE or FALSE" =
+            is.logical(fill_na) && length(fill_na) == 1)
 
   # Check required columns exist
   required_cols <- c(id_col, action_col)
@@ -208,6 +217,8 @@ long_to_wide <- function(data,
   wide_list <- lapply(groups, function(g) {
     row <- data.frame(g[[id_col]][1], stringsAsFactors = FALSE)
     names(row) <- id_col
+    # Loop kept: one column is added per event, in event order, and a
+    # repeated time name overwrites, as `[[<-` does.
     for (i in seq_len(nrow(g))) {
       row[[g[[".time_name"]][i]]] <- g[[action_col]][i]
     }
@@ -223,7 +234,7 @@ long_to_wide <- function(data,
     all_cols <- unique(unlist(lapply(wide_list, names)))
     wide_list <- lapply(wide_list, function(row) {
       missing <- setdiff(all_cols, names(row))
-      for (m in missing) row[[m]] <- NA_character_
+      row[missing] <- rep(list(NA_character_), length(missing))
       row[, all_cols, drop = FALSE]
     })
   } else {
@@ -305,7 +316,7 @@ prepare_for_tna <- function(data,
                             action_col = "Action",
                             validate = TRUE) {
   # Input validation
-  .assert(is.data.frame(data))
+  .assert("`data` must be a data frame" = is.data.frame(data))
   type <- match.arg(type)
 
   # Auto-detect format
@@ -367,11 +378,8 @@ prepare_for_tna <- function(data,
   result <- data[, seq_cols, drop = FALSE]
 
   # Convert factors to characters
-  for (col in names(result)) {
-    if (is.factor(result[[col]])) {
-      result[[col]] <- as.character(result[[col]])
-    }
-  }
+  is_fct <- vapply(result, is.factor, logical(1L))
+  result[is_fct] <- lapply(result[is_fct], as.character)
 
   # Validate state names if requested
   if (validate && !is.null(state_names)) {
@@ -379,7 +387,10 @@ prepare_for_tna <- function(data,
     all_states <- all_states[!is.na(all_states)]
     unknown_states <- setdiff(all_states, state_names)
     if (length(unknown_states) > 0) {
-      warning("Unknown states found: ", paste(unknown_states, collapse = ", "))
+      warning(warningCondition(
+        paste0("Unknown states found: ",
+               paste(unknown_states, collapse = ", ")),
+        class = "nestimate_unknown_states", call = NULL))
     }
   }
 
@@ -435,8 +446,10 @@ prepare_for_tna <- function(data,
 action_to_onehot <- function(data, action_col = "Action", states = NULL,
                              drop_action = TRUE, sort_states = FALSE,
                              prefix = "") {
-  .assert(is.data.frame(data))
-  .assert(action_col %in% names(data))
+  .assert("`data` must be a data frame" = is.data.frame(data))
+  .assert("`action_col` must name one column of `data`" =
+            is.character(action_col) && length(action_col) == 1 &&
+            action_col %in% names(data))
 
   if (is.null(states)) {
     states <- unique(data[[action_col]])
@@ -447,6 +460,8 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
     states <- sort(states)
   }
 
+  # Loop kept: columns are added one state at a time, and a state named like
+  # an existing column replaces it before the next state is read.
   for (state in states) {
     col_name <- paste0(prefix, state)
     data[[col_name]] <- as.integer(data[[action_col]] == state)
@@ -509,11 +524,13 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
                             window_size = 3L,
                             window_type = c("non-overlapping", "overlapping"),
                             aggregate = FALSE) {
-  .assert(is.data.frame(data))
-  .assert(is.character(cols), length(cols) >= 1)
-  .assert(all(cols %in% names(data)))
+  .assert("`data` must be a data frame" = is.data.frame(data))
+  .assert("`cols` must be a character vector of column names" =
+            is.character(cols) && length(cols) >= 1)
+  .assert("`cols` must name columns of `data`" = all(cols %in% names(data)))
   window_size <- as.integer(window_size)
-  .assert(window_size >= 1L)
+  .assert("`window_size` must be a whole number of at least 1" =
+            window_size >= 1L)
   window_type <- match.arg(window_type)
 
   interval <- if (is.null(interval)) ncol(data) * nrow(data) else interval
@@ -530,8 +547,13 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
 
   actor_col <- if (is.null(actor)) ".actor" else actor
   session_col <- if (is.null(session)) ".session" else session
-  if (!is.null(actor)) .assert(actor %in% names(data))
-  if (!is.null(session)) .assert(session %in% names(data))
+  if (!is.null(actor)) {
+    .assert("`actor` must name a column of `data`" = actor %in% names(data))
+  }
+  if (!is.null(session)) {
+    .assert("`session` must name a column of `data`" =
+              session %in% names(data))
+  }
   if (is.null(actor)) work[[actor_col]] <- 1L
   if (is.null(session)) work[[session_col]] <- 1L
 
@@ -631,9 +653,7 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
     all_cols <- unique(unlist(lapply(wide_list, names), use.names = FALSE))
     wide_list <- lapply(wide_list, function(row) {
       missing <- setdiff(all_cols, names(row))
-      for (m in missing) {
-        row[[m]] <- NA_character_
-      }
+      row[missing] <- rep(list(NA_character_), length(missing))
       row[, all_cols, drop = FALSE]
     })
     result <- do.call(rbind, wide_list)

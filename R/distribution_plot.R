@@ -34,8 +34,8 @@
 #'   `nrow(x)`), drawing one panel per group in the order of its factor
 #'   levels (sorted for a character or numeric vector). `NULL` (default)
 #'   uses the cluster assignments carried by a `net_clustering`, `net_mmm`
-#'   or `netobject_group`; a `group` given overrides them. Grouped panels
-#'   are titled `"Cluster <label>"`, whatever the grouping.
+#'   or `netobject_group`; a `group` given overrides them. Panels are
+#'   titled `"Cluster <label>"`, whatever the grouping.
 #' @param scale What the y-axis shows: `"proportion"` (default) divides
 #'   each time point by its total, so the bands fill 0 to 1; `"count"`
 #'   keeps the counts, and the axis reaches the tallest stack.
@@ -180,11 +180,15 @@ distribution_plot <- function(x,
   }
 
   .assert(
-    is.logical(na),       length(na)       == 1L, !is.na(na),
-    is.logical(frame),    length(frame)    == 1L, !is.na(frame),
-    is.logical(combined), length(combined) == 1L, !is.na(combined),
-    is.logical(trim_clusterwise), length(trim_clusterwise) == 1L,
-    !is.na(trim_clusterwise)
+    "`na` must be TRUE or FALSE" =
+      is.logical(na) && length(na) == 1L && !is.na(na),
+    "`frame` must be TRUE or FALSE" =
+      is.logical(frame) && length(frame) == 1L && !is.na(frame),
+    "`combined` must be TRUE or FALSE" =
+      is.logical(combined) && length(combined) == 1L && !is.na(combined),
+    "`trim_clusterwise` must be TRUE or FALSE" =
+      is.logical(trim_clusterwise) && length(trim_clusterwise) == 1L &&
+      !is.na(trim_clusterwise)
   )
 
   if (interactive() && (!is.null(width) || !is.null(height))) {
@@ -195,20 +199,24 @@ distribution_plot <- function(x,
 
   # After any dev.new(), pick the device-sized adaptive legend_size.
   legend_size <- .auto_legend_size(legend_size)
-  .assert(is.numeric(legend_size), length(legend_size) == 1L,
+  .assert("`legend_size` must be a single positive number" =
+            is.numeric(legend_size) && length(legend_size) == 1L &&
             legend_size > 0)
 
   # A palette attached with set_state_colors() is the object's own default;
   # an explicit `state_colors` still wins for this one figure.
   state_colors <- state_colors %||% .stored_state_colors(x)
 
-  # Extract data and group from various input types
+  # Extract data and group from various input types. Panels are "clusters"
+  # only when the grouping is the input's own clustering, not a `group` given.
+  group_given <- !is.null(group)
   extracted <- .extract_seqplot_input(x, group)
   x <- extracted$data
   group <- extracted$group
 
   if (!is.null(group)) {
-    .assert(length(group) == nrow(x))
+    .assert("`group` must have one value per sequence (row of `x`)" =
+              length(group) == nrow(x))
     group <- as.factor(group)
   }
 
@@ -270,7 +278,8 @@ distribution_plot <- function(x,
   } else if (is.null(nrow)) {
     nrow <- as.integer(ceiling(G / ncol))
   }
-  .assert(ncol * nrow >= G)
+  .assert("`ncol` * `nrow` must be at least the number of groups" =
+            ncol * nrow >= G)
 
   op <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(op), add = TRUE)

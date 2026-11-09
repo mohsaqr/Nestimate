@@ -2,6 +2,7 @@
 % Please edit documentation in R/gimme.R
 \name{build_gimme}
 \alias{build_gimme}
+\alias{coefs.net_gimme}
 \title{GIMME: Group Iterative Multiple Model Estimation}
 \usage{
 build_gimme(
@@ -23,6 +24,8 @@ build_gimme(
   n_excellent = 2L,
   seed = NULL
 )
+
+\method{coefs}{net_gimme}(x, ...)
 }
 \arguments{
 \item{data}{A data frame in long format: one row per person and time
@@ -86,6 +89,10 @@ Default \code{2}.}
 
 \item{seed}{An integer that makes the estimation reproducible; the
 session's own random stream is left as it was. Default \code{NULL}.}
+
+\item{x}{For the \code{coefs()} method: a \code{net_gimme} from \code{build_gimme()}.}
+
+\item{...}{For the \code{coefs()} method: passed to \code{\link[idiographic:coefs]{idiographic::coefs()}}.}
 }
 \value{
 The \code{net_gimme} object (class
@@ -184,6 +191,16 @@ Before 0.9.0 the search ran in an in-package implementation that was
 same data -- individual-level paths in particular -- so numeric results
 are not comparable with Nestimate <= 0.8.5. The returned object also
 gained fields (see \strong{Value}); nothing was removed.
+}
+
+\section{Methods}{
+
+\itemize{
+\item \code{coefs()} on a \code{build_gimme()} result returns idiographic's coefficient
+table, one row per person and path. Nestimate's own \code{\link[=coefs]{coefs()}} generic
+masks idiographic's when both packages are attached; this method makes
+either one give the same table.
+}
 }
 
 \examples{

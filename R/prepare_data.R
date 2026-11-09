@@ -135,16 +135,19 @@ prepare <- function(data,
                          unix_time_unit = c("seconds", "milliseconds",
                                             "microseconds"),
                          timezone = "UTC") {
-  .assert(is.data.frame(data))
+  .assert("`data` must be a data frame" = is.data.frame(data))
   .check_timezone(timezone)
-  .assert(is.character(action), length(action) == 1, action %in% names(data))
+  .assert("`action` must name one column of `data`" =
+            is.character(action) && length(action) == 1 &&
+            action %in% names(data))
   # FALSE disables gap-based splitting. Inf makes the `gaps > time_threshold`
   # test below never fire, so no separate code path is needed.
   if (isFALSE(time_threshold)) {
     time_threshold <- Inf
   }
-  .assert(is.numeric(time_threshold), length(time_threshold) == 1,
-          !is.na(time_threshold), time_threshold > 0)
+  .assert("`time_threshold` must be a single positive number, or FALSE" =
+            is.numeric(time_threshold) && length(time_threshold) == 1 &&
+            !is.na(time_threshold) && time_threshold > 0)
   unix_time_unit <- match.arg(unix_time_unit)
 
   df <- as.data.frame(data)
@@ -157,7 +160,8 @@ prepare <- function(data,
     actor_col <- ".actor"
     default_actor <- TRUE
   } else {
-    .assert(is.character(actor), all(actor %in% names(df)))
+    .assert("`actor` must name columns of `data`" =
+              is.character(actor) && all(actor %in% names(df)))
     if (length(actor) > 1L) {
       # Display label only. Identity comes from the underlying columns below.
       df$.actor <- .distinct_label(df[, actor, drop = FALSE])
@@ -170,7 +174,8 @@ prepare <- function(data,
 
   # ---- Session (explicit grouping) ----
   if (!is.null(session)) {
-    .assert(is.character(session), all(session %in% names(df)))
+    .assert("`session` must name columns of `data`" =
+              is.character(session) && all(session %in% names(df)))
     if (length(session) > 1L) {
       df$.session_explicit <- .distinct_label(df[, session, drop = FALSE])
     } else {
@@ -183,7 +188,9 @@ prepare <- function(data,
     df$.order <- seq_len(n)
     order_col <- ".order"
   } else {
-    .assert(is.character(order), length(order) == 1, order %in% names(df))
+    .assert("`order` must name one column of `data`" =
+              is.character(order) && length(order) == 1 &&
+              order %in% names(df))
     order_col <- order
   }
 
@@ -203,7 +210,8 @@ prepare <- function(data,
 
   # ---- Time parsing + inferred session detection ----
   if (!is.null(time)) {
-    .assert(is.character(time), length(time) == 1, time %in% names(df))
+    .assert("`time` must name one column of `data`" =
+              is.character(time) && length(time) == 1 && time %in% names(df))
 
     # Auto-detect numeric as unix
     if (is.numeric(df[[time]])) {
@@ -501,8 +509,9 @@ print.nestimate_data <- function(x, ...) {
   .check_timezone(timezone)
   unix_divisor <- switch(unix_time_unit,
     seconds = 1, milliseconds = 1000, microseconds = 1e6,
-    stop("'unix_time_unit' must be seconds, milliseconds or microseconds.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'unix_time_unit' must be seconds, milliseconds or microseconds.",
+      class = "nestimate_bad_input", call = NULL))
   )
   as_unix <- function(x) {
     as.POSIXct(x / unix_divisor, origin = "1970-01-01", tz = timezone)
@@ -659,6 +668,7 @@ print.nestimate_data <- function(x, ...) {
     .session_id = sessions,
     stringsAsFactors = FALSE
   )
+  # Loop kept: `[[<-` adds one column per pass and skips a NULL aggregate.
   for (col in extra_cols) {
     result[[col]] <- unname(agg_list[[col]])
   }

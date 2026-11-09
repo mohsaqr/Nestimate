@@ -117,7 +117,8 @@
 #' @param min_count The number of times a context must be observed to be
 #'   reported, a whole number of at least 1. Default `5`. Contexts seen less
 #'   often give noisy KL estimates; when no context reaches `min_count`,
-#'   `path_dependence()` stops with an error.
+#'   `path_dependence()` stops with an error of class
+#'   `nestimate_bad_input`.
 #' @param base The logarithm base for the entropies and the KL divergence:
 #'   `2` (default) gives bits, `exp(1)` nats and `10` hartleys. A positive
 #'   number other than 1.
@@ -250,6 +251,13 @@ path_dependence <- function(x, order = 2L, min_count = 5L, base = 2) {
 
   ## Aggregate per context, dropping low-count contexts
   ctxs <- names(ok_totals)[ok_totals >= min_count]
+  if (length(ctxs) == 0L) {
+    stop(errorCondition(sprintf(paste0(
+      "No order-%d context occurs at least `min_count` = %d times (the most ",
+      "frequent one occurs %d times). Lower `min_count`."),
+      order, min_count, as.integer(max(ok_totals))),
+      class = "nestimate_bad_input", call = NULL))
+  }
 
   ctx_rows <- do.call(rbind, lapply(ctxs, function(c) {
     sub  <- ok_df[ok_df$context == c, ]

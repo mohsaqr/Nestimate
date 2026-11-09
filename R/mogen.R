@@ -399,8 +399,8 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
                              whole_frame = TRUE)
   }
   data <- .coerce_sequence_input(data)
-  criterion <- match.arg(criterion)
-  dof <- match.arg(dof)
+  criterion <- .ho_match_arg(criterion, "criterion")
+  dof <- .ho_match_arg(dof, "dof")
   .assert(
     "'data' must be a data.frame or list" =
       is.data.frame(data) || is.list(data),
@@ -599,7 +599,8 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
 #'
 #' @export
 mogen_transitions <- function(x, order = NULL, min_count = 1L) {
-  .assert(inherits(x, "net_mogen"))
+  .assert("'x' must be a net_mogen object from build_mogen()" =
+            inherits(x, "net_mogen"))
   if (is.null(order)) order <- x$optimal_order
   .assert(
     "'order' must be a whole number" =
@@ -879,7 +880,7 @@ summary.net_mogen <- function(object, ...) {
 #' @rdname build_mogen
 #' @export
 plot.net_mogen <- function(x, type = c("ic", "likelihood"), ...) {
-  type <- match.arg(type)
+  type <- .ho_match_arg(type, "type")
 
   if (type == "ic") {
     orders <- x$orders

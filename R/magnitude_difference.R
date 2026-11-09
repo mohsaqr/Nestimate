@@ -157,7 +157,7 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
   metric <- match.arg(metric)
   scale  <- match.arg(scale)
   format <- match.arg(format)
-  .assert(is.data.frame(data))
+  .assert("`data` must be a data frame" = is.data.frame(data))
   .check_declared_columns(data, "magnitude_difference()", actor = actor,
                           action = action, time = time)
   if (is.null(action) && identical(format, "auto")) {

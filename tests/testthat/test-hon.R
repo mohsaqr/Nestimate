@@ -426,7 +426,8 @@ test_that("build_hon default method is hon+", {
 
 test_that("build_hon rejects invalid method", {
   trajs <- list(c("A", "B", "C"))
-  expect_error(build_hon(trajs, method = "invalid"), "arg")
+  expect_error(build_hon(trajs, method = "invalid"), "should be one of",
+               class = "nestimate_bad_input")
 })
 
 # ===========================================================================

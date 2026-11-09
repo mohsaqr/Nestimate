@@ -438,12 +438,16 @@ permutation <- function(x, y = NULL,
 
   # ---- Input validation ----
   .assert(
-    inherits(x, "netobject"),
-    inherits(y, "netobject"),
-    is.numeric(iter), length(iter) == 1, iter >= 2,
-    is.numeric(alpha), length(alpha) == 1, alpha > 0, alpha < 1,
-    is.logical(paired), length(paired) == 1,
-    is.character(adjust), length(adjust) == 1
+    "`x` and `y` must be netobjects (from build_network())" =
+      inherits(x, "netobject") && inherits(y, "netobject"),
+    "`iter` must be a single number >= 2" =
+      is.numeric(iter) && length(iter) == 1L && iter >= 2,
+    "`alpha` must be a single number in (0, 1)" =
+      is.numeric(alpha) && length(alpha) == 1L && alpha > 0 && alpha < 1,
+    "`paired` must be TRUE or FALSE" =
+      is.logical(paired) && length(paired) == 1L,
+    "`adjust` must be a single string" =
+      is.character(adjust) && length(adjust) == 1L
   )
   iter <- as.integer(iter)
   .check_permutation_block(actor, paired)
@@ -490,7 +494,8 @@ permutation <- function(x, y = NULL,
   }
 
   if (!is.null(seed)) {
-    .assert(is.numeric(seed), length(seed) == 1)
+    .assert("`seed` must be NULL or a single number" =
+              is.numeric(seed) && length(seed) == 1L)
     .local_seed(seed)
   }
 
@@ -861,10 +866,14 @@ permutation <- function(x, y = NULL,
   }
 
   .assert(
-    is.numeric(iter), length(iter) == 1, iter >= 2,
-    is.numeric(alpha), length(alpha) == 1, alpha > 0, alpha < 1,
-    is.logical(paired), length(paired) == 1,
-    is.character(adjust), length(adjust) == 1
+    "`iter` must be a single number >= 2" =
+      is.numeric(iter) && length(iter) == 1L && iter >= 2,
+    "`alpha` must be a single number in (0, 1)" =
+      is.numeric(alpha) && length(alpha) == 1L && alpha > 0 && alpha < 1,
+    "`paired` must be TRUE or FALSE" =
+      is.logical(paired) && length(paired) == 1L,
+    "`adjust` must be a single string" =
+      is.character(adjust) && length(adjust) == 1L
   )
   iter <- as.integer(iter)
   .check_permutation_block(actor, paired)
@@ -912,7 +921,8 @@ permutation <- function(x, y = NULL,
   }
 
   if (!is.null(seed)) {
-    .assert(is.numeric(seed), length(seed) == 1)
+    .assert("`seed` must be NULL or a single number" =
+              is.numeric(seed) && length(seed) == 1L)
     .local_seed(seed)
   }
 
@@ -1105,6 +1115,8 @@ permutation <- function(x, y = NULL,
   m_sum <- 0
   m_sumsq <- 0
 
+  # A for loop: only running sums are kept; an apply over shuffles would
+  # materialise an iter x n_edges matrix of differences.
   for (i in seq_len(iter)) {
     if (paired) {
       # Paired: randomly swap x/y within each pair
@@ -1470,6 +1482,8 @@ permutation <- function(x, y = NULL,
   }
   n_failed <- 0L
 
+  # A for loop: each shuffle refits two networks and only running sums are
+  # kept; an apply would materialise an iter x n_edges matrix of differences.
   for (i in seq_len(iter)) {
     if (paired) {
       swaps <- sample(c(TRUE, FALSE), n_x, replace = TRUE)
@@ -1646,8 +1660,12 @@ print.net_permutation <- function(x, ...) {
                        "edges %.2f  |  global %.2f\n"),
                 cl$deff_edges, cl$deff_global))
     if (cl$min_p > x$alpha) {
-      cat(sprintf("  Note: with %d actors no p-value can fall below %s\n",
-                  cl$n_actors, format(cl$min_p, digits = 3)))
+      # min_p is the larger of two floors: name the one that binds.
+      iter_binds <- isTRUE(all.equal(cl$min_p, 1 / (x$iter + 1)))
+      cat(sprintf("  Note: with %d %s no p-value can fall below %s\n",
+                  if (iter_binds) x$iter else cl$n_actors,
+                  if (iter_binds) "iterations" else "actors",
+                  format(cl$min_p, digits = 3)))
     }
   }
 

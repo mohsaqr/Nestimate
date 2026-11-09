@@ -109,7 +109,8 @@
 #'
 #' @export
 hypergraph_measures <- function(hg) {
-  .assert(inherits(hg, "net_hypergraph"))
+  .assert("`hg` must be a net_hypergraph (build_hypergraph/bipartite_groups)" =
+            inherits(hg, "net_hypergraph"))
 
   B <- hg$incidence
   n <- hg$n_nodes
@@ -256,9 +257,8 @@ print.hypergraph_measures <- function(x, ...) {
   }
   if (length(x$intersection_profile)) {
     cat("\nIntersection profile (pair counts by overlap size):\n")
-    for (nm in names(x$intersection_profile)) {
-      cat(sprintf("  %-12s: %d\n", nm, x$intersection_profile[[nm]]))
-    }
+    cat(sprintf("  %-12s: %d\n", names(x$intersection_profile),
+                x$intersection_profile), sep = "")
   }
   invisible(x)
 }

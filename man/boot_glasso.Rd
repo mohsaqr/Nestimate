@@ -34,7 +34,8 @@ observation and one column per variable, cleaned as in
 \code{\link[=build_glasso]{build_glasso()}}: non-numeric columns and a column named \code{rid} are
 set aside; columns with non-syntactic names, all-missing and constant
 columns, and rows with a missing value are dropped, each with a
-message; fewer than 2 variables or 3 complete rows raise an error. A
+message; fewer than 2 variables or 3 complete rows, or no more rows
+than variables, raise an error. A
 square symmetric matrix with matching row and column names is read as a
 correlation or covariance matrix and refused (class
 \code{nestimate_bad_input}): it has no observations to resample. Or a

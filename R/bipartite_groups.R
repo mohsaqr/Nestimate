@@ -104,13 +104,15 @@
 #' @export
 bipartite_groups <- function(data, player, group, weight = NULL) {
   .assert(
-    is.data.frame(data),
-    is.character(player), length(player) == 1L,
-    is.character(group),  length(group)  == 1L,
-    player %in% names(data),
-    group  %in% names(data),
-    is.null(weight) ||
-      (is.character(weight) && length(weight) == 1L && weight %in% names(data))
+    "`data` must be a data frame" = is.data.frame(data),
+    "`player` must name one column of `data`" =
+      is.character(player) && length(player) == 1L && player %in% names(data),
+    "`group` must name one column of `data`" =
+      is.character(group) && length(group) == 1L && group %in% names(data),
+    "`weight` must be NULL or name one column of `data`" =
+      is.null(weight) ||
+        (is.character(weight) && length(weight) == 1L &&
+           weight %in% names(data))
   )
 
   cols <- c(player, group, weight)
@@ -141,9 +143,11 @@ bipartite_groups <- function(data, player, group, weight = NULL) {
     incidence <- matrix(0, n_players, n_groups,
                         dimnames = list(player_levels, group_levels))
     w <- as.numeric(d[[weight]])
-    for (k in seq_along(pi)) {
-      incidence[pi[k], gj[k]] <- incidence[pi[k], gj[k]] + w[k]
-    }
+    # the weights of each (player, group) cell, added in row order
+    cell <- (gj - 1L) * n_players + pi
+    totals <- vapply(split(w, cell), function(v) Reduce(`+`, v, 0),
+                     numeric(1L))
+    incidence[as.integer(names(totals))] <- totals
   }
 
   # Drop hyperedges that ended up empty (e.g. all-zero weight)

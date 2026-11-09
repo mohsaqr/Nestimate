@@ -225,6 +225,15 @@
   }))
   rects <- rects[rects$ymax > rects$ymin, , drop = FALSE]
 
+  # A `fill` that names no column would only fail when ggplot builds the plot.
+  if (!identical(fill, "y") &&
+      !(is.character(fill) && length(fill) == 1L && fill %in% names(data))) {
+    stop(errorCondition(paste0(
+      "mosaic_plot: `fill` must be \"y\" or the name of one column of the ",
+      "data; got ", paste(format(fill), collapse = ", "), "."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+
   # Attach extra fill column if requested
   if (!identical(fill, "y") && fill %in% names(data)) {
     extra <- aggregate(data[[fill]],
@@ -427,7 +436,8 @@
 #'   lists the valid ones. The data-frame method takes no `style` and
 #'   raises an error of class `nestimate_bad_input` for any argument it
 #'   does not take; the `mcml` method does the same with
-#'   `style = "classic"`; the other methods ignore it.
+#'   `style = "classic"`; the other methods ignore it with a warning of
+#'   class `nestimate_ignored_argument`.
 #'
 #' @return A `ggplot` object, one rectangle per cell (empty cells are left
 #'   out of the flat and data-frame mosaics), filled by the standardised
@@ -561,6 +571,26 @@ mosaic_plot.mcml <- function(x,
   ))
 }
 
+# An argument that reaches `...` and is read by nothing is named in a
+# warning; the call still returns what it returned without the argument.
+.warn_ignored_dots <- function(fn, ...) {
+  n_dots <- ...length()
+  if (n_dots == 0L) {
+    return(invisible(FALSE))
+  }
+  dot_names <- ...names() %||% rep("", n_dots)
+  dot_names[is.na(dot_names)] <- ""
+  unnamed <- !nzchar(dot_names)
+  dot_names[unnamed] <- paste0("..", which(unnamed))
+  warning(warningCondition(
+    paste0(fn, " ignored ",
+           if (n_dots == 1L) "an argument it does not take: "
+           else "arguments it does not take: ",
+           paste(dot_names, collapse = ", "), "."),
+    class = "nestimate_ignored_argument", call = NULL))
+  invisible(TRUE)
+}
+
 #' @export
 #' @rdname mosaic_plot
 mosaic_plot.netobject_group <- function(x,
@@ -685,8 +715,9 @@ mosaic_plot.data.frame <- function(x,
   if (requireNamespace("gridExtra", quietly = TRUE)) {
     return(gridExtra::arrangeGrob(grobs = plots, ncol = ncol))
   }
-  warning("Install 'gridExtra' to combine grouped mosaics; returning a list.",
-          call. = FALSE)
+  warning(warningCondition(
+    "Install 'gridExtra' to combine grouped mosaics; returning a list.",
+    class = "nestimate_missing_package", call = NULL))
   plots
 }
 
@@ -931,6 +962,12 @@ mosaic_plot.data.frame <- function(x,
       paste0("Cluster ", seq_along(x$clusters))
     built <- lapply(seq_along(x$clusters), function(i) {
       cl <- x$clusters[[i]]
+      # One state gives no table whether or not it has self-transitions, so
+      # it is set aside before the count check (which stops on zero counts).
+      if (is.matrix(cl$weights) &&
+          (nrow(cl$weights) < 2L || ncol(cl$weights) < 2L)) {
+        return(NULL)
+      }
       w <- .mosaic_count_or_stop(
         list(weights = cl$weights, data = cl$data, method = x$meta$type),
         ctx = sprintf("cluster[%s]", titles[i]))
@@ -946,15 +983,18 @@ mosaic_plot.data.frame <- function(x,
         class = "nestimate_bad_input", call = NULL))
     }
     if (!all(keep)) {
-      warning("mosaic_plot.mcml: skipping single-state cluster(s): ",
-              paste(titles[!keep], collapse = ", "), call. = FALSE)
+      warning(warningCondition(
+        paste0("mosaic_plot.mcml: skipping single-state cluster(s): ",
+               paste(titles[!keep], collapse = ", ")),
+        class = "nestimate_skipped_cluster", call = NULL))
     }
     return(list(tabs = built[keep], titles = titles[keep],
                 xlab_default = NULL,
                 ylab_default = NULL))
   }
-  stop("mosaic_plot: unknown source_class '", source_class, "'.",
-       call. = FALSE)
+  stop(errorCondition(
+    paste0("mosaic_plot: unknown source_class '", source_class, "'."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 
@@ -1172,9 +1212,11 @@ mosaic_plot.data.frame <- function(x,
   # unless the caller passes an explicit `tile_label` via `...`.
   if (identical(style, "flat")) {
     if (!is.null(axis_groups)) {
-      warning("mosaic_plot: group-coloured axis strips are not drawn in ",
-              "style = 'flat'; use style = 'classic' for the htna group ",
-              "annotation.", call. = FALSE)
+      warning(warningCondition(paste0(
+        "mosaic_plot: group-coloured axis strips are not drawn in ",
+        "style = 'flat'; use style = 'classic' for the htna group ",
+        "annotation."),
+        class = "nestimate_ignored_argument", call = NULL))
     }
     dots <- list(...)
     if (is.null(dots$tile_label)) {
@@ -1185,6 +1227,8 @@ mosaic_plot.data.frame <- function(x,
                    c(list(res = attr(d, "stdres"), tab = tab, range = range),
                      dots)))
   }
+  # Classic style reads nothing from `...`.
+  .warn_ignored_dots("mosaic_plot(style = \"classic\")", ...)
   widths     <- attr(d, "widths")
   heights    <- attr(d, "heights")
   row_labels <- attr(d, "row_labels")
@@ -1324,8 +1368,8 @@ mosaic_plot.data.frame <- function(x,
   pct_base       <- match.arg(pct_base)
   col_label_side <- match.arg(col_label_side)
   row_label_side <- match.arg(row_label_side)
-  stopifnot("residual matrix must match the contingency table shape" =
-              identical(dim(res), dim(tab)))
+  .assert("residual matrix must match the contingency table shape" =
+            identical(dim(res), dim(tab)))
 
   rn <- rownames(tab); cn <- colnames(tab)
   R  <- nrow(tab); C <- ncol(tab)
@@ -1748,9 +1792,11 @@ mosaic_plot.data.frame <- function(x,
     combine <- length(groups) <= 3L
   }
   if (isTRUE(combine) && !requireNamespace("gridExtra", quietly = TRUE)) {
-    stop("legend = 'per_facet' with combine = TRUE requires the ",
-         "'gridExtra' package. Install it, set combine = FALSE, or pick ",
-         "a different legend value.", call. = FALSE)
+    stop(errorCondition(paste0(
+      "legend = 'per_facet' with combine = TRUE requires the ",
+      "'gridExtra' package. Install it, set combine = FALSE, or pick ",
+      "a different legend value."),
+      class = "nestimate_missing_package", call = NULL))
   }
 
   # Per-panel palettes: each group is independent, so colors restart from
@@ -1808,7 +1854,7 @@ print.nestimate_facet_plot <- function(x, ...) {
 #' @rdname plot_state_frequencies
 #' @export
 print.nestimate_facet_list <- function(x, ...) {
-  for (p in x) print(p)
+  lapply(x, print)
   invisible(x)
 }
 
@@ -1987,8 +2033,8 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #' @param x The object to count: a `netobject`, `netobject_group`, `mcml`
 #'   or `htna` network built from sequences. A network without sequence
 #'   data raises an error; in a `netobject_group` or `mcml`, groups without
-#'   it are left out. For the `print()`, `plot()` and
-#'   `as.data.frame()` methods of the result: the `state_freq` object;
+#'   it are left out. For the `print()` and `plot()`
+#'   methods of the result: the `state_freq` object;
 #'   for the `print()` methods of a per-panel figure: an object of class
 #'   `nestimate_facet_plot` or `nestimate_facet_list`.
 #' @param style The chart. `"marimekko"` (default) draws treemaps, or the
@@ -2055,15 +2101,18 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #' @param ncol For a combined figure with per-panel legends: the number of
 #'   columns. Default `NULL`: one column per panel with up to two panels,
 #'   two columns with more.
-#' @param ... Not used by the `netobject`, `netobject_group` and `htna`
-#'   methods; the `mcml` method raises an error for any argument it does
-#'   not take. For the `print()`, `plot()` and `as.data.frame()` methods
-#'   of the result: ignored.
+#' @param ... Not used: the `netobject`, `netobject_group` and `htna`
+#'   methods ignore an argument they do not take with a warning of class
+#'   `nestimate_ignored_argument`; the `mcml` method raises an error for
+#'   it. For the `print()` and `plot()` methods of the result:
+#'   ignored.
 #'
 #' @return A `state_freq` object. Printing it shows the event totals per
 #'   group and the share of each state within its group, then draws the
-#'   chart; `plot()` draws the chart alone. [state_distribution()] gives
-#'   the same counts from the network, with the full state names and, for
+#'   chart; `plot()` draws the chart alone. [state_distribution()] of the
+#'   result returns the table as drawn, one row per group and state;
+#'   [state_distribution()] of the network gives
+#'   the same counts, with the full state names and, for
 #'   an `mcml`, without the macro group unless `include_macro = TRUE`.
 #'   The object holds the chart (a
 #'   `ggplot`; with per-panel legends either a combined figure, a `gtable`
@@ -2085,7 +2134,7 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #'   res <- plot_state_frequencies(nw)
 #'   print(res)            # tidy frequency table in the console
 #'   plot(res)             # ggplot chart
-#'   head(as.data.frame(res))
+#'   head(state_distribution(res))
 #' }
 #' @order 1
 #' @export
@@ -2256,6 +2305,8 @@ plot_state_frequencies.default <- function(x, ...) {
   # A palette attached with set_state_colors() is the object's own default;
   # an explicit `colors` still wins for this one figure.
   colors       <- colors %||% .stored_state_colors(x)
+  # Nothing below reads `...` (the mcml method has already refused it).
+  .warn_ignored_dots("plot_state_frequencies()", ...)
 
   if (identical(legend, "auto")) {
     legend <- if (style == "bars") {
@@ -2364,7 +2415,8 @@ plot_state_frequencies.default <- function(x, ...) {
 #' sequence data.
 #'
 #' @param x A `netobject`, `netobject_group`, `mcml` or `htna` network
-#'   built from sequences. A network without sequence data raises an error;
+#'   built from sequences, or the `state_freq` result of
+#'   [plot_state_frequencies()], whose table is returned as drawn. A network without sequence data raises an error;
 #'   in a `netobject_group` or `mcml`, groups without it are left out, and
 #'   an error is raised only when none has any. Other classes raise an
 #'   error.
@@ -2424,6 +2476,10 @@ state_distribution.mcml <- function(x, include_macro = FALSE, ...) {
 state_distribution.netobject_group <- function(x, ...) {
   .freq_df_netobject_group(x)
 }
+
+#' @export
+#' @rdname state_distribution
+state_distribution.state_freq <- function(x, ...) x$table
 
 #' @export
 #' @rdname state_distribution
@@ -2553,8 +2609,10 @@ plot.state_freq <- function(x, ...) {
   invisible(NULL)
 }
 
-#' @rdname plot_state_frequencies
+# Kept so that code written against earlier versions still runs; the
+# documented verb is state_distribution().
 #' @export
+#' @noRd
 as.data.frame.state_freq <- function(x, ...) x$table
 
 

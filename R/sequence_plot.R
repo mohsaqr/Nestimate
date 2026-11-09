@@ -123,8 +123,10 @@
 #' *Multichannel view of an mcml*). That figure is drawn with ggplot2 and
 #' takes only `type`, `trim`, `state_colors`, `na_color`, `main`,
 #' `time_label` (or `xlab`) and the mcml options (`normalize`, `na`,
-#' `panel`, `expand`, `combine`, `rest`, `rest_label`); every other figure
-#' is drawn with base graphics.
+#' `panel`, `expand`, `combine`, `rest`, `rest_label`); any other argument
+#' given with an `mcml` is ignored with a warning of class
+#' `nestimate_ignored_argument`. Every other figure is drawn with base
+#' graphics.
 #'
 #' The plot describes the sequences; it does not model them. The row order
 #' of a heatmap comes from `sort` and is a display choice, so blocks of
@@ -190,7 +192,8 @@
 #'   sequence (`nrow(x)` values), for the index and distribution views; the
 #'   heatmap ignores it. `NULL` (default) uses the cluster assignments of a
 #'   `net_clustering`, `net_mmm` or `netobject_group` input, and draws one
-#'   panel otherwise. With `periods`, `group` instead names a column of the
+#'   panel otherwise. Index panels are titled
+#'   `"Cluster <label>"`, whatever the grouping. With `periods`, `group` instead names a column of the
 #'   event log (or of the network's metadata) that is constant within
 #'   actor, such as a class or a condition: one panel per value, one row
 #'   per actor, all panels on the same period axis. With an event log it
@@ -224,7 +227,8 @@
 #'   in grey. Repeats of a state merge into one spell; `cell_border =
 #'   "white"` (TraMineR's `border`) outlines each action so they show as
 #'   separate, equal shares of the period. Setting `fill` without `periods`
-#'   raises an error of class `nestimate_bad_input`; an `mcml` ignores it.
+#'   raises an error of class `nestimate_bad_input`; an `mcml` ignores it
+#'   with a warning.
 #' @param actor,action,time,order For an event log: column names, as in
 #'   [build_network()]. Giving `action` declares `x` an event log (one row
 #'   per action); `actor` identifies who acted (one row per actor in the
@@ -399,8 +403,8 @@
 #'   Needed when they are not a numbered run (`T1`, `T2`, ...), when one of
 #'   them is called `action`, or when any other column sits beside them;
 #'   given for any other input it raises an error of class
-#'   `nestimate_bad_input`, except for an `mcml`, which ignores it.
-#'   Default `NULL`.
+#'   `nestimate_bad_input`, except for an `mcml`, which ignores it with a
+#'   warning. Default `NULL`.
 #'
 #' @section Multichannel view of an mcml:
 #' An \code{mcml} built from sequences stores, for every cluster, the full
@@ -577,8 +581,11 @@ sequence_plot <- function(x,
   # A palette attached with set_state_colors() is the object's own default;
   # an explicit `state_colors` still wins for this one figure.
   state_colors <- state_colors %||% .stored_state_colors(x)
-  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined),
-            is.logical(trim_clusterwise), length(trim_clusterwise) == 1L)
+  .assert(
+    "`combined` must be TRUE or FALSE" =
+      is.logical(combined) && length(combined) == 1L && !is.na(combined),
+    "`trim_clusterwise` must be TRUE or FALSE" =
+      is.logical(trim_clusterwise) && length(trim_clusterwise) == 1L)
   if (is.null(legend)) legend <- "right"
   legend <- match.arg(legend, c("bottom", "right", "none"))
   if (!is.null(xlab)) time_label <- xlab
@@ -601,6 +608,7 @@ sequence_plot <- function(x,
                              "`actor =` and `session =`, not an mcml."))
   }
   if (inherits(x, "mcml")) {
+    .seqplot_mcml_ignored(names(match.call())[-1L])
     return(.sequence_plot_mcml(
       x, type = type, normalize = isTRUE(normalize),
       state_colors = state_colors, na_color = na_color,
@@ -719,6 +727,26 @@ sequence_plot <- function(x,
 }
 
 
+# An mcml is drawn by the ggplot multichannel path, which reads only the
+# arguments below; any other argument the caller set is named in a warning.
+.seqplot_mcml_ignored <- function(given) {
+  used <- c("x", "type", "normalize", "state_colors", "na_color", "main",
+            "time_label", "xlab", "trim", "panel", "expand", "combine",
+            "rest", "na", "rest_label", "periods")
+  ignored <- setdiff(given[nzchar(given)], used)
+  if (length(ignored)) {
+    warning(warningCondition(
+      paste0("sequence_plot(): ",
+             if (length(ignored) == 1L) "this argument is" else
+               "these arguments are",
+             " ignored for an mcml: ",
+             paste0("`", ignored, "`", collapse = ", "), "."),
+      class = "nestimate_ignored_argument", call = NULL))
+  }
+  invisible(ignored)
+}
+
+
 # ---- Heatmap (single-panel dense carpet with optional dendrogram) ---------
 .sequence_plot_heatmap <- function(x, sort, tree, dendrogram_width,
                                    k, k_color, k_line_width,
@@ -828,7 +856,9 @@ sequence_plot <- function(x,
   # where group membership changes in the plotted row order, draw thin
   # lines at those row boundaries.
   if (!is.null(k) && !is.null(tree)) {
-    .assert(is.numeric(k), length(k) == 1L, k >= 2L, k < n_rows)
+    .assert(
+      "`k` must be a single number from 2 to one less than the number of rows" =
+        is.numeric(k) && length(k) == 1L && !is.na(k) && k >= 2L && k < n_rows)
     hc  <- stats::as.hclust(tree)
     mem <- stats::cutree(hc, k = as.integer(k))[ord]
     boundaries <- which(diff(mem) != 0L)
@@ -858,16 +888,21 @@ sequence_plot <- function(x,
                                  legend_ncol, legend_border, legend_bty,
                                  trim = NULL, trim_clusterwise = FALSE) {
 
-  .assert(is.numeric(row_gap), length(row_gap) == 1L,
-            row_gap >= 0, row_gap < 1)
+  .assert(
+    "`row_gap` must be a single number from 0 up to, but not including, 1" =
+      is.numeric(row_gap) && length(row_gap) == 1L && !is.na(row_gap) &&
+      row_gap >= 0 && row_gap < 1)
 
-  # Extract data and group from various input types
+  # Extract data and group from various input types. Panels are "clusters"
+  # only when the grouping is the input's own clustering, not a `group` given.
+  group_given <- !is.null(group)
   extracted <- .extract_seqplot_input(x, group)
   x <- extracted$data
   group <- extracted$group
 
   if (!is.null(group)) {
-    .assert(length(group) == nrow(x))
+    .assert("`group` must have one value per sequence (row of `x`)" =
+              length(group) == nrow(x))
     group <- as.factor(group)
   }
 
@@ -910,7 +945,8 @@ sequence_plot <- function(x,
   } else if (is.null(nrow)) {
     nrow <- as.integer(ceiling(G / ncol))
   }
-  .assert(ncol * nrow >= G)
+  .assert("`ncol` * `nrow` must be at least the number of groups" =
+            ncol * nrow >= G)
 
   op <- graphics::par(no.readonly = TRUE); on.exit(graphics::par(op), add = TRUE)
   oma <- .legend_oma_size(levels_all, legend, legend_size,

@@ -3,12 +3,15 @@
 \name{loading_stability}
 \alias{loading_stability}
 \alias{print.pc_loading_stability}
+\alias{summary.pc_loading_stability}
 \alias{plot.pc_loading_stability}
 \title{Composite-Weight Stability Under Case Resampling}
 \usage{
 loading_stability(x, iter = 200L, ci_level = 0.05, seed = NULL)
 
 \method{print}{pc_loading_stability}(x, digits = 3, ...)
+
+\method{summary}{pc_loading_stability}(object, ...)
 
 \method{plot}{pc_loading_stability}(x, ...)
 }
@@ -32,10 +35,13 @@ than a plain bootstrap.}
 \item{digits}{For the \code{print()} method: the decimal places of the
 numeric columns. Default \code{3}.}
 
-\item{...}{For the \code{print()} and \code{plot()} methods: ignored.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: ignored.}
+
+\item{object}{For the \code{summary()} method: a \code{pc_loading_stability} object.}
 }
 \value{
-A \code{pc_loading_stability} object. \code{print()} shows the item table;
+A \code{pc_loading_stability} object. \code{print()} shows the item table
+and \code{summary()} returns it;
 \code{plot()} draws each item's signed weight with its interval, one panel
 per cluster. The object's fields:
 \describe{
@@ -50,6 +56,9 @@ weights.}
 
 For the methods: \code{print()} returns \code{x} invisibly, \code{plot()} a
 \code{ggplot}.
+
+For the \code{summary()} method: the item table, a data frame with one
+row per item and the columns listed under \code{summary} above.
 }
 \description{
 \code{loading_stability()} bootstraps the item weights of a \code{\link[=build_mcml_pc]{build_mcml_pc()}}

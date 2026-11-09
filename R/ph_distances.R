@@ -75,7 +75,9 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
   dims <- if (is.null(dimension)) {
     sort(unique(c(df1$dimension, df2$dimension)))
   } else {
-    .assert(is.numeric(dimension), all(dimension == as.integer(dimension)))
+    .assert("`dimension` must be whole numbers" =
+              is.numeric(dimension) && !anyNA(dimension) &&
+                all(dimension == as.integer(dimension)))
     as.integer(dimension)
   }
   if (length(dims) == 0L) {
@@ -163,7 +165,8 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 
   if (.bottleneck_feasible(p1, p2, d_p1_p2, d_p1_diag, d_p2_diag,
                             candidates[length(candidates)] + tol)) {
-    # find smallest eps via binary search
+    # find smallest eps via binary search (a loop: each step halves the
+    # interval the previous one left)
     lo <- 1L; hi <- length(candidates)
     while (lo < hi) {
       mid <- (lo + hi) %/% 2L
@@ -318,11 +321,13 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 persistence_landscape <- function(ph, k_max = 5L, dimension = 1L,
                                    t_grid = NULL) {
   .assert(
-    is.numeric(k_max), length(k_max) == 1L,
-    !is.na(k_max), k_max >= 1L, k_max == as.integer(k_max),
-    is.numeric(dimension), length(dimension) == 1L,
-    !is.na(dimension), dimension >= 0L,
-    dimension == as.integer(dimension)
+    "`k_max` must be a single positive whole number" =
+      is.numeric(k_max) && length(k_max) == 1L &&
+        !is.na(k_max) && k_max >= 1L && k_max == as.integer(k_max),
+    "`dimension` must be a single non-negative whole number" =
+      is.numeric(dimension) && length(dimension) == 1L &&
+        !is.na(dimension) && dimension >= 0L &&
+        dimension == as.integer(dimension)
   )
   df <- .ph_as_diagram(ph)
   sub <- df[df$dimension == as.integer(dimension), , drop = FALSE]

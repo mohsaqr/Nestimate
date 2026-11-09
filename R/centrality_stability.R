@@ -48,7 +48,8 @@
 #' long-standing behaviour. When *some* requested measures do not vary
 #' across the nodes of the original network (or are undefined on it), they
 #' are dropped, and the result covers only the retained ones. When *every*
-#' requested measure is so, a warning is issued and *all* requested names
+#' requested measure is so, a warning of class `nestimate_constant_measure`
+#' is issued and *all* requested names
 #' are returned with a CS-coefficient of 0 and correlations that are all
 #' `NA`. A measure counts as constant when its values span no more than
 #' the square root of the machine epsilon relative to their size, so
@@ -267,8 +268,10 @@ centrality_stability <- function(x,
                  function(m) !.is_constant_vector(orig_cents[[m]]),
                  logical(1))
   if (!any(keep)) {
-    warning("All centrality measures have zero variance. ",
-            "No stability can be assessed.", call. = FALSE)
+    warning(warningCondition(paste0(
+      "All centrality measures have zero variance. ",
+      "No stability can be assessed."),
+      class = "nestimate_constant_measure", call = NULL))
     result <- list(
       cs = stats::setNames(rep(0, length(measures)), measures),
       correlations = stats::setNames(
@@ -364,6 +367,8 @@ centrality_stability <- function(x,
   failed <- new.env(parent = emptyenv())
   failed$n <- 0L
   failed$total <- 0L
+  # Loop kept on purpose: the proportions draw from one random stream in
+  # order and fill pre-allocated matrices in place.
   for (p_idx in seq_len(n_prop)) {
     prop <- drop_prop[p_idx]
     n_keep <- n_seq - floor(n_seq * prop)
@@ -400,6 +405,7 @@ centrality_stability <- function(x,
     if (n_measures == 1L) {
       corr_storage[[1]][, p_idx] <- corr_mat
     } else {
+      # in-place column fill of the pre-allocated matrices
       for (k in seq_len(n_measures)) {
         corr_storage[[measures[k]]][, p_idx] <- corr_mat[k, ]
       }
@@ -474,10 +480,9 @@ centrality_stability <- function(x,
     }
     if (any(c("ClosenessIn", "ClosenessOut", "Closeness") %in% canonical)) {
       cl <- .closeness(abs_mat, directed = directed, invert = invert)
-      for (m in intersect(c("ClosenessIn", "ClosenessOut", "Closeness"),
-                          canonical)) {
-        result[[m]] <- cl[[m]]
-      }
+      wanted <- intersect(c("ClosenessIn", "ClosenessOut", "Closeness"),
+                          canonical)
+      result[wanted] <- cl[wanted]
     }
   }
 
@@ -506,25 +511,25 @@ centrality_stability <- function(x,
       stop(errorCondition("centrality_fn must return a named list.",
                           class = "nestimate_bad_input", call = NULL))
     } # nocov end
-    for (m in external) {
-      if (is.null(custom[[m]])) { # nocov start
-        stop(errorCondition(
-          paste0("centrality_fn did not return measure '", m, "'."),
-          class = "nestimate_bad_input", call = NULL))
-      } # nocov end
-      result[[m]] <- custom[[m]]
-    }
+    absent <- external[vapply(external, function(m) is.null(custom[[m]]),
+                              logical(1))]
+    if (length(absent) > 0L) { # nocov start
+      stop(errorCondition(
+        paste0("centrality_fn did not return measure '", absent[1L], "'."),
+        class = "nestimate_bad_input", call = NULL))
+    } # nocov end
+    result[external] <- lapply(external, function(m) custom[[m]])
   }
 
-  for (m in names(result)) {
-    if (isTRUE(normalize) ||
-        (identical(m, "Diffusion") && isTRUE(normalize_diffusion))) {
-      result[[m]] <- .range01_tna(result[[m]])
-    }
-  }
+  to_scale <- names(result)[vapply(names(result), function(m) {
+    isTRUE(normalize) ||
+      (identical(m, "Diffusion") && isTRUE(normalize_diffusion))
+  }, logical(1))]
+  result[to_scale] <- lapply(result[to_scale], .range01_tna)
 
   out <- vector("list", length(measures))
   names(out) <- measures
+  # Loop kept on purpose: each slot is assigned by name, in order.
   for (i in seq_along(measures)) {
     m <- measures[[i]]
     cm <- canonical[[i]]
@@ -582,14 +587,12 @@ centrality_stability <- function(x,
 #'   `net_stability_group`.
 #' @export
 print.net_stability <- function(x, ...) {
-  cat(sprintf("Centrality Stability (%d iterations, threshold = %.1f)\n",
-              x$iter, x$threshold))
+  cat(sprintf("Centrality Stability (%d iterations, threshold = %s)\n",
+              x$iter, format(x$threshold)))
   cat(sprintf("  Drop proportions: %s\n",
               paste(x$drop_prop, collapse = ", ")))
   cat("\n  CS-coefficients:\n")
-  for (m in names(x$cs)) {
-    cat(sprintf("    %-15s  %.2f\n", m, x$cs[m]))
-  }
+  cat(sprintf("    %-15s  %.2f\n", names(x$cs), x$cs), sep = "")
   invisible(x)
 }
 
@@ -597,8 +600,11 @@ print.net_stability <- function(x, ...) {
 #' @export
 print.net_stability_group <- function(x, ...) {
   measures <- unique(unlist(lapply(x, function(e) names(e$cs))))
-  cs_mat <- sapply(x, function(e) e$cs[measures])
-  rownames(cs_mat) <- measures
+  # A matrix whatever the number of measures: with one measure sapply()
+  # returned a plain vector and setting its row names stopped the print.
+  cs_mat <- matrix(
+    vapply(x, function(e) unname(e$cs[measures]), numeric(length(measures))),
+    nrow = length(measures), dimnames = list(measures, names(x)))
   cat(sprintf("Centrality Stability (%d networks, threshold = %.2f)\n",
               length(x), x[[1]]$threshold))
   print(round(t(cs_mat), 2))
@@ -660,7 +666,7 @@ plot.net_stability <- function(x, ...) {
     ggplot2::geom_hline(yintercept = x$threshold,
                         linetype = "dashed", color = "grey40") +
     ggplot2::annotate("text", x = max(x$drop_prop), y = x$threshold,
-                      label = sprintf("threshold = %.1f", x$threshold),
+                      label = sprintf("threshold = %s", format(x$threshold)),
                       hjust = 1, vjust = -0.5, size = 3, color = "grey40") +
     ggplot2::scale_x_continuous(
       breaks = x$drop_prop,

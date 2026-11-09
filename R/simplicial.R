@@ -87,8 +87,9 @@
 #' @param ... For `type = "pathway"` on a `tna` model or `netobject`: `method`
 #'   (`"hon"`, the default, `"hypa"` or `"mogen"`) chooses the higher-order
 #'   model built from it, and the other arguments go to [build_hon()],
-#'   [build_hypa()] or [build_mogen()]. For the `print()` and `plot()`
-#'   methods: ignored.
+#'   [build_hypa()] or [build_mogen()]. Any other construction or input does
+#'   not read `...` and warns with class `nestimate_ignored_argument` when it
+#'   is given. For the `print()` and `plot()` methods: ignored.
 #' @return A `simplicial_complex` object. `print()` shows the counts, the
 #'   density, the f-vector (simplices per dimension), the Euler
 #'   characteristic and the non-zero Betti numbers; `plot()` draws the
@@ -139,11 +140,14 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
   type <- match.arg(type, c("clique", "pathway", "vr", "rips"))
   anomaly <- match.arg(anomaly)
   .assert(
-    is.numeric(threshold), length(threshold) == 1L,
-    !is.na(threshold), threshold >= 0,
-    is.numeric(max_dim), length(max_dim) == 1L,
-    !is.na(max_dim), max_dim >= 0, max_dim == as.integer(max_dim)
+    "`threshold` must be a single non-negative number" =
+      is.numeric(threshold) && length(threshold) == 1L &&
+        !is.na(threshold) && threshold >= 0,
+    "`max_dim` must be a single non-negative whole number" =
+      is.numeric(max_dim) && length(max_dim) == 1L &&
+        !is.na(max_dim) && max_dim >= 0 && max_dim == as.integer(max_dim)
   )
+  if (type != "pathway") .sc_warn_ignored_dots("build_simplicial()", ...)
 
   if (type == "vr" || type == "rips") {
     d <- .sc_extract_matrix(x)
@@ -164,6 +168,24 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 
   mat <- .sc_extract_matrix(x)
   .build_simplicial_clique(mat, threshold, max_dim)
+}
+
+# `...` reaches a higher-order builder only for a pathway complex built from a
+# tna model or netobject; anywhere else it used to be dropped without a word,
+# so a misspelled argument had no effect.
+#' @noRd
+.sc_warn_ignored_dots <- function(fn, ...) {
+  if (...length() == 0L) return(invisible(NULL))
+  given <- ...names() %||% rep("", ...length())
+  given[is.na(given) | !nzchar(given)] <- "<unnamed>"
+  warning(warningCondition(
+    sprintf(paste0(
+      "%s: `...` is read only for type = \"pathway\" on a tna model or ",
+      "netobject; ignored here: %s."),
+      fn, paste(given, collapse = ", ")),
+    class = "nestimate_ignored_argument", call = NULL
+  ))
+  invisible(NULL)
 }
 
 #' @noRd
@@ -187,7 +209,11 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #' @noRd
 .build_simplicial_clique <- function(mat, threshold = 0, max_dim = 10L,
                                      inclusive = TRUE) {
-  .assert(is.matrix(mat), nrow(mat) == ncol(mat))
+  .assert(
+    "the network must be a square numeric weight matrix" =
+      is.matrix(mat) && (is.numeric(mat) || is.logical(mat)) &&
+        nrow(mat) == ncol(mat)
+  )
   nodes <- rownames(mat) %||% paste0("V", seq_len(nrow(mat)))
   n <- nrow(mat)
 
@@ -287,6 +313,9 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
                                        anomaly = c("all", "over", "under"),
                                        ...) {
   anomaly <- match.arg(anomaly)
+  if (inherits(x, c("net_hon", "net_hypa", "net_mogen"))) {
+    .sc_warn_ignored_dots("build_simplicial()", ...)
+  }
 
   if (inherits(x, "net_hon")) {
     edges <- x$ho_edges
@@ -415,6 +444,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
     pivot <- union_px[which.max(
       vapply(union_px, function(v) sum(P %in% neighbors[[v]]), integer(1))
     )]
+    # A loop: each branch shrinks P and grows X for the branches after it.
     for (v in setdiff(P, neighbors[[pivot]])) {
       nbrs <- neighbors[[v]]
       .bk(c(R, v), intersect(P, nbrs), intersect(X, nbrs))
@@ -430,25 +460,18 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #' Expand maximal cliques to all sub-simplices
 #' @noRd
 .expand_to_faces <- function(simplices, max_dim = 10L) {
-  seen <- new.env(hash = TRUE, parent = emptyenv())
-  result <- list()
-
-  for (simplex in simplices) {
+  # every face of every simplex, smallest first within a simplex; a face shared
+  # by several simplices is kept where it first appears
+  faces <- unlist(lapply(simplices, function(simplex) {
     simplex <- sort(as.integer(simplex))
     max_size <- min(length(simplex), max_dim + 1L)
-    for (size in seq_len(max_size)) {
-      combos <- utils::combn(simplex, size, simplify = FALSE)
-      for (face in combos) {
-        key <- paste(face, collapse = ",")
-        if (is.null(seen[[key]])) {
-          seen[[key]] <- TRUE
-          result[[length(result) + 1L]] <- face
-        }
-      }
-    }
-  }
-
-  result
+    unlist(lapply(seq_len(max_size), function(size) {
+      utils::combn(simplex, size, simplify = FALSE)
+    }), recursive = FALSE)
+  }), recursive = FALSE)
+  if (is.null(faces)) return(list())
+  keys <- vapply(faces, paste, character(1), collapse = ",")
+  faces[!duplicated(keys)]
 }
 
 # =========================================================================
@@ -458,13 +481,10 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #' @noRd
 .make_simplicial_complex <- function(simplices, nodes, type) {
   # Ensure all 0-simplices are present
-  seen <- new.env(hash = TRUE, parent = emptyenv())
-  for (s in simplices) seen[[paste(sort(s), collapse = ",")]] <- TRUE
-  for (i in seq_along(nodes)) {
-    if (is.null(seen[[as.character(i)]])) {
-      simplices[[length(simplices) + 1L]] <- i
-    }
-  }
+  keys <- vapply(simplices, function(s) paste(sort(s), collapse = ","),
+                 character(1))
+  absent <- setdiff(as.character(seq_along(nodes)), keys)
+  simplices <- c(simplices, as.list(as.integer(absent)))
 
   dims <- vapply(simplices, function(s) length(s) - 1L, integer(1))
   max_d <- if (length(dims) > 0L) max(dims) else 0L
@@ -535,7 +555,8 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #'
 #' @export
 betti_numbers <- function(sc) {
-  .assert(inherits(sc, "simplicial_complex"))
+  .assert("`sc` must be a simplicial_complex (see build_simplicial())" =
+            inherits(sc, "simplicial_complex"))
   if (isTRUE(sc$truncated)) {
     warning(warningCondition(
       sprintf(paste0(
@@ -555,39 +576,35 @@ betti_numbers <- function(sc) {
   dims <- vapply(sc$simplices, function(s) length(s) - 1L, integer(1))
   by_dim <- lapply(0:max_d, function(d) sc$simplices[dims == d])
 
-  boundary_ranks <- integer(max_d + 2L)
-  boundary_ranks[1L] <- 0L
-
-  for (d in seq_len(max_d)) {
+  # rank of the boundary map from the d-simplices to their (d - 1)-faces
+  boundary_rank <- function(d) {
     k_simplices <- by_dim[[d + 1L]]
     km1_simplices <- by_dim[[d]]
-
-    if (length(k_simplices) == 0L || length(km1_simplices) == 0L) { # nocov start
-      boundary_ranks[d + 1L] <- 0L
-      next # nocov end
-    }
+    if (length(k_simplices) == 0L || length(km1_simplices) == 0L) return(0L) # nocov
 
     km1_keys <- vapply(km1_simplices, function(s) {
       paste(sort(s), collapse = ",")
     }, character(1))
-    km1_idx <- setNames(seq_along(km1_keys), km1_keys)
+
+    # one row per (simplex j, omitted vertex i): the face it leaves and its sign
+    cells <- do.call(rbind, lapply(seq_along(k_simplices), function(j) {
+      simplex <- sort(k_simplices[[j]])
+      omitted <- seq_along(simplex)
+      face_keys <- vapply(omitted, function(i) {
+        paste(simplex[-i], collapse = ",")
+      }, character(1))
+      cbind(row = match(face_keys, km1_keys), col = j,
+            sign = (-1)^(omitted + 1L))
+    }))
+    cells <- cells[!is.na(cells[, "row"]), , drop = FALSE]
 
     bmat <- matrix(0, nrow = length(km1_simplices),
                    ncol = length(k_simplices))
-
-    for (j in seq_along(k_simplices)) {
-      simplex <- sort(k_simplices[[j]])
-      for (i in seq_along(simplex)) {
-        face_key <- paste(simplex[-i], collapse = ",")
-        row_idx <- km1_idx[face_key]
-        if (!is.na(row_idx)) {
-          bmat[row_idx, j] <- (-1)^(i + 1L)
-        }
-      }
-    }
-
-    boundary_ranks[d + 1L] <- qr(bmat)$rank
+    bmat[cells[, c("row", "col"), drop = FALSE]] <- cells[, "sign"]
+    qr(bmat)$rank
   }
+  boundary_ranks <- c(0L, vapply(seq_len(max_d), boundary_rank, integer(1)),
+                      0L)
 
   betti <- vapply(0:max_d, function(d) {
     n_k <- length(by_dim[[d + 1L]])
@@ -619,7 +636,8 @@ betti_numbers <- function(sc) {
 #'
 #' @export
 euler_characteristic <- function(sc) {
-  .assert(inherits(sc, "simplicial_complex"))
+  .assert("`sc` must be a simplicial_complex (see build_simplicial())" =
+            inherits(sc, "simplicial_complex"))
   signs <- (-1L)^(seq_along(sc$f_vector) - 1L)
   as.integer(sum(signs * sc$f_vector))
 }
@@ -742,9 +760,11 @@ euler_characteristic <- function(sc) {
   # filtered-complex shape consumed by .persistence_pairs_z2(). Honors max_dim
   # by dropping simplices above that dimension and re-orders by (filt, dim) so
   # boundary reduction is well-defined.
-  stopifnot(inherits(sc, "simplicial_complex"),
-            !is.null(sc$filtration),
-            length(sc$filtration) == length(sc$simplices))
+  .assert(
+    "`x` must be a simplicial_complex with one filtration value per simplex" =
+      inherits(sc, "simplicial_complex") && !is.null(sc$filtration) &&
+        length(sc$filtration) == length(sc$simplices)
+  )
   simplices <- sc$simplices
   filt <- as.numeric(sc$filtration)
   dims <- vapply(simplices, function(s) length(s) - 1L, integer(1))
@@ -1014,12 +1034,22 @@ euler_characteristic <- function(sc) {
 persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
                                 type = "clique", max_scale = NULL) {
   .assert(
-    is.numeric(n_steps), length(n_steps) == 1L,
-    !is.na(n_steps), n_steps >= 1L, n_steps == as.integer(n_steps),
-    is.numeric(max_dim), length(max_dim) == 1L,
-    !is.na(max_dim), max_dim >= 0, max_dim == as.integer(max_dim)
+    "`n_steps` must be a single positive whole number" =
+      is.numeric(n_steps) && length(n_steps) == 1L &&
+        !is.na(n_steps) && n_steps >= 1L && n_steps == as.integer(n_steps),
+    "`max_dim` must be a single non-negative whole number" =
+      is.numeric(max_dim) && length(max_dim) == 1L &&
+        !is.na(max_dim) && max_dim >= 0 && max_dim == as.integer(max_dim)
   )
   type <- match.arg(type, c("clique", "vr"))
+  if (inherits(x, "simplicial_complex") && is.null(x$filtration)) {
+    # a clique or pathway complex records no scale at which a simplex enters
+    stop(errorCondition(paste0(
+      "This ", x$type, " complex carries no filtration, so its persistence ",
+      "cannot be read. Pass the network or weight matrix itself, or a ",
+      "complex built with build_simplicial(type = \"vr\")."),
+      class = "nestimate_bad_input", call = NULL))
+  }
 
   # Filtered-complex handoff: build_simplicial(type = "vr") attaches a
   # $filtration vector. Consume it directly instead of rebuilding from a
@@ -1050,6 +1080,10 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
     }
   } else {
     mat <- .sc_extract_matrix(x)
+    .assert(
+      "the network must be a square numeric weight matrix" =
+        (is.numeric(mat) || is.logical(mat)) && nrow(mat) == ncol(mat)
+    )
     mat <- abs(mat)
     mat <- pmax(mat, t(mat))
     diag(mat) <- 0
@@ -1151,25 +1185,30 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
 #'
 #' @export
 simplicial_degree <- function(sc, normalized = FALSE) {
-  .assert(inherits(sc, "simplicial_complex"))
+  .assert(
+    "`sc` must be a simplicial_complex (see build_simplicial())" =
+      inherits(sc, "simplicial_complex"),
+    "`normalized` must be TRUE or FALSE" =
+      (is.logical(normalized) || is.numeric(normalized)) &&
+        length(normalized) == 1L && !is.na(normalized)
+  )
   n <- sc$n_nodes
   max_d <- sc$dimension
 
   dims <- vapply(sc$simplices, function(s) length(s) - 1L, integer(1))
 
-  mat <- matrix(0L, nrow = n, ncol = max_d + 1L)
-  for (i in seq_along(sc$simplices)) {
-    d <- dims[i]
-    for (v in sc$simplices[[i]]) {
-      mat[v, d + 1L] <- mat[v, d + 1L] + 1L
-    }
-  }
+  # cell (v, d + 1) counts the d-simplices that contain node v
+  members <- unlist(sc$simplices, use.names = FALSE)
+  member_dim <- rep(dims, times = dims + 1L)
+  mat <- matrix(
+    tabulate((member_dim * n) + members, nbins = n * (max_d + 1L)),
+    nrow = n, ncol = max_d + 1L
+  )
 
   if (normalized && n > 1L) {
-    for (d in 0:max_d) {
-      denom <- choose(n - 1L, d)
-      if (denom > 0) mat[, d + 1L] <- mat[, d + 1L] / denom
-    }
+    denom <- choose(n - 1L, 0:max_d)
+    denom[!(denom > 0)] <- 1
+    mat <- sweep(mat, 2L, denom, "/")
   }
 
   df <- as.data.frame(mat)
@@ -1233,7 +1272,8 @@ simplicial_degree <- function(sc, normalized = FALSE) {
 #'
 #' @export
 q_analysis <- function(sc) {
-  .assert(inherits(sc, "simplicial_complex"))
+  .assert("`sc` must be a simplicial_complex (see build_simplicial())" =
+            inherits(sc, "simplicial_complex"))
 
   simplices <- sc$simplices
   dims <- vapply(simplices, function(s) length(s) - 1L, integer(1))
@@ -1272,13 +1312,12 @@ q_analysis <- function(sc) {
   }
 
   # Shared face dimension between pairs
-  shared_dim <- matrix(-1L, n_max, n_max)
-  for (i in seq_len(n_max - 1L)) {
-    for (j in (i + 1L):n_max) {
-      common <- length(intersect(maximal[[i]], maximal[[j]])) - 1L
-      shared_dim[i, j] <- shared_dim[j, i] <- common
-    }
-  }
+  shared_dim <- vapply(seq_len(n_max), function(i) {
+    vapply(seq_len(n_max), function(j) {
+      if (i == j) return(-1L)
+      length(intersect(maximal[[i]], maximal[[j]])) - 1L
+    }, integer(1))
+  }, integer(n_max))
 
   # Q_q counts components among the maximal simplices of dimension >= q only
   max_dims <- vapply(maximal, length, integer(1)) - 1L
@@ -1302,6 +1341,8 @@ q_analysis <- function(sc) {
   n <- nrow(adj)
   visited <- logical(n)
   n_comp <- 0L
+  # A loop: a breadth-first search, where each start depends on the nodes the
+  # earlier searches already reached.
   for (start in seq_len(n)) {
     if (visited[start]) next
     n_comp <- n_comp + 1L
@@ -1415,7 +1456,9 @@ verify_simplicial <- function(mat, threshold = 0) {
 #'   panels (f-vector, Betti numbers, simplicial degree per node and degree
 #'   by dimension) as one 2 x 2 figure, which needs \pkg{gridExtra};
 #'   `FALSE` returns the four ggplots in a named list (`f_vector`, `betti`,
-#'   `degree`, `degree_heatmap`) to print, save or arrange separately.
+#'   `degree`, `degree_heatmap`) to print, save or arrange separately. A
+#'   complex without edges (dimension 0) has no simplicial degree to draw
+#'   and raises an error of class `nestimate_bad_input`.
 #' @return The `print()` method returns its input invisibly. `plot()`
 #'   returns the drawn grid grob invisibly with `combined = TRUE`, and the
 #'   named list of four ggplots invisibly with `combined = FALSE`.
@@ -1492,11 +1535,9 @@ print.persistent_homology <- function(x, ...) {
     top <- head(x$persistence[x$persistence$persistence > 0, ], 3)
     if (nrow(top) > 0L) {
       cat("  Longest-lived:\n")
-      for (i in seq_len(nrow(top))) {
-        cat(sprintf("    b%d: %.4f \u2192 %.4f (life: %.4f)\n",
-                    top$dimension[i], top$birth[i], top$death[i],
-                    top$persistence[i]))
-      }
+      cat(sprintf("    b%d: %.4f \u2192 %.4f (life: %.4f)\n",
+                  top$dimension, top$birth, top$death, top$persistence),
+          sep = "")
     }
   }
   invisible(x)
@@ -1564,7 +1605,15 @@ print.q_analysis <- function(x, ...) {
 #' @rdname build_simplicial
 #' @export
 plot.simplicial_complex <- function(x, combined = TRUE, ...) {
-  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
+  .assert("`combined` must be TRUE or FALSE" =
+            is.logical(combined) && length(combined) == 1L && !is.na(combined))
+  if (x$dimension < 1L) {
+    # the degree panels show participation in simplices of dimension 1 and up
+    stop(errorCondition(paste0(
+      "This complex has no edges (dimension 0), so there is no simplicial ",
+      "degree to plot. Build it with a lower `threshold`."),
+      class = "nestimate_bad_input", call = NULL))
+  }
 
   deg <- simplicial_degree(x)
   betti <- .compute_betti(x)
@@ -1645,10 +1694,19 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
 #' @rdname persistent_homology
 #' @export
 plot.persistent_homology <- function(x, combined = TRUE, ...) {
-  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
+  .assert("`combined` must be TRUE or FALSE" =
+            is.logical(combined) && length(combined) == 1L && !is.na(combined))
 
   filt <- x$betti_curve
   filt$dim_label <- factor(paste0("B", filt$dimension))
+  # the Vietoris-Rips filtration runs over distances, the clique one over weights
+  vr <- identical(x$mode, "vr")
+  curve_subtitle <- if (vr) {
+    "Betti numbers across distance thresholds"
+  } else {
+    "Betti numbers across inclusive weight thresholds"
+  }
+  curve_x <- if (vr) "Distance Threshold" else "Weight Threshold"
 
   # --- Panel 1: Betti curve ---
   p1 <- ggplot2::ggplot(filt, ggplot2::aes(x = threshold, y = betti,
@@ -1656,8 +1714,8 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
     ggplot2::geom_step(linewidth = 1.1, direction = "vh") +
     ggplot2::scale_color_brewer(palette = "Set1") +
     ggplot2::labs(title = "Betti Curve",
-                  subtitle = "Betti numbers across inclusive weight thresholds",
-                  x = "Weight Threshold", y = "Betti Number",
+                  subtitle = curve_subtitle,
+                  x = curve_x, y = "Betti Number",
                   color = NULL) +
     .sc_theme() +
     ggplot2::theme(legend.position = "top")
@@ -1719,7 +1777,8 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
 #' @rdname q_analysis
 #' @export
 plot.q_analysis <- function(x, combined = TRUE, ...) {
-  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
+  .assert("`combined` must be TRUE or FALSE" =
+            is.logical(combined) && length(combined) == 1L && !is.na(combined))
 
   # --- Panel 1: Q-vector ---
   qdf <- data.frame(q = as.integer(sub("^q_", "", names(x$q_vector))),

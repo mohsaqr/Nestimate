@@ -189,7 +189,11 @@ test_that("mcml input dispatches: one CS per sub-network", {
   )
   clusters <- list(A = c("a1", "a2"), B = c("b1", "b2"))
   mc <- build_mcml(edges, clusters, from = "from", to = "to", weight = "weight")
-  es <- casedrop_reliability(mc, iter = 30, drop_prop = c(0.2, 0.5), seed = 2)
+  # dropping 20% of 3 cases drops none, which is reported
+  expect_warning(
+    es <- casedrop_reliability(mc, iter = 30, drop_prop = c(0.2, 0.5),
+                               seed = 2),
+    class = "nestimate_drop_prop_skipped")
   expect_s3_class(es, "net_casedrop_reliability_group")
   expect_true(all(c("macro", "A", "B") %in% names(es)))
   for (nm in names(es)) {

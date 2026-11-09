@@ -36,6 +36,11 @@
 # ==============================================================================
 # 2. Distance Functions (R fallback)
 # ==============================================================================
+# The loops in this section are deliberate. The edit distances (Levenshtein,
+# OSA, Damerau-Levenshtein, LCS) are dynamic programmes: every cell of the
+# table is read from cells filled just before it. Jaro matching is greedy and
+# sequential (a matched position cannot be matched again), and the
+# Jaro-Winkler prefix stops at the first mismatch.
 
 #' @noRd
 .hamming_dist_r <- function(x, y, n, m, weights, ...) {
@@ -94,8 +99,8 @@
   maxdist <- n + m
   d[1L, ] <- maxdist
   d[, 1L] <- maxdist
-  for (i in 0:n) d[i + 2L, 2L] <- i
-  for (j in 0:m) d[2L, j + 2L] <- j
+  d[seq_len(n + 1L) + 1L, 2L] <- seq_len(n + 1L) - 1L
+  d[2L, seq_len(m + 1L) + 1L] <- seq_len(m + 1L) - 1L
   for (i in seq_len(n)) {
     db <- 0L
     for (j in seq_len(m)) {
@@ -140,10 +145,9 @@
 .get_qgram_r <- function(x, n, q) {
   if (n < q) return(integer()) # nocov start
   ng <- n - q + 1L
-  grams <- character(ng)
-  for (i in seq_len(ng)) {
-    grams[i] <- paste0(x[i:(i + q - 1L)], collapse = "\x01")
-  }
+  grams <- vapply(seq_len(ng), function(i) {
+    paste0(x[i:(i + q - 1L)], collapse = "\x01")
+  }, character(1L))
   tab <- table(grams)
   counts <- as.integer(tab)
   names(counts) <- names(tab)
@@ -245,6 +249,8 @@
   n <- nrow(mat_s)
   k <- ncol(mat_s)
   d <- matrix(0, n, n)
+  # Loops on purpose: one n x n mismatch matrix is added at a time, instead of
+  # holding an n x n x k array.
   if (length(weights) == 1L) {
     # Unweighted: just count mismatches per column
     for (c in seq_len(k)) {
@@ -263,28 +269,22 @@
 .build_qgram_tdm <- function(mat_s, len, q) {
   n <- nrow(mat_s)
   # Collect all q-gram profiles
-  profiles <- vector("list", n)
-  all_grams <- character(0L)
-  for (i in seq_len(n)) {
-    if (len[i] >= q) {
-      ng <- len[i] - q + 1L
-      grams <- character(ng)
-      for (j in seq_len(ng)) {
-        grams[j] <- paste0(mat_s[i, j:(j + q - 1L)], collapse = "\x01")
-      }
-      tab <- table(grams)
-      profiles[[i]] <- tab
-      all_grams <- union(all_grams, names(tab))
-    }
-  }
+  profiles <- lapply(seq_len(n), function(i) {
+    if (len[i] < q) return(NULL)
+    grams <- vapply(seq_len(len[i] - q + 1L), function(j) {
+      paste0(mat_s[i, j:(j + q - 1L)], collapse = "\x01")
+    }, character(1L))
+    table(grams)
+  })
+  gram_names <- as.character(unlist(lapply(profiles, names)))
+  # Columns in order of first appearance.
+  all_grams <- unique(gram_names)
   # Build matrix: rows = sequences, cols = unique qgrams
   tdm <- matrix(0L, nrow = n, ncol = length(all_grams))
   colnames(tdm) <- all_grams
-  for (i in seq_len(n)) {
-    if (!is.null(profiles[[i]])) {
-      tdm[i, names(profiles[[i]])] <- as.integer(profiles[[i]])
-    }
-  }
+  tdm[cbind(rep(seq_len(n), lengths(profiles)),
+            match(gram_names, all_grams))] <-
+    as.integer(unlist(lapply(profiles, as.integer)))
   tdm
 }
 
@@ -295,6 +295,7 @@
   # |a_i - b_i| summed over all qgrams = Manhattan distance between rows
   # Expand via outer difference per column, then sum absolute values
   d <- matrix(0, n, n)
+  # A loop on purpose: one n x n matrix per q-gram, not an n x n x grams array.
   for (c in seq_len(ncol(tdm))) {
     d <- d + abs(outer(tdm[, c], tdm[, c], "-"))
   }
@@ -727,8 +728,8 @@
 #' @return A `net_clustering` object. `print()` shows the method,
 #'   dissimilarity and average silhouette width, then one row per cluster
 #'   with its size (count and percentage), mean within-cluster distance and,
-#'   for PAM, its medoid; after a logit covariate analysis it adds a line
-#'   naming the predictors. [summary()] prints the method, dissimilarity and
+#'   for PAM, its medoid; after a covariate analysis it adds a line
+#'   naming the covariates. [summary()] prints the method, dissimilarity and
 #'   average silhouette width and a per-cluster table of sizes and mean
 #'   within-cluster distances, followed by the covariate analysis when there
 #'   is one, and returns a per-cluster table, or the covariate table after a
@@ -1106,7 +1107,7 @@ cluster_data <- function(...) {
 #'   covariates' odds ratios (log scale) for each cluster against the
 #'   reference cluster. `"predictors"` needs a fit with `covariates` and a
 #'   logit estimator; with `estimator = "chisq"`, which has no odds ratios,
-#'   it raises an error.
+#'   it raises an error that points to [summary()] for the tests.
 #' @param combined For `plot()` with `type = "predictors"`: `TRUE` (default)
 #'   draws one plot with a panel per non-reference cluster; `FALSE` returns
 #'   a list of plots, one per non-reference cluster. Ignored by the other
@@ -1172,14 +1173,44 @@ print.net_clustering <- function(x, digits = 3L, ...) {
   cat(paste(.cluster_table_lines(cols), collapse = "\n"), "\n", sep = "")
 
   if (!is.null(x$covariates)) {
-    cov_names <- setdiff(
-      unique(x$covariates$coefficients$variable), "(Intercept)"
-    )
-    cat(sprintf("\n  Covariates: %s (post-hoc, %d predictors)\n",
-                paste(cov_names, collapse = ", "), length(cov_names)))
+    cat(.covariate_line(x$covariates, "post-hoc"))
   }
 
   invisible(x)
+}
+
+# The covariates of a post-hoc or EM covariate analysis, as the user named
+# them. They are read from the profiles, which every estimator fills; the
+# coefficient table holds design columns (one per dummy level) and a
+# chi-square analysis has none.
+#' @noRd
+.covariate_names <- function(cov) {
+  unique(c(cov$profiles$numeric$variable, cov$profiles$categorical$variable))
+}
+
+# The "Covariates:" line shared by the print methods of net_clustering,
+# net_mmm, net_mmm_clustering and net_cluster_diagnostics.
+#' @noRd
+.covariate_line <- function(cov, label) {
+  cov_names <- .covariate_names(cov)
+  sprintf("\n  Covariates: %s (%s, %d %s)\n",
+          paste(cov_names, collapse = ", "), label, length(cov_names),
+          if (length(cov_names) == 1L) "covariate" else "covariates")
+}
+
+# The forest plot draws odds ratios, which a chi-square covariate analysis
+# does not estimate.
+#' @noRd
+.require_covariate_coefficients <- function(cov, type) {
+  if (!is.null(cov$coefficients)) return(invisible(TRUE))
+  stop(errorCondition(
+    paste0(
+      "plot(..., type = \"", type, "\") draws the odds ratios of a logit ",
+      "covariate analysis (estimator = \"auto\", \"firth\" or ",
+      "\"multinom\"). This analysis used estimator = \"",
+      cov$fit$method %||% "chisq", "\", which estimates none; summary() ",
+      "shows its tests."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 #' @rdname build_clusters
@@ -1236,15 +1267,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
         "No covariate analysis found. Run build_clusters() with covariates.",
         class = "nestimate_bad_input", call = NULL))
     }
-    if (is.null(x$covariates$coefficients)) {
-      stop(errorCondition(
-        paste0(
-          "plot(..., type = \"predictors\") requires odds-ratio coefficients ",
-          "from estimator = \"multinom\". The current covariate analysis ",
-          "(estimator = \"chisq\") has no coefficients; inspect ",
-          "x$covariates$tests and x$covariates$residuals instead."),
-        class = "nestimate_bad_input", call = NULL))
-    }
+    .require_covariate_coefficients(x$covariates, "predictors")
     return(.plot_covariate_forest(
       x$covariates$coefficients,
       sprintf("Covariate Effects on Cluster Membership (ref: Cluster %s)",
@@ -1360,8 +1383,10 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   if (is.null(covariates)) return(NULL)
 
   if (!requireNamespace("nnet", quietly = TRUE)) {
-    stop("The 'nnet' package is required for covariate analysis. ", # nocov
-         "Install it with install.packages('nnet').", call. = FALSE) # nocov
+    stop(errorCondition(paste0( # nocov start
+      "The 'nnet' package is required for covariate analysis. ",
+      "Install it with install.packages('nnet')."),
+      class = "nestimate_missing_package", call = NULL)) # nocov end
   }
 
   # --- Covariates supplied as a data.frame: use all columns ---
@@ -1471,15 +1496,16 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   }
 
   if (is.null(cov_df)) {
-    stop("Could not resolve covariate columns from the input data.", # nocov start
-         call. = FALSE) # nocov end
+    stop(errorCondition( # nocov start
+      "Could not resolve covariate columns from the input data.",
+      class = "nestimate_bad_input", call = NULL)) # nocov end
   }
 
   if (nrow(cov_df) != n) { # nocov start
-    stop(sprintf(
+    stop(errorCondition(sprintf(
       "Covariate data has %d rows but sequence data has %d rows.",
       nrow(cov_df), n
-    ), call. = FALSE) # nocov end
+    ), class = "nestimate_bad_input", call = NULL)) # nocov end
   }
 
   list(cov_df = cov_df, rhs = rhs_text)
@@ -1496,58 +1522,46 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   numeric_profile <- NULL
   if (any(num_cols)) {
     num_names <- names(cov_df)[num_cols]
-    rows <- vector("list", k * length(num_names))
-    idx <- 0L
-    for (cl in seq_len(k)) {
+    rows <- lapply(seq_len(k), function(cl) {
       mask <- assignments == cl
       cl_n <- sum(mask)
       cl_pct <- round(100 * cl_n / n_total, 1)
-      for (vname in num_names) {
-        idx <- idx + 1L
+      lapply(num_names, function(vname) {
         vals <- cov_df[[vname]][mask]
         vals <- vals[!is.na(vals)]
-        rows[[idx]] <- data.frame(
+        data.frame(
           cluster = cl, n = cl_n, pct = cl_pct, variable = vname,
           mean = mean(vals), sd = stats::sd(vals),
           median = stats::median(vals),
           stringsAsFactors = FALSE, row.names = NULL
         )
-      }
-    }
-    numeric_profile <- do.call(rbind, rows)
+      })
+    })
+    numeric_profile <- do.call(rbind, unlist(rows, recursive = FALSE))
   }
 
   # --- Categorical profiles ---
   categorical_profile <- NULL
   if (any(cat_cols)) {
     cat_names <- names(cov_df)[cat_cols]
-    # Pre-count total rows to avoid O(n^2) list growth
-    total_rows <- 0L
-    for (cl in seq_len(k)) {
-      mask <- assignments == cl
-      for (vname in cat_names) {
-        total_rows <- total_rows + length(unique(cov_df[[vname]][mask & !is.na(cov_df[[vname]])]))
-      }
-    }
-    rows <- vector("list", total_rows)
-    idx <- 0L
-    for (cl in seq_len(k)) {
+    # One row per cluster x variable x level, in that order.
+    rows <- lapply(seq_len(k), function(cl) {
       mask <- assignments == cl
       cl_n <- sum(mask)
-      for (vname in cat_names) {
+      lapply(cat_names, function(vname) {
         tab <- table(cov_df[[vname]][mask], useNA = "no")
-        for (lev in names(tab)) {
-          idx <- idx + 1L
-          rows[[idx]] <- data.frame(
+        lapply(names(tab), function(lev) {
+          data.frame(
             cluster = cl, n = cl_n, variable = vname,
             level = lev, count = as.integer(tab[[lev]]),
             pct = round(100 * as.integer(tab[[lev]]) / cl_n, 1),
             stringsAsFactors = FALSE, row.names = NULL
           )
-        }
-      }
-    }
-    categorical_profile <- do.call(rbind, rows)
+        })
+      })
+    })
+    categorical_profile <- do.call(
+      rbind, unlist(unlist(rows, recursive = FALSE), recursive = FALSE))
   }
 
   list(numeric = numeric_profile, categorical = categorical_profile)
@@ -1615,13 +1629,10 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 
   # --- Prepare data (shared across all three estimators) ---
   fit_df <- cov_df
-  for (nm in names(fit_df)) {
-    if (is.character(fit_df[[nm]])) {
-      fit_df[[nm]] <- factor(fit_df[[nm]])
-    } else if (is.ordered(fit_df[[nm]])) {
-      fit_df[[nm]] <- factor(fit_df[[nm]], ordered = FALSE)
-    }
-  }
+  to_factor <- names(fit_df)[vapply(fit_df, function(col) {
+    is.character(col) || is.ordered(col)
+  }, logical(1L))]
+  fit_df[to_factor] <- lapply(fit_df[to_factor], factor, ordered = FALSE)
   complete <- stats::complete.cases(fit_df)
   n_dropped <- sum(!complete)
   if (n_dropped > 0L) {
@@ -1633,12 +1644,14 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
     assignments <- assignments[complete]
   }
   fit_df$cluster <- factor(assignments)
-  for (nm in setdiff(names(fit_df), "cluster")) {
-    if (length(unique(fit_df[[nm]][!is.na(fit_df[[nm]])])) < 2L) {
-      stop(errorCondition(
-        sprintf("Covariate '%s' is constant. Remove it.", nm),
-        class = "nestimate_bad_input", call = NULL))
-    }
+  cov_cols <- setdiff(names(fit_df), "cluster")
+  constant <- cov_cols[vapply(cov_cols, function(nm) {
+    length(unique(fit_df[[nm]][!is.na(fit_df[[nm]])])) < 2L
+  }, logical(1L))]
+  if (length(constant) > 0L) {
+    stop(errorCondition(
+      sprintf("Covariate '%s' is constant. Remove it.", constant[1L]),
+      class = "nestimate_bad_input", call = NULL))
   }
   profiles_df <- if (n_dropped > 0L) cov_df[complete, , drop = FALSE] else cov_df
   profiles <- .compute_cluster_profiles(profiles_df, assignments, k)
@@ -1675,10 +1688,8 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   cov_names <- setdiff(names(fit_df), "cluster")
   cluster <- fit_df$cluster
 
-  test_rows <- list()
-  resid_rows <- list()
-
-  for (nm in cov_names) {
+  # One covariate at a time: its test row and, for a factor, its residuals.
+  per_covariate <- lapply(cov_names, function(nm) {
     x <- fit_df[[nm]]
     if (is.factor(x)) {
       tab <- table(cluster = cluster, level = x)
@@ -1690,7 +1701,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       # Cramer's V on a (r x c) table: sqrt(chi^2 / (n * min(r-1, c-1))).
       v <- sqrt(as.numeric(ct$statistic) /
                   (n_total * min(nrow(tab) - 1L, ncol(tab) - 1L)))
-      test_rows[[length(test_rows) + 1L]] <- data.frame(
+      test_row <- data.frame(
         variable = nm, type = "factor",
         statistic = unname(ct$statistic),
         df = unname(ct$parameter),
@@ -1707,10 +1718,10 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       sr_df$variable <- nm
       sr_df$observed <- as.numeric(as.vector(tab))
       sr_df$expected <- as.numeric(as.vector(ct$expected))
-      resid_rows[[length(resid_rows) + 1L]] <-
-        sr_df[, c("variable", "cluster", "level", "observed",
-                  "expected", "std_residual"),
-              drop = FALSE]
+      list(test = test_row,
+           resid = sr_df[, c("variable", "cluster", "level", "observed",
+                             "expected", "std_residual"),
+                         drop = FALSE])
     } else if (is.numeric(x)) {
       kw <- suppressWarnings(stats::kruskal.test(x ~ cluster))
       # eta-squared for KW: H / (n - 1) bounded to [0, 1]; sometimes
@@ -1719,7 +1730,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       n_total <- length(x)
       eta_sq <- as.numeric(kw$statistic) / (n_total - 1L)
       eta_sq <- max(0, min(1, eta_sq))
-      test_rows[[length(test_rows) + 1L]] <- data.frame(
+      list(test = data.frame(
         variable = nm, type = "numeric",
         statistic = unname(kw$statistic),
         df = unname(kw$parameter),
@@ -1727,7 +1738,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
         effect_size = eta_sq,
         effect_label = "eta^2 (KW)",
         stringsAsFactors = FALSE
-      )
+      ), resid = NULL)
     } else {
       stop(errorCondition(paste0(sprintf(
         "Covariate '%s' has unsupported type '%s' for estimator = 'chisq'. ",
@@ -1735,7 +1746,9 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
         "Convert to factor or numeric."),
         class = "nestimate_bad_input", call = NULL))
     }
-  }
+  })
+  test_rows <- lapply(per_covariate, `[[`, "test")
+  resid_rows <- Filter(Negate(is.null), lapply(per_covariate, `[[`, "resid"))
 
   tests <- do.call(rbind, test_rows)
   if (!is.null(tests)) {
@@ -1772,8 +1785,10 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   via_auto <- isTRUE(identical(attr(profiles, "auto_choice"), "multinom"))
   if (estimator == "multinom") {
     if (!requireNamespace("nnet", quietly = TRUE)) {
-      stop("Package 'nnet' is required for estimator = 'multinom'. ",
-           "Install with: install.packages('nnet')", call. = FALSE)
+      stop(errorCondition(paste0( # nocov start
+        "Package 'nnet' is required for estimator = 'multinom'. ",
+        "Install with: install.packages('nnet')"),
+        class = "nestimate_missing_package", call = NULL)) # nocov end
     }
     if (!via_auto) warning(
       "estimator = 'multinom' uses nnet::multinom (classical ML). ",
@@ -1790,18 +1805,18 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   } else {
     # estimator == "firth"
     if (!requireNamespace("brglm2", quietly = TRUE)) {
-      stop("Package 'brglm2' is required for estimator = 'firth'. ",
-           "Install with: install.packages('brglm2'). ",
-           "Pass estimator = 'multinom' to use nnet::multinom instead, ",
-           "or estimator = 'chisq' for descriptive-only output.",
-           call. = FALSE)
+      stop(errorCondition(paste0( # nocov start
+        "Package 'brglm2' is required for estimator = 'firth'. ",
+        "Install with: install.packages('brglm2'). ",
+        "Pass estimator = 'multinom' to use nnet::multinom instead, ",
+        "or estimator = 'chisq' for descriptive-only output."),
+        class = "nestimate_missing_package", call = NULL)) # nocov end
     }
     fml <- stats::as.formula(paste("cluster ~", rhs))
-    fit <- suppressWarnings(brglm2::brmultinom(fml, data = fit_df,
-                                                ref = 1L))
-    null_fit <- suppressWarnings(brglm2::brmultinom(cluster ~ 1,
-                                                     data = fit_df,
-                                                     ref = 1L))
+    # Not wrapped in suppressWarnings(): a convergence warning from the Firth
+    # fit is information about the reported odds ratios.
+    fit <- brglm2::brmultinom(fml, data = fit_df, ref = 1L)
+    null_fit <- brglm2::brmultinom(cluster ~ 1, data = fit_df, ref = 1L)
   }
 
   estimates <- if (estimator == "multinom") fit$estimates else summary(fit)
@@ -1831,11 +1846,9 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       "Estimates may be unreliable.", call. = FALSE)
   }
 
-  rows <- vector("list", nrow(coefs) * ncol(coefs))
-  idx <- 0L
-  for (i in seq_len(nrow(coefs))) {
-    for (j in seq_len(ncol(coefs))) {
-      idx <- idx + 1L
+  # One row per coefficient, clusters outermost.
+  rows <- lapply(seq_len(nrow(coefs)), function(i) {
+    lapply(seq_len(ncol(coefs)), function(j) {
       est <- coefs[i, j]; se <- ses[i, j]
       z_val <- est / se
       p_val <- 2 * (1 - stats::pnorm(abs(z_val)))
@@ -1843,7 +1856,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       sig <- if (is.na(p_val)) "" else if (p_val < 0.001) "***" else
         if (p_val < 0.01) "**" else if (p_val < 0.05) "*" else
         if (p_val < 0.1) "." else ""
-      rows[[idx]] <- data.frame(
+      data.frame(
         cluster = rownames(coefs)[i],
         variable = colnames(coefs)[j],
         estimate = est, std_error = se,
@@ -1851,9 +1864,9 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
         z = z_val, p = p_val, sig = sig,
         stringsAsFactors = FALSE, row.names = NULL
       )
-    }
-  }
-  coef_df <- do.call(rbind, rows)
+    })
+  })
+  coef_df <- do.call(rbind, unlist(rows, recursive = FALSE))
 
   null_dev <- tryCatch(-2 * as.numeric(stats::logLik(null_fit)),
                        error = function(e) NA_real_)
@@ -1965,11 +1978,14 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
         `N (%)` = sprintf("%d (%.0f%%)", sub$n[1L], sub$pct[1L]),
         stringsAsFactors = FALSE, check.names = FALSE
       )
-      for (v in vars) {
+      cells <- unlist(lapply(vars, function(v) {
         sv <- sub[sub$variable == v, ]
-        row[[sprintf("%s Mean (SD)", v)]] <- sprintf("%.2f (%.2f)", sv$mean, sv$sd)
-        row[[sprintf("%s Median", v)]] <- sprintf("%.2f", sv$median)
-      }
+        stats::setNames(
+          list(sprintf("%.2f (%.2f)", sv$mean, sv$sd),
+               sprintf("%.2f", sv$median)),
+          c(sprintf("%s Mean (SD)", v), sprintf("%s Median", v)))
+      }), recursive = FALSE)
+      row[names(cells)] <- cells
       row
     })
     print(do.call(rbind, rows), row.names = FALSE, right = FALSE)
@@ -1988,18 +2004,18 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
         Cluster = cl, N = sub$n[1L],
         stringsAsFactors = FALSE, check.names = FALSE
       )
-      for (col in all_cols) {
+      cells <- lapply(all_cols, function(col) {
         parts <- strsplit(col, "=", fixed = TRUE)[[1L]]
         v <- parts[1L]
         lev <- paste(parts[-1L], collapse = "=")  # handle = in level names
         slev <- sub[sub$variable == v & sub$level == lev, ]
         if (nrow(slev) > 0L) {
-          row[[sprintf("%s N(%%)", col)]] <- sprintf(
-            "%d (%.0f%%)", slev$count, slev$pct)
+          sprintf("%d (%.0f%%)", slev$count, slev$pct)
         } else {
-          row[[sprintf("%s N(%%)", col)]] <- "0 (0%)"
+          "0 (0%)"
         }
-      }
+      })
+      row[sprintf("%s N(%%)", all_cols)] <- cells
       row
     })
     print(do.call(rbind, rows), row.names = FALSE, right = FALSE)
@@ -2336,6 +2352,11 @@ print.tidy_covariates <- function(x, ...) {
 #' @export
 cluster_network <- function(data, k, cluster_by = "pam",
                              dissimilarity = "hamming", ...) {
+  if (missing(k)) {
+    stop(errorCondition(
+      "argument \"k\" is missing, with no default",
+      class = "nestimate_bad_input", call = NULL))
+  }
   caller_dots <- list(...)
 
   # Coerce cograph_network to netobject so the build_args lift below works.
@@ -2411,10 +2432,10 @@ cluster_network <- function(data, k, cluster_by = "pam",
   if (is.null(arg_names) || !length(arg_names)) return(invisible(TRUE))
 
   build_formals <- setdiff(names(formals(build_network)), c("data", "..."))
-  estimator_names <- tryCatch(list_estimators()$name, error = function(e) character())
+  estimator_names <- list_estimators()$name
   estimator_formals <- unique(unlist(lapply(estimator_names, function(nm) {
-    entry <- tryCatch(get_estimator(nm), error = function(e) NULL)
-    if (is.null(entry) || is.null(entry$fn)) return(character())
+    entry <- get_estimator(nm)
+    if (is.null(entry$fn)) return(character())
     setdiff(names(formals(entry$fn)), c("data", "..."))
   }), use.names = FALSE))
   accepted <- unique(c(build_formals, estimator_formals))

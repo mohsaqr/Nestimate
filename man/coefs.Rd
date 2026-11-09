@@ -40,6 +40,11 @@ the \code{D (I - Gamma)} transformation are not given as a table of their own.
 The p-values are not adjusted for the number of coefficients, and
 \code{significant} is \code{p < 0.05} for each coefficient on its own.
 }
+\note{
+The \pkg{idiographic} package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write \code{Nestimate::coefs()} to call this one.
+}
 \examples{
 # A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by
 # `happy` one beep earlier, so the temporal network should recover it.

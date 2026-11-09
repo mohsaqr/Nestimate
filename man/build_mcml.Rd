@@ -194,7 +194,10 @@ included. On an existing \code{mcml} they re-estimate the model (macro
 network, within-cluster networks and stored sequences) from the
 sequences it carries, with its original \code{type}, \code{method} and \code{directed}
 unless these are passed; a new \code{clusters} does the same under that
-partition, and an unchanged partition returns an equal object. Any
+partition, and an unchanged partition returns an equal object. With
+none of \code{clusters}, \code{combine} and \code{expand} the \code{mcml} is returned as
+it is, and a shaping argument passed with it is ignored with a warning
+of class \code{nestimate_ignored_argument}. Any
 session split, \code{exclude}, \code{trim} or \code{end} applied at build time is
 already in those sequences, so passing one of them (or \code{actor},
 \code{action}, \code{time}, \code{order}, \code{session}, \code{time_threshold}, \code{end_by},

@@ -63,7 +63,8 @@
 #'   [build_glasso()]: non-numeric columns and a column named `rid` are
 #'   set aside; columns with non-syntactic names, all-missing and constant
 #'   columns, and rows with a missing value are dropped, each with a
-#'   message; fewer than 2 variables or 3 complete rows raise an error. A
+#'   message; fewer than 2 variables or 3 complete rows, or no more rows
+#'   than variables, raise an error. A
 #'   square symmetric matrix with matching row and column names is read as a
 #'   correlation or covariance matrix and refused (class
 #'   `nestimate_bad_input`): it has no observations to resample. Or a
@@ -310,6 +311,19 @@ boot_glasso <- function(x,
     class = "nestimate_bad_input", call = NULL))
   if (n < 3) stop(errorCondition("At least 3 observations are required.",
     class = "nestimate_bad_input", call = NULL)) # nocov end
+  # Case-dropping keeps at least p + 1 rows of every subsample, which cannot
+  # be drawn without replacement from n <= p rows (it used to stop inside
+  # sample.int() with "cannot take a sample larger than the population").
+  if (n <= p) stop(errorCondition(sprintf(paste0(
+    "boot_glasso() needs more observations than variables: the data has ",
+    "%d rows and %d variables."), n, p),
+    class = "nestimate_bad_input", call = NULL))
+  # parallel::mclapply() forks, which Windows cannot do.
+  if (ncores > 1L && identical(.Platform$OS.type, "windows")) {
+    stop(errorCondition( # nocov start
+      "`ncores` > 1 is not supported on Windows. Use `ncores = 1`.",
+      class = "nestimate_bad_input", call = NULL)) # nocov end
+  }
 
   t_start <- proc.time()["elapsed"]
 
@@ -327,8 +341,9 @@ boot_glasso <- function(x,
                            lambda_min_ratio = glasso_set$lambda_min_ratio,
                            penalize_diagonal = glasso_set$penalize_diagonal,
                            refit = glasso_set$refit, native = TRUE),
-    error = function(e) stop("glassopath failed on original data: ",
-                              e$message, call. = FALSE)
+    error = function(e) stop(errorCondition(
+      paste0("glassopath failed on original data: ", conditionMessage(e)),
+      class = "nestimate_bad_input", call = NULL))
   )
 
   lambda_path <- fit_orig$lambda_path
@@ -385,6 +400,7 @@ boot_glasso <- function(x,
   .warn_failed_resamples(n_failed, iter, "boot_glasso() bootstrap",
                          below_threshold = FALSE)
 
+  # Loop kept on purpose: it fills rows of pre-allocated matrices in place.
   for (i in seq_len(iter)) {
     res <- boot_results[[i]]
     if (!is.null(res)) {
@@ -667,16 +683,16 @@ boot_glasso <- function(x,
       stop(errorCondition("centrality_fn must return a named list.",
         class = "nestimate_bad_input", call = NULL)) # nocov
     }
-    for (m in external) {
-      if (is.null(custom[[m]])) {
-        stop(errorCondition(
-          paste0("centrality_fn did not return measure '", m, "'."),
-          class = "nestimate_bad_input", call = NULL)) # nocov end
-      }
-      v <- custom[[m]]
-      names(v) <- nodes
-      result[[m]] <- v
+    absent <- external[vapply(external, function(m) is.null(custom[[m]]),
+                              logical(1))]
+    if (length(absent) > 0L) {
+      stop(errorCondition(
+        paste0("centrality_fn did not return measure '", absent[1L], "'."),
+        class = "nestimate_bad_input", call = NULL)) # nocov end
     }
+    result[external] <- lapply(external, function(m) {
+      stats::setNames(custom[[m]], nodes)
+    })
   }
 
   result
@@ -748,22 +764,18 @@ boot_glasso <- function(x,
   cors <- lapply(centrality, function(m) {
     mat <- matrix(NA_real_, nrow = 0, ncol = n_drop)
     # Collect per-proportion vectors
-    per_prop <- vector("list", n_drop)
-    for (d_idx in seq_len(n_drop)) per_prop[[d_idx]] <- numeric(0)
-
-    for (res in cs_results) {
-      if (!is.null(res$cors)) {
-        per_prop[[res$d_idx]] <- c(per_prop[[res$d_idx]], res$cors[[m]])
-      }
-    }
-    per_prop
+    done <- Filter(function(res) !is.null(res$cors), cs_results)
+    done_prop <- vapply(done, function(res) res$d_idx, integer(1))
+    done_cor <- vapply(done, function(res) res$cors[[m]], numeric(1))
+    lapply(seq_len(n_drop), function(d_idx) {
+      unname(done_cor[done_prop == d_idx])
+    })
   })
   names(cors) <- centrality
 
   # Build cs_data: mean correlation and P(cor > 0.7) for each proportion
-  cs_rows <- vector("list", n_drop)
-  for (d_idx in seq_len(n_drop)) {
-    for (m in centrality) {
+  cs_rows <- lapply(seq_len(n_drop), function(d_idx) {
+    do.call(rbind, lapply(centrality, function(m) {
       vals <- cors[[m]][[d_idx]]
       mean_cor <- if (length(vals) > 0) mean(vals, na.rm = TRUE) else NA_real_
       prop_above <- if (length(vals) > 0) {
@@ -771,16 +783,16 @@ boot_glasso <- function(x,
       } else {
         NA_real_
       }
-      cs_rows[[d_idx]] <- rbind(cs_rows[[d_idx]], data.frame(
+      data.frame(
         drop_prop = cs_drop[d_idx],
         measure = m,
         mean_cor = mean_cor,
         prop_above = prop_above,
         n_samples = length(vals),
         stringsAsFactors = FALSE
-      ))
-    }
-  }
+      )
+    }))
+  })
 
   cs_data <- do.call(rbind, cs_rows)
   rownames(cs_data) <- NULL
@@ -850,6 +862,8 @@ boot_glasso <- function(x,
 
   if (n_valid < 2) return(p_mat)
 
+  # Loop kept on purpose: one pass per edge holds an n_valid x n_edges block
+  # of differences; vectorising over all pairs would hold n_edges of them.
   for (i in seq_len(n_edges - 1L)) {
     js <- seq(i + 1L, n_edges)
     diffs <- bm[, i] - bm[, js, drop = FALSE]
@@ -882,6 +896,7 @@ boot_glasso <- function(x,
 
   if (n_valid < 2) return(p_mat)
 
+  # Loop kept on purpose, as in .bg_edge_diff_test().
   for (i in seq_len(p_nodes - 1L)) {
     js <- seq(i + 1L, p_nodes)
     diffs <- bm[, i] - bm[, js, drop = FALSE]
@@ -907,12 +922,10 @@ boot_glasso <- function(x,
   not_sig <- (sign(ci_lower_vec) != sign(ci_upper_vec)) |
     (ci_lower_vec == 0) | (ci_upper_vec == 0)
 
-  for (k in which(not_sig)) {
-    i <- ut$row_idx[k]
-    j <- ut$col_idx[k]
-    result[i, j] <- 0
-    result[j, i] <- 0
-  }
+  drop_i <- ut$row_idx[which(not_sig)]
+  drop_j <- ut$col_idx[which(not_sig)]
+  result[cbind(drop_i, drop_j)] <- 0
+  result[cbind(drop_j, drop_i)] <- 0
 
   result
 }
@@ -986,7 +999,7 @@ boot_glasso <- function(x,
 #' @export
 print.boot_glasso <- function(x, ...) {
   cat(sprintf(
-    "GLASSO Bootstrap (%d iterations, %d case-drop per proportion)\n",
+    "GLASSO Bootstrap (%d iterations, %d case-drop iterations)\n",
     x$iter, x$cs_iter
   ))
   cat(sprintf("  Data: %d x %d  |  Alpha: %.2f  |  Gamma: %.2f\n",
@@ -1008,11 +1021,12 @@ print.boot_glasso <- function(x, ...) {
   }
 
   cat("\n  Centrality Stability (CS-coefficient):\n")
-  for (m in x$centrality_measures) {
+  cs_lines <- vapply(x$centrality_measures, function(m) {
     cs_val <- x$cs_coefficient[[m]]
-    label <- .bg_cs_label(cs_val)
-    cat(sprintf("    %-22s %.2f [%s]\n", paste0(m, ":"), cs_val, label))
-  }
+    sprintf("    %-22s %.2f [%s]\n", paste0(m, ":"), cs_val,
+            .bg_cs_label(cs_val))
+  }, character(1))
+  cat(cs_lines, sep = "")
 
   # Edge differences
   if (!is.null(x$edge_diff_p)) {
@@ -1135,7 +1149,8 @@ plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {
 #' Edge difference heatmap
 #'
 #' Upper-triangle heatmap coloured by the mean bootstrap difference between
-#' each edge pair. Red = row edge stronger; blue = column edge stronger.
+#' each edge pair. Red = column (x-axis) edge stronger; blue = row (y-axis)
+#' edge stronger.
 #' Significant cells (p < alpha) are shown at full intensity with p-value
 #' stars; non-significant cells are nearly invisible. Diagonal shows the
 #' sample edge weight.
@@ -1143,9 +1158,9 @@ plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {
 #' @param x boot_glasso object.
 #' @param order Character. \code{"sample"} (default) orders edges by
 #'   absolute sample weight; \code{"id"} orders alphabetically.
-#' @param pos_color Colour for positive differences (row edge > col edge).
+#' @param pos_color Colour for positive differences (col edge > row edge).
 #'   Default \code{"#C0392B"} (crimson).
-#' @param neg_color Colour for negative differences (col edge > row edge).
+#' @param neg_color Colour for negative differences (row edge > col edge).
 #'   Default \code{"#2C6E8A"} (teal).
 #' @param ... Ignored.
 #' @noRd
@@ -1229,7 +1244,7 @@ plot.boot_glasso <- function(x, type = "edges", measure = NULL, ...) {
   n_sig  <- sum(p_mat[ut] < alpha)
   n_pairs <- nrow(ut)
   subtitle <- sprintf(
-    "%d of %d pairs significantly different (p < %s)  |  Red: row > col  |  Blue: col > row",
+    "%d of %d pairs significantly different (p < %s)  |  Red: column > row  |  Blue: row > column",
     n_sig, n_pairs, alpha
   )
 

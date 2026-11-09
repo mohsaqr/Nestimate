@@ -237,8 +237,9 @@ build_honem <- function(hon, dim = 32L, max_power = 10L) {
 #'   [graphics::plot()]. For the `print()` and `summary()` methods: ignored.
 #' @param object For the `summary()` method: a `net_honem` object.
 #' @param dims For the `plot()` method: the two dimensions to draw. Default
-#'   `c(1, 2)`. Nodes are labelled when there are at most 50; an embedding
-#'   with a single dimension draws nothing and says so in a message.
+#'   `c(1, 2)`; a dimension the embedding does not have raises an error.
+#'   Nodes are labelled when there are at most 50; an embedding with a single
+#'   dimension draws nothing and says so in a message.
 #' @return The `print()` and `plot()` methods return the input invisibly.
 #'   `summary()` returns a data frame with one row per node: `node` (the node
 #'   name), then `dim1`, `dim2`, ... with the coordinates; the summary text is
@@ -284,6 +285,14 @@ plot.net_honem <- function(x, dims = c(1L, 2L), ...) {
   }
 
   emb <- x$embeddings
+  if (!is.numeric(dims) || length(dims) != 2L || anyNA(dims) ||
+      any(dims != round(dims)) || any(dims < 1L) || any(dims > ncol(emb))) {
+    stop(errorCondition(
+      sprintf(paste0("`dims` must be two dimension numbers between 1 and %d ",
+                     "(the embedding has %d dimensions)."),
+              ncol(emb), ncol(emb)),
+      class = "nestimate_bad_input", call = NULL))
+  }
   d1 <- dims[1L]
   d2 <- dims[2L]
 

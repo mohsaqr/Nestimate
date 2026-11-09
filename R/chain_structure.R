@@ -25,6 +25,8 @@
 .cs_reachability <- function(A) {
   n <- nrow(A)
   R <- A > 0
+  # Loop: a fixpoint iteration, each step needs the previous one and it stops
+  # as soon as nothing new is reached.
   for (k in seq_len(n - 1L)) {
     R_new <- (R | (R %*% A) > 0)
     if (identical(R_new, R)) break
@@ -56,6 +58,7 @@
   x <- x[x > 0L]
   if (length(x) == 0L) return(NA_integer_)
   out <- x[1L]
+  # Loop: Euclid's algorithm is iterative, each step uses the running gcd.
   for (v in x[-1L]) {
     while (v != 0L) { tmp <- out %% v; out <- v; v <- tmp }
   }
@@ -76,6 +79,8 @@
   An_running <- An
   cycle_lengths <- integer()
   if (any(diag(An_running))) cycle_lengths <- c(cycle_lengths, 1L)
+  # Loop: successive matrix powers, each from the previous one, stopping
+  # early once the gcd of the cycle lengths is 1.
   for (k in seq_len(2L * n)) {
     An_running <- ((An_running %*% An) > 0)
     if (any(diag(An_running))) {
@@ -108,6 +113,7 @@
     reach <- .cs_reachability(A)
     diag(reach) <- 1L
   }
+  # Loop: one linear system per target state, written into its column of H.
   for (j in seq_len(n)) {
     if (n == 1L) {
       H[j, j] <- if (P[1L, 1L] > 0) 1 else 0
@@ -120,7 +126,13 @@
       I_sub <- diag(length(can_reach))
       h <- tryCatch(
         drop(solve(I_sub - P_sub, rhs)),
-        error = function(e) rep(NA_real_, length(can_reach))
+        error = function(e) {
+          warning(warningCondition(sprintf(paste0(
+            "The hitting probabilities into state '%s' could not be solved ",
+            "(%s); they are NA."), state_names[j], conditionMessage(e)),
+            class = "nestimate_singular_system", call = NULL))
+          rep(NA_real_, length(can_reach))
+        }
       )
       H[can_reach, j] <- h
     }
@@ -129,10 +141,10 @@
   # returning to j in >= 1 steps: the self-loop contributes P[j, j],
   # and any path leaving j must eventually hit j again with probability
   # H[k, j] (already computed off-diagonal).
-  for (j in seq_len(n)) {
+  diag(H) <- vapply(seq_len(n), function(j) {
     off_idx <- setdiff(seq_len(n), j)
-    H[j, j] <- P[j, j] + sum(P[j, off_idx] * H[off_idx, j])
-  }
+    P[j, j] + sum(P[j, off_idx] * H[off_idx, j])
+  }, numeric(1))
   H[!is.na(H)] <- pmin(pmax(H[!is.na(H)], 0), 1)
   H
 }
@@ -360,10 +372,11 @@ chain_structure <- function(x, normalize = TRUE, tol = 1e-10) {
 
   # ---- Period per state (only meaningful for recurrent states) ----
   period <- rep(NA_integer_, n)
-  for (cl in recurrent_classes) {
-    cl_period <- .cs_class_period(A[cl, cl, drop = FALSE])
-    period[cl] <- cl_period
-  }
+  cl_periods <- vapply(recurrent_classes, function(cl) {
+    .cs_class_period(A[cl, cl, drop = FALSE])
+  }, integer(1))
+  period[unlist(recurrent_classes)] <- rep(cl_periods,
+                                           lengths(recurrent_classes))
   names(period) <- state_names
 
   # ---- Chain-level properties ----
@@ -465,6 +478,12 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' required for plotting.", call. = FALSE)
   }
+  .assert(
+    "`show_values` must be TRUE or FALSE" =
+      (is.logical(show_values) || is.numeric(show_values)) &&
+      length(show_values) == 1L && !is.na(show_values),
+    "`digits` must be numeric" = is.numeric(digits)
+  )
 
   # Order states: members of each communicating class kept contiguous,
   # classes ordered by [recurrent first, then transient], and within each
@@ -595,6 +614,7 @@ summary.chain_structure <- function(object, ...) {
   if (!is.null(object$absorption_probabilities)) {
     abs_states <- colnames(object$absorption_probabilities)
     abs_probs <- object$absorption_probabilities
+    # Loop: adds one column per closed class to `out`, in class order.
     for (a in abs_states) {
       colname <- if (length(abs_states) == 1L) "absorption_probability"
                  else sprintf("absorbed_in_%s", a)
@@ -624,11 +644,11 @@ summary.chain_structure <- function(object, ...) {
 print.chain_structure_group <- function(x, ...) {
   cat(sprintf("Chain structure -- %d groups: %s\n\n",
               length(x), paste(names(x), collapse = ", ")))
-  for (nm in names(x)) {
+  invisible(lapply(names(x), function(nm) {
     cat(sprintf("--- %s ---\n", nm))
     print(x[[nm]], ...)
     cat("\n")
-  }
+  }))
   invisible(x)
 }
 
@@ -644,7 +664,7 @@ summary.chain_structure_group <- function(object, ...) {
   all_cols <- unique(unlist(lapply(parts, colnames)))
   parts <- lapply(parts, function(d) {
     miss <- setdiff(all_cols, colnames(d))
-    for (m in miss) d[[m]] <- NA
+    d[miss] <- NA
     d[, all_cols, drop = FALSE]
   })
   out <- do.call(rbind, parts)

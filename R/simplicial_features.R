@@ -75,10 +75,12 @@ utils::globalVariables(c("network", "feature", "value"))
 simplicial_features <- function(x, threshold = 0, max_dim = 4L,
                                 normalize = FALSE, type = "clique") {
   .assert(
-    "`threshold` must be a finite numeric vector" =
-      is.numeric(threshold) && length(threshold) >= 1L && all(is.finite(threshold)),
-    "`max_dim` must be a single non-negative integer" =
-      length(max_dim) == 1L && is.finite(max_dim) && max_dim >= 0,
+    "`threshold` must be a finite numeric vector with no negative value" =
+      is.numeric(threshold) && length(threshold) >= 1L &&
+        all(is.finite(threshold)) && all(threshold >= 0),
+    "`max_dim` must be a single number of at least 1" =
+      is.numeric(max_dim) && length(max_dim) == 1L && is.finite(max_dim) &&
+        max_dim >= 1,
     "`normalize` must be TRUE or FALSE" =
       isTRUE(normalize) || isFALSE(normalize)
   )

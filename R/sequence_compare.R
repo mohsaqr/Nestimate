@@ -87,7 +87,9 @@ utils::globalVariables(c(
 #' @param group The group of each sequence: the name of a column of a data
 #'   frame or matrix `x` (that column is then not read as a position), or a
 #'   vector with one label per sequence. Ignored for a `netobject_group`;
-#'   required otherwise. At least two groups are needed. Default `NULL`.
+#'   required otherwise. At least two groups are needed. Sequences with a
+#'   missing group are left out of the counts with a warning of class
+#'   `nestimate_missing_group`. Default `NULL`.
 #' @param sub The pattern lengths to count, positive whole numbers.
 #'   Lengths longer than the sequences are dropped, and an error is raised
 #'   when none remains. Default `3:5`.
@@ -97,7 +99,8 @@ utils::globalVariables(c(
 #' @param test The inference: `"permutation"` (default), `"chisq"` or
 #'   `"none"`; see *Details*.
 #' @param iter The number of permutations for `test = "permutation"`, a
-#'   positive whole number; ignored otherwise. Default `1000`.
+#'   positive whole number; ignored otherwise. `iter = 1` gives a warning
+#'   of class `nestimate_undefined_effect_size`. Default `1000`.
 #' @param adjust The p-value adjustment, any method of [stats::p.adjust()]
 #'   (`"holm"`, `"hochberg"`, `"hommel"`, `"bonferroni"`, `"BH"`, `"BY"`,
 #'   `"fdr"` or `"none"`). Default `"fdr"` (Benjamini-Hochberg).
@@ -159,16 +162,29 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   iter <- as.integer(iter)
   sub <- as.integer(sub)
   .assert(
-    length(sub) >= 1L, all(sub >= 1L),
-    min_freq >= 1L,
-    iter >= 1L
+    "`sub` must be one or more pattern lengths of 1 or more" =
+      length(sub) >= 1L && all(sub >= 1L),
+    "`min_freq` must be a whole number of 1 or more" = all(min_freq >= 1L),
+    "`iter` must be a whole number of 1 or more" = all(iter >= 1L)
   )
+  if (identical(test, "permutation") && isTRUE(all(iter < 2L))) {
+    warning(warningCondition(
+      "`iter = 1` gives no effect size (NA): it needs at least two permutations.",
+      class = "nestimate_undefined_effect_size", call = NULL))
+  }
   adjust <- match.arg(adjust, stats::p.adjust.methods)
 
   # ---- Extract sequences and group labels ----
   parsed <- .cs_parse_input(x, group)
   seq_mat <- parsed$seq_mat
   group_vec <- parsed$group
+  n_no_group <- sum(is.na(group_vec))
+  if (n_no_group > 0L) {
+    warning(warningCondition(
+      sprintf(paste0("%d of %d sequences have a missing group and are left ",
+                     "out of the counts."), n_no_group, length(group_vec)),
+      class = "nestimate_missing_group", call = NULL))
+  }
   groups <- sort(unique(group_vec))
   n_groups <- length(groups)
   .assert("Need at least 2 groups" = n_groups >= 2L)
@@ -183,13 +199,11 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   group_idx <- lapply(groups, function(g) which(group_vec == g))
   names(group_idx) <- groups
 
-  row_list <- list()
-
-  for (si in seq_along(sub)) {
+  row_list <- lapply(seq_along(sub), function(si) {
     k <- sub[si]
     pat_mat <- pat_list[[si]]
     unique_pats <- sort(unique(pat_mat[nzchar(pat_mat)]))
-    if (!length(unique_pats)) next
+    if (!length(unique_pats)) return(NULL)
 
     counts_all <- vapply(groups, function(g) {
       vals <- pat_mat[, group_idx[[g]], drop = FALSE]
@@ -202,11 +216,11 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 
     total_by_group <- colSums(counts_all)
     N_grand <- sum(total_by_group)
-    if (N_grand == 0) next
+    if (N_grand == 0) return(NULL)
 
     # min_freq filter: every group must meet threshold
     keep <- apply(counts_all, 1, min) >= min_freq
-    if (!any(keep)) next
+    if (!any(keep)) return(NULL)
     counts <- counts_all[keep, , drop = FALSE]
     kept_pats <- rownames(counts)
     n_pat <- nrow(counts)
@@ -222,12 +236,10 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
     col_props <- total_by_group / N_grand
     row_sums <- rowSums(counts)
     row_props <- row_sums / N_grand
-    for (i in seq_len(n_pat)) {
-      row1 <- counts[i, ]
-      exp1 <- row_sums[i] * col_props
-      denom <- sqrt(exp1 * (1 - row_props[i]) * (1 - col_props))
-      resids[i, ] <- (row1 - exp1) / denom
-    }
+    expected <- outer(row_sums, col_props)
+    denom <- sqrt(expected * (1 - row_props) *
+                    rep(1 - col_props, each = n_pat))
+    resids[] <- (counts - expected) / denom
     resids[!is.finite(resids)] <- 0
 
     freq_df  <- as.data.frame(counts, stringsAsFactors = FALSE)
@@ -242,23 +254,22 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 
     # ---- Inference ----
     if (test == "chisq") {
-      stat_vec <- numeric(n_pat)
-      p_vec <- numeric(n_pat)
-      for (i in seq_len(n_pat)) {
+      chi <- vapply(seq_len(n_pat), function(i) {
         row1 <- counts[i, ]
         row2 <- total_by_group - row1
         tab <- rbind(row1, row2)
         ch <- suppressWarnings(stats::chisq.test(tab))
-        stat_vec[i] <- unname(ch$statistic)
-        p_vec[i] <- ch$p.value
-      }
-      rows$statistic <- stat_vec
-      rows$p_value <- p_vec
+        c(unname(ch$statistic), ch$p.value)
+      }, numeric(2L))
+      rows$statistic <- chi[1L, ]
+      rows$p_value <- chi[2L, ]
     } else if (test == "permutation") {
       stat_obs <- .cs_pattern_statistic(counts)
       stat_perm <- matrix(0, nrow = n_pat, ncol = iter)
       stat_ge <- integer(n_pat)
 
+      # A loop on purpose: one permutation at a time keeps a single
+      # patterns-by-groups table in memory, not iter of them.
       for (it in seq_len(iter)) {
         perm_group <- group_vec[sample(n)]
         perm_idx <- lapply(groups, function(g) which(perm_group == g))
@@ -284,8 +295,9 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
     }
     # test == "none" adds nothing
 
-    row_list[[length(row_list) + 1L]] <- rows
-  }
+    rows
+  })
+  row_list <- Filter(Negate(is.null), row_list)
 
   if (!length(row_list)) {
     stop(errorCondition(
@@ -407,17 +419,17 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       return(matrix("", nrow = 0, ncol = n))
     }
     # Build pattern strings for each position x sequence
-    out <- matrix("", nrow = n_pos, ncol = n)
-    for (i in seq_len(n_pos)) {
+    pats <- lapply(seq_len(n_pos), function(i) {
       idx <- i:(i + k - 1L)
       has_na <- rowSums(mis[, idx, drop = FALSE]) > 0L
       cols <- m[, idx, drop = FALSE]
       pat <- do.call(paste, c(as.data.frame(cols, stringsAsFactors = FALSE),
                               list(sep = "->")))
       pat[has_na] <- ""
-      out[i, ] <- pat
-    }
-    out
+      pat
+    })
+    matrix(unlist(pats, use.names = FALSE), nrow = n_pos, ncol = n,
+           byrow = TRUE)
   })
 }
 

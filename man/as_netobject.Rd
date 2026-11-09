@@ -50,6 +50,11 @@ its \code{meta}; without one, a symmetric weight matrix is taken as
 field is read as \code{TRUE}. Numeric state codes in the stored data of a
 converted tna model are decoded to their labels.
 }
+\note{
+The \pkg{idiographic} package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write \code{Nestimate::as_netobject()} to call this one.
+}
 \examples{
 net <- build_cor(data.frame(a = rnorm(50), b = rnorm(50), c = rnorm(50)))
 identical(as_netobject(net), net) # netobjects pass through unchanged

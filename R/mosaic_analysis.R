@@ -3,8 +3,8 @@
 # A self-contained categorical association analysis for two columns of a
 # data.frame: contingency table -> min-count filtering -> chi-square (or
 # Fisher) test -> Cramer's V effect size -> standardized residuals -> a flat
-# ggplot2 mosaic (shared .mosaic_flat_draw renderer, Nestimate diverging
-# palette). Ported from Saqrmisc::mosaic_analysis(), rewritten in base R
+# ggplot2 mosaic (shared .mosaic_flat_draw renderer, ColorBrewer RdBu
+# ramp). Ported from Saqrmisc::mosaic_analysis(), rewritten in base R
 # (no dplyr / tibble / vcd) with tidy one-row-per-cell output.
 
 
@@ -293,11 +293,17 @@ print.mosaic_analysis <- function(x, ...) {
   cat(sprintf("  N = %d (filtered from %d); table %d x %d\n",
               x$n_filtered, x$n_original, nrow(x$table), ncol(x$table)))
   s <- x$stats
-  if (is.na(s$statistic)) {
-    cat(sprintf("  %s: p = %s\n", s$test, format(s$p_value)))
+  # A p-value below machine precision is stored as 0; it is not zero.
+  p_text <- if (isTRUE(s$p_value < .Machine$double.eps)) {
+    "p < 2.2e-16"
   } else {
-    cat(sprintf("  %s: X2 = %.3f, df = %g, p = %s\n",
-                s$test, s$statistic, s$df, format(s$p_value)))
+    paste("p =", format(s$p_value))
+  }
+  if (is.na(s$statistic)) {
+    cat(sprintf("  %s: %s\n", s$test, p_text))
+  } else {
+    cat(sprintf("  %s: X2 = %.3f, df = %g, %s\n",
+                s$test, s$statistic, s$df, p_text))
   }
   cat(sprintf("  Cramer's V = %.3f (%s)\n", s$cramers_v, s$effect_size))
   rm1 <- x$removed$var1; rm2 <- x$removed$var2

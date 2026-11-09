@@ -145,16 +145,15 @@ cluster_choice <- function(data,
   )
 
   # ---- Sweep ---------------------------------------------------------
-  rows <- vector("list", nrow(grid))
-  for (i in seq_len(nrow(grid))) {
+  rows <- lapply(seq_len(nrow(grid)), function(i) {
     fit <- do.call(build_clusters, c(
       list(data          = data,
            k             = grid$k[[i]],
            dissimilarity = grid$dissimilarity[[i]],
            method        = grid$method[[i]]),
       dots))
-    rows[[i]] <- .cluster_choice_row(fit)
-  }
+    .cluster_choice_row(fit)
+  })
   out <- cbind(grid, do.call(rbind, rows))
   rownames(out) <- NULL
   class(out) <- c("cluster_choice", "data.frame")
@@ -223,7 +222,8 @@ cluster_choice <- function(data,
 #' @param type For the `plot()` method: the kind of plot, one of `"auto"`
 #'   (default), `"lines"`, `"bars"`, `"heatmap"`, `"tradeoff"` and
 #'   `"facet"` (see *Plot types*). A type the sweep cannot support raises
-#'   an error that names the alternatives.
+#'   an error that names the alternatives, and so does a table with a
+#'   single configuration, which has nothing to compare.
 #' @param abbrev For the `plot()` method: whether to shorten the
 #'   dissimilarity and method names (e.g. `"hamming"` to `"ham"`,
 #'   `"ward.D2"` to `"wD2"`) on the axes, point labels and legend. Default
@@ -265,9 +265,7 @@ print.cluster_choice <- function(x, digits = 3L, ...) {
   best[best_idx] <- "<-- best"
   disp$best <- best
 
-  for (axis in c("k", "dissimilarity", "method")) {
-    if (!(axis %in% swept)) disp[[axis]] <- NULL
-  }
+  disp[setdiff(c("k", "dissimilarity", "method"), swept)] <- NULL
 
   print.data.frame(disp, row.names = FALSE, right = FALSE)
 
@@ -359,11 +357,19 @@ plot.cluster_choice <- function(x,
   }
   .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
   if (!requireNamespace("ggplot2", quietly = TRUE)) { # nocov start
-    stop("Package 'ggplot2' required.", call. = FALSE)
+    stop(errorCondition("Package 'ggplot2' required.",
+                        class = "nestimate_missing_package", call = NULL))
   } # nocov end
   type  <- match.arg(type)
   swept <- attr(x, "swept") %||% c("k", "dissimilarity", "method")
 
+  if (!length(swept)) {
+    stop(errorCondition(
+      paste0("Nothing to plot: this cluster_choice() holds one configuration. ",
+             "Sweep at least one of 'k', 'dissimilarity' or 'method' ",
+             "(for example k = 2:5)."),
+      class = "nestimate_bad_input", call = NULL))
+  }
   if (type == "auto") type <- .auto_choice_type(swept)
   .require_type_supported(type, swept)
 

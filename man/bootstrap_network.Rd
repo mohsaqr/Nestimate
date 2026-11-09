@@ -205,14 +205,15 @@ With \code{actor}, a merged sequence must belong entirely to one actor. Every
 other method (the association methods, \code{"attention"}, \code{"ngram"}, \code{"gap"},
 \code{"reverse"} and registered estimators) is re-estimated in full on
 resampled rows. A replicate whose estimation fails, or that loses a
-node, is left out of the p-values without a warning, and the bootstrap
+node, is left out of the p-values, with a warning of class
+\code{nestimate_resample_failed} that counts them, and the bootstrap
 statistics are computed over the remaining replicates; if every
 replicate fails, every p-value is 1.
 
 A network built from an edge list (for example an \code{mcml} from
 \code{\link[=build_mcml]{build_mcml()}} with \code{from} and \code{to}) has no sequences, so each
-transition is resampled as an independent case, with a warning that
-points to the alternatives.
+transition is resampled as an independent case, with a warning of class
+\code{nestimate_edgelist_resampling} that points to the alternatives.
 }
 \section{Nested data and \code{actor}}{
 

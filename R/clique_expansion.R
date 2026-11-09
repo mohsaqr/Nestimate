@@ -73,8 +73,10 @@
 #' @export
 clique_expansion <- function(hg, weighted = TRUE) {
   .assert(
-    inherits(hg, "net_hypergraph"),
-    is.logical(weighted), length(weighted) == 1L
+    "`hg` must be a net_hypergraph (build_hypergraph/bipartite_groups)" =
+      inherits(hg, "net_hypergraph"),
+    "`weighted` must be TRUE or FALSE" =
+      is.logical(weighted) && length(weighted) == 1L
   )
 
   if (hg$n_hyperedges == 0L) {

@@ -65,7 +65,8 @@ be a single non-negative whole number.}
 \item{type}{For the \code{plot()} method: the kind of plot, one of \code{"auto"}
 (default), \code{"lines"}, \code{"bars"}, \code{"heatmap"}, \code{"tradeoff"} and
 \code{"facet"} (see \emph{Plot types}). A type the sweep cannot support raises
-an error that names the alternatives.}
+an error that names the alternatives, and so does a table with a
+single configuration, which has nothing to compare.}
 
 \item{abbrev}{For the \code{plot()} method: whether to shorten the
 dissimilarity and method names (e.g. \code{"hamming"} to \code{"ham"},

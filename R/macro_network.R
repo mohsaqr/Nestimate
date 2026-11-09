@@ -121,8 +121,9 @@ macro_network <- function(x, expand = NULL, method = "relative",
   data <- attr(x, "htna_source")
   if (is.null(data)) {
     stop(errorCondition(
-      paste0("This mcml carries no node-level sequence data (it was built ",
-             "from a matrix or aggregate), so its clusters cannot be ",
+      paste0("This mcml carries no node-level sequence data (only an mcml ",
+             "built from sequence data keeps it, not one built from a ",
+             "matrix, an edge list or a network), so its clusters cannot be ",
              "expanded. Rebuild it from sequences."),
       class = "nestimate_no_expand_source", call = NULL))
   }

@@ -597,8 +597,14 @@ vertex_compare <- function(x, y,
 #' @export
 print.net_vertex_comparison <- function(x, digits = 3, ...) {
   cat("Two-Network Vertex Bootstrap Comparison (Snijders & Borgatti)\n")
-  cat(sprintf("  %s (%d nodes) vs %s (%d nodes) | %d replicates each\n\n",
-              x$labels[1], x$x$n_nodes, x$labels[2], x$y$n_nodes, x$x$iter))
+  # Two precomputed bootstraps may have used different numbers of replicates.
+  replicates <- if (isTRUE(x$x$iter == x$y$iter)) {
+    sprintf("%d replicates each", x$x$iter)
+  } else {
+    sprintf("%d and %d replicates", x$x$iter, x$y$iter)
+  }
+  cat(sprintf("  %s (%d nodes) vs %s (%d nodes) | %s\n\n",
+              x$labels[1], x$x$n_nodes, x$labels[2], x$y$n_nodes, replicates))
   df <- x$summary
   num_cols <- vapply(df, is.numeric, logical(1))
   df[num_cols] <- lapply(df[num_cols], round, digits = digits)

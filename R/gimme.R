@@ -193,9 +193,11 @@ build_gimme <- function(data,
   if (!is.null(seed)) .local_seed(seed)
 
   # --- Input validation (Nestimate's error surface, unchanged) ---
-  .assert(is.data.frame(data))
-  .assert(is.character(vars), length(vars) >= 2L)
-  .assert(is.character(id), length(id) == 1L, id %in% names(data))
+  .assert("`data` must be a data.frame" = is.data.frame(data))
+  .assert("`vars` must be a character vector of at least 2 column names" =
+            is.character(vars) && length(vars) >= 2L)
+  .assert("`id` must be a single column name in `data`" =
+            is.character(id) && length(id) == 1L && id %in% names(data))
   if (!all(vars %in% names(data))) {
     missing_v <- setdiff(vars, names(data))
     stop(errorCondition(
@@ -204,9 +206,11 @@ build_gimme <- function(data,
         paste(missing_v, collapse = ", ")),
       class = "nestimate_bad_input", call = NULL))
   }
-  .assert(is.numeric(groupcutoff), groupcutoff > 0, groupcutoff <= 1)
+  .assert("`groupcutoff` must be a single number in (0, 1]" =
+            is.numeric(groupcutoff) && all(groupcutoff > 0) &&
+            all(groupcutoff <= 1))
   if (!is.null(exogenous)) {
-    .assert(is.character(exogenous))
+    .assert("`exogenous` must be a character vector" = is.character(exogenous))
     bad_exog <- setdiff(exogenous, vars)
     if (length(bad_exog) > 0L) {
       stop(errorCondition(paste0("`exogenous` names must be among `vars`: ",
@@ -240,4 +244,20 @@ build_gimme <- function(data,
     nnfi_cutoff = nnfi_cutoff, cfi_cutoff = cfi_cutoff,
     n_excellent = as.integer(n_excellent), seed = seed
   )
+}
+
+#' @rdname build_gimme
+#' @param x For the `coefs()` method: a `net_gimme` from `build_gimme()`.
+#' @param ... For the `coefs()` method: passed to [idiographic::coefs()].
+#' @section Methods:
+#' * `coefs()` on a `build_gimme()` result returns idiographic's coefficient
+#'   table, one row per person and path. Nestimate's own [coefs()] generic
+#'   masks idiographic's when both packages are attached; this method makes
+#'   either one give the same table.
+#' @export
+coefs.net_gimme <- function(x, ...) {
+  # idiographic's method is fetched explicitly: calling idiographic::coefs()
+  # from here would dispatch straight back to this method.
+  utils::getS3method("coefs", "net_gimme",
+                     envir = asNamespace("idiographic"))(x, ...)
 }

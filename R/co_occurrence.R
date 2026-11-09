@@ -43,8 +43,10 @@
 #' @param by The column that defines the transactions of a long table: each
 #'   of its values is one transaction, holding the distinct `field` values of
 #'   its rows (for example `"paper_id"` or `"session_id"`). Default `NULL`,
-#'   where items co-occur within the same row. Ignored when `sep` is set,
-#'   which reads `field` as delimited.
+#'   where items co-occur within the same row. It needs a single `field`
+#'   column (several raise an error of class `nestimate_bad_input`). Ignored,
+#'   with a warning of class `nestimate_ignored_argument`, when `sep` is
+#'   set, which reads `field` as delimited.
 #' @param sep The separator that splits delimited `field` values, such as
 #'   `";"` or `","`, matched literally; the split values are trimmed. Default
 #'   `NULL`. See `field` for the combinations that raise an error.
@@ -96,7 +98,8 @@
 #'   `"binary"` declares them items, one row per transaction, where a missing
 #'   cell counts as no occurrence; it raises the same error on data with any
 #'   other value.
-#' @param ... Not used.
+#' @param ... Not used; an argument given here is ignored with a warning of
+#'   class `nestimate_ignored_argument`.
 #'
 #' @return A `netobject` (class `c("netobject", "cograph_network")`),
 #'   undirected (directed with `similarity = "relative"`), with
@@ -191,8 +194,14 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
   format <- match.arg(format)
   threshold <- as.numeric(threshold)
   min_occur <- as.integer(min_occur)
-  .assert(threshold >= 0, min_occur >= 1L,
-          is.logical(diagonal), length(diagonal) == 1L)
+  .assert(
+    "`threshold` must be a single number of 0 or more" =
+      length(threshold) == 1L && threshold >= 0,
+    "`min_occur` must be a single whole number of 1 or more" =
+      length(min_occur) == 1L && min_occur >= 1L,
+    "`diagonal` must be TRUE or FALSE" =
+      is.logical(diagonal) && length(diagonal) == 1L)
+  .warn_ignored_dots("cooccurrence()", ...)
 
   # A network is a list, so its fields would otherwise be read as transactions
   if (inherits(data, c("netobject", "netobject_group", "cograph_network", "tna"))) {
@@ -225,6 +234,18 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
       paste0("cooccurrence(): set `field` and `by` for a long table, or `field` ",
              "and `sep` for delimited columns."),
       class = "nestimate_bad_input", call = NULL))
+  }
+  if (!is.null(by) && is.null(sep) && length(field) != 1L) {
+    stop(errorCondition(
+      paste0("cooccurrence(): a long table has one item column; `field` names ",
+             length(field), ". Name one, or set `sep` to pool delimited columns."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (!is.null(by) && !is.null(sep)) {
+    warning(warningCondition(
+      paste0("cooccurrence(): `by` is ignored when `sep` is set: `field` is ",
+             "read as delimited, one transaction per row."),
+      class = "nestimate_ignored_argument", call = NULL))
   }
   # Convert input to list of character vectors (transactions)
   fmt <- .co_detect_format(data, field, by, sep)
@@ -303,7 +324,8 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
   # the upper triangle when undirected, one off-diagonal cell when directed;
   # the cutoff is taken from those same cells. Ties with the cutoff stay.
   if (!is.null(top_n)) {
-    .assert(is.numeric(top_n), top_n > 0)
+    .assert("`top_n` must be NULL or a positive number" =
+              is.numeric(top_n) && all(top_n > 0))
     top_n <- as.integer(top_n)
     candidates <- if (directed) row(W) != col(W) else upper.tri(W)
     values <- W[candidates]
@@ -453,9 +475,8 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
   k <- length(all_items)
   B <- matrix(FALSE, nrow = n, ncol = k,
               dimnames = list(NULL, all_items))
-  for (i in seq_len(n)) {
-    B[i, transactions[[i]]] <- TRUE
-  }
+  B[cbind(rep(seq_len(n), lengths(transactions)),
+          match(unlist(transactions, use.names = FALSE), all_items))] <- TRUE
   B
 }
 

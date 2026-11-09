@@ -64,7 +64,9 @@
 #'   items or recoded positions, so with `"auto"` (default) they raise an
 #'   error of class `nestimate_bad_input`. `"binary"` declares them items,
 #'   one row per transaction; it raises the same error on a data frame with
-#'   any other value.
+#'   any other value. A list of transactions or a network has no 0/1
+#'   columns, so `"binary"` is ignored for them with a warning of class
+#'   `nestimate_ignored_argument`.
 #'
 #' @return A `net_association_rules` object. `print()` shows the counts, the
 #'   thresholds and the ten rules with the highest lift; `summary()` returns
@@ -156,14 +158,25 @@ association_rules <- function(x,
 
   # ---- Input validation ----
   .assert(
-    is.numeric(min_support), length(min_support) == 1,
-    min_support > 0, min_support <= 1,
-    is.numeric(min_confidence), length(min_confidence) == 1,
-    min_confidence >= 0, min_confidence <= 1,
-    is.numeric(min_lift), length(min_lift) == 1, min_lift >= 0,
-    is.numeric(max_length), length(max_length) == 1, max_length >= 2
+    "`min_support` must be a single number above 0 and at most 1" =
+      is.numeric(min_support) && length(min_support) == 1 &&
+      min_support > 0 && min_support <= 1,
+    "`min_confidence` must be a single number from 0 to 1" =
+      is.numeric(min_confidence) && length(min_confidence) == 1 &&
+      min_confidence >= 0 && min_confidence <= 1,
+    "`min_lift` must be a single number of 0 or more" =
+      is.numeric(min_lift) && length(min_lift) == 1 && min_lift >= 0,
+    "`max_length` must be a single number of 2 or more" =
+      is.numeric(max_length) && length(max_length) == 1 && max_length >= 2
   )
   max_length <- as.integer(max_length)
+  if (identical(format, "binary") && is.list(x) && !is.data.frame(x)) {
+    warning(warningCondition(paste0(
+      "association_rules(): `format = \"binary\"` is ignored: it declares ",
+      "the 0/1 columns of a data frame or matrix, and `x` is a list of ",
+      "transactions or a network."),
+      class = "nestimate_ignored_argument", call = NULL))
+  }
 
   # ---- Parse input to binary transaction matrix ----
   parsed <- .ar_parse_input(x, format)
@@ -197,18 +210,17 @@ association_rules <- function(x,
   if (max_length >= 2 && n_items >= 2) {
     co_counts <- as.matrix(crossprod(trans_mat * 1L))
     # Upper triangle only (avoid duplicates)
-    freq2 <- list()
-    for (i in seq_len(n_items - 1L)) {
-      for (j in seq(i + 1L, n_items)) {
-        if (co_counts[i, j] >= min_count) {
-          freq2 <- c(freq2, list(list(
-            items = c(items[i], items[j]),
-            count = co_counts[i, j],
-            support = co_counts[i, j] / n_trans
-          )))
-        }
-      }
-    }
+    pairs <- unname(which(upper.tri(co_counts) & co_counts >= min_count,
+                          arr.ind = TRUE))
+    # Row by row, as the pairs are listed: (1, 2), (1, 3), ..., (2, 3), ...
+    pairs <- pairs[order(pairs[, 1L], pairs[, 2L]), , drop = FALSE]
+    freq2 <- lapply(seq_len(nrow(pairs)), function(r) {
+      i <- pairs[r, 1L]
+      j <- pairs[r, 2L]
+      list(items = c(items[i], items[j]),
+           count = co_counts[i, j],
+           support = co_counts[i, j] / n_trans)
+    })
     if (length(freq2) > 0) frequent_itemsets[[2]] <- freq2
   }
 
@@ -235,16 +247,13 @@ association_rules <- function(x,
       if (length(candidates) == 0) break
 
       # Count support via logical AND
-      freq_k <- list()
-      for (cand in candidates) {
+      freq_k <- Filter(Negate(is.null), lapply(candidates, function(cand) {
         mask <- Reduce(`&`, lapply(cand, function(it) trans_mat[, it]))
         cnt <- sum(mask)
         if (cnt >= min_count) {
-          freq_k <- c(freq_k, list(list(
-            items = cand, count = cnt, support = cnt / n_trans
-          )))
+          list(items = cand, count = cnt, support = cnt / n_trans)
         }
-      }
+      }))
       if (length(freq_k) == 0) break
       frequent_itemsets[[k]] <- freq_k
       k <- k + 1L
@@ -524,19 +533,19 @@ association_rules <- function(x,
 .ar_generate_candidates <- function(prev_items, k) {
   # Standard Apriori join: two (k-1)-itemsets sharing first k-2 items
   n <- length(prev_items)
-  candidates <- list()
-  for (i in seq_len(n - 1L)) {
+  candidates <- lapply(seq_len(n - 1L), function(i) {
     a <- prev_items[[i]]
     prefix_a <- a[seq_len(k - 2L)]
-    for (j in seq(i + 1L, n)) {
+    joined <- lapply(seq(i + 1L, n), function(j) {
       b <- prev_items[[j]]
       prefix_b <- b[seq_len(k - 2L)]
       if (identical(prefix_a, prefix_b) && a[k - 1L] < b[k - 1L]) {
-        candidates <- c(candidates, list(c(a, b[k - 1L])))
+        c(a, b[k - 1L])
       }
-    }
-  }
-  candidates
+    })
+    Filter(Negate(is.null), joined)
+  })
+  unlist(candidates, recursive = FALSE) %||% list()
 }
 
 
@@ -546,13 +555,13 @@ association_rules <- function(x,
 .ar_generate_rules <- function(frequent_itemsets, item_counts, items,
                                 n_trans, min_confidence, min_lift) {
   # Pre-build support lookup for all frequent itemsets
-  support_lookup <- new.env(hash = TRUE, parent = emptyenv())
-  for (level in frequent_itemsets) {
-    for (fi in level) {
-      key <- paste(fi$items, collapse = "\t")
-      support_lookup[[key]] <- fi$support
-    }
-  }
+  all_sets <- unlist(frequent_itemsets, recursive = FALSE)
+  support_lookup <- list2env(
+    stats::setNames(
+      lapply(all_sets, function(fi) fi$support),
+      vapply(all_sets, function(fi) paste(fi$items, collapse = "\t"),
+             character(1L))),
+    hash = TRUE, parent = emptyenv())
 
   # Item-level support for lift/conviction
   item_support <- setNames(item_counts / n_trans, items)
@@ -569,6 +578,8 @@ association_rules <- function(x,
       stringsAsFactors = FALSE
     ))
   }
+  # Loops on purpose: every itemset is split into each antecedent and
+  # consequent in turn, with four early exits; the nesting is the algorithm.
   for (k in seq(2L, length(frequent_itemsets))) {
     level <- frequent_itemsets[[k]]
     if (is.null(level)) next
@@ -696,11 +707,9 @@ print.net_association_rules <- function(x, ...) {
   if (x$n_rules > 0) {
     top <- utils::head(x$rules, 10)
     cat("\n  Top rules (by lift):\n")
-    for (i in seq_len(nrow(top))) {
-      r <- top[i, ]
-      cat(sprintf("    %d. %s -> %s  (sup=%.3f conf=%.3f lift=%.2f)\n",
-                  i, r$antecedent, r$consequent, r$support, r$confidence, r$lift))
-    }
+    cat(sprintf("    %d. %s -> %s  (sup=%.3f conf=%.3f lift=%.2f)\n",
+                seq_len(nrow(top)), top$antecedent, top$consequent,
+                top$support, top$confidence, top$lift), sep = "")
     if (x$n_rules > 10) {
       cat(sprintf("    ... and %d more rules\n", x$n_rules - 10))
     }

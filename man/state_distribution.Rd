@@ -6,6 +6,7 @@
 \alias{state_distribution.htna}
 \alias{state_distribution.mcml}
 \alias{state_distribution.netobject_group}
+\alias{state_distribution.state_freq}
 \alias{state_distribution.default}
 \title{Per-Class State Distribution as a Tidy Data Frame}
 \usage{
@@ -19,11 +20,14 @@ state_distribution(x, ...)
 
 \method{state_distribution}{netobject_group}(x, ...)
 
+\method{state_distribution}{state_freq}(x, ...)
+
 \method{state_distribution}{default}(x, ...)
 }
 \arguments{
 \item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna} network
-built from sequences. A network without sequence data raises an error;
+built from sequences, or the \code{state_freq} result of
+\code{\link[=plot_state_frequencies]{plot_state_frequencies()}}, whose table is returned as drawn. A network without sequence data raises an error;
 in a \code{netobject_group} or \code{mcml}, groups without it are left out, and
 an error is raised only when none has any. Other classes raise an
 error.}

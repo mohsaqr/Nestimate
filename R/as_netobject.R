@@ -37,6 +37,9 @@
 #' @examples
 #' net <- build_cor(data.frame(a = rnorm(50), b = rnorm(50), c = rnorm(50)))
 #' identical(as_netobject(net), net) # netobjects pass through unchanged
+#' @note The \pkg{idiographic} package exports a function with the same
+#'   name. With both packages attached, the one attached last masks the
+#'   other; write `Nestimate::as_netobject()` to call this one.
 #' @export
 as_netobject <- function(x) {
   UseMethod("as_netobject")

@@ -2,10 +2,13 @@
 % Please edit documentation in R/extraction.R
 \name{extract_transition_matrix}
 \alias{extract_transition_matrix}
+\alias{print.nest_transition_matrix}
 \alias{summary.nest_transition_matrix}
 \title{Extract Transition Matrix from Model}
 \usage{
 extract_transition_matrix(model, type = c("raw", "scaled"))
+
+\method{print}{nest_transition_matrix}(x, ...)
 
 \method{summary}{nest_transition_matrix}(object, ...)
 }
@@ -20,9 +23,12 @@ as stored. \code{"scaled"} divides each row by its sum, so the rows of a
 count matrix become transition probabilities; a row that sums to zero
 is left as it is.}
 
-\item{object}{For the \code{summary()} method: a \code{nest_transition_matrix}.}
+\item{x}{For the \code{print()} method: a \code{nest_transition_matrix}.}
 
-\item{...}{For the \code{summary()} method: ignored.}
+\item{...}{For the \code{summary()} method: ignored. For the \code{print()} method:
+passed on to the matrix print.}
+
+\item{object}{For the \code{summary()} method: a \code{nest_transition_matrix}.}
 }
 \value{
 For a single network: a square numeric matrix with the model's

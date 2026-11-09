@@ -50,6 +50,8 @@ extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
   if (inherits(model, "mcml")) {
     result <- list(macro = extract_transition_matrix(model$macro, type = type))
     if (!is.null(model$clusters)) {
+      # Loop kept: `[[<-` by cluster name, so a cluster called "macro"
+      # replaces the macro entry exactly as before.
       for (nm in names(model$clusters)) {
         result[[nm]] <- extract_transition_matrix(model$clusters[[nm]], type = type)
       }
@@ -108,8 +110,19 @@ extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
 
 
 #' @rdname extract_transition_matrix
+#' @param x For the `print()` method: a `nest_transition_matrix`.
+#' @export
+print.nest_transition_matrix <- function(x, ...) {
+  # the plain matrix, without a trailing attr(,"class") block
+  print(unclass(x), ...)
+  invisible(x)
+}
+
+
+#' @rdname extract_transition_matrix
 #' @param object For the `summary()` method: a `nest_transition_matrix`.
-#' @param ... For the `summary()` method: ignored.
+#' @param ... For the `summary()` method: ignored. For the `print()` method:
+#'   passed on to the matrix print.
 #' @export
 summary.nest_transition_matrix <- function(object, ...) {
   .matrix_to_long_df(unclass(object), value_col = "weight")
@@ -162,6 +175,8 @@ extract_initial_probs <- function(model) {
   if (inherits(model, "mcml")) {
     result <- list(macro = model$macro$inits)
     if (!is.null(model$clusters)) {
+      # Loop kept: `[[<-` skips a cluster without `$inits`; lapply() would
+      # add a NULL entry for it.
       for (nm in names(model$clusters)) {
         result[[nm]] <- model$clusters[[nm]]$inits
       }
@@ -183,9 +198,10 @@ extract_initial_probs <- function(model) {
 
   if (is.null(initial)) {
     # Try to infer from transition matrix
+    # only "no weights in this object" falls through to the error below
     weights <- tryCatch(
       extract_transition_matrix(model),
-      error = function(e) NULL
+      nestimate_bad_input = function(e) NULL
     )
     if (!is.null(weights)) {
       n_states <- nrow(weights)
@@ -194,7 +210,9 @@ extract_initial_probs <- function(model) {
       # Use uniform distribution
       initial <- rep(1 / n_states, n_states)
       names(initial) <- states
-      warning("Initial probabilities not found in model. Using uniform distribution.")
+      warning(warningCondition(
+        "Initial probabilities not found in model. Using uniform distribution.",
+        class = "nestimate_uniform_initial", call = NULL))
     } else {
       stop(errorCondition("Could not extract initial probabilities from model.",
                           class = "nestimate_bad_input", call = NULL))
@@ -217,8 +235,19 @@ extract_initial_probs <- function(model) {
 
 
 #' @rdname extract_initial_probs
+#' @param x For the `print()` method: a `nest_initial_probs`.
+#' @export
+print.nest_initial_probs <- function(x, ...) {
+  # the plain named vector, without a trailing attr(,"class") block
+  print(unclass(x), ...)
+  invisible(x)
+}
+
+
+#' @rdname extract_initial_probs
 #' @param object For the `summary()` method: a `nest_initial_probs`.
-#' @param ... For the `summary()` method: ignored.
+#' @param ... For the `summary()` method: ignored. For the `print()` method:
+#'   passed on to the vector print.
 #' @export
 summary.nest_initial_probs <- function(object, ...) {
   v <- unclass(object)
@@ -289,6 +318,9 @@ summary.nest_initial_probs <- function(object, ...) {
 #' @seealso \code{\link{extract_transition_matrix}} for the full matrix,
 #'   \code{\link{build_network}} for network estimation.
 #'
+#' @note The \pkg{idiographic} package exports a function with the same
+#'   name. With both packages attached, the one attached last masks the
+#'   other; write `Nestimate::extract_edges()` to call this one.
 #' @export
 extract_edges <- function(model,
                           threshold = 0,
@@ -324,6 +356,7 @@ extract_edges <- function(model,
                                          include_self = include_self,
                                          sort_by = sort_by))
     if (!is.null(model$clusters)) {
+      # Loop kept: `[[<-` by cluster name (see extract_transition_matrix()).
       for (nm in names(model$clusters)) {
         result[[nm]] <- extract_edges(model$clusters[[nm]],
                                        threshold = threshold,

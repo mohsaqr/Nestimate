@@ -67,8 +67,8 @@
 #'       weight at or below 0 raises an error of class
 #'       `nestimate_bad_input` (use `"log1p"` for networks with zeros).}
 #'     \item{`"log1p"`}{\eqn{\log(1 + w)}{log(1 + w)}; defined for
-#'       \eqn{w > -1}{w > -1}. A weight of -1 or below makes the comparison
-#'       fail with an error.}
+#'       \eqn{w > -1}{w > -1}: a weight of -1 or below raises an error of
+#'       class `nestimate_bad_input`.}
 #'     \item{`"softmax"`}{A numerically stable softmax over all the cells.}
 #'     \item{`"quantile"`}{The empirical cumulative distribution of the
 #'       cells.}
@@ -152,6 +152,16 @@ compare_model <- function(x, ...) UseMethod("compare_model")
 
 #' @rdname compare_model
 #' @export
+compare_model.default <- function(x, ...) {
+  stop(errorCondition(
+    paste0("`compare_model()` expects a netobject, cograph_network, ",
+           "netobject_group or numeric matrix. Got: ",
+           paste(class(x), collapse = ", "), "."),
+    class = "nestimate_bad_input", call = NULL))
+}
+
+#' @rdname compare_model
+#' @export
 compare_model.netobject <- function(x, y, scaling = "none", measures = character(0),
                               network = TRUE, ...) {
   .compare_impl(.weights_of(x, label_unnamed = FALSE),
@@ -186,21 +196,41 @@ compare_model.matrix <- function(x, y, scaling = "none", measures = character(0)
 compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
                                     measures = character(0), network = TRUE,
                                     ...) {
-  stopifnot(inherits(x, "netobject_group"))
+  .assert("`x` must be a netobject_group" = inherits(x, "netobject_group"))
   if (is.character(i)) i <- match(i, names(x))
   if (is.character(j)) j <- match(j, names(x))
-  .assert(!is.na(i), !is.na(j), i >= 1L, i <= length(x),
-            j >= 1L, j <= length(x), i != j)
+  .assert(
+    "`i` and `j` must each be the name or index of one network of the group" =
+      length(i) == 1L && length(j) == 1L && !is.na(i) && !is.na(j) &&
+        i >= 1L && i <= length(x) && j >= 1L && j <= length(x),
+    "`i` and `j` must name two different networks" = i != j)
   compare_model(x[[i]], x[[j]], scaling = scaling, measures = measures,
           network = network, ...)
 }
 
 
+# match.arg() whose error carries class `nestimate_bad_input` and names the
+# argument; match.arg()'s own wording ("should be one of") is kept.
+#' @noRd
+.compare_match_arg <- function(arg, choices, name) {
+  tryCatch(
+    match.arg(arg, choices),
+    error = function(e) {
+      stop(errorCondition(
+        sprintf("`%s` should be one of %s.", name,
+                paste0("\"", choices, "\"", collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
+    })
+}
+
+
 # ---- Internal: extract weight matrix ----
 
-.weights_of <- function(z, label_unnamed = TRUE) {
+# `fn` is the calling verb, named in the error for an unsupported object.
+.weights_of <- function(z, label_unnamed = TRUE, fn = "compare_model") {
   if (is.matrix(z)) {
-    .assert(nrow(z) == ncol(z), is.numeric(z))
+    .assert("A weight matrix must be square" = nrow(z) == ncol(z),
+            "A weight matrix must be numeric" = is.numeric(z))
     if (label_unnamed && (is.null(rownames(z)) || is.null(colnames(z)))) {
       labs <- paste0("V", seq_len(nrow(z)))
       rownames(z) <- colnames(z) <- labs
@@ -211,7 +241,8 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
     return(z$weights)
   }
   stop(errorCondition(
-    "`compare_model()` expects a netobject, cograph_network, or numeric matrix.",
+    sprintf("`%s()` expects a netobject, cograph_network, or numeric matrix.",
+            fn),
     class = "nestimate_bad_input", call = NULL))
 }
 
@@ -275,14 +306,25 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 # ---- Internal: the comparison machinery ----
 
 .compare_impl <- function(x, y, scaling, measures, network, directed) {
-  .assert(identical(dim(x), dim(y)))
-  .assert(!anyNA(x), !anyNA(y))
+  .assert("x and y must have the same number of nodes" =
+            identical(dim(x), dim(y)))
+  .assert("x and y must not contain missing weights" =
+            !anyNA(x) && !anyNA(y))
   aligned <- .compare_align_nodes(x, y)
   x <- aligned$x
   y <- aligned$y
   n <- nrow(x)
 
-  scaling <- match.arg(scaling, .compare_scaling_names())
+  scaling <- .compare_match_arg(scaling, .compare_scaling_names(), "scaling")
+  # log1p() is NaN below -1 and -Inf at -1; either made the similarity
+  # metrics fail later with an unrelated base error.
+  if (scaling == "log1p" && (any(x <= -1) || any(y <= -1))) {
+    stop(errorCondition(
+      sprintf(paste0("`scaling = \"log1p\"` needs every weight above -1; ",
+                     "the networks have %d weight(s) at or below -1."),
+              sum(x <= -1) + sum(y <= -1)),
+      class = "nestimate_bad_input", call = NULL))
+  }
   x_scaled <- .apply_compare_scaling(x, scaling)
   y_scaled <- .apply_compare_scaling(y, scaling)
   d <- x_scaled - y_scaled
@@ -442,7 +484,8 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
       mx <- max(w); e <- exp(w - mx); e / sum(e)
     },
     quantile = function(w) stats::ecdf(w)(w),
-    stop("Unknown scaling: ", scaling, call. = FALSE)
+    stop(errorCondition(paste0("Unknown scaling: ", scaling),
+                        class = "nestimate_bad_input", call = NULL))
   )
   out <- W
   out[] <- vec_fn(as.vector(W))
@@ -474,13 +517,15 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 
   has_matrix <- is.matrix(x) && is.matrix(y)
   if (has_matrix) {
-    stopifnot(identical(dim(x), dim(y)))
+    .assert("x and y must have the same dimensions" =
+              identical(dim(x), dim(y)))
     x_mat <- x; y_mat <- y
     x_vec <- as.vector(x); y_vec <- as.vector(y)
     n <- nrow(x_mat)
   } else {
     x_vec <- as.numeric(x); y_vec <- as.numeric(y)
-    stopifnot(length(x_vec) == length(y_vec))
+    .assert("x and y must have the same length" =
+              length(x_vec) == length(y_vec))
     n <- length(x_vec)
   }
 
@@ -674,7 +719,9 @@ print.net_comparison <- function(x, ...) {
     nm$y <- .format_metric_values(nm$metric, nm$y)
     print.data.frame(nm, row.names = FALSE)
   }
-  if (!is.null(x$centrality_correlations)) {
+  # No block when every requested measure was unknown (an empty table).
+  if (!is.null(x$centrality_correlations) &&
+      nrow(x$centrality_correlations) > 0L) {
     cat("\nCentrality correlations:\n")
     cc <- x$centrality_correlations
     cc$correlation <- vapply(cc$correlation,
@@ -696,11 +743,14 @@ plot.net_comparison <- function(x,
                                          "all"),
                                 combined = TRUE,
                                 ...) {
-  type <- match.arg(type)
-  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("ggplot2 is required for plot.net_comparison().", call. = FALSE)
-  }
+  type <- .compare_match_arg(
+    type, c("scatter", "heatmap", "diff_hist", "weight_dist", "all"), "type")
+  .assert("`combined` must be TRUE or FALSE" =
+            is.logical(combined) && length(combined) == 1L && !is.na(combined))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) { # nocov start
+    stop(errorCondition("ggplot2 is required for plot.net_comparison().",
+                        class = "nestimate_missing_package", call = NULL))
+  } # nocov end
   switch(type,
     scatter     = .plot_comparison_scatter(x),
     heatmap     = .plot_comparison_heatmap(x),
@@ -730,8 +780,9 @@ plot.net_comparison <- function(x,
   )
   if (!combined) return(invisible(panels))
   if (!requireNamespace("gridExtra", quietly = TRUE)) {
-    stop("type = 'all' with combined = TRUE requires the gridExtra package.",
-         call. = FALSE)
+    stop(errorCondition( # nocov start
+      "type = 'all' with combined = TRUE requires the gridExtra package.",
+      class = "nestimate_missing_package", call = NULL)) # nocov end
   }
   combined_grob <- gridExtra::arrangeGrob(panels$scatter, panels$heatmap,
                                           panels$diff_hist, panels$weight_dist,

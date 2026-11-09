@@ -104,7 +104,7 @@ extract_pathways <- function(data, action, group, order = NULL,
                              type = c("unit", "segments", "anchored"),
                              anchor = NULL, terminal = NULL, resolve = NULL,
                              sep = " -> ") {
-  type <- match.arg(type)
+  type <- .ho_match_arg(type, "type")
   .assert(
     "`data` must be a data.frame" = is.data.frame(data),
     "`action` must be a single column name" =
@@ -248,6 +248,8 @@ extract_pathways <- function(data, action, group, order = NULL,
                                                    collapse = sep), sep)),
                     by = "..pid"]
     lab <- rep("Unresolved", nrow(present))
+    # A loop on purpose: the labels are written in reverse so that, where a
+    # pathway satisfies several rules, the first rule listed wins.
     for (nm in rev(names(resolve))) {
       hit <- Reduce(`&`, lapply(resolve[[nm]], function(st)
         grepl(paste0(sep, st, sep), present$bag, fixed = TRUE)))

@@ -524,6 +524,8 @@ build_ising <- function(data, actor = NULL, ...) {
 }
 
 .apply_scaling <- function(mat, scaling, include_zeros = FALSE) {
+  # Loop kept: the scalings are applied in the order given, each to the
+  # result of the one before.
   for (s in scaling) {
     mat <- switch(s,
       minmax = {
@@ -626,7 +628,7 @@ build_ising <- function(data, actor = NULL, ...) {
 #' @return Transformed data frame.
 #' @noRd
 .decompose_multilevel <- function(data, id_col, level) {
-  stopifnot(is.data.frame(data)) # nocov
+  .assert("`data` must be a data frame" = is.data.frame(data)) # nocov
   grp_var <- id_col[1]
 
   if (!grp_var %in% names(data)) {
@@ -677,9 +679,9 @@ build_ising <- function(data, actor = NULL, ...) {
 
     # Person-mean center each variable
     mat_m <- as.matrix(mat)
-    for (j in seq_len(ncol(mat_m))) {
-      mat_m[, j] <- mat_m[, j] - ave(mat_m[, j], id_vals, FUN = mean)
-    }
+    mat_m[] <- vapply(seq_len(ncol(mat_m)), function(j) {
+      mat_m[, j] - ave(mat_m[, j], id_vals, FUN = mean)
+    }, numeric(nrow(mat_m)))
 
     return(as.data.frame(mat_m))
   }

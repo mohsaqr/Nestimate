@@ -180,11 +180,15 @@ build_mlvar <- function(data, vars, id,
                         standardize = FALSE) {
   # ---- Input validation ----
   .assert(
-    is.data.frame(data),
-    is.character(vars), length(vars) >= 2L,
-    is.character(id), length(id) == 1L,
-    is.numeric(lag), length(lag) == 1L, lag >= 1L,
-    is.logical(standardize), length(standardize) == 1L
+    "`data` must be a data.frame" = is.data.frame(data),
+    "`vars` must be a character vector of at least 2 column names" =
+      is.character(vars) && length(vars) >= 2L,
+    "`id` must be a single column name" =
+      is.character(id) && length(id) == 1L,
+    "`lag` must be a single number >= 1" =
+      is.numeric(lag) && length(lag) == 1L && !is.na(lag) && lag >= 1L,
+    "`standardize` must be TRUE or FALSE" =
+      is.logical(standardize) && length(standardize) == 1L
   )
 
   required <- c(vars, id)
@@ -286,6 +290,9 @@ build_mlvar <- function(data, vars, id,
 #'   `beta` plus or minus `qnorm(0.975)` standard errors) and `significant`
 #'   (`p < 0.05`).
 #' @inherit build_mlvar examples
+#' @note The \pkg{idiographic} package exports a function with the same
+#'   name. With both packages attached, the one attached last masks the
+#'   other; write `Nestimate::coefs()` to call this one.
 #' @export
 coefs <- function(x, ...) {
   UseMethod("coefs")
@@ -314,7 +321,7 @@ coefs.default <- function(x, ...) {
 #' @export
 print.net_mlvar <- function(x, ...) {
   coef_df <- attr(x, "coefs")
-  d <- nrow(x$temporal$weights)
+  d <- nrow(x[[1L]]$weights)
   n_sig <- sum(coef_df$significant, na.rm = TRUE)
   n_tot <- nrow(coef_df)
 
@@ -323,12 +330,12 @@ print.net_mlvar <- function(x, ...) {
               attr(x, "n_obs"),
               d,
               attr(x, "lag")))
-  cat(sprintf("  $temporal        %d x %d directed    (%d/%d edges significant at p<0.05)\n",
+  cat(sprintf("  temporal        %d x %d directed    (%d/%d edges significant at p<0.05)\n",
               d, d, n_sig, n_tot))
-  cat(sprintf("  $contemporaneous %d x %d undirected\n", d, d))
-  cat(sprintf("  $between         %d x %d undirected\n", d, d))
-  cat("Access: fit$temporal, fit$contemporaneous, fit$between (each a netobject);",
-      "coefs(fit) for tidy coefs.\n")
+  cat(sprintf("  contemporaneous %d x %d undirected\n", d, d))
+  cat(sprintf("  between         %d x %d undirected\n", d, d))
+  cat("coefs(fit) for the coefficient table;",
+      "plot(fit, layer = \"temporal\") to draw one network.\n")
   invisible(x)
 }
 
@@ -340,7 +347,9 @@ print.net_mlvar <- function(x, ...) {
 #' @export
 summary.net_mlvar <- function(object, ...) {
   coef_df <- attr(object, "coefs")
-  vars    <- rownames(object$temporal$weights)
+  # The layers are read by position (temporal, contemporaneous, between), so
+  # a fit whose layers were renamed with rename_models() still summarises.
+  vars    <- rownames(object[[1L]]$weights)
   d       <- length(vars)
 
   cat("=== mlVAR Summary ===\n")
@@ -351,7 +360,7 @@ summary.net_mlvar <- function(object, ...) {
   cat("Standardized:",  attr(object, "standardize"), "\n\n")
 
   cat("--- Temporal Network (rows: predictor at t - lag; columns: outcome) ---\n")
-  print(round(object$temporal$weights, 4))
+  print(round(object[[1L]]$weights, 4))
   cat("\n")
 
   sig_rows <- coef_df[coef_df$significant, , drop = FALSE]
@@ -371,11 +380,11 @@ summary.net_mlvar <- function(object, ...) {
   cat("\n")
 
   cat("--- Contemporaneous Network ---\n")
-  print(round(object$contemporaneous$weights, 4))
+  print(round(object[[2L]]$weights, 4))
   cat("\n")
 
   cat("--- Between-Subjects Network ---\n")
-  print(round(object$between$weights, 4))
+  print(round(object[[3L]]$weights, 4))
   cat("\n")
 
   coef_df
@@ -391,12 +400,14 @@ plot.net_mlvar <- function(x, layer = NULL, ...) {
   # the temporal matrix (it stores outcome x predictor), which would reverse
   # the predictor -> outcome edges Nestimate stores.
   layers <- c("temporal", "contemporaneous", "between")
-  if (!is.null(layer)) layers <- match.arg(layer, layers)
+  if (!is.null(layer)) layers <- .ho_match_arg(layer, "layer", layers)
   if (length(layers) > 1L) {
     op <- graphics::par(mfrow = c(1L, length(layers)), mar = c(2, 2, 3, 2))
     on.exit(graphics::par(op), add = TRUE, after = FALSE)
   }
-  lapply(layers, \(nm) .mlvar_draw_layer(x[[nm]], nm, ...))
+  # by position, so a fit renamed with rename_models() still draws
+  all_layers <- c("temporal", "contemporaneous", "between")
+  lapply(layers, \(nm) .mlvar_draw_layer(x[[match(nm, all_layers)]], nm, ...))
   invisible(x)
 }
 

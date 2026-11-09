@@ -729,9 +729,9 @@ entropy_trajectory <- function(data, action, actor = NULL, time = NULL,
   per_group <- lapply(split(seq_along(pair_enc), tr_g), function(gi) {
     n_tr <- length(gi)
     if (n_tr < window) {
-      warning(sprintf(
+      warning(warningCondition(sprintf(
         "Group stream (%d transitions) shorter than window (%d); using one window.",
-        n_tr, window), call. = FALSE)
+        n_tr, window), class = "nestimate_short_stream", call = NULL))
       starts <- 1L
       w_len  <- n_tr
     } else {

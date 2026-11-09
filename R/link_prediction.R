@@ -48,7 +48,10 @@
 #'   Default `NULL`, which uses \eqn{0.9 / \rho(A)} for the spectral radius
 #'   \eqn{\rho(A)} of the adjacency (`0.1` when it is 0). A value at or above
 #'   \eqn{1 / \rho(A)}, where the series diverges, is replaced by
-#'   \eqn{0.9 / \rho(A)} with a warning.
+#'   \eqn{0.9 / \rho(A)} with a warning of class
+#'   `nestimate_ignored_argument`. If the closed form cannot be solved, the
+#'   scores are the first six terms of the series and a warning of class
+#'   `nestimate_no_converge` says so.
 #'
 #' @return A `net_link_prediction` object. `print()` lists the top ten
 #'   predicted links (by consensus rank with several indices, by score with
@@ -169,7 +172,8 @@ predict_links <- function(x,
   nodes <- parsed$nodes
   n <- length(nodes)
 
-  .assert(is.numeric(W), nrow(W) == n, ncol(W) == n)
+  .assert("the network must be a square numeric weight matrix" =
+            is.numeric(W) && nrow(W) == n && ncol(W) == n)
   methods <- match.arg(methods, several.ok = TRUE)
 
   # Binary adjacency
@@ -346,6 +350,12 @@ predict_links <- function(x,
 #' @noRd
 .lp_katz <- function(A, damping) {
   n <- nrow(A)
+  if (anyNA(A)) {
+    # eigen() used to stop here with "infinite or missing values in 'x'"
+    stop(errorCondition(
+      "The Katz index needs a weight matrix without missing values.",
+      class = "nestimate_bad_input", call = NULL))
+  }
   # Auto-compute damping from spectral radius
   if (is.null(damping)) {
     sr <- max(abs(eigen(A, only.values = TRUE)$values))
@@ -354,25 +364,36 @@ predict_links <- function(x,
     sr <- max(abs(eigen(A, only.values = TRUE)$values))
     if (sr > 0 && damping >= 1 / sr) {
       damping <- 0.9 / sr
-      warning("katz_damping exceeded convergence bound; auto-adjusted to ",
-              round(damping, 4), call. = FALSE)
+      warning(warningCondition(
+        paste0("katz_damping exceeded convergence bound; auto-adjusted to ",
+               round(damping, 4)),
+        class = "nestimate_ignored_argument", call = NULL))
     }
   }
   S <- tryCatch(
     solve(diag(n) - damping * A) - diag(n),
     error = function(e) {
-      # Fallback: power series truncated at 6 terms
-      result <- matrix(0, n, n)
-      Ak <- A
-      for (k in seq_len(6L)) {
-        result <- result + damping^k * Ak
-        Ak <- Ak %*% A
-      }
-      result
+      # The closed form failed, so the scores below are an approximation:
+      # say so rather than return them as if they were exact.
+      warning(warningCondition(
+        paste0("The Katz index could not be solved exactly (",
+               conditionMessage(e), "); its scores are the first 6 terms ",
+               "of the power series."),
+        class = "nestimate_no_converge", call = NULL))
+      .lp_katz_series(A, damping, terms = 6L)
     }
   )
   diag(S) <- 0
   S
+}
+
+# The Katz power series cut after `terms` terms:
+# damping * A + damping^2 * A^2 + ... + damping^terms * A^terms.
+.lp_katz_series <- function(A, damping, terms = 6L) {
+  powers <- Reduce(function(Ak, k) Ak %*% A, seq_len(terms - 1L),
+                   accumulate = TRUE, A)
+  Reduce(`+`, Map(function(Ak, k) damping^k * Ak, powers, seq_len(terms)),
+         matrix(0, nrow(A), nrow(A)))
 }
 
 
@@ -499,7 +520,9 @@ predict_links <- function(x,
 #'   `to` (every row is an edge, whatever its other columns, such as a
 #'   weight, hold), or a matrix whose non-zero cells are edges. Its row
 #'   names name both its rows and its columns (column names are not read),
-#'   so its columns must be in the same order as its rows; without row
+#'   so its columns must be in the same order as its rows (column names
+#'   that differ from the row names raise a warning of class
+#'   `nestimate_ignored_argument`); without row
 #'   names, the nodes of `pred` are used. For a directed prediction, pairs
 #'   are matched by `from` and `to`, direction included; for an undirected
 #'   one, in either order, so `(C, A)` matches the listed pair `(A, C)`.
@@ -526,7 +549,8 @@ predict_links <- function(x,
 #' @export
 evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
   .assert(
-    inherits(pred, "net_link_prediction"),
+    "`pred` must be a net_link_prediction (see predict_links())" =
+      inherits(pred, "net_link_prediction"),
     "`k` must be positive whole numbers" =
       is.numeric(k) && length(k) >= 1L && all(is.finite(k)) &&
         all(k >= 1) && all(k == round(k))
@@ -534,13 +558,21 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 
   # Parse true edges to a set of "from->to" keys
   if (is.matrix(true_edges)) {
+    if (!is.null(rownames(true_edges)) && !is.null(colnames(true_edges)) &&
+        !identical(rownames(true_edges), colnames(true_edges))) {
+      warning(warningCondition(paste0(
+        "`true_edges` has column names that differ from its row names; its ",
+        "columns are read in the order of its rows."),
+        class = "nestimate_ignored_argument", call = NULL))
+    }
     nodes <- rownames(true_edges) %||% pred$nodes
     idx <- which(true_edges != 0, arr.ind = TRUE)
     true_from <- nodes[idx[, 1]]
     true_to <- nodes[idx[, 2]]
   } else {
-    .assert(is.data.frame(true_edges),
-              all(c("from", "to") %in% names(true_edges)))
+    .assert("`true_edges` must be a matrix or a data frame with columns `from` and `to`" =
+              is.data.frame(true_edges) &&
+                all(c("from", "to") %in% names(true_edges)))
     true_from <- as.character(true_edges$from)
     true_to <- as.character(true_edges$to)
   }
@@ -627,12 +659,9 @@ print.net_link_prediction <- function(x, ...) {
     n_total <- nrow(x$consensus)
     cat(sprintf("\n  Top predicted links (consensus across %d methods):\n",
                 length(x$methods)))
-    for (i in seq_len(nrow(top))) {
-      r <- top[i, ]
-      cat(sprintf("    %d. %s %s %s  (avg rank: %.1f, agreed: %d/%d)\n",
-                  i, r$from, arrow, r$to, r$avg_rank,
-                  r$n_methods, length(x$methods)))
-    }
+    cat(sprintf("    %d. %s %s %s  (avg rank: %.1f, agreed: %d/%d)\n",
+                seq_len(nrow(top)), top$from, arrow, top$to, top$avg_rank,
+                top$n_methods, length(x$methods)), sep = "")
     if (n_total > 10L) {
       cat(sprintf("    ... and %d more predictions\n", n_total - 10L))
     }
@@ -642,11 +671,9 @@ print.net_link_prediction <- function(x, ...) {
     top <- utils::head(df, 10L)
     if (nrow(top) > 0L) {
       cat(sprintf("\n  Top predicted links (%s):\n", x$methods[1]))
-      for (i in seq_len(nrow(top))) {
-        r <- top[i, ]
-        cat(sprintf("    %d. %s %s %s  (score: %.4f)\n",
-                    i, r$from, arrow, r$to, r$score))
-      }
+      cat(sprintf("    %d. %s %s %s  (score: %.4f)\n",
+                  seq_len(nrow(top)), top$from, arrow, top$to, top$score),
+          sep = "")
       if (nrow(df) > 10L) {
         cat(sprintf("    ... and %d more predictions\n", nrow(df) - 10L))
       }

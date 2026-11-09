@@ -1,3 +1,17 @@
+# Nestimate 1.0.12
+
+* New verbs for tables that were reached with `as.data.frame()`: `node_clusters()` for `hypergraph_cluster()`, `label_predictions()` and `label_scores()` for `hypergraph_transduction()`; `state_distribution()` accepts the result of `plot_state_frequencies()`, and `summary()` of `cluster_diagnostics()` returns the per-cluster table. The `as.data.frame()` methods still work.
+* New methods: `coefs()` for a `build_gimme()` fit, `summary()` for `loading_stability()`, `print()` for `extract_transition_matrix()` and `extract_initial_probs()`, and a `compare_model()` default that names the accepted classes.
+* `print()` and `summary()` of a `build_mlvar()` fit work after `rename_models()`.
+* Errors on bad input carry class `nestimate_bad_input` and name the argument where a base R or deparsed message was shown before, including `match.arg()` failures in the higher-order, comparison and NCT verbs.
+* Arguments that were ignored without a word now raise a warning of class `nestimate_ignored_argument` (`...` in `cooccurrence()`, `mosaic_plot()`, `plot_state_frequencies()`, `build_simplicial()`, `build_mcml_pc()`; shaping arguments of `build_mcml()` on an existing `mcml`; `sequence_plot()` arguments an `mcml` does not read).
+* New warnings where a result was returned without comment: failed association resamples in `bootstrap_network()`, a `drop_prop` that drops no case in `casedrop_reliability()`, unconverged factor extraction in `build_mcml_pc()` and `loading_stability()`, the Katz series fallback in `predict_links()`, sequences with a missing group in `sequence_compare()`, a singular neighbour block in `predictability()`.
+* Plots that failed now draw or stop with a clear message: `plot()` of `hypergraph_cluster()` with more than nine clusters, of a complex without edges, of `cluster_choice()` with nothing swept, of a mixture's covariates after `estimator = "chisq"`, and `print()` of a one-measure `centrality_stability()` group.
+* Printed text corrected: the interval level in `print()` of `bootstrap_network()` and `certainty()` (it always said 95%), edge-label alignment, the `boot_glasso()` edge-difference subtitle (the colours were described the wrong way round), the covariate line of clustering prints, the `mcml` layer header, and the permutation note on the smallest attainable p-value.
+* `hypergraph_transduction()`: the help page says when the default `xi = 0.99` over-smooths, and the example passes `xi = 0.9`.
+* `trajectories` is documented as 15 successive courses of a programme.
+* Help pages of `coefs()`, `extract_edges()`, `as_netobject()` and the estimator-registry verbs note that idiographic exports the same names.
+
 # Nestimate 1.0.11
 
 * Release review: TNA shortcuts keep positional `start`/`end` calls working; `markov_stability()` keeps recurrence times for separate closed classes; rectangular numeric sequence matrices accept `build_mcml()`'s `exclude`, `trim` and `end`.

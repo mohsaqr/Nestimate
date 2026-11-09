@@ -12,7 +12,6 @@
 \alias{state_freq}
 \alias{print.state_freq}
 \alias{plot.state_freq}
-\alias{as.data.frame.state_freq}
 \title{Plot State Frequency Distributions}
 \usage{
 plot_state_frequencies(x, ...)
@@ -102,22 +101,21 @@ plot_state_frequencies(x, ...)
 \method{print}{state_freq}(x, digits = 1, max_states = 20L, ...)
 
 \method{plot}{state_freq}(x, ...)
-
-\method{as.data.frame}{state_freq}(x, ...)
 }
 \arguments{
 \item{x}{The object to count: a \code{netobject}, \code{netobject_group}, \code{mcml}
 or \code{htna} network built from sequences. A network without sequence
 data raises an error; in a \code{netobject_group} or \code{mcml}, groups without
-it are left out. For the \code{print()}, \code{plot()} and
-\code{as.data.frame()} methods of the result: the \code{state_freq} object;
+it are left out. For the \code{print()} and \code{plot()}
+methods of the result: the \code{state_freq} object;
 for the \code{print()} methods of a per-panel figure: an object of class
 \code{nestimate_facet_plot} or \code{nestimate_facet_list}.}
 
-\item{...}{Not used by the \code{netobject}, \code{netobject_group} and \code{htna}
-methods; the \code{mcml} method raises an error for any argument it does
-not take. For the \code{print()}, \code{plot()} and \code{as.data.frame()} methods
-of the result: ignored.}
+\item{...}{Not used: the \code{netobject}, \code{netobject_group} and \code{htna}
+methods ignore an argument they do not take with a warning of class
+\code{nestimate_ignored_argument}; the \code{mcml} method raises an error for
+it. For the \code{print()} and \code{plot()} methods of the result:
+ignored.}
 
 \item{style}{The chart. \code{"marimekko"} (default) draws treemaps, or the
 cluster marimekko for an \code{mcml} (see Description); \code{"bars"} draws
@@ -206,8 +204,10 @@ row. \code{\link[=state_distribution]{state_distribution()}} gives the full tabl
 \value{
 A \code{state_freq} object. Printing it shows the event totals per
 group and the share of each state within its group, then draws the
-chart; \code{plot()} draws the chart alone. \code{\link[=state_distribution]{state_distribution()}} gives
-the same counts from the network, with the full state names and, for
+chart; \code{plot()} draws the chart alone. \code{\link[=state_distribution]{state_distribution()}} of the
+result returns the table as drawn, one row per group and state;
+\code{\link[=state_distribution]{state_distribution()}} of the network gives
+the same counts, with the full state names and, for
 an \code{mcml}, without the macro group unless \code{include_macro = TRUE}.
 The object holds the chart (a
 \code{ggplot}; with per-panel legends either a combined figure, a \code{gtable}
@@ -264,6 +264,6 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   res <- plot_state_frequencies(nw)
   print(res)            # tidy frequency table in the console
   plot(res)             # ggplot chart
-  head(as.data.frame(res))
+  head(state_distribution(res))
 }
 }

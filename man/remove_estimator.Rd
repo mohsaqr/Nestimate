@@ -20,6 +20,11 @@ side effect.
 too; they come back when the package is loaded again. A name that is not
 registered raises an error.
 }
+\note{
+The \pkg{idiographic} package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write \code{Nestimate::remove_estimator()} to call this one.
+}
 \examples{
 register_estimator("test_est", function(data, ...) diag(3),
   description = "test", directed = FALSE)

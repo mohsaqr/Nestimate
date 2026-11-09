@@ -427,8 +427,9 @@ build_network <- function(data,
                                   full_data = data$data %||% data$models[[1L]]$data))
   }
 
-  .assert(is.character(method), length(method) == 1)
-  .assert(is.list(params))
+  .assert("`method` must be a single character string" =
+            is.character(method) && length(method) == 1)
+  .assert("`params` must be a list" = is.list(params))
 
   # ---- mgm's `level`/`threshold` collide with build_network's own
   # same-named formals. build_network's `level` is the "between"/"within"/
@@ -463,14 +464,18 @@ build_network <- function(data,
     }
   }
 
-  .assert(is.numeric(threshold), length(threshold) == 1, threshold >= 0)
+  .assert("`threshold` must be a single number of at least 0" =
+            is.numeric(threshold) && length(threshold) == 1 &&
+            !is.na(threshold) && threshold >= 0)
   mode <- match.arg(mode)
 
   if (!is.null(state_cols)) {
-    .assert(is.character(state_cols))
+    .assert("`state_cols` must be a character vector of column names" =
+              is.character(state_cols))
   }
   if (!is.null(metadata_cols)) {
-    .assert(is.character(metadata_cols))
+    .assert("`metadata_cols` must be a character vector of column names" =
+              is.character(metadata_cols))
   }
   if (!is.null(state_cols) && !is.null(metadata_cols)) {
     overlap <- intersect(state_cols, metadata_cols)
@@ -609,7 +614,8 @@ build_network <- function(data,
     }
   }
   if (!is.null(group)) {
-    .assert(is.character(group))
+    .assert("`group` must be a character vector of column names" =
+              is.character(group))
     if (method %in% transition_methods && is.data.frame(data) &&
         is.null(.param_get(params, "alphabet"))) {
       if (!is.null(action) && action %in% names(data)) {
@@ -750,11 +756,11 @@ build_network <- function(data,
 
     # Warning for one-hot without windowing or session
     if (window_size <= 1L && is.null(session)) {
-      warning(
+      warning(warningCondition(paste0(
         "One-hot data without windowing or sessions produces sparse networks. ",
-        "Consider setting window_size > 1 or providing session.",
-        call. = FALSE
-      )
+        "Consider setting window_size > 1 or providing session."),
+        class = "nestimate_sparse_onehot", call = NULL
+      ))
     }
 
     # Build grouping from actor + session
@@ -1080,6 +1086,8 @@ build_network <- function(data,
   # Carry over method-specific extras (exclude cleaned_data - identical to $data)
   extras <- setdiff(names(est_result),
                     c("matrix", "nodes", "directed", "cleaned_data"))
+  # Loop kept: `[[<-` skips an extra that is NULL; `result[extras] <-` would
+  # add a NULL field for it.
   for (key in extras) {
     result[[key]] <- est_result[[key]]
   }
@@ -1355,7 +1363,13 @@ print.netobject <- function(x, ...) {
   }
 
   dir_label   <- if (x$directed) " [directed]" else " [undirected]"
-  level_label <- if (!is.null(x$level)) sprintf(" [%s-person]", x$level) else ""
+  # an mgm network keeps its per-variable category counts in `$level`; only
+  # the multilevel "between"/"within" value is a level to print
+  level_label <- if (is.character(x$level) && length(x$level) == 1L) {
+    sprintf(" [%s-person]", x$level)
+  } else {
+    ""
+  }
   cat(label, dir_label, level_label, "\n", sep = "")
 
   if (!is.null(x$n)) cat(sprintf("  Sample size: %d\n", x$n))
@@ -1650,6 +1664,7 @@ predictability.netobject <- function(object, data = NULL, ...) {
   } else if (!is.null(object$cor_matrix)) {
     S   <- object$cor_matrix
     net <- object$weights
+    singular <- logical(p)
     r2 <- vapply(seq_len(p), function(j) {
       neighbors <- which(net[j, ] != 0)
       if (length(neighbors) == 0L) return(0)
@@ -1657,8 +1672,21 @@ predictability.netobject <- function(object, data = NULL, ...) {
       r_vec <- S[neighbors, j]
       R_nn  <- S[neighbors, neighbors]
       tryCatch(as.numeric(crossprod(r_vec, solve(R_nn, r_vec))),
-               error = function(e) 0)
+               error = function(e) {
+                 singular[j] <<- TRUE
+                 0
+               })
     }, numeric(1))
+    # The 0 is kept (it is what this has always returned), but it means "not
+    # computable", so say which nodes it stands for.
+    if (any(singular)) {
+      warning(warningCondition(sprintf(paste0(
+        "predictability(): the correlations among the neighbours of %s are ",
+        "singular, so R2 could not be computed and is reported as 0 ",
+        "(RMSE as NA)."),
+        paste(labels[singular], collapse = ", ")),
+        class = "nestimate_singular_neighbours", call = NULL))
+    }
   } else {
     stop(errorCondition(paste0(
       "predictability() requires a precision or correlation matrix ",
@@ -1718,6 +1746,7 @@ predictability.netobject <- function(object, data = NULL, ...) {
 #' @rdname predictability
 #' @export
 predictability.netobject_ml <- function(object, ...) {
+  .predictability_ignored_dots(...)
   list(
     between = predictability(object$between),
     within  = predictability(object$within)
@@ -1728,7 +1757,28 @@ predictability.netobject_ml <- function(object, ...) {
 #' @rdname predictability
 #' @export
 predictability.netobject_group <- function(object, ...) {
+  .predictability_ignored_dots(...)
   lapply(object, predictability)
+}
+
+# The multilevel and grouped methods read each network's own stored data; an
+# argument such as `data` given to them is not passed on.
+.predictability_ignored_dots <- function(...) {
+  if (...length() > 0L) {
+    given <- names(list(...))
+    given <- if (is.null(given)) "" else given
+    warning(warningCondition(sprintf(paste0(
+      "predictability(): %s ignored for a multilevel or grouped network; ",
+      "each network's stored data is used."),
+      if (all(nzchar(given))) {
+        paste0(paste0("`", given, "`", collapse = ", "),
+               if (length(given) == 1L) " is" else " are")
+      } else {
+        "extra arguments are"
+      }),
+      class = "nestimate_ignored_argument", call = NULL))
+  }
+  invisible(NULL)
 }
 
 #' Resolve the wide sequence columns before estimation and group dispatch
@@ -1746,7 +1796,7 @@ predictability.netobject_group <- function(object, ...) {
 .build_sequence_cols <- function(data, cols = NULL, state_cols = NULL,
                                   metadata_cols = NULL, exclude = NULL,
                                   infer_numeric_metadata = TRUE) {
-  stopifnot(is.data.frame(data))
+  .assert("`data` must be a data frame" = is.data.frame(data))
   if (!is.null(cols)) return(cols)
   if (!is.null(state_cols)) return(state_cols)
   candidates <- setdiff(names(data), c(metadata_cols, exclude))
@@ -1864,6 +1914,11 @@ predictability.netobject_group <- function(object, ...) {
   if (length(hit) == 0L && readable) return(invisible(NULL))
   problem <- if (length(hit) > 0L) {
     sprintf("column names are not read, and `%s` is not declared", hit[1L])
+  } else if (length(beside <- .beside_position_run(frame, whole_frame)) > 0L) {
+    # the run is there; what stops a whole-frame verb is the column beside it
+    sprintf(paste0("no column role is declared, and beside the numbered run ",
+                   "of positions the frame holds: %s"),
+            paste(sprintf("`%s`", utils::head(beside, 6L)), collapse = ", "))
   } else {
     sprintf(paste0("no column role is declared, and these columns are not a ",
                    "numbered run of positions (T1, T2, ...): %s"),
@@ -1881,6 +1936,16 @@ predictability.netobject_group <- function(object, ...) {
     sprintf("%s: %s. %s", verb, problem, advice),
     class = "nestimate_bad_input", call = NULL
   ))
+}
+
+# For a verb that reads every column: the columns that sit beside a numbered
+# run of positions, so its refusal names them and not the run itself.
+#' @noRd
+.beside_position_run <- function(frame, whole_frame) {
+  if (!whole_frame) return(character(0L))
+  run <- c(.categorical_positions(frame), .numeric_position_run(frame))
+  if (length(run) == 0L) return(character(0L))
+  setdiff(names(frame), run)
 }
 
 # A verb that returns positions has had them declared or checked already, so its
@@ -1988,7 +2053,7 @@ predictability.netobject_group <- function(object, ...) {
   missing_cols <- missing_cols[nzchar(missing_cols)]
   if (length(missing_cols) == 0L) return(invisible(NULL))
   stop(errorCondition(
-    sprintf("%s: column(s) not found in `data`: %s.", verb,
+    sprintf("%s: column(s) not found in the data: %s.", verb,
             paste(missing_cols, collapse = "; ")),
     class = "nestimate_bad_input", call = NULL
   ))

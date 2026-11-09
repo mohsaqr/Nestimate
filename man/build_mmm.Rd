@@ -223,8 +223,8 @@ misclassified when each is assigned to its most likely subgroup, the mean
 of one minus the largest posterior; Vermunt & Magidson, 2005); a line when the EM did not converge;
 and one row per subgroup with its size, mixing proportion and AvePP. For a
 model fitted with \code{covariates}, a last line names them, says whether they
-entered the EM (integrated) or were related post hoc, and gives the number
-of predictors. The layout follows \code{print()} of a \code{net_clustering} from
+entered the EM (integrated) or were related post hoc, and gives their
+number. The layout follows \code{print()} of a \code{net_clustering} from
 \code{\link[=build_clusters]{build_clusters()}}, so dissimilarity-based and model-based clusterings read
 alike.
 

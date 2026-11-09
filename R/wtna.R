@@ -143,21 +143,23 @@ wtna <- function(data,
   # Mirror .prepare_onehot()'s window_size guard so an invalid value (non-
   # integer, zero, negative) errors cleanly instead of producing a distinct
   # garbage matrix (2.7) or silently falling to the non-windowed branch (0/-5).
-  .assert(length(window_size) == 1L, is.numeric(window_size),
-          !is.na(window_size), window_size == as.integer(window_size))
+  .assert("`window_size` must be a single whole number of at least 1" =
+            length(window_size) == 1L && is.numeric(window_size) &&
+            !is.na(window_size) && window_size == as.integer(window_size))
   window_size <- as.integer(window_size)
-  .assert(window_size >= 1L)
+  .assert("`window_size` must be a single whole number of at least 1" =
+            window_size >= 1L)
 
   df <- as.data.frame(data)
   codes <- .resolve_codes(df, codes, exclude = actor)
 
-  .assert(length(codes) >= 2L)
+  .assert("At least two one-hot code columns are needed" = length(codes) >= 2L)
 
   if (is.null(actor)) {
     X_raw <- .wtna_code_matrix(df, codes)
     weights <- .wtna_compute_weights(X_raw, method, window_size, mode)
   } else {
-    .assert(all(actor %in% names(df)))
+    .assert("`actor` must name columns of `data`" = all(actor %in% names(df)))
     weights <- .wtna_compute_by_actor(df, codes, window_size, mode, actor, method)
   }
 
@@ -235,6 +237,8 @@ wtna <- function(data,
   # window_i with every position in window_{i+1}
   divides <- n %% window_size == 0L
   q <- n %/% window_size - 1L * divides
+  # Loop kept: a running sum over windows; one k x k accumulator instead of
+  # a stack of n_windows matrices.
   for (i in seq_len(q)) {
     j_idx <- seq((i - 1L) * window_size + 1L, i * window_size)
     k_idx <- seq(i * window_size + 1L, min(n, (i + 1L) * window_size))
@@ -280,6 +284,7 @@ wtna <- function(data,
   # Match tna: pair every position with every other position within
   # the same window (including self-pairs at same position)
   n_windows <- ceiling(n / window_size)
+  # Loop kept: a running sum over windows (see .wtna_transitions()).
   for (i in seq_len(n_windows)) {
     idx <- seq((i - 1L) * window_size + 1L, min(n, i * window_size))
     s <- colSums(X[idx, , drop = FALSE])
@@ -362,14 +367,16 @@ wtna <- function(data,
 
   if (is.numeric(codes)) {
     # Column indices
-    .assert(all(codes >= 1L & codes <= ncol(df)))
+    .assert("`codes` positions must lie between 1 and the number of columns" =
+              all(codes >= 1L & codes <= ncol(df)))
     return(names(df)[codes])
   }
 
   if (is.character(codes) && length(codes) == 1L && grepl(":", codes)) {
     # Name range "start:end"
     parts <- strsplit(codes, ":")[[1]]
-    .assert(length(parts) == 2L)
+    .assert("A `codes` range must be written \"first:last\"" =
+              length(parts) == 2L)
     start <- match(parts[1], names(df))
     end <- match(parts[2], names(df))
     if (is.na(start)) {
@@ -384,7 +391,8 @@ wtna <- function(data,
   }
 
   # Character vector of names
-  .assert(is.character(codes))
+  .assert("`codes` must be column names, positions or a \"first:last\" range" =
+            is.character(codes))
   missing <- setdiff(codes, names(df))
   if (length(missing) > 0) {
     stop(errorCondition(paste0("Columns not found: ",
@@ -444,6 +452,8 @@ wtna <- function(data,
   prob_accum <- setNames(numeric(length(codes)), codes)
   n_valid    <- 0L
 
+  # Loop kept: a running mean over actors that skips actors with no
+  # observed first row; the order of addition is part of the result.
   for (id in actor_ids) {
     p <- .first_row_probs(X[grp == id, , drop = FALSE])
     if (is.null(p)) next
@@ -530,7 +540,7 @@ wtna <- function(data,
   df <- as.data.frame(data)
   codes <- .resolve_codes(df, codes, exclude = actor)
 
-  .assert(length(codes) >= 2L)
+  .assert("At least two one-hot code columns are needed" = length(codes) >= 2L)
   mode <- match.arg(mode, c("non-overlapping", "overlapping"))
   window_size <- as.integer(window_size)
 
@@ -538,7 +548,7 @@ wtna <- function(data,
     X_raw <- .wtna_code_matrix(df, codes)
     weights <- .wtna_compute_weights(X_raw, wtna_method, window_size, mode)
   } else {
-    .assert(all(actor %in% names(df)))
+    .assert("`actor` must name columns of `data`" = all(actor %in% names(df)))
     weights <- .wtna_compute_by_actor(df, codes, window_size, mode,
                                        actor, wtna_method)
   }

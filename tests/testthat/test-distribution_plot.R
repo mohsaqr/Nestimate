@@ -78,7 +78,8 @@ test_that("distribution_plot honours legend_position values", {
 test_that("distribution_plot rejects group vectors of wrong length", {
   seqs <- matrix(sample(c("A", "B"), 20, replace = TRUE), 10, 2)
   pdf(NULL); on.exit(dev.off(), add = TRUE)
-  expect_error(distribution_plot(seqs, group = c(1, 2, 3)), "length")
+  expect_error(distribution_plot(seqs, group = c(1, 2, 3)),
+               class = "nestimate_bad_input")
 })
 
 test_that("distribution_plot rejects all-NA input", {

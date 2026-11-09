@@ -205,6 +205,7 @@
   n <- ncol(mat)
   p <- diag(1, n, n)
   s <- 0
+  # Loop kept on purpose: each matrix power is the previous one times `mat`.
   for (i in seq_len(n)) {
     p <- p %*% mat
     s <- s + p
@@ -294,6 +295,7 @@
                                      normalize_diffusion) {
   out <- data.frame(state = factor(states, levels = states),
                     check.names = FALSE)
+  # Loop kept on purpose: columns are added to the frame one by one, by name.
   for (m in measures) out[[m]] <- unname(result[[m]])
   rownames(out) <- states
   attr(out, "measures") <- measures
@@ -488,6 +490,19 @@ centrality.cograph_network <- function(x, measures = NULL, loops = FALSE,
 }
 
 
+# Any other input stopped inside UseMethod() with "no applicable method for
+# 'centrality'", which names a function the user never called.
+#' @noRd
+centrality.default <- function(x, ...) {
+  stop(errorCondition(
+    paste0(
+      "net_centrality() requires a network (a 'netobject', ",
+      "'netobject_group', 'cograph_network' or 'mcml'); got '",
+      class(x)[1L],
+      "'."),
+    class = "nestimate_bad_input", call = NULL))
+}
+
 #' @noRd
 centrality.mcml <- function(x, measures = NULL, loops = FALSE,
                              normalize = FALSE, invert = TRUE,
@@ -605,6 +620,12 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
   rownames(d) <- NULL
   if (isTRUE(drop_zero)) d <- .centrality_drop_zero(d)
   if (type == "delta") {
+    if (!missing(palette) && length(unique(d$group)) == 2L) {
+      warning(warningCondition(paste0(
+        "`palette` is ignored for type = \"delta\" with two networks: the ",
+        "bars use the fixed pair of colours for above and below zero."),
+        class = "nestimate_ignored_argument", call = NULL))
+    }
     return(.plot_net_centrality_delta(d, ncol = ncol, reorder = reorder,
                                       labels = labels, palette = palette))
   }
@@ -744,6 +765,7 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
   d$value_plot <- d$value
   if (profile_scale == "measure") {
     split_idx <- split(seq_len(nrow(d)), d$measure)
+    # Loop kept on purpose: each measure's rows are rescaled in place.
     for (idx in split_idx) {
       vals <- d$value[idx]
       finite <- is.finite(vals)

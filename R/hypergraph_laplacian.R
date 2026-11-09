@@ -187,7 +187,7 @@ hypergraph_laplacian <- function(hg,
 #' hg <- bipartite_groups(events, player = "person", group = "meeting")
 #' cl <- hypergraph_cluster(hg, k = 2, seed = 1)
 #' cl
-#' as.data.frame(cl)
+#' node_clusters(cl)
 #'
 #' @export
 hypergraph_cluster <- function(hg, k,
@@ -211,7 +211,7 @@ hypergraph_cluster <- function(hg, k,
         n - 1L, k),
       class = "nestimate_bad_input", call = NULL))
   }
-  if (!is.null(seed)) .local_seed(as.integer(seed))
+  if (!is.null(seed)) .local_seed(.hg_seed(seed))
 
   parts <- .hl_build(hg, type = type, edge_weights = edge_weights)
   eig <- eigen((parts$L + t(parts$L)) / 2, symmetric = TRUE)
@@ -279,8 +279,11 @@ hypergraph_cluster <- function(hg, k,
 #' predicted into another class, and a class's scores grow with its number
 #' of labelled nodes. As `xi` approaches 1, every node's scores become
 #' proportional to the same vector, so in the limit every node is assigned
-#' the same class. On a small hypergraph the default `0.99` can come close
-#' to that; compare the predictions under a smaller `xi`.
+#' the same class. The default `0.99` is the value of Zhou et al. (2006) and
+#' suits large hypergraphs; on a small one it over-smooths. In the example
+#' below it assigns five of the six nodes to one class, where `xi = 0.9`
+#' splits them three and three, so on a small hypergraph pass a smaller
+#' `xi` and compare.
 #'
 #' @param hg The hypergraph: a connected `net_hypergraph`, as for
 #'   [hypergraph_laplacian()].
@@ -325,9 +328,10 @@ hypergraph_cluster <- function(hg, k,
 #'               "m4", "m4", "m4", "m5", "m5")
 #' )
 #' hg <- bipartite_groups(events, player = "person", group = "meeting")
-#' tr <- hypergraph_transduction(hg, labels = c(a = "x", d = "y"))
+#' tr <- hypergraph_transduction(hg, labels = c(a = "x", d = "y"), xi = 0.9)
 #' tr
-#' as.data.frame(tr)
+#' label_predictions(tr)
+#' label_scores(tr)
 #'
 #' @export
 hypergraph_transduction <- function(hg, labels, xi = 0.99,
@@ -491,8 +495,10 @@ hypergraph_transduction <- function(hg, labels, xi = 0.99,
     pi_v <- Re(eg$vectors[, lead])
     pi_v <- pi_v / sum(pi_v)
     if (min(pi_v) < -1e-8) {
-      stop("Stationary distribution has negative mass; the walk appears ",
-           "reducible despite the connectivity check.", call. = FALSE)
+      stop(errorCondition(paste0(
+        "Stationary distribution has negative mass; the walk appears ",
+        "reducible despite the connectivity check."),
+        class = "nestimate_hypergraph_disconnected", call = NULL))
     }
     pi_v <- pmax(pi_v, 0)
     pi_v <- pi_v / sum(pi_v)
@@ -511,8 +517,8 @@ hypergraph_transduction <- function(hg, labels, xi = 0.99,
 # ---- S3: net_hypergraph_cluster ----------------------------------------
 
 #' @rdname hypergraph_cluster
-#' @param x For the `print()`, `as.data.frame()` and `plot()` methods: a
-#'   `net_hypergraph_cluster` object.
+#' @param x For the `print()` and `plot()` methods and for
+#'   `node_clusters()`: a `net_hypergraph_cluster` object.
 #' @param ... For the methods: ignored.
 #' @param object For the `summary()` method: a `net_hypergraph_cluster`
 #'   object.
@@ -521,13 +527,15 @@ hypergraph_transduction <- function(hg, labels, xi = 0.99,
 #'   the eigengap after `k` can be read; `"embedding"` places the nodes on
 #'   the first two embedding dimensions, labelled, coloured and shaped by
 #'   cluster and sized by stationary probability, which is the geometry
-#'   k-means clustered; `"both"` (default) draws the two side by side.
+#'   k-means clustered (beyond nine clusters the colours repeat and the
+#'   shape tells the clusters of one colour apart); `"both"` (default) draws
+#'   the two side by side.
 #' @param n_values For the `plot()` method: how many of the smallest
 #'   eigenvalues the spectrum panel shows. Default `NULL`, which shows
 #'   `min(3 * k, n_nodes)`.
 #' @return The `print()` method returns its input invisibly. The `summary()`
 #'   method returns a data frame with one row per cluster: `cluster`, `size`
-#'   and `share` (the proportion of nodes). The `as.data.frame()` method
+#'   and `share` (the proportion of nodes). `node_clusters()`
 #'   returns a data frame with one row per node: `node`, `cluster`, `pi`
 #'   (the node's stationary probability under the Laplacian's walk) and the
 #'   embedding coordinates `dim1` to `dimk`. The `plot()` method returns a
@@ -557,11 +565,19 @@ summary.net_hypergraph_cluster <- function(object, ...) {
 
 #' @rdname hypergraph_cluster
 #' @export
-as.data.frame.net_hypergraph_cluster <- function(x, ...) {
+node_clusters <- function(x) {
+  .assert("`x` must be a net_hypergraph_cluster from hypergraph_cluster()" =
+            inherits(x, "net_hypergraph_cluster"))
   out <- x$clusters
   out$pi <- as.numeric(x$pi)
   cbind(out, as.data.frame(x$embedding), row.names = NULL)
 }
+
+# Kept so that code written against earlier versions still runs; the
+# documented verb is node_clusters().
+#' @export
+#' @noRd
+as.data.frame.net_hypergraph_cluster <- function(x, ...) node_clusters(x)
 
 #' @rdname hypergraph_cluster
 #' @export
@@ -573,6 +589,12 @@ plot.net_hypergraph_cluster <- function(x,
   okabe <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
              "#D55E00", "#CC79A7", "#999999", "#000000")
 
+  .assert(
+    "`n_values` must be NULL or a non-negative whole number" =
+      is.null(n_values) ||
+        (is.numeric(n_values) && length(n_values) >= 1L &&
+           !is.na(n_values[1L]) && n_values[1L] >= 0)
+  )
   n_show <- as.integer(n_values %||% min(3L * x$k, x$n_nodes))
   df_s <- data.frame(
     index = seq_len(n_show),
@@ -601,7 +623,15 @@ plot.net_hypergraph_cluster <- function(x,
     ggplot2::theme(legend.position = "bottom")
   if (what == "spectrum") return(p_spec)
 
-  df_e <- as.data.frame(x)
+  df_e <- node_clusters(x)
+  # Nine colours and nine shapes cover nine clusters. Beyond that the colours
+  # repeat (the manual scale used to stop with "Insufficient values"), and a
+  # tenth shape keeps every colour-shape pair distinct up to 90 clusters.
+  shapes <- c(16, 17, 15, 18, 8, 7, 3, 4, 6)
+  cluster_colours <- if (x$k <= length(okabe)) okabe else
+    rep(okabe, length.out = x$k)
+  cluster_shapes <- rep(if (x$k <= length(shapes)) shapes else c(shapes, 10),
+                        length.out = x$k)
   p_emb <- ggplot2::ggplot(df_e, ggplot2::aes(x = .data$dim1,
                                               y = .data$dim2,
                                               color = .data$cluster,
@@ -609,10 +639,8 @@ plot.net_hypergraph_cluster <- function(x,
     ggplot2::geom_point(ggplot2::aes(size = .data$pi), alpha = 0.85) +
     ggplot2::geom_text(ggplot2::aes(label = .data$node),
                        vjust = -1.1, size = 3.5, show.legend = FALSE) +
-    ggplot2::scale_color_manual(values = okabe) +
-    ggplot2::scale_shape_manual(
-      values = rep(c(16, 17, 15, 18, 8, 7, 3, 4, 6), length.out = x$k)
-    ) +
+    ggplot2::scale_color_manual(values = cluster_colours) +
+    ggplot2::scale_shape_manual(values = cluster_shapes) +
     ggplot2::scale_size_continuous(range = c(2, 6),
                                    guide = "none") +
     ggplot2::expand_limits(
@@ -644,26 +672,20 @@ plot.net_hypergraph_cluster <- function(x,
 # ---- S3: net_hypergraph_transduction -----------------------------------
 
 #' @rdname hypergraph_transduction
-#' @param x For the `print()`, `as.data.frame()` and `plot()` methods: a
+#' @param x For the `print()` and `plot()` methods and for
+#'   `label_predictions()` and `label_scores()`: a
 #'   `net_hypergraph_transduction` object.
 #' @param ... For the methods: ignored.
 #' @param object For the `summary()` method: a `net_hypergraph_transduction`
 #'   object.
-#' @param row.names For the `as.data.frame()` method: row names for the
-#'   returned data frame. Default `NULL` keeps the default row numbers.
-#' @param optional For the `as.data.frame()` method: ignored; it is there to
-#'   match the [base::as.data.frame()] generic.
-#' @param what For the `as.data.frame()` method: the table to return.
-#'   `"predictions"` (default) gives one row per node; `"scores"` gives one
-#'   row per node and class.
 #' @return The `print()` method returns its input invisibly. The `summary()`
 #'   method returns a data frame with one row per class: `class`,
 #'   `n_labeled`, `n_predicted` and `mean_margin` (the mean margin of the
-#'   nodes predicted into the class, `NA` when there are none). The
-#'   `as.data.frame()` method returns, for `what = "predictions"`, one row
-#'   per node with `node`, `label` (`NA` for an unlabelled node),
-#'   `predicted`, `score` and `margin`, and for `what = "scores"` one row per
-#'   node and class with `node`, `class` and `score`. The `plot()` method
+#'   nodes predicted into the class, `NA` when there are none).
+#'   `label_predictions()` returns a data frame with one row per node:
+#'   `node`, `label` (`NA` for an unlabelled node), `predicted`, `score` and
+#'   `margin`. `label_scores()` returns a data frame with one row per node
+#'   and class: `node`, `class` and `score`. The `plot()` method
 #'   returns the score heatmap as a `ggplot`, visibly, so `plot(x)` draws
 #'   it: one row per node, grouped by
 #'   predicted class and ordered by margin within it, one column per class,
@@ -703,20 +725,36 @@ summary.net_hypergraph_transduction <- function(object, ...) {
 
 #' @rdname hypergraph_transduction
 #' @export
+label_predictions <- function(x) {
+  .assert(
+    "`x` must be a net_hypergraph_transduction from hypergraph_transduction()" =
+      inherits(x, "net_hypergraph_transduction"))
+  x$predictions
+}
+
+#' @rdname hypergraph_transduction
+#' @export
+label_scores <- function(x) {
+  .assert(
+    "`x` must be a net_hypergraph_transduction from hypergraph_transduction()" =
+      inherits(x, "net_hypergraph_transduction"))
+  data.frame(
+    node  = rep(rownames(x$scores), times = ncol(x$scores)),
+    class = rep(colnames(x$scores), each = nrow(x$scores)),
+    score = as.vector(x$scores),
+    stringsAsFactors = FALSE
+  )
+}
+
+# Kept so that code written against earlier versions still runs; the
+# documented verbs are label_predictions() and label_scores().
+#' @export
+#' @noRd
 as.data.frame.net_hypergraph_transduction <- function(
     x, row.names = NULL, optional = FALSE,
     what = c("predictions", "scores"), ...) {
   what <- match.arg(what)
-  out <- if (what == "predictions") {
-    x$predictions
-  } else {
-    data.frame(
-      node  = rep(rownames(x$scores), times = ncol(x$scores)),
-      class = rep(colnames(x$scores), each = nrow(x$scores)),
-      score = as.vector(x$scores),
-      stringsAsFactors = FALSE
-    )
-  }
+  out <- if (what == "predictions") label_predictions(x) else label_scores(x)
   if (!is.null(row.names)) rownames(out) <- row.names
   out
 }
@@ -724,7 +762,7 @@ as.data.frame.net_hypergraph_transduction <- function(
 #' @rdname hypergraph_transduction
 #' @export
 plot.net_hypergraph_transduction <- function(x, ...) {
-  sc <- as.data.frame(x, what = "scores")
+  sc <- label_scores(x)
   p <- x$predictions
   sc$seeded <- !is.na(p$label[match(sc$node, p$node)]) &
     p$label[match(sc$node, p$node)] == sc$class

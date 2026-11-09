@@ -12,7 +12,8 @@
 #   codes      - integer matrix, same shape as input, NA preserved
 #   levels     - sort.int(unique(non-NA))
 .encode_states <- function(x) {
-  stopifnot(is.data.frame(x) || is.matrix(x))
+  .assert("`x` must be a data frame or a matrix of sequences" =
+            is.data.frame(x) || is.matrix(x))
   if (is.data.frame(x)) x <- as.matrix(x)
   levels <- sort.int(unique(as.vector(x)), na.last = NA)
   if (length(levels) == 0L) {

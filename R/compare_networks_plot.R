@@ -191,7 +191,7 @@ plot.net_network_comparison <- function(x,
   if (!is.null(what)) type <- what
   type <- match.arg(type, c("networks", "difference", "edges", "nodes",
                             "global", "heatmap", "scatter", "inference"))
-  .assert(
+  .cn_assert(
     "`combined` must be TRUE or FALSE" = isTRUE(combined) || isFALSE(combined),
     "`top_n` must be a single positive integer" =
       is.numeric(top_n) && length(top_n) == 1L && top_n >= 1,

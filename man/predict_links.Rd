@@ -56,7 +56,10 @@ number of existing edges. Default \code{FALSE}.}
 Default \code{NULL}, which uses \eqn{0.9 / \rho(A)} for the spectral radius
 \eqn{\rho(A)} of the adjacency (\code{0.1} when it is 0). A value at or above
 \eqn{1 / \rho(A)}, where the series diverges, is replaced by
-\eqn{0.9 / \rho(A)} with a warning.}
+\eqn{0.9 / \rho(A)} with a warning of class
+\code{nestimate_ignored_argument}. If the closed form cannot be solved, the
+scores are the first six terms of the series and a warning of class
+\code{nestimate_no_converge} says so.}
 
 \item{...}{For the \code{print()} and \code{summary()} methods: not used.}
 

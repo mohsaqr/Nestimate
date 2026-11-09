@@ -52,7 +52,7 @@
 #' @export
 actor_endpoints <- function(data, cols = NULL) {
   if (is.matrix(data)) data <- as.data.frame(data, stringsAsFactors = FALSE)
-  .assert(is.data.frame(data))
+  .assert("`data` must be a data frame or a matrix" = is.data.frame(data))
   .check_declared_columns(data, "actor_endpoints()", cols = cols)
   if (is.null(cols)) {
     .refuse_undeclared_roles(data, "actor_endpoints()", whole_frame = TRUE,
@@ -126,7 +126,7 @@ actor_endpoints <- function(data, cols = NULL) {
 #'   raise an error of class `nestimate_bad_input`.
 #' @param state The label written into the leading missing cells, a single
 #'   non-empty string. Default `"Start"`. If the label already occurs in
-#'   `data`, a warning is given and `_1`, `_2`, ... is appended until it is
+#'   `data`, a warning of class `nestimate_state_collision` is given and `_1`, `_2`, ... is appended until it is
 #'   unique, so the marker is never confused with an observed state.
 #' @param cols The columns holding the positions, in order; only they are
 #'   returned. A name not in `data` raises an error of class
@@ -143,9 +143,10 @@ actor_endpoints <- function(data, cols = NULL) {
 #' @seealso [mark_terminal_state()], [actor_endpoints()]
 #' @export
 mark_first_state <- function(data, state = "Start", cols = NULL) {
-  .assert(is.character(state), length(state) == 1L, nzchar(state))
+  .assert("`state` must be a single non-empty string" =
+            is.character(state) && length(state) == 1L && nzchar(state))
   if (is.matrix(data)) data <- as.data.frame(data, stringsAsFactors = FALSE)
-  .assert(is.data.frame(data))
+  .assert("`data` must be a data frame or a matrix" = is.data.frame(data))
   .check_declared_columns(data, "mark_first_state()", cols = cols)
   if (is.null(cols)) {
     .refuse_undeclared_roles(data, "mark_first_state()", whole_frame = TRUE,
@@ -154,8 +155,10 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
     data <- data[, cols, drop = FALSE]
   }
   if (state %in% unlist(lapply(data, as.character))) {
-    warning(sprintf("State '%s' already appears in `data`; using a unique replacement label.",
-                    state), call. = FALSE)
+    warning(warningCondition(
+      sprintf("State '%s' already appears in `data`; using a unique replacement label.",
+              state),
+      class = "nestimate_state_collision", call = NULL))
     base <- state
     i <- 1L
     while (state %in% unlist(lapply(data, as.character))) {
@@ -166,12 +169,11 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
   M <- as.matrix(data)
   storage.mode(M) <- "character"
   n <- nrow(M); k <- ncol(M)
-  for (i in seq_len(n)) {
-    row <- M[i, ]
-    obs <- which(!is.na(row))
-    if (length(obs) == 0L) next
-    first_step <- min(obs)
-    if (first_step > 1L) M[i, seq_len(first_step - 1L)] <- state
+  if (n > 0L && k > 0L) {
+    # Cells before each row's first observed state; an all-missing row is left.
+    observed   <- !is.na(M)
+    first_step <- max.col(observed, ties.method = "first")
+    M[rowSums(observed) > 0L & col(M) < first_step] <- state
   }
   out <- as.data.frame(M, stringsAsFactors = FALSE)
   attr(out, "leading_state") <- state
@@ -214,7 +216,7 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
 #'   raise an error of class `nestimate_bad_input`.
 #' @param state The label written into the trailing missing cells, a single
 #'   non-empty string. Default `"End"`. If the label already occurs in
-#'   `data`, a warning is given and `_1`, `_2`, ... is appended until it is
+#'   `data`, a warning of class `nestimate_state_collision` is given and `_1`, `_2`, ... is appended until it is
 #'   unique, so the absorbing marker is never confused with an observed
 #'   state.
 #' @param cols The columns holding the positions, in order; only they are
@@ -233,9 +235,10 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
 #' @seealso [actor_endpoints()], [chain_structure()], [build_network()]
 #' @export
 mark_terminal_state <- function(data, state = "End", cols = NULL) {
-  .assert(is.character(state), length(state) == 1L, nzchar(state))
+  .assert("`state` must be a single non-empty string" =
+            is.character(state) && length(state) == 1L && nzchar(state))
   if (is.matrix(data)) data <- as.data.frame(data, stringsAsFactors = FALSE)
-  .assert(is.data.frame(data))
+  .assert("`data` must be a data frame or a matrix" = is.data.frame(data))
   .check_declared_columns(data, "mark_terminal_state()", cols = cols)
   if (is.null(cols)) {
     .refuse_undeclared_roles(data, "mark_terminal_state()", whole_frame = TRUE,
@@ -244,8 +247,10 @@ mark_terminal_state <- function(data, state = "End", cols = NULL) {
     data <- data[, cols, drop = FALSE]
   }
   if (state %in% unlist(lapply(data, as.character))) {
-    warning(sprintf("State '%s' already appears in `data`; using a unique replacement label.",
-                    state), call. = FALSE)
+    warning(warningCondition(
+      sprintf("State '%s' already appears in `data`; using a unique replacement label.",
+              state),
+      class = "nestimate_state_collision", call = NULL))
     base <- state
     i <- 1L
     while (state %in% unlist(lapply(data, as.character))) {
@@ -256,12 +261,11 @@ mark_terminal_state <- function(data, state = "End", cols = NULL) {
   M <- as.matrix(data)
   storage.mode(M) <- "character"
   n <- nrow(M); k <- ncol(M)
-  for (i in seq_len(n)) {
-    row <- M[i, ]
-    obs <- which(!is.na(row))
-    if (length(obs) == 0L) next
-    last_step <- max(obs)
-    if (last_step < k) M[i, (last_step + 1L):k] <- state
+  if (n > 0L && k > 0L) {
+    # Cells after each row's last observed state; an all-missing row is left.
+    observed  <- !is.na(M)
+    last_step <- max.col(observed, ties.method = "last")
+    M[rowSums(observed) > 0L & col(M) > last_step] <- state
   }
   out <- as.data.frame(M, stringsAsFactors = FALSE)
   attr(out, "terminal_state") <- state

@@ -463,7 +463,8 @@ safe_sd <- function(x) {
 .as_netobject <- function(x) {
   if (inherits(x, "netobject")) return(x)
   if (!inherits(x, "cograph_network")) {
-    stop("Expected a netobject or cograph_network.", call. = FALSE)
+    stop(errorCondition("Expected a netobject or cograph_network.",
+                        class = "nestimate_bad_input", call = NULL))
   }
 
   mat <- x$weights

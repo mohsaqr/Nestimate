@@ -4,6 +4,28 @@
 # collision with any state label)
 .HON_SEP <- "\x01"
 
+# match.arg() whose failure is a classed condition naming the argument, where
+# base R says only "'arg' should be one of ...". `choices` defaults to the
+# calling function's own default for `name`, as match.arg() reads it.
+.ho_match_arg <- function(arg, name,
+                          choices = eval(formals(sys.function(sys.parent()))[[name]])) {
+  tryCatch(
+    match.arg(arg, choices),
+    error = function(e) {
+      stop(errorCondition(
+        sub("'arg'", paste0("'", name, "'"), conditionMessage(e), fixed = TRUE),
+        class = "nestimate_bad_input", call = NULL))
+    }
+  )
+}
+
+# The rule-extraction and network-wiring code below follows the published
+# HON / HON+ algorithms (Xu et al. 2016) step by step. Its `for` loops are
+# deliberate: each pass reads and updates shared environments (counts,
+# distributions, rules, the growing graph), so later iterations depend on
+# what earlier ones wrote, and several loops extend their own work list.
+# An apply-family rewrite would hide that order without removing it.
+
 # ---------------------------------------------------------------------------
 # Encoding / decoding helpers
 # ---------------------------------------------------------------------------
@@ -1239,7 +1261,7 @@ build_hon <- function(data, max_order = 5L, min_freq = 1L,
     "'min_freq' must be >= 1" = is.numeric(min_freq) && min_freq >= 1L
   )
 
-  method <- match.arg(method, c("hon+", "hon"))
+  method <- .ho_match_arg(method, "method", c("hon+", "hon"))
   max_order <- as.integer(max_order)
   min_freq <- as.integer(min_freq)
 
@@ -1308,9 +1330,8 @@ summary.net_hon <- function(object, ...) {
     }, integer(1L))
     order_tab <- table(node_orders)
     cat("  Node order distribution:\n")
-    for (ord in names(order_tab)) {
-      cat(sprintf("    Order %s: %d nodes\n", ord, order_tab[ord]))
-    }
+    cat(sprintf("    Order %s: %d nodes\n", names(order_tab),
+                as.integer(order_tab)), sep = "")
   }
 
   object$edges

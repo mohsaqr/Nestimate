@@ -366,8 +366,9 @@
 #'   `k + 1` states (`k` transitions), each conditioned on the `k`-state
 #'   context before its last state. With several orders, one layer is built
 #'   per order, in ascending order whatever the order given; an order with
-#'   no paths (longer than the sequences allow) is dropped without a
-#'   message, and an error is raised when none is left. The network fields
+#'   no paths (longer than the sequences allow) is dropped with a warning
+#'   of class `nestimate_ignored_argument`, and an error is raised when none
+#'   is left. The network fields
 #'   (`weights`, `edges`, `adjacency`, `xi`, `nodes`, `meta`) describe the
 #'   lowest order built, while `scores` holds every order.
 #' @param alpha The significance threshold for the labels, a number in
@@ -527,6 +528,15 @@ build_hypa <- function(data, order = 2L, alpha = 0.05, min_count = 5L,
       "No edges at any requested order (paths too short or too few)",
       class = "nestimate_bad_input", call = NULL))
   }
+  dropped_orders <- setdiff(as.character(order), names(per_order))
+  if (length(dropped_orders) > 0L) {
+    warning(warningCondition(
+      paste0("No edges at order ", paste(dropped_orders, collapse = ", "),
+             " (paths too short or too few): ",
+             if (length(dropped_orders) == 1L) "it is" else "they are",
+             " left out of the result."),
+      class = "nestimate_ignored_argument", call = NULL))
+  }
 
   scores_all <- do.call(rbind, lapply(per_order, `[[`, "scores"))
   over_all   <- do.call(rbind, lapply(per_order, `[[`, "over"))
@@ -616,7 +626,7 @@ print.net_hypa <- function(x, ...) {
               po$order, po$n_edges, po$n_over, po$n_under),
       character(1))
     cat("  Per-order:\n")
-    for (line in per) cat(sprintf("    %s\n", line))
+    cat(sprintf("    %s\n", per), sep = "")
   }
   invisible(x)
 }
@@ -628,8 +638,8 @@ summary.net_hypa <- function(object, n = 10L,
                              order_by = c("sig", "freq", "frequency",
                                           "ratio", "path"),
                              ...) {
-  type <- match.arg(type)
-  order_by <- match.arg(order_by)
+  type <- .ho_match_arg(type, "type")
+  order_by <- .ho_match_arg(order_by, "order_by")
   if (order_by == "frequency") order_by <- "freq"
 
   reorder_df <- function(df, dir) {

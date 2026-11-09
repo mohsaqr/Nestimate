@@ -67,14 +67,17 @@ distance.}
 \item{...}{For \code{type = "pathway"} on a \code{tna} model or \code{netobject}: \code{method}
 (\code{"hon"}, the default, \code{"hypa"} or \code{"mogen"}) chooses the higher-order
 model built from it, and the other arguments go to \code{\link[=build_hon]{build_hon()}},
-\code{\link[=build_hypa]{build_hypa()}} or \code{\link[=build_mogen]{build_mogen()}}. For the \code{print()} and \code{plot()}
-methods: ignored.}
+\code{\link[=build_hypa]{build_hypa()}} or \code{\link[=build_mogen]{build_mogen()}}. Any other construction or input does
+not read \code{...} and warns with class \code{nestimate_ignored_argument} when it
+is given. For the \code{print()} and \code{plot()} methods: ignored.}
 
 \item{combined}{For the \code{plot()} method: \code{TRUE} (default) draws the four
 panels (f-vector, Betti numbers, simplicial degree per node and degree
 by dimension) as one 2 x 2 figure, which needs \pkg{gridExtra};
 \code{FALSE} returns the four ggplots in a named list (\code{f_vector}, \code{betti},
-\code{degree}, \code{degree_heatmap}) to print, save or arrange separately.}
+\code{degree}, \code{degree_heatmap}) to print, save or arrange separately. A
+complex without edges (dimension 0) has no simplicial degree to draw
+and raises an error of class \code{nestimate_bad_input}.}
 }
 \value{
 A \code{simplicial_complex} object. \code{print()} shows the counts, the

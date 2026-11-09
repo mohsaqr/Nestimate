@@ -966,7 +966,8 @@ test_that("wtna keeps declared metadata out of its codes", {
 
 test_that("entropy_bayes() reads counts only from a network that holds them", {
   same <- data.frame(A = 1:6, B = 1:6, C = 1:6)
-  cor_net <- build_network(same, method = "cor")
+  expect_warning(cor_net <- build_network(same, method = "cor"),
+                 class = "nestimate_singular_neighbours")
   expect_error(entropy_bayes(cor_net, draws = 100L, seed = 1),
                class = "nestimate_bad_input")
   class(cor_net) <- "cograph_network"

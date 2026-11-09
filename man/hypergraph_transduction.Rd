@@ -4,7 +4,8 @@
 \alias{hypergraph_transduction}
 \alias{print.net_hypergraph_transduction}
 \alias{summary.net_hypergraph_transduction}
-\alias{as.data.frame.net_hypergraph_transduction}
+\alias{label_predictions}
+\alias{label_scores}
 \alias{plot.net_hypergraph_transduction}
 \title{Transductive label spreading on a hypergraph}
 \usage{
@@ -20,13 +21,9 @@ hypergraph_transduction(
 
 \method{summary}{net_hypergraph_transduction}(object, ...)
 
-\method{as.data.frame}{net_hypergraph_transduction}(
-  x,
-  row.names = NULL,
-  optional = FALSE,
-  what = c("predictions", "scores"),
-  ...
-)
+label_predictions(x)
+
+label_scores(x)
 
 \method{plot}{net_hypergraph_transduction}(x, ...)
 }
@@ -48,23 +45,14 @@ given labels. Default \code{0.99}.}
 \item{type, edge_weights}{The Laplacian and its hyperedge weights, passed
 to \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}. Defaults \code{"zhou"} and \code{NULL}.}
 
-\item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: a
+\item{x}{For the \code{print()} and \code{plot()} methods and for
+\code{label_predictions()} and \code{label_scores()}: a
 \code{net_hypergraph_transduction} object.}
 
 \item{...}{For the methods: ignored.}
 
 \item{object}{For the \code{summary()} method: a \code{net_hypergraph_transduction}
 object.}
-
-\item{row.names}{For the \code{as.data.frame()} method: row names for the
-returned data frame. Default \code{NULL} keeps the default row numbers.}
-
-\item{optional}{For the \code{as.data.frame()} method: ignored; it is there to
-match the \code{\link[base:as.data.frame]{base::as.data.frame()}} generic.}
-
-\item{what}{For the \code{as.data.frame()} method: the table to return.
-\code{"predictions"} (default) gives one row per node; \code{"scores"} gives one
-row per node and class.}
 }
 \value{
 A \code{net_hypergraph_transduction} object. \code{print()} reports the
@@ -86,11 +74,11 @@ winning minus the runner-up score).}
 The \code{print()} method returns its input invisibly. The \code{summary()}
 method returns a data frame with one row per class: \code{class},
 \code{n_labeled}, \code{n_predicted} and \code{mean_margin} (the mean margin of the
-nodes predicted into the class, \code{NA} when there are none). The
-\code{as.data.frame()} method returns, for \code{what = "predictions"}, one row
-per node with \code{node}, \code{label} (\code{NA} for an unlabelled node),
-\code{predicted}, \code{score} and \code{margin}, and for \code{what = "scores"} one row per
-node and class with \code{node}, \code{class} and \code{score}. The \code{plot()} method
+nodes predicted into the class, \code{NA} when there are none).
+\code{label_predictions()} returns a data frame with one row per node:
+\code{node}, \code{label} (\code{NA} for an unlabelled node), \code{predicted}, \code{score} and
+\code{margin}. \code{label_scores()} returns a data frame with one row per node
+and class: \code{node}, \code{class} and \code{score}. The \code{plot()} method
 returns the score heatmap as a \code{ggplot}, visibly, so \code{plot(x)} draws
 it: one row per node, grouped by
 predicted class and ordered by margin within it, one column per class,
@@ -116,8 +104,11 @@ distrust. The given labels are not held fixed, so a labelled node can be
 predicted into another class, and a class's scores grow with its number
 of labelled nodes. As \code{xi} approaches 1, every node's scores become
 proportional to the same vector, so in the limit every node is assigned
-the same class. On a small hypergraph the default \code{0.99} can come close
-to that; compare the predictions under a smaller \code{xi}.
+the same class. The default \code{0.99} is the value of Zhou et al. (2006) and
+suits large hypergraphs; on a small one it over-smooths. In the example
+below it assigns five of the six nodes to one class, where \code{xi = 0.9}
+splits them three and three, so on a small hypergraph pass a smaller
+\code{xi} and compare.
 }
 \examples{
 events <- data.frame(
@@ -127,9 +118,10 @@ events <- data.frame(
               "m4", "m4", "m4", "m5", "m5")
 )
 hg <- bipartite_groups(events, player = "person", group = "meeting")
-tr <- hypergraph_transduction(hg, labels = c(a = "x", d = "y"))
+tr <- hypergraph_transduction(hg, labels = c(a = "x", d = "y"), xi = 0.9)
 tr
-as.data.frame(tr)
+label_predictions(tr)
+label_scores(tr)
 
 }
 \references{

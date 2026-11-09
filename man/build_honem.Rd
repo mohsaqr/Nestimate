@@ -36,8 +36,9 @@ proximities.}
 \item{object}{For the \code{summary()} method: a \code{net_honem} object.}
 
 \item{dims}{For the \code{plot()} method: the two dimensions to draw. Default
-\code{c(1, 2)}. Nodes are labelled when there are at most 50; an embedding
-with a single dimension draws nothing and says so in a message.}
+\code{c(1, 2)}; a dimension the embedding does not have raises an error.
+Nodes are labelled when there are at most 50; an embedding with a single
+dimension draws nothing and says so in a message.}
 }
 \value{
 A \code{net_honem} object. \code{print()} shows the number of nodes, the

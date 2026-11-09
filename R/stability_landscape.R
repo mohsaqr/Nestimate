@@ -1146,6 +1146,7 @@ landscape_trend <- function(x, along = "phase",
     list(network = x)
   seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
+  if (length(alphabet) < 2L) .ls_bad("A landscape needs at least two states.")
   states <- .ls_states(states, alphabet)
   covariates <- lapply(seqs, \(s) {
     if (identical(along, "phase")) return(NULL)
@@ -1218,7 +1219,7 @@ summary.net_landscape_trend <- function(object, ...) object$table
 #' @export
 print.net_landscape_trend <- function(x, digits = 2, ...) {
   axis <- if (identical(x$along, "phase"))
-    sprintf("program phase (%d-step windows)", x$window) else
+    sprintf("programme phase (%d-step windows)", x$window) else
     sprintf("%s (%d nearest sequences per slice)", x$along, x$k)
   cat(sprintf("Stability landscape along %s: %d states, %d network%s, %d resamples\n\n",
               axis, length(x$states), length(x$groups),
@@ -1275,7 +1276,7 @@ plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
   last <- do.call(rbind, lapply(split(tab, list(tab$group, tab$state),
                                       drop = TRUE), \(r) r[which.max(r$value), ]))
   xlab <- if (identical(x$along, "phase"))
-    sprintf("Program phase (centre of a %d-step window)", x$window) else
+    sprintf("Programme phase (centre of a %d-step window)", x$window) else
     x$along
   y_scale <- if (x$depth == "stay") {
     ggplot2::scale_y_continuous(

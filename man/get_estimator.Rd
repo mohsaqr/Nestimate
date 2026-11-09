@@ -21,6 +21,11 @@ names. Method aliases such as \code{"tna"} are not resolved here; give the
 registered name, as \code{\link[=list_estimators]{list_estimators()}}
 shows it.
 }
+\note{
+The \pkg{idiographic} package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write \code{Nestimate::get_estimator()} to call this one.
+}
 \examples{
 est <- get_estimator("relative")
 
