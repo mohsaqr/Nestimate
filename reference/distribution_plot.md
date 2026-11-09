@@ -1,10 +1,23 @@
 # State Distribution Plot Over Time
 
-Draws how state proportions (or counts) evolve across time points. For
-each time column, tabulates how many sequences are in each state and
-renders the result as a stacked area (default) or stacked bar chart.
-Accepts the same inputs as
-[`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
+`distribution_plot()` draws how the states are distributed at each time
+point: for every position column it counts the sequences in each state
+and stacks the shares (or counts) as areas (default) or bars. It takes
+the same inputs as
+[`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+(wide sequences, networks built from sequences, clusterings, mixture
+fits and `tna` models), draws one panel per group or cluster, and is the
+figure `sequence_plot(type = "distribution")` draws.
+
+The plot shows the composition of the sample at each time point, not how
+individual sequences move: the same bands can come from sequences that
+stay in one state or from sequences that change state at every step.
+Look at single sequences with
+[`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+and at the transitions with
+[`build_tna()`](https://pak.dynasite.org/Nestimate/reference/build_tna.md).
+Missing cells form their own band by default (`na`), so sequences that
+end early stay visible instead of inflating the other shares.
 
 ## Usage
 
@@ -46,149 +59,169 @@ distribution_plot(
 
 - x:
 
-  Wide-format sequence data. Accepts the same inputs as
-  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md):
-  `data.frame`, `matrix`, `netobject`, `net_clustering`,
-  `netobject_group`, `net_mmm`, or `tna`. When clustering info is
-  available, one panel is drawn per cluster.
+  The sequences: a wide data frame or matrix (one row per sequence, one
+  column per time point), a `netobject` built from sequences, a
+  `netobject_group`, a `net_clustering`, a `net_mmm` or a `tna` model. A
+  clustering, a mixture fit or a `netobject_group` gives one panel per
+  cluster or group. A one-hot or association network, and a frame or
+  matrix holding only 0 and 1 (unless `cols` declares a frame's columns
+  as positions), raise an error of class `nestimate_bad_input`.
 
 - group:
 
-  Optional grouping vector (length `nrow(x)`) producing one panel per
-  group. `NULL` (default) falls back to the cluster assignments carried
-  by a `net_clustering` / `net_mmm` / `netobject_group` input; supplying
-  `group` overrides them.
+  A vector of one group label per sequence (length `nrow(x)`), drawing
+  one panel per group in the order of its factor levels (sorted for a
+  character or numeric vector). `NULL` (default) uses the cluster
+  assignments carried by a `net_clustering`, `net_mmm` or
+  `netobject_group`; a `group` given overrides them. Grouped panels are
+  titled `"Cluster <label>"`, whatever the grouping.
 
 - scale:
 
-  `"proportion"` (default) divides each column by its total so bands
-  fill 0..1. `"count"` keeps raw counts.
+  What the y-axis shows: `"proportion"` (default) divides each time
+  point by its total, so the bands fill 0 to 1; `"count"` keeps the
+  counts, and the axis reaches the tallest stack.
 
 - geom:
 
-  `"area"` (default) draws stacked polygons; `"bar"` draws stacked bars.
+  How the bands are drawn: `"area"` (default) as stacked polygons,
+  `"bar"` as stacked bars.
 
 - na:
 
-  If `TRUE` (default), `NA` cells are shown as an extra band coloured
-  `na_color`.
+  Whether missing cells are drawn as an extra band coloured `na_color`.
+  Default `TRUE`. With `FALSE` they are left out, and the proportions
+  are shares of the observed states at each time point.
 
 - trim:
 
-  Optional truncation of the time axis (one number) or of the time axis
-  and the rows (two numbers). `NULL` (default) keeps everything. The
-  first number: a fraction in `(0, 1)` keeps the busiest time points
-  that together hold that share of the observed states, and removes the
-  rest wherever they sit (`trim = 0.95`); a value `>= 1` is an absolute
-  cut (`trim = 50` keeps the first 50 time points). The second number
-  ends each sequence earlier before the proportions are taken: a count
-  keeps its first that many observed states, a fraction its first share
-  of them (`trim = c(0.9, 0.9)`); no sequence is removed. See
-  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
+  Cuts the time axis (one number) or the time axis and the rows (two
+  numbers); `NA` on either leaves that axis alone. Default `NULL` (no
+  cut). The first number: a fraction in (0, 1) keeps the busiest time
+  points that together hold that share of the observed states, wherever
+  they sit, and the kept ones close up under their own labels
+  (`trim = 0.95`); a value of 1 or more keeps the first that many time
+  points (`trim = 50`). The second number ends each sequence earlier
+  before the proportions are taken: a count keeps its first that many
+  observed states, a fraction its first share of them
+  (`trim = c(0.9, 0.9)`); no sequence is removed.
 
 - trim_clusterwise:
 
-  Grouped plots only, fractional `trim` only. `FALSE` (default) uses one
-  pooled cutoff for every panel so the time axes stay aligned; `TRUE`
-  crops each group to its own length quantile (panels can differ in
-  width). See
-  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
+  For grouped plots with a fractional `trim`: `FALSE` (default) chooses
+  one set of time points over all sequences, so every panel has the same
+  time axis; `TRUE` chooses them within each group, so panels can differ
+  in width.
 
 - state_colors:
 
-  Colours for the state fills. Either an unnamed vector, one colour per
-  state in level order, or a named lookup (`c(plan = "#0072B2")`) where
-  only the states you name are overridden and the rest keep the default
-  Okabe-Ito palette. Names this plot does not draw are dropped with a
-  message, so one palette can be reused across figures.
+  Colours for the state bands: an unnamed vector, one colour per state
+  in sorted state order, or a named vector such as
+  `c(plan = "#0072B2")`, where only the named states change and the rest
+  keep the Okabe-Ito defaults. Names this plot does not draw are dropped
+  with a message, so one palette can serve several figures. `NULL`
+  (default) uses the palette stored on `x` with
+  [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md),
+  or the Okabe-Ito palette.
 
 - na_color:
 
-  Colour for the `NA` band. Default `"grey90"`.
+  The colour of the missing-cell band. Default `"grey90"`.
 
 - frame:
 
-  `FALSE` (default) draws no panel box; `TRUE` draws a box around each
-  panel.
+  Whether to draw a box around each panel, and axis lines. Default
+  `FALSE`.
 
 - width, height:
 
-  Optional device dimensions. See
-  [`sequence_plot`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md).
+  Size of a new graphics device, in inches, opened only in an
+  interactive session (the other dimension defaults to 7). Default
+  `NULL` (draw on the current device).
 
 - main:
 
-  Plot title.
+  The plot title. With several panels on one figure it is drawn above
+  them; with several panels and `combined = FALSE` it is not drawn.
+  Default `NULL`.
 
 - show_n:
 
-  Append `"(n = N)"` (per-group when grouped) to the title.
+  Whether to add the number of sequences, `"(n = N)"`, to the title of
+  each panel. Default `TRUE`.
 
 - time_label:
 
-  X-axis label.
+  The x-axis label. Default `"Time"`; `NULL` or `""` draws none.
 
 - xlab:
 
-  Alias for `time_label`.
+  Another name for `time_label`; when given, it wins.
 
 - y_label:
 
-  Y-axis label. Defaults to `"Proportion"` or `"Count"` based on
-  `scale`.
+  The y-axis label. Default `NULL`: `"Proportion"` or `"Count"`,
+  following `scale`.
 
 - ylab:
 
-  Alias for `y_label`.
+  Another name for `y_label`; when given, it wins.
 
 - tick:
 
-  Show every Nth x-axis label. `NULL` = auto.
+  Label every `tick`-th time point. Default `NULL`, which thins the
+  labels to at most about 15.
 
 - ncol, nrow:
 
-  Facet grid dimensions. `NULL` = auto: `ncol = ceiling(sqrt(G))`,
-  `nrow = ceiling(G / ncol)`. Ignored when `combined = FALSE`.
+  The panel grid. Default `NULL`: with neither given,
+  `ncol = ceiling(sqrt(G))` and `nrow = ceiling(G / ncol)` for `G`
+  panels; with one given, the other follows. With `combined = FALSE` the
+  grid does not affect the layout, but `ncol * nrow` must still be at
+  least the number of panels or an error is raised.
 
 - combined:
 
-  When `TRUE` (default), groups are arranged on one figure via
-  [`graphics::layout()`](https://rdrr.io/r/graphics/layout.html). When
-  `FALSE`, each group is drawn on its own page (one full-size figure per
-  group, with its own legend). Useful when you want each group at full
-  size in knitr (`fig.show = "asis"`) or to save each as a separate
-  file. Single-group calls (`G == 1`) ignore this argument.
+  Whether to draw all panels on one figure. `TRUE` (default) arranges
+  them with
+  [`graphics::layout()`](https://rdrr.io/r/graphics/layout.html);
+  `FALSE` draws each panel on its own page with its own legend, for
+  knitr (`fig.show = "asis"`) or for saving each panel to its own file.
+  A single panel ignores it.
 
 - legend:
 
-  Legend position: `"right"` (default), `"bottom"`, or `"none"`.
+  Where the legend goes: `"right"` (default), `"bottom"` or `"none"`.
 
 - legend_size:
 
-  Legend text size. `NULL` (default) auto-scales from device width
-  (clamped to `[0.65, 1.2]`).
+  The legend text size. Default `NULL`, which scales it with the device
+  width, between 0.65 and 1.2.
 
 - legend_title:
 
-  Optional legend title.
+  A title for the legend. Default `NULL` (none).
 
 - legend_ncol:
 
-  Number of legend columns.
+  The number of legend columns. Default `NULL`: one column on the right,
+  one row at the bottom.
 
 - legend_border:
 
-  Swatch border colour.
+  The colour of the swatch borders. Default `NA` (none).
 
 - legend_bty:
 
-  `"n"` (borderless) or `"o"` (boxed).
+  The legend box: `"n"` (default) draws none, `"o"` draws one.
 
 - cols:
 
-  Character vector or `NULL`. For a wide data frame: the columns holding
-  the positions. Needed when they are not a numbered run (`T1`, `T2`,
-  ...) or one of them is called `action`.
+  For a wide data frame: the columns holding the time points. Needed
+  when they are not a numbered run (`T1`, `T2`, ...), when one of them
+  is called `action`, or when any other column sits beside them. Given
+  for any other input, it raises an error of class
+  `nestimate_bad_input`. Default `NULL`.
 
 ## Value
 
@@ -196,27 +229,28 @@ Invisibly, a list describing the drawn figure:
 
 - counts:
 
-  Named list, one entry per group, each a (state x time point) numeric
-  matrix of cell counts. Rows are named by `levels`; columns are the
-  retained time points.
+  A named list, one entry per panel, each a state by time point matrix
+  of counts; rows are named by `levels`, columns are the time points
+  kept.
 
 - proportions:
 
-  Same shape as `counts`, each column divided by its total.
+  The same matrices with each column divided by its total (an empty time
+  point stays 0).
 
 - levels:
 
-  Character vector of state labels in plotting order, with `"NA"`
-  appended when `na = TRUE`.
+  The state labels in plotting order, with `"NA"` appended when
+  `na = TRUE`.
 
 - palette:
 
-  Character vector of fill colours, parallel to `levels`.
+  The fill colours, one per entry of `levels`.
 
 - groups:
 
-  Character vector of group labels (`"all"` when ungrouped), parallel to
-  `counts` / `proportions`.
+  The panel labels (`"all"` when ungrouped), in the order of `counts`
+  and `proportions`.
 
 ## See also
 

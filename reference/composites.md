@@ -1,11 +1,19 @@
 # Cluster Scores From a Psychometric MCML Fit
 
-The per-observation cluster scores that a re-estimated
-[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
-macro network was fitted on: each respondent's weighted, sign-corrected
-score on every cluster. These are the scores to carry into a profile
-analysis, a regression, or any downstream model that needs one number
-per cluster per respondent.
+`composites()` returns the per-observation cluster scores that the macro
+network of a re-estimated
+[`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
+fit was estimated from: each respondent's weighted, sign-corrected score
+on every cluster. These are the scores to carry into a profile analysis,
+a regression or any other model that needs one number per cluster per
+respondent.
+
+A score is only as good as the items behind it: check the item weights
+and misfit flags with
+[`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
+and the stability of the weights with
+[`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
+before using the scores elsewhere.
 
 ## Usage
 
@@ -20,7 +28,11 @@ composites(x, ...)
 
 - x:
 
-  An object carrying cluster scores.
+  An `mcml_pc` fit with a score aggregation (`"scaled"`, `"composite"`,
+  `"mean"`, `"median"` or `"loadings"`). The descriptive aggregations
+  (`"average"`, `"escoufier"`, `"cancor"`) relate the clusters without
+  ever forming a score and raise an error of class
+  `nestimate_no_composites`.
 
 - ...:
 
@@ -30,14 +42,12 @@ composites(x, ...)
 
 A data frame with one row per row of the input data, in input order and
 with the input's row names, and one numeric column per cluster, named by
-the cluster. A row whose members of a cluster are all missing is `NA` in
-that column (items missing only in part are averaged over the observed
-ones). The macro network is estimated on the complete rows, so
-`build_network(composites(fit), method = ...)` reproduces it.
-
-The `mcml_pc` method errors with class `"nestimate_no_composites"` for
-the descriptive aggregations (`"average"`, `"escoufier"`, `"cancor"`),
-which relate clusters without ever forming a score.
+the cluster (as a syntactic name, so `"Clu A"` becomes `Clu.A`). A row
+whose members of a cluster are all missing is `NA` in that column; items
+missing only in part are averaged over the observed ones. The macro
+network is estimated on the complete rows, so
+`build_network(composites(fit), method = ...)` with the fit's estimator
+reproduces it.
 
 ## See also
 

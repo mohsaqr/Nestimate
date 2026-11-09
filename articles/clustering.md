@@ -22,6 +22,11 @@ label.
 
 library(cograph)
 library(Nestimate)
+#> Registered S3 methods overwritten by 'Nestimate':
+#>   method            from       
+#>   plot.net_mlvar    idiographic
+#>   print.net_mlvar   idiographic
+#>   summary.net_mlvar idiographic
 #> 
 #> Attaching package: 'Nestimate'
 #> The following object is masked from 'package:cograph':
@@ -451,8 +456,8 @@ mmm_fit <- build_mmm(net, k = 2)
 summary(mmm_fit)
 #> Mixed Markov Model
 #>   Sequences: 526  |  Clusters: 2  |  States: 3
-#>   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.530
-#>   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 0.0%
+#>   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.529
+#>   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 21.8%
 #> 
 #>   Cluster  N            Mix%   AvePP
 #>   1        334 (63.5%)  55.7%  0.766
@@ -470,8 +475,8 @@ summary(mmm_fit)
 #> Evaluative        0.447      0.462         0.090
 #> Metacognitive     0.398      0.435         0.166
 #>   component     prior n_assigned mean_posterior     avepp
-#> 1         1 0.5566955        334      0.7663911 0.7663911
-#> 2         2 0.4433045        192      0.8080450 0.8080450
+#> 1         1 0.5566997        334      0.7663949 0.7663949
+#> 2         2 0.4433003        192      0.8080413 0.8080413
 ```
 
 The `net_mmm` object contains posterior probabilities, model fit
@@ -488,12 +493,12 @@ diag_mmm <- cluster_diagnostics(mmm_fit)
 diag_mmm
 #> Cluster Diagnostics (mmm) [k = 2]
 #>   Sequences: 526  |  Clusters: 2  |  States: 3
-#>   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 0.0%
-#>   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.530
+#>   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 21.8%
+#>   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.529
 #> 
 #>   Cluster  N            Mix%   AvePP  Class.Err%
-#>   1        334 (63.5%)  55.7%  0.766   0.0%
-#>   2        192 (36.5%)  44.3%  0.808   0.0%
+#>   1        334 (63.5%)  55.7%  0.766  23.4%
+#>   2        192 (36.5%)  44.3%  0.808  19.2%
 ```
 
 The `posterior` plot type shows the distribution of each sequence’s max
@@ -633,12 +638,12 @@ cluster_diagnostics(grp_dist)
 cluster_diagnostics(fit_mmm)
 #> Cluster Diagnostics (mmm) [k = 2]
 #>   Sequences: 526  |  Clusters: 2  |  States: 3
-#>   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 0.0%
-#>   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.528
+#>   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 21.8%
+#>   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.522
 #> 
 #>   Cluster  N            Mix%   AvePP  Class.Err%
-#>   1        192 (36.5%)  44.3%  0.808   0.0%
-#>   2        334 (63.5%)  55.7%  0.766   0.0%
+#>   1        192 (36.5%)  44.3%  0.808  19.2%
+#>   2        334 (63.5%)  55.7%  0.766  23.4%
 ```
 
 Each element of the group is a full `netobject` named by its cluster
@@ -663,7 +668,7 @@ comparison
 #> Permutation Test: Transition Network (relative probabilities) [directed]
 #>   Iterations: 100  |  Alpha: 0.05
 #>   Nodes: 3  |  Edges tested: 9  |  Significant: 3
-#>   Global test (networks differ overall?): M = 0.335 (p = 0.0396)  |  S = 0.096 (p = 0.0396)
+#>   Global test (networks differ overall?): M = 0.335 (p = 0.0495)  |  S = 0.096 (p = 0.0495)
 ```
 
 ## Workflow Summary

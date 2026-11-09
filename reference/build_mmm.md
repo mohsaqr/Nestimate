@@ -1,8 +1,28 @@
 # Fit a Mixed Markov Model
 
-Discovers latent subgroups with different transition dynamics using
-Expectation-Maximization. Each mixture component has its own transition
-matrix. Sequences are probabilistically assigned to components.
+`build_mmm()` fits a mixture of first-order Markov chains to a set of
+sequences by expectation-maximisation: it looks for `k` subgroups whose
+members move between states in different ways, each with its own
+transition matrix and initial-state distribution. Every sequence gets a
+posterior probability of belonging to each subgroup and is assigned to
+the most probable one. Covariates can shape the mixing proportions
+during estimation or be related to the subgroups afterwards (see
+`covariate_effect`).
+
+EM finds a local maximum, so the fit is started `n_starts` times (one
+start from k-means on the transition counts, the rest random), each is
+screened with a short EM run, the most promising are continued for up to
+`max_iter` iterations, and the one with the highest log-likelihood is
+kept. [`print()`](https://rdrr.io/r/base/print.html) reports whether it
+converged within `max_iter`; a fit that did not is not a result. The
+information criteria (BIC, AIC, ICL) compare fits with different `k` –
+[`compare_mmm()`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
+fits a range of them – while average posterior probability (AvePP),
+entropy and classification error describe how cleanly the sequences
+separate within one fit. None of them picks `k` alone: also check that
+the subgroups' transition matrices differ in ways that can be
+interpreted, and that each subgroup holds enough sequences to estimate
+its matrix.
 
 ## Usage
 
@@ -45,126 +65,142 @@ plot(
 
 - data:
 
-  A data.frame (wide format), `netobject`, `cograph_network`, or `tna`
-  model. For tna and cograph_network objects the stored
-  (integer-encoded) data is extracted and decoded to state labels.
-  Columns of a data.frame take the same roles as in
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
-  an id or a covariate is not a sequence position. Those set aside are
-  named in a message and kept in `$metadata`.
+  The sequences: a data frame with one row per sequence and one column
+  per position, a `netobject` or bare `cograph_network` built from
+  sequences, or a `tna` model (whose stored states are decoded to their
+  labels). Columns take the same roles as in
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+  an id or a covariate is not a position, and the columns set aside are
+  named in a message and kept as metadata. Association networks (`cor`,
+  `pcor`, `glasso`, `ising`, `mgm`) hold variables, not sequences, and
+  raise an error of class `nestimate_bad_input`.
 
 - k:
 
-  Integer. Whole finite number of mixture components, \>= 2. Default: 2.
+  The number of subgroups (mixture components), a whole number of at
+  least 2. Default `2`.
 
 - n_starts:
 
-  Integer. Positive whole finite number of random restarts. Default: 50.
+  How many starting configurations to try, a positive whole number. More
+  starts make it likelier that the best local maximum is found. Default
+  `50`.
 
 - max_iter:
 
-  Integer. Positive whole finite maximum EM iterations per start.
-  Default: 200.
+  The most EM iterations a start may run, a positive whole number.
+  Default `200`.
 
 - tol:
 
-  Numeric. Finite positive convergence tolerance. Default: 1e-6.
+  The convergence tolerance: EM stops when the log-likelihood changes by
+  less than this between iterations (with `covariate_effect = "em"`,
+  also when its relative change does). A finite positive number; default
+  `1e-6`.
 
 - smooth:
 
-  Numeric. Finite non-negative Laplace smoothing constant. Default:
-  0.01.
+  A pseudo-count added to every transition count before the matrices are
+  estimated, so a transition unseen in a subgroup gets a small
+  probability instead of zero. A finite non-negative number; default
+  `0.01`.
 
 - seed:
 
-  Integer or NULL. Random seed.
+  An integer that makes the random starts reproducible. Default `NULL`.
+  The session's own random stream is left as it was.
 
 - covariates:
 
-  Optional. Covariates integrated into the EM algorithm to model
-  covariate-dependent mixing proportions. Accepts a string, character
-  vector, formula, or data.frame (same forms as
-  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)).
-  For `netobject` or `cograph_network` input, names are resolved against
-  `$metadata` first, so a typical call is
-  `build_mmm(net, k = 3, covariates = "session_label")`. Unlike the
-  post-hoc analysis in
-  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
-  these covariates directly influence cluster membership during EM
-  estimation (see `covariate_effect`).
+  Variables describing each sequence (such as a course or a grade),
+  given as a column name, a character vector of names, a one-sided
+  formula or a data frame, as in
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md).
+  For a `netobject`, names are looked up in its metadata first, so a
+  typical call is `build_mmm(net, k = 3, covariates = "session_label")`.
+  How they enter the model is set by `covariate_effect`. Default `NULL`.
 
 - covariate_effect:
 
-  How `covariates` enter the model. `"em"` (default) folds them into the
-  EM as covariate-dependent mixing proportions, so they shape the
-  cluster fit itself (and rows with missing covariates are dropped
-  before fitting). `"posthoc"` fits a plain mixture on every sequence
-  and uses the covariates only for the after-fit multinomial logit, so
-  covariate values — and their missingness — never change which clusters
-  are found. Ignored when `covariates` is `NULL`.
+  How `covariates` enter the model. `"em"` (default) makes the mixing
+  proportions depend on them during EM, so they shape the subgroups
+  found and add `(k - 1) * p` parameters for `p` covariate columns; rows
+  with a missing covariate are dropped first, with a warning.
+  `"posthoc"` fits a plain mixture on every sequence and relates the
+  covariates to the subgroups only afterwards, with a multinomial logit,
+  so neither their values nor their missingness change the subgroups.
+  Ignored without `covariates`.
 
 - estimator:
 
-  Multinomial fitter for the post-hoc covariate analysis (does not
-  affect EM): `"auto"` (default) inspects the cluster x covariate
-  cross-tab and falls back to `"firth"` only when any cell has fewer
-  than 5 observations (separation risk), otherwise the much faster
-  `"multinom"`; `"firth"` forces Firth's penalised likelihood via
-  [`brglm2::brmultinom`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
-  (finite under separation); `"multinom"` forces
-  [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html) (warns
-  about separation risk); `"chisq"` runs descriptive tests (no logit).
-  See
-  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  for full details.
+  How the after-fit multinomial logit is estimated; it never affects the
+  EM. `"auto"` (default) uses Firth's penalised likelihood
+  ([`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html),
+  finite under separation) when a cell of the subgroup-by-covariate
+  table has fewer than 5 sequences, and
+  [`nnet::multinom()`](https://rdrr.io/pkg/nnet/man/multinom.html)
+  otherwise. `"firth"` and `"multinom"` force one of them (`"multinom"`
+  warns about separation risk), and `"chisq"` runs descriptive tests
+  instead of a logit.
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  has the details. Ignored without `covariates`.
 
 - x:
 
   For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_mmm` or `net_mmm_clustering`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_mmm` fit, or the `net_mmm_clustering` attribute of the
+  `netobject_group` built from one.
 
 - digits:
 
-  In `print.net_mmm()`: Integer. Decimal places for floating-point
-  statistics. Default `3`. Non-breaking: `print(x)` keeps the same
-  alignment as before. In `print.net_mmm_clustering()`: Integer. Decimal
-  places for floating-point statistics. Default `3`.
+  For the [`print()`](https://rdrr.io/r/base/print.html) methods:
+  decimal places of the statistics. Default `3`.
 
 - ...:
 
-  In `plot.net_mmm()`, `plot.net_mmm_clustering()`, `print.net_mmm()`,
-  `print.net_mmm_clustering()` and `summary.net_mmm()`: Unsupported.
-  Supplying unused arguments raises an error.
+  For the [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: not
+  used; any extra argument raises an error.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_mmm`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_mmm` fit.
 
 - type:
 
-  In `plot.net_mmm()`: Character. Plot type: `"posterior"` (default) or
-  `"covariates"`. In `plot.net_mmm_clustering()`: Character. One of
-  `"posterior"` (default; histogram of max posterior probability per
-  sequence, coloured by cluster), `"covariates"` or its alias
-  `"predictors"` (covariate forest plot when
-  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
-  was run with `covariates`).
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods: `"posterior"` (default), a histogram of each sequence's
+  largest posterior probability, coloured by cluster; or `"covariates"`,
+  a forest plot of the covariate effects, for a model fitted with
+  `covariates`. On a `net_mmm_clustering`, `"predictors"` is an alias of
+  `"covariates"`.
 
 - combined:
 
-  In `plot.net_mmm()`: Logical. For `type = "covariates"` only: when
-  `TRUE` (default), covariate forest panels are combined into a single
-  faceted plot; when `FALSE`, a list of separate ggplots is returned. In
-  `plot.net_mmm_clustering()`: Logical. For `type` in `"covariates"` or
-  `"predictors"` only: when `TRUE` (default), forest panels are combined
-  into a single faceted plot; when `FALSE`, a list of separate ggplots
-  is returned.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods with `type = "covariates"`: `TRUE` (default) draws the forest
+  panels as one faceted plot; `FALSE` returns a list of ggplots, one per
+  cluster.
 
 ## Value
 
-An object of class `net_mmm` with components:
+A `net_mmm` object. [`print()`](https://rdrr.io/r/base/print.html) shows
+the fit statistics, classification quality and subgroup sizes;
+[`summary()`](https://rdrr.io/r/base/summary.html) adds each subgroup's
+transition matrix and returns one row per subgroup (mixing proportion,
+sequences assigned, mean posterior, AvePP);
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+posterior probabilities or the covariate effects;
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+turns the fit into one network per subgroup (a `netobject_group`);
+[`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
+and
+[`session_ids()`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
+give the classification and each sequence's subgroup. The object's
+fields:
 
 - data:
 
@@ -237,93 +273,71 @@ An object of class `net_mmm` with components:
   [`session_ids`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
   can name each sequence; NULL for other input.
 
-In `print.net_mmm()` and `print.net_mmm_clustering()`: The input object,
-invisibly.
-
-In `summary.net_mmm()`: A per-component summary `data.frame`. The class
-and visibility depend on whether the model was fitted with covariates:
-
-- No covariates:
-
-  A plain `data.frame` with one row per component and columns
-  `component`, `prior`, `n_assigned`, `mean_posterior`, `avepp`,
-  returned *visibly* (so it auto-prints after the printed summary
-  block).
-
-- With covariates:
-
-  A `tidy_covariates`/`data.frame` (the tidied covariate table, with the
-  per-component stats attached), returned *invisibly*.
-
-In both cases the printed summary (model fit, per-cluster transition
-matrices, optional covariate profiles) is emitted as a side effect.
-
-In `plot.net_mmm()`: A `ggplot` object, invisibly; for
-`type = "covariates"` with `combined = FALSE`, a list of `ggplot`
-objects named by cluster (invisibly).
-
-In `plot.net_mmm_clustering()`: A `ggplot` object, invisibly; for
-`type = "covariates"` / `"predictors"` with `combined = FALSE`, a list
-of `ggplot` objects named by cluster (invisibly).
+The [`print()`](https://rdrr.io/r/base/print.html) methods return their
+input invisibly. For a model fitted with `covariates`,
+[`summary()`](https://rdrr.io/r/base/summary.html) also prints the
+covariate profiles and effects and returns, invisibly, a
+`tidy_covariates` data frame of the effects (one row per subgroup other
+than the reference and per predictor term, so a factor gives one row per
+non-reference level; one row per covariate test with
+`estimator = "chisq"`), with the per-subgroup table as its
+`cluster_stats` attribute. The
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods print
+the plot and return the `ggplot` invisibly; with `type = "covariates"`
+and `combined = FALSE` they return, invisibly and without printing, a
+list of `ggplot`s named by subgroup.
 
 ## Initial states
 
-The first sequence column has special status: it is read directly as the
-per-sequence initial state
-(`init_state[i] <- match(raw_data[i, state_cols[1L]], states)`). The
-function does **not** scan forward to the first non-missing position,
-and it does not apply any `na_syms`-style symbol conversion (unlike
-[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)).
-The state vocabulary is built from the unique non-`NA` values across all
-columns, so if your data uses a sentinel character such as `"*"` or
-`"%"` for missing cells, that sentinel becomes a real state and the
-first column reads it as a valid initial state. If you want padded
-leading missings to be treated as missing, recode them to `NA` before
-calling `build_mmm()` (then
-[`match()`](https://rdrr.io/r/base/match.html) returns `NA`, which the
-EM treats as an uninformative initial distribution), or left-trim the
-leading missings so each sequence's first column carries an observed
-state.
+Each sequence's initial state is the value in its first position column,
+read as it is: the function does not look ahead to the first observed
+state, and it does not convert missing-value symbols as
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+does. The states are the distinct non-missing values of all position
+columns, so a placeholder such as `"*"` or `"%"` for an empty cell
+becomes a state, and a sequence starting with it starts in that state.
+Recode such placeholders to `NA` first: a missing first position gives
+the sequence no initial state, which leaves its subgroup to the
+transitions alone. Or trim leading empty cells so every first position
+holds an observed state.
 
-A one-hot network is the exception: its units are windows whose slots
-are codes, not positions, so the first column only says whether the
-first code was active. Its initial state is the one code observed in the
-first window, and no initial state (uninformative) when that window
-holds several codes or none.
+A one-hot network is different: its units are windows of codes, not
+positions, so its initial state is the one code active in the first
+window, and none when that window holds several codes or none.
 
 ## Methods
 
-- `plot.net_mmm_clustering()`: Plot routines for the MMM clustering
-  metadata attached to the `netobject_group` that
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  materializes from a
-  [`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
-  fit (or that
-  [`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
-  returns directly with `cluster_by = "mmm"`). Mirrors the type-driven
-  surface of
-  [`plot.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  but covers only the metrics the EM fit produces – there is no distance
-  matrix on an MMM clustering, so `"silhouette"` / `"mds"` / `"heatmap"`
-  aren't defined here and the dispatcher raises a clear error if you ask
-  for one of those on an MMM result.
+[`print()`](https://rdrr.io/r/base/print.html) of a `net_mmm` shows a
+header with the numbers of sequences, subgroups and states, the
+log-likelihood and the information criteria; a quality line with the
+overall AvePP, the normalised entropy (0 when every sequence is
+classified with certainty, 1 when all posteriors are equal) and the
+classification error (the expected share of sequences misclassified when
+each is assigned to its most likely subgroup, the mean of one minus the
+largest posterior; Vermunt & Magidson, 2005); a line when the EM did not
+converge; and one row per subgroup with its size, mixing proportion and
+AvePP. For a model fitted with `covariates`, a last line names them,
+says whether they entered the EM (integrated) or were related post hoc,
+and gives the number of predictors. The layout follows
+[`print()`](https://rdrr.io/r/base/print.html) of a `net_clustering`
+from
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+so dissimilarity-based and model-based clusterings read alike.
 
-- `print.net_mmm()`: Compact summary of a Mixed Markov Model fit. Header
-  carries dimensions and information criteria; cluster table carries N,
-  mixing share, and per-cluster average posterior probability (AvePP).
-  Layout matches
-  [`print.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  so distance- and model-based clusterings can be compared at a glance.
-
-- `print.net_mmm_clustering()`: Prints the clustering metadata attached
-  to the `netobject_group` that
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  materializes from a
-  [`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
-  fit (`attr(grp, "clustering")`). Layout mirrors
-  [`print.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md):
-  a one-line dimension header, a quality line with AvePP / entropy /
-  classification error, information criteria, and a per-cluster table.
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+on a fit, and
+[`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
+with `cluster_by = "mmm"`, return a `netobject_group` whose
+`"clustering"` attribute is a `net_mmm_clustering`: the fit without its
+subgroup networks. Its [`print()`](https://rdrr.io/r/base/print.html)
+shows the same quality line, information criteria and subgroup table,
+without the state count, the log-likelihood or the convergence line, and
+its [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+same two views as
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) of a `net_mmm`.
+The `"silhouette"`, `"mds"` and `"heatmap"` views of a
+dissimilarity-based clustering need a distance matrix, which an MMM
+clustering does not have, so asking for them raises an error.
 
 ## References
 
@@ -331,6 +345,9 @@ Helske, S., & Helske, J. (2019). Mixture hidden Markov models for
 sequence data: The seqHMM package in R. *Journal of Statistical
 Software*, 88(3), 1–32.
 [doi:10.18637/jss.v088.i03](https://doi.org/10.18637/jss.v088.i03)
+
+Vermunt, J. K., & Magidson, J. (2005). *Latent GOLD 4.0 User's Guide*.
+Statistical Innovations.
 
 ## See also
 
@@ -347,7 +364,7 @@ mmm
 #> Mixed Markov Model
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
 #>   ICs: LL = -62.330  |  BIC = 182.480  |  AIC = 158.659  |  ICL = 184.652
-#>   Quality: AvePP = 0.965  |  Entropy = 0.212  |  Class.Err = 0.0%
+#>   Quality: AvePP = 0.965  |  Entropy = 0.212  |  Class.Err = 3.5%
 #> 
 #>   Cluster  N           Mix%   AvePP
 #>   1        24 (80.0%)  78.1%  0.966
@@ -361,36 +378,36 @@ mmm <- build_mmm(seqs, k = 2, seed = 42)
 print(mmm)
 #> Mixed Markov Model
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
-#>   ICs: LL = -124.400  |  BIC = 306.621  |  AIC = 282.800  |  ICL = 313.645
-#>   Quality: AvePP = 0.904  |  Entropy = 0.304  |  Class.Err = 0.0%
+#>   ICs: LL = -120.823  |  BIC = 299.466  |  AIC = 275.646  |  ICL = 299.990
+#>   Quality: AvePP = 0.992  |  Entropy = 0.035  |  Class.Err = 0.8%
 #> 
 #>   Cluster  N           Mix%   AvePP
-#>   1        20 (66.7%)  62.4%  0.896
-#>   2        10 (33.3%)  37.6%  0.919
+#>   1        12 (40.0%)  40.7%  0.999
+#>   2        18 (60.0%)  59.3%  0.987
 summary(mmm)
 #> Mixed Markov Model
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
-#>   ICs: LL = -124.400  |  BIC = 306.621  |  AIC = 282.800  |  ICL = 313.645
-#>   Quality: AvePP = 0.904  |  Entropy = 0.304  |  Class.Err = 0.0%
+#>   ICs: LL = -120.823  |  BIC = 299.466  |  AIC = 275.646  |  ICL = 299.990
+#>   Quality: AvePP = 0.992  |  Entropy = 0.035  |  Class.Err = 0.8%
 #> 
 #>   Cluster  N           Mix%   AvePP
-#>   1        20 (66.7%)  62.4%  0.896
-#>   2        10 (33.3%)  37.6%  0.919
+#>   1        12 (40.0%)  40.7%  0.999
+#>   2        18 (60.0%)  59.3%  0.987
 #> 
-#> --- Cluster 1 (62.4%, n=20) ---
+#> --- Cluster 1 (40.7%, n=12) ---
 #>       A     B     C
-#> A 0.001 0.568 0.431
-#> B 0.485 0.203 0.313
-#> C 0.189 0.629 0.181
+#> A 0.003 0.365 0.632
+#> B 0.002 0.001 0.997
+#> C 0.176 0.309 0.515
 #> 
-#> --- Cluster 2 (37.6%, n=10) ---
+#> --- Cluster 2 (59.3%, n=18) ---
 #>       A     B     C
-#> A 0.593 0.261 0.145
-#> B 0.149 0.397 0.454
-#> C 0.394 0.002 0.604
+#> A 0.438 0.132 0.430
+#> B 0.526 0.473 0.001
+#> C 0.396 0.603 0.001
 #> 
-#>   component     prior n_assigned mean_posterior     avepp
-#> 1         1 0.6241614         20      0.8959195 0.8959195
-#> 2         2 0.3758386         10      0.9193350 0.9193350
+#>   component    prior n_assigned mean_posterior     avepp
+#> 1         1 0.407233         12      0.9991433 0.9991433
+#> 2         2 0.592767         18      0.9873740 0.9873740
 # }
 ```

@@ -1,12 +1,20 @@
 # Per-Class State Distribution as a Tidy Data Frame
 
-Returns a tidy `data.frame(group, state, count, proportion)` with one
-row per (group, state) cell. Companion to
-[`state_frequencies`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md)
-(which counts unique states in raw sequence input);
-`state_distribution()` pulls the same shape of frame from a fitted
-Nestimate object so analyses don't have to reach for the underlying
-`$data` slot directly.
+`state_distribution()` counts how often each state occurs in the
+sequences behind a network and returns one row per group and state, with
+the count and the share within the group. The groups follow the class: a
+single `netobject` is one group, `"all"`, unless it carries node groups,
+which then form the groups (states in none are `"(ungrouped)"`); an
+`htna` network has one group per actor; a `netobject_group` one per
+network, named as in the group (or `"Group 1"`, `"Group 2"`, ...); an
+`mcml` one per cluster, with the node labels it was given in place of
+the raw codes. Missing and empty cells are not counted.
+
+The table is the one behind
+[`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md),
+and the per-group counterpart of
+[`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md),
+which counts the states of raw sequence data.
 
 ## Usage
 
@@ -33,30 +41,28 @@ state_distribution(x, ...)
 
 - x:
 
-  A `netobject`, `netobject_group`, `mcml`, or `htna` object.
+  A `netobject`, `netobject_group`, `mcml` or `htna` network built from
+  sequences. A network without sequence data raises an error; in a
+  `netobject_group` or `mcml`, groups without it are left out, and an
+  error is raised only when none has any. Other classes raise an error.
 
 - ...:
 
-  Currently unused.
+  Not used. The `mcml` method raises an error for any argument it does
+  not take; the other methods ignore it.
 
 - include_macro:
 
-  For `mcml`: when `TRUE`, prepend a `group = "macro"` block aggregating
-  across clusters. Ignored for the other classes.
+  For an `mcml`: whether to add a `"macro"` group in front, holding the
+  state counts over all clusters. Default `FALSE`.
 
 ## Value
 
-A `data.frame` with one row per (group, state) cell and columns `group`
-(character), `state` (character), `count` (integer), and `proportion`
-(numeric, within-group share). A single ungrouped network yields a
-single group labelled `"all"`.
-
-## Details
-
-Used internally by
-[`plot_state_frequencies`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
-as the data layer behind every chart, and surfaced as the `$table` slot
-of the returned `state_freq` object.
+A data frame with one row per group and state and the columns `group`
+(character), `state` (character), `count` (integer) and `proportion`
+(the state's share of its group's events). Within a group the rows run
+from the most to the least frequent state; the `"macro"` group is in
+alphabetical order.
 
 ## Examples
 

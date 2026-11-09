@@ -1,14 +1,19 @@
 # Item Diagnostics From a Psychometric MCML Fit
 
-The item table behind
-[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md):
-one row per node, reporting how strongly the item connects to its own
-cluster, the weight it carries into that cluster's composite, and
-whether it connects more strongly to some other cluster.
+`item_loadings()` returns the item table behind a
+[`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
+fit: one row per item, with how strongly the item connects to its own
+cluster, the weight it carries into that cluster's score, and whether it
+connects more strongly to some other cluster. The loadings are network
+loadings, read from the node-level network (an item's mean absolute
+connection to the members of a cluster), not factor loadings.
 
-Reading the table is `item_loadings(fit)` - never a reach into the fit's
-internals. The name says *item*: these are network loadings of items on
-their own cluster, not factor loadings.
+An item flagged as `misfit` connects more strongly to another cluster
+than to its own, which is evidence that it is assigned to the wrong
+cluster; every aggregation of the fit inherits that membership. A `sign`
+of -1 marks an item treated as reverse-keyed. How stable the weights are
+under resampling is checked with
+[`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md).
 
 ## Usage
 
@@ -24,7 +29,9 @@ item_loadings(x, misfit = NULL, ...)
 - x:
 
   An `mcml_pc` object from
-  [`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md).
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md).
+  A fit that carries no item table raises an error of class
+  `nestimate_no_loadings`.
 
 - ...:
 
@@ -32,19 +39,24 @@ item_loadings(x, misfit = NULL, ...)
 
 - misfit:
 
-  Logical or NULL. `NULL` (default) returns every item; `TRUE` returns
-  only the items whose strongest cross-cluster connection exceeds their
-  own-cluster loading; `FALSE` returns only the items that fit where
-  they were assigned.
+  Which items to return: `NULL` (default) returns every item, `TRUE`
+  only those whose strongest cross-cluster connection exceeds their
+  own-cluster loading, and `FALSE` only those that fit where they were
+  assigned.
 
 ## Value
 
-A data frame with one row per node (one row per misfitting or fitting
-node when `misfit` is set) and columns `node`, `cluster`, `loading`
-(signed mean connection to its own cluster), `weight` (its composite
-weight), `sign` (+1, or -1 for a reverse-keyed item), `max_cross`
-(strongest connection to any other cluster), `cross_cluster` (which
-cluster that is), and `misfit` (logical).
+A data frame with one row per item (only the misfitting or the fitting
+items when `misfit` is set) and columns `node`, `cluster`, `loading`
+(the mean absolute connection to the other members of its own cluster,
+signed by the leading eigenvector of the cluster's block; under a
+sign-carrying weighting the `sign` column holds the sign actually used,
+which can differ), `weight` (its weight in the cluster score, or its
+strength weight for a descriptive aggregation; the weights of a cluster
+sum to 1), `sign` (+1, or -1 for a reverse-keyed item), `max_cross` (its
+strongest mean absolute connection to any other cluster),
+`cross_cluster` (which cluster that is) and `misfit` (logical). An item
+alone in its cluster has loading 0, weight 1 and is never flagged.
 
 ## See also
 

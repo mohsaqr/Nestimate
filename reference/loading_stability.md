@@ -1,14 +1,28 @@
 # Composite-Weight Stability Under Case Resampling
 
-**Experimental.** Bootstraps the item weights of a
-[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
-fit: rows of the raw data are resampled, the node-level network is
-re-estimated each time, and the fitted weighting scheme is reapplied,
-including data-dependent and custom weights and the factor-analysis
-options. Fixed equal or supplied numeric weights retain their magnitudes
-across resamples; item signs may vary. Older saved custom-weight fits
-must be rebuilt to retain their specification. Wide intervals mean the
-weighting should not be over-interpreted.
+`loading_stability()` bootstraps the item weights of a
+[`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
+fit and returns a `pc_loading_stability` object with each item's
+observed signed weight, its bootstrap mean and standard deviation, a
+percentile interval and how often its sign flipped. Each replicate
+resamples the rows of the raw data with replacement, re-estimates the
+node-level network with the fit's estimator (`cor`, `pcor` or `glasso`;
+any other node-level method is re-estimated as `cor`) and correlation
+type, and reapplies the fitted weighting scheme, data-dependent and
+custom weights and the factor-analysis options included. A fit with a
+descriptive aggregation (`"average"`, `"escoufier"`, `"cancor"`) has its
+item-table weights, the `"strength"` weights, resampled.
+**Experimental.**
+
+Wide intervals mean the weighting should not be over-interpreted. Equal
+weights keep their magnitudes in every replicate, so for them only the
+sign flips carry information; a sign that flips often marks an item
+whose reverse-keying is not settled by the data. Supplied numeric
+weights are fixed in magnitude and sign, so their intervals have zero
+width and resampling them tells nothing. The intervals describe the
+weights, not the macro network: edge-weight intervals for it come from
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+on its macro network.
 
 ## Usage
 
@@ -26,50 +40,74 @@ plot(x, ...)
 
 - x:
 
-  An `mcml_pc` object that carries raw data. For the
+  An `mcml_pc` object that carries its raw data; one built from a
+  network without data raises an error, and so does an older saved fit
+  with custom weights, which must be rebuilt with
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
+  to keep its weighting. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `pc_loading_stability`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `pc_loading_stability` object.
 
 - iter:
 
-  Integer. Bootstrap replicates (default 200; node-level re-estimation
-  makes this heavier than a plain bootstrap).
+  The number of bootstrap replicates, at least 2. Default `200`; each
+  replicate re-estimates the node-level network, so this is slower than
+  a plain bootstrap.
 
 - ci_level:
 
-  Numeric. Significance level for percentile CIs (default 0.05).
+  The tail level of the percentile intervals: `0.05` (default) gives 95%
+  intervals.
 
 - seed:
 
-  Integer or NULL. RNG seed.
+  An integer that makes the resampling reproducible. Default `NULL`. The
+  session's own random stream is left as it was.
 
 - digits:
 
-  Number of digits to display (default 3).
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: the
+  decimal places of the numeric columns. Default `3`.
 
 - ...:
 
-  In `plot.pc_loading_stability()` and `print.pc_loading_stability()`:
-  Additional arguments (ignored).
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  ignored.
 
 ## Value
 
-An object of class `"pc_loading_stability"`: a list with `summary` (tidy
-data frame: `node`, `cluster`, `weight`, `boot_mean`, `boot_sd`,
-`ci_lower`, `ci_upper`, `sign_flips` - the proportion of replicates in
-which the item's sign differed from the observed one), `boot_weights`
-(iter x n_nodes matrix), `iter`, and `ci_level`. Has print and plot
-methods.
+A `pc_loading_stability` object.
+[`print()`](https://rdrr.io/r/base/print.html) shows the item table;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws each
+item's signed weight with its interval, one panel per cluster. The
+object's fields:
 
-In `print.pc_loading_stability()`: `x`, invisibly.
+- summary:
 
-In `plot.pc_loading_stability()`: A ggplot object.
+  A data frame with one row per item: `node`, `cluster`, `weight` (the
+  observed signed weight), `boot_mean`, `boot_sd`, `ci_lower`,
+  `ci_upper` and `sign_flips` (the share of replicates in which the
+  item's sign differed from the observed one).
+
+- boot_weights:
+
+  The `iter` x items matrix of resampled signed weights.
+
+- iter, ci_level:
+
+  The settings used.
+
+For the methods: [`print()`](https://rdrr.io/r/base/print.html) returns
+`x` invisibly, [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+a `ggplot`.
 
 ## Methods
 
-- `plot.pc_loading_stability()`: Signed composite weights with bootstrap
-  percentile intervals, faceted by cluster.
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws each
+  item's observed signed composite weight with its bootstrap percentile
+  interval, one panel per cluster, with a dashed line at zero.
 
 ## Examples
 

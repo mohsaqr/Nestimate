@@ -1,10 +1,39 @@
 # Edge-weight Case-dropping Stability
 
-Computes a **CS-coefficient for the edge-weight vector** of a network:
-the maximum proportion of cases (rows of `x$data`) that can be dropped
-while the flattened edge-weight vector of the re-estimated network still
-correlates with the original above `threshold` in at least `certainty`
-of iterations.
+`casedrop_reliability()` measures how stable a network's edge weights
+are when cases are left out. It re-estimates the network on random
+subsets that drop each proportion in `drop_prop` of the cases, compares
+each re-estimated edge vector with the original, and reports a
+CS-coefficient for the edge weights: the largest proportion of cases
+that can be dropped while the correlation between the original and the
+re-estimated edge weights stays at or above `threshold` in at least
+`certainty` of the iterations (the case-dropping CS-coefficient of
+Epskamp, Borsboom & Fried, 2018, applied to the edge weights). Beside
+the correlation it records the mean, median and largest absolute change
+of the edge weights. The cases are the sequences of a transition network
+and the rows of the data otherwise. It takes a single network, or a
+`netobject_group` or an `mcml`, whose networks are assessed one by one.
+
+It complements
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md):
+that asks whether centrality *rankings* are stable, this asks whether
+the *edge-weight structure itself* is. For an `mcml` built from an edge
+list, where each row of the data is one transition, this is
+case-dropping of **edges**.
+
+The CS-coefficient is the largest proportion in `drop_prop` that passes,
+so it can only be one of the values tried. A smaller proportion need not
+have passed as well, so look at the correlation at every proportion, not
+only at the CS-coefficient:
+[`summary()`](https://rdrr.io/r/base/summary.html) gives its mean,
+median and quantiles (`q025`, `q975`) per proportion, and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws it. A
+correlation near 1 can hide a large change in a few edges, which the
+largest absolute change (`max_abs_dev`) shows. Stability under
+case-dropping says the estimate does not rest on a few cases; it gives
+no interval for a single edge, which
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+does.
 
 ## Usage
 
@@ -51,204 +80,211 @@ plot(
 
 - x:
 
-  A `netobject`, `cograph_network`, `netobject_group`, or `mcml`. For
-  the group types this function iterates over each element and returns a
-  named list. For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_casedrop_reliability` or
-  `net_casedrop_reliability_group` (or its
-  [`summary()`](https://rdrr.io/r/base/summary.html)).
+  The network: a `netobject` or `cograph_network` that carries its data,
+  or a `netobject_group` or `mcml`, whose networks (for an `mcml`, the
+  macro network and each cluster's) are assessed one by one. A network
+  without data raises an error, and one that rests on a single sequence,
+  or one-hot data with no actor or session, has no cases to drop and
+  raises an error of class `nestimate_single_sequence`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: the
+  result of `casedrop_reliability()` (for
+  [`print()`](https://rdrr.io/r/base/print.html), also the
+  [`summary()`](https://rdrr.io/r/base/summary.html) of a group result).
 
 - iter:
 
-  Integer. Iterations per drop proportion. Default `1000`.
+  The number of random subsets drawn for each drop proportion, at
+  least 2. Default `1000`.
 
 - drop_prop:
 
-  Numeric vector of proportions to evaluate. Each entry must lie
-  strictly between 0 and 1. Default `seq(0.1, 0.9, by = 0.1)`. In
-  `summary.net_casedrop_reliability_group()`: Drop proportion at which
-  to report the four metrics (mean +/- sd per network). Must be one of
-  the drop proportions the object was built with. Defaults to the
-  object's median grid value (the stored grid is used, not an assumed
-  `0.7`); pass an explicit value not in the grid to get an error listing
-  the available proportions.
+  The proportions of cases to drop, each strictly between 0 and 1, in
+  any order. Default `seq(0.1, 0.9, by = 0.1)`. A proportion that drops
+  no case of a small sample (`n * p < 1`) is not run (without a warning;
+  its metrics are `NA`) and counts as not passing. For the
+  [`summary()`](https://rdrr.io/r/base/summary.html) method of a group
+  result: the one proportion to report, which must be one of those the
+  result was built with; a value outside them raises an error listing
+  the available ones. Default `NULL` there, the middle proportion of the
+  grid (the lower of the two middle ones for an even number).
 
 - threshold:
 
-  Numeric in `[0, 1]`. Minimum edge-vector correlation for an iteration
-  to count as stable. Default `0.7`.
+  The lowest correlation between the original and the re-estimated edge
+  weights for an iteration to count as stable, between 0 and 1. Default
+  `0.7`.
 
 - certainty:
 
-  Numeric in `[0, 1]`. Required fraction of iterations whose correlation
-  must exceed `threshold` for a drop proportion to qualify. Default
-  `0.95`. It is the share of all iterations: one in which the
-  correlation is undefined (the edge vector is constant in that subset)
-  counts as not reaching `threshold`.
+  The share of iterations that must reach `threshold` for a drop
+  proportion to pass, between 0 and 1. Default `0.95`. It is the share
+  of all iterations: one in which the correlation is undefined (the edge
+  vector is constant in that subset), or in which the network could not
+  be re-estimated, counts as not reaching `threshold`.
 
 - method:
 
-  Correlation method: `"pearson"` (weight magnitudes), `"spearman"`
-  (ranks, robust to scale), or `"kendall"`. Default `"spearman"` because
-  edge weights often span several orders of magnitude and rank stability
-  is the typical target.
+  The correlation: `"spearman"` (default) compares ranks, so it is not
+  affected by the scale of the weights, which often span several orders
+  of magnitude; `"pearson"` compares the weight magnitudes; `"kendall"`
+  is Kendall's tau.
 
 - include_diag:
 
-  Logical. Include diagonal (self-loop) edges in the edge vector.
-  Default `FALSE`.
+  Whether self-loops are part of the edge vector. Default `FALSE`.
 
 - seed:
 
-  Optional integer for reproducibility.
+  A number that makes the subsets reproducible. The session's own random
+  stream is left as it was. For a `netobject_group` or `mcml`, each
+  network is assessed from the same seed. Default `NULL`.
 
 - target:
 
-  Cells to assess: `"auto"` (default) uses `"existing"` for unscaled,
-  unthresholded transition methods and `"all"` otherwise. `"existing"`
-  assesses only nonzero original cells; `"all"` includes original zeros
-  so edges appearing after case removal are assessed. `include_diag`
-  applies to either target.
+  The cells compared. `"existing"` compares only the cells that are
+  non-zero in the original network; `"all"` compares every cell, zeros
+  included, so edges that appear once cases are dropped count. `"auto"`
+  (default) uses `"existing"` for unscaled and unthresholded transition
+  networks, where an absent transition cannot appear in a subset, and
+  `"all"` otherwise. `include_diag` applies to either.
 
 - digits:
 
-  Digits to display. Default `3`.
+  For the [`print()`](https://rdrr.io/r/base/print.html) method of a
+  single result: the decimal places of the metric table. Default `3`.
 
 - ...:
 
-  In `plot.net_casedrop_reliability()`,
-  `plot.net_casedrop_reliability_group()`,
-  `print.net_casedrop_reliability()`,
-  `print.summary.net_casedrop_reliability_group()`,
-  `summary.net_casedrop_reliability()` and
-  `summary.net_casedrop_reliability_group()`: Additional arguments
-  (ignored). In `print.net_casedrop_reliability_group()`: Ignored.
+  For the [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  ignored.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_casedrop_reliability` or
-  `net_casedrop_reliability_group`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) methods:
+  the result of `casedrop_reliability()`.
 
 - combined:
 
-  When `TRUE` (default), all four metrics are shown in one ggplot via
-  `facet_wrap(~ metric)`. When `FALSE`, returns a named list of four
-  single-panel ggplots, one per metric.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method of a single result: `TRUE` (default) draws the four metrics as
+  panels of one plot; `FALSE` returns a named list of four single-panel
+  plots, one per metric.
 
 - metric:
 
-  Which metric to plot. One of `"correlation"` (default),
-  `"mean_abs_dev"`, `"median_abs_dev"`, `"max_abs_dev"`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method of a group result: the metric drawn, `"correlation"` (default),
+  `"mean_abs_dev"`, `"median_abs_dev"` or `"max_abs_dev"`.
 
 ## Value
 
-An object of class `net_casedrop_reliability` with:
+A `net_casedrop_reliability` object.
+[`print()`](https://rdrr.io/r/base/print.html) shows the CS-coefficient
+and the mean and standard deviation of each metric at each drop
+proportion; [`summary()`](https://rdrr.io/r/base/summary.html) returns
+that table in full, one row per metric and drop proportion;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+metrics across the drop proportions. A `netobject_group` or `mcml` gives
+a `net_casedrop_reliability_group`, a named list of one result per
+network: its [`print()`](https://rdrr.io/r/base/print.html) gives each
+network's number of cases, number of edges and CS-coefficient, its
+[`summary()`](https://rdrr.io/r/base/summary.html) one row per network
+at one drop proportion, and its
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) one curve per
+network. The fields of a single result:
 
 - `cs`:
 
-  Scalar CS-coefficient - the maximum drop proportion for which the
-  edge-vector correlation remains \>= `threshold` in at least
-  `certainty` of iterations. Zero if no proportion qualifies; `NA` when
-  the original edge weights do not vary (CS undefined).
+  The CS-coefficient: the largest drop proportion at which the
+  correlation reaches `threshold` in at least `certainty` of the
+  iterations. `0` when no proportion passes; `NA` when the original edge
+  weights do not vary (constant up to rounding error, relative to their
+  size), so the correlation is undefined.
 
 - `summary`:
 
-  Tidy data frame, one row per metric by drop proportion, with columns
-  `metric` (`"mean_abs_dev"`, `"median_abs_dev"`, `"correlation"`,
-  `"max_abs_dev"`), `drop_prop`, `mean`, `sd`, `median`, `mad`, `q025`,
-  `q975`.
+  A data frame with one row per metric and drop proportion: `metric`
+  (`"mean_abs_dev"`, `"median_abs_dev"`, `"correlation"`,
+  `"max_abs_dev"`), `drop_prop`, and the `mean`, `sd`, `median`, `mad`,
+  `q025` and `q975` of the metric over the iterations.
 
 - `metrics`:
 
-  Named list of four `iter` x `length(drop_prop)` matrices, one per
-  metric, holding the raw per-iteration values.
+  The per-iteration values: a named list of four matrices, one per
+  metric, with one row per iteration and one column per drop proportion.
 
 - `correlations`:
 
-  `iter` x `length(drop_prop)` matrix of per- iteration correlations
-  (the `correlation` entry of `metrics`).
+  The same matrix as the `correlation` entry of `metrics`.
 
 - `drop_prop`, `threshold`, `certainty`, `iter`, `method`,
   `include_diag`:
 
-  Inputs.
+  The settings used.
 
 - `n_cases`:
 
-  Number of cases resampled from (sequences for transition methods, rows
-  of `$data` otherwise).
+  The number of cases resampled from: sequences for a transition
+  network, rows of the data otherwise.
 
 - `n_edges`:
 
-  Number of cells assessed, determined by `target` and `include_diag`.
+  The number of cells compared, set by `target` and `include_diag`.
 
-The resolved target is retained as `attr(result, "target")`, preserving
-the existing list fields for downstream consumers. A `netobject_group`
-or `mcml` input instead returns a `net_casedrop_reliability_group`: a
-named list of one result per constituent network.
+The resolved `target` is kept as the result's `target` attribute.
 
-When the original edge vector has zero variance a warning is issued and
-the object is returned with `cs = NA`, an empty `summary`, and all-`NA`
-metric matrices.
+When the original edge weights do not vary, a warning is given and the
+result has `cs = NA`, a `summary` whose statistics are `NA`, and metric
+matrices of `NA`.
 
-In `print.net_casedrop_reliability()`: The input `x` invisibly.
-
-In `summary.net_casedrop_reliability()`: A tidy data frame with columns
-`metric`, `drop_prop`, `mean`, `sd` summarising edge-weight stability
-across case-dropping iterations.
-
-In `summary.net_casedrop_reliability_group()`: A data frame with one row
-per network containing `cor`, `mean_abs_dev`, `median_abs_dev`,
-`max_abs_dev` formatted as "mean +/- sd".
-
-In `plot.net_casedrop_reliability()`: A `ggplot` object, or a named list
-of four ggplots when `combined = FALSE`.
-
-In `plot.net_casedrop_reliability_group()`: A `ggplot` object.
+The [`print()`](https://rdrr.io/r/base/print.html) methods return their
+input invisibly. The [`summary()`](https://rdrr.io/r/base/summary.html)
+method of a single result returns its `summary` field, described above.
+The [`summary()`](https://rdrr.io/r/base/summary.html) method of a group
+result returns a `summary.net_casedrop_reliability_group` data frame
+with one row per network (named in the row names): `n_edges` and the
+four metrics (`cor`, `mean_abs_dev`, `median_abs_dev`, `max_abs_dev`) at
+the chosen drop proportion, each written as `"mean +/- sd"`; its
+[`print()`](https://rdrr.io/r/base/print.html) names that proportion.
+The [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods
+return a `ggplot`; with `combined = FALSE`, the named list of plots is
+returned invisibly. A single result is drawn as one panel per metric,
+the mean across iterations as a line with a band of plus and minus one
+standard deviation; a group result draws the chosen metric with one line
+and band per network. On the correlation, a dashed line marks
+`threshold`. A result whose CS-coefficient is undefined is drawn as a
+panel that says so, and in a group such networks are left out and named
+in the caption.
 
 ## Details
 
-Complements
-[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md):
-that function asks whether centrality *rankings* are stable; this one
-asks whether the *edge-weight structure itself* is stable. For
-MCML-derived networks where each row of `$data` is one transition, this
-is case-dropping of **edges**.
+For each drop proportion \\p\\ and each iteration, a subset of \\n -
+\lfloor np \rfloor\\ of the \\n\\ cases is drawn **without
+replacement**, the network is re-estimated with the input's method,
+scaling and threshold, and the compared cells of the new weight matrix
+are set against the same cells of the original. For transition networks
+the per-sequence transition counts are computed once and summed over
+each subset; other networks are re-estimated from the subset of rows. A
+re-estimation that fails, or that loses a node (a variable constant in
+the subset), leaves the iteration without values; such iterations are
+counted in a warning of class `nestimate_resample_failed` and count as
+below `threshold`.
 
-For each `drop_prop` p and each iteration, a size `n_cases * (1 - p)`
-subset of `$data` rows is selected **without replacement**, the network
-is re-estimated using the same method/scaling/threshold as the input,
-and the selected cells are compared with the same cells of the new
-weight matrix. With `target = "auto"`, unscaled and unthresholded
-transition methods assess only existing edges: absent transitions cannot
-appear in a subsample, and including these fixed zeros inflates the
-correlation. Association methods and scaled or thresholded networks
-assess all cells, because a zero original weight can become nonzero
-after case removal. Use `target = "existing"` explicitly to assess only
-the original edges in these networks. The correlation method defaults to
-Spearman.
+With `target = "auto"`, unscaled and unthresholded transition networks
+compare only the existing edges: an absent transition cannot appear in a
+subset, and the fixed zeros would inflate the correlation. Association
+networks and scaled or thresholded networks compare all cells, because a
+zero original weight can become non-zero once cases are dropped; set
+`target = "existing"` to compare only the original edges there.
 
-Case-dropping drops rows of `$data` at random, so it treats the rows as
-independent units. When rows are nested in actors (several sessions per
-person), dropped rows of one actor are replaced by the remaining rows of
-the same actor, and the CS-coefficient overstates the stability; drop
-whole actors instead (for example with `tna::estimate_cs(actor = )`).
-
-## Methods
-
-- `plot.net_casedrop_reliability()`: Plots the four model-level
-  reliability metrics across drop proportions: `correlation`,
-  `mean_abs_dev`, `median_abs_dev`, `max_abs_dev`. Each panel shows the
-  per-iteration mean with a ribbon at mean +/- sd. The `correlation`
-  panel includes a dashed horizontal line at the user's `threshold`
-  (default 0.7).
-
-- `plot.net_casedrop_reliability_group()`: Overlay of per-cluster
-  correlation curves across drop proportions. One colour per
-  sub-network; ribbons show mean +/- sd across iterations. Dashed
-  horizontal line marks the stability threshold (default 0.7).
+Case-dropping drops cases at random, so it treats them as independent
+units. When the cases are nested in actors (several sessions per
+person), the remaining cases of an actor stand in for the dropped ones,
+and the CS-coefficient overstates the stability; drop whole actors
+instead (for example with `tna::estimate_cs(actor = )`).
 
 ## References
 

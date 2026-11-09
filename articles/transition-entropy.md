@@ -245,8 +245,8 @@ eb
 #> Bayesian Transition Entropy (9 states, bits; Dirichlet prior 0.5, 1000 draws)
 #> 
 #>   entropy_rate:       2.411 [2.396, 2.425]
-#>    stationary_entropy: 2.783 [2.771, 2.796]
-#>    redundancy:         0.373 [0.361, 0.384]
+#>   stationary_entropy: 2.783 [2.771, 2.796]
+#>   redundancy:         0.373 [0.361, 0.384]
 #> 
 #> Edges: 78 observed; 31 credible (share of h(P) credibly > 1%).
 #> Use summary() for the edge table and plot() for the posterior.

@@ -1,9 +1,14 @@
 # Prepare Data for TNA Analysis
 
-Prepare simulated or real data for use with
+`prepare_for_tna()` returns the sequence columns of a data set as a wide
+data frame for
 [`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html) and
-related functions. Handles various input formats and ensures the output
-is compatible with TNA models.
+related functions: one row per sequence and the position columns `V1`,
+`V2`, ... in numeric order, with factors turned into character. Long
+input is converted with
+[`long_to_wide()`](https://pak.dynasite.org/Nestimate/reference/long_to_wide.md)
+first, padding shorter sequences with `NA`. Every other column (an id,
+metadata) is dropped.
 
 ## Usage
 
@@ -23,66 +28,50 @@ prepare_for_tna(
 
 - data:
 
-  Data frame containing sequence data.
+  A data frame of sequences: wide, with position columns named `V1`,
+  `V2`, ..., or long, with one row per action.
 
 - type:
 
-  Character. Type of input data:
-
-  "sequences"
-
-  :   Wide format with one row per sequence (default).
-
-  "long"
-
-  :   Long format with one row per action.
-
-  "auto"
-
-  :   Automatically detect format based on column names.
+  How to read `data`. `"sequences"` (default) reads wide position
+  columns; `"long"` converts a long table with
+  [`long_to_wide()`](https://pak.dynasite.org/Nestimate/reference/long_to_wide.md),
+  which needs `id_col` and `action_col`; `"auto"` reads long data when
+  `action_col` is a column and no `V<number>` column exists, wide data
+  in the opposite case, and, when both exist, long data only if `id_col`
+  is a column and there are more than twice as many rows as ids. Data
+  with neither raises an error. Whatever the type, the result needs
+  `V<number>` columns; others, such as `T1`, `T2`, are not renamed and
+  raise an error.
 
 - state_names:
 
-  Character vector. Expected state names, or NULL to extract from data.
-  Default: NULL.
+  The expected states, used with `validate`. Default `NULL`, which
+  accepts the states found in the data.
 
 - id_col:
 
-  Character. Name of ID column for long format data. Default: "Actor".
+  The column identifying sequences in long data. Default `"Actor"`.
 
 - time_col:
 
-  Character. Name of time column for long format data. Default: "Time".
+  The column ordering the actions in long data. Default `"Time"`.
 
 - action_col:
 
-  Character. Name of action column for long format data. Default:
-  "Action".
+  The column holding the actions in long data. Default `"Action"`.
 
 - validate:
 
-  Logical. Whether to validate that all actions are in state_names.
-  Default: TRUE.
+  Whether to check the states against `state_names`; states not listed
+  are named in a warning. Ignored when `state_names` is `NULL`. Default
+  `TRUE`.
 
 ## Value
 
-A data frame ready for use with TNA functions. For "sequences" type,
-returns a data frame where each row is a sequence and columns are time
-points (V1, V2, ...). For "long" type, converts to wide format first.
-
-## Details
-
-This function performs several preparations:
-
-1.  Converts long format to wide format if needed.
-
-2.  Validates that all actions/states are recognized.
-
-3.  Removes any non-sequence columns (e.g., id, metadata).
-
-4.  Converts factors to characters.
-
-5.  Ensures consistent column naming (V1, V2, ...).
+A data frame with one row per sequence and only the position columns
+`V1`, `V2`, ..., in numeric order, holding character states (or the
+original type for non-factor columns), with no row names.
 
 ## See also
 

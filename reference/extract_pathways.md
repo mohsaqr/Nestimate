@@ -1,8 +1,18 @@
 # Cut an Event Log into Pathways
 
-Splits a long event log into pathways and returns them as a tidy
-`data.frame`, one row per pathway, ready to tabulate against an outcome
-or to feed to a sequence model.
+`extract_pathways()` cuts a long event log into pathways, runs of
+consecutive events within one unit (an actor, or an actor's session),
+and returns them as a data frame with one row per pathway, ready to
+tabulate against an outcome or to pass to a sequence model. Three cuts
+are available through `type`: each unit as one pathway, consecutive
+segments that each end on a terminal state, or one pathway from every
+occurrence of an `anchor` state to the next terminal state.
+
+With `terminal`, the cuts keep only what reaches a terminal state: a
+unit without one, events after a unit's last terminal state, and anchors
+with no later terminal state are left out without a message, so count
+the units and events kept before comparing pathway frequencies across
+groups.
 
 ## Usage
 
@@ -24,22 +34,24 @@ extract_pathways(
 
 - data:
 
-  A long-format `data.frame`, one row per event, already in
-  chronological order within each group (or with `order` supplied).
+  A long data frame with one row per event, in time order within each
+  unit unless `order` is given. A unit's rows need not be contiguous:
+  rows of other units in between are not part of its pathways.
 
 - action:
 
-  Name of the column holding the state / event label.
+  The name of the column holding each event's state.
 
 - group:
 
-  Character vector of column names defining the unit a pathway may not
-  cross – typically the actor, or actor and session.
+  The names of the columns defining the unit a pathway may not cross,
+  typically the actor, or the actor and the session.
 
 - order:
 
-  Optional column giving the within-group event order. When `NULL`
-  (default) the existing row order is used.
+  The name of a column giving the order of events within a unit; the
+  rows are sorted by `group` and then by it. Default `NULL`, which keeps
+  the row order.
 
 - type:
 
@@ -47,55 +59,62 @@ extract_pathways(
 
   `"unit"`
 
-  :   (default) one pathway per group. With `terminal`, the group is
-      truncated at its last terminal state so the pathway ends on an
-      outcome rather than on whatever followed.
+  :   (default) one pathway per unit. With `terminal`, each unit is cut
+      after its last terminal state, so the pathway ends on an outcome
+      rather than on whatever followed; units without a terminal state
+      are left out.
 
   `"segments"`
 
-  :   consecutive, non-overlapping pathways: the group is cut after
-      every terminal state, so each pathway ends on one. Every event
-      belongs to exactly one pathway.
+  :   consecutive, non-overlapping pathways: each unit is cut after
+      every terminal state, so each pathway ends on one. Events after a
+      unit's last terminal state belong to no pathway.
 
   `"anchored"`
 
-  :   one pathway per occurrence of `anchor`, closing at the next
-      terminal state. Pathways may overlap and events between a terminal
-      and the next anchor belong to none.
+  :   one pathway per occurrence of `anchor`, closing at the first
+      terminal state after it. Pathways may overlap, and events between
+      a terminal state and the next anchor belong to none.
 
 - anchor:
 
-  State that opens a pathway when `type = "anchored"`. Ignored by the
-  other cuts. Default `NULL`.
+  The single state that opens a pathway when `type = "anchored"`, where
+  it is required; the other cuts ignore it. It may also be one of the
+  `terminal` states: a pathway then closes at the next terminal state
+  after the anchor, not at the anchor itself. Default `NULL`.
 
 - terminal:
 
-  States that close a pathway, the closing state included. Required for
-  `"segments"` and `"anchored"`; optional for `"unit"`, where it
-  truncates.
+  The states that close a pathway, the closing state included. Required
+  for `"segments"` and `"anchored"`; optional for `"unit"`, where it
+  cuts each unit after its last terminal state. Default `NULL`.
 
 - resolve:
 
-  Optional named list giving a resolution label to append as the
-  pathway's final state. Each element is a character vector of states; a
-  pathway takes the label of the **first** element whose states all
-  occur in it, so order the list from most specific to least. Pathways
-  matching nothing are labelled `"Unresolved"`. The label becomes the
-  last element of `path` and the value of `closes`, and the raw final
-  state is kept in `ends`.
+  A named list that appends a resolution label as each pathway's final
+  state. Each element is a character vector of states; a pathway takes
+  the name of the first element whose states all occur in it, so order
+  the list from most to least specific, and pathways matching none are
+  labelled `"Unresolved"`. The label becomes the last state of `path`,
+  counts in `length`, and is the value of `closes`; the observed last
+  state is kept in `ends`. Default `NULL` (no label).
 
 - sep:
 
-  Separator used when pasting the path. Default `" -> "`.
+  The separator placed between states in `path`. Default `" -> "`.
 
 ## Value
 
-A `data.frame` with one row per pathway: the `group` columns, `pathway`
-(an integer id within group), `path` (the states pasted with `sep`),
-`length`, `opens` (first state) and `closes` (last state). With
-`resolve`, `closes` holds the resolution label instead and a further
-`ends` column carries the raw final state. Pathways are returned in the
-order they occur.
+A data frame with one row per pathway, in the order the pathways occur
+within each unit. Units appear in the order they first occur in `data`,
+or sorted by `group` when `order` is given and when `type = "unit"` is
+combined with `terminal`. Columns: the `group` columns, `pathway` (the
+pathway's number within its unit, from 1), `path` (the states joined
+with `sep`), `length` (the number of states), `opens` (the first state)
+and `closes` (the last state). With `resolve`, `closes` holds the
+resolution label and an `ends` column the observed last state. When no
+pathway is found (for example, the anchor or the terminal states never
+occur), an error of class `nestimate_no_pathway` is raised.
 
 ## See also
 

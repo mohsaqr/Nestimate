@@ -1,7 +1,8 @@
 # Compute State Frequencies from Trajectory Data
 
-Counts how often each state appears across all trajectories. Returns a
-data frame sorted by frequency (descending).
+`state_frequencies()` counts how often each state occurs across all
+trajectories, and returns one row per state, most frequent first.
+Missing values are not counted.
 
 ## Usage
 
@@ -13,13 +14,18 @@ state_frequencies(data)
 
 - data:
 
-  A list of character vectors (trajectories) or a data.frame.
+  The trajectories: a list of state vectors, a data frame or character
+  matrix with one row per trajectory and one column per time point, a
+  `tna` model or a `netobject` built from sequences. A data frame needs
+  position columns named as a numbered run (`T1`, `T2`, ...); any other
+  frame, a one-hot or association network and a 0/1 matrix raise an
+  error of class `nestimate_bad_input`.
 
 ## Value
 
 A data frame with one row per distinct state, sorted by `count`
-(descending), with columns `state`, `count` and `proportion` (share of
-all observations, rounded to 4 decimal places).
+(descending), with columns `state`, `count` and `proportion` (the
+state's share of all observed states, rounded to 4 decimal places).
 
 ## Examples
 

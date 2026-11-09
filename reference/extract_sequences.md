@@ -1,11 +1,23 @@
 # Extract Sequences in Wide Format
 
-Returns the sequences behind any Nestimate input as a wide data frame,
-one row per sequence and one column per position. Accepts the output of
+`extract_sequences()` returns the sequences behind a Nestimate input as
+a wide data frame, one row per sequence and one column per position. It
+reads the output of
 [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md),
-a long event log, a wide data frame or character matrix, a `netobject`,
-a grouped `netobject_group`, or a `tna` model. Model objects return
-their stored, decoded states.
+a long event log (with `action` set), a wide data frame or character
+matrix, a `netobject`, `netobject_group` or `cograph_network` built from
+sequences, and a `tna` model; networks and models give back their
+stored, decoded states. The sequence verbs, such as
+[`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md)
+and
+[`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md),
+read their input the same way.
+
+Column roles are declared, never guessed: an event log needs `action`,
+and a wide table needs its positions named as a numbered run or listed
+in `cols`. When the positions were listed and their names are not a run,
+the result records them, so it can be passed to another sequence verb
+without `cols` again (not when `meta = TRUE` adds covariate columns).
 
 ## Usage
 
@@ -25,44 +37,63 @@ extract_sequences(
 
 - x:
 
-  Sequence data: a `nestimate_data` object from
+  The sequence data: a `nestimate_data` object from
   [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md);
-  a long event log (supply `action`); a wide `data.frame` or character
-  matrix; a `netobject`, `netobject_group`, `cograph_network` or `tna`
-  built from sequence data.
+  a long event log (set `action`); a wide data frame or character
+  matrix; or a `netobject`, `netobject_group`, `cograph_network` or
+  `tna` model built from sequence data. A network estimated with an
+  association method (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or from
+  one-hot codes, a network built from a matrix (it holds no sequences),
+  and any other input raise an error of class `nestimate_bad_input`.
 
 - cols:
 
-  Character vector of state columns for wide data frames. When `NULL`,
-  numeric columns of a mixed data frame are treated as covariates and
-  the remaining columns as states. Ignored for model objects.
+  The state columns of a wide data frame; the other columns are the
+  sequences' covariates. Default `NULL`: the frame must be a single
+  column or hold its positions as a numbered run of names (a shared
+  prefix and a number, `T1`, `T2`, ..., or `1`, `2`, ...), and the
+  columns outside the run, and numeric columns beside it, are
+  covariates. Any other frame, or columns holding only 0 and 1 (which
+  could be one-hot codes), then raise an error of class
+  `nestimate_bad_input`; listing them in `cols` reads them as positions.
+  A name in `cols` that is not in the frame raises the same class.
+  Ignored for prepared data, event logs (where a listed name must still
+  exist) and model objects.
 
 - actor, action, time:
 
-  Column names of a long event log, passed to
+  The actor, action and timestamp columns of a long event log. Setting
+  `action` declares `x` an event log and passes `actor` and `time` to
   [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md).
-  Supplying `action` marks `x` as long.
+  On a wide table without `action`, the columns they name must exist, or
+  an error of class `nestimate_bad_input` is raised. The columns they
+  name are covariates, never positions: they are left out of the states
+  (also from a numbered run) and kept with the covariates, and naming
+  one of them in `cols` too raises an error of class
+  `nestimate_bad_input`. Default `NULL`.
 
 - meta:
 
-  Logical. When `TRUE`, the covariate columns that belong to each
-  sequence (actor, session, group, metadata) are placed before the state
-  columns. Default `FALSE`.
+  Whether to put the covariate columns of each sequence (actor, session,
+  group, metadata) before the state columns; a grouped network adds its
+  grouping column among them. Default `FALSE`.
 
 - ...:
 
   Further arguments passed to
   [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
-  for long input (e.g. `time_threshold`, `order`).
+  for a long event log, such as `time_threshold` or `order`; ignored
+  otherwise.
 
 ## Value
 
-A `data.frame` with one row per sequence. State columns are character,
-with `NA` after a sequence ends; their names are the position names of
-the input (`T1`, `T2`, ... for prepared or long data). With
-`meta = TRUE` the covariate columns come first. A grouped network adds
-its grouping column. Input that has no sequence data raises
-`nestimate_bad_input`.
+A data frame with one row per sequence. The state columns are character,
+`NA` after a sequence ends and at missing positions (empty strings and
+TraMineR's void `%` and missing `*` markers are read as `NA`). Their
+names are the position names of the input (`T1`, `T2`, ... for prepared
+or long data, `V1`, `V2`, ... for an unnamed matrix). With `meta = TRUE`
+the covariate columns come first. Input that holds no observed state
+raises an error of class `nestimate_bad_input`.
 
 ## See also
 

@@ -1,6 +1,10 @@
 # Remove a Registered Estimator
 
-Remove a network estimator from the registry.
+`remove_estimator()` takes an estimator out of the registry, so
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+no longer finds it by name. Built-ins can be removed too; they come back
+when the package is loaded again. A name that is not registered raises
+an error.
 
 ## Usage
 
@@ -12,11 +16,12 @@ remove_estimator(name)
 
 - name:
 
-  Character. Name of the estimator to remove.
+  The registered name of the estimator to remove, a single string.
 
 ## Value
 
-Invisible `NULL`.
+`NULL`, invisibly. The entry is removed from the registry as a side
+effect.
 
 ## See also
 

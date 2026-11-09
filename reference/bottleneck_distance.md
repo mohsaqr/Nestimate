@@ -1,18 +1,23 @@
 # Bottleneck Distance Between Persistence Diagrams
 
-Computes the bottleneck distance between two persistence diagrams. For
-finite pairs, the bottleneck distance is \$\$W\_\infty(D_1, D_2) =
-\inf\_{\gamma} \sup\_{p \in D_1} \\p - \gamma(p)\\\_\infty,\$\$ where
-\\\gamma\\ ranges over bijections \\D_1 \cup \Delta \to D_2 \cup
-\Delta\\ and \\\Delta = \\(x,x)\\\\ is the diagonal. Each point may
-match a point in the other diagram or its projection onto the diagonal
-at cost \\\|d - b\|/2\\. Computed via binary search on \\\varepsilon\\
-plus a Kuhn bipartite-matching feasibility check.
+`bottleneck_distance()` returns the bottleneck distance between two
+persistence diagrams, one value per homology dimension. It takes two
+[`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
+results, or two data frames of persistence pairs. For the finite pairs,
+the distance is \$\$W\_\infty(D_1, D_2) = \inf\_{\gamma} \sup\_{p \in
+D_1} \\p - \gamma(p)\\\_\infty,\$\$ where \\\gamma\\ ranges over
+bijections \\D_1 \cup \Delta \to D_2 \cup \Delta\\ and \\\Delta =
+\\(x,x)\\\\ is the diagonal. Each point is matched to a point of the
+other diagram or to its projection onto the diagonal, at cost \\\|d -
+b\|/2\\.
 
-Essential classes (death = Inf in VR mode, or death = 0 in clique mode)
-are matched one-to-one within each dimension. If the diagrams have
-different numbers of essential classes in some dimension, the bottleneck
-distance for that dimension is `Inf`.
+The distance is the largest shift needed to match the two diagrams'
+features: a small value means every feature of either diagram has a
+close counterpart in the other or is short-lived enough to sit near the
+diagonal. It is a distance between two observed diagrams and carries no
+sampling uncertainty of its own; to compare diagrams on a common grid,
+or to average several, use
+[`persistence_landscape()`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md).
 
 ## Usage
 
@@ -24,25 +29,44 @@ bottleneck_distance(d1, d2, dimension = NULL, tol = .Machine$double.eps^0.5)
 
 - d1, d2:
 
-  `persistent_homology` objects, or data.frames with columns
-  `dimension`, `birth`, `death`.
+  The two diagrams:
+  [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
+  results, or data frames with the columns `dimension`, `birth` and
+  `death` (other columns are ignored). Any other input, or a data frame
+  missing one of those columns, raises an error.
 
 - dimension:
 
-  Integer vector of dimensions to compare. `NULL` (default) compares all
-  dimensions appearing in either diagram and returns a named numeric
-  vector.
+  The homology dimensions to compare, as whole numbers. Default `NULL`:
+  every dimension that appears in either diagram. A dimension absent
+  from both gives 0.
 
 - tol:
 
-  Numerical tolerance for binary search (default
-  `.Machine$double.eps ^ 0.5`).
+  The tolerance added to each candidate cost when checking whether a
+  matching exists, so that floating-point error does not miss an exact
+  match. Default `.Machine$double.eps ^ 0.5`.
 
 ## Value
 
-Named numeric vector. Names are `"dim_<k>"`. `Inf` indicates a
-structural mismatch (different essential counts in that dimension); a
-self-distance is always 0.
+A named numeric vector with one distance per dimension, named
+`"dim_<k>"` (empty when there is no dimension to compare). `Inf` marks a
+structural mismatch: different numbers of essential classes in that
+dimension. The distance of a diagram to itself is 0.
+
+## Details
+
+The smallest feasible \\\varepsilon\\ is found by binary search over the
+candidate costs (every pairwise \\L\_\infty\\ distance and every
+diagonal projection), checking each with a Kuhn bipartite matching.
+
+Essential classes (`death = Inf` in VR mode, `death = 0` with
+`birth > 0` in clique mode, as
+[`persistence_landscape()`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md)
+reads them; a `(0, 0)` pair is a zero-length finite point) are matched
+one-to-one within each dimension by their sorted births. When the two
+diagrams have different numbers of essential classes in a dimension, the
+distance for that dimension is `Inf`.
 
 ## References
 

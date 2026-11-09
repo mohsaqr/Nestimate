@@ -1,59 +1,74 @@
 # Multi-Cluster Multi-Level Aggregation for Psychometric Networks
 
-**Experimental.** Aggregates a node-level psychometric network
-(correlation, partial correlation, or EBICglasso) into a cluster-level
-macro network plus per-cluster within networks - the MCML view that
-[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
-provides for transition networks, adapted to the statistics of
-undirected association networks. The API and the exact aggregation
-formulas may change between releases.
+`build_mcml_pc()` collapses a psychometric network whose nodes are
+assigned to clusters into a cluster-level (macro) network and one
+within-cluster network per cluster, and returns an `mcml_pc` object. It
+is the counterpart of
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+for undirected association networks: it reads a `netobject` estimated
+with `cor`, `pcor` or `glasso`, or a numeric data frame of observations,
+from which it estimates the node-level network first. **Experimental**:
+the API and the aggregation formulas may change between releases.
 
-Unlike transition counts, partial correlations do not aggregate by
-arithmetic: the submatrix of a pcor matrix is *not* the pcor network of
-the subsystem (the conditioning set changes), and averaging pcor entries
-across blocks is descriptive only. The `aggregation` methods therefore
-have explicitly different statuses (the full list of accepted values is
-under `aggregation` below):
+Partial correlations do not aggregate by arithmetic. The submatrix of a
+partial-correlation matrix is *not* the partial-correlation network of
+that subsystem, because the conditioning set changes, and averaging
+entries across blocks is descriptive only. The aggregations (see
+`aggregation`) therefore differ in status:
+
+- Score paths, re-estimated (`"scaled"`, `"composite"`, `"mean"`,
+  `"median"`, `"loadings"`):
+
+  Each observation gets one score per cluster, formed from the cluster's
+  member items (see `weighting`), and the estimator in `method` is
+  re-fitted on these scores, so the macro network is a genuine
+  correlation, partial-correlation or EBICglasso network among clusters.
+  Needs raw data.
 
 - `"average"` (descriptive):
 
-  Macro edge A–B = mean of the signed node-level weights between members
-  of A and members of B; macro diagonal = mean within-block off-diagonal
-  weight. Needs only the weight matrix (works on data-less netobjects).
-  Caveat: signed averaging can cancel opposite-sign edges; interpret as
-  net average association, not connectivity strength.
-
-- `"composite"` (re-estimated):
-
-  Per-observation cluster scores = (optionally standardized) mean of
-  member variables; the chosen `method` is then re-fit on the k
-  composite columns, so the macro network is a genuine correlation /
-  pcor / EBICglasso network among clusters. Requires raw data.
-
-- `"loadings"` (re-estimated, connectivity-weighted):
-
-  As `"composite"`, but member variables are weighted by their
-  within-cluster connection strength in the node-level network (the
-  absolute summed weight to the other members of their own cluster,
-  normalized to sum to 1 per cluster). Nodes that anchor their cluster
-  contribute more to its composite. This is Nestimate's own weighting -
-  related in spirit to network loadings (Christensen & Golino 2021) but
-  not a reimplementation of any EGA-family estimator. Requires raw data.
+  The macro edge between clusters A and B is the mean of the signed
+  node-level weights between members of A and members of B; the macro
+  diagonal is the mean within-block off-diagonal weight. Needs only the
+  weight matrix, so it works on a netobject without data. Signed
+  averaging can cancel opposite-sign edges: read it as a net average
+  association, not a connection strength.
 
 - `"escoufier"` (descriptive, multivariate):
 
-  Macro edge A–B = Escoufier's RV coefficient between the member
-  blocks - a matrix correlation in `[0, 1]` computed from the block
-  covariance structure. No composites are formed and no estimator is
-  re-fit, so nothing is lost to averaging; signs are not represented.
-  Requires raw data.
+  The macro edge is Escoufier's RV coefficient between the member
+  blocks, a matrix correlation in `[0, 1]` computed from the block
+  covariance structure. No scores are formed and nothing is
+  re-estimated, so nothing is lost to averaging; signs are not
+  represented. Needs raw data.
 
 - `"cancor"` (descriptive, multivariate):
 
-  Macro edge A–B = the first canonical correlation between the member
+  The macro edge is the first canonical correlation between the member
   blocks: the strongest linear relationship any weighting of A's items
-  can have with any weighting of B's items - an upper bound on what
-  composite methods can recover. Requires raw data.
+  can have with any weighting of B's items, an upper bound on what the
+  score paths can recover. Needs raw data.
+
+Every aggregation inherits the cluster assignment. Before reading the
+macro network, check the item table with
+[`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md):
+an item more strongly connected to another cluster than to its own is
+flagged as misfit and named in a warning. A flagged item means every
+aggregation carries a doubtful membership, so fix the assignment rather
+than ignore the flag. How far the composite weights move under case
+resampling is checked with
+[`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md).
+The macro network of a score path carries its scores as data, so
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+(edge-weight intervals) and, with at least three clusters,
+[`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
+(network-level intervals) work on it directly, as in
+`bootstrap_network(macro_network(fit))`, and
+[`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
+(also with at least three clusters) compares the macro networks of two
+fits;
+[`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
+extracts it.
 
 ## Usage
 
@@ -88,339 +103,399 @@ plot(x, digits = 2, ...)
 
 - x:
 
-  A `netobject` estimated with an undirected association method (`cor`,
-  `pcor`, `glasso`; aliases accepted) - its `$data` and `$method` are
-  reused - or a numeric data.frame of raw observations (then `method`
-  decides the estimator). For the
+  The network or the data. A `netobject` (or a `cograph_network`)
+  estimated with an undirected association method (`cor`, `pcor`,
+  `glasso`, or their aliases), whose weights, stored data and method are
+  reused; a directed network raises an error and points to
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md).
+  Or a numeric data frame of observations (one row per observation, one
+  column per item), from which the node-level network is estimated with
+  `method` and `cor_method`; a non-numeric column raises an error. Any
+  other input, a matrix included, raises an error. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `mcml_pc`.
+  `mcml_pc` object.
 
 - clusters:
 
-  Cluster membership in any of three forms: a named list of node-label
-  vectors (names = cluster labels); a two-column `data.frame` read by
-  position (first column = node names, second = group labels); or a
-  vector of cluster labels named by node. Every node must be assigned to
-  exactly one cluster.
+  The cluster membership, in one of three forms: a named list of
+  node-label vectors (the names are the cluster labels), a data frame
+  whose first column holds the node names and second column the cluster
+  labels (read by position, column names are not used), or a vector of
+  cluster labels named by node. Every node must belong to exactly one
+  cluster, every member must be a node, and at least two clusters are
+  needed; anything else raises an error.
 
 - aggregation:
 
-  Character. How clusters are collapsed to the macro network. Default
-  `"scaled"`.
+  How the clusters are collapsed into the macro network. Default
+  `"scaled"`. The score paths re-estimate the network on one score per
+  cluster and observation:
 
   `"scaled"`
 
-  :   Re-estimate the network on per-cluster scores formed as the mean
-      of *standardized* member items (the default; was `"composite"`).
+  :   The weighted mean of the *standardised* member items.
 
   `"composite"`
 
-  :   Backward-compatible alias for `"scaled"`.
+  :   The former name of `"scaled"`, kept as an alias.
 
   `"mean"`
 
-  :   As `"scaled"` but on raw (unstandardized) item means.
+  :   As `"scaled"`, on the raw (unstandardised) items.
 
   `"median"`
 
-  :   As `"mean"` but the per-cluster score is the row-wise median of
-      the items (unweighted).
+  :   The row-wise median of the raw, sign-corrected items. The median
+      is unweighted, so the weight magnitudes from `weighting` are not
+      used, but a sign-carrying weighting still sets the item signs.
 
   `"loadings"`
 
-  :   The scaled score path with member items weighted by their
-      within-cluster network strength.
+  :   As `"scaled"`, with the items weighted by their within-cluster
+      network strength (`weighting = "strength"`) unless `weighting` is
+      given.
 
-  `"average"`
-
-  :   Average the item-pair edges in each between-cluster submatrix - no
-      scores, no re-estimation.
-
-  `"escoufier"`
-
-  :   Escoufier RV coefficient (descriptive multivariate similarity
-      between blocks).
-
-  `"cancor"`
-
-  :   First canonical correlation - an upper bound on how related two
-      blocks can be.
+  The descriptive ones relate the blocks without forming scores:
+  `"average"` (the mean item-pair edge of each between-cluster block),
+  `"escoufier"` (Escoufier's RV coefficient) and `"cancor"` (the first
+  canonical correlation); the Description says how each can be read.
+  Every path except `"average"` needs raw data; without it, an error
+  suggests `"average"`.
 
 - method:
 
-  Character. Network estimator for the re-estimation paths and for
-  data.frame input: `"pcor"` (default), `"glasso"`, or `"cor"` - the
-  same vocabulary as
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-  Ignored (with the netobject's own method used instead) when `x` is a
-  netobject and `method` is not given.
+  The network estimator for the node-level network of a data frame, the
+  macro network of the score paths and the re-estimated within-cluster
+  networks: `"pcor"` (default), `"glasso"` or `"cor"`, as in
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+  When `x` is a `cor`, `pcor` or `glasso` netobject and `method` is not
+  given, the netobject's own method is used; any other undirected
+  netobject (an `ising` one, say) uses the default `"pcor"`.
 
 - within:
 
-  Character. `"reestimate"` (default) or `"subnetwork"` (see Details).
+  How the within-cluster networks are formed: `"reestimate"` (default)
+  re-fits the estimator on each cluster's items, `"subnetwork"` slices
+  the node-level weight matrix (see Details). Input without raw data
+  uses `"subnetwork"` whatever is set.
 
 - weighting:
 
-  Character. How items are weighted inside their cluster score (the
-  score paths `"scaled"` / `"mean"` / `"loadings"`; not `"median"`,
-  which is unweighted):
+  How the items are weighted inside their cluster score on the score
+  paths; on `"median"` only the signs of a sign-carrying scheme are
+  used. Default `"equal"` (`"strength"` under
+  `aggregation = "loadings"`); the descriptive aggregations ignore it,
+  and their item table keeps the `"strength"` weights. The weights are
+  absolute values normalised to sum to 1 within each cluster.
 
   `"equal"`
 
-  :   (default) 1/m per item - the scale as scored.
+  :   1/m per item: the scale as scored.
 
   `"strength"`
 
-  :   Mean absolute connection to the other own-cluster members in the
-      node-level network (what `aggregation = "loadings"` selects).
+  :   The item's mean absolute connection to the other members of its
+      cluster in the node-level network (what `aggregation = "loadings"`
+      selects), so items that anchor their cluster count more in its
+      score. This is Nestimate's own weighting, related in spirit to
+      network loadings (Christensen & Golino 2021) but not a
+      reimplementation of any EGA-family estimator. A cluster whose
+      within-cluster connections are all zero gets equal weights, with a
+      warning.
 
   `"eigen"`
 
-  :   Leading-eigenvector weights of the within-cluster block of the
-      node-level network - like strength but giving extra weight to
-      items connected to other well-connected items.
+  :   The leading eigenvector of the cluster's block of the node-level
+      network: like strength, with extra weight for items connected to
+      other well-connected items.
 
   `"pca"`
 
-  :   First principal component of the member items' correlation
-      matrix - a data-statistical weighting, blind to the estimated
-      network.
+  :   The first principal component of the member items' correlation
+      matrix: a weighting from the data, blind to the estimated network.
+      A correlation block with non-finite entries gives equal weights,
+      with a warning.
 
   `"factor"`
 
-  :   Standardized loadings of a one-factor model per cluster - the
-      classical latent-variable weighting. The extraction method is
-      chosen by `fa_method` and the correlation input respects
-      `cor_method` (so polychoric factor analysis of ordinal items is
-      one call). Clusters with fewer than 3 items (or non-converging
-      fits) fall back to `"pca"` with a warning.
+  :   The standardised loadings of a one-factor model per cluster, the
+      classical latent-variable weighting. `fa_method` sets the
+      extraction and the correlations follow `cor_method`, so polychoric
+      factor analysis of ordinal items is one call. A cluster with fewer
+      than 3 items, or whose factor fit fails, falls back to `"pca"`
+      with a warning.
 
   `"closeness"`, `"betweenness"`
 
-  :   Within-cluster closeness / betweenness centrality of the item in
-      the node-level network block (absolute weights). Betweenness can
-      be all-zero in densely connected clusters; equal weights are used
-      then, with a warning.
+  :   The item's closeness or betweenness centrality within its
+      cluster's block of the node-level network (absolute weights).
+      Betweenness can be zero for every item of a densely connected
+      cluster; equal weights are then used, with a warning, and the same
+      holds for all-zero closeness.
 
   `"expected_influence"`
 
-  :   Mean *signed* connection to the other own-cluster members
-      (Robinaugh et al. 2016) - like strength, but opposite-sign
-      connections subtract, and negative expected influence marks
-      reverse-keyed items.
+  :   The item's mean *signed* connection to the other members of its
+      cluster (Robinaugh et al. 2016): like strength, but opposite-sign
+      connections subtract, and a negative value marks a reverse-keyed
+      item.
 
   `"specificity"`
 
   :   The misfit margin: own-cluster strength minus the strongest
-      cross-cluster strength, floored at 0. Items that belong as much to
-      another cluster contribute nothing to their composite - the
-      weighting twin of the `misfit` diagnostic.
+      cross-cluster strength, floored at 0, so an item that belongs as
+      much to another cluster adds nothing to its score; the weighting
+      twin of the `misfit` flag. When no item of a cluster has a
+      positive margin, equal weights are used, with a warning.
 
   `"item_total"`
 
-  :   Corrected item-total correlation: each item against the mean of
-      the other (standardized) members - the classical
+  :   The corrected item-total correlation of each item with the mean of
+      the other (standardised, sign-corrected) members: the classical
       scale-construction weighting.
 
-  **Custom weightings:** `weighting` also accepts a *named numeric
-  vector* (one entry per item; absolute values are normalized within
-  each cluster, signs flip items when `signed = TRUE`) or a *function*
-  `function(W_block, data_block, nodes)` returning one numeric weight
-  per item, evaluated per cluster.
+  `weighting` also takes a *named numeric vector* with one entry per
+  item (its absolute values are normalised within each cluster and, when
+  `signed = TRUE`, its signs set the item signs after the orientation
+  described below), or a *function*
+  `function(W_block, data_block, nodes)` that returns one finite weight
+  per item, evaluated per cluster; a vector missing an item, or a
+  function returning anything else, raises an error.
 
-  Network-based and data-based weightings answer different questions;
-  comparing them is informative - divergence means the network's view of
-  the cluster differs from its latent-variable view. Schemes with
-  inherently non-negative weights (equal, closeness, betweenness,
-  specificity) keep the eigenvector-based item signs; sign-carrying
-  schemes (eigen, pca, factor, expected_influence, item_total, custom)
-  use their own.
+  Network-based and data-based weightings answer different questions,
+  and comparing them is informative: when they diverge, the network's
+  view of the cluster differs from its latent-variable view. The schemes
+  whose weights cannot be negative (`"equal"`, `"strength"`,
+  `"closeness"`, `"betweenness"`, `"specificity"`) keep the
+  eigenvector-based item signs; the sign-carrying ones (`"eigen"`,
+  `"pca"`, `"factor"`, `"expected_influence"`, `"item_total"`, a custom
+  vector or function) set the signs from their own values. Within each
+  cluster those values are oriented first, negated when they sum to a
+  negative number, so the sign carrying the larger total counts as
+  positive and only the items of the other sign are flipped: marking the
+  reverse-keyed items of a cluster negative works only when they do not
+  outweigh the rest in total.
 
 - cor_method:
 
-  Character. Correlation type for estimation from raw data: `"pearson"`
-  (default), `"spearman"`, or `"polychoric"` (needs lavaan; see
-  Details).
+  The correlation used when estimating from raw data: `"pearson"`
+  (default), `"spearman"` or `"polychoric"` (needs lavaan; see Details).
 
 - signed:
 
-  Logical. Flip reverse-keyed items in composites (default `TRUE`; see
-  Details).
+  Whether reverse-keyed items are flipped in the cluster scores (see
+  Details). Default `TRUE`.
 
 - id_col:
 
-  Character vector or NULL. Identifier column(s) to drop from data.frame
-  input before analysis (e.g., the `rid`/actor columns produced by
-  [`convert_sequence_format`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)`(format = "frequency")`,
-  whose output otherwise feeds this function directly as per-actor
-  behavior profiles). Same convention as the association estimators.
+  Identifier columns to drop from data-frame input before the analysis.
+  Default `NULL`. Use it for the id columns that
+  [`convert_sequence_format()`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)
+  adds with `format = "frequency"`, whose per-sequence counts otherwise
+  feed this function directly as behaviour profiles. A `rid` column is
+  left out of the node-level network without being listed, as in the
+  association estimators of
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  except with `cor_method = "polychoric"`, where it must be listed too;
+  any other id column, including the `.rid` a wide table gets, is read
+  as an item unless listed. A column not in the data raises an error; a
+  netobject ignores the argument.
 
 - fa_method:
 
-  Character. Extraction method for `weighting = "factor"`:
+  The extraction method for `weighting = "factor"`; ignored otherwise.
 
   `"ml"`
 
-  :   (default) Maximum likelihood
-      ([`stats::factanal`](https://rdrr.io/r/stats/factanal.html) on the
-      `cor_method`-consistent correlation matrix).
+  :   (default) Maximum likelihood,
+      [`stats::factanal()`](https://rdrr.io/r/stats/factanal.html) on
+      the correlation matrix that `cor_method` gives.
 
   `"paf"`
 
-  :   Iterated principal axis factoring (SMC start, communalities
-      iterated on the reduced correlation matrix).
+  :   Iterated principal axis factoring, starting from the squared
+      multiple correlations and iterating the communalities on the
+      reduced correlation matrix.
 
   `"minres"`
 
-  :   Minimum residual / unweighted least squares (uniquenesses
-      optimized to minimize squared off-diagonal residuals).
+  :   Minimum residual (unweighted least squares): the uniquenesses are
+      chosen to minimise the squared off-diagonal residuals.
 
   `"cfa"`
 
-  :   One-factor confirmatory model in lavaan (standardized loadings);
-      with `cor_method = "polychoric"` the items are declared ordered,
-      giving the categorical (DWLS) factor model.
+  :   A one-factor confirmatory model fitted with
+      [`lavaan::cfa()`](https://rdrr.io/pkg/lavaan/man/cfa.html)
+      (standardised loadings); with `cor_method = "polychoric"` the
+      items are declared ordered, which gives the categorical (DWLS)
+      factor model.
 
-  On well-behaved unidimensional clusters the four agree closely;
-  divergence indicates Heywood-prone or non-unidimensional clusters.
+  On well-behaved unidimensional clusters the four agree closely; a
+  divergence points to a cluster prone to Heywood cases or not
+  unidimensional.
 
 - ...:
 
-  Further arguments forwarded directly to the `fa_method` backend,
-  exactly as that backend spells them (requires `weighting = "factor"`):
-  lavaan arguments for `"cfa"` (`estimator = "WLSMV"`,
-  `missing = "fiml"`, `se = "robust"`, ...),
+  Further arguments passed to the `fa_method` backend, spelled as that
+  backend spells them, and allowed only with `weighting = "factor"`
+  (otherwise they raise an error, as does an unnamed one):
+  [`lavaan::cfa()`](https://rdrr.io/pkg/lavaan/man/cfa.html) arguments
+  for `"cfa"` (`estimator = "WLSMV"`, `missing = "fiml"`,
+  `se = "robust"`, ...),
   [`stats::factanal()`](https://rdrr.io/r/stats/factanal.html) arguments
-  for `"ml"`, and `max_iter` / `tol` for `"paf"`. Arguments managed
-  internally (`model`, `data`, `covmat`, `n.obs`, `factors`) are ignored
-  with a warning - the model is always the one-factor model per cluster,
-  because the composite needs exactly one weight per item. In
-  `plot.mcml_pc()`, `print.mcml_pc()` and `summary.mcml_pc()`:
-  Additional arguments (ignored).
+  for `"ml"`, and `max_iter` / `tol` for `"paf"` (other names are not
+  used there); `"minres"` uses none. `estimator` is lavaan's and raises
+  an error for any other `fa_method`, since the network estimator is set
+  by `method`. Arguments the backend call sets itself (`model` and
+  `data` for `"cfa"`; `covmat`, `n.obs`, `factors`, `x` and `data` for
+  `"ml"`; `R` for `"paf"` and `"minres"`) are dropped with a warning:
+  the model is always the one-factor model per cluster, because the
+  score needs exactly one weight per item. For the
+  [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  ignored.
 
 - digits:
 
-  In `print.mcml_pc()`: Number of digits to display (default 3). In
-  `plot.mcml_pc()`: Number of digits for tile labels (default 2).
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: the
+  decimal places of the printed macro weights (default `3`) or of the
+  tile labels (default `2`).
 
 - object:
 
   For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `mcml_pc`.
+  `mcml_pc` object.
 
 ## Value
 
-An object of class `"mcml_pc"` containing:
+An `mcml_pc` object. [`print()`](https://rdrr.io/r/base/print.html)
+shows the aggregation, estimator, cluster sizes, the misfit and
+flipped-item counts (when there are any) and the macro weights;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns one row per
+macro edge; [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+draws the macro weights as a heatmap.
+[`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
+gives the item table,
+[`composites()`](https://pak.dynasite.org/Nestimate/reference/composites.md)
+the cluster scores of a score path,
+[`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
+the macro network,
+[`as_networks()`](https://pak.dynasite.org/Nestimate/reference/as_networks.md)
+the macro and within-cluster networks as a `netobject_group`,
+[`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
+the stability of the composite weights, and
+[`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html)
+draws the two-layer network. The object's fields:
 
 - macro:
 
-  Cluster-level netobject (k x k, undirected).
+  The cluster-level netobject (k x k, undirected).
 
 - clusters:
 
-  Named list of within-cluster netobjects (`NULL` for singleton
-  clusters).
+  Named list of within-cluster netobjects (`NULL` for a singleton
+  cluster).
 
 - cluster_members:
 
-  Named list of member node labels.
+  Named list of each cluster's node labels.
 
 - loadings:
 
-  Tidy item-diagnostic data frame (one row per node): `node`, `cluster`,
-  `loading` (signed own-cluster), `weight`, `sign`, `max_cross`,
-  `cross_cluster`, `misfit`. `NULL` only when no node-level network is
-  available.
+  The item table that
+  [`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
+  returns, one row per node.
 
 - node_network:
 
-  The node-level netobject the aggregation was based on (kept for
-  diagnostics and `loading_stability`).
+  The node-level netobject the aggregation was based on, kept for the
+  diagnostics and
+  [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md).
 
 - data:
 
-  The raw data (data.frame) when available, else `NULL`.
+  The raw data as a data frame when available, else `NULL`.
+
+- composites:
+
+  The cluster scores of a score path, else `NULL`.
 
 - meta:
 
   List: `aggregation` (the name as the caller spelled it), `method`,
-  `within`, `weighting`, `weighting_spec` (the actual scheme, custom
-  vector or function), `fa_method`, `fa_args`, `scale`, `cor_method`,
-  `signed`, `n_nodes`, `n_clusters`, `cluster_sizes`, `n_misfit`,
-  `n_flipped`, `directed = FALSE`, `source = "pc"`,
+  `within`, `weighting`, `weighting_spec` (the scheme itself, a custom
+  vector or function included), `fa_method`, `fa_args`, `scale`,
+  `cor_method`, `signed`, `n_nodes`, `n_clusters`, `cluster_sizes`,
+  `n_misfit`, `n_flipped`, `directed = FALSE`, `source = "pc"` and
   `experimental = TRUE`. `method` and `weighting` are `NA` on the
-  descriptive paths that re-estimate nothing, and `fa_method`/`fa_args`
-  are set only for `weighting = "factor"`.
+  descriptive paths, which re-estimate no macro network, and `fa_method`
+  / `fa_args` are set only for `weighting = "factor"`.
 
-In `print.mcml_pc()`: `x`, invisibly.
-
-In `summary.mcml_pc()`: Tidy data frame with one row per macro edge
-(upper triangle), columns `from`, `to`, `weight`.
-
-In `plot.mcml_pc()`: A ggplot object.
+For the methods: [`print()`](https://rdrr.io/r/base/print.html) returns
+`x` invisibly; [`summary()`](https://rdrr.io/r/base/summary.html)
+returns a data frame with one row per macro edge (the upper triangle)
+and columns `from`, `to` and `weight`;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
+`ggplot`.
 
 ## Details
 
-**Item diagnostics.** Whenever raw data or a node-level network is
-available, every item's connection strength to *every* cluster is
-computed. The
+**Item diagnostics.** Every item's mean absolute connection to the other
+members of *every* cluster is computed from the node-level network.
 [`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
-table reports, per item: its signed own-cluster loading, its composite
-weight, its strongest cross-cluster loading, and a `misfit` flag set
-when the cross-cluster loading exceeds the own-cluster loading -
-evidence the item is assigned to the wrong cluster. Misfit items trigger
-a warning; every aggregation silently inherits a bad membership, so fix
-the assignment rather than ignoring the flag.
+reports, per item, its own-cluster loading (signed by the eigenvector
+orientation; a sign-carrying weighting is recorded in the `sign` column
+instead), its composite weight, its strongest cross-cluster loading and
+the cluster that loading points to, and a `misfit` flag set when the
+cross-cluster loading exceeds the own-cluster loading. A singleton
+cluster has no within-cluster connections, so its item is never flagged.
 
-**Reverse-keyed items.** With `signed = TRUE` (default), items whose
-summed within-cluster association is negative are flipped (their
-standardized values enter composites with weight sign -1), so a
-reverse-keyed item reinforces its cluster composite instead of
-cancelling it. Flips are reported in the `sign` column and via a
-warning.
+**Reverse-keyed items.** With `signed = TRUE` (default), the item signs
+come from the leading eigenvector of the within-cluster block of the
+node-level network, oriented so most items are positive. An item with a
+negative sign enters its cluster score with sign -1, so a reverse-keyed
+item reinforces its cluster score instead of cancelling it. Flips are
+reported in the `sign` column of
+[`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
+and, on the score paths, in a warning. On the score paths a
+sign-carrying weighting sets the signs from its own values instead (see
+`weighting`).
 
-**Missing data.** Composites are per-row weighted means over the
-*observed* members (weights renormalized per row); rows with no observed
-member yield `NA` and are dropped by the estimator with a message.
+**Missing data.** Cluster scores are row-wise weighted means over the
+*observed* members, with the weights renormalised per row; a row with no
+observed member is `NA` and the estimator drops it with a message.
 Node-level estimation applies the estimators' own complete-case
-handling.
+handling, and `"escoufier"` and `"cancor"` use the rows complete on
+every item.
 
-**Ordinal items.** `cor_method = "polychoric"` (requires the lavaan
+**Ordinal items.** `cor_method = "polychoric"` (needs the lavaan
 package) estimates the node-level and within-cluster networks from
-polychoric correlations - appropriate for Likert items. Composites are
-continuous sums, so the macro re-estimation uses Pearson correlations of
-the composites regardless.
+polychoric correlations, which suits Likert items. Cluster scores are
+continuous, so the macro network is always re-estimated from their
+Pearson correlations.
 
-**Within-cluster networks** follow `within`: `"reestimate"` (default)
-re-fits the estimator on the member columns alone - the honest
-conditional structure of the subsystem; `"subnetwork"` slices the
-node-level weight matrix and is descriptive (for pcor/glasso it retains
-conditioning on out-of-cluster nodes). Modes without raw data force
-`"subnetwork"`. Singleton clusters get no within network (`NULL`).
-
-**Uncertainty.** The composite/loadings macro network is a full
-netobject carrying its composite data, so
-[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)`(macro_network(fit))`
-(edge-weight CIs) and
-[`vertex_bootstrap`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)`(macro_network(fit))`
-(network-level CIs) work directly;
-[`vertex_compare`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)`(macro_network(fit1), macro_network(fit2))`
-compares two groups.
-[`loading_stability`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
-quantifies how stable the composite weights themselves are under case
-resampling.
+**Within-cluster networks** follow `within`. `"reestimate"` re-fits the
+estimator on the member columns alone, giving the conditional structure
+of the subsystem; `"subnetwork"` slices the node-level weight matrix and
+is descriptive (for `pcor` and `glasso` it keeps the conditioning on
+items outside the cluster). Input without raw data always uses
+`"subnetwork"`. A singleton cluster gets no within-cluster network
+(`NULL`).
 
 All constituent networks are undirected (`meta$directed = FALSE`), so
-renderers that auto-detect directedness (e.g.
-[`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html))
-draw the result without arrowheads.
+renderers that detect directedness, such as
+[`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html),
+draw them without arrowheads.
 
 ## Methods
 
-- `plot.mcml_pc()`: Heatmap of the macro (cluster-level) weights with
-  the package's diverging palette. For the two-layer network rendering
-  use
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+  macro (cluster-level) weights as a heatmap in the package's diverging
+  palette, with each weight printed in its tile. For the two-layer
+  network drawing use
   [`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html),
   which accepts `mcml_pc` objects and draws them undirected.
 

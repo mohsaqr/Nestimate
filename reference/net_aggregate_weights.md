@@ -1,7 +1,14 @@
 # Aggregate Edge Weights
 
-Aggregates a vector of edge weights using various methods. Compatible
-with igraph's edge.attr.comb parameter.
+`net_aggregate_weights()` reduces a vector of edge weights to one
+number: their sum, mean, median, maximum, minimum, product, density or
+geometric mean. Missing and zero weights are removed first, so every
+method works on the edges that are present.
+[`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
+and
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+use it to combine the edges between two clusters into one cluster-level
+weight.
 
 ## Usage
 
@@ -13,34 +20,36 @@ net_aggregate_weights(w, method = "sum", n_possible = NULL)
 
 - w:
 
-  Numeric vector of finite edge weights. `NA` and zero weights are
-  excluded before aggregation, so every method (including `"density"`,
-  `"min"`, `"max"`, `"prod"`, `"geomean"`) operates on the non-zero,
-  non-`NA` subset.
+  The edge weights, a numeric vector. `NA` is allowed and removed with
+  the zeros; an infinite value raises an error.
 
 - method:
 
-  Single aggregation method: "sum", "mean", "median", "max", "min",
-  "prod", "density", or "geomean". Because zeros are stripped first,
-  `"density"` (`sum(w) / n_possible`) and `"mean"`
-  (`sum(w) / number of non-zero edges`) return the *same* value whenever
-  the block is fully dense – i.e. when the count of non-zero edges
-  equals `n_possible`. They diverge only when zero/`NA` edges are
-  present (then `"density"` divides by the larger `n_possible`, `"mean"`
-  by the smaller non-zero count).
+  How to combine the weights: `"sum"` (default), `"mean"`, `"median"`,
+  `"max"`, `"min"`, `"prod"`, `"density"` or `"geomean"`. A single
+  value; any other raises an error. `"density"` divides the sum by
+  `n_possible`, and `"mean"` by the number of non-zero weights, so the
+  two agree when every possible edge is present, and `"density"` is the
+  smaller when some are zero or missing. `"geomean"` is the geometric
+  mean of the positive weights; negative weights are left out, and the
+  result is `0` when none is positive.
 
 - n_possible:
 
-  Optional single finite numeric number of possible edges for density
-  calculation. When omitted, `"density"` falls back to
-  `sum(w) / length(w)` on the non-zero subset (equivalent to `"mean"`);
-  supply `n_possible` (e.g. the block size `n_i * n_j`) for a true edge
-  density.
+  For `method = "density"`: the number of possible edges, such as the
+  block size `n_i * n_j` of two clusters, a single finite number.
+  Default `NULL`, under which (as with a value of 0 or less) `"density"`
+  returns the mean of the non-zero weights. Other methods ignore it.
 
 ## Value
 
-A single numeric value: the chosen aggregation of the non-zero, non-`NA`
+A single number: the chosen aggregate of the non-zero, non-missing
 weights, or `0` when none remain.
+
+## Details
+
+`"sum"`, `"prod"`, `"min"`, `"max"`, `"mean"` and `"median"` mean what
+they mean in igraph's `edge.attr.comb` argument.
 
 ## Examples
 

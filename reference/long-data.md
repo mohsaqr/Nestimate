@@ -1,7 +1,11 @@
 # Human-AI Vibe Coding Interaction Data (Long Format)
 
-Coded interaction sequences from 429 human-AI pair programming sessions
-across 34 projects, in long format.
+Coded turns from 429 human-AI pair-programming ("vibe coding") sessions
+across 34 projects, held between 5 February and 8 March 2026, in long
+format with one row per code. `human_long` holds the codes of the human
+turns and `ai_long` those of the AI turns (428 of the sessions have AI
+turns). The two data frames share their columns and their sessions, and
+interleave on `order_in_session`.
 
 ## Usage
 
@@ -13,45 +17,59 @@ ai_long
 
 ## Format
 
-Data frames in long format with 9 columns:
+Two data frames with the same 9 columns:
 
 - message_id:
 
-  Integer. Turn index.
+  Integer identifier of the message (turn); the codes of one message
+  share it, and no identifier occurs in both data frames.
 
 - project:
 
-  Character. Project identifier (Project_1 .. Project_34).
+  Character project identifier, `Project_1` to `Project_34`.
 
 - session_id:
 
-  Character. Unique session hash.
+  Character session identifier, a 12-character hash.
 
 - timestamp:
 
-  Integer. Unix timestamp for ordering.
+  Integer Unix time (seconds) of midnight, UTC+2, on `session_date`. It
+  has day resolution, so the rows of one day share it;
+  `build_network(time = "timestamp")` keeps tied rows in row order,
+  which follows `order_in_session`. With the default `time_threshold`
+  (900 seconds), each change of day also starts a new sequence, so the
+  84 sessions that run over more than one day are split (526 sequences
+  instead of 429); to keep every session whole, use
+  `time = "order_in_session"`.
 
 - session_date:
 
-  Character. Date of the session (YYYY-MM-DD).
+  Character date of the row (`YYYY-MM-DD`); 84 sessions run over more
+  than one day.
 
 - code:
 
-  Character. Interaction code. The two data frames use disjoint code
-  sets – 9 labels in `human_long`, 8 in `ai_long`, 17 in total.
+  Character interaction code. The two data frames use disjoint code
+  sets: 9 labels in `human_long` (Command, Correct, Frustrate, Inquire,
+  Interrupt, Refine, Request, Specify, Verify) and 8 in `ai_long` (Ask,
+  Delegate, Execute, Explain, Investigate, Plan, Repair, Report), 17 in
+  total.
 
 - cluster:
 
-  Character. High-level cluster. `human_long` uses Directive, Evaluative
-  and Metacognitive; `ai_long` uses Action, Communication and Repair.
+  Character high-level cluster of the code. `human_long` uses Directive,
+  Evaluative and Metacognitive; `ai_long` uses Action, Communication and
+  Repair.
 
 - code_order:
 
-  Integer. Order of the code within the session.
+  Integer order of the code within its message, starting at 1.
 
 - order_in_session:
 
-  Integer. Absolute turn order within the session.
+  Integer position of the row in its session, counting the rows of both
+  data frames together.
 
 |              |                               |
 |--------------|-------------------------------|

@@ -1,11 +1,17 @@
 # Coerce a network object to a Nestimate netobject
 
-Promotes a psychnets result (class `c("psychnet", "cograph_network")`)
-or any bare `cograph_network` to the dual-class
-`c("netobject", "cograph_network")` used throughout Nestimate, so it
-dispatches to the package's verbs (`centrality()`,
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html), bootstrap,
-reliability, ...). A `netobject` is returned unchanged.
+`as_netobject()` converts a psychnets result (class
+`c("psychnet", "cograph_network")`) or any bare `cograph_network` into
+the `c("netobject", "cograph_network")` object the rest of Nestimate
+reads, so it can be passed to
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+and the other verbs that read a network. The resampling verbs
+([`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+[`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md))
+need the source data, which a psychnets result does not carry, so build
+the network with
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+for those. A `netobject` is returned unchanged.
 
 ## Usage
 
@@ -29,19 +35,30 @@ as_netobject(x)
 
 - x:
 
-  A `psychnet` object, a `cograph_network`, or a `netobject`.
+  The network to convert: a `psychnet` object, a `cograph_network` or a
+  `netobject`. Any other object raises an error.
 
 ## Value
 
-A `c("netobject", "cograph_network")` object.
+A `netobject` (class `c("netobject", "cograph_network")`), read by the
+same verbs as one from
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md);
+[`validate_netobject()`](https://pak.dynasite.org/Nestimate/reference/validate_netobject.md)
+checks its structure.
 
 ## Details
 
-The psychnet method re-derives the integer-indexed edge table that
-Nestimate expects (psychnet stores character-labelled edges), preserves
-the estimator name in `$method`, and parks every psychnet-specific
-field - including the graphical-lasso `$kkt` optimality certificate -
-under `$meta$psychnet` so nothing is lost in translation.
+For a `psychnet`, the edge table is rebuilt with integer node indices (a
+`psychnet` stores character-labelled edges), the estimator name is kept
+in `method`, and every field specific to the `psychnet`, including the
+graphical-lasso `kkt` optimality certificate, is kept in the `psychnet`
+entry of `meta`, so nothing is lost in the conversion.
+
+For a bare `cograph_network`, the method is read from the `tna` entry of
+its `meta`; without one, a symmetric weight matrix is taken as
+`"co_occurrence"` and any other as `"relative"`. A missing `directed`
+field is read as `TRUE`. Numeric state codes in the stored data of a
+converted tna model are decoded to their labels.
 
 ## See also
 

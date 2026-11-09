@@ -1,39 +1,42 @@
 # Bayesian Dirichlet-Multinomial comparison of two transition networks
 
-Compares two transition networks estimated by
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-(method `"relative"` or `"frequency"`) using a Bayesian
-Dirichlet-Multinomial model. The outgoing transitions from each source
-state are modelled as a Multinomial draw with a Dirichlet prior on the
-transition probabilities. With a Jeffreys prior the posterior for the
-transitions out of state \\i\\ is \\\mathrm{Dirichlet}(c_i + \alpha)\\,
-where \\c_i\\ are the observed outgoing counts. Each edge probability is
-then marginally Beta-distributed, so the posterior mean difference
-between the two networks is available in closed form and a credible
-interval is obtained by Monte Carlo.
+`bayes_compare()` compares two transition networks edge by edge and
+returns, for every transition, the posterior mean difference in
+transition probability, a credible interval, and the probability that
+the difference lies on its side of zero. The transitions out of each
+state are modelled as a multinomial draw with a Dirichlet prior on the
+transition probabilities, so the posterior for the transitions out of
+state \\i\\ is \\\mathrm{Dirichlet}(c_i + \alpha)\\, where \\c_i\\ are
+the observed outgoing counts and \\\alpha\\ is `prior`. Each edge
+probability is then marginally Beta-distributed: the posterior mean
+difference has a closed form, and the credible interval comes from Monte
+Carlo draws. It takes two networks estimated by
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+with method `"relative"` or `"frequency"` (for either, the difference is
+in transition probabilities estimated from the counts), a group of
+networks, or two edge-betweenness networks from
+[`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
+(see *Details*). An `mcml` object raises an error of class
+`nestimate_bad_input`: its layers hold different states and carry no
+transition counts.
 
-This is a complement to
-[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md):
-the permutation test answers "is this difference more extreme than
-chance?"; the Bayesian comparison answers "what is the plausible range
-of the true difference, and how precisely is it estimated given the
-counts?". An edge with few outgoing transitions from its source state
-yields a wide credible interval even when its row-normalised probability
-looks decisive.
-
-`bayes_compare()` also accepts two
-[`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
-objects (source method `"relative"` only). Edge betweenness is a
-nonlinear function of the whole transition matrix, so instead of Beta
-marginals the full transition matrix is drawn from each group's row-wise
-Dirichlet posterior and edge betweenness is recomputed on every draw -
-the Bayesian analogue of
-[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)'s
-edge-betweenness dispatch. The result summarises the posterior of
-`EB(x) - EB(y)`: `diff` is the posterior mean difference,
-`prob_x`/`prob_y` hold the posterior mean betweenness matrices, and
-`observed_diff` the plug-in difference of the two input networks. Both
-inputs must use the same `invert` setting.
+The comparison complements
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md):
+the permutation test asks whether a difference is more extreme than
+chance, and this comparison gives the plausible range of the difference
+and how precisely the counts estimate it. An edge whose source state has
+few outgoing transitions gets a wide interval even when its
+row-normalised probabilities look far apart. An edge is flagged as
+credibly different when its interval excludes zero and its mean and
+nearest bound pass `mean_threshold` and `bound_threshold`; the
+thresholds are conventions, and no correction is made for comparing many
+edges at once. The reported `p_value` (the Bayesian p-equivalent \\2(1 -
+p_d)\\, with \\p_d\\ the probability of direction) summarises posterior
+mass and is not a frequentist p-value. The model treats every transition
+as an independent draw, so it does not account for transitions being
+nested in sequences, which a permutation of sequences with
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+respects.
 
 ## Usage
 
@@ -69,96 +72,129 @@ summary(object, ...)
 
 - x:
 
-  A `netobject` (from
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)),
-  a `netobject_group`, an `mcml` object, or a
-  [`net_edge_betweenness`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
-  object. Must use a transition method (`"relative"` / `"frequency"` and
-  their aliases). For the [`print()`](https://rdrr.io/r/base/print.html)
-  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
-  an object of class `net_bayes` or `net_bayes_group`.
+  The first network: a `netobject` estimated with `"relative"` or
+  `"frequency"` or one of their aliases, a `netobject_group`, or a
+  `net_edge_betweenness` object. A bare `cograph_network` is recounted
+  from the sequences it carries, and used only when they reproduce its
+  weights; otherwise, and for an `mcml`, an error of class
+  `nestimate_bad_input` is raised. Both networks must use the same
+  method and hold the same nodes; any other method raises an error,
+  because the model needs transition counts. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_bayes`, or for [`print()`](https://rdrr.io/r/base/print.html) a
+  `net_bayes_group`.
 
 - y:
 
-  A second object of the same kind as `x`, or `NULL`. When `x` is a
-  `netobject_group` and `y` is `NULL`, all pairwise comparisons among
-  the groups are returned.
+  The second network, of the same kind as `x`. Default `NULL`: with a
+  `netobject_group` as `x`, every pair of its groups is compared. With
+  two `netobject_group`s, the groups sharing a name are compared, and an
+  error is raised when none do.
 
 - prior:
 
-  Numeric. Dirichlet prior concentration added to every cell (default
-  `0.5`, the Jeffreys prior). Use `1` for a uniform (Laplace) prior.
+  The Dirichlet concentration added to every cell of the count matrices,
+  a positive number. Default `0.5`, the Jeffreys prior; `1` gives a
+  uniform (Laplace) prior. Every cell gets it, so a transition observed
+  in neither network still has a small posterior probability.
 
 - draws:
 
-  Integer. Number of Monte Carlo posterior draws used for the credible
-  intervals (default `10000`).
+  The number of Monte Carlo posterior draws behind the credible
+  intervals, at least 2. Default `10000`. For edge-betweenness networks
+  the betweenness is recomputed on every draw, so time grows with
+  `draws`.
 
 - ci:
 
-  Numeric in (0, 1). Credible interval mass (default `0.95`).
+  The mass of the equal-tailed credible interval, a number between 0
+  and 1. Default `0.95`.
 
 - mean_threshold:
 
-  Numeric. An edge is flagged significant only if the absolute posterior
-  mean difference exceeds this (default `0.01`).
+  The absolute posterior mean difference an edge must exceed to be
+  flagged as credibly different. Default `0.01`, on the
+  transition-probability scale.
 
 - bound_threshold:
 
-  Numeric. An edge is flagged significant only if the credible-interval
-  bound nearest zero exceeds this in absolute value (default `0.001`).
-  Guards against differences that are detectable but negligibly small.
+  The absolute value the interval bound nearest zero must exceed for an
+  edge to be flagged. It guards against differences that are detectable
+  but negligibly small. Default `0.001`.
 
 - seed:
 
-  Integer or NULL. RNG seed for reproducible credible intervals.
+  An integer that makes the draws reproducible; the session's own random
+  stream is left as it was. Default `NULL`. For a group, it is set again
+  before each comparison.
 
 - ...:
 
-  In `plot.net_bayes()`: Additional arguments passed to
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): further
+  arguments for
   [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
-  when cograph is available. In `print.net_bayes()`,
-  `print.net_bayes_group()`, `summary.net_bayes()` and
-  `summary.net_bayes_group()`: Additional arguments (ignored).
+  when cograph is installed (such as `weight_digits`, the digits the
+  drawn differences are rounded to, default 2, or `edge_label_digits`,
+  the digits of the edge labels, default 3); otherwise ignored. The
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods ignore it.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_bayes` or `net_bayes_group`.
+  For [`summary()`](https://rdrr.io/r/base/summary.html): a `net_bayes`
+  or `net_bayes_group`.
 
 - significant_only:
 
-  Logical. Show only credibly-different edges (default `TRUE`).
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): whether
+  to draw only the edges flagged as credibly different. Default `TRUE`.
+  When no edge is left to draw, an error suggests
+  `significant_only = FALSE`.
 
 - title:
 
-  Optional plot title.
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the plot
+  title. Default `NULL`, which gives `"Bayesian network difference"`
+  (with cograph) or a title naming the posterior mean difference
+  (without it).
 
 ## Value
 
-An object of class `c("net_bayes", "netdifference", "net_permutation")`.
-It carries the same fields as a
-[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
-result, so it is a drop-in wherever a `net_permutation` is consumed, and
-also carries a `netdifference` difference matrix for cograph difference
-plotting, plus Bayesian extras:
+A `net_bayes` object (class
+`c("net_bayes", "netdifference", "net_permutation")`), or, for a
+`netobject_group` input, a `net_bayes_group`: a list of `net_bayes`
+objects named by comparison (`"A vs B"`), or by group name when two
+groups are compared. [`print()`](https://rdrr.io/r/base/print.html)
+shows the method, the prior, draws, interval and thresholds, and the
+numbers of nodes, of edges compared and of edges credibly different (for
+a group, it lists the comparisons);
+[`summary()`](https://rdrr.io/r/base/summary.html) returns one row per
+edge observed in at least one network (for a group, with a `comparison`
+column); and [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+draws the difference network. A `net_bayes` carries the same fields as a
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+result, so it is accepted wherever a `net_permutation` is, and also
+carries a difference matrix for the `netdifference` verbs
+([`as_netdifference()`](https://pak.dynasite.org/Nestimate/reference/as_netdifference.md),
+cograph's difference plots). Its fields:
 
 - x, y:
 
-  The two input `netobject`s.
+  The two input networks.
 
 - diff:
 
   Posterior mean difference matrix (`prob_x - prob_y`); the analogue of
-  the permutation observed difference.
+  the permutation test's observed difference.
 
 - difference_matrix:
 
-  Alias of `diff` for cograph `netdifference` helpers.
+  The same matrix as `diff`, for cograph's `netdifference` helpers.
 
 - diff_sig:
 
-  Difference where `sig`, else 0.
+  The difference where `sig` is `TRUE`, else 0.
 
 - p_values:
 
@@ -167,7 +203,8 @@ plotting, plus Bayesian extras:
 
 - effect_size:
 
-  Posterior mean difference over its posterior SD.
+  Posterior mean difference over its posterior standard deviation (0
+  where that is 0).
 
 - ci_lower, ci_upper:
 
@@ -175,61 +212,76 @@ plotting, plus Bayesian extras:
 
 - p_difference:
 
-  Probability of the difference: the share of posterior mass on the
-  dominant side of zero, in \\\[0.5, 1\]\\ (\\P(\mathrm{High} \>
-  \mathrm{Low})\\ for a positive difference).
+  Probability of direction: the share of posterior mass on the dominant
+  side of zero, in \\\[0.5, 1\]\\.
 
 - p_bayes:
 
-  Alias of `p_values`: the two-sided Bayesian p-*equivalent*
+  The same matrix as `p_values`: the two-sided Bayesian p-*equivalent*
   \\2(1-\mathrm{p\\difference})\\. It summarises posterior mass, not a
   frequentist tail probability, so it is not a p-value and should not be
   reported as one.
 
 - prob_x, prob_y:
 
-  Posterior mean transition-probability matrices.
+  Posterior mean transition-probability matrices (posterior mean
+  betweenness for edge-betweenness input).
 
 - sig:
 
-  Logical significance matrix (CI excludes zero, mean and nearest bound
-  exceed their thresholds).
+  Logical matrix: the interval excludes zero and the mean and nearest
+  bound exceed their thresholds.
 
 - summary:
 
-  Long-format data frame whose columns are a superset of
-  `summary.net_permutation`
-  (`from, to, weight_x, weight_y, diff, effect_size, p_value, sig`) plus
-  `count_x, count_y, ci_lower, ci_upper, ci_width, p_difference`.
+  The per-edge table that
+  [`summary()`](https://rdrr.io/r/base/summary.html) returns, with the
+  columns of a `net_permutation` summary (`from`, `to`, `weight_x`,
+  `weight_y`, `diff`, `effect_size`, `p_value`, `sig`) plus `count_x`,
+  `count_y`, `ci_lower`, `ci_upper`, `ci_width` and `p_difference`.
 
 - method, iter, alpha, paired, adjust:
 
   Permutation-compatible settings (`iter = draws`, `alpha = 1 - ci`,
-  `paired = FALSE`, `adjust = "none"`).
+  `paired = FALSE`, `adjust = "none"`); `method` is `"edge_betweenness"`
+  for edge-betweenness input.
 
 - prior, draws, ci, mean_threshold, bound_threshold:
 
-  Bayesian settings.
+  The Bayesian settings.
 
-In `print.net_bayes()` and `print.net_bayes_group()`: The input object,
-invisibly.
+- observed_diff, source_method, edge_betweenness:
 
-In `summary.net_bayes()`: A data frame with edge-level posterior
-differences and intervals.
+  For edge-betweenness input only: the plug-in difference, the source
+  networks' method and the betweenness settings.
 
-In `plot.net_bayes()`: Invisibly, the cograph network returned by
-[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
-when cograph is available; otherwise a fallback `ggplot` object.
+For the [`print()`](https://rdrr.io/r/base/print.html) methods: the
+input, invisibly. For
+[`summary()`](https://rdrr.io/r/base/summary.html): the per-edge data
+frame described under the `summary` field; for a `net_bayes_group`, the
+tables of every comparison stacked, with a `comparison` column first.
+For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): with
+cograph installed, it draws the difference network with
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html),
+each edge labelled with its posterior mean difference and credible
+interval, and returns the `cograph_network` invisibly; without cograph,
+it returns a `ggplot` chord diagram in which colour gives the direction
+of the difference and width its size.
 
-In `summary.net_bayes_group()`: A combined data frame with a
-`comparison` column.
+## Details
 
-## Methods
-
-- `plot.net_bayes()`: Draws a differential transition network as a
-  directed chord diagram. Edge colour encodes the signed posterior mean
-  difference (`x` stronger vs `y` stronger) and edge width its
-  magnitude.
+For two `net_edge_betweenness` objects (source method `"relative"`
+only), edge betweenness is a nonlinear function of the whole transition
+matrix, so Beta marginals do not apply. Instead the full transition
+matrix is drawn from each network's row-wise Dirichlet posterior and
+edge betweenness is recomputed on every draw, the Bayesian analogue of
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+on edge-betweenness networks. The result summarises the posterior of
+\\EB(x) - EB(y)\\: `diff` is the posterior mean difference, `prob_x` and
+`prob_y` the posterior mean betweenness matrices, and `observed_diff`
+the plug-in difference of the two input networks. Both inputs must use
+the same `invert` setting, and `mean_threshold` and `bound_threshold`
+are then on the betweenness scale.
 
 ## References
 

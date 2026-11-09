@@ -1,8 +1,11 @@
 # Discover Sequential Patterns
 
-Finds the ordered patterns that occur in a set of sequences and reports,
-for each one, how often it occurs, how many sequences contain it, and
-its lift. Three pattern types are supported:
+`sequence_patterns()` finds the ordered patterns of states that occur in
+a set of sequences and returns one row per pattern with how often it
+occurs, how many sequences contain it, and its lift. It reads sequences
+in every form
+[`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+accepts, and finds three kinds of pattern:
 
 - `"ngram"`:
 
@@ -17,8 +20,20 @@ its lift. Three pattern types are supported:
 
   Runs of `len` identical states, e.g. `A->A->A`.
 
-A window that contains a missing value is skipped, so a pattern never
-spans a gap or the end of a sequence.
+A `pattern` template searches for the instances of one pattern instead,
+and `group` adds a test of whether the share of sequences containing a
+pattern differs between groups (see *Group test*).
+
+Support and lift describe the sequences at hand. A lift above 1 says the
+states of a pattern occur in this order in more sequences than their
+separate presence predicts; it does not account for the transition
+structure, so a pattern that the transition probabilities make likely
+can have a lift above 1. Many patterns are searched at once, so read the
+group test's `p_adj`, not `p_value`, and its effect sizes beside them.
+To relate patterns to an outcome, use
+[`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md);
+to compare how often each run of states occurs in each group,
+[`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md).
 
 ## Usage
 
@@ -39,6 +54,9 @@ sequence_patterns(
   adjust = "BH",
   top = NULL,
   cols = NULL,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
   ...
 )
 ```
@@ -47,104 +65,126 @@ sequence_patterns(
 
 - x:
 
-  Sequence data, in any form accepted by
-  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md):
-  prepared data, a long event log (with `action`), a wide data frame or
-  character matrix, a `netobject`, `netobject_group` or `tna` model.
+  The sequences, in any form
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  accepts: prepared data, a long event log (with `action`), a wide data
+  frame or character matrix, a `netobject`, `netobject_group` or `tna`
+  model.
 
 - type:
 
-  Pattern type: `"ngram"` (default), `"gapped"` or `"repeated"`.
+  The kind of pattern to find: `"ngram"` (default), `"gapped"` or
+  `"repeated"`. Ignored when `pattern` is given.
 
 - len:
 
-  Integer vector of pattern lengths for `"ngram"` and `"repeated"`.
-  Default `2:5`.
+  The pattern lengths, in states, for `"ngram"` and `"repeated"`:
+  positive whole numbers. Default `2:5`.
 
 - gap:
 
-  Integer vector of gap sizes for `"gapped"`. Default `1:3`.
+  The gap sizes, in positions, for `"gapped"`: positive whole numbers.
+  Default `1:3`.
 
 - min_freq:
 
-  Minimum number of occurrences. Default `2`.
+  The fewest times a pattern must occur to be kept, at least 1. Default
+  `2`.
 
 - min_support:
 
-  Minimum share of sequences containing the pattern. Default `0.01`.
+  The smallest share of sequences that must contain a pattern for it to
+  be kept, between 0 and 1. Default `0.01`.
 
 - start, end:
 
-  Optional character vectors of states. Keep only patterns that begin
-  (`start`) or end (`end`) with one of them.
+  States a pattern must begin (`start`) or end (`end`) with, one of them
+  at least; wildcards do not count. Default `NULL` (any).
 
 - contain:
 
-  Optional character vector of states. Keep only patterns that include
-  at least one of them.
+  States a pattern must include, one of them at least. Default `NULL`
+  (any).
 
 - pattern:
 
-  Optional template to search for instead of discovering all patterns,
-  e.g. `"discuss->*->consensus"`: each `*` is one position holding any
-  state (`**` is two). Every concrete instance is returned as its own
-  row (`"discuss->plan->consensus"`, ...). `type`, `len` and `gap` are
-  then ignored.
+  A template to search for instead of discovering all patterns, such as
+  `"discuss->*->consensus"`: each `*` is one position holding any state
+  (`**` is two). Every concrete instance is returned as its own row
+  (`"discuss->plan->consensus"`, ...). States are joined by `"->"`
+  (spaces around it are allowed), and a template may mix fixed states
+  and wildcards or hold no wildcard at all. `type`, `len` and `gap` are
+  then ignored. An empty template, or one with an empty step such as
+  `"A->->B"` or a leading or trailing `"->"`, raises an error of class
+  `nestimate_bad_input`. Default `NULL`.
 
 - group:
 
-  Optional grouping of the sequences: the name of a column stored with
-  them (a covariate of a wide data frame or long event log, or of a
-  network's metadata), or a vector with one value per sequence. For a
-  `netobject_group` its own grouping is used when `group` is `NULL`.
-  Adds a test of pattern presence by group; see Details.
-  `group = "last_obs"` uses each sequence's last observed state as its
-  group and removes the states that end some sequence from all sequences
-  (for data whose final state codes the outcome, e.g. an appended
-  `"pass"`/`"fail"`; codyna's `last_obs`).
+  The grouping of the sequences for the group test: the name of a column
+  stored with them (a covariate of a wide data frame or long event log,
+  or of a network's metadata), or a vector with one value per sequence.
+  A `netobject_group` is grouped by its own groups when `group` is
+  `NULL`. `"last_obs"` takes each sequence's last observed state as its
+  group and removes every state that ends some sequence from all
+  sequences, for data whose final state codes the outcome (such as an
+  appended `"pass"` or `"fail"`), as codyna's `last_obs` does. Sequences
+  with a missing group are dropped with a warning of class
+  `nestimate_missing_group`. A column not found, a vector of the wrong
+  length or a single group raise an error of class
+  `nestimate_bad_input`. Default `NULL` (no test).
 
 - reference:
 
-  For two groups, the reference group; the odds ratio is for the other
-  group. Default: the first group in sorted order.
+  For two groups: the reference group, so the odds ratio is that of the
+  other group. Default `NULL`, the first group in sorted order; a value
+  that is not a group raises an error of class `nestimate_bad_input`.
 
 - adjust:
 
-  Multiplicity correction for the group test, passed to
-  [`p.adjust`](https://rdrr.io/r/stats/p.adjust.html). Default `"BH"`.
+  The multiplicity correction of the group test's p-values, one of
+  `p.adjust.methods` (see
+  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html)). Default
+  `"BH"`.
 
 - top:
 
-  Optional number of rows to return (the first `top` in the output
-  order). Default `NULL`, all rows.
+  The number of rows to return, a positive whole number: the first in
+  the output order. Default `NULL` (all).
 
 - cols:
 
-  State columns of a wide data frame; see
+  The state columns of a wide data frame, as in
   [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md).
+  Default `NULL`.
+
+- actor, action, time:
+
+  The actor, action and timestamp columns of a long event log, as in
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md):
+  setting `action` declares `x` an event log. Default `NULL`.
 
 - ...:
 
-  Passed to
-  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
-  e.g. `actor`, `action` and `time` for a long event log.
+  Further arguments passed to
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  for a long event log, such as `time_threshold` or `order`.
 
 ## Value
 
-A `data.frame` with one row per pattern, ordered by `support` (then
+A data frame with one row per pattern, ordered by `support` (then
 `occurrences`, then `pattern`):
 
 - pattern:
 
-  States joined by `"->"`; `*` marks a wildcard position.
+  The states joined by `"->"`; `*` marks a wildcard position.
 
 - length:
 
-  Number of positions the pattern spans.
+  The number of positions the pattern spans, gaps included.
 
 - occurrences:
 
-  Total number of times it occurs.
+  The number of times it occurs.
 
 - proportion:
 
@@ -152,7 +192,7 @@ A `data.frame` with one row per pattern, ordered by `support` (then
 
 - n_sequences:
 
-  Number of sequences that contain it.
+  The number of sequences that contain it.
 
 - support:
 
@@ -160,18 +200,15 @@ A `data.frame` with one row per pattern, ordered by `support` (then
 
 - lift:
 
-  Support relative to independent presence of its states.
+  Support relative to the independent presence of its states.
 
-With `group`, also `support_<group>` (the support within each group);
-for two groups `odds_ratio`, `or_lower`, `or_upper`; for more, `chisq`
-and `cramers_v`; then `p_value` and `p_adj`. Rows are ordered by
-`p_value` (then `support`).
+With `group`, the columns `support_<group>` (the support within each
+group) follow; then `odds_ratio`, `or_lower` and `or_upper` for two
+groups, or `chisq` and `cramers_v` for more; then `p_value` and `p_adj`.
+The rows are then ordered by `p_value` (then `support`).
 
-Conditions: `nestimate_bad_input` for a state name containing `"->"` or
-consisting only of asterisks (reserved for wildcards), a missing group
-column, a group vector of the wrong length, or a group with fewer than
-two values; warning `nestimate_missing_group` when sequences with a
-missing group are dropped.
+A state name that contains `"->"` or consists only of asterisks
+(reserved for wildcards) raises an error of class `nestimate_bad_input`.
 
 ## Details
 
@@ -180,30 +217,33 @@ once. `lift` compares it with the support expected if the states in the
 pattern appeared in sequences independently:
 `support / prod(state_support)`, where the support of a state is the
 share of sequences in which it occurs and wildcard positions are left
-out. A lift above 1 means the states co-occur in this order more often
-than independent presence predicts. It does not account for the
-transition structure: a pattern that the transition probabilities make
-likely can have a lift above 1.
+out.
+
+A window that contains a missing value, at a fixed or a wildcard
+position, is skipped, so a pattern never spans a gap or the end of a
+sequence.
 
 `proportion` is computed over all patterns of the same length before
 `min_freq`, `min_support`, `start`, `end` and `contain` are applied, so
-it does not change with the filters.
+it does not change with the filters. Counts, support and lift agree with
+`codyna::discover_patterns()`, which computes `proportion` after the
+filters instead.
 
 ## Group test
 
 With `group`, each pattern's presence (in a sequence or not) is
 cross-tabulated against the group. For two groups, Fisher's exact test
 gives the p-value, the conditional maximum-likelihood odds ratio of
-containing the pattern in the non-reference group, and its 95\\
+containing the pattern in the non-reference group, and its 95%
 confidence interval. A pattern that occurs in one group only has an
 infinite (or zero) odds ratio, with a finite lower (or upper) limit; a
 pattern present in every sequence has none (`NA`). For three or more
 groups, the Pearson chi-square of the presence-by-group table gives the
 p-value (G - 1 degrees of freedom), with Cramér's V as the effect size.
 Unlike a comparison of counts against an equal split, both tests account
-for unequal group sizes. p-values are adjusted across the returned
-patterns' family (all patterns passing the filters) with `adjust`. The
-rows are then ordered by `p_value`.
+for unequal group sizes. The p-values are adjusted with `adjust` over
+all patterns that pass the filters, before `top` is applied, and the
+rows are ordered by `p_value`.
 
 ## References
 

@@ -1,15 +1,27 @@
 # Centrality Stability Coefficient (CS-coefficient)
 
-Estimates the stability of centrality indices under case-dropping. For
-each drop proportion, sequences are randomly removed and the network is
-re-estimated. The correlation between the original and subset centrality
-values is computed. The CS-coefficient is the maximum proportion of
-cases that can be dropped while maintaining a correlation above
-`threshold` in at least `certainty` of bootstrap samples.
+`centrality_stability()` estimates how stable a network's centrality
+indices are under case-dropping (Epskamp, Borsboom & Fried, 2018). For
+each proportion in `drop_prop`, that share of the sequences (or, for
+association networks, of the rows) is removed at random `iter` times,
+the network is re-estimated on what is left, and its centralities are
+correlated with those of the full network. The CS-coefficient of a
+measure is the largest proportion that can be dropped while the
+correlation stays at or above `threshold` in at least a `certainty`
+share of the draws. It takes a `netobject` from
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+of any method, a bare `cograph_network`, or a `netobject_group` or
+`mcml`, whose networks are assessed one by one.
 
-For transition methods, uses pre-computed per-sequence count matrices
-for fast resampling. Strength centralities (InStrength, OutStrength) are
-computed directly from the matrix without igraph.
+The CS-coefficient says how well the nodes' centralities (their values,
+or with `method = "spearman"` or `"kendall"` their ordering) survive the
+loss of cases; Epskamp et al. (2018) suggest that it should not be below
+0.25, and preferably above 0.5, before centrality differences are
+interpreted. It does not say whether two nodes differ in centrality, nor
+how precise single edges are: check the edges with
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+and for `glasso` networks the centrality differences with
+[`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md).
 
 ## Usage
 
@@ -50,175 +62,180 @@ plot(x, ...)
 
 - x:
 
-  A `netobject` from
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
-  a `cograph_network`, or a `netobject_group` / `mcml` (each constituent
-  network is assessed and a `net_stability_group` is returned). For the
-  [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_stability` or `net_stability_group`.
+  The network: a `netobject` from
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  a bare `cograph_network` (converted to one), or a `netobject_group` or
+  `mcml`, each of whose networks is assessed. Any other object, or a
+  network built without its data, raises an error. For the
+  [`print()`](https://rdrr.io/r/base/print.html) methods: a
+  `net_stability` or `net_stability_group`; for the
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: a
+  `net_stability`.
 
 - measures:
 
-  Character vector. Centrality measures to assess. Defaults to
-  `c("InStrength", "OutStrength", "Betweenness")`. Pass `"all"` for
+  The centrality measures to assess. The default is `"InStrength"`,
+  `"OutStrength"` and `"Betweenness"`; `NULL` takes
+  [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)'s
+  default (`"InStrength"`, `"Betweenness"`, `"Diffusion"`), and `"all"`
   every built-in measure: `"OutStrength"`, `"InStrength"`,
   `"ClosenessIn"`, `"ClosenessOut"`, `"Closeness"`, `"Betweenness"`,
-  `"BetweennessRSP"`, `"Diffusion"`, and `"Clustering"`. The legacy
-  aliases `"InCloseness"` and `"OutCloseness"` are also accepted. Custom
-  measures beyond these are valid only when a `centrality_fn` is
-  supplied to resolve them.
+  `"BetweennessRSP"`, `"Diffusion"` and `"Clustering"`
+  ([`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  defines them). `"InCloseness"` and `"OutCloseness"` are accepted for
+  `"ClosenessIn"` and `"ClosenessOut"`. Other names need
+  `centrality_fn`; without it they raise an error.
 
 - iter:
 
-  Integer. Number of bootstrap iterations per drop proportion (default:
-  1000).
+  The number of random subsets drawn at each drop proportion, at
+  least 2. Default `1000`.
 
 - drop_prop:
 
-  Numeric vector. Proportions of cases to drop (default:
-  `seq(0.1, 0.9, by = 0.1)`).
+  The proportions of cases to drop, each strictly between 0 and 1.
+  Default `seq(0.1, 0.9, by = 0.1)`. A proportion that would leave fewer
+  than 2 cases is skipped and counts as not reaching `threshold`. The
+  CS-coefficient is the largest proportion that meets `certainty`, in
+  whatever order they are given.
 
 - threshold:
 
-  Numeric. Minimum correlation to consider stable (default: 0.7).
+  The correlation with the full network's centralities that a draw must
+  reach, between 0 and 1. Default `0.7`.
 
 - certainty:
 
-  Numeric. Required proportion of iterations above threshold (default:
-  0.95). It is the share of all iterations: one in which the correlation
-  is undefined (the measure is constant in that subset) counts as not
-  reaching `threshold`.
+  The share of draws at a drop proportion that must reach `threshold`,
+  between 0 and 1. Default `0.95`. It is a share of all draws: one with
+  an undefined correlation counts as not reaching `threshold`.
 
 - method:
 
-  Character. Correlation method: `"pearson"`, `"spearman"`, or
-  `"kendall"` (default: `"pearson"`).
+  The correlation between the full and the subset centralities:
+  `"pearson"` (default), `"spearman"` or `"kendall"`.
 
 - centrality_fn:
 
-  Optional function. A custom centrality function that takes a weight
-  matrix and returns a named list of centrality vectors. When `NULL`
-  (default), all built-in measures are computed internally:
-  `"InStrength"`/`"OutStrength"` via `colSums`/`rowSums`,
-  `"Betweenness"`/ `"ClosenessIn"`/`"ClosenessOut"`/`"Closeness"` via an
-  internal Floyd-Warshall shortest-path routine, and `"BetweennessRSP"`,
-  `"Diffusion"` and `"Clustering"` from the weight matrix directly. When
-  provided, the function is called as `centrality_fn(mat)` and is used
-  only for requested measures that are not one of the built-ins; it
-  should return a named list (e.g., `list(my_metric = ...)`).
+  A function of your own that takes the weight matrix and returns a
+  named list of centrality vectors, such as `list(my_metric = ...)`. It
+  is called as `centrality_fn(mat)` and used only for the requested
+  measures that are not built-in; list their names in `measures`.
+  Default `NULL`.
 
 - loops:
 
-  Logical. If `FALSE` (default), self-loops (diagonal) are excluded from
-  centrality computation. This does not modify the stored matrix.
+  Whether self-loops (staying in a state) count. With `FALSE` (default)
+  they are left out of every measure; the stored matrix is not changed.
 
 - normalize:
 
-  Logical. Range-normalize all requested measures using the same
-  transformation as `tna::centralities(normalize = TRUE)`. Default:
-  `FALSE`.
+  Whether to range-normalise every measure to 0–1, as
+  `tna::centralities(normalize = TRUE)` does. Default `FALSE`.
 
 - invert:
 
-  Logical. Invert weights for shortest-path measures? Default: `TRUE`,
-  matching `tna`.
+  Whether a heavier edge is a shorter step in the shortest-path measures
+  (distance = 1 / weight), as in `tna`. Default `TRUE`; with `FALSE` the
+  weight is the distance. It affects betweenness and closeness only, not
+  `"BetweennessRSP"`.
 
 - normalize_diffusion:
 
-  Logical. Range-normalize `Diffusion` even when `normalize = FALSE`.
-  Default: `TRUE`.
+  Whether to range-normalise `Diffusion` even when `normalize = FALSE`.
+  Default `TRUE`.
 
 - seed:
 
-  Integer or NULL. RNG seed for reproducibility.
+  An integer that makes the random subsets reproducible. Default `NULL`.
+  The session's own random stream is left as it was; a group's networks
+  are each started from the same seed.
 
 - ...:
 
-  In `plot.net_stability()`, `print.net_stability()`,
-  `print.net_stability_group()`, `summary.net_stability()` and
-  `summary.net_stability_group()`: Additional arguments (ignored).
+  For the [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: not
+  used.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_stability_group` or `net_stability`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) methods: a
+  `net_stability` or `net_stability_group`.
 
 ## Value
 
-An object of class `"net_stability"`: a list with
+A `net_stability` object. [`print()`](https://rdrr.io/r/base/print.html)
+shows the CS-coefficient of each measure;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns one row per
+measure and drop proportion, with the mean and SD of the correlations
+(over the draws where it is defined) and `prop_above`, the share of all
+draws that reach `threshold`;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the mean
+correlation against the proportion dropped, one line per measure with a
+band of one SD and a dashed line at `threshold`, and returns the ggplot
+invisibly. For a `netobject_group` or `mcml`, the result is a
+`net_stability_group`, a named list of `net_stability` objects, one per
+network, whose [`print()`](https://rdrr.io/r/base/print.html) shows the
+CS-coefficients as a networks-by-measures table and whose
+[`summary()`](https://rdrr.io/r/base/summary.html) stacks the
+per-network summaries with a leading `group` column. The
+[`print()`](https://rdrr.io/r/base/print.html) methods return their
+input invisibly. The `net_stability`'s fields:
 
 - cs:
 
-  Named numeric vector of CS-coefficients, one per retained measure.
+  The CS-coefficients, a named numeric vector with one per retained
+  measure.
 
 - correlations:
 
-  Named list of `iter` x `length(drop_prop)` matrices of correlation
-  values, one per retained measure.
+  A named list, one per retained measure, of `iter` x
+  `length(drop_prop)` matrices of correlations.
 
 - measures:
 
-  Character vector of the measures actually assessed (see the
-  zero-variance rule below).
+  The measures assessed (see the rule for measures without variance
+  under *Details*).
 
-- drop_prop:
+- drop_prop, threshold, certainty, iter, method:
 
-  Drop proportions used.
+  The settings used.
 
-- threshold:
+## Details
 
-  Stability threshold.
+For transition methods, per-sequence count matrices are computed once
+and each draw only re-sums them; the network's `scaling` and `threshold`
+are applied to every re-estimated network as to the original. For the
+other methods the estimator is re-run on each subset with the network's
+`params` (after the multilevel decomposition, when the network was built
+with a `level` and an id column and its estimator is undirected). The
+built-in measures are computed from the weight matrix directly, without
+igraph, as in
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md):
+strength from row and column sums, betweenness and closeness from
+Floyd-Warshall shortest paths. A network that rests on one sequence, or
+one-hot data with no actor or session, has nothing to drop and raises an
+error of class `nestimate_single_sequence`.
 
-- certainty:
+Every draw counts towards `certainty`: a draw whose correlation is
+undefined (the measure is constant in it), and a draw whose network
+could not be estimated, count as not reaching `threshold`. Failed
+estimates are reported in a warning of class
+`nestimate_resample_failed`.
 
-  Required certainty level.
-
-- iter:
-
-  Number of iterations.
-
-- method:
-
-  Correlation method.
-
-A `netobject_group` or `mcml` input instead returns a
-`"net_stability_group"`: a named list of one `net_stability` per
-constituent network.
-
-Zero-variance measures are handled by two different rules, both
-long-standing behaviour. When *some* requested measures have zero
-variance on the original network (for example `"OutStrength"` on a
-row-normalised transition network), those measures are **dropped**:
-`$cs`, `$correlations` and `$measures` cover only the retained ones.
-When *every* requested measure has zero variance a warning is issued and
-**all** requested names are returned with `cs = 0` and all-`NA`
-correlation matrices.
-
-In `print.net_stability()`: The input object, invisibly.
-
-In `print.net_stability_group()`: The input `x` invisibly.
-
-In `summary.net_stability_group()`: A data frame with columns `group`,
-`measure`, `drop_prop`, `mean_cor`, `sd_cor`, `prop_above`.
-
-In `summary.net_stability()`: A data frame with columns `measure`,
-`drop_prop`, `mean_cor`, `sd_cor`, `prop_above`.
-
-In `plot.net_stability()`: A `ggplot` object (invisibly).
-
-## Methods
-
-- `plot.net_stability()`: Plots mean correlation vs drop proportion for
-  each centrality measure. The CS-coefficient is marked where the curve
-  crosses the threshold.
-
-- `summary.net_stability()`: Returns the mean correlation at each drop
-  proportion for each measure.
-
-- `summary.net_stability_group()`: Per-network stability as a tidy data
-  frame. Stacks [`summary()`](https://rdrr.io/r/base/summary.html)
-  results for each network with a `group` column.
+Measures without variance are handled by two different rules, both
+long-standing behaviour. When *some* requested measures do not vary
+across the nodes of the original network (or are undefined on it), they
+are dropped, and the result covers only the retained ones. When *every*
+requested measure is so, a warning is issued and *all* requested names
+are returned with a CS-coefficient of 0 and correlations that are all
+`NA`. A measure counts as constant when its values span no more than the
+square root of the machine epsilon relative to their size, so
+`"OutStrength"` of a `"relative"` network with `loops = TRUE`, which is
+1 for every node up to rounding error, is dropped rather than correlated
+on that error. The same rule makes a measure constant in a draw an
+undefined correlation.
 
 ## References
 
@@ -229,8 +246,10 @@ Research Methods* 50(1), 195-212.
 
 ## See also
 
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
-[`network_reliability`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md),
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+[`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md),
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

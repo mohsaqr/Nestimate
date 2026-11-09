@@ -1,12 +1,29 @@
-# Cluster Choice – sweep k, dissimilarity and method
+# Compare Clusterings Across k, Dissimilarity and Method
 
-One-call sweep across any combination of k, dissimilarity metric, and
-clustering algorithm for distance-based sequence clustering. Mirrors
-[`compare_mmm`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
-for model-based clustering: returns a data frame with one row per swept
-configuration, a `best` marker on the silhouette-max row in the print
-method, and a [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-that adapts to the swept axes.
+`cluster_choice()` clusters the same sequences under every combination
+of the cluster counts, dissimilarities and algorithms given, each with
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+and returns one row per combination with its average silhouette width,
+mean within-cluster distance and cluster-size balance. It is the
+distance-based counterpart of
+[`compare_mmm()`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md),
+which compares mixtures of Markov chains across k. `"all"` expands
+`dissimilarity` or `method` to every supported option.
+
+The silhouette of a sequence (Rousseeuw, 1987) compares its mean
+distance to its own cluster with that to the nearest other cluster: near
+1 it sits well inside its cluster, near 0 between two, and below 0 it is
+closer to another cluster. Rows that share a dissimilarity compare k and
+algorithms on one distance scale; across dissimilarities the silhouettes
+and within-cluster distances rest on different distances and compare
+less directly. The row with the highest silhouette is marked, but that
+is not a decision: also weigh the cluster sizes (`min_size`,
+`size_ratio`), as a high silhouette can come with a cluster of very few
+sequences; then fit the chosen configuration with
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+and read it with its [`summary()`](https://rdrr.io/r/base/summary.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md).
 
 ## Usage
 
@@ -39,151 +56,168 @@ plot(
 
 - data:
 
-  Sequence data (data frame or matrix) – forwarded to
-  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md).
+  The sequences, passed to
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  unchanged: any input it takes, such as a wide data frame of sequences
+  or a network built from sequences.
 
 - k:
 
-  Integer vector of cluster counts to sweep. Default `2:5`. Each value
-  must be \>= 2 and \<= n - 1.
+  The cluster counts to try. Default `2:5`. Each must be a whole finite
+  number, or an error is raised;
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  also requires each to be at least 2 and at most the number of
+  sequences minus 1.
 
 - dissimilarity:
 
-  Character vector of dissimilarity metrics. Use `"all"` to expand to
-  every supported metric:
-  `c("hamming", "osa", "lv", "dl", "lcs", "qgram", "cosine",`
-  `"jaccard", "jw")`. Default `"hamming"`.
+  The dissimilarity measures to try. Default `"hamming"`. `"all"`
+  expands to every supported measure: `"hamming"`, `"osa"`, `"lv"`,
+  `"dl"`, `"lcs"`, `"qgram"`, `"cosine"`, `"jaccard"` and `"jw"`, and
+  may stand beside named ones (each is fitted once).
 
 - method:
 
-  Character vector of clustering algorithms. Use `"all"` to expand to
-  every supported method:
-  `c("pam", "ward.D2", "ward.D", "complete", "average", "single",`
-  `"mcquitty", "median", "centroid")`. Default `"ward.D2"`.
+  The clustering algorithms to try. Default `"ward.D2"` (where
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  defaults to `"pam"`). `"all"` expands to every supported algorithm:
+  `"pam"`, `"ward.D2"`, `"ward.D"`, `"complete"`, `"average"`,
+  `"single"`, `"mcquitty"`, `"median"` and `"centroid"`.
 
 - ...:
 
-  Other arguments forwarded to
-  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  (`weighted`, `lambda`, `q`, `p`, `seed`, `na_syms`, `covariates`,
-  `estimator`). Note: `weighted = TRUE` only works with
-  `dissimilarity = "hamming"` and is rejected up-front when sweeping
-  mixed dissimilarities. In `plot.cluster_choice()`,
-  `print.cluster_choice()` and `summary.cluster_choice()`: Unsupported.
-  Supplying unused arguments raises an error.
+  Further arguments of
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+  used for every combination: `weighted`, `lambda`, `q`, `p`, `seed`,
+  `na_syms`, `covariates` and `estimator`; any other name raises an
+  error. `weighted = TRUE` works only with `dissimilarity = "hamming"`
+  and is refused before any fit when the sweep holds another measure.
+  The [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods take
+  no further arguments and raise an error on any.
 
 - x:
 
   For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `cluster_choice`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `cluster_choice`.
 
 - digits:
 
-  Integer. Decimal places for floating-point columns. Default `3L`.
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: the
+  decimal places of the silhouette, within-cluster distance and size
+  ratio. Default `3`. Must be a single non-negative whole number.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `cluster_choice`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `cluster_choice`.
 
 - type:
 
-  Character. One of `"auto"` (default), `"lines"`, `"bars"`,
-  `"heatmap"`, `"tradeoff"`, `"facet"`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the kind of plot, one of `"auto"` (default), `"lines"`,
+  `"bars"`, `"heatmap"`, `"tradeoff"` and `"facet"` (see *Plot types*).
+  A type the sweep cannot support raises an error that names the
+  alternatives.
 
 - abbrev:
 
-  Logical. If `TRUE`, dissimilarity and method names shown on tick
-  labels and point labels are shortened (e.g. `"hamming"` -\> `"ham"`,
-  `"ward.D2"` -\> `"wD2"`). The legend shows the full canonical name.
-  Default `FALSE`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: whether to shorten the dissimilarity and method names (e.g.
+  `"hamming"` to `"ham"`, `"ward.D2"` to `"wD2"`) on the axes, point
+  labels and legend. Default `FALSE`.
 
 - combined:
 
-  Only meaningful for `type = "facet"`. When `TRUE` (default), all
-  methods are shown in one ggplot via `facet_wrap(~ method)`. When
-  `FALSE`, returns a named list of single-panel ggplots, one per method.
+  For `plot(type = "facet")`: `TRUE` (default) draws one panel per
+  method in a single plot; `FALSE` returns a named list of one-method
+  plots instead. Ignored by the other types, but must still be a single
+  logical value.
 
 ## Value
 
-A `cluster_choice` object (a data.frame subclass) with one row per (k,
-dissimilarity, method) combination and columns:
+A `cluster_choice` (a data frame subclass) with one row per combination,
+`k` varying fastest, then `dissimilarity`, then `method`.
+[`print()`](https://rdrr.io/r/base/print.html) shows the table, with
+only the settings that vary as columns, and flags the row with the
+highest silhouette in a `best` column;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the full
+table as a plain data frame with a character `best` column that holds
+`"silhouette"` on that row;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+silhouette across the swept settings (see *Plot types*) and returns the
+`ggplot` invisibly (with `type = "facet"` and `combined = FALSE`, a
+named list of `ggplot`s, returned invisibly and not drawn). The
+[`print()`](https://rdrr.io/r/base/print.html) method returns its input
+invisibly. The columns:
 
 - k, dissimilarity, method:
 
-  The configuration for that row.
+  The configuration of the row.
 
 - silhouette:
 
-  Overall average silhouette width (from
-  [`cluster::silhouette`](https://rdrr.io/pkg/cluster/man/silhouette.html),
-  computed inside
-  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)).
+  The average silhouette width over all sequences, computed by
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  (from [`cluster::pam()`](https://rdrr.io/pkg/cluster/man/pam.html) for
+  `"pam"`, with
+  [`cluster::silhouette()`](https://rdrr.io/pkg/cluster/man/silhouette.html)
+  otherwise).
 
 - mean_within_dist:
 
-  Size-weighted mean of within-cluster distances, in the units of the
-  row's dissimilarity.
+  The mean distance between members of the same cluster, averaged over
+  clusters weighted by their size (a one-member cluster counts as 0), in
+  the units of the row's dissimilarity.
 
 - min_size, max_size, size_ratio:
 
-  Cluster-size balance bounds and their ratio (`max / min`).
-
-In `print.cluster_choice()`: The input object, invisibly.
-
-In `summary.cluster_choice()`: A data frame with the swept
-configurations, all metrics, and a `best` character column flagging the
-silhouette-max row.
-
-In `plot.cluster_choice()`: A `ggplot` object, invisibly; for
-`type = "facet"` with `combined = FALSE`, a named list of ggplots.
-
-## Methods
-
-- `plot.cluster_choice()`: Six explicit chart types plus a smart
-  `"auto"` default. The user picks the shape; the function does not
-  editorialise (no "best" annotation, no interpretive subtitles, no
-  inferred recommendation).
+  The sizes of the smallest and the largest cluster, and their ratio
+  `max_size / min_size`.
 
 ## Plot types
 
-Type cheat-sheet:
+The plots show the values only: they carry no "best" marker and no
+recommendation. [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+needs at least one swept setting.
 
 - `"auto"`:
 
-  Default. Picks one of the others based on which axes were swept.
-  k-only -\> `"lines"`; one categorical axis swept -\> `"bars"`; k plus
-  one categorical -\> `"lines"`; k plus two categoricals -\> `"facet"`;
-  both categoricals without k -\> `"heatmap"`.
+  The default. Picks a type from the swept settings: `"lines"` when k is
+  swept with at most one other setting, `"bars"` when only
+  `dissimilarity` or only `method` is swept, `"heatmap"` when both are
+  swept at a single k, and `"facet"` when all three are swept.
 
 - `"lines"`:
 
-  Silhouette across k (and `mean_within_dist` when `k` is the only swept
-  axis), one line per non-k axis when present.
+  The silhouette across k, one line per value of the other swept
+  setting. When only k is swept, `mean_within_dist` is drawn as a second
+  line on the same axis. With all three swept, the lines follow
+  `dissimilarity` and the methods share them; use `"facet"` instead.
+  Needs k swept.
 
 - `"bars"`:
 
-  Horizontal bar chart of silhouette per axis level. Bars sorted by
-  silhouette.
+  Horizontal bars of the silhouette per value of the swept setting, or
+  per combination when several are swept, sorted by silhouette, with the
+  values printed.
 
 - `"heatmap"`:
 
-  Tiled silhouette across two categorical axes. Requires both
-  `dissimilarity` and `method` swept.
+  Tiles of the silhouette over `dissimilarity` and `method`, with the
+  values printed. Needs both swept, and is meant for a single k.
 
 - `"tradeoff"`:
 
-  Scatter: silhouette (y) vs `size_ratio` (x). Works for any sweep;
-  labels each point.
+  The silhouette against `size_ratio`, each point labelled with its
+  swept settings.
 
 - `"facet"`:
 
-  Lines vs k, colour by one categorical axis, facet by another. Requires
-  `k` plus two categoricals.
-
-Asking for a type the data can't support raises an error pointing at the
-alternatives.
+  The silhouette across k, one line per dissimilarity and one panel per
+  method. Needs all three swept.
 
 ## References
 
@@ -209,44 +243,44 @@ cluster_choice(seqs, k = 2:4)
 #> Cluster Choice (sweep: k)
 #> 
 #>  k silhouette within_dist sizes    ratio best    
-#>  2 0.421      0.965       [18, 22] 1.222         
-#>  3 0.561      0.697       [8, 18]  2.250 <-- best
-#>  4 0.556      0.532       [7, 14]  2.000         
+#>  2 0.403      0.995       [17, 23] 1.353         
+#>  3 0.563      0.711       [11, 17] 1.545 <-- best
+#>  4 0.541      0.553       [7, 12]  1.714         
 # \donttest{
 # Sweep dissimilarities at fixed k
 cluster_choice(seqs, k = 3, dissimilarity = c("hamming", "lcs", "jaccard"))
 #> Cluster Choice (sweep: dissimilarity)
 #> 
-#>  dissimilarity silhouette within_dist sizes   ratio best    
-#>  hamming       0.561      0.697       [8, 18] 2.250 <-- best
-#>  lcs           0.434      1.254       [7, 17] 2.429         
-#>  jaccard       0.413      0.587       [6, 27] 4.500         
+#>  dissimilarity silhouette within_dist sizes    ratio best    
+#>  hamming       0.563      0.711       [11, 17] 1.545 <-- best
+#>  lcs           0.403      1.363       [9, 19]  2.111         
+#>  jaccard       0.381      0.619       [5, 28]  5.600         
 
 # Full grid of k x dissimilarity
 cluster_choice(seqs, k = 2:4, dissimilarity = c("hamming", "lcs"))
 #> Cluster Choice (sweep: k x dissimilarity)
 #> 
 #>  k dissimilarity silhouette within_dist sizes    ratio best    
-#>  2 hamming       0.421      0.965       [18, 22] 1.222         
-#>  3 hamming       0.561      0.697       [8, 18]  2.250 <-- best
-#>  4 hamming       0.556      0.532       [7, 14]  2.000         
-#>  2 lcs           0.371      1.712       [17, 23] 1.353         
-#>  3 lcs           0.434      1.254       [7, 17]  2.429         
-#>  4 lcs           0.553      0.960       [6, 17]  2.833         
+#>  2 hamming       0.403      0.995       [17, 23] 1.353         
+#>  3 hamming       0.563      0.711       [11, 17] 1.545 <-- best
+#>  4 hamming       0.541      0.553       [7, 12]  1.714         
+#>  2 lcs           0.368      1.709       [19, 21] 1.105         
+#>  3 lcs           0.403      1.363       [9, 19]  2.111         
+#>  4 lcs           0.519      1.044       [5, 19]  3.800         
 
 # "all" sentinel
 cluster_choice(seqs, k = 3, dissimilarity = "all")
 #> Cluster Choice (sweep: dissimilarity)
 #> 
-#>  dissimilarity silhouette within_dist sizes   ratio best    
-#>  hamming       0.561      0.697       [8, 18] 2.250         
-#>  osa           0.500      0.697       [8, 18] 2.250         
-#>  lv            0.561      0.697       [8, 18] 2.250         
-#>  dl            0.500      0.697       [8, 18] 2.250         
-#>  lcs           0.434      1.254       [7, 17] 2.429         
-#>  qgram         0.413      1.173       [6, 27] 4.500         
-#>  cosine        0.413      0.587       [6, 27] 4.500         
-#>  jaccard       0.413      0.587       [6, 27] 4.500         
-#>  jw            0.711      0.209       [8, 18] 2.250 <-- best
+#>  dissimilarity silhouette within_dist sizes    ratio best    
+#>  hamming       0.563      0.711       [11, 17] 1.545         
+#>  osa           0.463      0.714       [10, 17] 1.700         
+#>  lv            0.563      0.711       [11, 17] 1.545         
+#>  dl            0.463      0.714       [10, 17] 1.700         
+#>  lcs           0.403      1.363       [9, 19]  2.111         
+#>  qgram         0.381      1.237       [5, 28]  5.600         
+#>  cosine        0.381      0.619       [5, 28]  5.600         
+#>  jaccard       0.381      0.619       [5, 28]  5.600         
+#>  jw            0.718      0.209       [12, 14] 1.167 <-- best
 # }
 ```

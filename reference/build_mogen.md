@@ -1,11 +1,28 @@
 # Build Multi-Order Generative Model (MOGen)
 
-Constructs higher-order De Bruijn graphs from sequential trajectory data
-and selects the optimal Markov order using AIC, BIC, or likelihood ratio
-tests. This is the multi-order model of Scholtes (2017), the model
-pathpy 2 calls `MultiOrderModel`. It is not the multi-order generative
-model of Gote et al. (2023), which adds start and end states and selects
-by AIC only; the function name is kept for compatibility.
+`build_mogen()` fits Markov chains of every order from 0 to `max_order`
+to a set of sequences and selects the order that best balances fit
+against the number of parameters, by AIC, BIC or likelihood-ratio tests.
+At order k the chain is a De Bruijn graph: its nodes are the k-tuples of
+consecutive states seen in the data, and an edge joins two tuples that
+overlap in k - 1 states, so each edge is an observed path of k + 1
+states. Order 0 is the marginal distribution of the states. It is the
+multi-order model of Scholtes (2017), and takes wide sequence data, a
+list of state vectors, a `tna` model or a network built from sequences.
+
+The selected order is the number of earlier states the next state
+depends on, as far as the sample can show. The number of parameters
+grows quickly with the order
+([`summary()`](https://rdrr.io/r/base/summary.html) lists them per
+order), so few or short sequences favour low orders, and AIC and BIC can
+disagree: [`print()`](https://rdrr.io/r/base/print.html) shows both.
+Before reading a higher-order transition, check how often its context
+was observed with
+[`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md);
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
+tests the order against a permutation null, and
+[`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
+shows which contexts carry the extra information.
 
 ## Usage
 
@@ -32,93 +49,118 @@ plot(x, type = c("ic", "likelihood"), ...)
 
 - data:
 
-  A data.frame (rows = trajectories, columns = time points), a list of
-  character/numeric vectors (one per trajectory), a `tna` object, or a
-  `netobject` with sequence data. For `tna`/`netobject`, numeric state
-  IDs are automatically converted to label names.
+  The sequences: a data frame with one row per trajectory and one column
+  per time point, a character matrix laid out the same way, a list of
+  state vectors (one per trajectory), a `tna` model (its integer states
+  are decoded to their labels) or a `netobject` built from sequences
+  (its states are read as stored). A data frame needs position columns
+  named as a numbered run (`T1`, `T2`, ...); any other frame raises an
+  error of class `nestimate_bad_input` that says to declare the roles in
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  and pass the network. A missing value ends a run of observed states,
+  so each run is its own trajectory, and trajectories with fewer than
+  two states are dropped; with none left, `build_mogen()` stops. A
+  one-hot network, an association network (`cor`, `pcor`, `glasso`,
+  `ising`, `mgm`), a `netobject_group` and a 0/1 matrix raise an error
+  of class `nestimate_bad_input`.
 
 - max_order:
 
-  Integer. Maximum Markov order to test (default 5). Must be a whole
-  number; a non-integer value (e.g. `2.7`) is an error rather than being
-  silently truncated. A `max_order` at or above the longest trajectory
-  is capped at (longest path - 1) with a message.
+  The highest order fitted, a whole number of at least 1; a value such
+  as `2.7` is an error, not truncated. Default `5`. A value at or above
+  the length of the longest trajectory is lowered to that length minus
+  1, with a message.
 
 - criterion:
 
-  Character. Model selection criterion: `"aic"` (default), `"bic"`, or
-  `"lrt"` (likelihood ratio test).
+  How the order is selected: `"aic"` (default) or `"bic"` takes the
+  order with the smallest criterion, and `"lrt"` uses the sequential
+  likelihood-ratio tests described in *Details*.
 
 - lrt_alpha:
 
-  Numeric. Significance threshold for LRT (default 0.01).
+  The significance level of the likelihood-ratio tests, strictly between
+  0 and 1. Default `0.01`. It only affects the selection with
+  `criterion = "lrt"`; the p-values are computed under every criterion.
 
 - dof:
 
-  Character. How the parameters of each layer are counted. `"paths"`
-  (default) counts every transition of the paths of length \\k\\ that
-  the observed first-order topology allows, as Scholtes (2017, Eq. 7)
-  and pathpy do. `"observed"` counts only the transitions seen in the
-  data (the rule before Nestimate 0.9.28); it can fall as the order
-  rises and under-penalises high orders on sparse data.
+  How the parameters of each layer are counted. `"paths"` (default)
+  counts every transition of the paths of length k that the observed
+  first-order topology allows, as Scholtes (2017, Eq. 7) and pathpy do.
+  `"observed"` counts only the transitions seen in the data (the rule
+  before Nestimate 0.9.28); that count can fall as the order rises, and
+  it under-penalises high orders on sparse data.
 
 - x:
 
   For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_mogen`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_mogen` object.
 
 - ...:
 
-  In `plot.net_mogen()`: Additional arguments passed to
-  [`plot`](https://rdrr.io/r/graphics/plot.default.html). In
-  `print.net_mogen()` and `summary.net_mogen()`: Additional arguments
-  (ignored).
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: further arguments passed to
+  [`graphics::plot()`](https://rdrr.io/r/graphics/plot.default.html).
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods: ignored.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_mogen`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_mogen` object.
 
 - type:
 
-  Character. Plot type: `"ic"` (default) or `"likelihood"`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: `"ic"` (default) draws AIC and BIC against the order;
+  `"likelihood"` draws the log-likelihood against the order. Both mark
+  the selected order with a dashed line.
 
 ## Value
 
-An object of class `c("net_mogen", "cograph_network")` with components:
+A `net_mogen` object (class `c("net_mogen", "cograph_network")`).
+[`print()`](https://rdrr.io/r/base/print.html) shows the selected order
+and the AIC and BIC of every order, with each minimum starred.
+[`summary()`](https://rdrr.io/r/base/summary.html) prints the states and
+the selection, then returns, visibly, one row per order as a data frame
+(`order`, `layer_dof`, `cum_dof`, `loglik`, `aic`, `bic`, `best`
+(`"AIC"`, `"BIC"` or `"AIC+BIC"` on the order each criterion picks,
+empty elsewhere) and `selected` (`"<--"` on the chosen order)).
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+criteria or the log-likelihood against the order and returns its input
+invisibly; [`print()`](https://rdrr.io/r/base/print.html) also returns
+its input invisibly.
+[`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
+gives the transitions of one order, one row per path, and
+[`pathways()`](https://pak.dynasite.org/Nestimate/reference/pathways.md)
+the same as character strings. The object's fields:
 
 - optimal_order:
 
-  Selected optimal Markov order.
+  The selected order.
 
 - criterion:
 
-  Which criterion was used for selection.
+  The criterion used for the selection.
 
 - orders:
 
-  Integer vector of tested orders (0 to max_order, after any capping).
+  The orders fitted, 0 to `max_order` after any capping.
 
-- aic:
+- aic, bic, log_likelihood:
 
-  Named numeric vector of AIC values per order.
-
-- bic:
-
-  Named numeric vector of BIC values per order.
-
-- log_likelihood:
-
-  Named numeric vector of log-likelihoods.
+  Named numeric vectors, one value per order.
 
 - dof:
 
-  Named numeric vector of cumulative DOF per model.
+  Named numeric vector of the cumulative degrees of freedom of each
+  model.
 
 - layer_dof:
 
-  Named numeric vector of per-layer DOF.
+  Named numeric vector of the degrees of freedom of each layer.
 
 - dof_method:
 
@@ -126,27 +168,29 @@ An object of class `c("net_mogen", "cograph_network")` with components:
 
 - lrt_p:
 
-  Named numeric vector: the likelihood-ratio p-value of order \\k\\
-  against order \\k-1\\ (`NA` for order 0 and where the test is
-  undefined).
+  Named numeric vector: the likelihood-ratio p-value of order k against
+  order k - 1.
 
 - transition_matrices:
 
-  List of row-stochastic transition matrices (index 1 = order 0, held as
-  the marginal named numeric vector).
+  List of row-stochastic transition matrices (a context never followed
+  by another state keeps a zero row), the first (order 0) held as the
+  named vector of marginal probabilities.
 
 - count_matrices:
 
-  List of the matching raw count matrices, same indexing; read by
-  [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md).
+  List of the matching counts, in the same order, the first (order 0) as
+  a named vector of state counts;
+  [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
+  reads them.
 
 - states:
 
-  Unique first-order states.
+  The distinct first-order states.
 
 - n_paths:
 
-  Number of trajectories.
+  Number of trajectories fitted.
 
 - n_observations:
 
@@ -154,57 +198,56 @@ An object of class `c("net_mogen", "cograph_network")` with components:
 
 - weights:
 
-  `cograph_network` weight matrix: the transition matrix of the selected
-  optimal order (a 1 x n matrix named `"marginal"` when the optimal
-  order is 0). Its dimnames are the internal k-gram keys (states joined
-  by a non-printing separator), not arrow notation.
+  The transition matrix of the selected order, as the `cograph_network`
+  weight matrix (a 1 x n matrix named `"marginal"` when the selected
+  order is 0). Its dimnames are internal k-tuple keys (states joined by
+  a non-printing separator), not arrow notation.
 
 - nodes:
 
-  data.frame (`id`, `label`, `name`) of the optimal-order De Bruijn
-  nodes.
+  Data frame (`id`, `label`, `name`) of the nodes of the selected order.
 
 - edges:
 
-  `cograph_network` edge data.frame with integer `from`/`to` node
-  indices and a numeric `weight`. The readable arrow-notation table is
-  [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md).
+  The `cograph_network` edge data frame, with integer `from` and `to`
+  node indices and a numeric `weight`;
+  [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
+  gives the readable table.
 
 - directed:
 
-  Logical. Always `TRUE`.
+  Always `TRUE`.
 
 - n_nodes, n_edges:
 
-  Counts for the optimal-order graph.
+  Counts for the graph of the selected order.
 
 - meta:
 
-  `cograph_network` metadata list.
+  The `cograph_network` metadata list.
 
 - node_groups:
 
   Always `NULL`.
 
-In `print.net_mogen()` and `plot.net_mogen()`: The input object,
-invisibly.
-
-In `summary.net_mogen()`: A per-order model-selection data.frame with
-columns `order`, `layer_dof`, `cum_dof`, `loglik`, `aic`, `bic`, `best`
-(`"AIC"`/`"BIC"`/`"AIC+BIC"` marker) and `selected` (`"<--"` on the
-chosen order), returned visibly; the summary text is printed as a side
-effect.
-
 ## Details
 
-With `criterion = "lrt"` the selected order is the largest \\k\\ whose
-test against order \\k-1\\ rejects at `lrt_alpha` (Scholtes 2017), or 0
-when none does; all p-values are returned in `lrt_p`, so a non-monotone
-sequence is visible.
+The log-likelihood of the order-k model scores the first state of each
+trajectory by the marginal distribution, the j-th state by the order j -
+1 transitions while j \<= k, and every later state by the order-k
+transitions. The likelihood-ratio test of order k against order k - 1
+refers twice the gain in log-likelihood to a chi-square distribution
+with the order-k layer's degrees of freedom; its p-value is `NA` for
+order 0 and where the statistic or the degrees of freedom are not
+positive. With `criterion = "lrt"` the selected order is the largest k
+whose test rejects at `lrt_alpha` (Scholtes 2017), or 0 when none does.
+Every p-value is kept in the result, so a non-monotone run of tests is
+visible.
 
-At order k, nodes are k-tuples of states and edges represent transitions
-between overlapping k-tuples. The model tests increasingly complex
-Markov orders and selects the one that best balances fit and parsimony.
+The model is the one pathpy 2 calls `MultiOrderModel`. It is not the
+multi-order generative model of Gote et al. (2023), which adds start and
+end states and selects by AIC only; the function name is kept for
+compatibility.
 
 ## References
 

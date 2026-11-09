@@ -1,12 +1,33 @@
 # Build a Higher-Order Network (HON)
 
-Constructs a Higher-Order Network from sequential data, faithfully
-implementing the BuildHON algorithm (Xu, Wickramarathne & Chawla, 2016).
+`build_hon()` builds a higher-order network from sequences with the
+BuildHON algorithm (Xu, Wickramarathne & Chawla, 2016) or its faster
+variant BuildHON+ (Saebi et al., 2020), and returns a `net_hon`. A node
+is a state together with as much of its preceding history as changes
+where the sequence goes next: `"B"` is a first-order node, and
+`"A -> B"` is state B reached from A, kept as a node of its own when the
+distribution of the next state after A then B differs enough from the
+one after B alone (see *Details*), or when it begins a longer history
+that is kept, such as `"A -> B -> C"`. It reads sequences in a wide data
+frame or character matrix, a list of state vectors, or a `netobject`,
+`cograph_network` or `tna` built from sequences.
 
-The algorithm detects when a first-order Markov model is insufficient to
-capture sequential dependencies and automatically creates higher-order
-nodes. Uses KL-divergence to determine whether extending a node's
-history provides significantly different transition distributions.
+An edge weight is the probability of moving from the source node to the
+target node. A higher-order node marks a dependence on earlier states
+that a first-order network, with one node per state, averages away.
+Whether a history is extended is decided by a rule, not a test: the
+Kullback-Leibler divergence between the longer and the shorter history's
+next-state distributions must exceed a threshold that grows with the
+order and shrinks with how often the longer history was observed, so the
+same divergence passes more easily for a history observed more often,
+and nodes resting on a few observations are noisy (raise `min_freq` to
+set them aside). To test whether the sequences need memory beyond the
+first order, use
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md);
+[`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+selects an order by likelihood, and
+[`pathways()`](https://pak.dynasite.org/Nestimate/reference/pathways.md)
+lists the higher-order paths found here.
 
 ## Usage
 
@@ -30,158 +51,188 @@ summary(object, ...)
 
 - data:
 
-  One of:
-
-  - `data.frame`: rows are trajectories, columns are time steps.
-    Trailing `NA`s are stripped. All non-NA values are coerced to
-    character.
-
-  - `list`: each element is a character (or coercible) vector
-    representing one trajectory.
-
-  - `tna`: a tna object with sequence data. Numeric state IDs are
-    automatically converted to label names.
-
-  - `netobject`: a netobject with sequence data.
+  The sequences. A data frame or character matrix has one row per
+  sequence and one column per position; a data frame of several columns
+  must hold only position columns named as a numbered run (`T1`, `T2`,
+  ...), or be a sequence table returned by a Nestimate verb such as
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
+  and any other frame raises an error of class `nestimate_bad_input`
+  (declare its positions with `build_network(state_cols = )` and pass
+  the network). A plain list holds one vector of states per sequence. A
+  `netobject`, a bare `cograph_network` or a `tna` built from sequences
+  contributes its stored sequences, with a `tna`'s numeric state codes
+  converted to their labels. Values are read as character. A missing
+  value ends a run of observed states, so a sequence with an internal
+  gap becomes two sequences, and sequences with fewer than two states
+  are dropped; when none is left, an error is raised. A one-hot or
+  association network, a `netobject_group`, a classed list, and a matrix
+  or data frame of only 0 and 1 raise an error of class
+  `nestimate_bad_input`.
 
 - max_order:
 
-  Integer. Maximum order of the HON. Default 5. The algorithm may
-  produce lower-order nodes if the data do not justify higher orders.
+  The highest order a node may reach, that is, how many states of
+  history it carries. Default `5`. Lower orders result where the data do
+  not support a longer history;
+  [`print()`](https://rdrr.io/r/base/print.html) reports the highest
+  order reached beside the one requested. Must be at least 1; a
+  fractional value is truncated to a whole number.
 
 - min_freq:
 
-  Integer. Minimum frequency for a transition to be considered.
-  Transitions observed fewer than `min_freq` times are treated as zero.
-  Default 1.
+  The minimum count for a transition to be used. Transitions observed
+  fewer than `min_freq` times are treated as zero, also in the totals
+  that set the divergence threshold. Default `1`. Must be at least 1; a
+  fractional value is truncated to a whole number.
 
 - collapse_repeats:
 
-  Logical. If `TRUE`, adjacent duplicate states within each trajectory
-  are collapsed before analysis. Default `FALSE`.
+  Whether to collapse each run of a repeated state into one state before
+  counting (after splitting at missing values). Default `FALSE`.
 
 - method:
 
-  Character. Algorithm to use: `"hon+"` (default, parameter-free
-  BuildHON+ with lazy observation building and MaxDivergence pruning) or
-  `"hon"` (original BuildHON with eager observation building).
+  The algorithm. `"hon+"` (default) is BuildHON+, which counts a longer
+  history only when it is needed and skips an extension when even the
+  largest divergence the history could reach would not pass the
+  threshold. `"hon"` is the original BuildHON, which first counts the
+  transitions from every history of up to `max_order` states. Both stop
+  at `max_order`.
 
 - x:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
-  object of class `net_hon`.
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: a
+  `net_hon`.
 
 - ...:
 
-  In `print.net_hon()` and `summary.net_hon()`: Additional arguments
-  (ignored).
+  Ignored by the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_hon`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_hon`.
 
 ## Value
 
-An S3 object of class `c("net_hon", "cograph_network")` containing:
+A `net_hon` (class `c("net_hon", "cograph_network")`). Print it for the
+number of nodes, edges and sequences and the orders reached;
+[`summary()`](https://rdrr.io/r/base/summary.html) prints the same with
+the first-order states and the number of nodes of each order, and
+returns the network's edge table (integer `from`/`to` node indices and
+`weight`).
+[`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
+gives the weight of each ordered pair of nodes by node name (pairs with
+zero weight are included at its default `threshold = 0`, and self-loops
+only with `include_self = TRUE`),
+[`pathways()`](https://pak.dynasite.org/Nestimate/reference/pathways.md)
+the higher-order paths,
+[`build_honem()`](https://pak.dynasite.org/Nestimate/reference/build_honem.md)
+an embedding of the nodes and `build_simplicial(type = "pathway")` a
+simplicial complex; it draws with
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
+The [`print()`](https://rdrr.io/r/base/print.html) method returns its
+input invisibly. The fields:
 
 - weights, matrix:
 
-  The same weighted adjacency matrix (rows = from, cols = to) under both
-  names; `weights` is the `cograph_network` slot, `matrix` the
-  higher-order name kept for back-compatibility. Rows and columns use
-  readable arrow notation (e.g., `"A -> B"`).
+  The weighted adjacency matrix (rows are sources, columns targets)
+  under two names: `weights` is the `cograph_network` field, `matrix`
+  the higher-order name kept for compatibility. Rows and columns carry
+  the node names in arrow notation (e.g. `"A -> B"`).
 
 - ho_edges:
 
-  The higher-order edge table: one row per HON edge, with columns `path`
-  (full state sequence, e.g., "A -\> B -\> C"), `from`
-  (context/conditioning states), `to` (predicted next state), `count`
-  (raw frequency), `probability` (transition probability), `from_order`,
-  `to_order`.
+  The higher-order edge table, one row per edge: `path` (the full state
+  sequence, e.g. `"A -> B -> C"`), `from` (the source node, its
+  history), `to` (the next state), `count` (how often the transition was
+  observed), `probability` (the transition probability), and
+  `from_order` and `to_order` (the orders of the source and target
+  nodes).
 
 - edges:
 
   The `cograph_network` edge table: one row per non-zero cell of
-  `weights`, with *integer* `from`/`to` node indices into `nodes` and a
-  numeric `weight`. This is **not** the arrow-notation table - use
-  `ho_edges` for that.
+  `weights`, with integer `from`/`to` indices into `nodes` and a numeric
+  `weight`. It is not the arrow-notation table, which is `ho_edges`.
 
 - nodes:
 
-  data.frame with columns `id`, `label`, `name` (one row per HON node;
-  `label`/`name` are the arrow-notation node names). Stored as a
-  data.frame for `cograph_network` compatibility.
+  A data frame with columns `id`, `label` and `name`, one row per node;
+  `label` and `name` hold the node names in arrow notation.
 
 - n_nodes:
 
-  Number of HON nodes.
+  The number of nodes.
 
 - n_edges:
 
-  Number of rows in `ho_edges`.
+  The number of rows of `ho_edges`.
 
 - first_order_states:
 
-  Character vector of unique original states.
+  The distinct states of the sequences analysed (after splitting at
+  missing values, collapsing repeats and dropping short sequences),
+  sorted.
 
 - max_order_requested:
 
-  The `max_order` parameter used.
+  The `max_order` used.
 
 - max_order_observed:
 
-  Highest order actually present.
+  The highest order reached.
 
 - min_freq:
 
-  The `min_freq` parameter used.
+  The `min_freq` used.
 
 - n_trajectories:
 
-  Number of trajectories after parsing.
+  The number of sequences analysed, after splitting at missing values
+  and dropping short ones.
 
 - directed:
 
-  Logical. Always `TRUE`.
+  Always `TRUE`.
 
 - meta:
 
-  `cograph_network` metadata list (`source`, `layout`,
+  The `cograph_network` metadata list (`source`, `layout`, and
   `tna$method = "hon"`).
 
 - node_groups:
 
   Always `NULL`.
 
-In `print.net_hon()`: The input object, invisibly.
-
-In `summary.net_hon()`: The `cograph_network` edge data.frame
-`object$edges`: one row per non-zero cell of the adjacency matrix, with
-integer `from`/`to` node indices and a numeric `weight`. Returned
-visibly; the summary text (counts, first-order states, order
-distribution) is printed as a side effect. The arrow-notation table with
-`path`/`count`/`probability` is `object$ho_edges`.
-
 ## Details
 
-**Node naming convention**: Higher-order nodes use readable arrow
-notation. A first-order node is simply `"A"`. A second-order node
-representing the context "came from A, now at B" is `"A -> B"`.
-Third-order: `"A -> B -> C"`, etc.
+**Node names**: a first-order node is the state itself, `"A"`. A
+second-order node for "came from A, now at B" is `"A -> B"`; a
+third-order one is `"A -> B -> C"`, and so on.
 
-**Algorithm overview**:
+**Algorithm**:
 
-1.  Count all subsequence transitions up to `max_order + 1`.
+1.  Count the transitions from every history of up to `max_order` states
+    (subsequences of up to `max_order + 1` states); BuildHON+ counts the
+    longer histories only when they are needed.
 
-2.  Build probability distributions, filtering by `min_freq`.
+2.  Turn the counts into next-state distributions, setting counts below
+    `min_freq` to zero.
 
-3.  For each first-order source, recursively test whether extending the
-    history (adding more context) produces a significantly different
-    distribution (via KL-divergence vs. an adaptive threshold).
+3.  For each first-order source, extend the history one state at a time
+    and keep the longer history when the Kullback-Leibler divergence
+    (base 2) of its distribution from the currently kept one exceeds
+    `order / log2(1 + n)`, where `order` is the new order and `n` the
+    number of transitions counted from the longer history (after setting
+    counts below `min_freq` to zero).
 
-4.  Build the network from the accepted rules, rewiring edges so
-    higher-order nodes are properly connected.
+4.  Build the network from the kept histories, rewiring edges so the
+    higher-order nodes are connected to each other.
+
+The implementation follows the reference Python code of the two papers
+(pyHON and pyHON+).
 
 ## References
 

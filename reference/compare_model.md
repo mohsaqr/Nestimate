@@ -1,14 +1,31 @@
 # Compare two networks descriptively
 
-Computes a battery of descriptive comparison metrics between two
-networks or two weight matrices: weight deviations (mean / median / RMS
-/ max absolute difference, relative mean absolute difference,
-coefficient-of- variation ratio), four correlation measures (Pearson,
-Spearman, Kendall, distance correlation), five dissimilarity measures
-(Euclidean, Manhattan, Canberra, Bray-Curtis, Frobenius), five
-similarity measures (Cosine, Jaccard, Dice, Overlap, RV), pattern
-agreements, and side-by-side network metrics. Optionally adds centrality
-differences and centrality correlations.
+`compare_model()` compares two networks, or two weight matrices, edge by
+edge and returns a battery of descriptive agreement measures: weight
+deviations (mean, median, root-mean-square and maximum absolute
+difference, relative mean absolute difference, coefficient-of-variation
+ratio), four correlations (Pearson, Spearman, Kendall, distance
+correlation), five dissimilarities (Euclidean, Manhattan, Canberra,
+Bray-Curtis, Frobenius), five similarities (cosine, Jaccard, Dice,
+overlap, RV coefficient) and two pattern agreements (rank and sign
+agreement), with the two networks' metrics side by side and, on request,
+their centrality differences. It takes two `netobject`s,
+`cograph_network`s or square numeric matrices, or two members of a
+`netobject_group`. Both weight matrices are scaled with the same
+`scaling` before comparison, which decides how weights from different
+estimators are put on a common footing.
+
+The measures describe how alike the two estimated networks are; they say
+nothing about whether a difference is larger than sampling variation
+would produce. For that, test the difference with
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+(two transition networks) or with
+[`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md) on the
+two groups' observations (psychological networks).
+[`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
+compares any number of networks with tidy tables and a
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) that draws one
+view per call.
 
 ## Usage
 
@@ -72,152 +89,213 @@ plot(
 
 - x:
 
-  A `netobject`, `cograph_network`, or numeric square matrix, or a
-  `netobject_group` whose members `i` and `j` are compared. For the
-  [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_comparison`.
+  The first network: a `netobject`, a `cograph_network` or a numeric
+  square matrix, or a `netobject_group` whose members `i` and `j` are
+  compared. For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_comparison` object.
 
 - ...:
 
-  Ignored. In `plot.net_comparison()` and `print.net_comparison()`:
-  Ignored.
+  Not used.
 
 - y:
 
-  A `netobject`, `cograph_network`, or numeric square matrix.
+  The second network, in the same forms (not used for a
+  `netobject_group`). The two must hold the same nodes and have no
+  missing weights. Named inputs are aligned by node name, so the node
+  order may differ; different node sets, or missing, empty or duplicated
+  names, raise an error. A matrix without names is matched to the other
+  input by position and takes its node names; when neither input has
+  names the nodes are labelled `V1`, `V2`, ....
 
 - scaling:
 
-  Scaling applied to both weight matrices before comparison. One of:
+  The scaling applied to each weight matrix before comparison. Default
+  `"none"`. One of:
 
   `"none"`
 
-  :   Identity (default).
+  :   The weights as they are.
 
   `"minmax"`
 
-  :   \\(w - \min) / (\max - \min)\\; maps to \\\[0, 1\]\\.
+  :   \\(w - \min) / (\max - \min)\\, which maps them to \\\[0, 1\]\\; a
+      constant matrix is left as it is.
 
   `"max"`
 
-  :   \\w / \max(\|w\|)\\; preserves sign.
+  :   \\w / \max\|w\|\\, dividing by the largest absolute weight, so
+      signs are kept; a matrix of zeros is left as it is.
 
   `"rank"`
 
-  :   Min-max of average ranks; ordinal scaling.
+  :   Average ranks, mapped to \\\[0, 1\]\\ by min-max; an ordinal
+      scaling. A constant matrix keeps its (equal) ranks.
 
   `"zscore"`
 
-  :   \\(w - \bar w) / s_w\\; standard score.
+  :   \\(w - \bar w) / s_w\\, the standard score; a constant matrix is
+      only centred.
 
   `"robust"`
 
-  :   \\(w - \mathrm{med}(w)) / \mathrm{mad}(w)\\; Huber-style robust
-      z-score, resists outliers.
+  :   \\(w - \mathrm{med}(w)) / \mathrm{mad}(w)\\, a standard score from
+      the median and the median absolute deviation, less affected by
+      outliers; with a MAD of 0 the weights are only centred.
 
   `"log"`
 
-  :   \\\log(w)\\; requires \\w \> 0\\.
+  :   \\\log(w)\\; needs \\w \> 0\\: a weight at or below 0 raises an
+      error of class `nestimate_bad_input` (use `"log1p"` for networks
+      with zeros).
 
   `"log1p"`
 
-  :   \\\log(1 + w)\\; admits \\w \ge 0\\.
+  :   \\\log(1 + w)\\; defined for \\w \> -1\\. A weight of -1 or below
+      makes the comparison fail with an error.
 
   `"softmax"`
 
-  :   Numerically stable softmax over the flattened vector.
+  :   A numerically stable softmax over all the cells.
 
   `"quantile"`
 
-  :   Empirical CDF of the flattened vector.
+  :   The empirical cumulative distribution of the cells.
 
   `"frobenius"`
 
-  :   Divide the matrix by its Frobenius norm \\\\W\\\_F = \sqrt{\sum
-      w\_{ij}^2}\\; matrix-level normalisation.
+  :   The matrix divided by its Frobenius norm \\\\W\\\_F = \sqrt{\sum
+      w\_{ij}^2}\\, a matrix-level normalisation.
 
   `"row"`
 
-  :   Row-stochastic normalisation (each row's absolute values sum to
-      1). Only meaningful for non-negative matrices; rows summing to
-      zero are left unchanged.
+  :   Each row divided by the sum of its absolute values, so the rows
+      sum to 1 for non-negative weights; rows summing to zero are left
+      unchanged.
 
-  Scalings that produce negative weights (`zscore`, `robust`) are
-  compatible with `network = TRUE` because the side-by-side metrics use
-  Nestimate's base-R Floyd-Warshall, which handles negative weights.
+  Scalings that produce negative weights (`"zscore"`, `"robust"`) work
+  with `network = TRUE`: the side-by-side distances are computed on the
+  absolute weights.
 
 - measures:
 
-  Character vector of centrality measures to compare. Empty by default
-  (no centrality block). Any built-in measure is valid: `"OutStrength"`,
-  `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`, `"Closeness"`,
-  `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"`, `"Clustering"`,
-  `"InCloseness"`, `"OutCloseness"`. Unknown names are ignored with a
-  warning.
+  Centrality measures to compare. Default `character(0)` (none). Any
+  built-in measure of
+  [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  can be named: `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`,
+  `"ClosenessOut"`, `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`,
+  `"Diffusion"` and `"Clustering"` (`"InCloseness"` and `"OutCloseness"`
+  are accepted for `"ClosenessIn"` and `"ClosenessOut"`). Unknown names
+  are dropped with a warning. The centralities are computed on the
+  scaled matrices as directed networks, without self-loops.
 
 - network:
 
-  Logical. Include side-by-side network metrics from
-  [`summary()`](https://rdrr.io/r/base/summary.html)? Default `TRUE`.
+  Whether to add the two networks' metrics side by side (the metrics
+  [`summary()`](https://rdrr.io/r/base/summary.html) reports for a
+  `netobject`). Default `TRUE`.
 
 - i, j:
 
-  For a `netobject_group`: index or name of the two member networks to
-  compare. Defaults `1L` and `2L`.
+  For a `netobject_group`: the two members to compare, by index or name.
+  Defaults `1` and `2`; the two must differ, and a member that does not
+  exist raises an error.
 
 - type:
 
-  Character. One of `"scatter"` (default - edge-weight scatter with OLS
-  fit and correlation overlay), `"heatmap"` (n by n grid of x - y
-  differences using the diverging palette), `"diff_hist"` (histogram of
-  \|x - y\| absolute differences with rug + density), `"weight_dist"`
-  (overlaid distributions of \|x\| and \|y\| edge weights), or `"all"`
-  (2 by 2 grid of all four panels; requires the gridExtra package).
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the
+  view. `"scatter"` (default) plots each cell's weight in `y` against
+  its weight in `x`, with the line of perfect agreement (dashed), an OLS
+  fit with its 95% band and the Pearson, Spearman and Kendall
+  correlations. `"heatmap"` draws the difference matrix `x - y` on the
+  diverging palette: blue where `x` is larger, red where `y` is larger,
+  white where they agree. `"diff_hist"` is a histogram of the absolute
+  differences `|x - y|`, with a density curve, a rug of the cells and
+  lines at the mean and median. `"weight_dist"` overlays the
+  distributions of `|x|` and `|y|`. `"all"` draws these four views in a
+  2 x 2 grid.
 
 - combined:
 
-  When `type = "all"` and `combined = TRUE` (default), the four panels
-  are stitched into a 2x2 gtable. When `FALSE`, returns a named list of
-  the four ggplots so each can be printed, saved, or re-laid-out
-  independently. Ignored for other `type` values.
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html) with
+  `type = "all"`: `TRUE` (default) arranges the four views into one 2 x
+  2 gtable, which needs the gridExtra package; `FALSE` returns them as a
+  named list of ggplots, to print, save or lay out separately. Ignored
+  for the other views.
 
 ## Value
 
-A `net_comparison` object: a named list with `matrices`,
-`difference_matrix`, `edge_metrics`, `summary_metrics`, optionally
-`network_metrics`, `centrality_differences`, `centrality_correlations`.
+A `net_comparison` object. Print it for the agreement measures, the
+side-by-side network metrics and the centrality correlations;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+edge-weight scatter or another view (see `type`). The object is a list
+with:
 
-In `print.net_comparison()`: `x`, invisibly.
+- matrices:
 
-In `plot.net_comparison()`: A `ggplot` object; for `type = "all"` with
-`combined = TRUE` a `gtable` arranged 2 by 2; for `type = "all"` with
-`combined = FALSE` a named list of four ggplots.
+  The two scaled weight matrices, `x` and `y`, aligned by node.
+
+- difference_matrix:
+
+  The scaled `x` minus the scaled `y`.
+
+- edge_metrics:
+
+  A data frame with one row per cell (`source`, `target`, self-loops
+  included): the two weights and their raw, absolute, squared, relative
+  and rank differences, percentile difference, ratio
+  (`similarity_strength_index`), relative change (`difference_index`),
+  log ratio of 1 + weight (`logarithmic_ratio`, `NA` where a weight is
+  -1 or below), standardised weights and their ratio. A ratio is `NA`
+  where its denominator is zero, and the standardised weights are `NA`
+  when a matrix is constant.
+
+- summary_metrics:
+
+  A data frame of the 22 agreement measures, with columns `category`,
+  `metric` and `value`.
+
+- network_metrics:
+
+  When `network = TRUE`: a data frame with columns `metric`, `x` and
+  `y`, one row per network metric.
+
+- centrality_differences, centrality_correlations:
+
+  When `measures` is not empty (empty data frames when none of its names
+  is valid): one row per node and measure (`state`, `centrality`, `x`,
+  `y`, `difference`), and one row per measure with the correlation of
+  the two networks' values.
+
+[`print()`](https://rdrr.io/r/base/print.html) returns its input
+invisibly. [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+returns a ggplot; with `type = "all"`, it draws the 2 x 2 grid and
+returns it invisibly as a gtable, or with `combined = FALSE` returns the
+four ggplots invisibly as a named list.
 
 ## Details
 
-Mirrors
-[`tna::compare()`](https://sonsoles.me/tna/reference/compare.html)
-numerically. Inputs are converted to weight matrices and scaled before
-comparison; the choice of scaling determines how weights from different
-estimators are placed on a common footing. Named inputs are aligned by
-node names; different node sets or duplicate names raise an error. A
-fully unnamed matrix is matched by position.
+The measures, scalings and edge metrics mirror
+[`tna::compare()`](https://sonsoles.me/tna/reference/compare.html) (tna
+1.5.4 and later) numerically. The distance correlation is that of
+Szekely, Rizzo and Bakirov (2007), `NA` when one network is constant,
+and the RV coefficient that of Robert and Escoufier (1976). A network's
+own `directed` flag decides how its network metrics are computed; a
+plain matrix has none, so an asymmetric matrix is read as directed and a
+symmetric one as undirected.
 
-## Methods
+## References
 
-- `compare_model.netobject_group()`: Selects two members of a
-  `netobject_group` (by index or name) and dispatches to
-  `compare_model.netobject()`. See also
-  [`compare_networks`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md),
-  the N-way successor with tidy tables and a
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) that draws
-  one view per call.
+Szekely, G. J., Rizzo, M. L., & Bakirov, N. K. (2007). Measuring and
+testing dependence by correlation of distances. *The Annals of
+Statistics*, 35(6), 2769–2794.
+[doi:10.1214/009053607000000505](https://doi.org/10.1214/009053607000000505)
 
-- `plot.net_comparison()`: Visualises a `net_comparison` object.
-  Currently supports the edge-weight scatterplot (default), with the
-  diagonal reference (perfect agreement) and the OLS regression line
-  annotated by Pearson, Spearman, and Kendall correlations.
+Robert, P., & Escoufier, Y. (1976). A unifying tool for linear
+multivariate statistical methods: The RV-coefficient. *Journal of the
+Royal Statistical Society, Series C (Applied Statistics)*, 25(3),
+257–265. [doi:10.2307/2347233](https://doi.org/10.2307/2347233)
 
 ## Examples
 

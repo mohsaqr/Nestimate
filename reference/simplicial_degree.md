@@ -1,6 +1,17 @@
 # Simplicial Degree
 
-Counts how many simplices of each dimension contain each node.
+`simplicial_degree()` counts, for each node of a simplicial complex, how
+many simplices of each dimension contain it: edges (dimension 1),
+triangles (dimension 2) and so on. It is the higher-order counterpart of
+a node's degree, and says which nodes take part in many group-level
+structures rather than only in pairs.
+
+The counts describe the complex as built, so they move with the
+threshold or pathways
+[`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
+was given. A node in a clique of m nodes is in `choose(m - 1, k)` of its
+k-simplices, so one large clique raises the node's counts in every
+dimension up to the clique's own; compare nodes within a dimension.
 
 ## Usage
 
@@ -12,16 +23,21 @@ simplicial_degree(sc, normalized = FALSE)
 
 - sc:
 
-  A `simplicial_complex` object.
+  A `simplicial_complex` from
+  [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md).
 
 - normalized:
 
-  Divide by maximum possible count. Default `FALSE`.
+  Whether to divide each count of dimension k by the largest possible
+  one, `choose(n_nodes - 1, k)`, the number of k-simplices a node can be
+  in. Default `FALSE`.
 
 ## Value
 
-Data frame with `node`, columns `d0` through `d_k`, and `total` (sum of
-d1+). Sorted by total descending.
+A data frame with one row per node, sorted by decreasing `total`:
+`node`, then `d0`, `d1`, ... up to the dimension of the complex (the
+number of simplices of that dimension containing the node; `d0` is
+always 1), and `total`, the sum of `d1` onwards.
 
 ## Examples
 

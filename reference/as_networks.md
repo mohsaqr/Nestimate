@@ -1,16 +1,25 @@
 # Promote a psychometric MCML result to a network group
 
-`as_networks()` is the psychometric-network counterpart of
-[`as_tna`](https://pak.dynasite.org/Nestimate/reference/as_tna.md). It
-promotes the cluster-level (macro) and within-cluster networks produced
-by
-[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
-into a single `netobject_group`, so the result flows into the same
-downstream verbs as any other group of networks
-([`print()`](https://rdrr.io/r/base/print.html),
+`as_networks()` gathers the cluster-level (macro) network and the
+within-cluster networks of a
+[`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
+fit into one `netobject_group`, so they go through the same verbs as any
+other group of networks: [`print()`](https://rdrr.io/r/base/print.html),
 [`summary()`](https://rdrr.io/r/base/summary.html),
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-[`net_centrality`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)).
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md),
+and
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+for drawing. It is the psychometric-network counterpart of
+[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md).
+
+[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
+converts *transition* networks (directed, row-normalised, with initial
+probabilities) and re-wraps raw matrices. The macro and within-cluster
+networks of an `mcml_pc` object are already full netobjects of
+*psychometric* networks (undirected; correlation, partial correlation or
+glasso) carrying their estimator and directedness, and their data when
+they were re-estimated, so `as_networks()` only assembles them into a
+group.
 
 ## Usage
 
@@ -28,34 +37,23 @@ as_networks(x)
 
 - x:
 
-  An object to convert. The `mcml_pc` method (from
-  [`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md))
-  is the primary path.
+  The object to convert: an `mcml_pc` fit from
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md),
+  or a `netobject_group`, which is returned unchanged. Any other object
+  raises an error.
 
 ## Value
 
-A `netobject_group`: a named list whose first element is `macro` (the
-cluster-level network), followed by one netobject per non-singleton
-cluster.
-
-The `mcml_pc` method returns a `netobject_group`; singleton clusters (no
-within-network) are dropped with a
-[`warning()`](https://rdrr.io/r/base/warning.html).
-
-The default method returns the input unchanged if it is already a
-`netobject_group`, otherwise it errors.
-
-## Details
-
-Where
-[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
-promotes *transition* networks (directed, row-normalised, with initial
-probabilities) and re-wraps raw matrices, `as_networks()` promotes
-*psychometric* networks (undirected; correlation / partial-correlation /
-glasso). The macro and within-cluster components of an `mcml_pc` object
-are already full netobjects carrying their estimator, directedness and
-data, so this function assembles them into a group rather than
-re-wrapping matrices.
+A `netobject_group`, read by
+[`print()`](https://rdrr.io/r/base/print.html),
+[`summary()`](https://rdrr.io/r/base/summary.html) and
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+and drawn by
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html):
+a named list whose first element, `macro`, is the cluster-level network,
+followed by one netobject per cluster with more than one member. A
+singleton cluster has no within-cluster network and is left out, with a
+warning naming it.
 
 ## See also
 

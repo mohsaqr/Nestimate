@@ -1,11 +1,21 @@
 # Validate a netobject / cograph_network against the shared schema
 
-Enforces the structural contract that both Nestimate netobjects and
-psychnets objects must satisfy to be interchangeable across the package
-boundary. This is the single place that says what "a network object"
-means, so a drift on either side (a renamed field, a mistyped edge
-column) fails loudly here rather than mis-rendering three layers
-downstream.
+`validate_netobject()` checks that an object meets the structure
+Nestimate `netobject`s and psychnets objects share, so either can be
+passed across the package boundary. It is the one place that says what a
+network object is, so a change on either side (a renamed field, a
+mistyped edge column) fails here instead of further down, for instance
+when the network is drawn.
+
+The checks are the shared part only: the object inherits
+`cograph_network`; `weights` is a square numeric matrix with node names
+as dimnames; `nodes` is a data frame with columns `id`, `label` and
+`name`, one row per node; `edges` is a data frame with columns `from`,
+`to` and a numeric `weight`, whose endpoints are integer node indices
+(Nestimate) or node labels (psychnets); `directed` is a single logical
+value; and `method` is a single string. The `x`/`y` layout columns of
+`nodes` and Nestimate's own fields (`data`, `level`, ...) are not
+required.
 
 ## Usage
 
@@ -17,19 +27,12 @@ validate_netobject(x)
 
 - x:
 
-  An object expected to satisfy the `cograph_network` contract.
+  The object to check, expected to be a `cograph_network`.
 
 ## Value
 
-Invisibly `TRUE` if `x` conforms; otherwise stops with the full list of
-violations.
-
-## Details
-
-The contract is deliberately the *shared* subset: the `$nodes` `x`/`y`
-layout columns and the Nestimate pipeline fields (`$data`, `$level`,
-...) are not required, and `$edges` endpoints may be either integer node
-indices (Nestimate) or character labels (psychnet).
+`TRUE`, invisibly, when `x` passes every check. Otherwise an error that
+lists every check it failed.
 
 ## See also
 

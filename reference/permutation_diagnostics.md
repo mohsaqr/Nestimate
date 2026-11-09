@@ -1,15 +1,25 @@
 # Does Nesting Bias a Permutation Test?
 
-Shows what treating nested sequences as independent would cost. The
-comparison is run twice on the same data: once with the ordinary
-[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
-test, which shuffles single sequences, and once with `actor`, which
-shuffles whole actors (the persons whose sessions they are, or the teams
-of students). The result places the two side by side, with the ICC and
-design effect that explain any difference between them. See the sections
-*Nested data and actor* and *ICC and design effect* of
-[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
-for what these quantities mean.
+`permutation_diagnostics()` shows what treating nested sequences as
+independent costs a network comparison. It runs
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+twice on the same networks and seed: once shuffling single sequences,
+once with `actor`, shuffling whole actors (the persons whose sessions
+the sequences are, or the teams of students). It returns the two results
+side by side, one row per compared pair or per edge, with the intraclass
+correlation (ICC) and design effect that explain any difference between
+them. It takes two transition networks, or every pair of groups of a
+`netobject_group`.
+
+A design effect near 1 and few changed edges say that the nesting
+changes the comparison little. Where the two tests differ, the
+actor-level one is the test that follows the nesting, as
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+sets out for nested data. The sections *Nested data and actor* and *ICC
+and design effect* of
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+define these quantities, and *How to read the result* below says what
+each column shows.
 
 ## Usage
 
@@ -29,51 +39,59 @@ permutation_diagnostics(
 
 - x:
 
-  A `netobject_group` (every pair of groups is diagnosed) or a
-  `netobject` (then `y` is required). Transition methods only
-  (`"relative"`, `"frequency"`, `"co_occurrence"`).
+  The networks to compare: a `netobject_group`, whose every pair of
+  groups is diagnosed, or a `netobject`, compared with `y`. An `mcml`,
+  whose layers hold different states, raises an error of class
+  `nestimate_bad_input`. Only the transition methods `"relative"`,
+  `"frequency"` and `"co_occurrence"` are supported; any other method,
+  association networks and `wtna` among them, raises an error of class
+  `nestimate_actor_unsupported`.
 
 - y:
 
-  A `netobject` to compare with `x`, or `NULL`.
+  The `netobject` to compare with when `x` is a `netobject`. Default
+  `NULL`, as it must stay when `x` is a group.
 
 - actor:
 
-  Character. Column identifying the actor each sequence belongs to, as
-  in
-  [`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
+  The column identifying the actor each sequence belongs to, as in
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
+  looked up in the networks' metadata or sequence data. A column not
+  found, or one with missing values, raises an error of class
+  `nestimate_actor_missing`. Required.
 
 - iter:
 
-  Integer. Permutation iterations for each of the two tests. Default
-  1000.
+  The number of permutations for each of the two tests, at least 2.
+  Default `1000`.
 
 - alpha:
 
-  Numeric. Significance level. Default 0.05.
+  The significance level that counts an edge as significant, between 0
+  and 1. The p-values are not adjusted for multiplicity. Default `0.05`.
 
 - level:
 
-  Character. `"overall"` (default): one row per group pair. `"edges"`:
-  one row per edge per pair.
+  `"overall"` (default) returns one row per compared pair; `"edges"` one
+  row per edge per pair.
 
 - seed:
 
-  Integer or NULL. RNG seed; both tests use the same seed.
+  A seed for the shuffles, used by both tests, so the result repeats
+  exactly. Default `NULL`.
 
 ## Value
 
-A `data.frame`.
-
-With `level = "overall"`, one row per compared pair:
+A data frame. With `level = "overall"`, one row per compared pair:
 
 - pair:
 
-  `"<x> vs <y>"`.
+  `"<x> vs <y>"`, the names of the two groups (`"x vs y"` for two
+  networks).
 
 - n_sequences, n_actors:
 
-  Sequences and distinct actors in the pair.
+  The sequences and distinct actors in the pair.
 
 - design:
 
@@ -82,16 +100,18 @@ With `level = "overall"`, one row per compared pair:
 
 - icc, icc_ci_lower, icc_ci_upper:
 
-  How alike the sequences of one actor are, with a 95% interval; as
-  printed by
-  [`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
-  `NA` interval with fewer than 3 actors.
+  How alike the sequences of one actor are: the jackknife bias-corrected
+  ICC, as printed by
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
+  with a 95% interval; with fewer than 3 actors the ICC is the
+  uncorrected estimate and the interval is `NA`; the ICC is `NA` when no
+  transition share varies.
 
 - deff_edges:
 
-  Median over edges of the design effect, the ratio of the actor-level
-  to the sequence-level null variance of the edge difference (Kish,
-  1965).
+  The median over edges of the design effect, the ratio of the
+  actor-level to the sequence-level null variance of the edge difference
+  (Kish, 1965).
 
 - deff_global:
 
@@ -99,35 +119,35 @@ With `level = "overall"`, one row per compared pair:
 
 - p_global_sequence, p_global_actor:
 
-  Permutation p-values of `M` when sequences or whole actors are
+  The permutation p-values of `M` when sequences or whole actors are
   reassigned.
 
 - sig_edges_sequence, sig_edges_actor:
 
-  Edges with `p < alpha` under each test.
+  The number of edges with `p < alpha` under each test.
 
 - edges_changed:
 
-  Edges significant under one test but not the other.
+  The number of edges significant under one test but not the other.
 
 - min_p_actor:
 
-  Smallest p-value an exact actor-level test can produce,
-  `max(1 / arrangements, 1 / (iter + 1))`.
+  The smallest p-value the actor-level test can reach: one over the
+  number of distinct arrangements of the actors, or `1 / (iter + 1)`,
+  whichever is larger.
 
-With `level = "edges"`, one row per edge present in either network:
-`pair`, `from`, `to`, `diff`, `icc` (per-edge ANOVA ICC, not
-bias-corrected; `NA` where the share does not vary), `null_sd_sequence`,
-`null_sd_actor`, `deff` (`NaN` where the edge difference never varies
-under either null), `p_sequence`, `p_actor`, `changed`.
+With `level = "edges"`, one row per edge present in either network, with
+the columns `pair`, `from`, `to`, `diff` (the observed difference,
+`x - y`), `icc` (the edge's ANOVA ICC, not bias-corrected; `NA` where
+the share does not vary), `null_sd_sequence` and `null_sd_actor` (the SD
+of the shuffled differences under each test), `deff` (`NaN` where the
+edge difference never varies under either null), `p_sequence`, `p_actor`
+and `changed` (whether the edge is significant under one test only).
 
-The ICC and design effects are those of the actor-level run (see the
-`clustering` element of
-[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md));
-the p-values and significance counts compare it with a separate ordinary
-run. Errors with class `nestimate_actor_unsupported` for association
-networks and `nestimate_actor_missing` when `actor` is not a column of
-the networks' metadata or sequence data.
+The ICC and design effects are those of the actor-level run, as
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+prints them when given `actor`; the p-values and significance counts
+compare it with a separate ordinary run.
 
 ## How to read the result
 

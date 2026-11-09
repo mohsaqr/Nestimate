@@ -1,15 +1,24 @@
 # Split-Half Reliability for Network Estimates
 
-Assesses the stability of network estimates by repeatedly splitting
-sequences into two halves, building networks from each half, and
-comparing them. Supports single-model reliability assessment and
-multi-model comparison with optional scaling for cross-method
-comparability.
+`network_reliability()` measures how much a network's weights depend on
+the particular sample: it splits the sequences (for an association
+network, the rows of its data) at random into two halves, estimates the
+network on each half with the original network's method and settings,
+compares the two weight matrices, and repeats this `iter` times. Each
+comparison gives four numbers: the mean, median and largest absolute
+difference between the halves' weights and their Pearson correlation,
+taken over all cells of the weight matrix. It takes one network or
+several, so the reliability of different methods or groups can be set
+side by side; a `netobject_group` contributes one network per group.
 
-For transition methods (`"relative"`, `"frequency"`, `"co_occurrence"`),
-uses pre-computed per-sequence count matrices for fast resampling (same
-infrastructure as
-[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)).
+Each half holds only part of the sequences, so the agreement is that of
+networks estimated from a sample of that size. Differences are on the
+scale of the weights: counts of a `"frequency"` network and
+probabilities of a `"relative"` one are not comparable without `scale`.
+To see how far single edges move, use
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md);
+to check centrality rankings,
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md).
 
 ## Usage
 
@@ -36,99 +45,130 @@ plot(x, bins = 60L, combined = TRUE, ...)
 
 - ...:
 
-  One or more `netobject`s (from
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)).
-  If unnamed, each model is auto-named from its `$method`; duplicate
-  names are made unique with
-  [`make.unique()`](https://rdrr.io/r/base/make.unique.html). A
-  `netobject_group` is flattened into its constituent models (named by
-  group), and an `mcml` or `cograph_network` is converted first. In
-  `plot.net_reliability()` and `print.net_reliability()`: Additional
-  arguments (ignored). In `summary.net_reliability()`: Ignored.
+  The networks: one or more `netobject`s from
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+  A `netobject_group` is split into its networks, named by group; an
+  `mcml` is converted with
+  [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
+  first, and a bare `cograph_network` is read as a `netobject`. Each
+  network is named by its argument name or, failing that, its method;
+  repeated names get a suffix (`"_1"`, `"_2"`, ...). A network without
+  its sequence data (which
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  keeps) raises an error, a network resting on one sequence an error of
+  class `nestimate_single_sequence`, and networks of different methods
+  with `scale = "none"` a warning. For the
+  [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  ignored.
 
 - iter:
 
-  Integer. Number of split-half iterations (default: 1000).
+  The number of split-half iterations, at least 2. Default `1000`.
 
 - split:
 
-  Numeric. Fraction of sequences assigned to the first half (default:
-  0.5).
+  The share of the sequences that goes to the first half, the rest
+  forming the second, strictly between 0 and 1. Default `0.5`.
 
 - scale:
 
-  Character. Scaling applied to both split-half matrices before
-  computing metrics. One of `"none"` (default), `"minmax"`,
-  `"standardize"`, or `"proportion"`. Use scaling when comparing models
-  on different scales (e.g. frequency vs relative).
+  The rescaling applied to both halves' weight matrices before they are
+  compared, so that networks on different scales can be set side by
+  side: `"none"` (default); `"minmax"`, which maps each matrix to 0–1;
+  `"standardize"`, which subtracts the mean of its cells and divides by
+  their SD; or `"proportion"`, which divides by the sum of its cells. A
+  matrix whose cells are all equal, or sum to 0, is left as it is.
 
 - seed:
 
-  Integer or NULL. RNG seed for reproducibility.
+  A seed for the random splits, so the result repeats exactly. The
+  session's own random stream is left as it was. Default `NULL`.
 
 - x:
 
   For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_reliability`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_reliability` object.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_reliability`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_reliability` object.
 
 - bins:
 
-  Integer. Number of histogram bins per panel (default 60).
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the number of histogram bins per panel. Default `60`.
 
 - combined:
 
-  When `TRUE` (default), all four metrics are shown in one ggplot via
-  `facet_wrap(~ metric)`. When `FALSE`, returns a named list of four
-  single-panel ggplots, one per metric.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: `TRUE` (default) draws the four metrics as panels of one plot;
+  `FALSE` returns a named list of four single-panel plots, one per
+  metric, without drawing them.
 
 ## Value
 
-An object of class `"net_reliability"` containing:
+A `net_reliability` object.
+[`print()`](https://rdrr.io/r/base/print.html) shows the mean and SD of
+each metric over the iterations, per network;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns them as a
+data frame with one row per network and metric and the columns `model`,
+`metric` (`mean_dev`, `median_dev`, `cor`, `max_dev`), `mean` and `sd`;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws their
+distributions. The object's fields:
 
 - iterations:
 
-  Data frame with columns `model`, `mean_dev`, `median_dev`, `cor`,
-  `max_dev` (one row per iteration per model).
+  A data frame with one row per iteration and network, and the columns
+  `model`, `mean_dev`, `median_dev`, `cor` and `max_dev`.
 
 - summary:
 
-  Data frame with columns `model`, `metric`, `mean`, `sd`.
+  The table [`summary()`](https://rdrr.io/r/base/summary.html) returns.
 
 - models:
 
-  Named list of the original `netobject`s.
+  The networks compared, as a named list.
 
-- iter:
+- iter, split, scale:
 
-  Number of iterations.
+  The settings of the call.
 
-- split:
+[`print()`](https://rdrr.io/r/base/print.html) returns its input
+invisibly. [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+draws the histograms (see *Methods*) and returns the `ggplot` invisibly;
+with `combined = FALSE` it returns, without drawing, a list of four
+`ggplot`s named by the metric labels (`"Max Abs. Diff."`,
+`"Mean Abs. Diff."`, `"Median Abs. Diff."`, `"Pearson"`).
 
-  Split fraction.
+## Details
 
-- scale:
-
-  Scaling method used.
-
-In `print.net_reliability()`: The input object, invisibly.
-
-In `summary.net_reliability()`: A tidy data frame with columns `model`,
-`metric`, `mean`, `sd` summarising the split-half iterations.
-
-In `plot.net_reliability()`: A `ggplot` object (invisibly), or a named
-list of four ggplots when `combined = FALSE`.
+The first half holds `round(split * n)` of the `n` sequences (at least
+one), the second the rest; a `split` that leaves the second half empty
+(few sequences, `split` far from 0.5) raises an error of class
+`nestimate_bad_input`. For the transition methods (`"relative"`,
+`"frequency"`, `"co_occurrence"`, and one-hot `wtna` networks, which are
+counted the same way), each sequence's transition counts are computed
+once and each half is summed from them, as in
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md).
+Other methods are re-estimated on each half of the rows. The network's
+own scaling and threshold are applied to both halves. A half on which
+the estimator fails, or that loses a variable (a column constant in that
+half), gives `NA` for that iteration, counted in a warning of class
+`nestimate_resample_failed`. The summary leaves out missing values, such
+as a correlation that is undefined because one half's weights are all
+equal.
 
 ## Methods
 
-- `plot.net_reliability()`: Density plots of split-half metrics faceted
-  by metric type. Multi-model comparisons show overlaid densities
-  colored by model.
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html): histograms
+  of the split-half metrics over the iterations, one panel per metric,
+  the mean marked by a dashed line and a label. With several networks,
+  their histograms are overlaid, one colour per network, with a legend
+  below.
 
 ## See also
 

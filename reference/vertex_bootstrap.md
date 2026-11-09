@@ -1,23 +1,27 @@
 # Vertex Bootstrap for Network-Level Statistics
 
-Non-parametric vertex bootstrap of a single observed network (Snijders &
-Borgatti 1999). Vertices are resampled with replacement and the weight
-matrix is rebuilt from the original entries of the resampled vertex
-pairs; network-level statistics computed on each replicate give
-bootstrap distributions, standard errors, and confidence intervals.
+`vertex_bootstrap()` resamples the nodes of one observed network and
+returns bootstrap standard errors, bias and confidence intervals for
+network-level statistics: density, mean weight, strength centralisation
+and, for a directed network, reciprocity, plus any statistic of your own
+(Snijders & Borgatti 1999). It needs only the weight matrix, so it works
+on any `netobject` or `cograph_network`, including those that carry no
+data, such as the constituents of
+[`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
+or the networks
+[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
+returns for an `mcml` object built from a weight matrix, and on a plain
+square weight matrix.
 
-Unlike
-[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
-which resamples the underlying cases (sequences or rows) and therefore
-requires the raw data stored in the netobject, the vertex bootstrap
-needs **only the weight matrix**. It works on any `netobject` -
-including data-less ones such as
-[`build_mlvar`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
-constituents or `as_tna(mcml)` elements - and on plain weight matrices.
-The two procedures answer different questions: the case bootstrap
-quantifies sampling-of-subjects uncertainty in the edge weights; the
-vertex bootstrap quantifies structural uncertainty of whole-network
-descriptives given the one network you observed.
+The intervals describe how much a whole-network statistic depends on
+which nodes happen to make up the network, with the edge weights taken
+as given. They say nothing about how the weights themselves vary from
+sample to sample; when the sequences or rows behind a network are
+available,
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+resamples those instead. Two networks are compared on these statistics
+with
+[`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md).
 
 ## Usage
 
@@ -47,134 +51,159 @@ plot(x, bins = 30, ...)
 
 - x:
 
-  A `netobject` (from
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  The network: a `netobject` (from
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   or any builder), a `cograph_network`, or a square numeric weight
-  matrix. For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_vertex_bootstrap`.
+  matrix, with at least 3 nodes. Other input raises an error. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_vertex_bootstrap` result.
 
 - iter:
 
-  Integer. Number of bootstrap replicates (default 1000).
+  The number of bootstrap replicates, at least 2. Default `1000`.
 
 - ci_level:
 
-  Numeric. Significance level for the confidence intervals (default 0.05
-  for 95% CIs).
+  The significance level of the confidence intervals, not their
+  coverage: `0.05` (default) gives 95% intervals. Must lie strictly
+  between 0 and 1.
 
 - ci_method:
 
-  Character. `"percentile"` (default) for empirical quantile intervals,
-  or `"basic"` for intervals reflected around the observed value
-  (Davison & Hinkley 1997, eq. 5.6).
+  How the intervals are formed. `"percentile"` (default) takes the
+  `ci_level / 2` and `1 - ci_level / 2` quantiles of the replicates;
+  `"basic"` reflects them around the observed value,
+  `2 * observed - upper` and `2 * observed - lower` (Davison & Hinkley
+  1997, eq. 5.6).
 
 - statistics:
 
-  Character vector selecting built-in statistics (see Details). Default:
-  all applicable to the network's directedness.
+  The built-in statistics to compute (see *Details*). Default `NULL`:
+  all of them, with `reciprocity` only for a directed network. A name
+  that is not available for the network, such as `reciprocity` on an
+  undirected one, raises an error.
 
 - statistic_fn:
 
-  Optional named list of functions, each taking the weight matrix and
-  returning a single numeric value. Computed alongside the built-ins.
+  Statistics of your own, as a named list of functions, each taking the
+  weight matrix and returning a single number. They are computed beside
+  the built-ins on the whole matrix, diagonal included. Default `NULL`.
 
 - directed:
 
-  Logical or NULL. Directedness of the network. NULL (default) reads
-  `x$directed` when available, otherwise falls back to matrix symmetry.
+  Whether the network is directed, which decides how collisions are
+  filled and whether `reciprocity` is available. Default `NULL` reads
+  the network's own directedness, and for a matrix (or a network that
+  records none) treats an asymmetric matrix as directed.
 
 - seed:
 
-  Integer or NULL. RNG seed for reproducibility.
+  A seed passed to [`set.seed()`](https://rdrr.io/r/base/Random.html)
+  before resampling, so the run can be repeated; the session's
+  random-number stream then continues from it. Default `NULL` uses the
+  current stream.
 
 - digits:
 
-  Number of digits to display (default 3).
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: the
+  number of decimals shown. Default `3`.
 
 - ...:
 
-  In `plot.net_vertex_bootstrap()`, `print.net_vertex_bootstrap()` and
-  `summary.net_vertex_bootstrap()`: Additional arguments (ignored).
+  Not used.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_vertex_bootstrap`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_vertex_bootstrap` result.
 
 - bins:
 
-  Number of histogram bins (default 30).
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the number of histogram bins. Default `30`.
 
 ## Value
 
-An object of class `"net_vertex_bootstrap"` containing:
+A `net_vertex_bootstrap` object. Printing it shows the number of nodes,
+the directedness, the number of replicates and the interval level and
+method, then the summary table;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns that table as
+a data frame with one row per statistic and the columns `statistic`,
+`observed`, `boot_mean`, `boot_sd`, `bias` (`boot_mean - observed`),
+`ci_lower` and `ci_upper`;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+bootstrap distributions. The object holds:
 
 - summary:
 
-  Tidy data frame, one row per statistic: `statistic`, `observed`,
-  `boot_mean`, `boot_sd`, `bias`, `ci_lower`, `ci_upper`.
+  The summary table described above.
 
 - boot_stats:
 
-  `iter` x n_statistics matrix of replicate values.
+  A matrix of the replicate values, `iter` rows by one column per
+  statistic.
 
 - observed:
 
-  Named vector of observed statistics.
+  The observed statistics, as a named numeric vector.
 
 - iter, ci_level, ci_method, directed, n_nodes:
 
-  Configuration.
+  The settings used and the number of nodes.
 
-In `print.net_vertex_bootstrap()`: `x`, invisibly.
-
-In `summary.net_vertex_bootstrap()`: The tidy summary data frame (one
-row per statistic).
-
-In `plot.net_vertex_bootstrap()`: A ggplot object.
+The [`print()`](https://rdrr.io/r/base/print.html) method returns its
+input invisibly, [`summary()`](https://rdrr.io/r/base/summary.html) the
+summary data frame and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) a `ggplot`
+object.
 
 ## Details
 
-Each replicate draws `n` vertex indices with replacement and sets
-`W_b[i, j] = W[idx_i, idx_j]`. When the same original vertex is drawn
-for two different positions, the off-diagonal cell would be a structural
-self-pair; following Snijders & Borgatti, such cells are filled with the
-weight of a randomly chosen pair of distinct original vertices. Diagonal
-entries carry the original self-weight of the resampled vertex
-(`W[idx_i, idx_i]`) - self-loops are meaningful in transition networks
-and are never altered. For undirected networks the substitution is
-applied symmetrically so replicates stay symmetric.
+Each replicate draws `n` node indices with replacement and sets
+`W_b[i, j] = W[idx_i, idx_j]`. When the same original node is drawn for
+two different positions, the off-diagonal cell between them would be a
+self-pair; following Snijders & Borgatti, it is filled with the weight
+of a randomly chosen pair of distinct original nodes. Diagonal cells
+keep the original self-weight of the resampled node (`W[idx_i, idx_i]`),
+since self-loops are meaningful in transition networks. For an
+undirected network the substitution is made in the upper triangle and
+mirrored, so every replicate stays symmetric.
 
-Built-in statistics (all computed on the off-diagonal part of the weight
-matrix):
+The built-in statistics are computed on the off-diagonal cells:
 
 - `density`:
 
-  Proportion of non-zero off-diagonal cells.
+  The share of non-zero off-diagonal cells.
 
 - `mean_weight`:
 
-  Mean of the non-zero off-diagonal weights.
+  The mean of the non-zero off-diagonal weights.
 
 - `centralization`:
 
-  Freeman-type strength centralization:
-  `sum(max(s) - s) / ((n - 1) * max(s))` where `s` is total node
-  strength on absolute weights. 0 when all nodes have equal strength,
-  approaching 1 for a star.
+  Freeman-type strength centralisation,
+  `sum(max(s) - s) / ((n - 1) * max(s))`, where `s` is each node's total
+  (in plus out) absolute strength without its self-loop: 0 when every
+  node has the same strength, approaching 1 for a star.
 
 - `reciprocity`:
 
-  Directed networks only. Weighted reciprocity
-  `sum(pmin(|W|, |t(W)|)) / sum(|W|)` over off-diagonal cells: the
-  proportion of total weight that is reciprocated.
+  Directed networks only. Weighted reciprocity,
+  `sum(pmin(|W|, |t(W)|)) / sum(|W|)` over the off-diagonal cells: the
+  share of the total weight that is reciprocated.
+
+A statistic is `NA` when it is undefined: `mean_weight` with no non-zero
+cell, `centralization` when every strength is 0, `reciprocity` when the
+total weight is 0. `NA` replicates are left out of the bootstrap mean,
+standard deviation and quantiles.
 
 ## Methods
 
-- `plot.net_vertex_bootstrap()`: Histogram of the bootstrap distribution
-  per statistic, with the observed value (solid line) and confidence
-  bounds (dashed lines).
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
+histogram of the replicate values for each statistic, one panel per
+statistic with its own scales, a solid line at the observed value and
+dashed lines at the interval bounds.
 
 ## References
 

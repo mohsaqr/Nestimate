@@ -1,9 +1,20 @@
 # Cluster sequences using Mixed Markov Models
 
-Fits a mixture of Markov chains to sequence data and returns the fitted
-`net_mmm` clustering object. The fit retains assignments, posterior
-probabilities, mixing proportions, information criteria, and the fitted
-component models.
+`cluster_mmm()` clusters sequences by fitting a mixture of first-order
+Markov chains and returns the fitted `net_mmm` object: the same fit,
+with the same arguments, as
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md).
+The fit holds each sequence's subgroup and posterior probabilities, the
+mixing proportions, the information criteria and the subgroups'
+transition matrices.
+
+Pass the fit to
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+to get one network per subgroup, or use
+`cluster_network(..., cluster_by = "mmm")` to fit and build the networks
+in one call.
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+explains how to read the fit and what to check before trusting it.
 
 ## Usage
 
@@ -28,116 +39,133 @@ cluster_mmm(
 
 - data:
 
-  A data.frame (wide format), `netobject`, `cograph_network`, or `tna`
-  model. For tna and cograph_network objects the stored
-  (integer-encoded) data is extracted and decoded to state labels.
-  Columns of a data.frame take the same roles as in
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
-  an id or a covariate is not a sequence position. Those set aside are
-  named in a message and kept in `$metadata`.
+  The sequences: a data frame with one row per sequence and one column
+  per position, a `netobject` or bare `cograph_network` built from
+  sequences, or a `tna` model (whose stored states are decoded to their
+  labels). Columns take the same roles as in
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+  an id or a covariate is not a position, and the columns set aside are
+  named in a message and kept as metadata. Association networks (`cor`,
+  `pcor`, `glasso`, `ising`, `mgm`) hold variables, not sequences, and
+  raise an error of class `nestimate_bad_input`.
 
 - k:
 
-  Integer. Whole finite number of mixture components, \>= 2. Default: 2.
+  The number of subgroups (mixture components), a whole number of at
+  least 2. Default `2`.
 
 - n_starts:
 
-  Integer. Positive whole finite number of random restarts. Default: 50.
+  How many starting configurations to try, a positive whole number. More
+  starts make it likelier that the best local maximum is found. Default
+  `50`.
 
 - max_iter:
 
-  Integer. Positive whole finite maximum EM iterations per start.
-  Default: 200.
+  The most EM iterations a start may run, a positive whole number.
+  Default `200`.
 
 - tol:
 
-  Numeric. Finite positive convergence tolerance. Default: 1e-6.
+  The convergence tolerance: EM stops when the log-likelihood changes by
+  less than this between iterations (with `covariate_effect = "em"`,
+  also when its relative change does). A finite positive number; default
+  `1e-6`.
 
 - smooth:
 
-  Numeric. Finite non-negative Laplace smoothing constant. Default:
-  0.01.
+  A pseudo-count added to every transition count before the matrices are
+  estimated, so a transition unseen in a subgroup gets a small
+  probability instead of zero. A finite non-negative number; default
+  `0.01`.
 
 - seed:
 
-  Integer or NULL. Random seed.
+  An integer that makes the random starts reproducible. Default `NULL`.
+  The session's own random stream is left as it was.
 
 - covariates:
 
-  Optional. Covariates integrated into the EM algorithm to model
-  covariate-dependent mixing proportions. Accepts a string, character
-  vector, formula, or data.frame (same forms as
-  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)).
-  For `netobject` or `cograph_network` input, names are resolved against
-  `$metadata` first, so a typical call is
-  `build_mmm(net, k = 3, covariates = "session_label")`. Unlike the
-  post-hoc analysis in
-  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
-  these covariates directly influence cluster membership during EM
-  estimation (see `covariate_effect`).
+  Variables describing each sequence (such as a course or a grade),
+  given as a column name, a character vector of names, a one-sided
+  formula or a data frame, as in
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md).
+  For a `netobject`, names are looked up in its metadata first, so a
+  typical call is `build_mmm(net, k = 3, covariates = "session_label")`.
+  How they enter the model is set by `covariate_effect`. Default `NULL`.
 
 - covariate_effect:
 
-  How `covariates` enter the model. `"em"` (default) folds them into the
-  EM as covariate-dependent mixing proportions, so they shape the
-  cluster fit itself (and rows with missing covariates are dropped
-  before fitting). `"posthoc"` fits a plain mixture on every sequence
-  and uses the covariates only for the after-fit multinomial logit, so
-  covariate values — and their missingness — never change which clusters
-  are found. Ignored when `covariates` is `NULL`.
+  How `covariates` enter the model. `"em"` (default) makes the mixing
+  proportions depend on them during EM, so they shape the subgroups
+  found and add `(k - 1) * p` parameters for `p` covariate columns; rows
+  with a missing covariate are dropped first, with a warning.
+  `"posthoc"` fits a plain mixture on every sequence and relates the
+  covariates to the subgroups only afterwards, with a multinomial logit,
+  so neither their values nor their missingness change the subgroups.
+  Ignored without `covariates`.
 
 - estimator:
 
-  Multinomial fitter for the post-hoc covariate analysis (does not
-  affect EM): `"auto"` (default) inspects the cluster x covariate
-  cross-tab and falls back to `"firth"` only when any cell has fewer
-  than 5 observations (separation risk), otherwise the much faster
-  `"multinom"`; `"firth"` forces Firth's penalised likelihood via
-  [`brglm2::brmultinom`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
-  (finite under separation); `"multinom"` forces
-  [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html) (warns
-  about separation risk); `"chisq"` runs descriptive tests (no logit).
-  See
-  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  for full details.
+  How the after-fit multinomial logit is estimated; it never affects the
+  EM. `"auto"` (default) uses Firth's penalised likelihood
+  ([`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html),
+  finite under separation) when a cell of the subgroup-by-covariate
+  table has fewer than 5 sequences, and
+  [`nnet::multinom()`](https://rdrr.io/pkg/nnet/man/multinom.html)
+  otherwise. `"firth"` and `"multinom"` force one of them (`"multinom"`
+  warns about separation risk), and `"chisq"` runs descriptive tests
+  instead of a logit.
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+  has the details. Ignored without `covariates`.
 
 - cluster_by:
 
-  Character. Accepted only as `"mmm"` (the default). Present so
-  `cluster_mmm()` and
+  The clustering family. Only `"mmm"` (the default) is accepted; it is
+  there so `cluster_mmm()` and
   [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
-  share the same call shape; any other value raises an error pointing at
-  [`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md).
+  share one call shape. Any other value raises an error that points to
+  [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md).
 
 - ...:
 
-  Unsupported. Supplying unused arguments raises an error.
+  Not used; any extra argument raises an error.
 
 ## Value
 
-A fitted `net_mmm` clustering object. This is the same object contract
-returned by
-[`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md).
-For HTNA input, its preserved actor partition is restored when the fit
-is materialized with
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+A `net_mmm` object, exactly as
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+returns it: [`print()`](https://rdrr.io/r/base/print.html),
+[`summary()`](https://rdrr.io/r/base/summary.html) and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) read it,
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+turns it into a `netobject_group` with one network per subgroup, and
+[`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
+gives the classification and, for sequences built from long data with
+`actor`/`session`,
+[`session_ids()`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
+gives each sequence's subgroup.
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+lists its fields. For HTNA input, the actor partition is kept and
+restored when the fit is turned into networks with
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 or
-[`Nestimate::as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md).
+[`as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md).
 
 ## Details
 
-To materialize one network per fitted cluster, pass the result to
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-or use `cluster_network(..., cluster_by = "mmm")` for fitting and
-network construction in one call.
+`cluster_mmm()` takes the arguments of
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+plus `cluster_by`, so its call has the same shape as
+[`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md).
 
 ## See also
 
-[`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md),
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md),
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
 and
-[`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
-for fitting and immediately materializing per-cluster networks
+[`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
+for fitting and building the per-cluster networks in one call.
 
 ## Examples
 
@@ -148,22 +176,22 @@ fit <- cluster_mmm(seqs, k = 2, n_starts = 1, max_iter = 10, seed = 1)
 fit
 #> Mixed Markov Model
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
-#>   ICs: LL = -59.844  |  BIC = 177.508  |  AIC = 153.688  |  ICL = 179.621
-#>   Quality: AvePP = 0.966  |  Entropy = 0.202  |  Class.Err = 0.0%
+#>   ICs: LL = -64.101  |  BIC = 186.022  |  AIC = 162.201  |  ICL = 188.063
+#>   Quality: AvePP = 0.967  |  Entropy = 0.197  |  Class.Err = 3.3%
 #>   Status: did not converge in 10 iterations
 #> 
 #>   Cluster  N           Mix%   AvePP
-#>   1        26 (86.7%)  84.8%  0.969
-#>   2        4 (13.3%)   15.2%  0.943
+#>   1        28 (93.3%)  91.6%  0.973
+#>   2        2 ( 6.7%)    8.4%  0.888
 cluster_diagnostics(fit)
 #> Cluster Diagnostics (mmm) [k = 2]
 #>   Sequences: 30  |  Clusters: 2  |  States: 3
-#>   Quality: AvePP = 0.966  |  Entropy = 0.202  |  Class.Err = 0.0%
-#>   ICs: LL = -59.844  |  BIC = 177.508  |  AIC = 153.688  |  ICL = 179.621
+#>   Quality: AvePP = 0.967  |  Entropy = 0.197  |  Class.Err = 3.3%
+#>   ICs: LL = -64.101  |  BIC = 186.022  |  AIC = 162.201  |  ICL = 188.063
 #> 
 #>   Cluster  N           Mix%   AvePP  Class.Err%
-#>   1        26 (86.7%)  84.8%  0.969   0.0%
-#>   2        4 (13.3%)   15.2%  0.943   0.0%
+#>   1        28 (93.3%)  91.6%  0.973   2.7%
+#>   2        2 ( 6.7%)    8.4%  0.888  11.2%
 # \donttest{
 # Visualise with sequence_plot
 seqs <- data.frame(

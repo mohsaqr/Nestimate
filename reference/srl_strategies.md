@@ -1,11 +1,13 @@
 # Self-Regulated Learning Strategy Frequencies
 
-Simulated frequency counts of 9 self-regulated learning (SRL) strategies
-for 250 university students. Strategies are grouped into three clusters:
+Simulated counts of how often 250 university students used 9
+self-regulated learning (SRL) strategies, in three clusters:
 metacognitive (Planning, Monitoring, Evaluating), cognitive
-(Elaboration, Organization, Rehearsal), and resource management
-(Help_Seeking, Time_Mgmt, Effort_Reg). Within-cluster correlations are
-moderate (0.3–0.6), cross-cluster correlations are weaker.
+(Elaboration, Organization, Rehearsal) and resource management
+(Help_Seeking, Time_Mgmt, Effort_Reg). Strategies of the same cluster
+were simulated to correlate moderately and those of different clusters
+more weakly; in the bundled sample the correlations range from 0.18 to
+0.49 within clusters and from -0.13 to 0.31 across them.
 
 ## Usage
 
@@ -15,9 +17,10 @@ srl_strategies
 
 ## Format
 
-A data frame with 250 rows and 9 columns, one row per student. Every
-column is numeric (double) and holds a whole-number count of how often
-that student used the strategy; observed values range from 0 to 37.
+A data frame with 250 rows and 9 columns, one row per student and one
+column per strategy. Every column is numeric (double) and holds a
+whole-number count of how often that student used the strategy; the
+observed values range from 0 to 37, with no missing values.
 
 ## Examples
 

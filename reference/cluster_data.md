@@ -1,11 +1,12 @@
 # Cluster sequence data (deprecated alias)
 
-Renamed to
-[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-in Nestimate 0.4.3. This thin wrapper is preserved so the function name
-in older tutorials and the historical pkgdown reference continues to
-work; it issues a one-shot deprecation warning and forwards every
-argument unchanged.
+`cluster_data()` is the old name of
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),
+renamed in Nestimate 0.4.3. It is kept so older tutorials and the
+historical pkgdown reference still run: every call raises a deprecation
+warning and passes its arguments to
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+unchanged.
 
 ## Usage
 
@@ -17,13 +18,14 @@ cluster_data(...)
 
 - ...:
 
-  Passed verbatim to
-  [`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md).
+  Arguments passed unchanged to
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md).
 
 ## Value
 
-The `net_clustering` object returned by
-[`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md).
+The `net_clustering` object that
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+returns.
 
 ## See also
 

@@ -1,7 +1,12 @@
 # Convert Action Column to One-Hot Encoding
 
-Convert a categorical Action column to one-hot (binary indicator)
-columns.
+`action_to_onehot()` adds one 0/1 indicator column per state to a data
+frame with a categorical action column: the column of a row's state is 1
+and the others are 0. The result is the one-hot layout that
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+reads with `codes` or `format = "onehot"`, and
+[`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md) reads
+directly.
 
 ## Usage
 
@@ -20,34 +25,40 @@ action_to_onehot(
 
 - data:
 
-  Data frame containing an action column.
+  A data frame with an action column.
 
 - action_col:
 
-  Character. Name of the action column. Default: "Action".
+  The action column. Default `"Action"`; a name that is not a column
+  raises an error.
 
 - states:
 
-  Character vector or NULL. States to include as columns. If NULL, uses
-  all unique values. Default: NULL.
+  The states to make columns for, in that order. Default `NULL`, every
+  non-missing value of the action column in order of first appearance. A
+  listed state that never occurs gets a column of zeros, and a row whose
+  state is not listed is 0 in every column.
 
 - drop_action:
 
-  Logical. Remove the original action column. Default: TRUE.
+  Whether to remove the action column. Default `TRUE`.
 
 - sort_states:
 
-  Logical. Sort state columns alphabetically. Default: FALSE.
+  Whether to sort the state columns alphabetically (in level order for a
+  factor action column). Default `FALSE`.
 
 - prefix:
 
-  Character. Prefix for state column names. Default: "".
+  A prefix for the state column names. Without one, a state named like
+  an existing column replaces that column. Default `""`.
 
 ## Value
 
-The input data frame with one 0/1 integer column appended per state
-(named `paste0(prefix, state)`). All other columns are kept; the
-original action column is removed unless `drop_action = FALSE`.
+The input data frame with one integer column per state appended, named
+`paste0(prefix, state)`. All other columns are kept; the action column
+is removed unless `drop_action = FALSE`. A row with a missing action is
+`NA` in every state column.
 
 ## Examples
 

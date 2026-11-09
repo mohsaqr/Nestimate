@@ -1,6 +1,13 @@
 # Retrieve a Registered Estimator
 
-Retrieve a registered network estimator by name.
+`get_estimator()` returns the registry entry of one estimator: its
+function, description and directedness, as
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+uses them. A name that is not registered raises an error that lists the
+registered names. Method aliases such as `"tna"` are not resolved here;
+give the registered name, as
+[`list_estimators()`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md)
+shows it.
 
 ## Usage
 
@@ -12,11 +19,12 @@ get_estimator(name)
 
 - name:
 
-  Character. Name of the estimator to retrieve.
+  The registered name of the estimator, a single string.
 
 ## Value
 
-A list with elements `fn`, `description`, `directed`.
+A list with `fn` (the estimator function), `description` (a string) and
+`directed` (`TRUE` or `FALSE`).
 
 ## See also
 

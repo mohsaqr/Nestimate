@@ -1,25 +1,41 @@
 # Build a Simplicial Complex
 
-Constructs a simplicial complex from a network or higher-order pathway
-object. Two construction methods are available:
+`build_simplicial()` builds a simplicial complex, the higher-order
+structure of a network: besides nodes (0-simplices) and edges
+(1-simplices) it holds filled triangles (2-simplices), tetrahedra and
+larger groups of nodes. Three constructions are available through
+`type`:
 
-- **Clique complex** (`"clique"`): every clique in the thresholded
-  non-zero graph becomes a simplex. Edges with absolute weight \\\geq\\
-  `threshold` are retained. The standard bridge from graph theory to
-  algebraic topology.
+- **Clique complex** (`"clique"`): every clique of the network whose
+  edges reach `threshold` becomes a simplex, the standard bridge from a
+  graph to algebraic topology.
 
-- **Pathway complex** (`"pathway"`): each higher-order pathway from a
-  `net_hon` or `net_hypa` becomes a simplex.
+- **Pathway complex** (`"pathway"`): the states on each higher-order
+  pathway of a `net_hon`, `net_hypa` or `net_mogen` (or of one built
+  from a `tna` model or `netobject`) become a simplex.
 
-For `type = "vr"` (or alias `"rips"`), the input is treated as a
-non-negative distance / dissimilarity matrix and a Vietoris-Rips
-filtration is constructed: each k-simplex \\\sigma\\ enters at
-\\\max\_{(i,j) \in \sigma} d(i,j)\\. Use `max_scale` to cap the
-filtration diameter; edges with `d(i,j) > max_scale` are excluded.
-Filtration values are attached as `$filtration` on the returned object
-so
-[`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
-can read them directly.
+- **Vietoris-Rips complex** (`"vr"`, alias `"rips"`): the input is a
+  non-negative distance matrix, every group of nodes whose pairwise
+  distances are all at most `max_scale` becomes a simplex, and each
+  simplex records the scale at which it enters (its largest pairwise
+  distance), so
+  [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
+  can read the filtration.
+
+A clique complex is fixed by the thresholded graph, since every clique
+is filled in; its Betti numbers count the holes that remain, such as
+cycles of edges that no triangles fill. Its shape depends on
+`threshold`, so read
+[`betti_numbers()`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md)
+at more than one threshold, or follow the features across all of them
+with
+[`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md).
+A pathway complex is built from paths observed in the sequences, so its
+simplices say which states occur together on a path.
+[`simplicial_degree()`](https://pak.dynasite.org/Nestimate/reference/simplicial_degree.md)
+and
+[`q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
+describe how the nodes take part in the complex.
 
 ## Usage
 
@@ -46,121 +62,165 @@ plot(x, combined = TRUE, ...)
 
 - x:
 
-  A square matrix, `tna`, `netobject`, `net_hon`, `net_hypa`, or
-  `net_mogen`. For the [`print()`](https://rdrr.io/r/base/print.html)
-  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
-  an object of class `simplicial_complex`.
+  The network: a square weight matrix, a `tna` model, a `netobject` or
+  `cograph_network`, or a `net_hon`, `net_hypa` or `net_mogen`. With
+  `type = "vr"`, the matrix holds non-negative distances. The clique and
+  Vietoris-Rips constructions read the weight matrix of any of these
+  networks; with `type = "pathway"`, a bare `cograph_network` or a
+  matrix raises an error. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `simplicial_complex` object.
 
 - type:
 
-  Construction type: `"clique"` (default), `"pathway"`, or `"vr"` (alias
-  `"rips"`).
+  The construction: `"clique"` (default), `"pathway"` or `"vr"` (alias
+  `"rips"`, stored as `"vr"`).
 
 - threshold:
 
-  For `type = "clique"`: minimum non-zero absolute edge weight to
-  include an edge (default 0). Edges below this are ignored; zero-weight
-  non-edges are never included. Ignored for `type = "vr"` (use
-  `max_scale` instead) and for `type = "pathway"`.
+  For `type = "clique"`: the smallest absolute edge weight an edge needs
+  to enter (edges at exactly `threshold` are included). Zero weights are
+  never edges. Default `0`. Ignored for `"vr"`, which uses `max_scale`,
+  and for `"pathway"`.
 
 - max_dim:
 
-  Maximum simplex dimension (default 10). Must be a single non-negative
-  integer. A k-simplex has k+1 nodes.
+  The highest simplex dimension built (a k-simplex has k + 1 nodes), a
+  non-negative whole number. Default `10`. When a larger clique is cut
+  at this dimension, the clique or Vietoris-Rips complex is marked
+  truncated;
+  [`betti_numbers()`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md)
+  then warns with class `nestimate_truncated_complex`, as does
+  [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
+  on a Vietoris-Rips complex. A pathway with more than `max_dim + 1`
+  distinct states is cut to its faces of that size, without the
+  truncated mark.
 
 - max_pathways:
 
-  For `type = "pathway"`: maximum number of pathways to include, ranked
-  by count (HON) or ratio (HYPA). `NULL` includes all. Default `NULL`.
+  For `type = "pathway"`, how many pathways to keep: the most frequent
+  higher-order paths for a `net_hon`, the most frequent transitions of
+  [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
+  at the optimal order for a `net_mogen` (the highest order fitted when
+  the optimal one is 0), and for a `net_hypa` the anomalous paths ranked
+  by their observed / expected ratio (see `anomaly`). Default `NULL`
+  (all).
 
 - anomaly:
 
-  For HYPA pathway complexes, which anomaly direction to include:
-  `"all"` (default), `"over"`, or `"under"`. Under-represented HYPA
-  paths are ranked by smallest observed/expected ratio; over-represented
-  paths are ranked by largest ratio. Possible paths that never occur are
-  left out: a pathway simplex is a set of states observed together on a
+  For `type = "pathway"` on a `net_hypa`: which anomalous paths become
+  simplices: `"all"` (default), `"over"` or `"under"`. Over-represented
+  and `"all"` paths are ranked by the largest ratio, under-represented
+  ones by the smallest. Possible paths that never occur are left out,
+  since a pathway simplex is a set of states observed together on a
   path.
 
 - max_scale:
 
-  For `type = "vr"`: maximum edge length to include in the filtration.
-  `NULL` (default) uses `max(d)`.
+  For `type = "vr"`: the largest distance at which an edge enters;
+  longer edges are left out. Default `NULL`, the largest finite
+  distance.
 
 - ...:
 
-  Additional arguments passed to
-  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
-  when `x` is a `tna`/`netobject` with `type = "pathway"`. In
-  `plot.simplicial_complex()`: Ignored. In `print.simplicial_complex()`:
-  Additional arguments (unused).
+  For `type = "pathway"` on a `tna` model or `netobject`: `method`
+  (`"hon"`, the default, `"hypa"` or `"mogen"`) chooses the higher-order
+  model built from it, and the other arguments go to
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  or
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md).
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  ignored.
 
 - combined:
 
-  When `TRUE` (default), the four panels are stitched into a 2x2 gtable
-  via
-  [`gridExtra::arrangeGrob`](https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html)
-  and drawn. When `FALSE`, returns a named list of the four ggplots
-  (`f_vector`, `betti`, `degree`, `degree_heatmap`) so each can be
-  printed, saved, or re-laid-out independently.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: `TRUE` (default) draws the four panels (f-vector, Betti
+  numbers, simplicial degree per node and degree by dimension) as one 2
+  x 2 figure, which needs gridExtra; `FALSE` returns the four ggplots in
+  a named list (`f_vector`, `betti`, `degree`, `degree_heatmap`) to
+  print, save or arrange separately.
 
 ## Value
 
-A `simplicial_complex` object - a list with:
+A `simplicial_complex` object.
+[`print()`](https://rdrr.io/r/base/print.html) shows the counts, the
+density, the f-vector (simplices per dimension), the Euler
+characteristic and the non-zero Betti numbers;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+f-vector, the Betti numbers and the simplicial degree of each node;
+[`betti_numbers()`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md),
+[`euler_characteristic()`](https://pak.dynasite.org/Nestimate/reference/euler_characteristic.md),
+[`simplicial_degree()`](https://pak.dynasite.org/Nestimate/reference/simplicial_degree.md),
+[`q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
+and
+[`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
+read it. The object's fields:
 
 - simplices:
 
-  List of integer vectors, one per simplex, each holding the (sorted)
-  node indices it spans. Every face of every simplex is present,
-  including all 0-simplices (isolated vertices included).
+  List of integer vectors, one per simplex, each holding the sorted
+  indices of the nodes it spans. Every face of every simplex is present,
+  as are all 0-simplices (isolated nodes included).
 
 - nodes:
 
-  Character vector of node labels; `simplices` index into it.
+  Character vector of node labels, which `simplices` index.
 
 - n_nodes, n_simplices:
 
-  Integer counts.
+  Counts of nodes and simplices.
 
 - dimension:
 
-  Integer. Highest simplex dimension present (a k-simplex has k+1
-  nodes).
+  Highest simplex dimension present.
 
 - f_vector:
 
-  Named integer vector `dim_0`, `dim_1`, ... - the number of simplices
-  of each dimension.
+  Named integer vector `dim_0`, `dim_1`, ...: the number of simplices of
+  each dimension.
 
 - density:
 
-  Numeric. `n_simplices` divided by the number of simplices a complete
-  complex on `n_nodes` would have up to `dimension`.
+  `n_simplices` divided by the number of simplices a complete complex on
+  `n_nodes` nodes would have up to `dimension`.
 
 - mean_dim:
 
-  Numeric. Mean simplex dimension.
+  Mean simplex dimension.
 
 - type:
 
-  `"clique"`, `"pathway"`, or `"vr"`.
+  `"clique"`, `"pathway"` or `"vr"`.
 
-For `type = "vr"` two further elements are attached: `$filtration`
-(numeric, parallel to `$simplices`: the value at which each simplex
-enters) and `$max_scale` (the cap actually used).
+- truncated:
+
+  For the clique and Vietoris-Rips complexes: whether `max_dim` cut a
+  larger clique.
+
+A Vietoris-Rips complex also holds `filtration` (the scale at which each
+simplex enters, in the order of `simplices`) and `max_scale` (the cap
+used), which
 [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
-consumes them directly.
+reads.
 
-In `print.simplicial_complex()`: The input object, invisibly.
+The [`print()`](https://rdrr.io/r/base/print.html) method returns its
+input invisibly.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns the
+drawn grid grob invisibly with `combined = TRUE`, and the named list of
+four ggplots invisibly with `combined = FALSE`.
 
-In `plot.simplicial_complex()`: A grid grob (invisibly) when
-`combined = TRUE`; a named list of four ggplots when `combined = FALSE`.
+## Details
 
-## Methods
-
-- `plot.simplicial_complex()`: Produces a four-panel summary: f-vector,
-  Betti numbers, simplicial degree ranking, and degree-by-dimension
-  heatmap.
+For the clique and Vietoris-Rips complexes the weight matrix is made
+symmetric first (the larger absolute weight of the two directions for a
+clique complex, the larger distance for a Vietoris-Rips complex) and its
+diagonal is not read. Cliques are found with
+[`igraph::cliques()`](https://r.igraph.org/reference/cliques.html) when
+igraph is installed, and by Bron-Kerbosch otherwise.
 
 ## See also
 

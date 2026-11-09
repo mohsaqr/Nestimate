@@ -1,18 +1,41 @@
 # Extract Pathways from Higher-Order Network Objects
 
-Extracts higher-order pathway strings suitable for
-[`cograph::plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html).
-Each pathway represents a multi-step dependency: source states lead to a
-target state.
+`pathways()` turns a higher-order result into pathway strings in arrow
+notation, `"A B -> C"`: the states before the arrow lead, together, to
+the state after it. The strings are what
+[`cograph::plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html)
+draws, one simplex per pathway. Which pathways are returned depends on
+the input:
 
-For `net_hon`: extracts edges where the source node is higher-order
-(order \> 1), i.e., the transitions that differ from first-order Markov.
+- a `net_hon` gives its higher-order edges, those whose source node has
+  order above 1, i.e. the transitions that differ from a first-order
+  Markov chain, ranked by count;
 
-For `net_hypa`: extracts anomalous paths (over- or under-represented
-relative to the hypergeometric null model).
+- a `net_hypa` gives its anomalous paths, over- or under-represented
+  relative to the hypergeometric null model, the over-represented ones
+  first;
 
-For `net_mogen`: extracts all transitions at the optimal order (or a
-specified order).
+- a `net_mogen` gives every transition at the optimal order (or the
+  order given), ranked by count;
+
+- a `netobject` built from sequences is first turned into a HON or a
+  HYPA, and that result's pathways are returned;
+
+- a `net_association_rules` gives its rules `{A, B} => {C}` as
+  `"A B -> C"`: antecedent items become the sources, consequent items
+  the target. Rules whose antecedent and consequent together hold the
+  same items describe the same simplex, so only the highest-lift rule
+  per item set is kept; the rules are ranked by lift, then confidence;
+
+- a `net_link_prediction` gives its predicted links, ranked by score;
+  with `evidence = TRUE` each predicted edge `A -> B` is extended with
+  the common neighbours that support it, `"A cn1 cn2 -> B"`.
+
+The strings keep only which pathways passed the filters, not the counts,
+probabilities, scores or tests behind them; those stay in the source
+object (for a MOGen,
+[`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
+gives them per order).
 
 ## Usage
 
@@ -42,113 +65,118 @@ pathways(x, order = NULL, min_count = 1L, min_prob = 0, top = NULL, ...)
 
 - x:
 
-  A higher-order network object (`net_hon`, `net_hypa`, `net_mogen`), a
-  `netobject`, a `net_association_rules` or a `net_link_prediction`.
+  The object to read: a `net_hon`, `net_hypa` or `net_mogen` (from
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+  or
+  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)),
+  a `netobject` built from sequences, a `net_association_rules` (from
+  [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md))
+  or a `net_link_prediction` (from
+  [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)).
+  A `netobject` of an association method (whose rows are variables) or a
+  one-hot `netobject` raises an error of class `nestimate_bad_input`; a
+  network without its sequences stops `pathways()`.
 
 - ...:
 
-  Additional arguments passed on to the method.
+  For the `netobject` method: passed to the `pathways()` method of the
+  HON or HYPA built from it, so `min_count`, `min_prob`, `top` and
+  `order` apply to a HON and `type` to a HYPA. Ignored by the other
+  methods.
 
 - min_count:
 
-  Integer. Minimum transition count to include (default: 1). Filters
-  noise from rare observations. Used by the `net_hon` and `net_mogen`
-  methods.
+  For a HON or a MOGen: the smallest transition count kept, which
+  filters out rare observations. Default `1` (all).
 
 - min_prob:
 
-  Numeric. Minimum transition probability to include (default: 0).
-  Useful for filtering weak transitions. Used by the `net_hon` and
-  `net_mogen` methods.
+  For a HON or a MOGen: the smallest transition probability kept.
+  Default `0` (all).
 
 - top:
 
-  Integer or NULL. Keep only the top N pathways: ranked by count for
-  `net_hon` and `net_mogen`, by lift then confidence for
-  `net_association_rules`, and by score for `net_link_prediction`.
-  Default `NULL` (all) everywhere except `net_link_prediction`, whose
-  default is `10`.
+  How many pathways to keep after ranking: by count for a HON or a
+  MOGen, by lift then confidence for association rules (after the item
+  sets are de-duplicated), and by score for link predictions. Default
+  `NULL` (all), except for link predictions, whose default is `10`. Not
+  used for a HYPA.
 
 - order:
 
-  Integer or NULL. For `net_hon`, keep only pathways whose source is of
-  this order; default `NULL` = every order above 1. For `net_mogen`, the
-  Markov order to extract; default `NULL` = the optimal order from model
-  selection.
+  For a HON: keep only pathways whose source has this order. Default
+  `NULL`, every order above 1; order 1 returns nothing. For a MOGen: the
+  Markov order to extract. Default `NULL`, the optimal order from model
+  selection; an order below 1 returns `character(0)`.
 
 - type:
 
-  Character. Which anomalies to include: `"all"` (default), `"over"`, or
-  `"under"`.
+  For a HYPA: which anomalies to include, `"all"` (default), `"over"`
+  (over-represented paths) or `"under"` (under-represented ones).
 
 - ho_method:
 
-  Character. Higher-order method: `"hon"` (default) or `"hypa"`.
+  For a `netobject`: the higher-order model built from its sequences,
+  `"hon"` (default,
+  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md))
+  or `"hypa"`
+  ([`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)),
+  each with its default settings. The network must carry the sequences
+  it was built from.
 
 - min_lift:
 
-  Numeric or NULL. Additional lift filter applied on top of the object's
-  original threshold (default: NULL).
+  For association rules: the smallest lift kept, on top of the threshold
+  the rules were mined with. Default `NULL` (no further filter).
 
 - min_confidence:
 
-  Numeric or NULL. Additional confidence filter (default: NULL).
+  For association rules: the smallest confidence kept, on top of the
+  mining threshold. Default `NULL` (no further filter).
 
 - method:
 
-  Character or NULL. Which prediction method to use. Default: first
-  method in the object.
+  For link predictions: the prediction method whose links are returned.
+  Default `NULL`, the first method in the object. A method the object
+  does not hold returns `character(0)`.
 
 - evidence:
 
-  Logical. If TRUE, include common neighbor evidence nodes in each
-  pathway. Default: TRUE.
+  For link predictions: whether to extend each predicted link `A -> B`
+  with its common neighbours, the nodes with an edge from `A` and an
+  edge to `B`, giving `"A cn1 cn2 -> B"`. Default `TRUE`. Without a
+  stored adjacency matrix the links are returned as `"A -> B"`.
 
 - max_evidence:
 
-  Integer. Maximum number of evidence nodes per pathway (default: 3).
+  For link predictions with `evidence = TRUE`: the most common
+  neighbours added to one link; when there are more, those with the
+  largest summed weight of the edges from `A` and to `B` are kept.
+  Default `3`.
 
 ## Value
 
 A character vector of pathway strings in arrow notation (e.g.
-`"A B -> C"`), suitable for
+`"A B -> C"`), one per pathway and in the ranking order described above,
+ready for
 [`cograph::plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html).
-Every method returns this shape, and `character(0)` when nothing
-survives its filters.
+Every method returns this shape, and `character(0)` when nothing passes
+its filters.
 
 ## Methods (by class)
 
-- `pathways(net_hon)`: Extract higher-order pathways from HON
+- `pathways(net_hon)`: Higher-order edges of a HON.
 
-- `pathways(net_hypa)`: Extract anomalous pathways from HYPA
+- `pathways(net_hypa)`: Anomalous paths of a HYPA.
 
-- `pathways(netobject)`: Extract pathways from a netobject
+- `pathways(netobject)`: Higher-order pathways of a network's sequences.
 
-  Builds a Higher-Order Network (HON) from the netobject's sequence data
-  and returns the higher-order pathways. Requires that the netobject was
-  built from sequence data (has `$data`).
+- `pathways(net_association_rules)`: Association rules as pathways.
 
-- `pathways(net_association_rules)`: Extract pathways from association
-  rules
+- `pathways(net_link_prediction)`: Predicted links as pathways.
 
-  Converts association rules `{A, B} => {C}` into pathway strings
-  `"A B -> C"` suitable for
-  [`cograph::plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html).
-  Antecedent items become source nodes; consequent items become the
-  target. Rules whose antecedent and consequent share the same item set
-  describe the same simplex, so only the highest-lift rule per item set
-  is returned; `top` is applied after that de-duplication.
-
-- `pathways(net_link_prediction)`: Extract pathways from link
-  predictions
-
-  Converts predicted links into pathway strings for
-  [`cograph::plot_simplicial()`](https://sonsoles.me/cograph/reference/plot_simplicial.html).
-  When `evidence = TRUE` (default), each predicted edge `A -> B` is
-  enriched with common neighbors that structurally support the
-  prediction, producing `"A cn1 cn2 -> B"`.
-
-- `pathways(net_mogen)`: Extract transition pathways from MOGen
+- `pathways(net_mogen)`: Transitions of a MOGen at one order.
 
 ## Examples
 

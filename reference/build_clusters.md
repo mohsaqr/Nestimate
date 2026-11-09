@@ -1,10 +1,33 @@
 # Cluster Sequences by Dissimilarity
 
-Clusters wide-format sequences using pairwise string dissimilarity and
-either PAM (Partitioning Around Medoids) or hierarchical clustering.
-Supports 9 distance metrics including temporal weighting for Hamming
-distance. When the stringdist package is available, uses C-level
-distance computation for 100-1000x speedup on edit distances.
+`build_clusters()` splits a set of sequences into `k` groups of similar
+sequences. It computes the dissimilarity between every pair of sequences
+(the Hamming distance, an edit distance, a q-gram distance or the
+Jaro-Winkler distance) and partitions that matrix with PAM (partitioning
+around medoids) or a hierarchical method. It takes wide sequence data, a
+`netobject` or bare `cograph_network` built from sequences, or a `tna`
+model. A one-hot network built with `"relative"`, `"frequency"` or
+`"co_occurrence"` is clustered by unit, each actor's or session's
+windows forming one sequence; a `wtna` network is refused (see `data`).
+Covariates can be related to the clusters after the fit (see
+`covariates`); they never change the assignments.
+
+Every dissimilarity and method returns `k` groups, whether or not the
+sequences fall into groups. The average silhouette width (Rousseeuw,
+1987), which [`print()`](https://rdrr.io/r/base/print.html) reports,
+compares each sequence's mean dissimilarity to its own cluster with that
+to the nearest other cluster: it runs from -1 to 1, values near 1
+meaning well-separated clusters and values near 0 overlapping ones. It
+describes one solution and is not a test. Compare values of `k`,
+dissimilarities and methods with
+[`cluster_choice()`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md),
+check the classification with
+[`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md),
+and build one network per cluster with
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+(or
+[`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
+in one call) to see how the groups differ.
 
 ## Usage
 
@@ -47,191 +70,218 @@ print(x, ...)
 
 - data:
 
-  Input data. Accepts multiple formats:
-
-  data.frame / matrix
-
-  :   Wide-format sequences (rows = sequences, columns = time points,
-      values = state names). Columns of a data frame take the same roles
-      as in
-      [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
-      an id or a covariate is not a sequence position. Those set aside
-      are named in a message and kept in `$metadata`.
-
-  netobject
-
-  :   A network object from
-      [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-      Extracts the stored sequence data. Only valid for sequence-based
-      methods (relative, frequency, co_occurrence, attention).
-
-  tna
-
-  :   A tna model from the tna package. Decodes the integer-encoded
-      sequence data using stored labels.
-
-  cograph_network
-
-  :   A cograph network object. Extracts the stored sequence data.
+  The sequences: a data frame or matrix with one row per sequence and
+  one column per position, holding state names; a `netobject` or bare
+  `cograph_network` built from sequences with method `"relative"`,
+  `"frequency"`, `"co_occurrence"` or `"attention"`, whose stored
+  sequences are used; or a `tna` model, whose integer-coded sequences
+  are decoded to their labels. Columns of a data frame take the same
+  roles as in
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+  an id or a covariate is not a position, and the columns set aside are
+  named in a message and kept as metadata. A one-hot network needs an
+  `actor` or `session` to define its units. A one-hot network without
+  one, and a network of any other method, raise an error of class
+  `nestimate_bad_input`.
 
 - k:
 
-  Integer. Number of clusters (must be between 2 and `nrow(data) - 1`).
+  The number of clusters, a whole number from 2 to one less than the
+  number of sequences. Required.
 
 - dissimilarity:
 
-  Character. Distance metric. One of `"hamming"`, `"osa"` (optimal
-  string alignment), `"lv"` (Levenshtein), `"dl"` (Damerau-Levenshtein),
-  `"lcs"` (longest common subsequence), `"qgram"`, `"cosine"`,
-  `"jaccard"`, `"jw"` (Jaro-Winkler). Default: `"hamming"`.
+  How two sequences are compared. `"hamming"` (default) counts the
+  positions where they differ. `"lv"` (Levenshtein) counts the
+  insertions, deletions and substitutions that turn one into the other;
+  `"osa"` (optimal string alignment) and `"dl"` (Damerau-Levenshtein)
+  also count a swap of two adjacent states as one edit; `"lcs"` counts
+  the states left unpaired by their longest common subsequence.
+  `"qgram"`, `"cosine"` and `"jaccard"` compare the runs of `q`
+  consecutive states (q-grams) the sequences contain: the summed
+  absolute difference of their counts, one minus the cosine similarity
+  of the counts, and one minus the share of distinct q-grams they have
+  in common. `"jw"` is the Jaro-Winkler distance, which weighs agreement
+  in the first states more (see `p`).
 
 - method:
 
-  Character. Clustering method. `"pam"` for Partitioning Around Medoids,
-  or a hierarchical method: `"ward.D2"`, `"ward.D"`, `"complete"`,
-  `"average"`, `"single"`, `"mcquitty"`, `"median"`, `"centroid"`.
-  Default: `"pam"`.
+  The clustering algorithm. `"pam"` (default) partitions around medoids:
+  it chooses `k` sequences as centres and assigns every sequence to the
+  nearest one (Kaufman & Rousseeuw, 1990). `"ward.D2"`, `"ward.D"`,
+  `"complete"`, `"average"`, `"single"`, `"mcquitty"`, `"median"` and
+  `"centroid"` build a tree with
+  [`stats::hclust()`](https://rdrr.io/r/stats/hclust.html) using that
+  linkage and cut it into `k` groups.
 
 - na_syms:
 
-  Character vector. Symbols treated as missing values. Default:
-  `c("*", "%")`.
-
-  **Missing-value distance rule:** after symbols are converted to `NA`,
-  missing values are encoded as a single comparable sentinel state –
-  *not* pairwise-deleted. Two missing values in the same position match
-  (distance contribution 0); a missing value paired with any observed
-  state mismatches (distance contribution 1 for Hamming, etc.). This is
-  the conventional behaviour for aligned sequence matrices because
-  pairwise deletion would change the effective length of every pair and
-  break the metric. If you want pairwise deletion or a different
-  missing-value semantic, drop or recode the missing cells before
-  passing the data in.
+  The symbols read as missing values, besides `NA`. Default
+  `c("*", "%")`. A missing cell is not dropped from a comparison: it is
+  treated as one more state, so two missing cells at the same position
+  match and a missing cell against an observed state is a mismatch (a
+  distance of 1 for Hamming). This is the usual rule for aligned
+  sequences, because dropping missing cells pair by pair would change
+  each pair's effective length and break the metric. For every
+  dissimilarity except Hamming, a sequence ends at its last observed
+  state, so trailing missing cells are not compared. To treat missing
+  cells differently, drop or recode them before the call.
 
 - weighted:
 
-  Logical. Apply exponential decay weighting to Hamming distance
-  positions? Only valid when `dissimilarity = "hamming"`. Default:
-  `FALSE`.
+  Whether to weight the Hamming distance by position, so that a
+  difference early in the sequences counts more than a late one (see
+  `lambda`). Default `FALSE`. With any dissimilarity other than
+  `"hamming"`, `TRUE` raises an error.
 
 - lambda:
 
-  Numeric. Non-negative decay rate for weighted Hamming. Higher values
-  weight earlier positions more strongly. Default: 1.
+  The decay rate of the position weights when `weighted = TRUE`:
+  position \\t\\ gets weight \\e^{-\lambda (t - 1)}\\, so a larger value
+  puts more of the distance on the earlier positions. A finite
+  non-negative number; default `1`. Ignored, and stored as `0`, when
+  `weighted = FALSE`.
 
 - seed:
 
-  Integer or NULL. Random seed for reproducibility. Default: `NULL`.
+  An integer used as the random seed for clustering; the session's own
+  random stream is left as it was. Default `NULL`. PAM and the
+  hierarchical methods are deterministic, so it does not change the
+  clusters; it is stored with the result.
 
 - q:
 
-  Integer. Size of q-grams for `"qgram"`, `"cosine"`, and `"jaccard"`
-  distances. Default: `2L`.
+  The length of the q-grams compared by `"qgram"`, `"cosine"` and
+  `"jaccard"`, a positive whole number. Default `2`. Ignored by the
+  other dissimilarities.
 
 - p:
 
-  Numeric. Winkler prefix penalty for Jaro-Winkler distance. Must be
-  between 0 and 0.25. Default: `0.1`.
+  The Winkler prefix weight of `"jw"`: how much agreement in the first
+  states (up to four) lowers the Jaro distance, from 0 (the plain Jaro
+  distance) to 0.25. Default `0.1`. Ignored by the other
+  dissimilarities.
 
 - covariates:
 
-  Optional. Post-hoc covariate analysis of cluster membership. Named
-  covariate columns present in raw sequence data are excluded from the
-  sequence distances before clustering. Columns matching a separately
-  supplied covariate frame by both name and values are also excluded;
-  unrelated sequence columns remain unchanged. Accepts:
-
-  string
-
-  :   Single column name, e.g. `"Age"`. Resolved against `x$metadata`
-      (and `x$data`) for `netobject` or `cograph_network` input.
-
-  character vector
-
-  :   `c("Age", "Gender")`, same lookup.
-
-  formula
-
-  :   `~ Age + Gender`, same lookup; supports `"Age + Gender"` string
-      form too.
-
-  data.frame
-
-  :   All columns used as covariates verbatim; must have one row per
-      sequence.
-
-  NULL
-
-  :   No covariate analysis (default).
-
-  For `netobject` or `cograph_network` input, names are resolved against
-  `$metadata` first and then non-state columns of `$data`, so a typical
-  call looks like
-  `build_clusters(net, k = 3, covariates = "session_label")` without
-  pre-extracting a data.frame. `tna` input requires the data.frame form.
-  Results are stored in `$covariates`.
+  Variables describing each sequence (such as an achievement level or a
+  course), related to the clusters after they are found; they never
+  change the assignments. Give a column name, a character vector of
+  names, a one-sided formula such as `~ Age + Gender` (or the string
+  `"Age + Gender"`), or a data frame with one row per sequence, all of
+  whose columns are used. For a `netobject` or `cograph_network`, names
+  are looked up in its metadata first and then among the columns of its
+  data, so a typical call is
+  `build_clusters(net, k = 3, covariates = "Achiever")`; for a data
+  frame or matrix, among its columns. A `tna` model takes only the
+  data-frame form. Named covariate columns are taken out of the sequence
+  data before the distances are computed, and so are the columns of a
+  supplied data frame that match a sequence column in name and values; a
+  sequence column that shares only a name is kept. For a network, a name
+  found in its metadata leaves a same-named data column in place as a
+  sequence position. Rows with a missing covariate are left out of the
+  analysis with a warning, and a constant covariate raises an error. How
+  the analysis is run is set by `estimator`. Default `NULL` (none).
 
 - estimator:
 
-  Multinomial logit fitter for the covariate analysis. `"auto"`
-  (default) inspects the cluster x covariate cross-tab and falls back to
-  `"firth"` only when any cell has fewer than 5 observations
-  (quasi-complete separation risk); otherwise uses the much faster
-  `"multinom"`. `"firth"` forces Firth's penalised likelihood via
-  [`brglm2::brmultinom`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
-  – bias-reduced and finite under separation, but ~200x slower than
-  multinom on well-conditioned data. `"multinom"` forces classical ML
-  via [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html);
-  warns because rare-cell separation produces astronomical ORs with
-  degenerate CIs (silent failure). `"chisq"` runs WeightedCluster-style
-  descriptive tests (chi-square + Cramer's V + standardized adjusted
-  residuals for factors; Kruskal-Wallis + eta-squared for numerics).
+  How the relation between the covariates and the clusters is estimated;
+  it never affects the clustering. `"auto"` (default) fits a multinomial
+  logit of cluster membership on the covariates: with Firth's
+  bias-reduced penalised likelihood
+  ([`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html),
+  finite under quasi-complete separation) when a cell of the
+  cluster-by-covariate table of a categorical covariate holds fewer than
+  5 sequences, and with
+  [`nnet::multinom()`](https://rdrr.io/pkg/nnet/man/multinom.html)
+  otherwise. `"firth"` forces the Firth fit, which is about 200 times
+  slower on well-conditioned data. `"multinom"` forces classical maximum
+  likelihood and warns that rare cells can give extreme odds ratios with
+  degenerate confidence intervals. `"chisq"` runs descriptive tests
+  instead of a logit, as WeightedCluster does: for each categorical
+  covariate a chi-square test with Cramer's V and standardised adjusted
+  residuals, for each numeric one a Kruskal-Wallis test with
+  eta-squared. Ignored without `covariates`.
 
 - ...:
 
-  Unsupported. Supplying unused arguments raises an error. In
-  `plot.net_clustering()`, `print.net_clustering()` and
-  `summary.net_clustering()`: Unsupported. Supplying unused arguments
-  raises an error. In `print.tidy_covariates()`: Ignored.
+  Not used: an extra argument raises an error, here and in the
+  [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods for a
+  `net_clustering`. [`print()`](https://rdrr.io/r/base/print.html) of a
+  `tidy_covariates` table ignores it.
 
 - x:
 
   For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_clustering` or `tidy_covariates`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_clustering`; for [`print()`](https://rdrr.io/r/base/print.html),
+  also the `tidy_covariates` table that
+  [`summary()`](https://rdrr.io/r/base/summary.html) returns.
 
 - digits:
 
-  Integer. Decimal places used for floating-point statistics in the
-  printout. Default `3`. Non-breaking: existing `print(x)` calls keep
-  their previous formatting.
+  For [`print()`](https://rdrr.io/r/base/print.html) of a
+  `net_clustering`: decimal places of the silhouette width and the
+  within-cluster distances, a non-negative whole number. Default `3`.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_clustering`.
+  For [`summary()`](https://rdrr.io/r/base/summary.html): a
+  `net_clustering`.
 
 - type:
 
-  Character. Plot type: `"silhouette"` (per-observation silhouette
-  bars), `"mds"` (2D MDS projection), `"heatmap"` (distance matrix
-  heatmap ordered by cluster), or `"predictors"` (odds-ratio forest plot
-  of the post-hoc covariate analysis; requires `covariates` and an
-  estimator that produces coefficients). Default: `"silhouette"`.
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the
+  view. `"silhouette"` (default) draws each sequence's silhouette width
+  as a bar, grouped by cluster, with the average as a dashed line;
+  `"mds"` places the sequences on the first two dimensions of a
+  classical multidimensional scaling of the distances, coloured by
+  cluster; `"heatmap"` draws the distance matrix with the sequences
+  ordered by cluster; `"predictors"` draws a forest plot of the
+  covariates' odds ratios (log scale) for each cluster against the
+  reference cluster. `"predictors"` needs a fit with `covariates` and a
+  logit estimator; with `estimator = "chisq"`, which has no odds ratios,
+  it raises an error.
 
 - combined:
 
-  Logical. For `type = "predictors"` only: when `TRUE` (default),
-  covariate forest panels are combined into a single faceted plot; when
-  `FALSE`, a list of separate ggplots is returned.
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html) with
+  `type = "predictors"`: `TRUE` (default) draws one plot with a panel
+  per non-reference cluster; `FALSE` returns a list of plots, one per
+  non-reference cluster. Ignored by the other views.
 
 ## Value
 
-An object of class `"net_clustering"` containing:
+A `net_clustering` object.
+[`print()`](https://rdrr.io/r/base/print.html) shows the method,
+dissimilarity and average silhouette width, then one row per cluster
+with its size (count and percentage), mean within-cluster distance and,
+for PAM, its medoid; after a logit covariate analysis it adds a line
+naming the predictors.
+[`summary()`](https://rdrr.io/r/base/summary.html) prints the method,
+dissimilarity and average silhouette width and a per-cluster table of
+sizes and mean within-cluster distances, followed by the covariate
+analysis when there is one, and returns a per-cluster table, or the
+covariate table after a covariate analysis (see the methods' return
+value below). [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+draws the silhouette widths, a map of the distances, the distance matrix
+or the covariate effects.
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+turns the clustering into one network per cluster (a `netobject_group`),
+and
+[`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
+and
+[`session_ids()`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
+give the classification quality and each sequence's cluster. The
+object's fields:
 
 - data:
 
-  The original input data.
+  The sequence positions that were clustered, one row per sequence:
+  covariates and set-aside columns are removed, and a one-hot network
+  gives one row per unit.
 
 - k:
 
@@ -239,11 +289,12 @@ An object of class `"net_clustering"` containing:
 
 - assignments:
 
-  Named integer vector of cluster assignments.
+  Integer vector of cluster memberships (1 to `k`), one per sequence in
+  row order.
 
 - silhouette:
 
-  Overall average silhouette width.
+  Average silhouette width over all sequences.
 
 - sizes:
 
@@ -255,39 +306,39 @@ An object of class `"net_clustering"` containing:
 
 - dissimilarity:
 
-  Distance metric used.
+  Dissimilarity used.
 
 - distance:
 
-  The computed dissimilarity matrix (`dist` object).
+  The pairwise dissimilarities, a `dist` object.
 
 - medoids:
 
-  Integer vector of medoid row indices (PAM only; NULL for hierarchical
-  methods).
+  For PAM, the row numbers of the `k` medoid sequences; NULL for the
+  hierarchical methods.
 
 - seed:
 
-  Seed used (or NULL).
+  Seed given (or NULL).
 
 - weighted:
 
-  Logical, whether weighted Hamming was used.
+  Whether weighted Hamming was used.
 
 - lambda:
 
-  Lambda value used (0 if not weighted).
+  Decay rate used (0 when not weighted).
 
 - covariates:
 
-  The post-hoc covariate analysis (a list; see the `estimator`
-  argument), or NULL when `covariates = NULL`.
+  The covariate analysis (a list; see `estimator`), or NULL when
+  `covariates = NULL`.
 
 - network_method, build_args:
 
   For `netobject` input, the source network's method and stored build
   arguments, so per-cluster networks can be rebuilt the same way. NULL
-  otherwise.
+  otherwise, and `build_args` is NULL for a one-hot network.
 
 - metadata:
 
@@ -295,44 +346,39 @@ An object of class `"net_clustering"` containing:
   clustered sequence, so
   [`session_ids`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
   can name each sequence. For a data frame, the columns set aside as
-  covariates (see `data`). NULL otherwise.
+  covariates (see `data`). NULL otherwise, and for a one-hot network.
 
 - htna_partition:
 
   For HTNA input, the preserved node-to-actor partition used to restore
   HTNA children when networks are built.
 
-In `print.net_clustering()`: The input object, invisibly.
+For the [`print()`](https://rdrr.io/r/base/print.html) methods: the
+input, invisibly. [`print()`](https://rdrr.io/r/base/print.html) of a
+`tidy_covariates` table prints a header naming the estimator, then the
+table. For [`summary()`](https://rdrr.io/r/base/summary.html): a data
+frame with one row per cluster and columns `cluster`, `size` and
+`mean_within_dist`, returned visibly after the printed summary. For a
+clustering fitted with `covariates`, the printed summary adds the
+covariate profiles and the logit or test tables, and a `tidy_covariates`
+data frame is returned invisibly instead: one row per cluster and
+predictor (`cluster`, `predictor`, `OR`, `CI_low`, `CI_high`, `p`,
+`sig`) for a logit, or one row per covariate (`variable`, `type`,
+`statistic`, `df`, `p`, `effect`, `effect_kind`, `sig`) for
+`estimator = "chisq"`, with the per-cluster table, fit statistics and
+profiles attached as attributes. For
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html): a `ggplot`
+object, drawn and returned invisibly; with `type = "predictors"` and
+`combined = FALSE`, a list of `ggplot` objects, one per non-reference
+cluster and named by it, returned invisibly without drawing.
 
-In `summary.net_clustering()`: A data frame of per-cluster statistics,
-one row per cluster, with columns `cluster`, `size` and
-`mean_within_dist`, returned *visibly*. When the clustering was fitted
-with `covariates`, a `tidy_covariates`/`data.frame` (the tidied
-covariate table, with cluster sizes, fit statistics and profiles
-attached as attributes) is returned *invisibly* instead. In both cases
-the printed summary is a side effect.
+## Details
 
-In `plot.net_clustering()`: A `ggplot` object (invisibly); for
-`type = "predictors"` with `combined = FALSE`, a list of `ggplot`
-objects named by cluster (invisibly).
-
-In `print.tidy_covariates()`: The input invisibly.
-
-## Methods
-
-- `print.net_clustering()`: Compact, fixed-width summary of a
-  sequence-clustering result. The header carries the clustering method
-  and dissimilarity; the per-cluster table carries cluster size (count
-  and percentage) and mean within-cluster distance when available.
-  Optional medoid and covariate lines surface only when those fields are
-  populated.
-
-- `print.tidy_covariates()`: Prints a one-line header naming the
-  estimator, then the data.frame. The full human-readable view
-  (per-cluster stats, profiles, OR/test tables) was already printed by
-  [`summary()`](https://rdrr.io/r/base/summary.html) when this object
-  was produced, so this method intentionally stays minimal to avoid
-  duplication. Auto-prints when the user types the variable at the REPL.
+With the stringdist package installed, the distances are computed by
+[`stringdist::stringdistmatrix()`](https://rdrr.io/pkg/stringdist/man/stringdist.html)
+in C, many times faster than the base R implementation for the edit
+distances. The base R implementation is used when stringdist is absent,
+for weighted Hamming, and when the data hold 62 or more states.
 
 ## References
 
@@ -369,23 +415,23 @@ print(cl)
 #> Sequence Clustering [pam]
 #>   Sequences: 20  |  Clusters: 2
 #>   Dissimilarity: hamming
-#>   Quality: silhouette = 0.222
+#>   Quality: silhouette = 0.315
 #> 
 #>   Cluster  N           Mean within-dist  Medoid
-#>   1        9 (45.0%)   2.444             13
-#>   2        11 (55.0%)  2.236             14
+#>   1        9 (45.0%)   2.333             5
+#>   2        11 (55.0%)  2.000             15
 summary(cl)
 #> Sequence Clustering Summary
 #>   Method:        pam 
 #>   Dissimilarity: hamming 
-#>   Silhouette:    0.2222 
+#>   Silhouette:    0.315 
 #> 
 #> Per-cluster statistics:
 #>  cluster size mean_within_dist
-#>        1    9         2.444444
-#>        2   11         2.236364
+#>        1    9         2.333333
+#>        2   11         2.000000
 #>   cluster size mean_within_dist
-#> 1       1    9         2.444444
-#> 2       2   11         2.236364
+#> 1       1    9         2.333333
+#> 2       2   11         2.000000
 # }
 ```

@@ -1,9 +1,10 @@
 # The state colours an object will draw with
 
-Reads back the palette an object resolves to: the colours set with
-[`set_state_colors`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
-plus the defaults filled in for everything else, so the table is what
-the figures actually use.
+`state_colors()` returns the palette an object draws with: the colours
+set with
+[`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
+plus the defaults filled in for every other state, so the table shows
+what the figures use.
 
 ## Usage
 
@@ -30,18 +31,20 @@ state_colors(x, ...)
 
 - x:
 
-  A `netobject`, `netobject_group`, `mcml` or `htna`.
+  A `netobject`, `netobject_group`, `mcml` or `htna`; any other object
+  raises an error.
 
 - ...:
 
-  Ignored, for method consistency.
+  Not used.
 
 ## Value
 
-A `data.frame`, one row per colour key the object carries, with columns
-`state` (the key), `color` (the hex colour it draws with) and `source`
-(`"set"` when the palette named it, `"default"` when it fell back to
-Okabe-Ito). For an `mcml` the cluster names appear after the states.
+A data frame with one row per colour key the object carries (for a
+`netobject_group`, the states of all its networks): `state` (the key),
+`color` (the colour it draws with) and `source` (`"set"` when the
+palette named it, `"default"` when it fell back to Okabe-Ito). For an
+`mcml`, the cluster names follow the states.
 
 ## See also
 

@@ -1,9 +1,34 @@
 # Build a Network
 
-Universal network estimation function that supports both transition
-networks (relative, frequency, co-occurrence) and association networks
-(correlation, partial correlation, graphical lasso). Uses the global
-estimator registry, so custom estimators can also be used.
+`build_network()` estimates a network from sequences, an event log,
+one-hot codes or numeric variables, and returns a `netobject`: the
+object every other Nestimate verb reads (bootstrap, permutation,
+centrality, clustering, plotting). One call covers two kinds of network.
+Transition networks (`"relative"`, `"frequency"`, `"co_occurrence"` and
+their variants) are directed or undirected graphs of states, where an
+edge says how often or how likely one state follows another. Association
+networks (`"cor"`, `"pcor"`, `"glasso"`, `"ising"`, `"mgm"`) are
+undirected graphs of variables, where an edge is a correlation or a
+(regularised) partial correlation. The *Estimators* section lists every
+method and its aliases; estimators added with
+[`register_estimator()`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md)
+are called the same way.
+
+Column roles are declared, never read from names or values. An event log
+needs `action`, and usually `actor`, `time` or `session`; a wide table
+needs position columns named as a numbered run (`T1`, `T2`, ...) or
+listed in `state_cols`; one-hot data needs `codes` or
+`format = "onehot"`. Input that fits none of these raises an error of
+class `nestimate_bad_input` instead of being read one way or another.
+
+The weights are point estimates. Before reading single edges, see how
+far they move under resampling with
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+and compare groups with
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+rather than by eye. An event log that yields a single sequence is
+reported with a message of class `nestimate_single_sequence`: that
+network describes one sequence and cannot be resampled.
 
 ## Usage
 
@@ -62,251 +87,260 @@ print(x, ...)
 
 - data:
 
-  Data frame (sequences or per-observation frequencies) or a square
-  symmetric matrix (correlation or covariance). A fitted
-  `net_clustering` or `net_mmm` object is also accepted: the per-cluster
-  networks are (re)built and a `netobject_group` is returned.
+  The data to estimate from: a data frame of sequences (one row per
+  sequence, one column per position), an event log (one row per event,
+  with `action` set), one-hot code columns, numeric variables (one row
+  per observation) for the association methods, or a square symmetric
+  correlation or covariance matrix. A fitted `net_clustering` or
+  `net_mmm` object also works: its per-cluster networks are built, with
+  the `scaling`, `threshold`, `start`, `end` and `params` given here,
+  and returned as a `netobject_group`. The relative networks of a
+  `net_mmm` are the fitted chains: `scaling` and `threshold` are applied
+  to them, and any other argument raises an error of class
+  `nestimate_bad_input`.
 
 - method:
 
-  Character. Required, except when `data` is a `net_clustering` or
-  `net_mmm` object, where the fitted object's own network method is
-  used. Name of a registered estimator. Built-in methods: `"relative"`,
-  `"frequency"`, `"co_occurrence"`, `"cor"`, `"pcor"`, `"glasso"`,
-  `"ising"`, `"mgm"`, `"attention"`, `"wtna"`, `"wtna_cooccurrence"`,
-  `"ngram"`, `"gap"`, `"reverse"`. The last three mirror
-  [`tna::build_model()`](https://sonsoles.me/tna/reference/build_model.html)
-  types `"n-gram"` (adjacent pairs counted once per n-gram window
-  containing them; `params = list(n_gram = 2)`), `"gap"` (pairs up to
-  `max_gap + 1` positions apart, weighted by `1 / distance`;
-  `params = list(max_gap = 1)`) and `"reverse"` (reply network: the
-  transpose of `"frequency"`; `params = list(weighted = FALSE)`). All
-  three return raw weights; add `scaling = "normalize"` for row
-  probabilities. Aliases: `"tna"` and `"transition"` map to
-  `"relative"`; `"ftna"` and `"counts"` map to `"frequency"`; `"cna"`
-  and `"wcna"` map to `"co_occurrence"`; `"corr"` and `"correlation"`
-  map to `"cor"`; `"partial"` maps to `"pcor"`; `"ebicglasso"` and
-  `"regularized"` map to `"glasso"`; `"isingfit"` maps to `"ising"`;
-  `"atna"` maps to `"attention"`; `"mixed"` and `"mixed_graphical"` map
-  to `"mgm"`; `"wtna_transition"` maps to `"wtna"`; `"co-occurrence"`
-  maps to `"co_occurrence"`; `"n-gram"` and `"n_gram"` map to `"ngram"`.
+  The estimator: a built-in method or alias (see the *Estimators*
+  section), or a name added with
+  [`register_estimator()`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md);
+  [`list_estimators()`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md)
+  lists them. Required, except when `data` is a `net_clustering` or
+  `net_mmm` object, whose own method is used.
 
 - actor:
 
-  Character. Name of the actor/person ID column for sequence grouping.
-  Default: `NULL`.
+  The column naming who each row belongs to (a person, a team). In an
+  event log, each actor's events form a sequence, split further by
+  `session` or `time_threshold`. With `level`, it is the id the
+  multilevel decomposition groups by. Default `NULL`.
 
 - action:
 
-  Character. Name of the action/state column (long format). Default:
-  `NULL`. Column names give no role: `action`, `actor`, `time` and
+  The column holding each event's state; setting it declares the data an
+  event log. Column names give no role: `action`, `actor`, `time` and
   `session` are read only when set. A column called `Action` with
-  nothing declared raises an error of class `nestimate_bad_input`; an
-  undeclared time or session column beside `action` is named in a
-  message of class `nestimate_column_role`.
+  nothing declared raises an error of class `nestimate_bad_input`, and
+  an undeclared time or session column beside `action` is named in a
+  message of class `nestimate_column_role`. Default `NULL`.
 
 - time:
 
-  Character. Name of the time column (long format). Default: `NULL`.
+  The timestamp column of an event log. Events are ordered by it, and a
+  gap longer than `time_threshold` starts a new sequence. Default
+  `NULL`.
 
 - session:
 
-  Character. Name of the session column. Default: `NULL`.
+  The column identifying sessions in an event log; each session is its
+  own sequence, also without `actor`. Default `NULL`.
 
 - order:
 
-  Character. Name of the ordering column. Default: `NULL`.
+  The column that orders events sharing a timestamp; without it, those
+  events keep their row order. Default `NULL`.
 
 - codes:
 
-  Character vector. Column names of one-hot encoded states (for onehot
-  format). Default: `NULL`.
+  The one-hot code columns (one per state, 1 when the state is active);
+  setting them declares one-hot data. Default `NULL`.
 
 - group:
 
-  Character. Name of a grouping column for per-group networks. Returns a
-  `netobject_group` (named list of netobjects). Default: `NULL`.
+  A column to split the data by: one network is estimated per value and
+  the result is a `netobject_group`. Default `NULL`.
 
 - format:
 
-  Character. Input format: `"auto"`, `"wide"`, `"long"`, or `"onehot"`.
-  Default: `"auto"` reads an event log when `action` is set, one-hot
-  data when `codes` is set, and otherwise wide positions; it does not
-  read one-hot data from the values. The association methods and the
-  `wtna` methods read 0/1 columns as they always do.
+  How to read `data`. `"auto"` (default) reads an event log when
+  `action` is set, one-hot data when `codes` is set, and wide positions
+  otherwise; it never infers one-hot data from the values. `"wide"`,
+  `"long"` and `"onehot"` force a reading. The association methods and
+  the `wtna` methods read 0/1 columns as they always do.
 
 - window_size:
 
-  Integer. Window size for one-hot windowing. Default: `3L`.
+  For one-hot data: how many consecutive rows form one window (default
+  `3`). Windows on sequence data are set through `params` instead.
 
 - mode:
 
-  Character. Windowing mode for one-hot input only: `"non-overlapping"`
-  or `"overlapping"`. Has no effect on wide or long sequence data (only
-  the one-hot/wtna path reads it). See
-  [`wtna`](https://pak.dynasite.org/Nestimate/reference/wtna.md) for how
-  overlapping windows are counted. Default: `"non-overlapping"`.
+  For one-hot data: `"non-overlapping"` (default) or `"overlapping"`
+  windows;
+  [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
+  describes how overlapping windows are counted. Wide and long sequence
+  data ignore it.
 
 - scaling:
 
-  Character vector or NULL. Post-estimation scaling to apply (in order).
-  Options: `"minmax"`, `"max"`, `"rank"`, `"normalize"`. Can combine:
-  `c("rank", "minmax")`. Default: `NULL` (no scaling).
+  Rescaling applied to the weights after estimation, in the order given:
+  `"minmax"` maps the non-zero weights into (0, 1\], `"max"` divides by
+  the largest absolute weight, `"rank"` replaces the non-zero weights by
+  their ranks, and `"normalize"` makes each row's absolute weights sum
+  to 1. Zero weights stay zero under every option. Combine them as in
+  `c("rank", "minmax")`. Default `NULL` (none).
 
 - threshold:
 
-  Numeric. Absolute values below this are set to zero in the result
-  matrix. Default: 0 (no thresholding).
+  Weights whose absolute value is below this are set to zero. Default
+  `0` (none). For `method = "mgm"`, `"LW"` or `"none"` instead selects
+  mgm's coefficient-thresholding rule (a `threshold` in `params` takes
+  precedence); any other non-numeric value raises an error.
 
 - level:
 
-  Character or NULL. Multilevel decomposition for the undirected
-  association methods (`cor`, `pcor`, `glasso`, `mgm`); a directed
-  estimator errors. One of `NULL`, `"between"`, `"within"`, `"both"`.
-  Requires an id column, supplied either as `actor` or as `params$id` /
-  `params$id_col`. Default: `NULL`. For `method = "mgm"`, a numeric
-  vector instead supplies one category count per modeled variable (`1`
-  for continuous variables), after excluding group, actor and metadata
-  columns. It is checked and retained for compatibility; the MGM fit
-  infers category levels from data.
+  Multilevel decomposition for the undirected association methods
+  (`cor`, `pcor`, `glasso`, `mgm`): `"between"` estimates the network of
+  person means, `"within"` the network of deviations from them, and
+  `"both"` returns the two as a `netobject_ml`. It needs an id column,
+  given as `actor` or as `params$id`; a directed method raises an error.
+  Default `NULL` (no decomposition). For `method = "mgm"`, a numeric
+  vector instead gives one category count per modelled variable (`1` for
+  continuous ones), after group, actor and metadata columns are set
+  aside; it is checked and kept for compatibility, and the fit reads the
+  categories from the data.
 
 - time_threshold:
 
-  Numeric or FALSE. Maximum time gap (seconds) for long format session
-  splitting. Set to `FALSE` to switch session-interval splitting off, so
-  each actor (or actor-session) forms a single sequence. Default: `900`.
+  The longest gap, in seconds, between two events of the same sequence
+  in an event log; a longer gap starts a new sequence. `FALSE` turns the
+  split off, so each actor (or actor-session) is one sequence. Default
+  `900`.
 
 - timezone:
 
-  Character. Olson time zone used to interpret naive timestamps in
-  long-format data (offset-bearing timestamps such as `...Z` or `+02:00`
-  are converted from their offset). Passed to
-  [`prepare`](https://pak.dynasite.org/Nestimate/reference/prepare.md).
-  Default: `"UTC"`.
+  The Olson time zone for timestamps without an offset (passed to
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md));
+  timestamps with an offset, such as `...Z` or `+02:00`, are converted
+  from it. Default `"UTC"`.
 
 - predictability:
 
-  Logical. If `TRUE` (default), compute and store node predictability
-  (R-squared) for undirected association methods (glasso, pcor, cor).
-  Stored in `$predictability` and auto-displayed as donuts by
-  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
+  Whether to compute each node's predictability (the R-squared of the
+  node on its neighbours) for the undirected association methods `cor`,
+  `pcor` and `glasso`. It is stored on the network, and
+  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+  draws it as a ring around each node. Default `TRUE`.
 
 - state_cols:
 
-  Character vector or `NULL`. Explicit names of columns to classify as
-  state columns in the returned netobject's `$data` slot. When provided,
-  all other columns of the cleaned input go to `$metadata`.
-  Auto-detection (values-in-nodes heuristic) is bypassed. Use this when
-  a metadata column happens to contain values that overlap with node
-  names (e.g. condition labels `"A","B","C"` and nodes `"A","B","C"`)
-  and auto-detection would misclassify it. Default: `NULL`. Declared
-  columns are positions, also when they hold only 0 and 1: use `codes`
-  or `format = "onehot"` for one-hot data. For wide sequence data with
-  nothing declared, the frame must be one column or hold position
-  columns named as a run (a shared prefix and a number: `T1`, `T2`, ...;
-  or `1`, `2`, ...). Columns of only 0 and 1 on a sequence method raise
-  an error of class `nestimate_bad_input`: nothing says whether they are
-  one-hot codes or positions. Numeric columns of a mixed frame are then
-  covariates, and so is every character or factor column outside the
-  run. Any other frame on a sequence method raises an error of class
-  `nestimate_bad_input`: set `action` for an event log, or this argument
-  for a wide table.
+  The columns of a wide table that are sequence positions; every other
+  column of the cleaned input goes to the network's metadata. Declared
+  columns are positions even when they hold only 0 and 1; one-hot data
+  is declared with `codes` or `format = "onehot"`. With nothing
+  declared, the frame must be one column or hold position columns named
+  as a numbered run (a shared prefix and a number, `T1`, `T2`, ..., or
+  `1`, `2`, ...); numeric columns beside the run and character or factor
+  columns outside it are then covariates. Any other frame on a sequence
+  method, and columns of only 0 and 1, raise an error of class
+  `nestimate_bad_input`: nothing says whether they are positions or
+  one-hot codes. Default `NULL`.
 
 - metadata_cols:
 
-  Character vector or `NULL`. Explicit names of columns to force into
-  the `$metadata` slot. Cannot overlap with `state_cols`. Default:
-  `NULL`. A column left out of a numbered run of positions is named in a
-  message of class `nestimate_column_role`; listing it here or in
-  `state_cols` settles it.
+  Columns to keep as the network's metadata (covariates), never as
+  positions; they cannot overlap `state_cols`. A column left out of a
+  numbered run of positions is named in a message of class
+  `nestimate_column_role`, and listing it here or in `state_cols`
+  settles it. Default `NULL`.
 
 - start:
 
-  Boundary marker prepended to every sequence as an explicit start state
-  (a pure source: no incoming edges, every sequence's first transition
-  is `start -> first_observed`). `FALSE` (default) adds nothing; `TRUE`
-  uses the label `"Start"`; a single string uses that string as the
-  label. Only valid for the transition methods (`relative`, `frequency`,
-  `co_occurrence`, `attention`, `ngram`, `gap`, `reverse`); errors
-  otherwise (`wtna` included).
+  A start state put before every sequence, so the network shows where
+  sequences begin (an edge from it to each sequence's first state).
+  `FALSE` (default) adds none, `TRUE` adds one labelled `"Start"`, and a
+  single string adds one with that label. Only for the transition
+  methods `relative`, `frequency`, `co_occurrence`, `attention`,
+  `ngram`, `gap` and `reverse`; any other method, `wtna` included,
+  raises an error.
 
 - end:
 
-  Boundary marker placed in the single cell after each sequence's last
-  observed (non-`NA`) state, as an explicit terminal state (a pure sink:
-  no outgoing edges, no self-loop – distinct from
-  [`mark_terminal_state`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md),
-  which fills all trailing NAs into an absorbing state). `FALSE`
-  (default) adds nothing; `TRUE` uses the label `"End"`; a single string
-  uses that string as the label. Same method restriction as `start`.
+  An end state put in the cell after each sequence's last observed
+  state, so the network shows where sequences stop. It has no outgoing
+  edges and no self-loop, unlike
+  [`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md),
+  which fills all trailing missing cells with an absorbing state.
+  `FALSE` (default) adds none, `TRUE` adds one labelled `"End"`, and a
+  single string adds one with that label. Same methods as `start`.
 
 - params:
 
-  Named list. Method-specific parameters passed to the estimator
-  function (e.g. `list(gamma = 0.5)` for glasso, or
-  `list(format = "wide")` for transition methods). This is the key
-  composability feature: downstream functions like bootstrap or grid
-  search can store and replay the full params list without knowing
-  method internals. Transition estimators accept tna-style sequence
-  options such as `weighted` and `concat` (and the low-level
-  `begin_state` / `end_state`, of which `start` / `end` are the public
-  form – see those arguments). `window_size` (and `window_span`, or
-  `windowed = TRUE` for a size of 2) counts the methods `relative`,
-  `frequency` and `co_occurrence` between consecutive non-overlapping
-  blocks of that many positions, as
+  Settings passed to the estimator, as a named list, such as
+  `list(gamma = 0.5)` for `glasso` or `list(n_gram = 3)` for `ngram`.
+  The list is stored on the network, so
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+  and the other resampling verbs re-estimate with exactly the same
+  settings. The transition methods take tna's sequence options
+  `weighted` and `concat`, and the low-level `begin_state` / `end_state`
+  that `start` and `end` set. `window_size` (with `window_span`, or
+  `windowed = TRUE` for a size of 2) counts `relative`, `frequency` and
+  `co_occurrence` between consecutive non-overlapping blocks of that
+  many positions, as
   [`tna::tna()`](https://sonsoles.me/tna/reference/build_model.html)
   does; other transition methods raise an error of class
   `nestimate_bad_input`, and `mode = "overlapping"` a warning of class
-  `nestimate_ignored_mode`. Column-like entries in `params` (`action`,
-  `id`, `id_col`, `actor`, `time`, `session`, `order`, `cols`, `codes`,
-  and `group`) are resolved before format detection and must name
-  existing columns. If the same column role is supplied both directly
-  and through `params`, the names must agree.
+  `nestimate_ignored_mode`. Column roles given here (`action`, `id`,
+  `id_col`, `actor`, `time`, `session`, `order`, `cols`, `codes`,
+  `group`) must name existing columns, and must agree with the same role
+  given directly.
 
 - labels:
 
-  Optional name -\> label remap applied after construction. Accepts a
-  2-column data.frame `(name, label)`, a named character vector
-  `c(name = "label")`, or a named list. Rewrites `$nodes$label` and
-  `dimnames(weights)`. Unmapped names pass through unchanged.
+  New display labels for the nodes, applied after estimation: a
+  two-column data frame (`name`, `label`), a named character vector
+  `c(name = "label")` or a named list. It rewrites the node labels and
+  the weight matrix's dimnames; nodes not listed keep their names.
 
 - ...:
 
-  Additional arguments passed to the estimator function. For long data,
+  Further arguments for the estimator. For event logs,
   [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)'s
-  time options `unix_time_unit`, `is_unix_time` and `custom_format` are
-  passed to
-  [`prepare`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
-  instead (e.g. `unix_time_unit = "milliseconds"` for millisecond
-  timestamps). In `print.netobject()`, `print.netobject_group()` and
-  `print.netobject_ml()`: Additional arguments (ignored). In
-  `print.summary.netobject()`, `print.summary.netobject_group()`,
-  `summary.netobject()` and `summary.netobject_group()`: Ignored.
+  time options `unix_time_unit`, `is_unix_time` and `custom_format` go
+  to
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  instead (e.g. `unix_time_unit = "milliseconds"`). For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods: ignored.
 
 - x:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
-  object of class `netobject`, `netobject_group` or `netobject_ml` (or
-  its [`summary()`](https://rdrr.io/r/base/summary.html)).
+  For the [`print()`](https://rdrr.io/r/base/print.html) methods: a
+  `netobject`, `netobject_group` or `netobject_ml`, or the result of
+  [`summary()`](https://rdrr.io/r/base/summary.html) on one.
 
 - digits:
 
-  Integer. Decimal places for the weight summary. Default `3`.
-  Non-breaking: `print(x)` keeps the same shape as before, with the
-  addition of a weight-range column.
+  For [`print()`](https://rdrr.io/r/base/print.html) of a
+  `netobject_group`: decimal places of the weight range. Default `3`.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `netobject` or `netobject_group`.
+  For [`summary()`](https://rdrr.io/r/base/summary.html): a `netobject`
+  or `netobject_group`.
 
 - combined:
 
-  Logical. Combine into one wide data.frame? Default `TRUE`.
+  For [`summary()`](https://rdrr.io/r/base/summary.html) of a
+  `netobject_group`: `TRUE` (default) joins the groups' metrics into one
+  data frame with a column per group; `FALSE` returns a named list of
+  the per-group tables.
 
 ## Value
 
-An object of class `c("netobject", "cograph_network")` containing:
+A `netobject` (class `c("netobject", "cograph_network")`). Print it for
+an overview;
+[`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
+gives one row per edge,
+[`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
+and
+[`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
+the weights and initial-state probabilities, and
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+draws it. [`summary()`](https://rdrr.io/r/base/summary.html) returns the
+descriptive metrics, one row per metric (a `netobject_group` gives one
+column per group). The [`print()`](https://rdrr.io/r/base/print.html)
+methods return their input invisibly. The `netobject`'s fields:
 
 - data:
 
@@ -323,8 +357,7 @@ An object of class `c("netobject", "cograph_network")` containing:
 
 - nodes:
 
-  Data frame with columns `id`, `label`, `name`, `x`, `y`. Node labels
-  are in `$nodes$label`.
+  Data frame with columns `id`, `label`, `name`, `x`, `y`.
 
 - edges:
 
@@ -361,7 +394,8 @@ An object of class `c("netobject", "cograph_network")` containing:
 
 - level:
 
-  Decomposition level used (or NULL).
+  Decomposition level used, or NULL; for `mgm`, the category count of
+  each variable.
 
 - build_args:
 
@@ -379,96 +413,161 @@ An object of class `c("netobject", "cograph_network")` containing:
 
 - predictability:
 
-  Named numeric vector of R-squared predictability values per node (for
-  undirected association methods when `predictability = TRUE`). NULL for
-  directed methods.
+  Named numeric vector of R-squared predictability values per node, for
+  `cor`, `pcor` and `glasso` when `predictability = TRUE`; NULL
+  otherwise.
 
-Method-specific extras (e.g. `precision_matrix`, `cor_matrix`,
-`frequency_matrix`, `initial`, `lambda_selected`, etc.) are preserved
-from the estimator output.
+The estimator's own results are kept beside these fields, depending on
+the method: for example `frequency_matrix` and `initial` for `relative`,
+`frequency`, `ngram`, `gap` and `reverse` (only `initial` for
+`attention`, neither for `co_occurrence`), `cor_matrix` and the sample
+size `n` for `cor`, `pcor` and `glasso`, `precision_matrix` for `pcor`
+and `glasso`, and `lambda_selected` for `glasso`.
 
-When `level = "both"`, returns an object of class `"netobject_ml"` with
-`$between` and `$within` sub-networks and a `$method` field.
-`level = "between"` or `"within"` returns a single `netobject` estimated
-on the decomposed data.
+With `level = "both"`, the result is a `netobject_ml` holding the
+between-person and within-person networks (`between` and `within`, each
+a `netobject`) and the `method`. `level = "between"` or `"within"`
+returns a single `netobject` estimated on the decomposed data.
 
-When `group` is supplied (or `data` is a `net_clustering` / `net_mmm`
-object), returns an object of class `"netobject_group"`: a named list of
-`netobject`s, one per group, carrying the grouping column in
-`attr(x, "group_col")`.
-
-In `print.netobject()`, `print.netobject_group()` and
-`print.netobject_ml()`: The input object, invisibly.
-
-In `summary.netobject()`: A `data.frame` with columns `metric` and
-`value`, of class `c("summary.netobject", "data.frame")`.
-
-In `summary.netobject_group()`: Either a `data.frame` (one column per
-group) or a named list of `summary.netobject` objects, of class
-`c("summary.netobject_group", ...)`.
-
-In `print.summary.netobject()`: `x`, invisibly.
-
-In `print.summary.netobject_group()`: `x`, invisibly.
+With `group`, or when `data` is a `net_clustering` or `net_mmm` object,
+the result is a `netobject_group`: a named list of `netobject`s, one per
+group, that records the grouping column in its `group_col` attribute.
 
 ## Details
 
-The function works as follows:
+`build_network()` resolves the method alias, checks the declared column
+arguments before the format is resolved, and takes the estimator from
+the registry. For an association method with `level`, it first
+decomposes the data into person means (`"between"`) or deviations from
+them (`"within"`). It then calls the estimator with `data` and `params`,
+applies `scaling` and then `threshold` to the weight matrix, and
+extracts the edges.
 
-1.  Resolves method aliases to canonical names.
-
-2.  Validates explicit column arguments before any format guessing.
-
-3.  Retrieves the estimator function from the global registry.
-
-4.  For association methods with `level` specified, decomposes the data
-    (between-person means or within-person centering).
-
-5.  Calls the estimator: `do.call(fn, c(list(data = data), params))`.
-
-6.  Applies scaling and thresholding to the result matrix.
-
-7.  Extracts edges and constructs the `netobject`.
-
-For long-format transition data, supplying `action` alone treats all
-rows as one sequence in row order; `session`, or a `time` gap above
-`time_threshold`, splits them without an `actor`. A message says so when
-one sequence is built, because a one-sequence transition network is not
-recommended and cannot be validated by bootstrap or other confirmatory
-tests.
+In an event log, `action` alone makes all rows one sequence in row
+order; `session`, or a `time` gap above `time_threshold`, splits them
+without an `actor`. When the log yields a single sequence, a message of
+class `nestimate_single_sequence` says so, because such a network cannot
+be validated by bootstrap or the other confirmatory tests.
 
 For `method = "mgm"`, missing continuous values are filled with the
 observed column mean and missing categorical values with the modal
-level. This retains the rows and is psychnets' documented
+level. This keeps the rows and is psychnets' documented
 `na_method = "pairwise"` policy; it is not pairwise deletion.
+
+For a network with non-negative weights, the
+[`summary()`](https://rdrr.io/r/base/summary.html) values equal those of
+[`tna::summary.tna()`](https://sonsoles.me/tna/reference/summary.tna.html)
+from tna 1.5.4 on.
+
+## Estimators
+
+- `"relative"`:
+
+  Transition probabilities (row-normalised counts); directed. Aliases:
+  `"tna"`, `"transition"`.
+
+- `"frequency"`:
+
+  Transition counts; directed. Aliases: `"ftna"`, `"counts"`.
+
+- `"co_occurrence"`:
+
+  Co-occurrence within sequences; undirected. Aliases: `"cna"`,
+  `"wcna"`, `"co-occurrence"`.
+
+- `"attention"`:
+
+  Decay-weighted transitions; directed. Alias: `"atna"`.
+
+- `"ngram"`:
+
+  Adjacent pairs counted once per n-gram window; directed. Aliases:
+  `"n-gram"`, `"n_gram"`.
+
+- `"gap"`:
+
+  Pairs up to `max_gap + 1` positions apart, weighted `1 / distance`;
+  directed.
+
+- `"reverse"`:
+
+  Reply network, the transpose of `"frequency"`; directed.
+
+- `"wtna"`:
+
+  Window-based transitions on one-hot data; directed. Alias:
+  `"wtna_transition"`.
+
+- `"wtna_cooccurrence"`:
+
+  Window-based co-occurrence on one-hot data; undirected.
+
+- `"cor"`:
+
+  Pearson correlations; undirected. Aliases: `"corr"`, `"correlation"`.
+
+- `"pcor"`:
+
+  Partial correlations, unregularised; undirected. Alias: `"partial"`.
+
+- `"glasso"`:
+
+  EBIC graphical lasso partial correlations; undirected. Aliases:
+  `"ebicglasso"`, `"regularized"`.
+
+- `"ising"`:
+
+  Ising model (L1-penalised logistic regression); undirected. Alias:
+  `"isingfit"`.
+
+- `"mgm"`:
+
+  Mixed graphical model; undirected. Aliases: `"mixed"`,
+  `"mixed_graphical"`.
+
+`"ngram"`, `"gap"` and `"reverse"` are
+[`tna::build_model()`](https://sonsoles.me/tna/reference/build_model.html)'s
+types `"n-gram"`, `"gap"` and `"reverse"`. Their settings go in
+`params`: `list(n_gram = 2)`, `list(max_gap = 1)` and
+`list(weighted = FALSE)` are the defaults. All three return raw weights;
+add `scaling = "normalize"` for row probabilities.
 
 ## Methods
 
-- `print.netobject_group()`: Compact summary of a `netobject_group`.
-  Header surfaces the source (a clustering attached by
-  [`cluster_network`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
-  or
-  [`cluster_mmm`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md),
-  or a plain split by `group_col`). The per-group table carries node and
-  edge counts, weight range, and – when a clustering attribute is
-  present – N and percentage of sequences per cluster (matching the
-  layout used by
-  [`print.net_clustering`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  and
-  [`print.net_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)).
+Printing a `netobject` shows the kind of network, the range of its
+weights (with the numbers of positive and negative edges for `cor`,
+`pcor`, `glasso` and `ising`, the mean weight otherwise), the weight
+matrix under the node labels, the initial probabilities and the
+predictability values when present, the sample size for `cor`, `pcor`,
+`glasso` and `ising`, the tuning values of `glasso` and `ising`, and any
+scaling or threshold. Printing a `netobject_group` gives a header naming
+its source (a clustering from `build_network()` on a `net_clustering` or
+`net_mmm` fit, or
+[`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md),
+or a plain split by the grouping column) and one row per group with its
+node and edge counts and weight range; when the groups are clusters, it
+also shows the number and share of sequences in each, in the layout of
+the
+[`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
+and
+[`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
+prints. A `netobject_ml` prints the node, edge and sample counts of its
+between- and within-person networks.
 
-- `summary.netobject()`: Computes node count, edge count, density, mean
-  shortest-path distance, mean and SD of in/out strength, mean and SD of
-  in/out degree, in/out degree centralization (Freeman), and
-  reciprocity. Mirrors the metric set returned by
-  [`tna::summary.tna()`](https://sonsoles.me/tna/reference/summary.tna.html)
-  so a Nestimate netobject and the equivalent tna model report
-  numerically identical descriptive metrics.
-
-- `summary.netobject_group()`: Returns one summary per constituent
-  network. With `combined = TRUE` (default) the per-group tables are
-  joined into a single wide `data.frame` with one column per group; with
-  `combined = FALSE` returns a named list.
+[`summary()`](https://rdrr.io/r/base/summary.html) gives the descriptive
+metrics
+[`tna::summary.tna()`](https://sonsoles.me/tna/reference/summary.tna.html)
+reports: node and edge counts, density, mean shortest-path distance, the
+mean and SD of out- and in-strength, the mean and SD of out-degree, out-
+and in-degree centralisation (Freeman) and reciprocity. A self-loop
+counts as an edge, an undirected edge is counted once, and density is
+capped at 1. Strengths sum absolute weights. Distances take each edge's
+absolute weight as its length, not its inverse, and pairs with no path
+between them are left out of the mean. Degree centralisation ignores
+self-loops, and reciprocity is the share of off-diagonal edges whose
+reverse is also present (1 for an undirected network). Mean distance and
+reciprocity are `NaN` when no pair qualifies. Printing a summary shows
+the counts as integers and the other metrics to four significant digits.
 
 ## References
 
@@ -532,20 +631,20 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 print(net)
 #> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.111, 0.556]  |  mean: 0.250
+#>   Weights: [0.143, 0.429]  |  mean: 0.250
 #> 
 #>   Weight matrix:
 #>         A     B     C     D
-#>   A 0.423 0.192 0.192 0.192
-#>   B 0.304 0.304 0.217 0.174
-#>   C 0.217 0.304 0.304 0.174
-#>   D 0.222 0.111 0.556 0.111 
+#>   A 0.310 0.310 0.172 0.207
+#>   B 0.353 0.176 0.176 0.294
+#>   C 0.261 0.174 0.217 0.348
+#>   D 0.429 0.238 0.143 0.190 
 #> 
 #>   Initial probabilities:
-#>   A             0.333  ████████████████████████████████████████
-#>   B             0.300  ████████████████████████████████████
-#>   D             0.200  ████████████████████████
-#>   C             0.167  ████████████████████
+#>   C             0.367  ████████████████████████████████████████
+#>   A             0.300  █████████████████████████████████
+#>   D             0.233  █████████████████████████
+#>   B             0.100  ███████████
 
 # Association network (glasso)
 freq_data <- convert_sequence_format(seqs, format = "frequency")

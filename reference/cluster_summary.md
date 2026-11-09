@@ -1,9 +1,26 @@
 # Cluster Summary Statistics
 
-Aggregates node-level network weights to cluster-level summaries.
-Computes both between-cluster transitions (how clusters connect to each
-other) and within-cluster transitions (how nodes connect within each
-cluster).
+`cluster_summary()` aggregates a node-level weight matrix to clusters of
+nodes and returns an `mcml` object with two levels: a macro network
+whose entry (i, j) combines every edge from a node of cluster i to a
+node of cluster j (the diagonal combines the edges inside a cluster),
+and one within-cluster network per cluster, the submatrix of its nodes.
+It takes a weight matrix, a `netobject`, a bare `cograph_network` or a
+`tna` model, and the clusters as a membership vector, a node-to-cluster
+data frame or a named list. This is the matrix route of Multi-Cluster
+Multi-Level (MCML) analysis;
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+calls it for matrix input.
+
+The macro weights are arithmetic aggregates (see `method`) of weights
+that already exist. They are not row-normalised and are not the
+transition probabilities of a process over clusters: the transitions
+between clusters can be counted only from the sequences, which
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+does (its default `type = "tna"` gives transition probabilities between
+clusters).
+[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
+keeps the macro weights as they are and does not normalise them.
 
 ## Usage
 
@@ -21,168 +38,159 @@ cluster_summary(
 
 - x:
 
-  Network input. Accepts multiple formats:
-
-  matrix
-
-  :   Numeric adjacency/weight matrix. Row and column names are used as
-      node labels. Values represent edge weights (e.g., transition
-      counts, co-occurrence frequencies, or probabilities).
-
-  netobject
-
-  :   A network object built by
-      [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-      Its weight matrix `x$weights` is aggregated; a bare
-      `cograph_network` is coerced to a netobject first.
-
-  tna
-
-  :   A tna object from the tna package. Extracts `x$weights`.
-
-  mcml
-
-  :   An `mcml` object is returned unchanged.
+  The node-level network: a numeric square matrix whose row and column
+  names (identical, in the same order) label the nodes, with finite
+  weights such as transition counts, co-occurrence frequencies or
+  probabilities; a `netobject` from
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  or a bare `cograph_network`, whose weight matrix is used; or a `tna`
+  model, whose weights are used. An `mcml` object is returned unchanged.
+  A matrix without names labels its nodes `"1"`, `"2"`, ....
 
 - clusters:
 
-  Cluster/group assignments for nodes. Accepts multiple formats:
+  The cluster of each node, required (`NULL`, the default, raises an
+  error;
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  is the verb that reads clusters from a `netobject`'s node table).
+  Accepted forms:
 
-  NULL
+  membership vector
 
-  :   (default) Not usable here: `clusters` is required and `NULL`
-      raises an error. Auto-detection of a cluster column in a
-      `netobject`'s node table happens in
-      [`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md),
-      which then calls this function with the detected assignment.
+  :   One value per node, in the order of the matrix rows, such as
+      `c(1, 1, 2, 2, 3, 3)` or `c("A", "A", "B")`. A named vector is
+      matched to the nodes by name instead. Numeric values give clusters
+      in sorted order, character values in order of first appearance.
 
-  vector
+  data frame
 
-  :   Cluster membership for each node, in the same order as the matrix
-      rows/columns. Can be numeric (1, 2, 3) or character ("A", "B").
-      Cluster names will be derived from unique values. Example:
-      `c(1, 1, 2, 2, 3, 3)` assigns first two nodes to cluster 1.
-
-  data.frame
-
-  :   A data frame where the first column contains node names and the
-      second column contains group/cluster names. Example:
-      `data.frame(node = c("A", "B", "C"), group = c("G1", "G1", "G2"))`
+  :   Node names in the first column, cluster names in the second, such
+      as
+      `data.frame(node = c("A", "B", "C"), group = c("G1", "G1", "G2"))`;
+      the clusters come in alphabetical order.
 
   named list
 
-  :   Explicit mapping of cluster names to node labels. List names
-      become cluster names, values are character vectors of node labels
-      that must match matrix row/column names. Example:
-      `list(Alpha = c("A", "B"), Beta = c("C", "D"))`
+  :   Cluster names mapped to their nodes, such as
+      `list(Alpha = c("A", "B"), Beta = c("C", "D"))`; the clusters keep
+      the list's order.
+
+  Every node must belong to exactly one cluster: an unknown node, a node
+  listed twice, a node left out or an empty cluster raises an error.
 
 - method:
 
-  Aggregation method for combining edge weights within/between clusters.
-  Controls how multiple node-to-node edges are summarized:
+  How the edges between (or within) two clusters are combined into one
+  weight, with
+  [`net_aggregate_weights()`](https://pak.dynasite.org/Nestimate/reference/net_aggregate_weights.md);
+  zero edges are left out first.
 
-  "sum"
+  `"sum"`
 
-  :   (default) Sum of all edge weights. Best for count data (e.g.,
-      transition frequencies). Preserves total flow.
+  :   (default) The total weight, which keeps the total flow. Suits
+      counts such as transition frequencies.
 
-  "mean"
+  `"mean"`
 
-  :   Average edge weight. Best when cluster sizes differ and you want
-      to control for size. Note: when input is already a transition
-      matrix (rows sum to 1), "mean" avoids size bias. Example: cluster
-      with 5 nodes won't have 5x the weight of cluster with 1 node.
+  :   The mean weight, so a cluster of 5 nodes does not get 5 times the
+      weight of a cluster of 1. Suits a matrix of probabilities (rows
+      summing to 1), where a sum would grow with cluster size.
 
-  "median"
+  `"median"`
 
-  :   Median edge weight. Robust to outliers.
+  :   The median weight, less affected by a few extreme weights.
 
-  "max"
+  `"max"`
 
-  :   Maximum edge weight. Captures strongest connection.
+  :   The strongest connection.
 
-  "min"
+  `"min"`
 
-  :   Minimum edge weight. Captures weakest connection.
+  :   The weakest connection.
 
-  "density"
+  `"density"`
 
-  :   Sum of (non-zero) edge weights divided by the number of possible
-      edges between the two clusters (`n_i * n_j`). Normalizes by
-      cluster size combinations. Because zero/`NA` edges are stripped
-      before aggregation, this equals `"mean"` exactly when the
-      cluster-pair block is fully dense (no zero edges), and is strictly
-      smaller than `"mean"` when zero edges are present (it divides by
-      the larger possible-edge count).
+  :   The total weight divided by the number of possible edges between
+      the two clusters (`n_i * n_j`). It equals `"mean"` when the block
+      has no zero edges and is smaller than it when it has some.
 
-  "geomean"
+  `"geomean"`
 
-  :   Geometric mean of positive weights. Useful for multiplicative
+  :   The geometric mean of the positive weights, for multiplicative
       processes.
 
 - directed:
 
-  Logical. If `TRUE` (default), treat network as directed. A-\>B and
-  B-\>A are separate edges. If `FALSE`, edges are undirected and the
-  matrix is symmetrized before processing.
+  Whether the network is directed, so that A-\>B and B-\>A are separate
+  edges. Default `TRUE`. `FALSE` replaces the matrix by the mean of it
+  and its transpose before aggregating, which makes every layer
+  symmetric.
 
 - compute_within:
 
-  Logical. If `TRUE` (default), compute within-cluster transition
-  matrices for each cluster. Each cluster gets its own n_i x n_i matrix
-  showing internal node-to-node transitions. Set to `FALSE` to skip this
-  computation for better performance when only between-cluster summary
-  is needed.
+  Whether to build the within-cluster networks, one n_i x n_i matrix per
+  cluster. Default `TRUE`; `FALSE` skips them when only the macro
+  network is needed, and
+  [`summary()`](https://rdrr.io/r/base/summary.html) then reports their
+  totals as `NA`.
 
 ## Value
 
-An `mcml` object (S3 class): a list with
+An `mcml` object. Print it for the aggregation method, the node and
+cluster counts, the clusters and the macro weights;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
+with one row per cluster with its size, total absolute within-cluster
+weight and between-cluster weight sent and received (described under
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md));
+[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
+turns the layers into a `netobject_group`;
+[`simplicial_features()`](https://pak.dynasite.org/Nestimate/reference/simplicial_features.md)
+summarises the topology of each within-cluster network.
+[`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md),
+which opens chosen clusters into their states, needs an `mcml` built
+from sequences by
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md);
+on this result it raises an error of class `nestimate_no_expand_source`.
+The object's fields:
 
 - macro:
 
-  An `mcml_layer` holding the cluster-level network: `$weights`, the k x
-  k matrix whose entry (i, j) is the aggregation (per `method`) of all
-  edges from nodes in cluster i to nodes in cluster j, with the diagonal
-  holding the within-cluster edges – pure arithmetic, no row
-  normalization; `$inits`, the length-k column sums of that matrix
-  normalized to sum to 1; `$labels`, the cluster names; and `$data`,
-  `NULL` on this path.
+  The cluster-level layer (class `mcml_layer`): `weights`, the k x k
+  matrix of aggregated weights, diagonal included and rows not
+  normalised; `inits`, the column sums of that matrix normalised to sum
+  to 1 (equal shares when every weight is zero); `labels`, the cluster
+  names; and `data`, `NULL` on this route.
 
 - clusters:
 
-  Named list with one `mcml_layer` per cluster. Its `$weights` is the
-  n_i x n_i submatrix of the nodes in that cluster and its `$inits` the
-  normalized column sums of that submatrix. `NULL` when
+  A named list of one `mcml_layer` per cluster: the n_i x n_i submatrix
+  of its nodes, self-loops included, and its normalised column sums as
+  `inits` (1 for a single-node cluster). `NULL` when
   `compute_within = FALSE`.
 
 - cluster_members:
 
-  Named list mapping cluster names to their member node labels, e.g.
+  A named list of each cluster's node labels, such as
   `list(A = c("n1", "n2"), B = c("n3", "n4", "n5"))`.
 
 - edges:
 
-  `NULL` on this path – a matrix carries no node-level transitions. The
-  sequence and edge-list paths of
-  [`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
-  fill in a tidy edge table here.
+  `NULL`: a matrix carries no node-level transitions. The sequence and
+  edge-list routes of
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  fill it.
 
 - meta:
 
-  List with `type` (always `"aggregate"` here), `method`, `directed`,
-  `n_nodes`, `n_clusters`, `cluster_sizes` (named integer vector) and
+  A list with `type` (always `"aggregate"` here), `method`, `directed`,
+  `n_nodes`, `n_clusters`, `cluster_sizes` (a named integer vector) and
   `source` (`"matrix"`).
 
 ## Details
 
-This is the core function for Multi-Cluster Multi-Level (MCML) analysis.
-Use [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
-to convert results to tna objects for further analysis with the tna
-package.
-
 ### Workflow
 
-Typical MCML analysis workflow:
+A typical MCML analysis:
 
 
     # 1. Create the node-level network
@@ -198,38 +206,31 @@ Typical MCML analysis workflow:
     # 4. Promote the layers to netobjects for downstream verbs
     nets <- as_tna(cs)
 
-### Between-Cluster Matrix Structure
+### The macro matrix
 
-The `macro$weights` matrix has clusters as both rows and columns:
+The macro matrix has clusters as both rows and columns. An off-diagonal
+entry (i, j) is the aggregated weight from cluster i to cluster j; a
+diagonal entry (i, i) aggregates the edges inside cluster i.
 
-- Off-diagonal (row i, col j): Aggregated weight from cluster i to
-  cluster j
-
-- Diagonal (row i, col i): Within-cluster total (aggregation of internal
-  edges)
-
-Rows are NOT normalized. Entries are elementwise aggregates produced by
-`method`. If the caller wants probabilities, they should normalize
-downstream (e.g. via
-[`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)).
-Mixing an arithmetic aggregation with row-normalization here (the old
-`type = "tna"` combined with `method = "min"` / `"mean"` etc.) produces
-numbers that sum to 1 per row but are not a probability distribution
-over any process; that silently-wrong combination is why `type` was
-removed from the matrix path. The sequence and edgelist paths of
+Rows are not normalised: each entry is the aggregate `method` produces.
+Row-normalising an arithmetic aggregate here (the old `type = "tna"`
+combined with `method = "min"`, `"mean"` and so on) gave rows that sum
+to 1 but are not a probability distribution over any process, which is
+why `type` was removed from the matrix route. The sequence and edge-list
+routes of
 [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
-keep `type`, where the aggregation is always counts and the
-post-processing chooses between well-defined network constructions.
+keep `type`: there the aggregate is always a count, and `type` chooses
+between well-defined network constructions.
 
 ### Choosing method
 
 |  |  |  |
 |----|----|----|
-| **Input data** | **Recommended method** | **Reason** |
-| Edge counts | `"sum"` | Preserves total flow between clusters |
-| Transition matrix | `"mean"` | Avoids cluster size bias |
+| **Input data** | **Suggested method** | **Reason** |
+| Edge counts | `"sum"` | Keeps the total flow between clusters |
+| Transition matrix | `"mean"` | Avoids cluster-size bias |
 | Correlation matrix | `"mean"` | Average correlations |
-| Dense weighted | `"max"` / `"median"` | Robust summary |
+| Dense weighted | `"max"` / `"median"` | Less sensitive to single weights |
 
 ## See also
 

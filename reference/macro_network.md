@@ -1,15 +1,26 @@
 # Cluster-Level Network, With One Cluster Expanded
 
-Returns the macro (cluster-level) network of an `mcml`, optionally with
-one or more clusters expanded back into their member states. Every other
-cluster stays collapsed to a single node, so the result is a network at
-mixed resolution: the cluster of interest in detail, its context in
-summary.
+`macro_network()` returns the cluster-level (macro) network of an
+`mcml`, optionally with one or more clusters expanded back into their
+member states. Every other cluster stays collapsed to a single node, so
+the result is a network at mixed resolution: the cluster of interest in
+detail, its context in summary, with weights counted from the sequences.
+For an `mcml_pc` from
+[`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md),
+it returns the cluster-level network that fit already holds.
 
 ## Usage
 
 ``` r
-macro_network(x, expand = NULL, method = "relative", ...)
+macro_network(
+  x,
+  expand = NULL,
+  method = "relative",
+  scaling = NULL,
+  threshold = 0,
+  params = list(),
+  ...
+)
 ```
 
 ## Arguments
@@ -17,47 +28,73 @@ macro_network(x, expand = NULL, method = "relative", ...)
 - x:
 
   An `mcml` built from sequence data, or an `mcml_pc` from
-  [`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md).
-  A matrix-derived `mcml` carries no node-level data and cannot be
-  expanded.
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md).
+  An `mcml` built from a matrix or an edge list holds no sequences to
+  count, so it raises an error of class `nestimate_no_expand_source`,
+  even with `expand = NULL`; a name in `expand` that is not a cluster is
+  reported first.
 
 - expand:
 
-  Names of clusters to expand into their member states. `NULL` (default)
-  collapses every cluster, reproducing the macro layer; `"all"` or
-  `TRUE` expands every cluster, so each state is its own node.
+  The clusters to expand into their member states. `NULL` (default)
+  collapses every cluster, which reproduces the macro layer; `"all"` or
+  `TRUE` expands every cluster, so each state is its own node. A name
+  that is not a cluster raises an error. For an `mcml_pc`, any value
+  other than `NULL` raises an error of class `nestimate_no_expand`:
+  there are no sequences to count again.
 
 - method:
 
-  Estimator passed to
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-  Default `"relative"` (row-normalised transitions). Not used for an
-  `mcml_pc`.
+  The estimator passed to
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+  Default `"relative"` (row-normalised transitions). For an `mcml_pc`,
+  giving it raises an error: the estimator was set by
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md).
+
+- scaling, threshold, params:
+
+  Passed to
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  for the re-counted network: `scaling` (default `NULL`, none),
+  `threshold` (default `0`) and `params` (default
+  [`list()`](https://rdrr.io/r/base/list.html)), as there. For an
+  `mcml_pc`, giving any raises an error, as for `method`.
 
 - ...:
 
-  Further arguments passed to
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-  Not used for an `mcml_pc`.
+  Further arguments for
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  such as `start` or `end`. For an `mcml_pc`, giving any raises an
+  error, as for `method`.
 
 ## Value
 
-For an `mcml_pc`: its cluster-level network, the netobject estimated by
-[`build_mcml_pc`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md),
-unchanged. Its estimator is set when the fit is built, so `method` or
-`...` raise an error, and `expand` errors with class
-`nestimate_no_expand` (there are no sequences to re-count).
-
 For an `mcml`: a `netobject` (also a `cograph_network`) whose nodes are
 the collapsed clusters plus the member states of any expanded cluster,
-with weights re-counted from the sequence data by
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-`$node_groups` is a two-column data frame (`node`, `group`) mapping
-every node to its cluster, and the same labels are a factor in
-`$nodes$groups`, so the result plots grouped; an expanded cluster's
-states each map to that cluster, a collapsed cluster maps to itself.
-`$expanded` records the cluster names that were expanded (`NULL` when
+with weights counted by
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+It is printed, resampled (for example with
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md))
+and drawn like any other `netobject`; its node grouping is read by
+cograph's group-aware plots, such as
+[`cograph::plot_mtna()`](https://sonsoles.me/cograph/reference/plot_mtna.html).
+Beside the usual `netobject` fields it holds `node_groups`, a data frame
+with the columns `node` and `group` that maps each node to its cluster
+(an expanded cluster's states map to that cluster, a collapsed cluster
+maps to itself), the same labels as a factor in the `groups` column of
+`nodes`, and `expanded`, the names of the clusters expanded (`NULL` when
 none were).
+
+For an `mcml_pc`: its cluster-level network, the `netobject` estimated
+by
+[`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md),
+unchanged.
+
+## Details
+
+The weights are counted again from the sequences, after each state is
+recoded to its cluster (or kept, for an expanded cluster), because a
+cluster-level matrix cannot be split back into its states.
 
 ## See also
 

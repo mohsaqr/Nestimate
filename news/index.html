@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.9</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,41 @@
       <small>Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.11" id="nestimate-1011">Nestimate 1.0.11<a class="anchor" aria-label="anchor" href="#nestimate-1011"></a></h2>
+<ul><li>Release review: TNA shortcuts keep positional <code>start</code>/<code>end</code> calls working; <code><a href="../reference/markov_stability.html">markov_stability()</a></code> keeps recurrence times for separate closed classes; rectangular numeric sequence matrices accept <code><a href="../reference/build_mcml.html">build_mcml()</a></code>’s <code>exclude</code>, <code>trim</code> and <code>end</code>.</li>
+<li>Help pages rewritten: what each function does, how to read the result, and every argument’s default and errors.</li>
+<li>
+<code><a href="../reference/build_mlvar.html">build_mlvar()</a></code>: temporal edges ran from outcome to predictor; they now run predictor to outcome. Tiny p-values are no longer 0, and Nestimate’s own print/summary/plot are used.</li>
+<li>
+<code><a href="../reference/permutation.html">permutation()</a></code>: glasso shuffles use the same estimator as the observed networks; <code>adjust</code> corrects over the edges tested, as tna does.</li>
+<li>
+<code><a href="../reference/extract_edges.html">extract_edges()</a></code>: keeps negative edges, drops zero-weight pairs, lists undirected edges once.</li>
+<li>
+<code><a href="../reference/build_mmm.html">build_mmm()</a></code>: classification error is 1 - mean largest posterior (it was always 0 for k = 2).</li>
+<li>
+<code><a href="../reference/net_prune.html">net_prune()</a></code>: undirected networks are pruned by pair; groups take one bootstrap per network; re-pruning after <code><a href="../reference/net_deprune.html">net_deprune()</a></code> works.</li>
+<li>
+<code><a href="../reference/centrality_stability.html">centrality_stability()</a></code>, <code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code>: the CS-coefficient no longer depends on the order of <code>drop_prop</code>.</li>
+<li>
+<code><a href="../reference/passage_time.html">passage_time()</a></code>, <code><a href="../reference/chain_structure.html">chain_structure()</a></code>: unreachable targets give <code>Inf</code>; absorption probabilities sum to 1.</li>
+<li>Also fixed: <code><a href="../reference/predict_links.html">predict_links()</a></code> weighted Jaccard, <code>cooccurrence(similarity = "relative")</code> (now directed), <code>compare_model(scaling = "max")</code>, <code><a href="../reference/extract_initial_probs.html">extract_initial_probs()</a></code> on tna models, <code><a href="../reference/boot_glasso.html">boot_glasso()</a></code> settings and failed resamples, <code><a href="../reference/cluster_network.html">cluster_network()</a></code> dropped arguments, declared <code>actor</code>/<code>time</code> columns read as states, <code><a href="../reference/prepare.html">prepare()</a></code> time zone and <code>is_unix_time</code>.</li>
+<li>Input errors carry the class <code>nestimate_bad_input</code> across the package (messages unchanged), so they can be caught by class.</li>
+<li>
+<code>seed =</code> no longer moves the session’s random stream after the call; results for a given seed are unchanged.</li>
+<li>
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of an <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> with more than nine groups draws one panel per group instead of failing.</li>
+<li>The shortcut verbs name the arguments they used to hide in <code>...</code>: <code><a href="../reference/build_tna.html">build_tna()</a></code>, <code><a href="../reference/build_ftna.html">build_ftna()</a></code>, <code><a href="../reference/build_atna.html">build_atna()</a></code>, <code><a href="../reference/build_cna.html">build_cna()</a></code> take <code>actor</code>, <code>action</code>, <code>time</code>, <code>session</code>; <code><a href="../reference/build_cor.html">build_cor()</a></code>, <code><a href="../reference/build_pcor.html">build_pcor()</a></code>, <code><a href="../reference/build_glasso.html">build_glasso()</a></code> take <code>actor</code>, <code>level</code>; <code><a href="../reference/build_ising.html">build_ising()</a></code> takes <code>actor</code>; <code><a href="../reference/sequence_patterns.html">sequence_patterns()</a></code>, <code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code>, <code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code> take <code>actor</code>, <code>action</code>, <code>time</code>; <code><a href="../reference/compare_mmm.html">compare_mmm()</a></code> takes <code><a href="../reference/build_mmm.html">build_mmm()</a></code>’s settings (<code>seed</code>, <code>n_starts</code>, …); <code><a href="../reference/macro_network.html">macro_network()</a></code> takes <code>scaling</code>, <code>threshold</code>, <code>params</code>. Existing calls give the same results. A wrapper given <code>method</code> says which method it always uses.</li>
+<li>Entropy: <code><a href="../reference/entropy_network.html">entropy_network()</a></code> refuses <code>scaling = "share"</code> on a zero-rate chain and <code>"chance"</code> on one state (was a cryptic error), keeps a bare <code>cograph_network</code> a <code>netobject</code>, and warns on a non-ergodic chain as <code><a href="../reference/transition_entropy.html">transition_entropy()</a></code> does; <code><a href="../reference/entropy_bayes.html">entropy_bayes()</a></code> networks declare the TNA geometry and accept <code><a href="../reference/wtna.html">wtna()</a></code> output; grouped results have <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> (a data frame) and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>; <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> refuses a character time column and labels its axes correctly (row number, numeric column name, nats/hartleys).</li>
+<li>
+<code>mosaic_plot(residuals = "asymptotic")</code> keeps the residuals of a table with an empty row or column (it set every tile to 0). <code><a href="../reference/state_distribution.html">state_distribution()</a></code>, <code><a href="../reference/plot_state_frequencies.html">plot_state_frequencies()</a></code> and <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code> refuse association and one-hot networks instead of counting their values as states.</li>
+<li>
+<code><a href="../reference/compare_model.html">compare_model()</a></code>: undefined edge ratios are <code>NA</code> (were <code>NaN</code>/<code>Inf</code>), and <code>logarithmic_ratio</code> no longer warns “NaNs produced”.</li>
+<li>
+<code>build_mcml(method = "density")</code>: within-cluster weights are the sum, matching the macro layer’s sum / (n_i * n_j) (they were the mean). A weight matrix with <code>exclude</code>, <code>trim</code> or <code>end</code> is refused.</li>
+<li>Persistent homology: the Vietoris-Rips print counts essential classes and shows the ascending range; <code><a href="../reference/bottleneck_distance.html">bottleneck_distance()</a></code> reads a (0, 0) pair as finite, as <code><a href="../reference/persistence_landscape.html">persistence_landscape()</a></code> does.</li>
+<li>Also fixed: <code><a href="../reference/evaluate_links.html">evaluate_links()</a></code> validates <code>k</code> and returns an empty table instead of <code>NULL</code>; <code><a href="../reference/net_centrality.html">net_centrality()</a></code> warns when a normalised measure is constant; <code><a href="../reference/landscape_trend.html">landscape_trend()</a></code> validates <code>iter</code>; <code><a href="../reference/network_reliability.html">network_reliability()</a></code> refuses a split that empties the second half; <code><a href="../reference/boot_glasso.html">boot_glasso()</a></code> refuses a correlation matrix; <code><a href="../reference/path_dependence.html">path_dependence()</a></code> refuses a 0/1 matrix; <code>mogen_transitions(min_count = 0)</code> lists only contexts that can follow each other; logical flags such as <code>combined</code> refuse <code>NA</code>; <code><a href="../reference/build_hypa.html">build_hypa()</a></code>’s message lists <code>none</code> once; <code><a href="../reference/compare_networks.html">compare_networks()</a></code> errors are also <code>nestimate_bad_input</code>. <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of <code><a href="../reference/chain_structure.html">chain_structure()</a></code> names each state’s class in its axis label (it coloured the labels, which ggplot2 warns about and which encoded the class by colour alone).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.9" id="nestimate-109">Nestimate 1.0.9<a class="anchor" aria-label="anchor" href="#nestimate-109"></a></h2>
 <p>Corrections to 1.0.7, from a review of that release.</p>

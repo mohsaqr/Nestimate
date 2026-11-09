@@ -1,20 +1,31 @@
 # Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
 
-Closed-form alternative to
-[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
-for transition networks. Models the outgoing transitions from each state
-as a Dirichlet-Multinomial process: with a Jeffreys prior the posterior
-for state \\i\\ is \\\mathrm{Dirichlet}(c_i + \mathrm{prior})\\, so each
-edge is marginally Beta and its posterior mean, standard deviation,
-credible interval and stability decision are available analytically. No
-resampling, so it runs in microseconds.
+`certainty()` gives each edge of a transition-probability network a
+posterior mean, standard deviation, credible interval and a decision on
+whether the edge is certain, all in closed form, and returns them in the
+layout of
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md).
+It models the outgoing transitions of each state as a
+Dirichlet-Multinomial process: with a Dirichlet prior of concentration
+`prior`, the posterior for state \\i\\ is \\\mathrm{Dirichlet}(c_i +
+\mathrm{prior})\\, where \\c_i\\ are its transition counts, so each edge
+probability is marginally Beta. It reads a `netobject` built with
+`method = "relative"`, or a `netobject_group` of them.
 
-The return value has the same structure as
-[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
-(same slots and summary columns) and carries class
-`c("net_certainty", "net_bootstrap")`, so
-[`summary()`](https://rdrr.io/r/base/summary.html) and any code that
-consumes a `net_bootstrap` object work unchanged.
+With `inference = "stability"`, an edge is certain when the posterior
+mass outside a band around its weight (`consistency_range`) is below
+`ci_level`; with `"threshold"`, when the mass below `edge_threshold` is.
+Certainty says how precisely the observed counts pin an edge down, not
+whether the edge survives resampling the sequences
+([`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md))
+or holds across split halves
+([`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)).
+Certainty and bootstrap stability agree on homogeneous data. Certainty
+treats every transition as independent, so it is over-confident when the
+sequences come from a mixture of latent classes, the more so the longer
+they are; use
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+there.
 
 ## Usage
 
@@ -36,73 +47,90 @@ print(x, ...)
 
 - x:
 
-  A `netobject` from
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  using a transition-probability method (`"relative"` / `"tna"`), or a
-  `netobject_group`. For the
-  [`print()`](https://rdrr.io/r/base/print.html) method: an object of
-  class `net_certainty`.
+  The network: a `netobject` built with
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  using `method = "relative"` (or its aliases `"tna"`, `"transition"`),
+  without `scaling`, or a `netobject_group` of such networks, each
+  handled on its own. A bare `cograph_network` is recounted from the
+  sequences it carries, and used only when they reproduce its weights;
+  otherwise, and for an `mcml`, an error of class `nestimate_bad_input`
+  is raised. Another method or a scaled network raises an error. For the
+  [`print()`](https://rdrr.io/r/base/print.html) method: a
+  `net_certainty` object.
 
 - prior:
 
-  Numeric. Dirichlet prior concentration added to every cell (default
-  `0.5`, the Jeffreys prior).
+  The Dirichlet concentration added to every cell of the count matrix,
+  zero cells and self-loops included; a positive number. Default `0.5`,
+  the Jeffreys prior.
 
 - ci_level:
 
-  Numeric in (0,1). Tail level for credible intervals and the stability
-  decision (default `0.05`, i.e. a 95% interval). Named to match
+  The tail level, in (0, 1), of the equal-tailed credible intervals and
+  of the decision: an edge is certain when its posterior mass (the
+  `p_value` column) is below it. Default `0.05`, a 95% interval. Named
+  to match
   [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md).
 
 - inference:
 
-  Character. `"stability"` (default) tests whether the posterior keeps
-  the edge within a multiplicative `consistency_range` of its weight;
-  `"threshold"` tests whether the edge exceeds `edge_threshold`.
+  The decision rule. `"stability"` (default) takes the posterior mass
+  outside the band `consistency_range` times the edge's weight;
+  `"threshold"` takes the posterior mass below `edge_threshold`.
 
 - consistency_range:
 
-  Numeric vector of length 2. Multiplicative bounds for stability
-  inference (default `c(0.75, 1.25)`).
+  For `inference = "stability"`: the two multiplicative bounds of the
+  band around each weight, positive numbers in either order. Default
+  `c(0.75, 1.25)`.
 
 - edge_threshold:
 
-  Numeric or NULL. Fixed threshold for `inference = "threshold"`. If
-  NULL, defaults to the 10th percentile of non-zero edge weights.
+  For `inference = "threshold"`: the weight an edge must exceed. Default
+  `NULL`: the 10th percentile of the non-zero weights. Ignored for
+  `"stability"`.
 
 - ...:
 
-  In `print.net_certainty()`: Additional arguments (ignored).
+  For the [`print()`](https://rdrr.io/r/base/print.html) method:
+  ignored.
 
 ## Value
 
-For a `netobject`: an object of class
-`c("net_certainty", "net_bootstrap")` with the same fields as
-[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md):
-`original`, `mean`, `sd`, `p_values`, `significant`, `ci_lower`,
-`ci_upper`, `cr_lower`, `cr_upper`, `summary`, `model`, `method`,
-`params`, `ci_level`, `inference`, `consistency_range`,
-`edge_threshold`, plus `prior`, `ci_method = "analytic"` and `iter = NA`
-(no iterations).
+For a `netobject`: a `net_certainty` object (class
+`c("net_certainty", "net_bootstrap")`), so the `net_bootstrap` methods
+work on it. [`print()`](https://rdrr.io/r/base/print.html) lists up to
+five certain edges with the largest absolute posterior means (with their
+intervals), then the prior, the count of certain edges and the settings;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns one row per
+non-zero edge with columns `from`, `to`, `weight`, `mean`, `sd`,
+`p_value`, `sig`, `ci_lower` and `ci_upper`, plus `cr_lower` and
+`cr_upper` (the band) for `inference = "stability"`;
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+draws it. The object has the fields of a
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+result: `original` (the input network), `mean`, `sd`, `p_values`,
+`significant` (the weights of the certain edges, zero elsewhere),
+`ci_lower`, `ci_upper`, `cr_lower`, `cr_upper` (matrices), `summary`,
+`model` (the network of certain edges only), `method`, `params`,
+`ci_level`, `inference`, `consistency_range` and `edge_threshold`, plus
+`prior`, `ci_method = "analytic"` and `iter = NA` (no iterations).
 
-For a `netobject_group`: a named list of those objects, one per
-constituent network, of class
-`c("net_certainty_group", "net_bootstrap_group", "list")`.
+For a `netobject_group`: a named list of those objects, one per network,
+of class `c("net_certainty_group", "net_bootstrap_group", "list")`,
+printed and summarised by the `net_bootstrap_group` methods
+([`summary()`](https://rdrr.io/r/base/summary.html) stacks the
+per-network tables with a `group` column).
 
-In `print.net_certainty()`: The input object, invisibly.
+The [`print()`](https://rdrr.io/r/base/print.html) method returns its
+input invisibly.
 
 ## Details
 
-Certainty (this function), stability
-([`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md))
-and reliability
-([`reliability`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md))
-answer different questions about an edge: how precisely it is pinned
-down by the observed counts, whether it survives resampling the
-sequences, and whether it is consistent across split-halves. Certainty
-and stability agree on homogeneous data; certainty is over-confident
-when the data are a mixture of latent classes, because it treats
-transitions clustered within a sequence as independent.
+Nothing is resampled: the posterior quantities are Beta means, variances
+and quantiles ([`stats::qbeta()`](https://rdrr.io/r/stats/Beta.html),
+[`stats::pbeta()`](https://rdrr.io/r/stats/Beta.html)), so a call takes
+milliseconds.
 
 ## References
 

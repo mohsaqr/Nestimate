@@ -1,8 +1,11 @@
 # Re-apply Network Pruning
 
-Re-applies a previously computed pruning that was undone by
-[`net_deprune`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md),
-without recomputation.
+`net_reprune()` re-applies a pruning that
+[`net_deprune()`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md)
+undid, without recomputing it: the pruned weights stored by
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
+come back and the pruning is marked active again. A `netobject_group` is
+handled network by network.
 
 ## Usage
 
@@ -23,7 +26,9 @@ net_reprune(x, ...)
 
 - x:
 
-  A depruned `netobject` or `netobject_group`.
+  A depruned `netobject` or `netobject_group`. A network that was never
+  pruned, or whose pruning is already active, raises an error, and so
+  does another class.
 
 - ...:
 
@@ -31,8 +36,8 @@ net_reprune(x, ...)
 
 ## Value
 
-The network (or group) with pruned weights re-applied and its pruning
-marked active.
+The input, of the same class, with the pruned weights, its edge table
+and edge count updated to them, and its pruning marked active.
 
 ## See also
 

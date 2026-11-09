@@ -1,13 +1,25 @@
 # Compare two or more networks
 
-Compares any number of networks pairwise (all pairs, or every network
-against one `reference`) and returns one tidy object: an edge table, a
-node (centrality) table, a global-metric table and per-network
-structural metrics, each returned by a named verb and carrying a `pair`
-column so nothing ever needs list indexing. Descriptive by default;
-`test =` adds permutation, Bayesian and bootstrap evidence to the same
-tables. [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws
-one view per call.
+`compare_networks()` compares two or more networks cell by cell, node by
+node and on global metrics, and returns one `net_network_comparison`
+object. It compares every pair of networks, or every network against one
+`reference`, and takes any mix of `netobject`s, groups of them, `tna`
+models and square weight matrices, as long as they share the same nodes
+in the same order. Each table carries a `pair` column, so one call to a
+named verb returns it for every pair. The comparison is descriptive by
+default; `test` adds permutation, Bayesian and bootstrap evidence to the
+same tables.
+
+Every difference is `diff = a - b`, network `a` minus network `b` of a
+pair, between two sets of point estimates. The similarity metrics
+(Pearson, cosine, Jaccard and the others in the global table) describe
+how alike the two weight matrices are; neither they nor a large `diff`
+say whether a difference is larger than sampling variation would
+produce. For that, rerun with `test = "permutation"` (or `"bayes"` for
+relative or frequency networks) and read the `sig` column, and use
+`adjust` when many edges are read at once.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws one view
+of the comparison per call.
 
 ## Usage
 
@@ -52,147 +64,190 @@ plot(
 
 - ...:
 
-  For `compare_networks()`: two or more networks, in any mix of:
-  `netobject`, `netobject_group` (members are flattened and keep their
-  names), `cograph_network` / `psychnet`, `mcml`, `tna`, `group_tna`,
-  square numeric matrices, or one unnamed `list` of these. Name the
-  arguments to name the networks
-  (`compare_networks(early = a, late = b)`). For
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html): passed to
+  The networks, two or more, in any mix of `netobject`,
+  `netobject_group` (its members are compared individually and keep
+  their names), `cograph_network`, `psychnet`, `mcml`, `tna`,
+  `group_tna`, square numeric matrices, or one unnamed list of these.
+  Name the arguments to name the networks, as in
+  `compare_networks(early = a, late = b)`; an unnamed network is named
+  after its method, or `network_<i>`. Nested lists, non-square matrices
+  and other classes raise an error of class
+  `nestimate_compare_bad_input`. For the
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
+  passed to
   [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
-  for the network views (e.g. `layout`, `node_size`, `minimum`); ignored
-  by the other views and by
-  [`print()`](https://rdrr.io/r/base/print.html).
+  in the `"networks"` and `"difference"` views (such as `layout`,
+  `node_size` or `minimum`) and ignored by the other views; the
+  [`print()`](https://rdrr.io/r/base/print.html) method ignores it.
 
 - reference:
 
-  `NULL` (default) compares all pairs. A single network name or index
-  compares every other network against that one; the reference is always
-  `network_a`, so `diff = reference - other`.
+  The network every other one is compared against, by name or index; it
+  is always `network_a` of its pairs, so `diff = reference - other`.
+  Default `NULL`, which compares all pairs. A name or index that matches
+  no network raises an error of class
+  `nestimate_compare_reference_unknown`.
 
 - scaling:
 
-  Scaling applied to every network before comparison; one of `"none"`
-  (default), `"minmax"`, `"max"`, `"rank"`, `"zscore"`, `"robust"`,
-  `"log"`, `"log1p"`, `"softmax"`, `"quantile"`, `"frobenius"`, `"row"`.
-  Inference (`test != "none"`) requires `"none"`: the tests are defined
-  on the networks as estimated.
+  A rescaling applied to every weight matrix before the comparison.
+  `"none"` (default) keeps the weights as estimated; `"minmax"`,
+  `"max"`, `"rank"`, `"zscore"`, `"robust"` (median and MAD), `"log"`,
+  `"log1p"`, `"softmax"` and `"quantile"` (empirical percentile)
+  transform all cells of a matrix together; `"frobenius"` divides by the
+  Frobenius norm and `"row"` makes each row's absolute weights sum to 1.
+  `"log"` needs strictly positive weights and `"log1p"` weights of at
+  least -1, otherwise an error of class
+  `nestimate_compare_scaling_domain` is raised. The tests are defined on
+  the networks as estimated, so any other value than `"none"` with
+  `test` raises an error of class `nestimate_compare_scaling_inference`.
 
 - measures:
 
-  Centrality measures for the node table. Any of `OutStrength`,
-  `InStrength`, `ClosenessIn`, `ClosenessOut`, `Closeness`,
-  `Betweenness`, `BetweennessRSP`, `Diffusion`, `Clustering`; `"all"`
-  selects those nine. `NULL` or `character(0)` skips the node table.
-  Unknown names are dropped with a warning.
+  The centrality measures compared in the node table. Default
+  `c("InStrength", "OutStrength", "Betweenness")`. Any of
+  `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`,
+  `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"` and
+  `"Clustering"`, or `"all"` for these nine (see
+  [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)).
+  `NULL` or `character(0)` skips the node table. Unknown names are
+  dropped with a warning of class `nestimate_compare_unknown_measure`.
 
 - labels:
 
-  For `compare_networks()`: optional character vector naming the
-  networks (one per network after flattening groups); overrides argument
-  names. For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
-  logical; print the signed difference on the edge and node views,
-  default `TRUE` (the heatmap always shows its values).
+  Names for the networks, one per network after groups are expanded;
+  they replace the argument names. Default `NULL`. A vector of the wrong
+  length raises an error of class `nestimate_compare_labels_length`. For
+  the [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
+  whether to print the signed difference on the edge and node views and
+  the p-values on the inference view. Default `TRUE`; the heatmap always
+  prints its values.
 
 - test:
 
-  Character vector of inference backends, any of `"none"` (default),
-  `"permutation"`, `"bayes"`, `"bootstrap"`. Several may be combined;
-  each fills the columns it supports (see Details).
+  The inference to add, one or more of `"none"` (default),
+  `"permutation"`, `"bayes"` and `"bootstrap"`. Each fills the columns
+  it supports (see *Details*). The permutation and Bayesian tests need
+  networks that carry their data and share one estimation method, and
+  the Bayesian test needs `"relative"` or `"frequency"` networks;
+  otherwise an error of class `nestimate_compare_test_unsupported` is
+  raised.
 
 - iter:
 
-  Number of permutations / posterior draws / bootstrap replicates per
-  pair. Default `1000`.
+  The number of permutations, posterior draws or bootstrap replicates
+  per pair, at least 2. Default `1000`.
 
 - alpha:
 
-  Significance level (permutation, bootstrap) and `1 - ci` (Bayesian
-  credible interval). Default `0.05`.
+  The significance level of the permutation and bootstrap tests, a
+  number between 0 and 1; the Bayesian credible interval covers
+  `1 - alpha`. Default `0.05`.
 
 - adjust:
 
-  Multiplicity adjustment for permutation p-values, passed to
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html) within
-  each pair and table. Default `"none"`.
+  The multiplicity correction for the permutation p-values, a method of
+  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html), applied
+  within each pair and separately to the edge and node tables, as
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  does. Default `"none"`.
 
 - paired:
 
-  Logical; paired permutation (equal observation counts).
+  Whether the networks hold paired observations, so the permutation test
+  swaps the two members of each pair instead of shuffling all labels;
+  the networks then need the same number of sequences. It cannot be
+  combined with `actor` (an error of class `nestimate_bad_actor`).
+  Default `FALSE`.
 
 - rope:
 
-  Optional half-width of a region of practical equivalence on the
-  difference scale (Bayesian backend only). Adds `bayes_p_rope` and a
-  `bayes_decision` of `"different"`, `"equivalent"` or `"undecided"`.
+  The half-width of a region of practical equivalence on the difference
+  scale, for the Bayesian test. It adds `bayes_p_rope` and a
+  `bayes_decision` of `"different"`, `"equivalent"` or `"undecided"` to
+  the edge table. Default `NULL` (none).
 
 - seed:
 
-  Optional integer seed. Each pair uses `seed + pair index`, so results
-  are reproducible and independent of pair order.
+  An integer that makes the tests reproducible. Pair `i` uses
+  `seed + i`, so each pair's result does not depend on the others.
+  Default `NULL`.
 
 - actor:
 
-  Optional column name identifying the actor each sequence belongs to
-  (e.g. `"student_id"` when sessions are nested in students, `"Group"`
-  for students nested in teams). Passed to
+  The column identifying the actor each sequence belongs to (such as
+  `"student_id"` when sessions are nested in students, or `"Group"` for
+  students nested in teams). It is passed to
   [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
-  which then reassigns whole actors; see its sections *Nested data and
-  actor* and *ICC and design effect*. Requires `test = "permutation"`.
-  The ICC and design effects are added to `global` under the category
-  `"Nesting"`. Default `NULL`.
+  which then shuffles whole actors; see its sections *Nested data and
+  actor* and *ICC and design effect*. The ICC and design effects are
+  added to the global table under the category `"Nesting"`. It needs
+  `test = "permutation"`, otherwise an error of class
+  `nestimate_compare_actor_needs_permutation` is raised. Default `NULL`.
 
 - x:
 
   For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_network_comparison`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_network_comparison` object.
 
 - digits:
 
-  In `plot.net_network_comparison()`: Decimals in printed values.
-  Default `2`. In `print.net_network_comparison()`: Decimals shown.
-  Default `2`.
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: the
+  decimals shown in printed values. Default `2`.
 
 - type:
 
-  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): one view
-  per call. `"networks"` (default) draws each network once with
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the view to draw, one per call. `"networks"` (default) draws
+  each network once with
   [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html);
   `"difference"` draws the signed difference network of each pair;
-  `"edges"` is a ranked dumbbell of the largest edge differences;
-  `"nodes"` the same for centralities; `"global"` the 22 comparison
-  metrics; `"heatmap"` the signed difference matrix; `"scatter"` weight
-  against weight; `"inference"` is a forest of the edge differences on
-  the difference scale, with credible intervals when the Bayesian
-  backend ran and the p-value printed per edge. It needs
-  `test != "none"` and raises `nestimate_compare_no_test` otherwise.
+  `"edges"` is a ranked dumbbell of the largest edge differences, and
+  `"nodes"` the same for the centralities; `"global"` shows the 22
+  comparison metrics as points, plus the inference rows with their
+  p-values (and bootstrap intervals) when `test` was run; `"heatmap"`
+  the signed difference matrix; `"scatter"` the weights of one network
+  against the other's; and `"inference"` a forest of the edge
+  differences on the difference scale, with the credible intervals when
+  the Bayesian test ran and the p-value printed per edge. `"inference"`
+  needs `test`, otherwise an error of class `nestimate_compare_no_test`
+  is raised.
 
 - pair:
 
-  Optional selection of comparisons to draw; default all. Any of: the
-  pair name(s) as printed (`"A vs B"`); the two network names
-  (`c("A", "B")`, either order); one network name (`"A"`, every pair it
-  takes part in); or index/indices into the pair table (`1`, `c(1, 3)`).
-  For `type = "networks"` this selects the networks taking part in the
-  chosen pairs.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the comparisons to draw. Default `NULL`, all of them. Give the
+  pair names as printed (`"A vs B"`), the two network names in either
+  order (`c("A", "B")`), one network name (`"A"`, every pair it takes
+  part in), or indices into the pair table (`1`, `c(1, 3)`). For
+  `type = "networks"`, it selects the networks taking part in the chosen
+  pairs. A selection that matches no comparison raises an error of class
+  `nestimate_compare_unknown_pair`.
 
 - combined:
 
-  When `TRUE` (default), a multi-pair view is one figure (facets for the
-  `ggplot` views, one base-graphics page for `"networks"` and
-  `"difference"`). When `FALSE`, the view is split: the `ggplot` views
-  return a named list of single-pair plots, one per pair, and the
-  base-graphics views draw one panel per page.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: whether a view of several pairs is one figure. With `TRUE`
+  (default), the `ggplot` views facet by pair and the `"networks"` and
+  `"difference"` views draw all panels on one base-graphics page. With
+  `FALSE`, the `ggplot` views return a named list of single-pair plots,
+  for iterating over or saving, and the base-graphics views draw one
+  panel per page.
 
 - top_n:
 
-  Number of edges shown in the edge view (largest absolute differences
-  first). Default `20`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the number of edges shown per pair in the `"edges"` and
+  `"inference"` views, largest absolute difference first. Default `20`.
 
 - measure:
 
-  Optional centrality measure(s) to restrict the node view.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the centrality measures shown in the `"nodes"` view. Default
+  `NULL`, all measures of the comparison; a measure the object does not
+  carry raises an error of class `nestimate_compare_unknown_measure`.
 
 - what:
 
@@ -200,121 +255,160 @@ plot(
 
 ## Value
 
-An object of class `net_network_comparison`: a list with
-
-- `networks`: named list of the input networks as `netobject`s (scaled
-  weights);
-
-- `matrices`: named list of scaled weight matrices;
-
-- `pairs`: data.frame, one row per comparison: `pair`, `network_a`,
-  `network_b`;
-
-- `edges`: data.frame, one row per pair x cell: `pair`, `network_a`,
-  `network_b`, `from`, `to`, `weight_a`, `weight_b`, `diff`, `abs_diff`,
-  `rel_diff`, `ratio`, `log_ratio`, `rank_a`, `rank_b`, `rank_diff`,
-  `percentile_diff`, `status` (`both`/`only_a`/`only_b`/`neither`),
-  `higher` (`network_a`, `network_b` or `equal`), plus inference
-  columns;
-
-- `nodes`: data.frame (or `NULL`), one row per pair x node x measure:
-  `pair`, `network_a`, `network_b`, `node`, `measure`, `value_a`,
-  `value_b`, `diff`, `abs_diff`, `rank_a`, `rank_b`, `higher`, plus
-  inference columns;
-
-- `global`: data.frame, one row per pair x metric (22 descriptive
-  metrics in five categories, plus inference rows): `pair`, `network_a`,
-  `network_b`, `category`, `metric`, `key`, `value`, plus inference
-  columns;
-
-- `network_metrics`: data.frame, one row per network x structural
-  metric: `network`, `metric`, `value`;
-
-- `differences`: named list of `netdifference` objects (one per pair);
-
-- `scaling`, `reference`, `measures`, `test`, `iter`, `alpha`, `adjust`,
-  `paired`, `rope`, `directed` (named logical), `n_networks`, `n_pairs`.
-
-[`summary()`](https://rdrr.io/r/base/summary.html) returns the
-one-row-per-pair overview table; the full tables come from the named
-verbs
+A `net_network_comparison` object.
+[`print()`](https://rdrr.io/r/base/print.html) shows one line per pair
+(Pearson correlation, mean and largest absolute difference, the largest
+change) and returns `x` invisibly;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns one row per
+pair;
 [`edge_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
 [`node_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
 [`global_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
 and
-[`network_metrics()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md).
+[`network_metrics()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
+return the full tables (see
+[comparison_tables](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md));
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws one view
-per call.
+per call. The object's fields:
 
-In `plot.net_network_comparison()`:
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
-`ggplot` for `type = "edges"`, `"nodes"`, `"global"`, `"heatmap"`,
-`"scatter"` and `"inference"`, or a named list of such plots (one per
-pair) when `combined = FALSE`. `type = "networks"` and
-`type = "difference"` draw in base graphics – with
+- `networks`: the input networks as `netobject`s, with scaled weights;
+
+- `matrices`: the scaled weight matrices;
+
+- `pairs`: one row per comparison, with `pair`, `network_a` and
+  `network_b`;
+
+- `edges`: one row per pair and cell: `pair`, `network_a`, `network_b`,
+  `from`, `to`, `weight_a`, `weight_b`, `diff`, `abs_diff`, `rel_diff`,
+  `ratio`, `log_ratio`, `rank_a`, `rank_b`, `rank_diff`,
+  `percentile_diff`, `status` (`both`, `only_a`, `only_b` or `neither`),
+  `higher` (the name of the higher network, or `equal`), and the
+  inference columns;
+
+- `nodes`: one row per pair, node and measure: `pair`, `network_a`,
+  `network_b`, `node`, `measure`, `value_a`, `value_b`, `diff`,
+  `abs_diff`, `rank_a`, `rank_b`, `higher`, and the inference columns;
+  `NULL` without `measures`;
+
+- `global`: one row per pair and metric (22 descriptive metrics in five
+  categories, and the inference rows): `pair`, `network_a`, `network_b`,
+  `category`, `metric`, `key`, `value`, and the inference columns;
+
+- `network_metrics`: one row per network and structural metric:
+  `network`, `metric`, `value`;
+
+- `differences`: one `netdifference` object per pair (from
+  [`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md));
+
+- the settings `scaling`, `reference`, `measures`, `test`, `iter`,
+  `alpha`, `adjust`, `paired`, `rope` and `actor`, with `directed` (one
+  logical per network), `n_networks` and `n_pairs`.
+
+For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
+a `ggplot` for the `"edges"`, `"nodes"`, `"global"`, `"heatmap"`,
+`"scatter"` and `"inference"` views, or, with `combined = FALSE`, a
+named list of them, one per pair, returned invisibly. The `"networks"`
+and `"difference"` views draw in base graphics (with
 [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
-when cograph is installed, otherwise with a built-in circular drawer –
-and return `NULL` invisibly.
-
-In `print.net_network_comparison()`:
-[`print()`](https://rdrr.io/r/base/print.html) returns `x` invisibly.
+when cograph is installed, otherwise with a built-in circular drawer
+that ignores `...`) and return `NULL` invisibly.
 
 ## Details
 
-**Guarding.** Ratios are never `Inf`/`NaN`: `ratio` is `NA` when
-`weight_b == 0`, `rel_diff` is `NA` when both weights are 0, and
+**Cells.** Every cell of the weight matrix is a row of the edge table,
+the diagonal and the edges absent from one network (weight 0) included;
+when both networks are undirected only the cells with `from <= to` are
+kept. A difference smaller than `sqrt(.Machine$double.eps)` counts as no
+difference (`higher = "equal"`).
+
+**Guarding.** Ratios are never `Inf` or `NaN`, and no pseudo-counts are
+added: `ratio` is `NA` when `weight_b` is 0, `rel_diff`
+(`abs(diff) / (abs(a) + abs(b))`) is `NA` when both weights are 0, and
 `log_ratio = log1p(a) - log1p(b)` is `NA` when either weight is
-negative. No pseudo-counts are added.
+negative.
 
-**Cells.** Every cell of the weight matrix is a row, including the
-diagonal and edges absent from one network (weight 0); when both
-networks are undirected only `from <= to` cells are kept.
-
-**Inference.** `"permutation"` (via
-[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md))
-adds `perm_effect`, `perm_p`, `perm_sig` to `edges` and `nodes`, and two
-rows `M` (sum of absolute edge differences) and `S` (largest absolute
-edge difference) to `global` with permutation p-values; with `actor`,
-the reassignment moves whole actors and `global` also gains the rows
-`ICC`, `Design effect (edges)` and `Design effect (M)`. `"bayes"` (via
-[`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md))
-adds `bayes_diff` (posterior mean difference), `bayes_ci_lower`,
-`bayes_ci_upper`, `bayes_pd` (probability of direction), `bayes_p`,
-`bayes_sig` to `edges`; with `rope`, `bayes_p_rope` (normal
-approximation from the posterior mean and SD) and `bayes_decision`.
-`"bootstrap"` (via
-[`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md))
-appends structural rows (density, mean weight, centralization,
-reciprocity) to `global` with `boot_se`, `boot_ci_lower`,
-`boot_ci_upper`, `boot_z`, `boot_p`, `boot_sig`. Unified `sig` and
-`evidence` columns take the permutation result when run (on both `edges`
-and `nodes`), else the Bayesian one (on `edges` only – the Bayesian
-backend is edge-level). Permutation and Bayesian tests need networks
-that carry their data
-([`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-output, or `tna` objects, which are rebuilt); plain matrices support
-`"bootstrap"` only.
+**Inference.** `"permutation"` runs
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+per pair and adds `perm_effect`, `perm_p` and `perm_sig` to the edge and
+node tables, and two rows to the global table with permutation p-values:
+`M`, the sum of the absolute differences over all cells, and `S`, the
+largest absolute difference. With `actor`, whole actors are shuffled and
+the global table also gains the rows `"ICC"`, `"Design effect (edges)"`
+and `"Design effect (M)"`. `"bayes"` runs
+[`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
+per pair (prior `0.5`, `iter` draws) and adds to the edge table
+`bayes_diff` (posterior mean difference), `bayes_ci_lower`,
+`bayes_ci_upper`, `bayes_pd` (probability of direction), `bayes_p`
+(`2 * (1 - pd)`) and `bayes_sig`; with `rope`, also `bayes_p_rope` (a
+normal approximation from the posterior mean and SD) and
+`bayes_decision`. `"bootstrap"` runs the vertex bootstrap of
+[`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
+per pair and adds structural rows (density, mean weight, centralization
+and, for directed networks, reciprocity) to the global table, with
+`boot_observed_a`, `boot_observed_b`, `boot_se`, `boot_ci_lower`,
+`boot_ci_upper`, `boot_z`, `boot_p` and `boot_sig`. It reads only the
+weights, so plain matrices support it; the other two tests need
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+output with data, or `tna` models, which are rebuilt from their
+sequences when these reproduce the weights. The `sig` and `evidence`
+columns take the permutation result when it was run (edge and node
+tables), and otherwise the Bayesian one (edge table only).
 
 ## Errors
 
-Classed conditions (`nestimate_compare_*`): `too_few`, `bad_input`,
-`dim_mismatch`, `node_mismatch`, `na_weights`, `reference_unknown`,
-`labels_length`, `scaling_domain`, `scaling_inference`,
-`test_unsupported`, `unknown_pair`, `no_nodes`, `no_test`
-(`plot(type = "inference")` under `test = "none"`), `unknown_measure`
-(selecting a measure the object does not carry); warning
-`unknown_measure` (an unknown name in `measures`).
+The errors that `compare_networks()` and its verbs raise themselves have
+the class `nestimate_compare_error` and one of these:
+
+- `nestimate_compare_too_few`: fewer than two networks;
+
+- `nestimate_compare_bad_input`: an input of an unsupported class, a
+  non-square matrix or a nested list;
+
+- `nestimate_compare_dim_mismatch`: different numbers of nodes;
+
+- `nestimate_compare_node_mismatch`: node labels that differ in set or
+  order;
+
+- `nestimate_compare_na_weights`: missing weights;
+
+- `nestimate_compare_reference_unknown`,
+  `nestimate_compare_labels_length`, `nestimate_compare_scaling_domain`,
+  `nestimate_compare_scaling_inference`,
+  `nestimate_compare_test_unsupported` and
+  `nestimate_compare_actor_needs_permutation`: see the arguments;
+
+- `nestimate_compare_unknown_pair`: a `pair` that matches no comparison;
+
+- `nestimate_compare_no_nodes`: the node view or table of a comparison
+  without `measures`;
+
+- `nestimate_compare_no_test`: `plot(type = "inference")` without
+  `test`;
+
+- `nestimate_compare_unknown_measure`: selecting a measure the object
+  does not carry.
+
+Plain argument-type checks raise unclassed errors, and errors from
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
+[`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
+and
+[`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
+keep their own classes (for example `nestimate_bad_actor` for
+`paired = TRUE` with `actor`).
+
+An unknown name in `measures` gives a warning of class
+`nestimate_compare_warning` and `nestimate_compare_unknown_measure`.
 
 ## Reading the figures
 
-One colour contract in every view and every backend: `"#4A6FE3"` marks
-`network_a` (the reference, when one is set) as the higher of the two,
-`"#D33F6A"` marks `network_b`, and grey marks no difference; the plotted
-quantity is always `diff = a - b`. Colour never carries the sign alone –
-a solid line and a circular marker repeat "`a` higher", a dashed line
-and a square marker repeat "`b` higher", and the printed value carries
-its sign. When `test` was run, evidence is shown by opacity and a
-starred (edge and node views) or annotated (inference view) label: a
+One colour contract holds in every view and every backend: `"#4A6FE3"`
+marks `network_a` (the reference, when one is set) as the higher of the
+two, `"#D33F6A"` marks `network_b`, and grey marks no difference; the
+plotted quantity is always `diff = a - b`. Colour never carries the sign
+alone: a solid line and a circular marker repeat "`a` higher", a dashed
+line and a square marker repeat "`b` higher", and the printed value
+carries its sign. When `test` was run, evidence is shown by opacity and
+a starred (edge and node views) or annotated (inference view) label: a
 non-significant difference is faded, never deleted.
 
 ## See also

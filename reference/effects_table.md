@@ -1,7 +1,10 @@
 # Effect Table of a Fitted Outcome Model
 
-The tidy one-row-per-term table of estimates, confidence intervals and
-corrected p-values.
+`effects_table()` returns the effect table of an
+[`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+fit: one row per term, with its estimate, confidence interval and
+corrected p-value, rounded for reading. Arguments keep the intercept or
+only the significant terms.
 
 ## Usage
 
@@ -19,33 +22,36 @@ effects_table(
 
 - x:
 
-  A `net_outcome_model` from
-  [`outcome_model`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md).
+  An
+  [`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
+  result; anything else raises an error.
 
 - intercept:
 
-  Keep the intercept row? Default `FALSE`.
+  Whether to keep the intercept row. Default `FALSE`.
 
 - significant:
 
-  Keep only terms whose corrected p-value is below `alpha`? Default
-  `FALSE`.
+  Whether to keep only the terms whose corrected p-value (`p_adj`) is
+  below `alpha`. Default `FALSE`.
 
 - alpha:
 
-  Threshold used by `significant`. Default `0.05`.
+  The threshold for `significant`, between 0 and 1. Default `0.05`.
 
 - digits:
 
-  Rounding for the numeric columns. Default `3`; `p_value` and `p_adj`
-  are never rounded.
+  The decimal places of the numeric columns. Default `3`; `p_value` and
+  `p_adj` are never rounded.
 
 ## Value
 
-A `data.frame` with the same columns as the model's effect table, one
-row per retained term. The intercept row is dropped unless
-`intercept = TRUE`, and every term is kept unless `significant = TRUE`
-restricts them to `p_adj < alpha`.
+A data frame with the columns of the model's effect table (`term`,
+`estimate`, `std_error`, `statistic`, `ci_lower`, `ci_upper`, `p_value`,
+`p_adj`, and for a binomial fit `odds_ratio`, `or_lower` and
+`or_upper`), one row per retained term. The intercept row is dropped
+unless `intercept = TRUE`, and every term is kept unless
+`significant = TRUE` restricts them to `p_adj < alpha`.
 
 ## Examples
 

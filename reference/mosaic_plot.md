@@ -1,11 +1,33 @@
 # Mosaic Plot of a Network's Transition or Co-occurrence Counts
 
-Draws a Hartigan-Friendly mosaic (marimekko geometry, chi-square
-standardized-residual fill) for an integer-weighted network. Equivalent
-in algorithm and appearance to
-[`tna::plot_mosaic()`](https://sonsoles.me/tna/reference/plot_mosaic.html);
-named differently to avoid an export clash when both packages are
-attached.
+`mosaic_plot()` draws a mosaic display of a contingency table and fills
+each tile with its standardised residual under independence: blue tiles
+hold more cases than independence predicts, red tiles fewer. It reads
+the transition or co-occurrence counts of a `netobject` or `htna`
+network, the state counts of each group of a `netobject_group`, the
+cluster-level or per-cluster counts of an `mcml`, or a `table` or count
+`matrix` given directly. A data frame in long form is drawn as a plain
+marimekko of shares instead, coloured by the stacked variable (or the
+`fill` column), without residuals.
+
+In a network's mosaic each column is a target state, its width
+proportional to the transitions into it, and its segments are the source
+states, stacked in proportion to their share of those transitions. For a
+`netobject_group` the columns are the groups and the segments the
+states, counted from each group's sequences, so the mosaic shows how the
+state mix differs between groups. For a `table` or `matrix`, its rows
+are the columns of the mosaic and its columns the stacked segments. An
+`htna` network has its states ordered by actor, with each state's label
+set in bold in its actor's colour.
+
+The residuals describe where the counts depart from independence; they
+are not tests of single cells, and transitions taken from the same
+sequence are not independent draws. To test edges or group differences,
+use
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md);
+for a chi-square or Fisher test with Cramér's V on two variables of a
+data frame, use
+[`mosaic_analysis()`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md).
 
 ## Usage
 
@@ -121,144 +143,158 @@ mosaic_plot(
 
 - x:
 
-  One of the four data-bearing Nestimate classes: `netobject` (single
-  mosaic of `$weights`), `netobject_group` (one panel per group), `mcml`
-  (between-cluster mosaic by default; per-cluster panels with
-  `level = "within"`), or `htna` (single mosaic of `$weights`; htna
-  inherits netobject so the geometry matches). Also accepts a
-  contingency `table` or plain numeric `matrix` for ad-hoc plotting, and
-  a tidy `data.frame` in long form (see `x_var`, `y_var`, `weight`).
+  The object to draw: a `netobject`, `netobject_group`, `mcml` or `htna`
+  network, a contingency `table`, a numeric count `matrix`, or a data
+  frame in long form (see `x_var`, `y_var` and `weight`).
 
 - ...:
 
-  Flat styling overrides forwarded to the flat renderer when
-  `style = "flat"` (otherwise ignored).
+  With `style = "flat"`: styling arguments for the flat mosaic of a
+  network, table or matrix; an unknown name raises an error that lists
+  the valid ones. The data-frame method takes no `style` and raises an
+  error of class `nestimate_bad_input` for any argument it does not
+  take; the `mcml` method does the same with `style = "classic"`; the
+  other methods ignore it.
 
 - xlab, ylab:
 
-  Axis labels. `NULL` (default) draws no axis title on the four
-  data-bearing methods; the `table` / `matrix` methods default to
-  `"Row"` and `"Column"`. Pass any string to set one.
+  Axis titles. The network and `mcml` methods draw none by default
+  (`NULL`); the `table` and `matrix` methods default to `"Row"` and
+  `"Column"`; a data frame defaults to the `x_var` name and
+  `"Proportion"`. Not drawn with `style = "flat"`.
 
 - range:
 
-  Numeric of length 2 giving the lower and upper colour-scale limits for
-  the standardized residual. `NULL` (default) auto-fits the limits to
-  the symmetric range `c(-M, M)` where `M = max(|stdres|)` floored at 1,
-  so no signal is squished and the legend stays readable on a
-  near-independent table. Pass an explicit range (e.g. `c(-4, 4)` for
-  tna-style display, `c(-6, 6)` for moderate clipping) to clamp the
-  colour scale.
+  The lower and upper limits of the residual colour scale, two
+  increasing numbers; residuals beyond them take the end colours.
+  Default `NULL`, which fits the symmetric range `c(-M, M)`, with `M`
+  the largest absolute residual (at least 1), so no tile is clipped.
+  `c(-4, 4)` matches tna's display.
 
 - top_angle, left_angle:
 
-  Rotation in degrees for the top (x) and left (y) tick labels. `NULL`
-  (default) uses the auto rule `90 if n_levels > 3 else 0` on each axis.
-  Pass any numeric to override (e.g. `top_angle = 45, left_angle = 0`).
+  Rotation, in degrees, of the column labels on top and the segment
+  labels on the left. Default `NULL`: 90 when an axis has more than
+  three levels, 0 otherwise. Not used with `style = "flat"` or for the
+  per-cluster `mcml` panels.
 
 - residuals:
 
-  One of `"permutation"` (default) or `"asymptotic"`. `"permutation"`
-  computes empirical-null z-scores by shuffling one variable's labels
-  against the other for `n_perm` draws and reporting
-  `(O - mean_perm) / sd_perm` per cell. Robust on sparse tables.
-  `"asymptotic"` returns `stats::chisq.test()$stdres` (the closed-form
-  `(O - E) / sqrt(E*(1 - p_row)*(1 - p_col))` that vcd and tna use).
+  How the standardised residuals are computed. `"permutation"` (default)
+  shuffles one variable's labels against the other `n_perm` times, which
+  keeps both margins, and gives each cell `(observed - mean) / sd` over
+  the shuffles; a cell that never varies gets 0. It does not rely on
+  large expected counts, so it suits sparse tables. `"asymptotic"` gives
+  the adjusted residuals of
+  [`stats::chisq.test()`](https://rdrr.io/r/stats/chisq.test.html),
+  `(O - E) / sqrt(E (1 - p_row) (1 - p_col))`, as vcd and tna do.
 
 - n_perm:
 
-  Number of permutations when `residuals = "permutation"`. Default 500;
-  use `>= 1000` for stable tail estimates.
+  The number of shuffles for `residuals = "permutation"`, at least 2.
+  Default `500`; use 1000 or more for stable values in the tails.
 
 - seed:
 
-  Optional integer seed for the permutation RNG. Use for reproducible
-  plots; ignored when `residuals = "asymptotic"`.
+  A seed for the shuffles, so the residuals repeat exactly. The
+  session's own random stream is left as it was. Default `NULL`. Ignored
+  with `residuals = "asymptotic"`.
 
 - values:
 
-  Logical. When `TRUE`, overlay each cell's standardized residual as a
-  numeric label (one decimal). Text colour switches to white on
-  saturated cells (\|stdres\| \> 1.5) and dark grey otherwise. Default
-  `FALSE` – the colour bar legend already conveys the sign and
-  magnitude.
+  Whether to print each tile's residual (one decimal) inside it. Default
+  `FALSE`. In the classic style the text is white on strongly coloured
+  tiles (absolute residual above 1.5) and dark grey otherwise; with
+  `style = "flat"` it is white on tiles whose absolute residual exceeds
+  0.55 of the largest, and tiles too small for a label stay blank.
 
 - style:
 
-  Character. `"classic"` (default) draws the black-bordered
-  `theme_minimal` mosaic with axis labels; `"flat"` draws the flat
-  `theme_void` mosaic with white gutters, a soft background and a
-  colour-bar legend. With `style = "flat"`, `values = TRUE` prints the
-  standardized residual inside each tile, and extra flat styling
-  arguments (`tile_label`, `col_label_side`, `row_label_side`,
-  `legend_position`, `legend_size`, `label_size`, ...; see
-  [`mosaic_analysis`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md))
-  may be passed via `...`. Not supported for multi-panel `mcml` (level =
-  "clusters"), which falls back to the classic faceted style.
+  `"classic"` (default) draws black-bordered tiles with axis labels.
+  `"flat"` draws the mosaic of
+  [`mosaic_analysis()`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md):
+  white gutters between tiles, labels beside them, no axes, and a
+  ColorBrewer red-blue residual ramp; `values = TRUE` then prints the
+  residuals in the tiles, and its styling arguments (`tile_label`,
+  `col_label_side`, `row_label_side`, `legend_position`, `legend_size`,
+  `label_size`, ...) go in `...`. An `mcml` with `level = "clusters"`
+  and more than one panel is drawn classic, with a message; an `htna`
+  drawn flat loses its actor-coloured labels, with a warning.
 
 - level:
 
-  For `mcml` only. `"macro"` (default) draws a single mosaic of
-  `x$macro$weights` (the cluster-by-cluster aggregate); `"clusters"`
-  draws one mosaic per cluster from `x$clusters[[k]]$weights`, faceted
-  into one combined ggplot.
+  For an `mcml`: `"macro"` (default) draws one mosaic of the
+  cluster-by-cluster counts; `"clusters"` draws one mosaic per cluster,
+  as panels of one plot that share the residual scale.
 
 - ncol:
 
-  Number of columns in the multi-panel layout. Default 2. Effective only
-  for `mcml` with `level = "clusters"`, the one multi-panel case;
-  `netobject_group` is drawn as a single (group x state) mosaic, so
-  `ncol` is accepted but has no effect there.
+  For an `mcml` with `level = "clusters"`: the number of panel columns.
+  Default `2`. Accepted by the `netobject_group` method, whose single
+  mosaic does not use it.
 
 - x_var, y_var, weight:
 
-  For a `data.frame`: the names of the column variable (one mosaic
-  column per level, width proportional to its total `weight`), the
-  segment variable (stacked within each column in proportion to its
-  share), and the cell weight (e.g. a count).
+  For a data frame: the column whose levels form the mosaic's columns
+  (each as wide as its total `weight`), the column whose levels are
+  stacked within each column (in proportion to their share), and the
+  column holding each row's weight, such as a count. Levels keep their
+  factor order, or sort alphabetically. `x_var`, `y_var`, `weight`,
+  `fill`, `colors` and `show_labels` given with any other input raise an
+  error of class `nestimate_bad_input`, as does `label_size` outside
+  `style = "flat"`.
 
 - fill:
 
-  For a `data.frame`: `"y"` (default) colours the segments by `y_var`;
-  the name of another column (e.g. a residual) maps that column to the
-  fill instead.
+  For a data frame: `"y"` (default) colours the segments by `y_var`; the
+  name of another column maps that column to the fill instead (the first
+  value per cell).
 
 - colors:
 
-  For a `data.frame`: optional fill colours, either an unnamed vector in
-  level order or a named lookup (`c(plan = "#0072B2")`) overriding only
-  the levels named. Defaults to recycled Okabe-Ito.
+  For a data frame with `fill = "y"`: fill colours, either an unnamed
+  vector in level order (at least one per level) or a named lookup such
+  as `c(plan = "#0072B2")` that overrides only the levels named. Default
+  `NULL`, the Okabe-Ito palette, recycled.
 
 - show_labels, label_size:
 
-  For a `data.frame`: draw percentage labels inside the segments, and
-  their size.
+  For a data frame: whether to print each segment's percentage inside it
+  (default `TRUE`; segments under 4% stay unlabelled), and the label
+  size (default `3.5`). With `style = "flat"`, `label_size` also sizes
+  the flat mosaic's tile labels.
 
 ## Value
 
-A `ggplot` object: one `geom_rect` layer with one rectangle per
-contingency-table cell, filled by the standardized residual. `mcml` with
-`level = "clusters"` returns a single `facet_wrap`-ed `ggplot` (one
-panel per cluster, shared fill scale); every other input returns a
-single-panel `ggplot`.
+A `ggplot` object, one rectangle per cell (empty cells are left out of
+the flat and data-frame mosaics), filled by the standardised residual
+(by category for a data frame). Print it to draw it, or add ggplot2
+layers and themes. An `mcml` with `level = "clusters"` gives one faceted
+`ggplot` with a panel per cluster and one shared fill scale. An object
+of an unsupported class raises an error.
 
 ## Details
 
-Column widths are proportional to row marginals of the weight matrix
-(incoming totals when the matrix is transposed, as for transitions).
-Within each column, segment heights are proportional to that row's
-conditional distribution. Cell fill is the standardized residual under
-the independence null – a permutation z-score by default, or the
-closed-form
-[`stats::chisq.test()`](https://rdrr.io/r/stats/chisq.test.html)
-residual with `residuals = "asymptotic"` (see `residuals`) – on a
-diverging palette whose limits auto-fit the observed residuals unless
-`range` is supplied. Mosaics need integer counts: when `$weights` is
-already integer (`method = "frequency"` / `"co_occurrence"`) it is used
-directly; for a single `netobject` / `htna` otherwise (relative, glasso,
-cor, ...) order-1 transition counts are recounted from the raw `$data`
-sequences. The function errors only when neither integer weights nor
-`$data` are available.
+A mosaic needs counts. A network whose weights are whole numbers
+(`method = "frequency"` or `"co_occurrence"`) is drawn from its weights;
+otherwise from the transition counts stored with it at estimation, and
+failing that from first-order transitions recounted from its sequence
+data. A `netobject_group` is counted from each group's sequences, or
+from the column sums of its weights when they are counts. A single
+network with none of these, such as an association network (`cor`,
+`pcor`, `glasso`, `ising`, `mgm`), raises an error. A `netobject_group`
+must hold sequence networks: the group method counts whatever its
+networks' data hold, so a group of association networks is drawn without
+an error, each distinct numeric value counted as a state. An `mcml` is
+counted the same way as a network, layer by layer; a cluster with a
+single state has no table to draw: when it holds self-transitions it is
+left out of the per-cluster figure with a warning, and when it holds no
+transition at all the call stops with an error. When a row or column of
+the table is empty, the asymptotic residuals are undefined and every
+tile is drawn at 0. The geometry and the asymptotic residuals follow
+[`tna::plot_mosaic()`](https://sonsoles.me/tna/reference/plot_mosaic.html);
+the function has its own name so the two packages can be attached
+together.
 
 ## References
 

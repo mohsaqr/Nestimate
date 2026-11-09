@@ -1,11 +1,15 @@
 # Tables of a network comparison
 
-Named accessors for the tables inside a `net_network_comparison` object
-(from
-[`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)).
-Each returns a plain data frame with one row per unit and no row names.
-Numeric columns are rounded to `digits` decimals; p-value columns are
-never rounded.
+[`summary()`](https://rdrr.io/r/base/summary.html),
+`edge_differences()`, `node_differences()`, `global_differences()` and
+`network_metrics()` return the tables of a comparison made with
+[`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md):
+one row per pair, per pair and cell, per pair, node and measure, per
+pair and metric, and per network and structural metric. Each is a data
+frame with no row names, numeric columns rounded to `digits` decimals
+and p-value and probability-of-direction columns left unrounded. All but
+`network_metrics()` select pairs with the same `pair` argument as the
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method.
 
 ## Usage
 
@@ -29,14 +33,18 @@ print(x, digits = attr(x, "digits") %||% 2L, ...)
 
 - pair:
 
-  Optional selection of comparisons. Any of: the pair name(s) as printed
-  (`"A vs B"`); the two network names (`c("A", "B")`, either order); one
-  network name (`"A"`, every pair it takes part in); or index/indices
-  into the pair table (`1`, `c(1, 3)`). `NULL` keeps all.
+  The comparisons to keep. Default `NULL`, all of them. Give the pair
+  names as printed (`"A vs B"`), the two network names in either order
+  (`c("A", "B")`), one network name (`"A"`, every pair it takes part
+  in), or indices into the pair table (`1`, `c(1, 3)`). A selection that
+  matches no comparison raises an error of class
+  `nestimate_compare_unknown_pair`.
 
 - digits:
 
-  Decimals kept in numeric columns. Default `2`.
+  The decimals kept in the numeric columns. Default `2`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) method: the decimals
+  shown, by default those the table was made with.
 
 - ...:
 
@@ -44,49 +52,57 @@ print(x, digits = attr(x, "digits") %||% 2L, ...)
 
 - x, object:
 
-  A `net_network_comparison` object (for `print.net_table()`, a table
-  returned by one of these verbs).
+  A `net_network_comparison` object from
+  [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md).
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: a table
+  returned by one of these verbs.
 
 - measure:
 
-  Optional centrality measure name(s) to keep.
+  The centrality measures to keep in `node_differences()`. Default
+  `NULL`, all measures of the comparison; a measure the object does not
+  carry raises an error of class `nestimate_compare_unknown_measure`.
 
 ## Value
 
-- [`summary()`](https://rdrr.io/r/base/summary.html): one row per pair –
-  `pair`, `network_a`, `network_b`, `n_cells`, `n_differing`,
-  `share_higher_a`, `share_higher_b`, `mean_abs_diff`, `max_abs_diff`,
-  `pearson`, `spearman`, `cosine`, `jaccard`, `top_edge`,
-  `top_edge_higher`, and with inference `n_sig_edges`, `n_sig_nodes`,
-  `m_stat`, `m_p`, `s_stat`, `s_p`. The per-edge, per-node, per-metric
-  and per-network tables are the four verbs below.
+Each verb returns a data frame of class `net_table`. Its
+[`print()`](https://rdrr.io/r/base/print.html) shows whole numbers
+without decimals, exact zeros as `0`, other values with `digits`
+decimals and p-values and probabilities of direction with three
+decimals, and returns the table invisibly. The tables:
 
-- `edge_differences()`: one row per pair x transition: `pair`,
+- [`summary()`](https://rdrr.io/r/base/summary.html): one row per pair,
+  with `pair`, `network_a`, `network_b`, `n_cells` (cells compared),
+  `n_differing` (cells whose weights differ), `share_higher_a`,
+  `share_higher_b`, `mean_abs_diff`, `max_abs_diff`, `pearson`,
+  `spearman`, `cosine`, `jaccard`, `top_edge` (the cell with the largest
+  absolute difference) and `top_edge_higher`; with the permutation or
+  Bayesian test, also `n_sig_edges`, and with the permutation test
+  `n_sig_nodes` (when there is a node table), `m_stat`, `m_p`, `s_stat`
+  and `s_p`.
+
+- `edge_differences()`: one row per pair and cell, with `pair`,
   `network_a`, `network_b`, `from`, `to`, `weight_a`, `weight_b`,
   `diff`, `abs_diff`, `rel_diff`, `ratio`, `log_ratio`, `rank_a`,
   `rank_b`, `rank_diff`, `percentile_diff`, `status`, `higher`, and the
   inference columns when `test` was used.
 
-- `node_differences()`: one row per pair x state x measure: `pair`,
+- `node_differences()`: one row per pair, node and measure, with `pair`,
   `network_a`, `network_b`, `node`, `measure`, `value_a`, `value_b`,
-  `diff`, `abs_diff`, `rank_a`, `rank_b`, `higher`, plus inference
-  columns. Errors (class `nestimate_compare_no_nodes`) when
+  `diff`, `abs_diff`, `rank_a`, `rank_b`, `higher`, and the inference
+  columns. It raises an error of class `nestimate_compare_no_nodes` when
   [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
-  was called with no `measures`.
+  was called without `measures`.
 
-- `global_differences()`: one row per pair x metric: `pair`,
-  `network_a`, `network_b`, `category`, `metric`, `key`, `value`, plus
-  inference rows and columns.
+- `global_differences()`: one row per pair and metric, with `pair`,
+  `network_a`, `network_b`, `category`, `metric`, `key`, `value`, and
+  the inference rows and columns.
 
-- `network_metrics()`: one row per network x structural metric:
-  `network`, `metric`, `value`.
+- `network_metrics()`: one row per network and structural metric, with
+  `network`, `metric` and `value`.
 
-Every table is a data frame of class `net_table` whose
-[`print()`](https://rdrr.io/r/base/print.html) shows whole numbers
-without decimals, exact zeros as `0`, other values with `digits`
-decimals, and p-values with three decimals;
-[`print()`](https://rdrr.io/r/base/print.html) itself returns the table
-invisibly.
+[`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
+describes every column under *Details* and *Value*.
 
 ## Examples
 

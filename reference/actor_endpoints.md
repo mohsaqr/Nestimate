@@ -1,9 +1,20 @@
 # Tidy per-actor endpoint summary of a wide-format sequence dataset
 
-For each actor (row), reports the first and last observed states, the
-time indices at which they appear, the number of observed steps, and a
-`dropped_out` flag that is `TRUE` when the actor has a *terminal-NA*
-pattern (after the final observed step, every remaining cell is `NA`).
+`actor_endpoints()` returns one row per sequence (actor) of a
+wide-format sequence table, with its first and last observed states, the
+positions where they occur, the number of observed cells and whether the
+sequence ends early. A sequence ends early (`dropped_out`) when its last
+observed state comes before the last column, so every cell after it is
+missing: the *terminal-NA* pattern of drop-out, course end or censoring.
+Internal gaps do not count.
+
+The flag records only where the observations stop; it cannot say why. A
+sequence recorded over fewer positions than the others looks the same as
+one that left.
+[`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md)
+turns the terminal-NA cells into an explicit end state, and
+[`chain_structure()`](https://pak.dynasite.org/Nestimate/reference/chain_structure.md)
+then describes the chain with that state.
 
 ## Usage
 
@@ -15,48 +26,53 @@ actor_endpoints(data, cols = NULL)
 
 - data:
 
-  A wide-format matrix or data.frame where rows are actors and columns
-  are time steps. Cells are state labels; `NA` represents missing
-  observations. If `data` is a `data.frame`, non-character/-factor
-  columns (e.g. an `id` column) are dropped via the `cols` argument.
+  The sequences: a matrix or data frame with one row per actor and one
+  column per position, holding state labels, with `NA` for a missing
+  observation. Without `cols`, every column is read as a position, so
+  the frame must be one column or a numbered run of positions (`T1`,
+  `T2`, ...); a frame with other columns beside them, such as an id,
+  raises an error of class `nestimate_bad_input`. A table from
+  [`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md)
+  or
+  [`mark_first_state()`](https://pak.dynasite.org/Nestimate/reference/mark_first_state.md)
+  is read as it is, because those functions mark their columns as
+  positions.
 
 - cols:
 
-  Optional character vector of state-column names. If `NULL` (default)
-  every column is treated as a state column.
+  The columns holding the positions, in order; the other columns are
+  ignored. A name not in `data` raises an error of class
+  `nestimate_bad_input`. Default `NULL` (every column).
 
 ## Value
 
-A tidy `data.frame` with one row per actor and columns:
+A data frame with one row per actor and the columns:
 
 - `actor`:
 
-  Row number (or row name if present).
+  The row name when `data` has row names other than `1`, `2`, ...;
+  otherwise the row number.
 
-- `first_state`:
+- `first_state`, `last_state`:
 
-  First non-NA state.
+  The first and the last observed state.
 
-- `last_state`:
+- `first_step`, `last_step`:
 
-  Last non-NA state.
-
-- `first_step`:
-
-  Column index of the first observed state.
-
-- `last_step`:
-
-  Column index of the last observed state.
+  The positions (column numbers among the position columns) of the first
+  and the last observed state.
 
 - `n_observed`:
 
-  Number of non-NA cells.
+  The number of observed cells.
 
 - `dropped_out`:
 
-  `TRUE` iff every cell after `last_step` is `NA` and
-  `last_step < ncol(data)`.
+  `TRUE` when `last_step` is before the last column, so the row ends in
+  missing cells.
+
+A row with no observed state has `NA` states and steps, `n_observed` 0
+and `dropped_out` `FALSE`.
 
 ## See also
 

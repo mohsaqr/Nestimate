@@ -1,10 +1,13 @@
 # Report Network Pruning Details
 
-Returns the edges removed by
-[`net_prune`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
-as a tidy one-row-per-edge data frame, with the method, cut-off, and
-retained/removed counts attached as attributes and shown by its print
-method.
+`net_pruning_details()` lists the edges that
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
+removed from a network, one row per edge, and prints the method with its
+setting and the numbers of edges removed and retained above the table.
+It reads the pruning record, so it works on a network whose pruning was
+undone by
+[`net_deprune()`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md)
+as well.
 
 ## Usage
 
@@ -28,21 +31,27 @@ print(x, ...)
 
 - x:
 
-  A pruned `netobject` or `netobject_group`. For the
-  [`print()`](https://rdrr.io/r/base/print.html) method: an object of
-  class `net_pruning_details`.
+  A pruned `netobject` or `netobject_group`; a network that was never
+  pruned, or another class, raises an error. For the
+  [`print()`](https://rdrr.io/r/base/print.html) method: a
+  `net_pruning_details`.
 
 - ...:
 
-  Ignored. In `print.net_pruning_details()`: Ignored.
+  Ignored.
 
 ## Value
 
-For a `netobject`: a `net_pruning_details` data frame (columns `from`,
-`to`, `weight`) of removed edges. For a `netobject_group`: a named list
-of such data frames.
-
-In `print.net_pruning_details()`: `x`, invisibly.
+For a `netobject`: a `net_pruning_details` data frame of the removed
+edges, with columns `from`, `to` and `weight` (the weight before
+pruning). The method, its setting, the cut-off and the counts are
+attributes; [`print()`](https://rdrr.io/r/base/print.html) shows the
+method, its setting and the counts. The counts are edges: non-zero cells
+of either sign (self-loops included), one per pair on an undirected
+network. The retained count is the non-zero edges left after pruning.
+For a `netobject_group`: a named list of such data frames, one per
+network. The [`print()`](https://rdrr.io/r/base/print.html) method
+returns its input invisibly.
 
 ## See also
 

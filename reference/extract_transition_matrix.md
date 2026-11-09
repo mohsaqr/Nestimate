@@ -1,6 +1,11 @@
 # Extract Transition Matrix from Model
 
-Extract the transition probability matrix from a TNA model object.
+`extract_transition_matrix()` returns the weight matrix of a network:
+for a transition network, the transition probabilities or counts between
+states, with rows as the states moved from and columns as the states
+moved to. It reads a `netobject` (or any list with a `weights` element),
+a `tna`, `ftna`, `ctna` or `atna` model, an `mcml` (one matrix per
+layer) or a bare matrix, and can rescale the rows to sum to 1.
 
 ## Usage
 
@@ -15,55 +20,45 @@ summary(object, ...)
 
 - model:
 
-  A `netobject`, TNA model object, `mcml` object, a list containing a
-  `weights` element, or a bare weight matrix.
+  The network: a `netobject`, a `tna`-family model, an `mcml`, a list
+  holding the matrix as `weights` (or, failing that, `transition_matrix`
+  or `transition`), or a weight matrix. Anything else raises an error.
 
 - type:
 
-  Character. Type of matrix to return:
-
-  "raw"
-
-  :   The raw weight matrix as stored in the model.
-
-  "scaled"
-
-  :   Row-normalized to ensure rows sum to 1.
-
-  Default: "raw".
+  Which matrix to return. `"raw"` (default) returns the weights as
+  stored. `"scaled"` divides each row by its sum, so the rows of a count
+  matrix become transition probabilities; a row that sums to zero is
+  left as it is.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `nest_transition_matrix`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `nest_transition_matrix`.
 
 - ...:
 
-  In `summary.nest_transition_matrix()`: Additional arguments (ignored).
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method:
+  ignored.
 
 ## Value
 
-For a single network: a square numeric matrix with row and column names
-as state names, of class
+For a single network: a square numeric matrix with the model's state
+names (if any) as row and column names, of class
 `c("nest_transition_matrix", "matrix", "array")`. It behaves as an
-ordinary matrix; the class stamp only adds a
-[`summary()`](https://rdrr.io/r/base/summary.html) method returning a
-tidy `from`/`to`/`weight` data frame.
+ordinary matrix in arithmetic and indexing;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
+with one row per non-zero entry (self-transitions included) and the
+columns `from`, `to` and `weight`, sorted by decreasing absolute weight.
 
-For an `mcml` object: a named list of such matrices, with `macro` first
-and then one element per cluster.
-
-In `summary.nest_transition_matrix()`: A tidy data frame with columns
-`from`, `to`, `weight`, with one row per non-zero entry.
+For an `mcml`: a named list of such matrices, `macro` first and then one
+per cluster.
 
 ## Details
 
-TNA models store transition weights in different locations depending on
-the model type. This function handles the extraction automatically.
-
-For "scaled" type, each row is divided by its sum to create valid
-transition probabilities. This is useful when the original weights don't
-sum to 1.
+Models store their weights in different places; the function looks in
+each in turn. `"scaled"` is useful when the stored weights are counts or
+otherwise do not sum to 1 per row.
 
 ## See also
 

@@ -1,10 +1,25 @@
 # Model a Binary Outcome From Sequential Patterns
 
-Selects the `n` patterns most associated with a two-valued outcome and
-fits one logistic regression of the outcome on their presence. This
-reproduces `codyna::analyze_outcome()`: the same pattern discovery and
-filters, the same ranking, and the same model, so the coefficients
-agree. The result is a tidy table, one row per selected pattern.
+`pattern_outcome()` selects the `n` sequential patterns most associated
+with a two-valued outcome and fits one logistic regression of the
+outcome on their presence (or their counts), returning one row per
+selected pattern with its log odds ratio, odds ratio and Wald interval.
+It reads any sequence data
+[`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+reads, takes the outcome from a stored covariate, a vector or each
+sequence's last state, and can adjust for covariates and add a random
+intercept per actor.
+
+Each estimate is the association of one pattern with the outcome,
+adjusted for the other selected patterns and the covariates; it is not a
+causal effect. The patterns are chosen by their association with the
+outcome in the same data the model is fitted to, so the p-values do not
+account for that selection and overstate the evidence: treat them as a
+ranking, or confirm the selected patterns on new data. A pattern and a
+longer pattern containing it often occur together, and each coefficient
+is then adjusted for the other;
+[`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
+shows how often each pattern occurs, overall and by group.
 
 ## Usage
 
@@ -30,6 +45,9 @@ pattern_outcome(
   reference = NULL,
   ci_level = 0.95,
   cols = NULL,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
   ...
 )
 ```
@@ -38,108 +56,128 @@ pattern_outcome(
 
 - x:
 
-  Sequence data, in any form accepted by
-  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md):
-  prepared data, a long event log, a wide data frame, a `netobject`,
-  `netobject_group` or `tna` model.
+  The sequence data, in any form
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  accepts: prepared data, a long event log, a wide data frame, a
+  `netobject`, `netobject_group` or `tna` model.
 
 - outcome:
 
   The outcome, with exactly two distinct values: the name of a column
   stored with the sequences (a covariate of a wide data frame or long
   event log, or of a network's metadata), or a vector with one value per
-  sequence. Use a vector for a model that stores no covariates, such as
-  a `tna` model. `outcome = "last_obs"` uses each sequence's last
+  sequence; use a vector for a model that stores no covariates, such as
+  a `tna` model. The default, `"last_obs"`, uses each sequence's last
   observed state as the outcome and removes the states that end some
-  sequence from all sequences (the default, as in codyna; for data whose
-  final state codes the outcome, such as an appended `"pass"` or
-  `"fail"`).
+  sequence from all sequences, as codyna does; it suits data whose final
+  state codes the outcome, such as an appended `"pass"` or `"fail"`. An
+  outcome without exactly two values, a vector of the wrong length or a
+  column that is not stored with the sequences raises an error of class
+  `nestimate_bad_input`.
 
 - type, len, gap, min_freq, min_support, start, end, contain:
 
-  Pattern definition and filters; see
+  The pattern definition and filters; see
   [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md).
-  The defaults are codyna's: `len = 1:2`, `gap = 1`, `min_freq = 5`,
-  `min_support = 0.01`.
+  The defaults are codyna's: `type = "ngram"`, `len = 1:2`, `gap = 1`,
+  `min_freq = 5` and `min_support = 0.01`. When no pattern passes the
+  filters under both outcome values, an error of class
+  `nestimate_no_patterns` is raised.
 
 - n:
 
-  Number of patterns entered into the model. Default `10`.
+  The number of patterns entered into the model, a positive whole
+  number. Default `10`.
 
 - priority:
 
-  Column(s) ranking the patterns for selection, applied in order:
+  The columns ranking the patterns for selection, applied in order:
   `"chisq"` (default), `"p_value"`, `"support"`, `"n_sequences"`,
-  `"occurrences"`, `"proportion"`, `"lift"`, `"length"`.
+  `"occurrences"`, `"proportion"`, `"lift"` and `"length"`.
 
 - desc:
 
-  Logical, recycled to `priority`: rank in descending order. Default
-  `TRUE`.
+  Whether each `priority` column ranks in descending order, recycled to
+  the length of `priority`. Default `TRUE`, so `"p_value"` needs
+  `desc = FALSE` to select the smallest p-values.
 
 - occurrences:
 
-  Logical. Enter each pattern as its number of occurrences in the
-  sequence instead of presence (0/1). Default `FALSE`.
+  Whether each pattern enters the model as its number of occurrences in
+  the sequence instead of its presence (0/1). Default `FALSE`.
 
 - adjust:
 
-  Optional character vector of covariate columns added to the model.
+  Covariate columns added to the model. Default `NULL`. A name that is
+  not a column stored with the sequences raises an error of class
+  `nestimate_bad_input`.
 
 - adjust_length:
 
-  Logical. Also add the number of observed states per sequence as a
-  covariate. Default `FALSE` (codyna does not).
+  Whether to add the number of observed states per sequence as a
+  covariate. Default `FALSE`, as in codyna.
 
 - group:
 
-  Optional column identifying the actor (or other cluster) each sequence
-  belongs to; adds a random intercept. Requires lme4.
+  The column identifying the actor (or other cluster) each sequence
+  belongs to; it adds a random intercept per group. It needs lme4,
+  otherwise an error of class `nestimate_no_lme4` is raised. Default
+  `NULL`. A name that is not a column stored with the sequences raises
+  an error of class `nestimate_bad_input`.
 
 - reference:
 
   The reference outcome value; the odds ratios are for the other value.
-  Default: the first value in sorted order.
+  Default `NULL`, the first value in sorted order; a value that does not
+  occur raises an error of class `nestimate_bad_input`.
 
 - ci_level:
 
-  Confidence level of the Wald intervals. Default `0.95`.
+  The confidence level of the Wald intervals, a number between 0 and 1.
+  Default `0.95`.
 
 - cols:
 
-  State columns of a wide data frame; see
+  The state columns of a wide data frame; see
   [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md).
+  Default `NULL`.
+
+- actor, action, time:
+
+  The actor, action and timestamp columns of a long event log, as in
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md):
+  setting `action` declares `x` an event log. Default `NULL`.
 
 - ...:
 
-  Passed to
-  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
-  e.g. `actor`, `action` and `time` for a long event log.
+  Further arguments passed to
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  for a long event log, such as `time_threshold` or `order`.
 
 ## Value
 
-A `data.frame` with one row per selected pattern, in the model's term
-order (pattern name): `pattern`, `length`, `occurrences`, `n_sequences`,
-`support`, `lift` (as in
-[`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)),
-the support within each outcome value (`support_<value>`), `chisq` (the
-selection statistic), `estimate` (log odds ratio, adjusted for the other
-terms), `std_error`, `ci_lower`, `ci_upper`, `p_value` (Wald z),
-`odds_ratio`, `or_lower`, `or_upper`.
+A data frame with one row per selected pattern, ordered by pattern name,
+with the columns `pattern`, `length`, `occurrences`, `n_sequences`,
+`support` and `lift` (as in
+[`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md));
+the share of the sequences of each outcome value that contain the
+pattern (`support_<value>`); `chisq` (the selection statistic);
+`estimate` (the log odds ratio, adjusted for the other terms),
+`std_error`, `ci_lower`, `ci_upper` and `p_value` (Wald z); and
+`odds_ratio`, `or_lower` and `or_upper`.
 
-Conditions: `nestimate_bad_input` for a missing column, an outcome
-without exactly two values, or an unknown `reference`;
-`nestimate_no_patterns` when no pattern passes the filters;
-`nestimate_no_lme4` when `group` is set and lme4 is not installed;
-warning `nestimate_missing_outcome` when sequences with a missing
-outcome, covariate or group are dropped; warning
-`nestimate_aliased_pattern` when a selected pattern is collinear with
-the other terms (its row is `NA`). Warnings from the model fit (e.g.
-separation) are passed on unchanged.
+Sequences with a missing outcome, covariate or group are dropped with a
+warning of class `nestimate_missing_outcome`. A selected pattern
+collinear with the other terms gets `NA` estimates (and `NA` standard
+error, intervals, p-value and odds ratios), its descriptive columns
+kept, and a warning of class `nestimate_aliased_pattern`. Warnings from
+the model fit (such as separation) are passed on unchanged.
 
 ## Details
 
-Steps:
+`pattern_outcome()` reproduces `codyna::analyze_outcome()`: the same
+pattern discovery and filters, the same ranking and the same model, so
+the coefficients agree. The steps:
 
 1.  Patterns are found as in
     [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
@@ -154,14 +192,12 @@ Steps:
 
 3.  The top `n` patterns by `priority` enter one model,
     `outcome ~ adjust + pattern_1 + ... + pattern_n`, as presence
-    indicators (or occurrence counts with `occurrences = TRUE`). With
-    `group`, a random intercept per group is added
-    ([`lme4::glmer`](https://rdrr.io/pkg/lme4/man/glmer.html)).
-
-The patterns are chosen by their association with the outcome in the
-same data the model is fitted to, so the p-values do not account for
-that selection and overstate the evidence. Treat them as a ranking, or
-confirm the selected patterns on new data.
+    indicators (or occurrence counts with `occurrences = TRUE`). Ties
+    keep codyna's order: more occurrences first, then first appearance.
+    With `group`, a random intercept per group is added
+    ([`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html));
+    otherwise the model is a plain
+    [`glm()`](https://rdrr.io/r/stats/glm.html).
 
 ## References
 

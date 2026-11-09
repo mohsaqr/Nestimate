@@ -1,10 +1,14 @@
 # Online Learning Activity Indicators
 
-Simulated binary time-series data for 200 students across 30 time
-points. At each time point, one or more learning activities may be
-active (1) or inactive (0). Activities: Reading, Video, Forum, Quiz,
-Coding, Review. Includes temporal persistence (activities tend to
-continue across adjacent time points).
+Simulated binary (one-hot) indicator time series of six online learning
+activities (Reading, Video, Forum, Quiz, Coding, Review) for 200
+students over 30 time points. Each row is one time point of one student
+and marks every activity active then (1) or not (0); at least one
+activity is active in every row, and several often are. Activities tend
+to continue from one time point to the next. The rows of each student
+are consecutive and in time order, so the data are ready for
+[`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md) with
+`actor = "student"`.
 
 ## Usage
 
@@ -18,31 +22,31 @@ A data frame with 6,000 rows and 7 columns:
 
 - student:
 
-  Integer. Student identifier (1–200).
+  Integer student identifier, 1 to 200, with 30 rows each.
 
 - Reading:
 
-  Integer (0/1). Reading activity indicator.
+  Integer reading indicator (0/1).
 
 - Video:
 
-  Integer (0/1). Video watching indicator.
+  Integer video-watching indicator (0/1).
 
 - Forum:
 
-  Integer (0/1). Discussion forum indicator.
+  Integer discussion-forum indicator (0/1).
 
 - Quiz:
 
-  Integer (0/1). Quiz/assessment indicator.
+  Integer quiz or assessment indicator (0/1).
 
 - Coding:
 
-  Integer (0/1). Coding practice indicator.
+  Integer coding-practice indicator (0/1).
 
 - Review:
 
-  Integer (0/1). Review/revision indicator.
+  Integer review or revision indicator (0/1).
 
 ## Examples
 

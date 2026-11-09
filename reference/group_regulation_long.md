@@ -1,8 +1,8 @@
 # Group Regulation in Collaborative Learning (Long Format)
 
-Students' regulation strategies during collaborative learning, in long
-format. Contains 27,533 timestamped action records from multiple
-students working in groups across two courses.
+Students' regulation actions during collaborative learning, in long
+format: 27,533 timestamped actions by 2,000 students working in 200
+groups across three courses, one row per action.
 
 ## Usage
 
@@ -16,28 +16,29 @@ A data frame with 27,533 rows and 6 columns:
 
 - Actor:
 
-  Integer. Student identifier.
+  Integer student identifier, 1 to 2,000.
 
 - Achiever:
 
-  Character. Achievement level: `"High"` or `"Low"`.
+  Character achievement level, `"High"` or `"Low"`.
 
 - Group:
 
-  Numeric. Collaboration group identifier.
+  Numeric collaboration group identifier, 1 to 200; each student belongs
+  to one group.
 
 - Course:
 
-  Character. Course identifier (`"A"`, `"B"`, or `"C"`).
+  Character course identifier, `"A"`, `"B"` or `"C"`.
 
 - Time:
 
-  POSIXct. Timestamp of the action.
+  POSIXct timestamp of the action.
 
 - Action:
 
-  Character. Regulation action (e.g., cohesion, consensus, discuss,
-  synthesis).
+  Character regulation action, one of adapt, cohesion, consensus,
+  coregulate, discuss, emotion, monitor, plan and synthesis.
 
 ## Source
 

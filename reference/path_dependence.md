@@ -1,12 +1,24 @@
 # Per-Context Path Dependence at Order k
 
-Diagnoses where a chain's order-1 Markov assumption fails by comparing,
-for each order-k context \\(s_1, \ldots, s\_{k-1})\\, the empirical
-next-state distribution \\P(s_k \mid s_1, \ldots, s\_{k-1})\\ against
-the order-1 prediction \\P(s_k \mid s\_{k-1})\\ that uses only the most
-recent state. Returns a tidy per-context table sorted by
-Kullback-Leibler divergence so the analyst can see exactly *which*
-histories carry extra predictive information.
+`path_dependence()` shows, context by context, where a first-order
+Markov chain misses what longer histories say about the next state. For
+every context of k = `order` consecutive states \\c = (s_1, \ldots,
+s_k)\\, it compares the observed distribution of the next state after
+that context, \\P_k(s\_{k+1} \mid c)\\, with the first-order prediction
+\\P_1(s\_{k+1} \mid s_k)\\ from the last state alone. Its table has one
+row per context, sorted by the Kullback-Leibler divergence between the
+two, with both entropies and whether the most likely next state changes.
+It reads wide sequence data or a network built from sequences.
+
+A KL of 0 means the longer history adds nothing in that context; a
+positive entropy drop means it sharpens the prediction; and a flip means
+it changes which next state is most likely, not only how confident the
+prediction is. The values are computed from the observed counts and come
+without a test, and a context seen a few times gives a noisy KL: read
+`n` beside it and raise `min_count` when small contexts lead the table.
+Whether order k is needed for the chain as a whole is tested by
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md);
+`path_dependence()` breaks that decision down by context.
 
 ## Usage
 
@@ -30,139 +42,141 @@ plot(x, top = 15L, title = NULL, ...)
 
 - x:
 
-  A wide sequence data.frame / matrix (rows = actors, columns =
-  time-steps), or a `netobject` that carries the source data. For the
-  [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_path_dependence` (or its
-  [`summary()`](https://rdrr.io/r/base/summary.html)).
+  The sequences: a wide data frame or matrix (one row per sequence, one
+  column per time step), or a `netobject` built from sequences, whose
+  stored data are read. A data frame needs position columns named as a
+  numbered run (`T1`, `T2`, ...); any other frame, a one-hot network and
+  an association network raise an error of class `nestimate_bad_input`,
+  and a network without its data stops `path_dependence()`. Paths that
+  touch a missing cell are left out. For the
+  [`print()`](https://rdrr.io/r/base/print.html) methods: a
+  `net_path_dependence` object or its
+  [`summary()`](https://rdrr.io/r/base/summary.html); for the
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: a
+  `net_path_dependence` object.
 
 - order:
 
-  Integer. Order of the conditioning context. `order = 2` (default)
-  compares 2-step memory against 1-step; `order = 3` compares 3-step
-  memory; etc. Must be a whole number; a non-integer value is an error
-  rather than being silently truncated.
+  The length k of the conditioning context, a whole number of at least
+  2; a non-integer value is an error, not truncated. Default `2`, which
+  compares a two-state history with the last state alone; `3` compares a
+  three-state history, and so on. The data need at least `order + 1`
+  time steps.
 
 - min_count:
 
-  Integer. Drop contexts seen fewer than this many times. Default 5.
-  Very small samples produce noisy KL estimates.
+  The number of times a context must be observed to be reported, a whole
+  number of at least 1. Default `5`. Contexts seen less often give noisy
+  KL estimates; when no context reaches `min_count`, `path_dependence()`
+  stops with an error.
 
 - base:
 
-  Numeric. Logarithm base for entropy and KL. Default 2 (bits).
+  The logarithm base for the entropies and the KL divergence: `2`
+  (default) gives bits, `exp(1)` nats and `10` hartleys. A positive
+  number other than 1.
 
 - top:
 
-  In `print.net_path_dependence()`: Integer. Number of top contexts to
-  show. Default 10. In `plot.net_path_dependence()`: Integer. Number of
-  contexts to show (top by KL). Default 15.
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: how
+  many contexts to show, highest KL first. Default `10` for
+  [`print()`](https://rdrr.io/r/base/print.html) and `15` for
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html).
 
 - digits:
 
-  Integer. Digits to round numeric output. Default 3.
+  For the [`print()`](https://rdrr.io/r/base/print.html) methods:
+  decimal places of the entropies, the entropy drop and the KL, in the
+  table and in the chain-level summaries. Default `3`.
 
 - ...:
 
-  In `plot.net_path_dependence()`, `print.net_path_dependence()`,
-  `print.summary.net_path_dependence()` and
-  `summary.net_path_dependence()`: Ignored.
+  For the [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
+  ignored.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_path_dependence`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_path_dependence` object.
 
 - title:
 
-  Character or `NULL`. Plot title. Default `NULL`, which builds "Path
-  dependence: order k vs order 1" from the fitted order.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the plot title. Default `NULL`, which builds
+  `"Path dependence: order k vs order 1"` from the fitted order.
 
 ## Value
 
-An object of class `"net_path_dependence"` with
+A `net_path_dependence` object.
+[`print()`](https://rdrr.io/r/base/print.html) shows the chain-level
+summaries and the `top` contexts by KL;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a
+`summary.net_path_dependence` holding the full sorted table, which
+prints every context and the chain-level summaries;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
+ggplot lollipop chart of each context's KL, highest first, with point
+size proportional to the context's count and the contexts whose modal
+next state flips coloured and labelled with the change. The
+[`print()`](https://rdrr.io/r/base/print.html) methods return their
+input invisibly. The object's fields:
 
 - contexts:
 
-  tidy data.frame, one row per order-k context, sorted by KL descending.
-  Columns: `context` (e.g. "A -\> B"), `n` (count), `H_order1` (entropy
-  of \\P(\cdot \mid s\_{k-1})\\), `H_orderk` (entropy of \\P(\cdot \mid
-  \mathrm{context})\\), `H_drop` (= `H_order1` - `H_orderk`), `KL` (=
-  \\D\_{KL}(P_k \\ P_1)\\), `top_o1` (most likely next state under
-  order-1), `top_ok` (most likely next state under order-k), `flips`
-  (logical: did the most likely next state change?).
+  Data frame with one row per context, sorted by KL (descending), with
+  columns `context` (such as `"A -> B"`), `n` (its count), `H_order1`
+  (entropy of \\P_1(\cdot \mid s_k)\\), `H_orderk` (entropy of
+  \\P_k(\cdot \mid c)\\), `H_drop` (`H_order1 - H_orderk`), `KL`
+  (\\D\_{KL}(P_k \\ P_1)\\), `top_o1` (the most likely next state under
+  order 1), `top_ok` (the most likely next state under order k) and
+  `flips` (whether the two differ).
 
 - chain:
 
-  list with chain-level summaries: `KL_weighted` (count-weighted mean KL
-  across contexts), `H_drop_weighted` (count-weighted mean entropy
-  drop), `n_contexts`, `n_flips` (contexts where the most-likely next
-  state changed).
+  List of chain-level summaries: `KL_weighted` (the count-weighted mean
+  KL over contexts), `H_drop_weighted` (the count-weighted mean entropy
+  drop), `n_contexts` and `n_flips` (the number of contexts whose most
+  likely next state changes).
 
 - order:
 
-  integer
+  The context length used.
 
 - base:
 
-  numeric
+  The logarithm base used.
 
 - min_count:
 
-  integer
+  The minimum context count used.
 
 - states:
 
-  character vector
-
-In `print.net_path_dependence()` and
-`print.summary.net_path_dependence()`: `x` invisibly.
-
-In `summary.net_path_dependence()`: A `summary.net_path_dependence` with
-the full sorted table and chain-level summaries.
-
-In `plot.net_path_dependence()`: A ggplot object.
+  The states observed.
 
 ## Details
 
-For each context \\c = (s_1, \ldots, s\_{k-1})\\ occurring at least
-`min_count` times, the function computes:
+For each context \\c\\ observed at least `min_count` times, the function
+computes:
 
-- the empirical conditional \\P_k(\cdot \mid c)\\ from k-gram counts;
+- the empirical conditional \\P_k(\cdot \mid c)\\ from the counts of the
+  paths of k + 1 states;
 
-- the order-1 prediction \\P_1(\cdot \mid s\_{k-1})\\ from the most
-  recent state alone (the bigram-marginal estimator);
+- the first-order prediction \\P_1(\cdot \mid s_k)\\ from the most
+  recent state alone, estimated from all pairs of consecutive states;
 
-- the entropy drop \\H(P_1) - H(P_k)\\ - bits of uncertainty removed by
-  extending memory by one step in this specific context;
+- the entropy drop \\H(P_1) - H(P_k)\\, the uncertainty removed by the
+  longer memory in this context;
 
-- the Kullback-Leibler divergence \\D\_{KL}(P_k \\\\\\ P_1)\\ - bits of
-  "surprise" if you used the order-1 model when the order-k model is
-  true.
+- the Kullback-Leibler divergence \\D\_{KL}(P_k \\\\\\ P_1)\\, the
+  expected extra surprise of predicting with the first-order model when
+  the order-k distribution holds.
 
-`KL = 0` means longer history adds no information for that context.
-`H_drop > 0` means longer history sharpens the prediction; `H_drop < 0`
-indicates the order-k context happens to spread probability across more
-outcomes than order-1 alone (small-sample noise or genuine
-context-induced uncertainty - inspect `n`).
-
-Contexts where `flips = TRUE` are the substantively interesting ones:
-the longer history changes the *modal* prediction, not just its
-confidence.
-
-Pair this with
-[`markov_order_test`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
-(which decides whether order-k is needed *globally*) to see the
-chain-level decision broken down per context.
-
-## Methods
-
-- `plot.net_path_dependence()`: Lollipop chart of per-context KL
-  divergence, sorted descending. Point size is proportional to context
-  count; points where the modal next state flips between orders are
-  marked with an X to highlight substantively meaningful order-2
-  effects.
+A negative `H_drop` means the order-k context spreads its probability
+over more outcomes than the last state alone does, which can be
+small-sample noise or uncertainty the context adds; inspect `n`.
 
 ## References
 

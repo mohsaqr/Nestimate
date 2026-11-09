@@ -1,11 +1,14 @@
 # The session behind each sequence
 
-Names every sequence of a network or of a clustering by the columns it
-was built from. A network built from long data with `actor` and
-`session` has one sequence per actor-session; its rows are ordered by
-the grouping, not by the input, and a fitted clustering reports its
-assignments in that same order. `session_ids()` returns the key that
-joins them back to the input data, so no label has to be parsed.
+`session_ids()` names every sequence of a network, or of a clustering
+fitted on one, by the actor and session values it was built from, and
+returns one row per sequence. A network built from long data with
+`actor` and `session` holds one sequence per actor-session; its rows are
+ordered by the grouping, not by the input, and a fitted clustering
+reports its assignments in that same order. `session_ids()` returns the
+key that joins them back to the input data, so no label has to be
+parsed. For a clustering it adds each sequence's cluster, and for a
+mixed Markov model also the posterior probability of that cluster.
 
 ## Usage
 
@@ -29,26 +32,27 @@ session_ids(x, ...)
 
 - x:
 
-  A `netobject` from
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  on long data, or a `net_mmm`
-  ([`build_mmm`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md))
+  A `netobject` built by
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  from long data, or a `net_mmm`
+  ([`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md))
   or `net_clustering`
-  ([`build_clusters`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md))
-  fitted on such a network.
+  ([`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md))
+  fitted on such a network. Any other object raises an error of class
+  `nestimate_no_session_ids` (see *Errors*).
 
 - ...:
 
-  Unused.
+  Not used.
 
 ## Value
 
 A data frame with one row per sequence, in the row order of the
-network's `$data` (and of the fit's assignments):
+network's sequence data (and of the fit's assignments):
 
 - sequence:
 
-  Integer row number of the sequence.
+  The integer row number of the sequence.
 
 - actor and session columns:
 
@@ -58,8 +62,8 @@ network's `$data` (and of the fit's assignments):
 
 - session_label:
 
-  The readable label of the sequence. With `time`, sessions split at
-  time gaps carry a `" s<n>"` suffix, so this column separates them.
+  The readable label of the sequence. With `time`, the sessions split at
+  time gaps carry an `" s<n>"` suffix, so this column tells them apart.
 
 - cluster:
 
@@ -71,9 +75,11 @@ network's `$data` (and of the fit's assignments):
 
 ## Errors
 
-Raises `nestimate_no_session_ids` when `x` carries no per-sequence
-metadata: a network built from wide data, a fit on wide data or on a
-`tna` model, or a fit made before Nestimate 0.9.6 (refit it). Raises
+Raises an error of class `nestimate_no_session_ids` when `x` carries no
+per-sequence metadata (a network built from wide data, a fit on wide
+data or on a `tna` model, or a fit made before Nestimate 0.9.6, which
+must be refitted) and when `x` is of another class, such as a
+`netobject_group`. Raises an error of class
 `nestimate_session_ids_misaligned` when the metadata and the sequences
 differ in number.
 

@@ -1,6 +1,23 @@
 # Extract Initial Probabilities from Model
 
-Extract the initial state probability vector from a TNA model object.
+`extract_initial_probs()` returns the initial-state probabilities of a
+network: the share of sequences that start in each state. It reads a
+`netobject` (or any list) that stores them as `initial`,
+`initial_probs`, `inits` or `initial_probabilities`, a `tna`-family
+object that stores them as `initial`, `initial_probs` or `inits` (models
+from the tna package store `inits`), or an `mcml` (one vector per
+layer).
+
+Of the
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+methods, the transition methods (`"relative"`, `"frequency"`,
+`"attention"`, `"ngram"`, `"gap"` and `"reverse"`) store initial
+probabilities, as do
+[`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
+transition networks. For co-occurrence and association networks, and for
+a model that keeps them under another name, the function returns a
+uniform distribution over the states of the weight matrix, with a
+warning: those values are a placeholder, not an estimate.
 
 ## Usage
 
@@ -15,39 +32,32 @@ summary(object, ...)
 
 - model:
 
-  A `netobject`, TNA model object, `mcml` object, or a list containing
-  an `initial` element.
+  The network: a `netobject`, a `tna`-family model, an `mcml`, or a list
+  holding an `initial` element. Input from which neither initial
+  probabilities nor a weight matrix can be read raises an error.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `nest_initial_probs`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `nest_initial_probs`.
 
 - ...:
 
-  In `summary.nest_initial_probs()`: Additional arguments (ignored).
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method:
+  ignored.
 
 ## Value
 
-For a single network: a named numeric vector of initial state
-probabilities summing to 1, of class
-`c("nest_initial_probs", "numeric")`. The class stamp only adds a
-[`summary()`](https://rdrr.io/r/base/summary.html) method returning a
-tidy `state`/`prob` data frame.
+For a single network: a named numeric vector of initial-state
+probabilities that sums to 1 (stored values are rescaled when their sum
+differs from 1 by more than 1e-6), of class
+`c("nest_initial_probs", "numeric")`.
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
+with one row per state and the columns `state` and `prob`, sorted by
+decreasing probability.
 
-For an `mcml` object: a named list of such vectors, with `macro` first
-and then one element per cluster (taken from each layer's `$inits`,
-unstamped).
-
-In `summary.nest_initial_probs()`: A tidy data frame with columns
-`state` and `prob`, sorted by decreasing probability.
-
-## Details
-
-Initial probabilities represent the probability of starting a sequence
-in each state. If the model doesn't have explicit initial probabilities,
-this function falls back to a uniform distribution over the states of
-the transition matrix and warns.
+For an `mcml`: a named list of plain numeric vectors, `macro` first and
+then one per cluster, taken as stored in each layer (`inits`).
 
 ## See also
 

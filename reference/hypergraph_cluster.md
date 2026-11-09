@@ -1,15 +1,25 @@
 # Spectral clustering of hypergraph vertices
 
-Partitions the nodes of a hypergraph into `k` clusters with the
-Laplacian-eigenmap + k-means algorithm of Hayashi et al. (2020,
-"RDC-Spec"): the eigenvectors of the `k` smallest eigenvalues of the
-normalized hypergraph Laplacian are row-normalized to unit length and
-clustered with k-means. With `type = "random_walk"` and a weighted
-incidence (e.g. from
+`hypergraph_cluster()` partitions the nodes of a hypergraph into `k`
+clusters with the spectral algorithm of Hayashi et al. (2020,
+"RDC-Spec"): it takes the eigenvectors of the `k` smallest eigenvalues
+of the normalised Laplacian from
+[`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md),
+scales each node's row of them to unit length, and clusters the rows
+with k-means. It works with either Laplacian. With
+`type = "random_walk"` and a weighted incidence (for example from
 [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)
-with `weight =`), the edge-dependent vertex weights genuinely change the
-partition - with edge-independent weights the walk collapses to a graph
-random walk (Chitra & Raphael 2019).
+with `weight`), the edge-dependent vertex weights can change the
+partition; with edge-independent weights the walk reduces to a random
+walk on a graph (Chitra & Raphael 2019).
+
+The eigengap, the distance between the `k`-th and the next eigenvalue,
+shows how well the spectrum separates `k` groups: a large gap supports
+`k`, a small one means the spectrum does not single it out.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+spectrum, so neighbouring values of `k` can be compared. k-means is
+stochastic, so a partition that matters is worth refitting with other
+seeds to see whether it holds.
 
 ## Usage
 
@@ -40,99 +50,125 @@ plot(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
 
 - hg:
 
-  A connected `net_hypergraph`.
+  The hypergraph: a connected `net_hypergraph`, as for
+  [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md).
 
 - k:
 
-  Integer number of clusters, `2 <= k <= n_nodes - 1`.
+  The number of clusters, a whole number from 2 to one less than the
+  number of nodes. Required; a value that is not a single whole number
+  in that range raises an error.
 
 - type, edge_weights:
 
-  Passed to
+  The Laplacian and its hyperedge weights, passed to
   [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md).
+  Defaults `"zhou"` and `NULL`.
 
 - nstart:
 
-  Integer. k-means random restarts (default 25).
+  The number of random starts k-means tries, keeping the best. Default
+  `25`.
 
 - seed:
 
-  Optional integer seed for the k-means initialization.
+  A whole number that makes the k-means starts reproducible. The
+  session's own random stream is left as it was. Default `NULL`.
 
 - x:
 
   For the [`print()`](https://rdrr.io/r/base/print.html),
   [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_hypergraph_cluster`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_hypergraph_cluster` object.
 
 - ...:
 
-  In `as.data.frame.net_hypergraph_cluster()`,
-  `plot.net_hypergraph_cluster()`, `print.net_hypergraph_cluster()` and
-  `summary.net_hypergraph_cluster()`: Additional arguments (ignored).
+  For the methods: ignored.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_hypergraph_cluster`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_hypergraph_cluster` object.
 
 - what:
 
-  Character. `"both"` (default), `"spectrum"`, or `"embedding"`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: the panel to draw. `"spectrum"` is a scree plot of the
+  smallest eigenvalues with the `k` used marked, so the eigengap after
+  `k` can be read; `"embedding"` places the nodes on the first two
+  embedding dimensions, labelled, coloured and shaped by cluster and
+  sized by stationary probability, which is the geometry k-means
+  clustered; `"both"` (default) draws the two side by side.
 
 - n_values:
 
-  Integer. How many smallest eigenvalues to show in the spectrum panel
-  (default: `min(3 * k, n_nodes)`).
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: how many of the smallest eigenvalues the spectrum panel shows.
+  Default `NULL`, which shows `min(3 * k, n_nodes)`.
 
 ## Value
 
-An object of class `net_hypergraph_cluster`: a list with `$clusters`
-(data.frame, one row per node: `node`, `cluster` - labels `"Cluster 1"`,
-`"Cluster 2"`, ... ordered by first appearance), `$embedding` (node x k
-row-normalized spectral embedding used by k-means, dims `dim1..dimk`),
-`$k`, `$type`, `$eigenvalues` (full Laplacian spectrum, increasing),
-`$eigengap` (gap after the k-th eigenvalue), `$sizes` (data.frame
-`cluster`/`size`), `$pi` (named stationary distribution), `$n_nodes`,
-`$n_hyperedges` and `$params` (the `edge_weights` used, `nstart`,
-`seed`, `tot_withinss`). Has `print`, `summary`, `plot` and
-`as.data.frame` methods;
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
-one row per node with `node`, `cluster`, the stationary probability
-`pi`, and the embedding coordinates.
+A `net_hypergraph_cluster` object.
+[`print()`](https://rdrr.io/r/base/print.html) reports the Laplacian,
+the cluster sizes and the eigengap;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns one row per
+cluster; [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws
+the spectrum and the embedding. The object's fields:
 
-In `print.net_hypergraph_cluster()`: The input object, invisibly.
+- clusters:
 
-In `summary.net_hypergraph_cluster()`: A data.frame, one row per
-cluster: `cluster`, `size`, `share`.
+  A data frame with one row per node: `node` and `cluster`. Clusters are
+  labelled `"Cluster 1"`, `"Cluster 2"`, ... in the order they first
+  appear among the nodes.
 
-In `as.data.frame.net_hypergraph_cluster()`: The tidy assignment table:
-one row per node, columns `node`, `cluster`, `pi` (stationary
-probability of the node under the Laplacian's random walk) and the
-spectral-embedding coordinates `dim1..dimk`.
+- embedding:
 
-In `plot.net_hypergraph_cluster()`: For `"spectrum"`/`"embedding"`, the
-ggplot object. For `"both"`, the arranged gtable when gridExtra is
-installed (drawn on the current device), otherwise the two panels are
-drawn via grid viewports and the list of the two ggplots is returned
-invisibly.
+  The node-by-`k` spectral embedding k-means clustered, each row of unit
+  length, with columns `dim1` to `dimk`.
 
-## Details
+- k, type:
 
-k-means is stochastic: `nstart` restarts are used and a `seed` fixes the
-result. Report stability across seeds for consequential results.
+  The number of clusters and the Laplacian type.
 
-## Methods
+- eigenvalues:
 
-- `plot.net_hypergraph_cluster()`: Two diagnostic panels. `"spectrum"`:
-  scree plot of the Laplacian spectrum with the k used for clustering
-  marked - the eigengap after k supports (or questions) the choice of k.
-  `"embedding"`: the nodes in the first two spectral-embedding
-  dimensions, labelled, coloured and shaped by cluster, sized by
-  stationary probability - the geometry k-means actually clustered.
-  `"both"` (default) arranges the two side by side (via gridExtra when
-  available, base grid viewports otherwise).
+  The full spectrum of the Laplacian, increasing.
+
+- eigengap:
+
+  The `(k + 1)`-th minus the `k`-th eigenvalue.
+
+- sizes:
+
+  A data frame of `cluster` and `size`.
+
+- pi:
+
+  The stationary distribution of the walk, named by node.
+
+- n_nodes, n_hyperedges:
+
+  The size of the hypergraph.
+
+- params:
+
+  The `edge_weights` used, `nstart`, `seed` and the k-means total
+  within-cluster sum of squares (`tot_withinss`).
+
+The [`print()`](https://rdrr.io/r/base/print.html) method returns its
+input invisibly. The [`summary()`](https://rdrr.io/r/base/summary.html)
+method returns a data frame with one row per cluster: `cluster`, `size`
+and `share` (the proportion of nodes). The
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) method
+returns a data frame with one row per node: `node`, `cluster`, `pi` (the
+node's stationary probability under the Laplacian's walk) and the
+embedding coordinates `dim1` to `dimk`. The
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method returns
+a `ggplot` for `"spectrum"` or `"embedding"`. For `"both"` it draws the
+two panels and returns the arranged `gtable` invisibly when gridExtra is
+installed, and otherwise draws them in grid viewports and returns the
+two `ggplot`s as a list, invisibly.
 
 ## References
 

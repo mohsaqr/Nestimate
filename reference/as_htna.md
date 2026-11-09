@@ -1,13 +1,27 @@
 # Build a grouped node-level network (htna) from data and a clustering
 
-Builds the full node-level network from the original data and attaches a
-cluster grouping, producing a single `htna` network in which every actor
-is a node and cluster membership labels the actors. This is the
+`as_htna()` builds the full node-level network from the original data
+with
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+and attaches a cluster to every node, returning a single `htna` network:
+every state is a node, and the clusters group the nodes. It is the
 node-level counterpart of
-[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md):
-where `build_mcml` collapses the network to a cluster-level (macro)
-summary, `as_htna` keeps every node and every transition - including the
-between-cluster transitions an mcml only retains in aggregate.
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md):
+where
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+collapses the network to a cluster-level (macro) summary, `as_htna()`
+keeps every node and every transition, including the between-cluster
+transitions an `mcml` keeps only in aggregate. It takes data with a
+clustering, an `mcml` (which supplies the clustering, and often the
+data), or a fitted `net_mmm`.
+
+The result is an ordinary `netobject`, so the inference verbs apply to
+it
+([`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md),
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)),
+and cograph draws it as a grouped network:
+`cograph::plot_htna(as_htna(data, clusters))`.
 
 ## Usage
 
@@ -28,74 +42,83 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 
 - x:
 
-  Data accepted by
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  (sequence data frame, edgelist, transition matrix, `netobject`, or
-  `tna`); or an `mcml` object, which provides the node-cluster
-  membership and, when it was built from wide sequence data, the
-  retained source as well (see `data`); or a fitted `net_mmm` object,
-  which is materialized into one HTNA per sequence cluster using its
-  preserved actor partition.
+  The data, in any form
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  accepts (a sequence data frame, an event log, an edge list, a
+  transition matrix, a `netobject` or a `tna` model); or an `mcml`
+  object, which provides the cluster membership and, when it was built
+  from a wide sequence frame or an event log, the data as well (see
+  `data`); or a `net_mmm` fitted by
+  [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
+  on an HTNA network, which is materialised into one HTNA per sequence
+  cluster using its preserved actor partition.
 
 - clusters:
 
-  Cluster assignment: a named list of node-name vectors, a per-node
-  membership vector, or a two-column data frame. When `NULL` and `x`
-  carries node groups (or is an `mcml`), those are used.
+  The cluster of each node: a named list of node-name vectors, a
+  membership vector with one value per node (in the order of the built
+  network's nodes, alphabetical for sequence data, or named by node), or
+  a two-column data frame of node and cluster names. Default `NULL`,
+  under which the node groups of the network (`node_groups` with `node`
+  and `group` columns) or an `mcml`'s clusters are used; with neither,
+  an error is raised. Every node must belong to a cluster, and
+  unassigned nodes are named in an error. A fitted `net_mmm` takes no
+  `clusters`: passing them raises an error.
 
 - method:
 
-  Estimator passed to
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-  Default `"relative"` (row-normalized transitions).
+  The estimator passed to
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+  Default `"relative"` (row-normalised transitions).
 
 - ...:
 
-  Further arguments forwarded to
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  (e.g. `actor`, `action`, `time` for long-format data).
+  Further arguments for
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  such as `actor`, `action` and `time` for an event log. A `group`
+  argument raises an error, because a single network is expected.
 
 - data:
 
-  For the `mcml` method, the original data the mcml was built from
-  (sequence/edgelist/etc.). Optional when the mcml was built from wide
-  sequence data (long-format input counts, since
+  For the `mcml` method: the original data the `mcml` was built from.
+  Optional when it was built from a wide sequence frame, a character
+  sequence matrix, or an event log (which
   [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
-  widens it first): that source is stashed on the object, so
-  `as_htna(mcml)` works on its own. Required for an mcml built from a
-  matrix, an aggregate, or an edge list, none of which retain a usable
-  node-level source.
+  turns into sequences first): that source is kept on the object, so
+  `as_htna(mcml)` works on its own, except for an `mcml` built with
+  `labels`, whose kept source holds the original state names (pass
+  `clusters` with those names then). Required for an `mcml` built from a
+  matrix, an edge list, a `netobject` or a `tna` model, which keep no
+  usable node-level source; without it an error is raised. Default
+  `NULL`.
 
 ## Value
 
-For data and `mcml` inputs, a single `htna` (also a `netobject` and
-`cograph_network`) over all nodes. Cluster labels are stored as a factor
-in `$nodes$groups` and as character values in `$node_groups$group`;
-`$actor_levels` records their order and is also attached to
-`$node_groups` for lossless partition round trips. For compatibility,
-the result also retains `$nodes$cluster` and the membership in the
-`"cluster_members"` attribute. A fitted `net_mmm` returns an
-`htna_group`, one materialized HTNA network per sequence cluster, while
-preserving the MMM diagnostics.
+For data and `mcml` input, a single `htna` network (class
+`c("htna", "netobject", "cograph_network")`) over all nodes. Print it
+for an overview, call [`summary()`](https://rdrr.io/r/base/summary.html)
+for its network metrics, and draw it with
+[`cograph::plot_htna()`](https://sonsoles.me/cograph/reference/plot_htna.html).
+The clusters are stored as a factor in the `groups` column of the node
+table and as character values in the `group` column of `node_groups`;
+`actor_levels` records their order and is also attached to
+`node_groups`, so the partition survives a round trip. For
+compatibility, the node table also keeps a `cluster` column, and the
+membership is kept in the `"cluster_members"` attribute. A fitted
+`net_mmm` returns an `htna_group`, one HTNA network per sequence
+cluster, with the MMM diagnostics kept; a `net_mmm` fitted on data
+without an HTNA actor partition raises an error.
 
 ## Details
 
-**Why this rebuilds from data.** An `mcml` stores cluster-level data
-(the macro sequences are recoded to cluster labels, and the per-cluster
-data is filtered to within-cluster nodes), so it does not retain a
-faithful node-level transition network. The only faithful source of
-node-level between-cluster transitions is the original data. `as_htna()`
-therefore rebuilds from data via
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md);
-an `mcml` supplies the cluster membership and either its retained source
-or explicitly supplied original data supplies the transitions.
+### Why it rebuilds from data
 
-The result is a genuine `netobject`, so it supports inference
-([`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
-centrality,
-[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md))
-and plots directly as a grouped network with cograph:
-`cograph::plot_htna(as_htna(data, clusters))`.
+It rebuilds from data because an `mcml` holds no faithful node-level
+network: its macro sequences are recoded to cluster labels, and its
+per-cluster data keep only that cluster's states, so the node-level
+transitions between clusters survive only in the original data. An
+`mcml` therefore supplies the cluster membership, and either the source
+it retained or the `data` passed supplies the transitions.
 
 ## See also
 
@@ -133,7 +156,6 @@ net
 #>   E             0.250  ████████████████████████████████████████
 #>   D             0.000  
 #>   F             0.000  
-if (FALSE) { # \dontrun{
-cograph::plot_htna(net)
-} # }
+if (requireNamespace("cograph", quietly = TRUE)) cograph::plot_htna(net)
+#> Using 'groups' column for node groups
 ```

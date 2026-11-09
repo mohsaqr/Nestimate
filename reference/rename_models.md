@@ -1,11 +1,15 @@
 # Rename the models of a `netobject_group`
 
-Replaces the names of the constituent networks in a `netobject_group`
-(or any object inheriting from it). Useful when
+`rename_models()` replaces the names of the networks in a
+`netobject_group` and returns the group with nothing else changed. The
+names label every later report (print methods, plot panels, bootstrap
+and permutation output), so this is the step that turns the generic
+labels
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-produced generic labels (e.g. `"Cluster 1"`, `"Cluster 2"`) and you want
-to substitute meaningful ones (e.g. `"High engagement"`,
-`"Low engagement"`).
+gives clusters (`"Cluster 1"`, `"Cluster 2"`) into meaningful ones
+(`"High engagement"`, `"Low engagement"`) once it is known what each
+cluster represents. It is the Nestimate counterpart of
+[`tna::rename_groups()`](https://sonsoles.me/tna/reference/rename_groups.html).
 
 ## Usage
 
@@ -23,19 +27,26 @@ rename_models(x, new_names)
 
 - x:
 
-  A `netobject_group` (or any object inheriting from it, such as
-  `net_mlvar`).
+  A `netobject_group`, or an object inheriting from it. Any other object
+  raises an error. A `net_mlvar` is accepted too, but its
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) find the three
+  layers by their names (`temporal`, `contemporaneous`, `between`):
+  after renaming, [`print()`](https://rdrr.io/r/base/print.html) shows
+  none of the model's dimensions and
+  [`summary()`](https://rdrr.io/r/base/summary.html) fails.
 
 - new_names:
 
-  A character vector of new names. Must have the same length as `x`,
-  contain no `NA` or empty strings, and be unique.
+  The new names, a character vector in the order of the networks in `x`:
+  one per network, none missing or empty, and no two the same. Anything
+  else raises an error.
 
 ## Value
 
-A `netobject_group` of the same class and length as `x`, with
-[`names()`](https://rdrr.io/r/base/names.html) replaced by `new_names`.
-The constituent networks are returned unchanged.
+An object of the same class and length as `x`, its networks and
+attributes (such as `group_col`) unchanged and its names replaced by
+`new_names`.
 
 ## Examples
 

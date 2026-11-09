@@ -1,8 +1,33 @@
 # Plot State Frequency Distributions
 
-Visualise state (node) frequency distributions across groups for any
-Nestimate object that carries sequence data: a single `netobject`, a
-`netobject_group`, an `mcml` model, or an `htna` network.
+`plot_state_frequencies()` counts how often each state occurs in the
+sequences behind a network and draws the shares, per group, as treemaps
+or bars; it returns the chart together with the table of counts. It
+takes a `netobject`, a `netobject_group` (one group per network), an
+`mcml` (one group per cluster) or an `htna` network (one group per
+actor). A single `netobject` is one group, `"all"`, unless it carries
+node groups, which then form the groups. Missing and empty cells are not
+counted.
+
+With `style = "marimekko"` (default), each group is a treemap whose
+tiles have areas proportional to the states' shares within that group.
+The groups of a `netobject` or `netobject_group` are panels of one plot,
+with the states in the same order and colours in every panel. The actors
+of an `htna` network and the clusters of an `mcml` usually have states
+of their own, so each is drawn as a separate treemap with its own legend
+(`legend = "per_facet"`). An `mcml` drawn with any other legend is a
+single marimekko instead: one column per cluster, as wide as the
+cluster's share of all events, with its states stacked by their share
+within the cluster. With `style = "bars"`, each group is a panel of
+horizontal bars, one per state.
+
+The shares describe how often states occur, not how they follow each
+other. Two groups can have the same state mix and different transitions;
+compare the networks for that, with
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
+[`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
+shows which cells of a `netobject_group`'s group-by-state table depart
+from independence.
 
 ## Usage
 
@@ -112,199 +137,169 @@ as.data.frame(x, ...)
 
 - x:
 
-  A `netobject`, `netobject_group`, `mcml`, or `htna` object. For the
-  [`print()`](https://rdrr.io/r/base/print.html),
+  The object to count: a `netobject`, `netobject_group`, `mcml` or
+  `htna` network built from sequences. A network without sequence data
+  raises an error; in a `netobject_group` or `mcml`, groups without it
+  are left out. For the [`print()`](https://rdrr.io/r/base/print.html),
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
-  methods: the `state_freq` object returned by
-  `plot_state_frequencies()`; for the
-  [`print()`](https://rdrr.io/r/base/print.html) methods of the
-  per-facet figure, an object of class `nestimate_facet_plot` or
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) methods
+  of the result: the `state_freq` object; for the
+  [`print()`](https://rdrr.io/r/base/print.html) methods of a per-panel
+  figure: an object of class `nestimate_facet_plot` or
   `nestimate_facet_list`.
 
 - ...:
 
-  Reserved for future use. In `as.data.frame.state_freq()`,
-  `plot.state_freq()`, `print.state_freq()`,
-  `print.nestimate_facet_list()` and `print.nestimate_facet_plot()`:
-  ignored.
+  Not used by the `netobject`, `netobject_group` and `htna` methods; the
+  `mcml` method raises an error for any argument it does not take. For
+  the [`print()`](https://rdrr.io/r/base/print.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) methods
+  of the result: ignored.
 
 - style:
 
-  One of:
-
-  - `"marimekko"` (default) – per-group treemap panels with
-    cumulative-width geometry; tile area = within-group state share.
-
-  - `"bars"` – horizontal bars sorted by frequency, faceted per group.
-
-  For chi-square mosaics of a (group x state) contingency table, use
-  [`mosaic_plot`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
-  directly – it is kept as a separate function with its own dispatch
-  surface.
+  The chart. `"marimekko"` (default) draws treemaps, or the cluster
+  marimekko for an `mcml` (see Description); `"bars"` draws horizontal
+  bars, the most frequent state on top when `sort_states = "frequency"`,
+  with one panel per group.
 
 - metric:
 
-  For `style = "bars"`: which value the bar length encodes – `"prop"`
-  (default) or `"freq"`. Treemap and hierarchical-marimekko areas always
-  encode proportion within group.
+  For `style = "bars"`: what the bar length shows, `"prop"` (default),
+  the share within the group, or `"freq"`, the count. Treemap and
+  marimekko areas always show the share within the group.
 
 - label:
 
-  Inline tile / bar annotation. All formats render on a single line.
-
-  - `"prop"` (default) – proportion only, e.g. `"66%"`
-
-  - `"freq"` – count only, e.g. `"1,234"`
-
-  - `"both"` – count + proportion, e.g. `"1,234 (66%)"`
-
-  - `"state"` – state name only, e.g. `"Average"`
-
-  - `"all"` – state + proportion, e.g. `"Average (66%)"`
-
-  - `"none"` – no inline labels
+  The text printed on each tile or bar, on one line: `"prop"` (default)
+  the share, as in `"66.0%"`; `"freq"` the count, as in `"1,234"`;
+  `"both"` the two, `"1,234 (66.0%)"`; `"state"` the state name; `"all"`
+  the name and share, `"Average (66.0%)"`; `"none"` no text.
 
 - legend:
 
-  Legend position. `"auto"` (default) resolves per style: `"none"` for
-  `style = "bars"` (the y-axis already names every state, so a colour
-  legend is redundant); `"per_facet"` for `htna`/`mcml` treemaps (state
-  vocabularies differ per panel, so each gets its own legend);
-  `"bottom"` for single-network and `netobject_group` treemaps (shared
-  state vocabulary, one shared legend). Override with any of `"bottom"`,
-  `"top"`, `"right"`, `"left"`, `"none"`, or `"per_facet"`.
-  `"per_facet"` is silently demoted to `"bottom"` when every group
-  shares the same state vocabulary (repeating one legend per panel would
-  be redundant); when it does take effect it returns a `gtable`
-  (requiring the gridExtra package) or a list of ggplots, per `combine`.
+  Where the colour legend goes: `"bottom"`, `"top"`, `"right"`,
+  `"left"`, `"none"` or `"per_facet"`. `"auto"` (default) resolves to
+  `"none"` for bars, whose axis names the states, to `"per_facet"` for
+  `htna` and `mcml` treemaps, and to `"bottom"` otherwise. `"per_facet"`
+  draws each group as its own treemap with its own legend (on the right
+  with up to two panels, at the bottom with more), and its colours
+  restart in every panel; it falls back to `"bottom"` when every group
+  has the same states, and to a legend on the right for bars. It returns
+  a combined figure or a list of plots, as `combine` sets.
 
 - legend_dir:
 
-  Legend internal layout: `"auto"` (default – horizontal for top/bottom,
-  vertical for left/right), or force `"horizontal"` or `"vertical"`
-  regardless of position.
+  The direction of the legend's keys: `"auto"` (default) lays them out
+  horizontally for a legend on top or bottom and vertically on the left
+  or right; `"horizontal"` and `"vertical"` force one.
 
 - legend_frame:
 
-  `"none"` (default) for an unframed legend, or `"border"` to draw a
-  thin grey rectangle around the legend ("legend enclosed in a square").
+  `"none"` (default) draws the legend unframed; `"border"` draws a thin
+  grey rectangle around it.
 
 - sort_states:
 
-  One of `"frequency"` (default – most frequent first), `"alpha"`, or
-  `"none"`.
+  The order of the states in the legend, the tiles and the bars:
+  `"frequency"` (default), the most frequent first; `"alpha"`,
+  alphabetical; or `"none"`, the order of the table.
 
 - colors:
 
-  Optional colors overriding the default Okabe-Ito state palette. Either
-  an unnamed vector applied in state order (length at least the number
-  of unique states), or a named lookup (`c(plan = "#0072B2")`)
-  overriding only the states you name.
+  Fill colours for the states, overriding the palette attached to `x`
+  with
+  [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
+  for this chart: an unnamed vector in state order (at least one per
+  state) or a named lookup such as `c(plan = "#0072B2")` that overrides
+  only the states named. Default `NULL`: the attached palette, or else
+  the Okabe-Ito palette, recycled.
 
 - label_size:
 
-  Numeric size of inline labels (max size when ggfittext is installed –
-  text auto-shrinks per tile).
+  The size of the tile and bar labels; with ggfittext installed, the
+  largest size, as labels shrink to fit their tiles. Default `3.5`.
 
 - abbreviate:
 
-  Abbreviate state names. `FALSE` (default) shows full names; `TRUE`
-  truncates to the first 3 characters via
-  [`base::abbreviate()`](https://rdrr.io/r/base/abbreviate.html) (which
-  extends the truncation as needed to keep names unique after
-  collision); a positive integer sets the target minimum length
-  explicitly (e.g. `abbreviate = 4`). Affects tile labels, the legend,
-  and the tidy table returned by
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html).
+  Whether to shorten the state names with
+  [`base::abbreviate()`](https://rdrr.io/r/base/abbreviate.html), which
+  drops lower-case vowels and then letters from the end until a name
+  fits, keeping the names distinct. `FALSE` (default) keeps the full
+  names; `TRUE` shortens them to at least three characters; a positive
+  whole number sets that minimum length. It applies to the labels, the
+  legend and the returned table.
 
 - include_macro:
 
-  For `mcml` only: prepend a `"macro"` reference column showing
-  aggregate state frequencies across all clusters. Default `FALSE`.
+  For an `mcml`: whether to add a `"macro"` group in front, holding the
+  state counts over all clusters. Default `FALSE`. Ignored for the other
+  classes.
 
 - combine:
 
-  For `legend = "per_facet"` only. `"auto"` (default) returns a single
-  combined gtable for 1-3 panels and a list of ggplots (one per panel)
-  for 4+ panels – many-cluster `mcml` layouts read better as separate
-  figures than as a tile grid. `TRUE` forces a combined gtable via
-  gridExtra; `FALSE` forces a list (knitr renders each at the chunk's
-  full `fig.width` / `fig.height`).
+  With per-panel legends: `"auto"` (default) combines up to three panels
+  into one figure and returns a list of plots, one per panel, for four
+  or more, which knitr draws as separate figures at the chunk's size.
+  `TRUE` always combines them; `FALSE` always returns the list. A
+  combined figure, whether from `TRUE` or from `"auto"` with up to three
+  panels, needs gridExtra and raises an error without it; `FALSE` does
+  not.
 
 - ncol:
 
-  For `legend = "per_facet"` with `combine = TRUE`: number of columns in
-  the grid arrangement. `NULL` (default) picks 1, 2, or 3 columns based
-  on the number of panels.
+  For a combined figure with per-panel legends: the number of columns.
+  Default `NULL`: one column per panel with up to two panels, two
+  columns with more.
 
 - node_groups:
 
-  Optional named character vector mapping node labels to semantic
-  groups. When supplied, panels (or bars) are coloured / annotated by
-  group rather than by individual state, so state-level palettes can
-  collapse onto a smaller categorical legend.
+  A named character vector that maps states to broader groups, such as
+  `c(plan = "Regulation", monitor = "Regulation")`. The chart is then
+  drawn and coloured by these groups, states not named keeping their own
+  name; the returned table keeps one row per state. Default `NULL`.
 
 - digits:
 
-  Number of decimal places for proportion / share columns. Default 1.
+  For [`print()`](https://rdrr.io/r/base/print.html) of the result:
+  decimal places of the percentages. Default `1`.
 
 - max_states:
 
-  Cap on rows shown per group in the per-state table (default 20); the
-  surplus is folded into a single `"(+k more)"` row. The full, uncapped
-  table is returned by `as.data.frame(x)`.
+  For [`print()`](https://rdrr.io/r/base/print.html) of the result: the
+  most states shown per group (default `20`); the rest are folded into
+  one `"(+k more)"` row.
+  [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
+  gives the full table.
 
 ## Value
 
-A `state_freq` object: a list with the rendered `$plot` (a `ggplot`; a
-`gtable` or a list of ggplots under `legend = "per_facet"`, per
-`combine`), the tidy `$table` (a `data.frame` with columns `group`,
-`state`, `count`, `proportion`, one row per (group, state) cell), and
-the call's `$style`, `$metric`, `$source_class`. The class supports
-[`print()`](https://rdrr.io/r/base/print.html) (prints the tidy table
-and draws the chart),
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) (draws the
-chart alone), and
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) (returns
-the tidy table) – see the section below.
-
-[`print()`](https://rdrr.io/r/base/print.html) returns `x` invisibly
-(after printing the table and drawing the chart);
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns
-`invisible(NULL)` after drawing;
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
-the tidy `data.frame`, one row per (group, state) cell with columns
-`group`, `state`, `count`, `proportion`.
-
-## Details
-
-The marimekko layout is dispatched per class:
-
-- For `mcml`, where states partition cleanly into clusters, the chart is
-  a hierarchical 2D marimekko: cluster columns of width proportional to
-  cluster total, segments stacked vertically with heights proportional
-  to within-cluster state proportions.
-
-- For all other classes (`netobject`, `netobject_group`, `htna`), each
-  group is rendered as its own panel containing a squarified treemap:
-  each state becomes a rectangular tile whose AREA is exactly
-  proportional to the state's share within that group. Single-panel when
-  no groups exist; faceted when groups are present.
-
-The bar style produces horizontal bars (state on the y-axis), faceted by
-group when groups exist. All variants use the Okabe-Ito palette.
+A `state_freq` object. Printing it shows the event totals per group and
+the share of each state within its group, then draws the chart;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the chart
+alone.
+[`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
+gives the same counts from the network, with the full state names and,
+for an `mcml`, without the macro group unless `include_macro = TRUE`.
+The object holds the chart (a `ggplot`; with per-panel legends either a
+combined figure, a `gtable` of class `nestimate_facet_plot`, or a list
+of `ggplot`s of class `nestimate_facet_list`), the table (one row per
+group and state, with columns `group`, `state`, `count` and
+`proportion`, the share within the group), and the `style`, `metric` and
+source class of the call. The
+[`print()`](https://rdrr.io/r/base/print.html) methods return their
+input invisibly,
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns `NULL`
+invisibly. Any other class raises an error, a tna model included; draw a
+tna model with
+[`tna::plot_frequencies()`](https://sonsoles.me/tna/reference/plot_frequencies.html).
 
 ## The state_freq object
 
-`plot_state_frequencies()` returns a `state_freq` object holding both
-the rendered chart and the tidy frequency table.
-[`print()`](https://rdrr.io/r/base/print.html) shows the table in the
-console *and* draws the chart on the active graphics device,
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the chart
-alone, and
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
-the tidy table for downstream piping.
+In a knitr document, printing the object puts the table in the text and
+the chart in a figure of the chunk's size; a list of per-panel plots
+gives one figure per panel.
 
 ## Examples
 

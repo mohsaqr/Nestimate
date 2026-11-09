@@ -1,5 +1,144 @@
 # Changelog
 
+## Nestimate 1.0.11
+
+- Release review: TNA shortcuts keep positional `start`/`end` calls
+  working;
+  [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
+  keeps recurrence times for separate closed classes; rectangular
+  numeric sequence matrices accept
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)’s
+  `exclude`, `trim` and `end`.
+- Help pages rewritten: what each function does, how to read the result,
+  and every argument’s default and errors.
+- [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md):
+  temporal edges ran from outcome to predictor; they now run predictor
+  to outcome. Tiny p-values are no longer 0, and Nestimate’s own
+  print/summary/plot are used.
+- [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md):
+  glasso shuffles use the same estimator as the observed networks;
+  `adjust` corrects over the edges tested, as tna does.
+- [`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md):
+  keeps negative edges, drops zero-weight pairs, lists undirected edges
+  once.
+- [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md):
+  classification error is 1 - mean largest posterior (it was always 0
+  for k = 2).
+- [`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md):
+  undirected networks are pruned by pair; groups take one bootstrap per
+  network; re-pruning after
+  [`net_deprune()`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md)
+  works.
+- [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md),
+  [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md):
+  the CS-coefficient no longer depends on the order of `drop_prop`.
+- [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md),
+  [`chain_structure()`](https://pak.dynasite.org/Nestimate/reference/chain_structure.md):
+  unreachable targets give `Inf`; absorption probabilities sum to 1.
+- Also fixed:
+  [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
+  weighted Jaccard, `cooccurrence(similarity = "relative")` (now
+  directed), `compare_model(scaling = "max")`,
+  [`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
+  on tna models,
+  [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
+  settings and failed resamples,
+  [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
+  dropped arguments, declared `actor`/`time` columns read as states,
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  time zone and `is_unix_time`.
+- Input errors carry the class `nestimate_bad_input` across the package
+  (messages unchanged), so they can be caught by class.
+- `seed =` no longer moves the session’s random stream after the call;
+  results for a given seed are unchanged.
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of an
+  [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
+  with more than nine groups draws one panel per group instead of
+  failing.
+- The shortcut verbs name the arguments they used to hide in `...`:
+  [`build_tna()`](https://pak.dynasite.org/Nestimate/reference/build_tna.md),
+  [`build_ftna()`](https://pak.dynasite.org/Nestimate/reference/build_ftna.md),
+  [`build_atna()`](https://pak.dynasite.org/Nestimate/reference/build_atna.md),
+  [`build_cna()`](https://pak.dynasite.org/Nestimate/reference/build_cna.md)
+  take `actor`, `action`, `time`, `session`;
+  [`build_cor()`](https://pak.dynasite.org/Nestimate/reference/build_cor.md),
+  [`build_pcor()`](https://pak.dynasite.org/Nestimate/reference/build_pcor.md),
+  [`build_glasso()`](https://pak.dynasite.org/Nestimate/reference/build_glasso.md)
+  take `actor`, `level`;
+  [`build_ising()`](https://pak.dynasite.org/Nestimate/reference/build_ising.md)
+  takes `actor`;
+  [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md),
+  [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md),
+  [`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md)
+  take `actor`, `action`, `time`;
+  [`compare_mmm()`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
+  takes
+  [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)’s
+  settings (`seed`, `n_starts`, …);
+  [`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
+  takes `scaling`, `threshold`, `params`. Existing calls give the same
+  results. A wrapper given `method` says which method it always uses.
+- Entropy:
+  [`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md)
+  refuses `scaling = "share"` on a zero-rate chain and `"chance"` on one
+  state (was a cryptic error), keeps a bare `cograph_network` a
+  `netobject`, and warns on a non-ergodic chain as
+  [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
+  does;
+  [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
+  networks declare the TNA geometry and accept
+  [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
+  output; grouped results have
+  [`summary()`](https://rdrr.io/r/base/summary.html) (a data frame) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html);
+  [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
+  refuses a character time column and labels its axes correctly (row
+  number, numeric column name, nats/hartleys).
+- `mosaic_plot(residuals = "asymptotic")` keeps the residuals of a table
+  with an empty row or column (it set every tile to 0).
+  [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md),
+  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
+  and
+  [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
+  refuse association and one-hot networks instead of counting their
+  values as states.
+- [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md):
+  undefined edge ratios are `NA` (were `NaN`/`Inf`), and
+  `logarithmic_ratio` no longer warns “NaNs produced”.
+- `build_mcml(method = "density")`: within-cluster weights are the sum,
+  matching the macro layer’s sum / (n_i \* n_j) (they were the mean). A
+  weight matrix with `exclude`, `trim` or `end` is refused.
+- Persistent homology: the Vietoris-Rips print counts essential classes
+  and shows the ascending range;
+  [`bottleneck_distance()`](https://pak.dynasite.org/Nestimate/reference/bottleneck_distance.md)
+  reads a (0, 0) pair as finite, as
+  [`persistence_landscape()`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md)
+  does.
+- Also fixed:
+  [`evaluate_links()`](https://pak.dynasite.org/Nestimate/reference/evaluate_links.md)
+  validates `k` and returns an empty table instead of `NULL`;
+  [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  warns when a normalised measure is constant;
+  [`landscape_trend()`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
+  validates `iter`;
+  [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
+  refuses a split that empties the second half;
+  [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
+  refuses a correlation matrix;
+  [`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
+  refuses a 0/1 matrix; `mogen_transitions(min_count = 0)` lists only
+  contexts that can follow each other; logical flags such as `combined`
+  refuse `NA`;
+  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)’s
+  message lists `none` once;
+  [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
+  errors are also `nestimate_bad_input`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of
+  [`chain_structure()`](https://pak.dynasite.org/Nestimate/reference/chain_structure.md)
+  names each state’s class in its axis label (it coloured the labels,
+  which ggplot2 warns about and which encoded the class by colour
+  alone).
+
 ## Nestimate 1.0.9
 
 Corrections to 1.0.7, from a review of that release.

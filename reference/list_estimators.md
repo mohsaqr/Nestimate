@@ -1,6 +1,13 @@
 # List All Registered Estimators
 
-Return a data frame summarising all registered network estimators.
+`list_estimators()` returns the estimators
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+can call by name: the fourteen built-ins and any added with
+[`register_estimator()`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md).
+Aliases such as `"tna"` or `"ebicglasso"` are not listed; the
+*Estimators* section of
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+gives them.
 
 ## Usage
 
@@ -10,7 +17,9 @@ list_estimators()
 
 ## Value
 
-A data frame with columns `name`, `description`, `directed`.
+A data frame with one row per registered estimator, sorted by name, and
+columns `name`, `description` and `directed` (`TRUE` for directed
+networks). With an empty registry it has no rows.
 
 ## See also
 

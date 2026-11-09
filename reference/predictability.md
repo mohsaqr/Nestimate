@@ -1,16 +1,23 @@
 # Compute Node Predictability
 
-Computes the proportion of variance explained (R\\^2\\) for each node in
-the network, following Haslbeck & Waldorp (2018).
+`predictability()` computes how well each node of an association network
+is predicted by the others: the proportion of its variance explained
+(R\\^2\\), with the root mean squared error (RMSE) of that prediction,
+following Haslbeck & Waldorp (2018). It reads networks estimated with
+`method = "glasso"`, `"pcor"` or `"cor"`, single, multilevel
+(`netobject_ml`) or grouped (`netobject_group`).
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+stores the same R\\^2\\ values on these networks when
+`predictability = TRUE` (the default), and
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+draws them as a ring around each node.
 
-For `method = "glasso"` or `"pcor"`, predictability is computed
-analytically from the precision matrix: \$\$R^2_j = 1 - 1 /
-\Omega\_{jj}\$\$ where \\\Omega\\ is the precision (inverse correlation)
-matrix.
-
-For `method = "cor"`, predictability is the multiple R\\^2\\ from
-regressing each node on its network neighbors (nodes with non-zero
-edges).
+R\\^2\\ says how much of a node's variance its connections in the
+network account for; a low value leaves most of it to variables outside
+the network or to noise. It is computed from the matrices estimated on
+the sample, so it describes that sample. For `"glasso"` it reflects the
+regularised estimate, and for `"cor"` it depends on which edges survive
+`threshold`.
 
 ## Usage
 
@@ -31,36 +38,49 @@ predictability(object, ...)
 
 - object:
 
-  A `netobject`, `netobject_ml`, or `netobject_group` object.
+  The network: a `netobject` estimated with `method = "glasso"`,
+  `"pcor"` or `"cor"`, or a `netobject_ml` or `netobject_group` of them.
+  A network from any other method raises an error.
 
 - ...:
 
-  Additional arguments (ignored).
+  Not used.
 
 - data:
 
-  Optional data frame of the original variables used to estimate the
-  network. R\\^2\\ never needs it (it comes from the precision or
-  correlation matrix stored on the object). It is used only for the
-  `RMSE` column and defaults to `object$data`; when neither is available
-  `RMSE` is `NA`.
+  The variables the network was estimated from, used only for the `RMSE`
+  column; R\\^2\\ comes from the matrices stored on the network. Its
+  columns are matched by node label or, failing that, by node name.
+  Default `NULL`, which uses the data stored on the network; without
+  either, or when the columns do not match, `RMSE` is `NA`. The
+  `netobject_ml` and `netobject_group` methods take no `data` (one
+  passed to them is ignored) and use each network's own.
 
 ## Value
 
-For `netobject`: a data frame with one row per node and columns `node`
-(character), `R2` (numeric, between 0 and 1) and `RMSE` (numeric, `NA`
-when no data is available).
+A data frame with one row per node and the columns `node` (the node
+label), `R2` (between 0 and 1) and `RMSE` (`NA` when no data is
+available). A `netobject_ml` gives a list of two such data frames,
+`between` and `within`, and a `netobject_group` a named list of them,
+one per group.
 
-For `netobject_ml`: a list with elements `$between` and `$within`, each
-such a data frame.
+## Details
 
-For `netobject_group`: a named list of such data frames, one per group.
+For `"glasso"` and `"pcor"`, R\\^2\\ comes from the estimated precision
+matrix \\\Omega\\ (the inverse of the correlation matrix, regularised
+for `"glasso"`): \$\$R^2_j = 1 - 1 / \Omega\_{jj}\$\$ For `"cor"`, it is
+the multiple R\\^2\\ of each node regressed on its neighbours (the nodes
+it shares a non-zero edge with), computed from the stored correlation
+matrix: 0 for a node without neighbours, the squared correlation for a
+node with one. Values are clipped to \[0, 1\].
 
-A data frame with one row per node and columns `node`, `R2` and `RMSE`.
-
-A list with `between` and `within` predictability data frames.
-
-A named list of per-group predictability data frames.
+RMSE predicts each standardised variable from the others (for `"cor"`,
+from its neighbours) with the regression weights implied by the same
+matrix, on the complete rows of the data, and reports the error on the
+variable's original scale. For `"cor"`, a node without neighbours has an
+RMSE equal to its standard deviation (prediction by the mean), and a
+singular correlation block of its neighbours gives an R\\^2\\ of 0 and
+an RMSE of `NA`.
 
 ## References
 

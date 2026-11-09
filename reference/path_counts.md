@@ -1,8 +1,14 @@
 # Count Path Frequencies in Trajectory Data
 
-Counts the frequency of k-step paths (k-grams) across all trajectories.
-Useful for understanding which sequences dominate the data before
-applying formal models.
+`path_counts()` counts how often each path of `k` consecutive states (a
+k-gram) occurs across all trajectories, and returns one row per path,
+most frequent first. Every position of a trajectory starts a path, so
+the paths of one trajectory overlap. The counts are descriptive: they
+show which runs of states dominate the data before a model such as
+[`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+or
+[`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
+is fitted to them.
 
 ## Usage
 
@@ -14,27 +20,31 @@ path_counts(data, k = 2L, top = NULL)
 
 - data:
 
-  A list of character vectors (trajectories) or a data.frame (rows =
-  trajectories, columns = time points).
+  The trajectories: a list of state vectors, a data frame or character
+  matrix with one row per trajectory and one column per time point, a
+  `tna` model or a `netobject` built from sequences. A data frame needs
+  position columns named as a numbered run (`T1`, `T2`, ...); any other
+  frame, a one-hot or association network and a 0/1 matrix raise an
+  error of class `nestimate_bad_input`. A missing value ends a run of
+  observed states, and no path spans it.
 
 - k:
 
-  Integer \>= 2. Length of the path / n-gram (default 2). A k of 2
-  counts individual transitions; k of 3 counts two-step paths, etc. Must
-  be a whole number; a non-integer value is an error rather than being
-  silently truncated.
+  The number of states in each path, a whole number of at least 2; a
+  non-integer value is an error, not truncated. Default `2`, which
+  counts single transitions; `3` counts two-step paths, and so on.
 
 - top:
 
-  Integer or NULL. If set, returns only the top N most frequent paths
-  (default NULL = all).
+  The number of most frequent paths to keep. Default `NULL`, every path.
 
 ## Value
 
-A data frame with one row per distinct k-gram, sorted by `count`
-(descending), with columns `path` (the k states in arrow notation, e.g.
-"A -\> B"), `count` and `proportion` (share of all k-grams, rounded to 4
-decimal places).
+A data frame with one row per distinct path, sorted by `count`
+(descending), with columns `path` (the k states in arrow notation, such
+as `"A -> B"`), `count` and `proportion` (the path's share of all paths
+counted, rounded to 4 decimal places). When no trajectory holds `k`
+consecutive observed states, the data frame has no rows.
 
 ## Examples
 

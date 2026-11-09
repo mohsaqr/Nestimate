@@ -1,10 +1,14 @@
 # Undo Network Pruning
 
-Restores the original (pre-pruning) weights of a network pruned by
-[`net_prune`](https://pak.dynasite.org/Nestimate/reference/net_prune.md),
-without recomputation. The pruning record is kept, so
-[`net_reprune`](https://pak.dynasite.org/Nestimate/reference/net_reprune.md)
-can re-apply it.
+`net_deprune()` restores the weights a network had before
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md),
+without recomputing anything, and marks its pruning inactive. The
+pruning record stays on the network, so
+[`net_reprune()`](https://pak.dynasite.org/Nestimate/reference/net_reprune.md)
+can re-apply it and
+[`net_pruning_details()`](https://pak.dynasite.org/Nestimate/reference/net_pruning_details.md)
+still lists what the pruning removed. A `netobject_group` is restored
+network by network.
 
 ## Usage
 
@@ -25,7 +29,9 @@ net_deprune(x, ...)
 
 - x:
 
-  A pruned `netobject` or `netobject_group`.
+  A pruned `netobject` or `netobject_group`. A network that was never
+  pruned, or whose pruning is already inactive, raises an error, and so
+  does another class.
 
 - ...:
 
@@ -33,8 +39,8 @@ net_deprune(x, ...)
 
 ## Value
 
-The network (or group) with original weights restored and its pruning
-marked inactive.
+The input, of the same class, with the original weights, its edge table
+and edge count updated to them, and its pruning marked inactive.
 
 ## See also
 

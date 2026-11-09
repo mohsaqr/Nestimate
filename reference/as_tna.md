@@ -1,10 +1,21 @@
 # Promote the Layers of an mcml to Networks
 
-Converts an `mcml` object into a `netobject_group`: one netobject for
-the cluster-level (macro) layer, and one per cluster for the
+`as_tna()` turns an `mcml` object into a `netobject_group`: one network
+for the cluster-level (macro) layer, followed by one per cluster for the
 within-cluster layers. The stored weights are carried over as they are –
-nothing is re-normalised here, so the aggregation chosen when the `mcml`
-was built is what the networks hold.
+nothing is re-normalised – so the networks hold the aggregation and
+`type` chosen when the `mcml` was built. Despite its name it returns
+Nestimate networks, not `tna` models; a `tna` model passed to it is
+returned unchanged.
+
+This is the step that lets an MCML result reach the verbs that take a
+group of networks: printing, the network metrics of
+[`summary()`](https://rdrr.io/r/base/summary.html),
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+(for an `mcml` built from sequences, whose layers keep them; the layers
+of a
+[`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
+result carry none) and drawing with cograph.
 
 ## Usage
 
@@ -22,45 +33,52 @@ as_tna(x, ...)
 
 - x:
 
-  An `mcml` object created by
-  [`cluster_summary`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
+  An `mcml` object from
+  [`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
   or
-  [`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md).
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md).
+  The default method also takes a `tna` model.
 
 - ...:
 
-  Passed to methods.
+  Not used.
 
 - expand:
 
-  For the `mcml` method, names of clusters whose member states replace
-  the collapsed cluster node in the `macro` layer (see
-  [`macro_network`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)).
-  `NULL` (default) keeps the macro fully collapsed. The per-cluster
-  layers are unaffected.
+  For the `mcml` method: clusters whose member states replace the
+  collapsed cluster node in the macro network, as in
+  [`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md).
+  Default `NULL` (the macro network stays fully collapsed). The
+  within-cluster networks are not affected. It needs an `mcml` that
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  built from a wide sequence frame, a sequence matrix or an event log;
+  one from
+  [`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md),
+  an edge list, a `netobject` or a `tna` model raises an error of class
+  `nestimate_no_expand_source`.
 
 ## Value
 
-A `netobject_group`: a named list whose first element is `macro` (the k
-x k cluster-level network) followed by one element per cluster, each a
-`netobject`/`cograph_network` carrying `$weights`, `$inits`, `$nodes`,
-`$edges` and the recorded `$method` (`"relative"` for an mcml whose
-weights are already row-normalised, `"frequency"` otherwise).
-
-The `mcml` method returns that `netobject_group`, each layer keeping the
-data the corresponding `mcml` layer carried. With `expand`, its `macro`
-element is the mixed-resolution network of
-[`macro_network`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
-rather than the fully collapsed one.
-
-The default method returns the input unchanged when it already inherits
-from `tna`, and otherwise raises an error.
+A `netobject_group`: a named list whose first element, `macro`, is the k
+x k cluster-level network, followed by one network per cluster. Print it
+for one row per layer (nodes, edges, weight range), call
+[`summary()`](https://rdrr.io/r/base/summary.html) for the network
+metrics of each layer, and draw a layer with
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
+Each element is a `netobject` (class
+`c("netobject", "cograph_network")`) with the layer's weights, initial
+probabilities, node and edge tables and data, and records
+`method = "relative"` when the `mcml` holds row-normalised weights
+(`type = "tna"`), `method = "co_occurrence"` for symmetrised counts
+(`type = "cooccurrence"`), and `method = "frequency"` for counts (`type`
+`"raw"` or `"frequency"`) and for the aggregates of
+[`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md).
+With `expand`, the `macro` element is the mixed-resolution network of
+[`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
+instead of the fully collapsed one. The default method returns a `tna`
+model unchanged and raises an error for any other class.
 
 ## Details
-
-This is the step that lets an MCML result flow into the verbs that take
-a group of networks (printing, network-metric summaries, rendering with
-cograph).
 
 ### Workflow
 
@@ -74,14 +92,13 @@ cograph).
     print(nets)      # one line per layer
     summary(nets)    # network metrics per layer
 
-### Zero-out-degree (sink) nodes
+### Sink nodes
 
-Every cluster is returned, regardless of its row sums. A node with zero
-outgoing weight is a legitimate sink (a terminal state); its row in the
-wrapped network is left all-zero. This holds for both
-`net_method = "relative"` and `"frequency"` – the stored weights are
-never re-normalised, so a sink row needs no special handling. Inspect
-`rowSums(x$clusters[[cl]]$weights)` to find sink nodes.
+Every cluster is returned, whatever its row sums. A node with no
+outgoing weight is a legitimate sink (a terminal state), and its row
+stays all zero in the network, for `method = "relative"` and
+`"frequency"` alike: the stored weights are never re-normalised, so a
+sink row needs no special handling.
 
 ## See also
 

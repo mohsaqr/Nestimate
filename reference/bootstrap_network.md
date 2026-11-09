@@ -1,28 +1,36 @@
 # Bootstrap a Network Estimate
 
-Non-parametric bootstrap for any network estimated by
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-Works with all built-in methods (transition and association) as well as
-custom registered estimators.
+`bootstrap_network()` resamples the cases a network was estimated from,
+re-estimates the network on every resample with the same method and
+settings, and reports for each edge its bootstrap mean, standard
+deviation, confidence interval and a p-value, together with the network
+pruned to the edges that pass. It reads any network from
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+built-in method or registered estimator, as well as a `netobject_group`
+or `mcml` (every network is bootstrapped) and a `wtna_mixed` (both of
+its components). The cases are the sequences of a transition network
+(for one-hot data, its actors or sessions) and the rows of the data
+otherwise; with `actor`, whole actors are resampled (see *Nested data
+and `actor`*).
 
-For transition methods (`"relative"`, `"frequency"`, `"co_occurrence"`),
-uses a fast pre-computation strategy: per-sequence count matrices are
-computed once, and each bootstrap iteration only resamples sequences via
-`colSums` (C-level) plus lightweight post-processing. Data must be in
-wide format for transition bootstrap; use
-[`convert_sequence_format`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)
-to convert long-format data first. With `params = list(concat = k)`, the
-consecutive groups of up to `k` rows merged by the estimator are the
-sequences resampled; joins inside each merged sequence are retained.
-With `actor`, a merged sequence must belong entirely to one actor.
+The p-value comes from one of two tests. With `inference = "stability"`
+it counts the replicates that fall outside a consistency range around
+the original weight (by default 75% to 125% of it), so a significant
+edge is one whose weight the resamples reproduce within that range. With
+`inference = "threshold"` it counts the replicates whose absolute weight
+falls below `edge_threshold`, so a significant edge stays above that
+threshold. In both, the p-value is that count plus one, divided by the
+number of replicates plus one, so it is never 0. Edges with a p-value
+below `ci_level` are kept in the pruned network.
 
-For association methods (`"cor"`, `"pcor"`, `"glasso"`, and custom
-estimators), the full estimator is called on resampled rows each
-iteration.
-
-A network that rests on one sequence, or one-hot data with no actor or
-session, has nothing to resample and raises an error of class
-`nestimate_single_sequence`.
+The p-value counts replicates, so it cannot fall below `1 / (iter + 1)`:
+with too few iterations no edge can pass a small `ci_level`. The
+stability test asks whether a weight is reproduced within a range, not
+whether it differs from zero, and because the range is a proportion of
+the weight, a weak edge has to be reproduced within a narrow band; read
+the interval beside the test. The bootstrap describes how the estimate
+varies over resamples of one sample; to compare groups, use
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
 
 ## Usage
 
@@ -63,143 +71,159 @@ summary(object, ...)
 
 - x:
 
-  A `netobject` from
-  [`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
-  The data, method, params, scaling, threshold, and level are all
-  extracted from this object. A `cograph_network` is coerced first; a
-  `netobject_group` or `mcml` bootstraps every constituent network, and
-  a `wtna_mixed` bootstraps both of its components (see **Value**). For
-  the [`print()`](https://rdrr.io/r/base/print.html) method: an object
-  of class `net_bootstrap`, `net_bootstrap_group` or `wtna_boot_mixed`.
+  The network: a `netobject` that carries its data (any network from
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)),
+  or a `cograph_network`, which is converted first. A `netobject_group`
+  or `mcml` bootstraps every network it holds (for an `mcml`, the macro
+  network and each cluster's), and a `wtna_mixed` bootstraps both of its
+  components (see *Value*). A network without its data raises an error,
+  and one that rests on a single sequence, or one-hot data with no actor
+  or session, has nothing to resample and raises an error of class
+  `nestimate_single_sequence`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) methods: the result of
+  `bootstrap_network()`.
 
 - iter:
 
-  Integer. Number of bootstrap iterations (default: 1000).
+  The number of bootstrap replicates, at least 2. Default `1000`.
 
 - ci_level:
 
-  Numeric. Significance level for CIs and p-values (default: 0.05).
+  The significance level, between 0 and 1: the confidence intervals
+  cover `1 - ci_level`, and an edge is significant when its p-value is
+  below `ci_level`. Default `0.05`.
 
 - inference:
 
-  Character. `"stability"` (default) tests whether bootstrap replicates
-  fall within a multiplicative consistency range around the original
-  weight. `"threshold"` tests whether replicates exceed a fixed edge
-  threshold.
+  The test behind the p-values. `"stability"` (default) counts the
+  replicates outside the consistency range around the original weight;
+  `"threshold"` counts the replicates whose absolute weight is below
+  `edge_threshold`.
 
 - consistency_range:
 
-  Numeric vector of length 2. Multiplicative bounds for stability
-  inference (default: `c(0.75, 1.25)`).
+  For `inference = "stability"`: the two multipliers of the original
+  weight that bound the consistency range. Default `c(0.75, 1.25)`. For
+  a negative weight the bounds are swapped, so the range still runs from
+  the lower to the upper value. Not used by `"threshold"`.
 
 - edge_threshold:
 
-  Numeric or NULL. Fixed threshold for `inference = "threshold"`. If
-  NULL, defaults to the 10th percentile of absolute original edge
-  weights.
+  For `inference = "threshold"`: the absolute weight a replicate must
+  reach. Default `NULL`, the 10th percentile of the non-zero absolute
+  original weights. Not used by `"stability"`.
 
 - seed:
 
-  Integer or NULL. RNG seed for reproducibility.
+  A number that makes the resamples reproducible. The session's own
+  random stream is left as it was. For a `netobject_group` or `mcml`,
+  each network is bootstrapped from the same seed; for a `wtna_mixed`,
+  the seed is set once, before both components. Default `NULL`.
 
 - boundary:
 
-  Character. Comparison rule when computing the consistency-range
-  p-value. `"inclusive"` (default, tna-compatible) counts iterations
-  that meet the bound (\\\le\\ / \\\ge\\); `"strict"` counts only
-  iterations strictly outside (\\\<\\ / \\\>\\).
+  For `inference = "stability"`: how a replicate that lands exactly on a
+  bound of the consistency range counts. `"inclusive"` (default, as in
+  tna) counts it as outside (\\\le\\ / \\\ge\\); `"strict"` counts only
+  replicates strictly outside (\\\<\\ / \\\>\\).
 
 - ci_method:
 
-  Character. Method for the edge-weight confidence intervals.
-  `"percentile"` (default) uses the empirical bootstrap quantiles
-  (Efron). `"basic"` reflects those quantiles around the observed
-  weight, \\(2\hat{\theta} - q\_{1-\alpha/2}, 2\hat{\theta} -
-  q\_{\alpha/2})\\ (Davison & Hinkley 1997, eq. 5.6), which corrects
-  first-order bootstrap bias but can produce bounds outside the natural
-  weight range near boundaries (e.g., below 0 for transition
-  probabilities close to 0).
+  The confidence interval for the edge weights. `"percentile"` (default)
+  uses the empirical bootstrap quantiles (Efron). `"basic"` reflects
+  those quantiles around the observed weight, \\(2\hat{\theta} -
+  q\_{1-\alpha/2}, 2\hat{\theta} - q\_{\alpha/2})\\ (Davison & Hinkley
+  1997, eq. 5.6), which corrects first-order bootstrap bias but can give
+  bounds outside the natural weight range near its limits (for example
+  below 0 for a transition probability close to 0).
 
 - actor:
 
-  Character or NULL. Name of the column identifying the actor each
-  sequence belongs to (e.g. `"student_id"` for sessions nested in
-  students, `"Group"` for students nested in teams), looked up in the
-  network's `$metadata` or wide sequence data. When supplied, whole
-  actors are resampled; see the section *Nested data and actor*. Default
-  `NULL`: sequences are resampled individually.
+  The column identifying the actor each sequence belongs to (for example
+  `"student_id"` for sessions nested in students, `"Group"` for students
+  nested in teams), looked up in the network's metadata or its wide
+  sequence data. With it, whole actors are resampled; see *Nested data
+  and `actor`*. Default `NULL`: sequences are resampled one by one. It
+  is available for sequence-based transition networks (`"relative"`,
+  `"frequency"`, `"co_occurrence"`); a method outside the fast path (see
+  *Details*) raises an error of class `nestimate_actor_unsupported`. A
+  value that is not a single column name, or that names fewer than two
+  actors, raises an error of class `nestimate_bad_actor`; a column that
+  is absent or has missing values, one of class
+  `nestimate_actor_missing`; and ids that do not give one actor per
+  sequence, one of class `nestimate_actor_misaligned`.
 
 - ...:
 
-  In `print.net_bootstrap()`, `print.wtna_boot_mixed()`,
-  `summary.net_bootstrap()` and `summary.wtna_boot_mixed()`: Additional
-  arguments (ignored). In `print.net_bootstrap_group()` and
-  `summary.net_bootstrap_group()`: Ignored.
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods: ignored.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_bootstrap`, `net_bootstrap_group` or
-  `wtna_boot_mixed`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) methods:
+  the result of `bootstrap_network()`.
 
 ## Value
 
-An object of class `"net_bootstrap"` containing:
+A `net_bootstrap` object. [`print()`](https://rdrr.io/r/base/print.html)
+lists the five strongest significant edges (by absolute bootstrap mean,
+with their interval) and reports the iterations, the number of
+significant edges, the interval level and the test, and with `actor` the
+ICC and design effect;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns one row per
+edge of the original network;
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+draws the bootstrapped network;
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
+with `method = "bootstrap"` removes the non-significant edges from the
+original network. The fields:
 
 - original:
 
   The original `netobject`.
 
-- mean:
+- mean, sd:
 
-  Bootstrap mean weight matrix.
-
-- sd:
-
-  Bootstrap SD matrix.
+  The bootstrap mean and standard deviation of each weight, as matrices.
 
 - p_values:
 
-  P-value matrix.
+  The matrix of p-values.
 
 - significant:
 
-  Original weights where p \< ci_level, else 0.
+  The original weights where the p-value is below `ci_level`, and 0
+  elsewhere, self-loops included.
 
-- ci_lower:
+- ci_lower, ci_upper:
 
-  Lower CI bound matrix.
+  The matrices of interval bounds.
 
-- ci_upper:
+- cr_lower, cr_upper:
 
-  Upper CI bound matrix.
-
-- cr_lower:
-
-  Consistency range lower bound (stability only).
-
-- cr_upper:
-
-  Consistency range upper bound (stability only).
+  The matrices of consistency-range bounds (used by `"stability"` only).
 
 - summary:
 
-  Long-format data frame, one row per non-zero original edge (undirected
-  networks keep one row per unordered pair), with columns `from`, `to`,
-  `weight`, `mean`, `sd`, `p_value`, `sig`, `ci_lower`, `ci_upper`, plus
-  `cr_lower` and `cr_upper` when `inference = "stability"`.
+  A data frame with one row per non-zero original edge (one row per
+  unordered pair in an undirected network) and the columns `from`, `to`,
+  `weight`, `mean`, `sd`, `p_value`, `sig`, `ci_lower` and `ci_upper`,
+  plus `cr_lower` and `cr_upper` with `inference = "stability"`.
 
 - model:
 
-  Pruned `netobject` (non-significant edges zeroed).
+  The pruned `netobject`, whose weights are `significant`: its
+  non-significant edges, self-loops included, are zero. (The network
+  [`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
+  returns keeps every self-loop.)
 
 - method, params, iter, ci_level, inference, ci_method:
 
-  Bootstrap config.
+  The bootstrap settings.
 
 - consistency_range, edge_threshold:
 
-  Inference parameters.
+  The test settings.
 
 - actor, n_actors:
 
@@ -207,34 +231,55 @@ An object of class `"net_bootstrap"` containing:
 
 - clustering:
 
-  Only with `actor`. One-row data frame: `n_sequences`, `n_actors`,
-  `icc`, `icc_ci_lower`, `icc_ci_upper`, `deff_edges`.
+  Only with `actor`: a one-row data frame of `n_sequences`, `n_actors`,
+  `icc`, `icc_ci_lower`, `icc_ci_upper` and `deff_edges`.
 
 - clustering_edges:
 
-  Only with `actor`. One row per edge of `summary`: `from`, `to`, `icc`,
-  `sd_actor`, `sd_sequence`, `deff`.
+  Only with `actor`: one row per edge of `summary`, with `from`, `to`,
+  `icc`, `sd_actor`, `sd_sequence` and `deff`.
 
-A `netobject_group` or `mcml` input returns a `"net_bootstrap_group"`
-(named list of `net_bootstrap` results); a `wtna_mixed` input returns a
-`"wtna_boot_mixed"` with `$transition` and `$cooccurrence` results.
+A `netobject_group` or `mcml` gives a `net_bootstrap_group`, a named
+list of `net_bootstrap` results: its
+[`print()`](https://rdrr.io/r/base/print.html) reports each network's
+significant and total edges and the significant edges all networks share
+(when the networks have edges in common); its
+[`summary()`](https://rdrr.io/r/base/summary.html) is described with the
+methods below. A `wtna_mixed` gives a `wtna_boot_mixed` holding the
+`transition` and `cooccurrence` results.
 
-In `print.net_bootstrap()` and `print.wtna_boot_mixed()`: The input
-object, invisibly.
+The [`print()`](https://rdrr.io/r/base/print.html) methods return their
+input invisibly. The [`summary()`](https://rdrr.io/r/base/summary.html)
+method of a `net_bootstrap` returns its per-edge table, the `summary`
+field described above. For a `net_bootstrap_group` it stacks those
+tables into one data frame, with a first column `group` naming the
+network each row comes from; for a `wtna_boot_mixed` it returns a list
+of the `transition` and `cooccurrence` tables.
 
-In `summary.net_bootstrap()`: The `$summary` data frame: one row per
-non-zero original edge, with columns `from`, `to`, `weight`, `mean`,
-`sd`, `p_value`, `sig`, `ci_lower`, `ci_upper`, plus `cr_lower` and
-`cr_upper` when the bootstrap used `inference = "stability"`.
+## Details
 
-In `print.net_bootstrap_group()`: `x` invisibly.
+The two tests and the inclusive boundary rule follow
+[`tna::bootstrap()`](https://sonsoles.me/tna/reference/bootstrap.html).
 
-In `summary.net_bootstrap_group()`: The per-group summaries stacked into
-one data frame: the columns of `summary.net_bootstrap` prefixed by a
-`group` column naming the network each row came from.
+Transition networks (`"relative"`, `"frequency"`, `"co_occurrence"`, and
+`wtna` networks, which hold the same one-hot counts) take a fast path:
+the count matrix of every sequence is computed once, and each replicate
+sums the counts of the sequences drawn, then applies the network's
+normalisation, scaling and threshold. With `params = list(concat = k)`,
+the consecutive groups of up to `k` rows merged by the estimator are the
+sequences resampled; joins inside each merged sequence are retained.
+With `actor`, a merged sequence must belong entirely to one actor. Every
+other method (the association methods, `"attention"`, `"ngram"`,
+`"gap"`, `"reverse"` and registered estimators) is re-estimated in full
+on resampled rows. A replicate whose estimation fails, or that loses a
+node, is left out of the p-values without a warning, and the bootstrap
+statistics are computed over the remaining replicates; if every
+replicate fails, every p-value is 1.
 
-In `summary.wtna_boot_mixed()`: A list with `$transition` and
-`$cooccurrence` summary data frames.
+A network built from an edge list (for example an `mcml` from
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+with `from` and `to`) has no sequences, so each transition is resampled
+as an independent case, with a warning that points to the alternatives.
 
 ## Nested data and `actor`
 
@@ -277,8 +322,7 @@ assessing rater reliability. *Psychological Bulletin*, 86(2), 420-428.
 [`certainty`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
 for the closed-form Bayesian counterpart (same result layout, no
 resampling);
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
-`print.net_bootstrap`, `summary.net_bootstrap`
+[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 
 ## Examples
 

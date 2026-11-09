@@ -1,9 +1,18 @@
 # Extract Transition Table from a MOGen Model
 
-Returns a data frame of all transitions at a given Markov order, sorted
-by count (descending). Each row shows the full path as a readable
-sequence of states, along with the observed count and transition
-probability.
+`mogen_transitions()` returns the transitions of a fitted
+[`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+model at one order, one row per path, most frequent first, with the path
+written out in arrow notation, its observed count and its transition
+probability. At order k each edge of the De Bruijn graph is a path of
+k + 1 states: at order 2, the edge from node `"AI -> FAIL"` to node
+`"FAIL -> SOLVE"` is the path `AI -> FAIL -> SOLVE`, read as the
+probability of `SOLVE` after the context `AI -> FAIL`.
+
+A probability is the share of its context's observations that moved to
+that state, so in a context seen a few times it rests on those few
+observations: read it with its `count`, and use `min_count` to leave
+rare transitions out.
 
 ## Usage
 
@@ -20,52 +29,47 @@ mogen_transitions(x, order = NULL, min_count = 1L)
 
 - order:
 
-  Integer \>= 1 and at most the highest order tested. Which order's
-  transitions to extract. Must be a whole number; a non-integer value is
-  an error rather than being silently truncated. Defaults to the optimal
-  order selected by the model - pass an explicit `order` when that
-  optimal order is 0, which has no transition table and therefore
-  errors.
+  The order whose transitions are returned, a whole number from 1 to the
+  highest order fitted; a non-integer value is an error, not truncated.
+  Default `NULL`, the order the model selected. Order 0 has no
+  transitions, so when the model selected order 0, give `order`
+  explicitly; otherwise `mogen_transitions()` stops.
 
 - min_count:
 
-  Integer. Minimum observed count to include (default 1). Use this to
-  filter out rare transitions that have unreliable probabilities.
+  The smallest observed count a transition needs to be listed. Default
+  `1`, every observed transition. A value below 1 also lists the
+  transitions that never occurred, with count and probability 0: every
+  pair of observed contexts where the second continues the first (at
+  order 1, every pair of states).
 
 ## Value
 
-A data frame with one row per retained transition, sorted by `count`
+A data frame with one row per listed transition, sorted by `count`
 (descending), with columns:
 
 - path:
 
-  The full state sequence (e.g., "AI -\> FAIL -\> SOLVE").
+  The full sequence of states, such as `"AI -> FAIL -> SOLVE"`.
 
 - count:
 
-  Number of times this transition was observed.
+  How often the transition was observed.
 
 - probability:
 
-  Transition probability P(to \| from), rounded to 4 decimal places.
+  The transition probability P(to \| from), rounded to 4 decimal places.
 
 - from:
 
-  The context / conditioning states (k-gram source node).
+  The context: the k states the transition starts from.
 
 - to:
 
-  The predicted next state.
+  The next state.
 
-A zero-row data frame with the same columns when no transition reaches
-`min_count`.
-
-## Details
-
-At order k, each edge in the De Bruijn graph represents a (k+1)-step
-path. For example, at order 2, the edge from node "AI -\> FAIL" to node
-"FAIL -\> SOLVE" represents the three-step path AI -\> FAIL -\> SOLVE.
-The `path` column reconstructs this full sequence for readability.
+When no transition reaches `min_count`, a data frame with the same
+columns and no rows.
 
 ## Examples
 

@@ -1,9 +1,25 @@
 # Structural measures for a hypergraph
 
-Computes a comprehensive structural-statistics suite for a
-[net_hypergraph](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md):
-node-level, hyperedge-level, and global measures. All measures are
-derived in a few BLAS calls on the incidence matrix.
+`hypergraph_measures()` computes the structural statistics of a
+hypergraph at three levels: for each node (how many hyperedges it
+belongs to, how large they are, and how many it shares with each other
+node), for each hyperedge and pair of hyperedges (their sizes and how
+much they overlap), and for the hypergraph as a whole (density, mean
+hyperedge size, the intersection profile). It reads the `net_hypergraph`
+objects that
+[`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
+and
+[`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)
+return.
+
+The measures describe the hypergraph as observed: they carry no
+uncertainty and test nothing. The intersection profile shows whether
+hyperedges mostly share no or few nodes or share substantial cores (Do
+et al., 2020; Lee, Choe & Shin, 2021). To rank nodes by their position
+in the hypergraph, use
+[`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md);
+to read it as an ordinary pairwise network, project it with
+[`clique_expansion()`](https://pak.dynasite.org/Nestimate/reference/clique_expansion.md).
 
 ## Usage
 
@@ -18,29 +34,36 @@ print(x, ...)
 
 - hg:
 
-  A `net_hypergraph` (from
+  A `net_hypergraph`, from
   [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   or
-  [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)).
+  [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md).
+  Any other object raises an error.
 
 - x:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html) method: an
-  object of class `hypergraph_measures`.
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: a
+  `hypergraph_measures` object.
 
 - ...:
 
-  In `print.hypergraph_measures()`: Additional arguments (ignored).
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: not
+  used.
 
 ## Value
 
-An object of class `hypergraph_measures` (a named list) with components:
+A `hypergraph_measures` object, a named list;
+[`print()`](https://rdrr.io/r/base/print.html) shows the density, mean
+hyperedge size and pairwise participation, the minimum, median and
+maximum of hyperdegree, node strength and hyperedge size, and the
+intersection profile, and returns its input invisibly. Its components,
+node-level first:
 
-- **Node-level (length `n_nodes`)**:
+- **Node-level (one value per node)**:
 
 - `hyperdegree`:
 
-  Number of hyperedges containing each node.
+  The number of hyperedges containing each node.
 
 - `node_strength`:
 
@@ -49,69 +72,72 @@ An object of class `hypergraph_measures` (a named list) with components:
 
 - `max_edge_size`:
 
-  Size of the largest hyperedge containing each node.
+  The size of the largest hyperedge containing each node (0 for a node
+  in none).
 
 - `co_degree`:
 
-  `n_nodes` x `n_nodes` matrix: `co_degree[i, j] = |{e : i, j in e}|`
-  (number of hyperedges co-containing nodes \\i\\ and \\j\\). Diagonal
-  is zero.
+  An `n_nodes` x `n_nodes` matrix:
+  `co_degree[i, j] = |{e : i, j in e}|`, the number of hyperedges
+  containing both nodes \\i\\ and \\j\\. The diagonal is zero.
 
-- **Hyperedge-level (length `n_hyperedges` or m x m)**:
+- **Hyperedge-level (one value per hyperedge, or m x m)**:
 
 - `edge_sizes`:
 
-  Hyperedge sizes \\\|e\|\\.
+  The hyperedge sizes \\\|e\|\\.
 
 - `edge_pairwise_overlap`:
 
-  `m` x `m` matrix: `|e_i intersect e_j|`. Diagonal is zero.
+  An `m` x `m` matrix of `|e_i intersect e_j|`. The diagonal is zero.
 
 - `overlap_coefficient`:
 
-  `m` x `m`: `|e_i and e_j| / min(|e_i|, |e_j|)`. Measures how much the
-  smaller hyperedge is contained in the larger.
+  An `m` x `m` matrix of `|e_i intersect e_j| / min(|e_i|, |e_j|)`: how
+  much of the smaller hyperedge lies in the larger. The diagonal is
+  zero.
 
 - `jaccard`:
 
-  `m` x `m`: symmetric overlap index `|e_i and e_j| / |e_i union e_j|`.
+  An `m` x `m` matrix of the symmetric overlap index
+  `|e_i intersect e_j| / |e_i union e_j|`. The diagonal is zero.
 
 - **Global (scalars)**:
 
 - `density`:
 
-  For `k`-uniform hypergraphs: `m / choose(n, k)`. For mixed sizes:
-  `sum(|e|) / (n * m)` (mean fraction of nodes per hyperedge).
+  For a hypergraph whose hyperedges all have size `k`:
+  `m / choose(n, k)`. For mixed sizes: `sum(|e|) / (n * m)`, the mean
+  fraction of nodes per hyperedge.
 
 - `avg_edge_size`:
 
-  Mean of `edge_sizes`.
+  The mean of `edge_sizes`.
 
 - `size_distribution`:
 
-  Tabulation of hyperedge sizes (passed through from `hg`).
+  The count of hyperedges of each size, passed through from `hg`.
 
 - `intersection_profile`:
 
-  Distribution of pairwise hyperedge intersection sizes - useful for
-  spotting whether hyperedges overlap mostly trivially or share
-  substantial cores (Do et al. 2020).
+  The number of hyperedge pairs at each intersection size that occurs,
+  named `overlap_<size>` (sizes with no pairs are left out); empty with
+  fewer than two hyperedges.
 
 - `pairwise_participation`:
 
-  Fraction of node pairs co-appearing in at least one hyperedge.
+  The fraction of node pairs that appear together in at least one
+  hyperedge (0 with fewer than two nodes).
 
 - `n_nodes`, `n_hyperedges`:
 
-  Convenience scalars.
-
-In `print.hypergraph_measures()`: The input `x` invisibly.
+  The numbers of nodes and hyperedges.
 
 ## Details
 
-All measures are computed via standard matrix operations on the binary
-incidence \\B = (b\_{ij})\\ where \\b\_{ij} = 1\\ iff node \\i\\ is in
-hyperedge \\j\\:
+All measures are matrix operations on the binary incidence matrix \\B =
+(b\_{ij})\\, where \\b\_{ij} = 1\\ if node \\i\\ is in hyperedge \\j\\;
+a weighted incidence is binarised first:
 
 - `hyperdegree = rowSums(B)`, `edge_sizes = colSums(B)`
 
@@ -123,8 +149,11 @@ hyperedge \\j\\:
 
 - `jaccard[i, j] = overlap[i, j] / (edge_sizes[i] + edge_sizes[j] - overlap[i, j])`
 
-Empty hypergraph (`n_hyperedges == 0`) returns trivial zeros and empty
-matrices.
+A ratio whose denominator is 0 is set to 0.
+
+A hypergraph without hyperedges (`n_hyperedges == 0`) gives zeros for
+the node measures, empty hyperedge matrices, a density and pairwise
+participation of 0, and an `avg_edge_size` of `NA`.
 
 ## References
 
@@ -139,6 +168,7 @@ and generative models of real-world hypergraphs. arXiv:2006.07060.
 
 [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md),
 [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md),
+[`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md),
 [`clique_expansion()`](https://pak.dynasite.org/Nestimate/reference/clique_expansion.md).
 
 ## Examples

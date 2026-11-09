@@ -1,7 +1,22 @@
 # Convert Sequence Data to Different Formats
 
-Convert wide or long sequence data into frequency counts, one-hot
-encoding, edge lists, or follows format.
+`convert_sequence_format()` turns wide or long sequence data into one of
+four data frames: per-sequence state counts, per-sequence state presence
+(one-hot), the list of consecutive transitions, or each event paired
+with the one before it. It reads an event log (`action` set) or a wide
+table (one row per sequence, one column per position). The counts can
+serve as per-sequence behaviour profiles for the association estimators
+of
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+and for
+[`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md).
+The id columns (those that `id_col` names, and `.rid` for a wide table
+without `id_col`) are not variables and must be set aside there
+(`id_col` in
+[`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md),
+`actor` in
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md));
+the `rid` column is dropped automatically.
 
 ## Usage
 
@@ -20,74 +35,63 @@ convert_sequence_format(
 
 - data:
 
-  Data frame containing sequence data.
+  A data frame of sequences: an event log or a wide table.
 
 - seq_cols:
 
-  Character vector. Names of columns containing sequential states (for
-  wide format input). If NULL, all columns except `id_col` are used.
-  Default: NULL.
+  The state columns of a wide table; setting them declares a wide table.
+  Default `NULL`: every column except `id_col` and `time`. With neither
+  `action` nor `seq_cols`, the frame must be one column or hold position
+  columns named as a numbered run (`T1`, `T2`, ..., or `1`, `2`, ...),
+  with nothing beside them but the `id_col` (and `time`) columns;
+  anything else raises an error of class `nestimate_bad_input`, as does
+  a column listed both here and in `id_col` or `time`.
 
 - id_col:
 
-  Character vector. Name(s) of the ID column(s). For long format,
-  required. For wide format, optional: if NULL, the first column is used
-  as the id only when it is a genuine identifier (its values are
-  disjoint from the states in the remaining columns); for canonical wide
-  sequence data with no id column (e.g. `V1..Vn` / `T1..Tn`), a
-  row-index id is synthesized and every column is treated as a sequence
-  column. Default: NULL.
+  The identifier column(s), copied to every output row. In an event log,
+  each unique combination of their values is one sequence, and it is
+  required: an event log without `id_col` raises an error of class
+  `nestimate_bad_input` (no column is taken by position). In a wide
+  table, each row is one sequence and no id is inferred from the data:
+  without `id_col`, a row-index column `.rid` is added. Default `NULL`.
 
 - action:
 
-  Character or NULL. Name of the column containing actions/states (for
-  long format input). If provided, data is treated as long format.
-  Default: NULL.
+  The column holding each event's state; setting it declares an event
+  log. Default `NULL`.
 
 - time:
 
-  Character or NULL. Name of the time column for ordering actions within
-  sequences (for long format). Default: NULL.
+  The column that orders the events within each sequence of an event
+  log; without it, events keep their row order. A wide table leaves it
+  out of the state columns. Default `NULL`.
 
 - format:
 
-  Character. Output format:
-
-  "frequency"
-
-  :   Count of each action per sequence (wide, one column per state).
-
-  "onehot"
-
-  :   Binary presence/absence of each action per sequence.
-
-  "edgelist"
-
-  :   Consecutive transition pairs (from, to) per sequence.
-
-  "follows"
-
-  :   Each action paired with the action that preceded it.
+  The output format: `"frequency"` (default), the count of each state
+  per sequence; `"onehot"`, whether each state occurs in the sequence
+  (0/1); `"edgelist"`, each pair of consecutive states (`from`, `to`);
+  `"follows"`, each event (`act`) paired with the event before it
+  (`follows`).
 
 ## Value
 
-A data frame in the requested format:
+A data frame with the id column(s) first. For `"frequency"` and
+`"onehot"`: one row per sequence, a `rid` column identifying the
+sequence, and one integer column per state, holding counts or 0/1. For
+`"edgelist"`: one row per transition, with columns `from` and `to`. For
+`"follows"`: one row per event after the first of its sequence, with
+columns `act` and `follows`. An event log's rows come out sorted by
+`id_col`.
 
-- frequency:
+## Details
 
-  ID columns + one integer column per state with counts.
-
-- onehot:
-
-  ID columns + one binary column per state (0/1).
-
-- edgelist:
-
-  ID columns + `from` and `to` columns.
-
-- follows:
-
-  ID columns + `act` and `follows` columns.
+A missing state (`NA` or an empty string) is dropped and the states on
+either side are joined, so a sequence `A, NA, B` gives the transition
+`A -> B`.
+[`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.md)
+counts no transition across a missing state instead.
 
 ## See also
 

@@ -1,13 +1,19 @@
 # Compute Centrality Measures for a Network
 
-Computes centrality measures from a `netobject`, `netobject_group`,
-`mcml`, or `cograph_network`. The built-in measures match
-[`tna::centralities()`](https://sonsoles.me/tna/reference/centralities.html)
-without importing `tna` or `igraph`: strength is taken from the weight
-matrix directly, and the path-based measures (betweenness, closeness)
-come from all-pairs shortest paths computed in-package by
-Floyd-Warshall. The only intentional default difference from `tna` is
-that `Diffusion` is range-normalized by default.
+`net_centrality()` scores how central each node is in a network, for one
+or more measures, and returns one row per node. Strength sums a node's
+edge weights (incoming or outgoing); closeness and betweenness read the
+shortest paths between nodes, where a heavier edge is a shorter step;
+diffusion counts the weighted walks that start at a node; and clustering
+measures how strongly a node's neighbours are tied to each other. It
+takes a single network or a group of them (a `netobject_group`, the
+clusters of an `mcml`), scoring each separately.
+
+Centralities describe the estimated network, not the population it was
+estimated from. Rankings built on a few weak edges change from sample to
+sample: check them with
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
+before reporting which node is most central.
 
 ## Usage
 
@@ -55,117 +61,139 @@ plot(
 
 - x:
 
-  A `netobject`, `netobject_group`, `mcml`, or `cograph_network`. For
-  the [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
-  an object of class `net_centrality` or `net_centrality_group`.
+  The network: a `netobject`, `netobject_group`, `mcml` or
+  `cograph_network`. For the
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: the
+  result of `net_centrality()`.
 
 - measures:
 
-  Character vector. Centrality measures to compute. Defaults to
-  `c("InStrength", "Betweenness", "Diffusion")`. Pass `"all"` for every
-  built-in measure: `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`,
-  `"ClosenessOut"`, `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`,
-  `"Diffusion"`, and `"Clustering"`. The legacy aliases `"InCloseness"`
-  and `"OutCloseness"` are also accepted.
+  The measures to compute. The default is `"InStrength"`,
+  `"Betweenness"` and `"Diffusion"`; `"all"` computes every built-in
+  one: `"OutStrength"` and `"InStrength"` (sum of outgoing or incoming
+  weights), `"ClosenessOut"`, `"ClosenessIn"` and `"Closeness"` (inverse
+  of the summed shortest-path distances from, to, or ignoring the
+  direction of edges), `"Betweenness"` (how many shortest paths pass
+  through the node), `"BetweennessRSP"` (betweenness over randomised
+  shortest paths, which also counts near-shortest routes), `"Diffusion"`
+  (the summed weights of walks of length 1 to n from the node) and
+  `"Clustering"` (weighted clustering coefficient). `"InCloseness"` and
+  `"OutCloseness"` are accepted for `"ClosenessIn"` and
+  `"ClosenessOut"`. With `centrality_fn`, name its measures here to have
+  them returned.
 
 - loops:
 
-  Logical. Include self-loops (diagonal) in computation? Default:
-  `FALSE`.
+  Whether self-loops (staying in a state) count. With `FALSE` (default)
+  they are left out of every measure, and a message says so.
 
 - normalize:
 
-  Logical. Range-normalize all requested measures using the same
-  transformation as `tna::centralities(normalize = TRUE)`. Default:
-  `FALSE`.
+  Whether to range-normalise every measure to 0–1, as
+  `tna::centralities(normalize = TRUE)` does. Default `FALSE`.
 
 - invert:
 
-  Logical. Invert weights for shortest-path measures? Default: `TRUE`,
-  matching `tna`.
+  Whether a heavier edge is a shorter step in the shortest-path measures
+  (distance = 1 / weight), as in `tna`. With `FALSE`, the weight itself
+  is the distance. Default `TRUE`.
 
 - normalize_diffusion:
 
-  Logical. Range-normalize `Diffusion` even when `normalize = FALSE`.
-  Default: `TRUE`.
+  Whether to range-normalise `Diffusion` even when `normalize = FALSE`.
+  Default `TRUE`.
 
 - centrality_fn:
 
-  Optional function. Custom centrality function that takes a weight
-  matrix and returns a named list of centrality vectors.
+  A function of your own that takes the weight matrix and returns a
+  named list of centrality vectors, one per measure; list their names in
+  `measures`. Default `NULL`.
 
 - ...:
 
-  Additional arguments (ignored). In `plot.net_centrality()` and
-  `plot.net_centrality_group()`: Additional arguments ignored.
+  Not used.
 
 - reorder:
 
-  In `plot.net_centrality()`: Logical. Reorder states within each
-  centrality panel by centrality value. Default: `TRUE`. In
-  `plot.net_centrality_group()`: Logical. Reorder states by their mean
-  value within each centrality panel. Default: `TRUE`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods: whether to sort the nodes in each measure's panel by their
+  value (for a group, by their mean value across networks). Default
+  `TRUE`.
 
 - ncol:
 
-  Integer. Number of facet columns. Default: `3`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods: the number of panel columns. Default `3`.
 
 - type:
 
-  In `plot.net_centrality()`: Plot type. `"bar"` shows one faceted
-  horizontal bar chart per measure; `"line"` shows state profiles as
-  lines across measures (the value `"profile"` is still accepted as an
-  alias); `"heatmap"` shows a states-by-measures tile grid, each measure
-  scaled to 0–1 for cross-measure comparability with the raw value
-  printed in the tile. Default: `"bar"`. In
-  `plot.net_centrality_group()`: Plot type. `"bar"` shows grouped bars
-  within each measure; `"line"` facets by state and draws one line per
-  group across centrality measures (`"profile"` is accepted as an
-  alias); `"delta"` draws a diverging bar of group differences. With two
-  groups it is the per-state difference (second group minus first); with
-  three or more groups it is each group's deviation from the per-state
-  group mean, so the largest gaps stand out either way. Default:
-  `"bar"`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods: the kind of plot. `"bar"` (default) draws one panel of bars
+  per measure, grouped bars for several networks. `"line"` draws each
+  node's profile across the measures (for several networks, one panel
+  per node and one line per network); `"profile"` is accepted for it. A
+  single network also takes `"heatmap"`, a nodes-by-measures grid with
+  each measure scaled to 0–1 for the colour and its raw value printed in
+  the tile. Several networks also take `"delta"`, bars of the
+  differences between networks: the second minus the first with two,
+  each network's deviation from the per-node mean with more.
 
 - scales:
 
-  Facet scale mode. `"free_x"` (default) uses free centrality axes;
-  `"fixed"` keeps a common centrality axis.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods: `"free_x"` (default) gives each measure its own value axis,
+  `"fixed"` one shared axis.
 
 - profile_scale:
 
-  Scaling used by `type = "line"`. `"measure"` (default) rescales each
-  centrality measure to 0–1 before drawing cross-measure profiles;
-  `"none"` uses raw values.
+  For `type = "line"`: `"measure"` (default) rescales each measure to
+  0–1 so the profiles compare across measures; `"none"` draws raw
+  values.
 
 - labels:
 
-  In `plot.net_centrality()`: Logical. Add compact value labels.
-  Default: `TRUE`. In `plot.net_centrality_group()`: Logical. Add
-  compact value labels. Default: `FALSE`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods: whether to print the values on the plot. Default `TRUE` for
+  one network, `FALSE` for several.
 
 - drop_zero:
 
-  In `plot.net_centrality()`: Logical. Drop measures whose values are
-  all (near) zero so empty panels do not waste space. Default: `FALSE`
-  (every requested measure is shown). In `plot.net_centrality_group()`:
-  Logical. Drop measures whose values are all (near) zero so empty
-  panels do not waste space. Default: `FALSE`.
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods: whether to leave out measures that are zero for every node.
+  Default `FALSE`.
 
 - palette:
 
-  Brewer palette for groups. Default: `"Set2"`.
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of
+  several networks: the ColorBrewer palette for the networks. Default
+  `"Set2"`. Ignored by `type = "delta"` with two networks, whose bars
+  are coloured by which network is higher.
 
 ## Value
 
-For a `netobject` or `cograph_network`: a `net_centrality` data frame,
-one row per node, with a `state` column and one further column per
-requested measure (node names are also the row names). For a
-`netobject_group` or an `mcml`: a `net_centrality_group` list of such
-data frames, one per group.
+For a `netobject` or `cograph_network`: a `net_centrality` data frame
+with one row per node, a `state` column and one column per requested
+measure (the node names are also the row names). For a `netobject_group`
+or an `mcml`: a `net_centrality_group`, a list of such data frames, one
+per network. [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+draws the measures per node.
 
-In `plot.net_centrality()` and `plot.net_centrality_group()`: A `ggplot`
-object.
+For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+methods: a `ggplot` object.
+
+## Details
+
+Strength is read from the weight matrix directly, and closeness and
+betweenness from all-pairs shortest paths (Floyd-Warshall), without
+igraph; the values agree with
+[`tna::centralities()`](https://sonsoles.me/tna/reference/centralities.html).
+Diffusion is range-normalised by default, which `tna` does not do.
+
+Range normalisation of a measure that is the same for every node is
+undefined and gives `NaN`, with a warning of class
+`nestimate_constant_measure`. Diffusion on a `"relative"` network with
+`loops = TRUE` is such a case: each row sums to 1, so every node has the
+same diffusion; use `normalize_diffusion = FALSE` there.
 
 ## References
 
@@ -198,6 +226,7 @@ seqs <- data.frame(
 net <- build_network(seqs, method = "relative")
 net_centrality(net)
 #> centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+#> Warning: Diffusion is the same for every node, so it cannot be range-normalised and is NaN. Use `normalize_diffusion = FALSE` for the raw values.
 #>   state InStrength Betweenness Diffusion
 #> A     A          1           1       NaN
 #> B     B          1           1       NaN

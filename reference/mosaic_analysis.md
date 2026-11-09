@@ -1,12 +1,27 @@
 # Two-variable mosaic analysis (chi-square test + flat mosaic)
 
-Analyses the association between two categorical columns of a
-data.frame. Builds the contingency table, drops sparse categories below
-`min_count`, runs a Pearson chi-square test (or Fisher's exact test),
-computes Cramer's V with a df-adjusted effect-size label, and draws a
-flat ggplot2 mosaic whose tile area encodes counts and whose fill
-encodes the standardized Pearson residual (Nestimate diverging palette).
-All tabular output is a tidy one-row-per-cell `data.frame`.
+`mosaic_analysis()` tests the association between two categorical
+columns of a data frame and draws it as a mosaic. It builds their
+contingency table, drops sparse categories (fewer than `min_count`
+rows), runs a Pearson chi-square test (or Fisher's exact test), computes
+Cramer's V with an effect-size label, and draws a flat ggplot2 mosaic in
+which tile area is the cell count and the fill is the cell's
+standardised residual. The per-cell results come as a data frame, one
+row per cell.
+
+The p-value tests the null hypothesis that the two variables are
+independent; with large samples almost any departure is significant, so
+read Cramer's V for the size of the association. The label follows
+Cohen's (1988) thresholds for the table's degrees of freedom,
+`min(rows, columns) - 1`: 0.10 / 0.30 / 0.50 for small / medium / large
+at 1, 0.07 / 0.21 / 0.35 at 2, 0.06 / 0.17 / 0.29 at 3, and 0.05 / 0.15
+/ 0.25 above (Cohen's w divided by the square root of the degrees of
+freedom); a V below the small threshold is labelled `"negligible"`. The
+residuals are
+[`chisq.test()`](https://rdrr.io/r/stats/chisq.test.html)'s standardised
+residuals, roughly standard normal under independence, so one beyond
+about +-2 marks a cell that holds more (or fewer) rows than independence
+predicts; with many cells, some pass that line by chance.
 
 ## Usage
 
@@ -37,135 +52,150 @@ summary(object, ...)
 
 - data:
 
-  A data.frame containing the two variables.
+  A data frame holding the two variables. Rows missing either of them
+  are left out; a `var1` or `var2` that is not a column of `data`, or no
+  complete rows, raises an error.
 
 - var1:
 
-  Character. Name of the first variable (mosaic columns).
+  The name of the first variable, drawn as the mosaic's columns (column
+  width is its marginal share).
 
 - var2:
 
-  Character. Name of the second variable (stacked within columns).
+  The name of the second variable, stacked within each column.
 
 - min_count:
 
-  Integer. Minimum marginal count for a category to be kept. Categories
-  of either variable below this are dropped before testing. Default 10.
+  The smallest number of rows a category must have to be kept.
+  Categories of either variable with fewer rows in the full table are
+  dropped, in one pass, before the test. Default `10`. If fewer than two
+  categories of either variable remain, an error is raised.
 
 - test:
 
-  Character. `"chisq"` (default) Pearson chi-square, or `"fisher"`
-  Fisher's exact test (simulated p-value). Cramer's V and the residual
-  fill are always derived from the chi-square statistic.
+  The test reported: `"chisq"` (default) for Pearson's chi-square test,
+  or `"fisher"` for Fisher's exact test: exact for a 2 x 2 table, and
+  otherwise with a p-value simulated from 10,000 tables (so it changes
+  with the random seed and cannot fall below 1/10,001). Cramer's V and
+  the residuals always come from the chi-square statistic.
 
 - percentage_base:
 
-  Character. Base for the `"percent"` tile label and the `pct` column:
-  `"total"` (default), `"row"` (within `var1`), or `"column"` (within
-  `var2`).
+  What the `pct` column and the `"percent"` tile label are a percentage
+  of: `"total"` (default) the whole table, `"row"` each level of `var1`,
+  `"column"` each level of `var2`.
 
 - tile_label:
 
-  Character. What to print inside each tile: `"count"` (default),
-  `"percent"`, `"residual"`, `"category"` (`var2` level), or `"none"`.
+  What to print inside each tile: `"count"` (default), `"percent"`,
+  `"residual"`, `"category"` (the `var2` level) or `"none"`.
 
 - title:
 
-  Character. Plot title. Default `""`.
+  The plot title. Default `""` (none).
 
 - ...:
 
-  Further flat-mosaic styling arguments passed to the renderer (e.g.
-  `col_label_side`, `row_label_side`, `legend_position`, `legend_size`,
-  `label_size`, `palette`). Tile fill uses the ColorBrewer RdBu ramp by
-  default (override with `palette`). Column labels auto-rotate to
-  vertical when there are more than 6 columns; pass `col_label_angle` to
-  force an angle. In `plot.mosaic_analysis()`: Styling overrides
-  forwarded to the flat renderer. In `print.mosaic_analysis()` and
-  `summary.mosaic_analysis()`: Ignored.
+  Further styling for the flat mosaic: `col_label_side`,
+  `row_label_side`, `col_label_angle`, `row_label_angle`, `show_legend`,
+  `legend_position`, `legend_size`, `legend_title`, `label_size`,
+  `range`, `palette`, `min_label_h` and `min_label_w` (and `pct_base`,
+  which overrides `percentage_base` in the plot only; the `pct` column
+  always follows `percentage_base`). The fill is the ColorBrewer RdBu
+  ramp unless `palette` is given. Column labels turn vertical when there
+  are more than 6 columns; `col_label_angle` sets an angle. Any other
+  name raises an error. For the
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: the
+  same styling and `title`, overriding what the fit stored; for the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods: ignored.
 
 - x:
 
   For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
-  [`print()`](https://rdrr.io/r/base/print.html) methods: an object of
-  class `mosaic_analysis`.
+  [`print()`](https://rdrr.io/r/base/print.html) methods: a
+  `mosaic_analysis`.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `mosaic_analysis`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `mosaic_analysis`.
 
 ## Value
 
-An object of class `"mosaic_analysis"`: a list with
+A `mosaic_analysis` object.
+[`print()`](https://rdrr.io/r/base/print.html) shows the sample size,
+the test, Cramer's V with its label and the dropped categories, and
+returns the object invisibly;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the per-cell
+data frame (the `counts` table below) with the one-row test summary
+attached as the attribute `"stats"`;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+mosaic on the active device, with new styling if given, and returns the
+`ggplot` invisibly. The object is a list with:
 
 - plot:
 
-  The flat mosaic `ggplot` object.
+  The flat mosaic, a `ggplot`. Building the object does not draw it.
 
 - counts:
 
-  Tidy data.frame, one row per (var1, var2) cell, with `observed`,
-  `expected`, `residual` (standardized), and `pct` (on
-  `percentage_base`).
+  A data frame with one row per (`var1`, `var2`) cell: the two variables
+  (named after them), `observed`, `expected`, `residual` (the
+  standardised residual) and `pct` (on `percentage_base`); `expected`
+  and `residual` are rounded to 3 decimals, `pct` to 2.
 
 - stats:
 
-  One-row data.frame: `test`, `statistic`, `df`, `p_value`, `cramers_v`,
-  `effect_size`, `n`.
+  A one-row data frame: `test`, `statistic`, `df`, `p_value`,
+  `cramers_v`, `effect_size` and `n`, rounded (`statistic` and
+  `cramers_v` to 3 decimals, `p_value` to 4 significant digits).
+  `statistic` and `df` are `NA` for Fisher's test.
 
 - test:
 
-  The raw `htest` object.
+  The `htest` object of the test reported.
 
 - cramers_v, effect_size:
 
-  Effect size value and label.
+  Cramer's V, unrounded, and its label.
 
 - table:
 
-  The filtered contingency `table`.
+  The filtered contingency table.
 
 - removed:
 
-  List of dropped `var1` / `var2` categories.
+  The dropped categories, as a list with `var1` and `var2`.
 
 - n_original, n_filtered:
 
-  Row counts before/after filtering.
+  The number of complete rows before and after the sparse categories are
+  dropped.
 
 - vars:
 
-  Named character vector `c(var1 = , var2 = )`.
+  The two variable names, as `c(var1 = , var2 = )`.
 
 - plot_parts, plot_args:
 
-  The residual matrix, table, and styling arguments retained so
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) can re-render
-  without re-testing.
-
-Use [`print()`](https://rdrr.io/r/base/print.html) for the test summary
-and [`summary()`](https://rdrr.io/r/base/summary.html) for the tidy
-per-cell table.
-
-In `plot.mosaic_analysis()`: The re-rendered flat mosaic `ggplot`
-object, invisibly; the plot is drawn on the active device as a side
-effect.
-
-In `print.mosaic_analysis()`: `x`, invisibly.
-
-In `summary.mosaic_analysis()`: The tidy per-cell `data.frame`: one row
-per (var1, var2) cell, with the two variable columns (named after `var1`
-/ `var2`) plus `observed`, `expected`, `residual` and `pct`. The one-row
-test summary is attached as the `"stats"` attribute.
+  The residual matrix, the table and the styling, kept so
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) can redraw
+  without testing again.
 
 ## Methods
 
-- `plot.mosaic_analysis()`: Re-renders the flat mosaic from the stored
-  contingency table and residuals, so styling can be changed without
-  re-running the test. Any flat-mosaic styling argument (`tile_label`,
-  `pct_base`, `col_label_side`, `legend_size`, ...) may be overridden
-  via `...`.
+- `plot.mosaic_analysis()` redraws the flat mosaic from the stored
+  contingency table and residuals, so the styling can change without the
+  test being run again. Any flat-mosaic styling argument (`tile_label`,
+  `pct_base`, `col_label_side`, `legend_size`, ...) can be overridden
+  through `...`.
+
+## References
+
+Cohen, J. (1988). *Statistical power analysis for the behavioral
+sciences* (2nd ed.). Lawrence Erlbaum.
 
 ## See also
 

@@ -780,19 +780,19 @@ sessionInfo()
     [1] stats     graphics  grDevices utils     datasets  methods   base
 
     other attached packages:
-    [1] cograph_2.7.11  Nestimate_1.0.9
+    [1] cograph_2.7.11   Nestimate_1.0.11
 
     loaded via a namespace (and not attached):
-     [1] vctrs_0.7.3         cli_3.6.6           knitr_1.52
-     [4] rlang_1.3.0         xfun_0.62           otel_0.3.0
-     [7] generics_0.1.4      S7_0.2.2            data.table_1.18.6.1
-    [10] jsonlite_2.0.0      labeling_0.4.3      glue_1.8.1
-    [13] htmltools_0.5.9     scales_1.4.0        rmarkdown_2.32
-    [16] grid_4.6.2          tibble_3.3.1        evaluate_1.0.5
-    [19] fastmap_1.2.0       yaml_2.3.12         lifecycle_1.0.5
-    [22] compiler_4.6.2      igraph_2.3.4        dplyr_1.2.1
-    [25] RColorBrewer_1.1-3  pkgconfig_2.0.3     farver_2.1.2
-    [28] digest_0.6.39       R6_2.6.1            tna_1.3.1
-    [31] tidyselect_1.2.1    parallel_4.6.2      pillar_1.11.1
-    [34] magrittr_2.0.5      withr_3.0.3         tools_4.6.2
-    [37] gtable_0.3.6        ggplot2_4.0.3      
+     [1] gtable_0.3.6        jsonlite_2.0.0      dplyr_1.2.1
+     [4] compiler_4.6.2      tidyselect_1.2.1    parallel_4.6.2
+     [7] scales_1.4.0        yaml_2.3.12         fastmap_1.2.0
+    [10] ggplot2_4.0.3       R6_2.6.1            labeling_0.4.3
+    [13] generics_0.1.4      igraph_2.3.4        knitr_1.52
+    [16] tibble_3.3.1        pillar_1.11.1       RColorBrewer_1.1-3
+    [19] rlang_1.3.0         xfun_0.62           S7_0.2.2
+    [22] otel_0.3.0          cli_3.6.6           withr_3.0.3
+    [25] magrittr_2.0.5      digest_0.6.39       grid_4.6.2
+    [28] tna_1.3.1           lifecycle_1.0.5     vctrs_0.7.3
+    [31] evaluate_1.0.5      glue_1.8.1          data.table_1.18.6.1
+    [34] farver_2.1.2        idiographic_0.3.4   rmarkdown_2.32
+    [37] tools_4.6.2         pkgconfig_2.0.3     htmltools_0.5.9    

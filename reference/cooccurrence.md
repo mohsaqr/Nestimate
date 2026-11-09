@@ -1,10 +1,24 @@
 # Build a Co-occurrence Network
 
-Constructs an undirected co-occurrence network from various input
-formats. Entities that appear together in the same transaction,
-document, or record are connected, with edge weights reflecting raw
-counts or a similarity measure. Argument names follow the citenets
-convention.
+`cooccurrence()` builds an undirected network of items that appear
+together in the same transaction (a document, a session, a record): an
+edge joins two items that occur together, weighted by how often they do,
+or by a similarity measure that adjusts that count for how often each
+item occurs overall. With `similarity = "relative"` the network is
+directed. It reads delimited columns (keywords separated by `";"`), a
+long table of items per transaction, a 0/1 incidence table, wide
+sequences or a list of transactions; the *Details* say how each is
+recognised.
+
+Raw counts grow with how frequent the two items are, so the most
+frequent items dominate a count network. The similarity measures correct
+for that in different ways (van Eck & Waltman, 2009); compare a few
+before reading which pairs are strongest. The network is descriptive: it
+keeps no source data, so
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+and
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+cannot resample it.
 
 ## Usage
 
@@ -29,42 +43,55 @@ cooccurrence(
 
 - data:
 
-  Input data. Accepts:
+  The transactions, in one of these forms:
 
-  - A `data.frame` with a delimited column (`field` + `sep`).
+  - a data frame with a delimited column (`field` and `sep`);
 
-  - A `data.frame` in long/bipartite format (`field` + `by`).
+  - a data frame in long (bipartite) form, one row per item in a
+    transaction (`field` and `by`);
 
-  - A binary `data.frame` or `matrix` (0/1 or `TRUE`/`FALSE`), declared
-    with `format = "binary"`.
+  - a 0/1 or `TRUE`/`FALSE` data frame or matrix, one row per
+    transaction and one column per item, declared with
+    `format = "binary"`;
 
-  - A wide sequence `data.frame` or `matrix` (non-binary).
+  - a wide sequence data frame or matrix with other values, whose rows
+    are the transactions;
 
-  - A `list` of character vectors (each element is a transaction).
+  - a plain list of character vectors, one per transaction.
+
+  A network object (`netobject`, `netobject_group`, `cograph_network`,
+  `tna`) raises an error of class `nestimate_bad_input`; pass the data
+  it was built from.
 
 - field:
 
-  Character. The entity column - determines what the nodes are. For
-  delimited format, a single column whose values are split by `sep`. For
-  long/bipartite format, the item column. For multi-column delimited, a
-  vector of column names whose split values are pooled per row.
+  The column holding the items, which become the nodes. With `sep`, its
+  values are split by `sep`; several column names pool the split values
+  of each row. With `by`, it is the item column of a long table. Default
+  `NULL`. Setting `by` or `sep` without `field`, or `field` without
+  either, raises an error of class `nestimate_bad_input`, as does naming
+  a column that `data` does not have, or setting any of the three for a
+  list.
 
 - by:
 
-  Character or `NULL`. What links the nodes. For long/bipartite format,
-  the grouping column (e.g., `"paper_id"`, `"session_id"`). Each unique
-  value of `by` defines one transaction. If `NULL` (default), entities
-  co-occur within the same row/document.
+  The column that defines the transactions of a long table: each of its
+  values is one transaction, holding the distinct `field` values of its
+  rows (for example `"paper_id"` or `"session_id"`). Default `NULL`,
+  where items co-occur within the same row. Ignored when `sep` is set,
+  which reads `field` as delimited.
 
 - sep:
 
-  Character or `NULL`. Separator for splitting delimited fields (e.g.,
-  `";"`, `","`). Default `NULL`.
+  The separator that splits delimited `field` values, such as `";"` or
+  `","`, matched literally; the split values are trimmed. Default
+  `NULL`. See `field` for the combinations that raise an error.
 
 - similarity:
 
-  Character. Similarity measure applied to the raw co-occurrence counts.
-  One of:
+  How the co-occurrence count \\C\_{ij}\\ of items \\i\\ and \\j\\, with
+  item frequencies \\f_i\\ and \\f_j\\, is turned into an edge weight.
+  Default `"none"`.
 
   `"none"`
 
@@ -84,7 +111,7 @@ cooccurrence(
 
   `"association"`
 
-  :   \\C\_{ij} / (f_i \cdot f_j)\\ (association strength /
+  :   \\C\_{ij} / (f_i \cdot f_j)\\ (association strength, or
       probabilistic affinity index; van Eck & Waltman, 2009).
 
   `"dice"`
@@ -97,89 +124,111 @@ cooccurrence(
 
   `"relative"`
 
-  :   Row-normalized: each row sums to 1.
+  :   Each row divided by its sum (the diagonal included when
+      `diagonal = TRUE`), so each row sums to 1: the weight from `i` to
+      `j` is the share of `i`'s co-occurrences that involve `j`. The
+      matrix is no longer symmetric, so the network is directed and both
+      directions of a pair are edges.
+
+  A zero denominator is replaced by 1, so an item without co-occurrences
+  gets weight 0 rather than `NaN`.
 
 - threshold:
 
-  Numeric. Minimum edge weight to retain. Edges below this value are set
-  to zero. Applied *after* similarity normalization. Default 0.
+  The smallest weight kept: weights below it, on the scale of
+  `similarity`, are set to zero. Default `0` (none).
 
 - min_occur:
 
-  Integer. Minimum entity frequency (number of transactions an entity
-  must appear in). Entities below this threshold are dropped before
-  computing co-occurrence. Default 1 (keep all).
+  The fewest transactions an item must appear in to be kept. Rarer items
+  are dropped before the co-occurrences are counted, and transactions
+  left empty are dropped with them. Default `1` (keep all).
 
 - diagonal:
 
-  Logical. If `TRUE` (default), the diagonal of the co-occurrence matrix
-  is kept (item self-co-occurrence = item frequency). If `FALSE`, the
-  diagonal is zeroed.
+  Whether the diagonal is kept. With `TRUE` (default) it holds each
+  item's frequency (the number of transactions it appears in),
+  transformed by `similarity`; with `FALSE` it is set to zero. Item
+  frequencies for the similarity measures are the same either way.
 
 - top_n:
 
-  Integer or `NULL`. If specified, return only the top `top_n` edges by
-  weight. Default `NULL` (all edges).
+  How many of the strongest off-diagonal edges to keep: pairs in an
+  undirected network, directed cells with `similarity = "relative"`.
+  Edges tied with the `top_n`-th weight are all kept, so a few more may
+  remain, and the diagonal is not affected. Default `NULL` (all edges).
 
 - ...:
 
-  Currently unused.
+  Not used.
 
 - format:
 
-  `"auto"` (default) or `"binary"`. Columns of only 0 and 1 could be
-  items or recoded positions, so `"auto"` raises an error of class
-  `nestimate_bad_input` on them. `"binary"` declares them items, one row
-  per transaction; a missing cell counts as no occurrence.
+  How 0/1 columns are read. Columns of only 0 and 1 (or `TRUE` and
+  `FALSE`) could be items or recoded positions, so with `"auto"`
+  (default) they raise an error of class `nestimate_bad_input`.
+  `"binary"` declares them items, one row per transaction, where a
+  missing cell counts as no occurrence; it raises the same error on data
+  with any other value.
 
 ## Value
 
-A `netobject` (undirected, class `c("netobject", "cograph_network")`)
-with `method = "co_occurrence_fn"` and `$data = NULL` - this function
-does *not* go through
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
-so the result carries no source data and the data-resampling verbs
-([`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
-[`permutation`](https://pak.dynasite.org/Nestimate/reference/permutation.md))
-cannot be run on it. The `$weights` matrix holds the similarity (or raw)
-co-occurrence values, one row/column per retained item. The `$params`
-list records `similarity`, `threshold`, `min_occur`, `diagonal`,
-`top_n`, `n_transactions` and `n_items`.
+A `netobject` (class `c("netobject", "cograph_network")`), undirected
+(directed with `similarity = "relative"`), with
+`method = "co_occurrence_fn"`. Print it for an overview;
+[`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
+gives one row per edge,
+[`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
+the weight matrix (one row and column per item kept),
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+the node centralities, and
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+draws it. It is built without
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+and holds no source data (`data` is `NULL`). Its `params` record
+`similarity`, `threshold`, `min_occur`, `diagonal`, `top_n`,
+`n_transactions` and `n_items`.
 
 ## Details
 
-Six input formats are supported, auto-detected from the combination of
-`field`, `by`, and `sep`:
+Six input forms are recognised from `data` and from which of `field`,
+`by` and `sep` are set:
 
-1.  **Delimited**: `field` + `sep` (single column). Each cell is split
-    by `sep`, trimmed, and de-duplicated per row.
+1.  **Delimited**: `field` (one column) and `sep`. Each cell is split by
+    `sep`, trimmed, and its distinct values form a transaction.
 
-2.  **Multi-column delimited**: `field` (vector) + `sep`. Values from
-    multiple columns are split, pooled, and de-duplicated per row.
+2.  **Multi-column delimited**: `field` (several columns) and `sep`. The
+    split values of a row's columns are pooled into one transaction.
 
-3.  **Long bipartite**: `field` + `by`. Groups by `by`; unique values of
-    `field` within each group form a transaction.
+3.  **Long bipartite**: `field` and `by`. The distinct `field` values
+    within each `by` group form a transaction.
 
-4.  **Binary matrix**: No `field`/`by`/`sep`, all values 0/1 or logical,
-    and `format = "binary"`. Columns are items, rows are transactions; a
+4.  **Binary**: none of the three, all values 0/1 or logical, and
+    `format = "binary"`. Columns are items, rows are transactions; a
     missing cell is no occurrence. Without `format = "binary"` such data
     is refused, since 0/1 columns could also be recoded positions.
 
-5.  **Wide sequence**: No `field`/`by`/`sep`, non-binary. Unique values
-    across each row form a transaction.
+5.  **Wide sequence**: none of the three, other values. The distinct
+    states of each row form a transaction, leaving out missing values
+    and the void markers (`"%"`, `"*"`, `""`, `"NA"`, `"NaN"`). A data
+    frame must be a single column or a numbered run of position columns
+    (`T1`, `T2`, ...) with nothing beside it; any other frame raises an
+    error of class `nestimate_bad_input`, and a column called `action`
+    and repeated column names are refused the same way.
 
-6.  **List**: A plain list of character vectors.
+6.  **List**: a plain list of character vectors.
 
-A network object (`netobject`, `netobject_group`, `cograph_network`,
-`tna`) is refused: pass the data it was built from, or use
-`build_network(method = "co_occurrence")` for positional co-occurrence
-of sequences.
+To count co-occurrence of states within sequences through
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+with its resampling verbs, use `build_network(method = "co_occurrence")`
+or
+[`build_cna()`](https://pak.dynasite.org/Nestimate/reference/build_cna.md)
+instead.
 
-The pipeline converts all formats into a list of character vectors
-(transactions), optionally filters by `min_occur`, builds a binary
-transaction matrix, computes `crossprod(B)` for the raw co-occurrence
-counts, normalizes via the chosen `similarity`, then applies `threshold`
-and `top_n` filtering.
+All forms are turned into a list of transactions, which `min_occur`
+filters. The raw counts are `crossprod(B)` of the binary transaction
+matrix `B`; `similarity` is applied to them, then `threshold`, then
+`top_n`.
 
 ## References
 

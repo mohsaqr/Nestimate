@@ -1,12 +1,25 @@
 # Compare Network-Level Statistics of Two Networks
 
-Snijders & Borgatti (1999) two-network test: each network's statistics
-get vertex-bootstrap standard errors, and each difference is tested with
-\$\$z = (\hat{\theta}\_x - \hat{\theta}\_y) / \sqrt{SE_x^2 + SE_y^2}\$\$
-against a standard normal reference. This is the comparison the vertex
-bootstrap was originally proposed for: deciding whether two observed
-networks differ in density, centralization, reciprocity, or any other
-whole-network descriptive.
+`vertex_compare()` tests whether two observed networks differ in their
+network-level statistics, the two-network test Snijders & Borgatti
+(1999) proposed the vertex bootstrap for. Each network's statistics get
+vertex-bootstrap standard errors from
+[`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md),
+and each difference is tested with \$\$z = (\hat{\theta}\_x -
+\hat{\theta}\_y) / \sqrt{SE_x^2 + SE_y^2}\$\$ against a standard normal
+distribution, with a normal-approximation confidence interval for the
+difference. It covers density, mean weight, centralisation, reciprocity
+and any statistic of your own.
+
+The test is about whole-network descriptives, and its standard errors
+reflect the resampling of nodes, not of the cases behind the weights.
+The p-values are not adjusted for the number of statistics tested; pass
+them to [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html)
+when several are read together. When the raw data of both networks are
+available,
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+and [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)
+compare them edge by edge.
 
 ## Usage
 
@@ -38,72 +51,95 @@ plot(x, ...)
 - x, y:
 
   The two networks: `netobject`s, `cograph_network`s, square weight
-  matrices, or precomputed `net_vertex_bootstrap` objects (then `iter`,
-  `statistics`, `statistic_fn`, `directed`, and `seed` are ignored for
-  that argument). For the [`print()`](https://rdrr.io/r/base/print.html)
-  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods,
-  `x` is an object of class `net_vertex_comparison`. The two sides must
-  cover exactly the same statistics; a mismatch (e.g., a directed
-  network's `reciprocity` against an undirected one, or precomputed
-  objects built with different `statistics` selections) is an error,
-  never a silent subset.
+  matrices, or `net_vertex_bootstrap` results computed beforehand. A
+  precomputed result is used as it is, so `iter`, `statistics`,
+  `statistic_fn` and `directed` do not apply to it. The two must cover
+  the same statistics: a mismatch, such as a directed network's
+  `reciprocity` against an undirected network, or two precomputed
+  results with different `statistics`, raises an error rather than
+  comparing a subset. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods, `x`
+  is a `net_vertex_comparison` result.
 
 - iter:
 
-  Integer. Number of bootstrap replicates (default 1000).
+  The number of bootstrap replicates, at least 2. Default `1000`.
 
 - ci_level:
 
-  Numeric. Significance level for the confidence intervals (default 0.05
-  for 95% CIs).
+  The significance level of the normal-approximation intervals for the
+  differences: `0.05` (default) gives 95% intervals. It is also passed
+  to the bootstraps run here; with a precomputed result, the differences
+  still use this level.
 
 - statistics:
 
-  Character vector selecting built-in statistics (see Details). Default:
-  all applicable to the network's directedness.
+  The built-in statistics to compare, as named for
+  [`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md):
+  `density`, `mean_weight`, `centralization` and, for directed networks,
+  `reciprocity`. Default `NULL`: all that apply. A name not available
+  for a network raises an error.
 
 - statistic_fn:
 
-  Optional named list of functions, each taking the weight matrix and
-  returning a single numeric value. Computed alongside the built-ins.
+  Statistics of your own, as a named list of functions, each taking the
+  weight matrix and returning a single number. They are computed beside
+  the built-ins on the whole matrix, diagonal included. Default `NULL`.
 
 - directed:
 
-  Logical or NULL. Directedness of the network. NULL (default) reads
-  `x$directed` when available, otherwise falls back to matrix symmetry.
+  Whether the networks are directed, which decides how collisions are
+  filled and whether `reciprocity` is available; one value applies to
+  both networks, not to a precomputed result. Default `NULL` reads each
+  network's own directedness, and for a matrix (or a network that
+  records none) treats an asymmetric matrix as directed.
 
 - seed:
 
-  Integer or NULL. RNG seed for reproducibility.
+  A seed passed to [`set.seed()`](https://rdrr.io/r/base/Random.html)
+  once, before both bootstraps run, so the comparison can be repeated;
+  the session's random-number stream then continues from it. Default
+  `NULL` uses the current stream.
 
 - labels:
 
-  Character vector of length 2 naming the networks in the output
-  (default `c("x", "y")`).
+  Two names for the networks, used in the print header, the plot axis
+  and the column names `observed_<label>` (made syntactic with
+  [`make.names()`](https://rdrr.io/r/base/make.names.html)). Default
+  `c("x", "y")`.
 
 - digits:
 
-  Number of digits to display (default 3).
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: the
+  number of decimals shown. Default `3`.
 
 - ...:
 
-  In `plot.net_vertex_comparison()`, `print.net_vertex_comparison()` and
-  `summary.net_vertex_comparison()`: Additional arguments (ignored).
+  Not used.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_vertex_comparison`.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_vertex_comparison` result.
 
 ## Value
 
-An object of class `"net_vertex_comparison"` containing:
+A `net_vertex_comparison` object. Printing it shows the two networks'
+sizes and the first network's number of replicates, then the summary
+table with significance stars;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns that table as
+a data frame with one row per statistic and the columns `statistic`, the
+two observed values (`observed_<label>`), `diff` (first minus second),
+`se_diff`, `z`, `p_value` (two-sided), `ci_lower` and `ci_upper`;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+differences with their intervals. When a statistic has no bootstrap
+variation in either network (both standard errors 0), its `z` and
+`p_value` are `NA`. The object holds:
 
 - summary:
 
-  Tidy data frame, one row per statistic: `statistic`, the two observed
-  values, `diff`, `se_diff`, `z`, `p_value`, and a normal-approximation
-  confidence interval for the difference.
+  The summary table described above.
 
 - x, y:
 
@@ -111,24 +147,20 @@ An object of class `"net_vertex_comparison"` containing:
 
 - labels, ci_level:
 
-  Configuration.
+  The settings used.
 
-When both bootstrap SEs are zero (a statistic with no resampling
-variation in either network) `z` and `p_value` are `NA`.
-
-In `print.net_vertex_comparison()`: `x`, invisibly.
-
-In `summary.net_vertex_comparison()`: The tidy summary data frame (one
-row per statistic).
-
-In `plot.net_vertex_comparison()`: A ggplot object.
+The [`print()`](https://rdrr.io/r/base/print.html) method returns its
+input invisibly, [`summary()`](https://rdrr.io/r/base/summary.html) the
+summary data frame and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) a `ggplot`
+object.
 
 ## Methods
 
-- `plot.net_vertex_comparison()`: Forest plot of the statistic
-  differences with normal-approximation confidence intervals;
-  differences whose interval excludes zero are the statistically
-  distinguishable ones.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws each
+statistic's difference as a point with its normal-approximation
+interval, beside a dashed line at zero; intervals that exclude zero are
+drawn in red, the others in blue.
 
 ## References
 

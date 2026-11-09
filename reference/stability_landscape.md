@@ -1,14 +1,34 @@
 # Stability Landscape of a Transition Network
 
-Draws a transition network as a ball-in-cup landscape (Scheffer et al.
-2009) in which the depth of each cup is the stability of the state: how
-long the process stays once it is there. A state with stay probability
+`stability_landscape()` estimates the ball-in-cup landscape (Scheffer et
+al. 2009) of a transition network, which
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws: one cup
+per state, whose depth is the stability of that state, how long the
+process stays once it is there. A state with stay probability
 \\P\_{ii}\\ is left after \\1 / (1 - P\_{ii})\\ steps on average (its
-dwell time), and its cup depth is the log of that time, \\-\log(1 -
-P\_{ii})\\, so that dwell time = \\e^{depth}\\: the escape-time law of a
-particle in a potential well (Kramers 1940). A state that is left at
-once has depth 0, no cup at all. Intervals come from resampling whole
-sequences.
+expected stay, or dwell time), and its cup depth is the log of that
+time, \\-\log(1 - P\_{ii})\\, so that dwell time = \\e^{depth}\\: the
+escape-time law of a particle in a potential well (Kramers 1940). A
+state that is left at once has depth 0, no cup at all. It takes a
+`"relative"` or `"frequency"` network, a grouped network (one landscape
+per group, on one state order) or the wide sequences themselves, and
+gives every depth a percentile interval from resampling whole sequences.
+
+Depth is a property of the state alone. How often the process enters the
+state is its `share` of the observed time steps, reported beside the
+depth, and where the process goes when it leaves is in the exit
+probabilities (`summary(x, table = "exits")`), which the plot writes
+under each cup. With three states the result also reports the net
+circulation, the net probability flux \\\pi_i P\_{ij} - \pi_j P\_{ji}\\
+around the cycle, which stationarity makes equal on all three edges
+(Schnakenberg 1976): zero for a chain whose every transition is as
+common as its reverse. The depths pool every sequence and every time
+step; whether they change over the programme or along a covariate is
+what
+[`landscape_trend()`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
+shows, and how long the process takes to get from one state to another
+is given by
+[`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md).
 
 ## Usage
 
@@ -36,54 +56,60 @@ plot(x, ...)
 
 - x:
 
-  A transition network from
+  The network or sequences: a transition network from
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  (method `"relative"` or `"frequency"`), a grouped one
-  (`netobject_group`, for example
+  with method `"relative"` or `"frequency"` (or a bare `cograph_network`
+  of one), a grouped one (`netobject_group`, for example
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   of a
   [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  result) or a wide sequence data frame or matrix. The network must
-  carry its sequences. For the
-  [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_landscape`.
+  result), a `tna` model, or a wide sequence data frame or matrix. A
+  network must carry its sequences; a network of another method (for
+  example `"glasso"`) raises an error of class `nestimate_not_markov`.
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_landscape` object.
 
 - states:
 
-  Character vector naming every state once, in the order to draw them
-  (for example from least to most engaged). Default: the alphabetical
-  order.
+  Every state, each named once, in the order to draw them (for example
+  from least to most engaged). Default `NULL`, the alphabetical order. A
+  vector that leaves out, adds or repeats a state raises an error of
+  class `nestimate_bad_input`.
 
 - iter:
 
-  Integer. Bootstrap resamples of sequences. Default 1000.
+  The number of bootstrap resamples of sequences behind the intervals, a
+  non-negative whole number. Default `1000`; `0` skips the resampling
+  and leaves the intervals `NA`.
 
 - ci_level:
 
-  Numeric in (0, 1). Interval level. Default 0.95.
+  The interval level, a number between 0 and 1. Default `0.95`.
 
 - seed:
 
-  Integer or `NULL`. Seed for the resampling, scoped to the call (the
-  global random state is restored).
+  A seed for the resampling. It applies to this call only: the session's
+  random state is restored afterwards. Default `NULL`.
 
 - cols:
 
-  Character vector or `NULL`. For a wide data frame: the columns holding
-  the positions. Needed when they are not a numbered run (`T1`, `T2`,
-  ...) or one of them is called `action`.
+  For a wide data frame: the columns holding the positions. Needed when
+  they are not a numbered run (`T1`, `T2`, ...) or one of them is called
+  `action`; such a frame without `cols` raises an error of class
+  `nestimate_bad_input`. Default `NULL`.
 
 - object:
 
-  A `net_landscape` object (for
-  [`summary()`](https://rdrr.io/r/base/summary.html)).
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_landscape` object.
 
 - table:
 
-  One of `"cups"`, `"exits"`, `"circulation"`. In
-  [`summary()`](https://rdrr.io/r/base/summary.html): which table to
-  return.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method:
+  which table to return, `"cups"` (default), `"exits"` or
+  `"circulation"`. The circulation exists for three states only; asking
+  for it otherwise raises an error of class `nestimate_bad_input`.
 
 - ...:
 
@@ -91,51 +117,63 @@ plot(x, ...)
 
 - digits:
 
-  Integer. Decimal places in
-  [`print()`](https://rdrr.io/r/base/print.html). Default 2.
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: decimal
+  places (the circulation gets two more). Default `2`.
 
 ## Value
 
-An object of class `"net_landscape"`: one fit per network (`"network"`
-for a single one, the group names for a grouped one), with `states`,
-`iter` and `ci_level`.
+A `net_landscape` object. [`print()`](https://rdrr.io/r/base/print.html)
+shows each state's depth with its interval, expected stay, stay
+probability and share, and the net circulation for three states;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the tables
+below; [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns
+the landscape as a `ggplot`, one panel per network, with the intervals
+as bars and the expected stay, share and exit probabilities written
+under each cup, and with three states the net circulation and its
+interval at the top of the panel.
+[`print()`](https://rdrr.io/r/base/print.html) returns its input
+invisibly.
 
-In [`summary()`](https://rdrr.io/r/base/summary.html): a data frame.
-`table = "cups"` (default): one row per network and state, with `group`,
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame.
+With `table = "cups"`: one row per network and state, with `group`,
 `state`, `depth`, `ci_lower`, `ci_upper`, `dwell` (expected consecutive
 steps in the state), `stay` (\\P\_{ii}\\), `share` (share of observed
 time steps in the state), `n_from` (transitions out of the state,
-self-transitions included) and `resamples`. `table = "exits"`: one row
-per network and pair of distinct states, with `probability` and `count`.
-`table = "circulation"`: one row per network (three states only), with
-`cycle` (the direction of the net flow), `current`, `ci_lower`,
-`ci_upper` and `resamples` (resamples with a stationary distribution).
+self-transitions included) and `resamples`. With `table = "exits"`: one
+row per network and pair of distinct states, with `group`, `from`, `to`,
+`probability` and `count`. With `table = "circulation"`: one row per
+network, with `group`, `cycle` (the direction of the net flow),
+`current`, `ci_lower`, `ci_upper` and `resamples` (resamples with a
+unique stationary distribution).
 
-In [`print()`](https://rdrr.io/r/base/print.html): `x`, invisibly.
+The object's fields:
 
-In [`plot()`](https://rdrr.io/r/graphics/plot.default.html): a `ggplot`
-object, one panel per network.
+- fits:
+
+  One fit per network, named `"network"` for a single one and by group
+  for a grouped one; each holds the cups, exits and circulation tables
+  and the numbers of sequences and transitions.
+
+- states:
+
+  The states, in drawing order.
+
+- iter, ci_level:
+
+  The resampling settings.
 
 ## Details
 
-Network input replays per-sequence weighting, concatenation and boundary
-markers. Concatenated sequences are the resampling units. With a
-covariate, its value must be constant within each concatenated unit.
-Scaled, thresholded or otherwise modified networks whose weights do not
-match their stored sequences are refused; pass the original sequences to
-estimate a new landscape. Observed shares count prepared positions
-without sequence weighting. Phase windows retain the full sequence's
-weight.
-
-Depth is a property of the state alone; how often the process enters the
-state is its `share` of the observed time steps, reported beside the
-depth. Where the process goes when it leaves is in the exit
-probabilities (`summary(x, table = "exits")`), which the plot writes
-under each cup. With three states the plot also reports the net
-circulation, the net probability flux \\\pi_i P\_{ij} - \pi_j P\_{ji}\\
-around the cycle, which stationarity makes equal on all three edges
-(Schnakenberg 1976): zero for a chain whose every transition is as
-common as its reverse.
+Network input replays the network's per-sequence weighting,
+concatenation and boundary markers (a `start` or `end` state is a state
+of the landscape), and the concatenated sequences are the resampling
+units. An end state, or any state seen only at the last position of a
+sequence, has no outgoing transitions, so its depth, stay and dwell are
+`NA`, and the plot draws it flat at depth 0, without a cup. Scaled,
+thresholded or otherwise modified networks whose weights do not match
+their stored sequences are refused; pass the original sequences to
+estimate a new landscape. The `share` column counts prepared positions
+without sequence weighting.
 
 In a resample where a state is never left, its depth is infinite, so an
 upper interval limit can be `Inf`; a resample in which a state never
@@ -146,9 +184,11 @@ them is a smooth join, and every rim is drawn at 0.
 ## Errors
 
 `nestimate_not_markov` for a network that is not a transition network;
-`nestimate_bad_input` for `states` that do not name every state once, or
-input without sequences; `nestimate_landscape_unestimable` for a state
-that is never left or input with no observed transition.
+`nestimate_bad_input` for `states` that do not name every state once,
+fewer than two states, input without sequences, or a network whose
+weights cannot be rebuilt from its sequences;
+`nestimate_landscape_unestimable` for a state that is never left or
+input with no observed transition.
 
 ## References
 

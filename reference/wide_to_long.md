@@ -1,7 +1,10 @@
 # Convert Wide Sequences to Long Format
 
-Convert sequence data from wide format (one row per sequence, columns as
-time points) to long format (one row per action).
+`wide_to_long()` turns sequences in wide format (one row per sequence,
+one column per time point) into long format, with one row per sequence
+and time point. The time point columns are those named `time_prefix`
+followed by a number (`V1`, `V2`, ...); every other column is kept and
+repeated on each row of its sequence.
 
 ## Usage
 
@@ -20,56 +23,62 @@ wide_to_long(
 
 - data:
 
-  Data frame in wide format with sequences in rows.
+  A data frame in wide format, one row per sequence.
 
 - id_col:
 
-  Character. Name of the ID column, or NULL to auto-generate IDs.
-  Default: NULL.
+  The column identifying each sequence. Default `NULL`, which adds a
+  column `id` holding the row number of the wide input (replacing any
+  existing column of that name). A name that is not a column raises an
+  error.
 
 - time_prefix:
 
-  Character. Prefix for time point columns (e.g., "V" for V1, V2, ...).
-  Default: "V".
+  The prefix of the time point columns: with `"V"` (default), the
+  columns `V1`, `V2`, ... are read. No column matching it raises an
+  error.
 
 - action_col:
 
-  Character. Name of the action column in output. Default: "Action".
+  The name of the state column in the output. Default `"Action"`.
 
 - time_col:
 
-  Character. Name of the time column in output. Default: "Time".
+  The name of the time column in the output. Default `"Time"`.
 
 - drop_na:
 
-  Logical. Whether to drop NA values. Default: TRUE.
+  Whether to drop the rows whose state is missing, such as the padding
+  after a shorter sequence ends. Default `TRUE`.
 
 ## Value
 
-A data frame in long format, one row per (sequence, time point), sorted
-by identifier then time, with columns:
+A data frame in long format, one row per sequence and time point, sorted
+by identifier and then time. Its columns are the identifier, the other
+kept columns, the time and the state:
 
 - id:
 
-  Sequence identifier. Named by `id_col`; when that is `NULL` the column
-  is called `id` and holds the row number of the wide input (integer).
+  The sequence identifier, named by `id_col`; with `id_col = NULL` it is
+  called `id` and holds the row number of the wide input (integer).
 
 - Time:
 
-  Time point within the sequence (integer), taken from the numeric
-  suffix of the wide column name. Named by `time_col`.
+  The time point within the sequence (integer), taken from the number in
+  the wide column name; named by `time_col`.
 
 - Action:
 
-  The action/state at that time point. Named by `action_col`.
-
-Any additional non-time columns from the original data are preserved and
-repeated on every row of their sequence.
+  The state at that time point; named by `action_col`.
 
 ## Details
 
-Converts wide sequence data (one row per sequence, one column per time
-point) to the long format used by many TNA functions and analyses.
+The long format is the event-log layout read by
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+with `action` (and
+[`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)):
+give `action = "Action"`, `actor = "id"` and `time = "Time"` (or the
+names chosen here).
 
 ## See also
 

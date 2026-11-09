@@ -1,20 +1,28 @@
 # Bayesian Transition Entropy
 
-Bayesian estimation of the transition entropy quantities of
-[`transition_entropy`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
-and the edge-level decomposition of
-[`entropy_network`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md).
-Each row of the transition matrix gets an independent Dirichlet
-posterior (counts + `prior`); Monte Carlo draws propagate count
-uncertainty into the entropy rate, the per-state branching entropies,
-and every edge's entropy contribution, yielding posterior means and
-credible intervals.
+`entropy_bayes()` puts credible intervals on the entropy quantities of
+[`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
+and on the edge-level decomposition of
+[`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md).
+Each row of the transition count matrix gets an independent Dirichlet
+posterior (counts + `prior`), and Monte Carlo draws from it carry the
+uncertainty of the counts into the entropy rate, the stationary entropy,
+the redundancy, each state's branching entropy and stationary
+probability, and every edge's entropy contribution. Each is reported as
+a posterior mean with an equal-tailed credible interval. The counts are
+recovered from a network, a `tna` model, a count matrix or sequence data
+(see `x`); a `netobject_group` gives one result per group.
 
 The practical purpose is to **exclude unstable estimates**: an edge
 whose contribution rests on a handful of observations has a wide
-posterior, and is flagged non-credible unless it credibly accounts for
-at least `min_share` of the process entropy. `$model` is the entropy
-network with non-credible edges zeroed - the stable entropy skeleton.
+posterior, and it is flagged as not credible unless it credibly accounts
+for at least `min_share` of the entropy rate. The pruned network keeps
+the credible edges only, the stable entropy skeleton. The posterior
+treats every transition as an independent draw from its row of a
+first-order chain; whether a first-order chain describes the sequences
+is a separate question, which
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
+tests.
 
 ## Usage
 
@@ -35,6 +43,12 @@ print(x, digits = 3, ...)
 # S3 method for class 'net_entropy_bayes_group'
 print(x, ...)
 
+# S3 method for class 'net_entropy_bayes_group'
+summary(object, ...)
+
+# S3 method for class 'net_entropy_bayes_group'
+plot(x, top = 25, title = paste("Bayesian edge entropy", "contributions"), ...)
+
 # S3 method for class 'net_entropy_bayes'
 summary(object, ...)
 
@@ -46,143 +60,181 @@ plot(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 
 - x:
 
-  A frequency `netobject` (`build_network(method = "frequency")`), a
-  relative or frequency `netobject` that carries its `$data` (counts are
-  recounted with the network's own start/end states, concatenation,
-  windows and one-hot units), a `tna` model, a count matrix, or a wide
-  sequence data.frame. Counts are read from the declared method, never
-  from the values: a scaled or relative network is recounted from its
-  data, and an association network or any other network without counts
-  raises `nestimate_bad_input`. Group dispatch on `netobject_group`. For
-  the [`print()`](https://rdrr.io/r/base/print.html) and
+  The transition counts: a frequency `netobject`
+  (`build_network(method = "frequency")`); a relative, frequency or
+  co-occurrence `netobject` that carries its data, recounted with the
+  network's own start and end states, concatenation, windows and one-hot
+  units; a one-hot network built with `build_network(method = "wtna")`
+  or `"wtna_cooccurrence"`, with its data, recounted the same way (a
+  [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
+  result, whose method is `"wtna_transition"`, currently raises
+  `nestimate_bad_input`); an unscaled frequency, co-occurrence or
+  reverse network without data, whose weights are the counts; a network
+  without a declared method whose weights are non-negative whole
+  numbers, read as counts; a `tna` model; a count matrix (non-negative
+  whole numbers); or wide sequence data (a data frame or a character
+  matrix) that holds a numbered run of positions (T1, T2, ...), from
+  which a frequency network is built, other columns set aside with a
+  message. For a frame without such a run, pass a network built with
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+  When a network declares its method, counts are read from that method,
+  never from the values: a scaled or relative network is recounted from
+  its data. An association network, or any other network whose counts
+  cannot be recovered, raises an error of class `nestimate_bad_input`; a
+  matrix of probabilities raises an error. A `netobject_group` gives one
+  result per group. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
-  object of class `net_entropy_bayes` or `net_entropy_bayes_group`.
+  `entropy_bayes()` result;
+  [`print()`](https://rdrr.io/r/base/print.html) also takes a group
+  result.
 
 - prior:
 
-  Numeric. Dirichlet prior concentration added to every cell of the
-  count matrix (default `0.5`, Jeffreys).
+  The Dirichlet concentration added to every cell of the count matrix, a
+  positive number. Default `0.5` (Jeffreys).
 
 - draws:
 
-  Integer. Number of Monte Carlo posterior draws (default `4000`).
+  The number of Monte Carlo posterior draws, at least 100. Default
+  `4000`.
 
 - ci:
 
-  Numeric in (0, 1). Credible interval mass (default `0.95`).
+  The mass of the credible intervals, between 0 and 1. Default `0.95`.
 
 - min_share:
 
-  Numeric in \[0, 1). An edge is credible when the lower bound of the
-  credible interval of its *share* of the entropy rate exceeds this
-  value (default `0.01`: the edge credibly accounts for at least 1% of
-  process entropy).
+  The credibility threshold, a proportion in \\\[0, 1)\\: an edge is
+  credible when the lower limit of the credible interval of its *share*
+  of the entropy rate exceeds it. Default `0.01`: the edge credibly
+  accounts for at least 1% of the entropy rate.
 
 - base:
 
-  Numeric. Logarithm base (default `2`, bits).
+  The logarithm base, which sets the unit: `2` (default) for bits. Any
+  positive number other than 1.
 
 - seed:
 
-  Integer or NULL. RNG seed for reproducibility.
+  An integer that makes the draws reproducible. Default `NULL`. The
+  session's own random stream is left as it was; a group uses the same
+  seed for every group.
 
 - digits:
 
-  Integer. Digits to round numeric output. Default `3`.
+  For [`print()`](https://rdrr.io/r/base/print.html) of a result:
+  decimal places of the chain-level estimates. Default `3`. A group
+  result prints with three.
 
 - ...:
 
-  In `plot.net_entropy_bayes()`, `print.net_entropy_bayes()`,
-  `print.net_entropy_bayes_group()` and `summary.net_entropy_bayes()`:
-  Ignored.
+  For the [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: not
+  used.
 
 - object:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: an
-  object of class `net_entropy_bayes`.
+  For [`summary()`](https://rdrr.io/r/base/summary.html): an
+  `entropy_bayes()` result.
 
 - top:
 
-  Integer. Show at most this many edges, by posterior mean contribution
-  (default `25`).
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the most
+  edges to show, those with the largest posterior mean contribution.
+  Default `25`.
 
 - title:
 
-  Character. Plot title.
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the plot
+  title. Default `"Bayesian edge entropy contributions"`.
 
 ## Value
 
-An object of class `"net_entropy_bayes"` with:
+A `net_entropy_bayes` object, or for a `netobject_group` a
+`net_entropy_bayes_group`: a named list of them, one per group.
+[`print()`](https://rdrr.io/r/base/print.html) shows the posterior mean
+and credible interval of the entropy rate, stationary entropy and
+redundancy, and how many edges are credible; for a group, each group's
+entropy rate. For a group,
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the
+chain-level table of every group stacked, with a `group` column, and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+forest plot below in one panel per group. For one network,
+[`summary()`](https://rdrr.io/r/base/summary.html) prints the
+chain-level table and the per-edge table and returns the per-edge data
+frame invisibly.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
+`ggplot` forest plot of the edges with the largest posterior mean
+contributions: the mean and credible interval of each, credible edges in
+Okabe-Ito blue and unstable ones in grey, with a dashed line at
+`min_share` of the posterior mean entropy rate, the stability criterion.
+The [`print()`](https://rdrr.io/r/base/print.html) methods return their
+input invisibly. The object's fields:
 
 - summary:
 
-  Tidy data.frame - one row per chain-level quantity (`entropy_rate`,
-  `stationary_entropy`, `redundancy`), with posterior `mean`, `sd`,
-  `ci_lower`, `ci_upper`.
+  Data frame, one row per chain-level quantity (`entropy_rate`,
+  `stationary_entropy`, `redundancy`), with the posterior `mean`, `sd`,
+  `ci_lower` and `ci_upper`.
 
 - states:
 
-  Tidy data.frame - one row per state: posterior mean/CI of the row
-  entropy and of the stationary probability.
+  Data frame, one row per state: the posterior mean, sd and credible
+  interval of its branching entropy, and the posterior mean and credible
+  interval of its stationary probability.
 
 - edges:
 
-  Tidy data.frame - one row per observed transition: posterior
-  mean/sd/CI of the contribution (bits), posterior mean/CI of its share
-  of the entropy rate, and the `credible` flag.
+  Data frame, one row per observed transition (`from`, `to`, `count`),
+  sorted by contribution, largest first: the posterior mean, sd and
+  credible interval of its contribution (in `base` units), the posterior
+  mean and credible interval of its share of the entropy rate (a
+  proportion), and the `credible` flag.
 
 - network:
 
-  `netobject` - posterior-mean entropy network (all edges), carrying the
-  entropy house style.
+  A `netobject`: the posterior-mean entropy network, every observed edge
+  included, with the entropy edge style (vermilion edges, 2-digit
+  labels, no minimum-weight pruning, node rings showing the posterior
+  mean stationary distribution).
 
 - model:
 
-  `netobject` - the pruned entropy network: posterior means where
-  `credible`, `0` elsewhere.
+  A `netobject`: the pruned entropy network, posterior means where
+  `credible` and `0` elsewhere, styled the same way.
 
 - draws_entropy_rate:
 
-  Numeric vector of posterior entropy-rate draws (for further analysis
-  or plotting).
+  The posterior draws of the entropy rate, for further analysis or
+  plotting.
 
-- prior, draws, ci, min_share, base, states_names:
+- prior, draws, ci, min_share, base:
 
-  Call metadata.
+  The settings used.
 
-For a `netobject_group` the result is a `"net_entropy_bayes_group"`: a
-named list holding one such object per group.
+- states_names:
 
-In `print.net_entropy_bayes()` and `print.net_entropy_bayes_group()`:
-`x` invisibly.
-
-In `summary.net_entropy_bayes()`: The tidy edge table (data.frame), one
-row per observed transition, sorted by posterior mean contribution,
-returned invisibly. The chain-level and per-edge tables are printed as a
-side effect.
-
-In `plot.net_entropy_bayes()`: A ggplot object.
+  Character vector of state names.
 
 ## Details
 
-With `prior > 0` the posterior puts mass on every transition, so
-contribution draws are strictly positive and a naive "CI excludes zero"
-rule would flag every edge as credible. The share criterion is used
-instead: an edge is stable when it credibly carries at least `min_share`
-of \\h(P)\\. Unobserved transitions (count 0) get only prior mass and
-are never credible under any sensible `min_share`.
+With `prior > 0` the posterior puts mass on every transition, so the
+contribution draws are strictly positive and a rule such as "the
+interval excludes zero" would flag every edge as credible. The share
+criterion is used instead: an edge is stable when it credibly carries at
+least `min_share` of \\h(P)\\. An unobserved transition (count 0) gets
+prior mass only; it is left out of the edge table and of both networks.
 
-The posterior mean entropy rate is typically slightly below the plug-in
-estimate on sparse data (Dirichlet smoothing pulls rows toward uniform
-but averages over uncertainty); the difference vanishes as counts grow.
-
-## Methods
-
-- `plot.net_entropy_bayes()`: Forest plot of the per-edge entropy
-  contributions: posterior mean and credible interval, credible edges in
-  Okabe-Ito blue, unstable (non-credible) edges in grey. The dashed line
-  marks `min_share` of the posterior-mean entropy rate - the stability
-  criterion.
+The posterior mean entropy rate differs from the plug-in estimate of
+[`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
+in two opposite ways: the prior pulls every row toward uniform, which
+raises the entropy, and averaging over the posterior lowers it. Which
+effect wins depends on the data (on the first 200 events of
+`group_regulation_long` the posterior mean is above the plug-in value);
+the difference is largest on sparse counts and vanishes as the counts
+grow.
 
 ## References
 
@@ -205,8 +257,8 @@ eb
 #> Bayesian Transition Entropy (9 states, bits; Dirichlet prior 0.5, 1000 draws)
 #> 
 #>   entropy_rate:       2.411 [2.396, 2.425]
-#>    stationary_entropy: 2.783 [2.771, 2.796]
-#>    redundancy:         0.373 [0.361, 0.384]
+#>   stationary_entropy: 2.783 [2.771, 2.796]
+#>   redundancy:         0.373 [0.361, 0.384]
 #> 
 #> Edges: 78 observed; 31 credible (share of h(P) credibly > 1%).
 #> Use summary() for the edge table and plot() for the posterior.

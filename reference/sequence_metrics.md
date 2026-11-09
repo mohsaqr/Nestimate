@@ -1,12 +1,26 @@
 # Per-Sequence Indices
 
-Computes descriptive indices for every sequence: length and validity,
-composition and diversity, spells, transitions, the fate of the initial
-state, the dominant and emergent states, cyclic recurrence, and a
-composite complexity index. The indices are those of
-`codyna::sequence_indices()`, with three corrections listed under
-Details. One row per sequence, so the result can be described, plotted,
-or used as predictors.
+`sequence_metrics()` computes descriptive indices for every sequence and
+returns one row per sequence: length and validity, composition and
+diversity, spells, transitions, the fate of the initial state, the
+dominant and emergent states, cyclic recurrence and a composite
+complexity index, plus the integrative potential of a set of favourable
+states when `favorable` is given. It reads any input
+[`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+reads: a wide table of positions, an event log, the output of
+[`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md),
+a sequence network or group of networks, or a `tna` model. The indices
+are those of `codyna::sequence_indices()`, with three corrections listed
+under *Details*.
+
+The indices describe each sequence as it was observed, and several of
+them (spells, transitions, recurrence) rest on few positions in a short
+sequence; read them beside `valid_n`. Because there is one row per
+sequence, the result can be summarised, plotted or used as predictors;
+[`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
+and
+[`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md)
+look at which subsequences recur and how they relate to an outcome.
 
 ## Usage
 
@@ -17,6 +31,9 @@ sequence_metrics(
   omega = 1,
   meta = FALSE,
   cols = NULL,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
   ...
 )
 ```
@@ -25,42 +42,55 @@ sequence_metrics(
 
 - x:
 
-  Sequence data, in any form accepted by
-  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md).
+  The sequence data, in any form
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
+  accepts.
 
 - favorable:
 
-  Optional character vector of favourable states; adds
-  `integrative_potential`. States not in the data raise
-  `nestimate_bad_input` when none of them occur.
+  The favourable states; giving them adds `integrative_potential`.
+  States that do not occur in the data are ignored, and an error of
+  class `nestimate_bad_input` is raised when none of them occur. Default
+  `NULL`.
 
 - omega:
 
-  Exponent of the position weights in `integrative_potential`. Default
-  `1`.
+  The exponent of the position weights in `integrative_potential`; a
+  positive value gives later positions more weight, `0` weights every
+  position equally and a negative value gives earlier positions more
+  weight; any single finite number is accepted. Ignored without
+  `favorable`. Default `1`.
 
 - meta:
 
-  Logical. Put each sequence's covariates (actor, session, group,
+  Whether to put each sequence's covariates (actor, session, group,
   metadata) before the indices. Default `FALSE`.
 
 - cols:
 
-  State columns of a wide data frame; see
+  The state columns of a wide data frame, as in
   [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md).
+  Default `NULL`.
+
+- actor, action, time:
+
+  The actor, action and timestamp columns of a long event log, as in
+  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md):
+  setting `action` declares `x` an event log. Default `NULL`.
 
 - ...:
 
-  Passed to
-  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
-  e.g. `actor`, `action` and `time` for a long event log.
+  Further arguments passed to
+  [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
+  for a long event log, such as `time_threshold` or `order`.
 
 ## Value
 
-A `data.frame` with one row per sequence, in the order of
+A data frame with one row per sequence, in the order of
 [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md),
-and the columns described in Details (`integrative_potential` only with
-`favorable`).
+and the columns described in *Details* (`integrative_potential` only
+with `favorable`). With `meta = TRUE`, the input's covariate columns, if
+it has any, come first.
 
 ## Details
 
@@ -69,20 +99,22 @@ below is the position of the last observed state.
 
 - valid_n, valid_proportion:
 
-  Observed states, and their share of the first `p` positions.
+  The number of observed states, and their share of the first `p`
+  positions.
 
 - unique_states:
 
-  Number of distinct states.
+  The number of distinct states.
 
 - mean_spell_duration, max_spell_duration:
 
-  Mean and longest run of one state.
+  The mean and the longest run of one state.
 
 - longitudinal_entropy:
 
-  Shannon entropy of the state proportions, divided by the log of the
-  number of states in the data (0 to 1).
+  The Shannon entropy of the state proportions, divided by the log of
+  the number of states in the data (0 to 1; 0 when the data hold one
+  state).
 
 - simpson_diversity:
 
@@ -90,49 +122,53 @@ below is the position of the last observed state.
 
 - self_loop_tendency, transition_rate:
 
-  Share of transitions (pairs of adjacent observed states) that repeat
-  the state, and share that change it; the two sum to 1.
+  The share of transitions (pairs of adjacent observed states) that
+  repeat the state, and the share that change it; the two sum to 1.
 
 - transition_complexity:
 
-  Distinct state-changing transitions, as a share of the \\a(a - 1)\\
-  possible ones.
+  The number of distinct state-changing transitions, as a share of the
+  \\a(a - 1)\\ possible ones, where \\a\\ is the number of states in the
+  data; `NA` when the data hold one state.
 
 - initial_state_persistence:
 
-  Length of the opening spell as a share of `p`.
+  The length of the opening spell as a share of `p`.
 
 - initial_state_proportion:
 
-  Share of the sequence in its first state.
+  The share of the observed states that are the first state.
 
 - initial_state_influence_decay:
 
-  Share of the first third spent in the first state minus the share of
-  the last third.
+  The share of the first third spent in the first state minus the share
+  of the last third.
 
 - cyclic_feedback_strength:
 
-  Largest share, over lags of 2 or more, of positions whose state recurs
-  that many steps later.
+  The largest share, over lags of 2 or more, of positions whose state
+  recurs that many steps later.
 
 - first_state, last_state, dominant_state, dominant_proportion,
   dominant_max_spell:
 
-  Opening and closing states; the most frequent state, its share, and
-  its longest spell.
+  The opening and closing states; the most frequent state (ties go to
+  the state that sorts first), its share and its longest spell.
 
 - emergent_state, emergent_state_persistence, emergent_state_proportion:
 
-  A state that settles in later (a spell of at least 3 that outlasts the
-  dominant spell, a dominant state that is not the first, or a return to
-  the first state in a spell of at least 3 and more than half the
-  opening one), its spell and its share; `NA` when none.
+  A state that settles in later, its spell and its share; `NA` when
+  there is none. The candidates are a spell of at least 3 that outlasts
+  the dominant spell, the dominant state when it is not the first and
+  has a spell of at least 3, and a return to the first state in a spell
+  of at least 3 and more than half the opening one; the longest of them
+  is taken.
 
 - integrative_potential:
 
-  With `favorable`: position-weighted share of favourable states over
-  the observed positions, weights `position^omega` (Brzinsky-Fay 2018).
+  With `favorable`: the position-weighted share of favourable states
+  over the observed positions, with weights `position^omega`
+  (Brzinsky-Fay 2018).
 
 - complexity_index:
 
@@ -145,11 +181,12 @@ Missing values: a missing position is not an observation. The first
 state is the first observed one, a missing position inside a sequence
 ends a spell, and a pair of states across it is not a transition.
 Indices that are undefined for a sequence (for example a rate with no
-transition) are `NA`. On sequences without internal gaps the indices
-shared with TraMineR (`seqindic()`, `seqistatd()`, `seqdur()`,
-`seqintegr()`) agree exactly; at an internal gap TraMineR joins the
-states on either side into one sequence, so spells and transitions
-differ there.
+transition) are `NA`; a sequence with no observed state has `valid_n`
+and `unique_states` 0 and every other index `NA`. On sequences without
+internal gaps the indices shared with TraMineR (`seqindic()`,
+`seqistatd()`, `seqdur()`, `seqintegr()`) agree exactly; at an internal
+gap TraMineR joins the states on either side into one sequence, so
+spells and transitions differ there.
 
 Corrections relative to `codyna::sequence_indices()` 1.0.0, which
 otherwise agrees value for value: `dominant_max_spell` is computed per

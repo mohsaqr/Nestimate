@@ -47,6 +47,7 @@ Core functions for building networks from data
 - [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   [`print(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   [`summary(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
+  [`plot(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   : Build a Multilevel Vector Autoregression (mlVAR) network
 - [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
   : GIMME: Group Iterative Multiple Model Estimation
@@ -106,7 +107,7 @@ Methods for capturing higher-order dependencies
 - [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md)
   : Count Path Frequencies in Trajectory Data
 - [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)
-  : Hypergraph from bipartite group / event data
+  : Build a Hypergraph from Group Memberships
 - [`clique_expansion()`](https://pak.dynasite.org/Nestimate/reference/clique_expansion.md)
   : Clique expansion of a hypergraph
 - [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
@@ -131,7 +132,7 @@ Methods for capturing higher-order dependencies
   [`plot(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   : Transductive label spreading on a hypergraph
 - [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md)
-  : Normalized hypergraph Laplacian
+  : Normalised hypergraph Laplacian
 
 ## Markov Analysis
 
@@ -175,6 +176,8 @@ Order, structure, entropy, and stability of Markov chains
 - [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`print(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`print(`*`<net_transition_entropy_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
+  [`summary(`*`<net_transition_entropy_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
+  [`plot(`*`<net_transition_entropy_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`summary(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`print(`*`<summary.net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`plot(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
@@ -189,6 +192,8 @@ Order, structure, entropy, and stability of Markov chains
 - [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`print(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`print(`*`<net_entropy_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
+  [`summary(`*`<net_entropy_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
+  [`plot(`*`<net_entropy_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`summary(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`plot(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   : Bayesian Transition Entropy
@@ -206,7 +211,7 @@ Order, structure, entropy, and stability of Markov chains
   [`summary(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
   [`print(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
   [`plot(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
-  : Stability Landscape Along the Program or a Covariate
+  : Stability Landscape Along the Programme or a Covariate
 
 ## Network Pruning
 
@@ -251,7 +256,7 @@ Statistical inference for network estimation
   [`print(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   [`summary(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   [`plot(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
-  : Bootstrap for Regularized Partial Correlation Networks
+  : Bootstrap for Regularised Partial Correlation Networks
 
 - [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   [`print(`*`<net_permutation>`*`)`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
@@ -345,7 +350,7 @@ Cluster-based and multilevel network analysis
   [`print(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
   [`summary(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
   [`plot(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
-  : Cluster Choice – sweep k, dissimilarity and method
+  : Compare Clusterings Across k, Dissimilarity and Method
 - [`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   [`print(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   [`plot(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
