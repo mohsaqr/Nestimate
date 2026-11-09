@@ -1,4 +1,4 @@
-# Nestimate 1.0.10
+# Nestimate 1.0.11
 
 * Release review: TNA shortcuts keep positional `start`/`end` calls working; `markov_stability()` keeps recurrence times for separate closed classes; rectangular numeric sequence matrices accept `build_mcml()`'s `exclude`, `trim` and `end`.
 * Help pages rewritten: what each function does, how to read the result, and every argument's default and errors.
